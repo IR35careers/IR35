@@ -19,6 +19,7 @@ import { Briefcase, Sparkles, ArrowRight, Loader2, CheckCircle2, Users } from "l
 import { validateEmail } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
+import CountdownTimer from "./CountdownTimer";
 
 const Input = React.forwardRef<
   HTMLInputElement,
@@ -59,16 +60,12 @@ export function WaitlistExperience(): ReactElement {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({
-    days: 225,
-    hours: 23,
-    minutes: 17,
-    seconds: 58,
-  });
+  const [signupCount, setSignupCount] = useState<number | null>(null);
 
   // Three.js background effect
   useEffect(() => {
     if (!mountRef.current) return;
+    const container = mountRef.current;
 
     const scene = new Scene();
     const camera = new PerspectiveCamera(
@@ -85,7 +82,7 @@ export function WaitlistExperience(): ReactElement {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 1);
-    mountRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // Create curved light geometry
     const curve = new QuadraticBezierCurve3(
@@ -215,8 +212,8 @@ export function WaitlistExperience(): ReactElement {
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
       }
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (container && renderer.domElement) {
+        container.removeChild(renderer.domElement);
       }
       renderer.dispose();
       tubeGeometry.dispose();
@@ -226,30 +223,21 @@ export function WaitlistExperience(): ReactElement {
     };
   }, []);
 
-  // Countdown timer
+  // Fetch the real signup count for social proof (view is defined in supabase/waitlist.sql).
+  // Hidden entirely if it can't be loaded or is still zero, rather than showing a made-up number.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        let { days, hours, minutes, seconds } = prev;
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        } else if (days > 0) {
-          days--;
-          hours = 23;
-          minutes = 59;
-          seconds = 59;
-        }
-        return { days, hours, minutes, seconds };
+    let isMounted = true;
+    supabase
+      .from("waitlist_count")
+      .select("total")
+      .single()
+      .then(({ data, error }) => {
+        if (!isMounted || error || !data) return;
+        setSignupCount(Number(data.total));
       });
-    }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -289,15 +277,14 @@ export function WaitlistExperience(): ReactElement {
     }
   };
 
-  const navItems = ["Features", "Pricing", "Beta", "Launch", "Updates"];
-
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black w-full">
+    <main className="relative min-h-screen overflow-x-hidden bg-black w-full">
       {/* Three.js Background */}
       <div
         ref={mountRef}
         className="fixed inset-0 w-full h-full"
         style={{ zIndex: 0 }}
+        aria-hidden="true"
       />
 
       {/* Content Layer */}
@@ -314,25 +301,6 @@ export function WaitlistExperience(): ReactElement {
                 <span className="text-white font-bold text-sm">
                   IR35<span className="text-white/70">Careers</span>
                 </span>
-              </div>
-
-              {/* Nav separator */}
-              <div className="w-px h-4 bg-white/20" />
-
-              {/* Nav items */}
-              <div className="flex items-center gap-2">
-                {navItems.map((item, index) => (
-                  <button
-                    key={item}
-                    className={`text-sm px-3 py-1 rounded-full transition-colors ${
-                      index === 2
-                        ? "bg-black/60 text-white border border-white/20"
-                        : "text-white/60 hover:text-white/80"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
@@ -394,60 +362,24 @@ export function WaitlistExperience(): ReactElement {
                       </div>
                     </form>
 
-                    <div className="flex items-center justify-center gap-3 mb-6">
-                      <div className="flex -space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white/20 flex items-center justify-center text-white text-xs font-medium">
-                          J
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white/20 flex items-center justify-center text-white text-xs font-medium">
-                          A
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white/20 flex items-center justify-center text-white text-xs font-medium">
-                          M
-                        </div>
-                      </div>
-                      <span className="text-white/70 text-sm flex items-center gap-1.5">
+                    {signupCount !== null && signupCount > 0 && (
+                      <div className="flex items-center justify-center gap-1.5 mb-6 text-white/70 text-sm">
                         <Users size={13} />
-                        ~2k+ already joined
-                      </span>
-                    </div>
+                        <span>
+                          <span className="font-semibold text-white">
+                            {signupCount.toLocaleString()}
+                          </span>{" "}
+                          {signupCount === 1 ? "person has" : "people have"}{" "}
+                          already joined
+                        </span>
+                      </div>
+                    )}
 
-                    <div className="flex items-center justify-center gap-6 text-center">
-                      <div>
-                        <div className="text-2xl font-light text-white">
-                          {timeLeft.days}
-                        </div>
-                        <div className="text-xs text-white/60 uppercase tracking-wide">
-                          days
-                        </div>
-                      </div>
-                      <div className="text-white/40">|</div>
-                      <div>
-                        <div className="text-2xl font-light text-white">
-                          {timeLeft.hours}
-                        </div>
-                        <div className="text-xs text-white/60 uppercase tracking-wide">
-                          hours
-                        </div>
-                      </div>
-                      <div className="text-white/40">|</div>
-                      <div>
-                        <div className="text-2xl font-light text-white">
-                          {timeLeft.minutes}
-                        </div>
-                        <div className="text-xs text-white/60 uppercase tracking-wide">
-                          minutes
-                        </div>
-                      </div>
-                      <div className="text-white/40">|</div>
-                      <div>
-                        <div className="text-2xl font-light text-white">
-                          {timeLeft.seconds}
-                        </div>
-                        <div className="text-xs text-white/60 uppercase tracking-wide">
-                          seconds
-                        </div>
-                      </div>
+                    <div>
+                      <p className="text-[10px] text-white/40 text-center uppercase tracking-widest mb-3">
+                        Counting down to launch
+                      </p>
+                      <CountdownTimer />
                     </div>
                   </>
                 ) : (
