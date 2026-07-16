@@ -99,7 +99,7 @@ Edit `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_LAUNCH_DATE=2026-07-30T09:00:00Z
+NEXT_PUBLIC_LAUNCH_DATE=2026-08-15T09:00:00Z
 ```
 
 **Important:** set `NEXT_PUBLIC_LAUNCH_DATE` to your real, chosen launch date before going live. If it's left unset, the countdown falls back to a rough "N days from whenever the app was last started/deployed" placeholder, which will silently drift on every redeploy.
@@ -170,10 +170,10 @@ Row Level Security is enabled with:
 
 ---
 
-## Known limitations / things to decide before public launch
+## Notes
 
-- **Domain:** this codebase (metadata, `robots.txt`, `sitemap.xml`) consistently points at `ir35careers.co.uk`, while the launch-plan document refers to `ir35careers.uk`. Confirm which domain you actually control and make sure it's consistent everywhere, including the `NEXT_PUBLIC_SITE_URL` env var.
-- **Launch date:** the countdown does nothing useful until `NEXT_PUBLIC_LAUNCH_DATE` is set to a real date (see above).
+- **Domain:** confirmed as `ir35careers.com` — used consistently in metadata, `robots.txt`, and `sitemap.xml`.
+- **Launch date:** countdown targets a 30-day launch window from 16 July 2026, i.e. **15 August 2026** (`NEXT_PUBLIC_LAUNCH_DATE=2026-08-15T09:00:00Z`). Update this env var if the target date changes.
 - **Theming:** `next-themes` and a `ThemeProvider` are wired up in the root layout, but the current page is unconditionally dark-themed and no light/dark toggle is rendered anywhere. This is harmless as-is, just noting it in case a toggle was expected.
 
 ---

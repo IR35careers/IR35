@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   creator: "IR35Careers",
   publisher: "IR35Careers",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://ir35careers.co.uk"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://ir35careers.com"
   ),
   alternates: {
     canonical: "/",
@@ -89,13 +89,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "IR35Careers",
-              url: "https://ir35careers.co.uk",
+              url: "https://ir35careers.com",
               description:
                 "The UK's modern platform for Inside & Outside IR35 contract opportunities.",
               potentialAction: {
                 "@type": "SearchAction",
                 target:
-                  "https://ir35careers.co.uk/search?q={search_term_string}",
+                  "https://ir35careers.com/search?q={search_term_string}",
                 "query-input": "required name=search_term_string",
               },
             }),
