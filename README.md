@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IR35Careers Landing Page
 
 > Find Better UK Contract Jobs. The UK's modern platform for Inside & Outside IR35 contract opportunities.
@@ -239,3 +240,6 @@ For questions or issues, reach out via:
 ---
 
 Built with ❤️ for UK Contractors
+=======
+# IR35
+>>>>>>> 257246518c01d7149a32b6fd4497f51f8c1ca43b
