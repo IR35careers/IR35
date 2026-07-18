@@ -136,11 +136,15 @@ export function processRawJob(raw: RawATSJob): ProcessedJob | null {
   const ir35 = classifyIR35(title, description);
 
   // ── Location + UK gate ───────────────────────────────────────────────
+  // Sources that are UK-only by construction (ukHint) skip the gate; their
+  // locations still get normalized for consistent display.
   const loc = normalizeLocation(raw.location);
-  const ukMarketSignal = rate.currency === "GBP" || ir35.status !== "unknown";
-  const isBareRemote = loc.location === "Remote";
-  const ukAccepted = loc.isUK && (!isBareRemote || ukMarketSignal);
-  if (!ukAccepted) return null;
+  if (raw.ukHint !== true) {
+    const ukMarketSignal = rate.currency === "GBP" || ir35.status !== "unknown";
+    const isBareRemote = loc.location === "Remote";
+    const ukAccepted = loc.isUK && (!isBareRemote || ukMarketSignal);
+    if (!ukAccepted) return null;
+  }
 
   // ── Remote type ──────────────────────────────────────────────────────
   const remote_type = detectRemoteType(raw.location, description);

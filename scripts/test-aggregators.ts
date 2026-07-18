@@ -104,6 +104,42 @@ function checkTrue(name: string, condition: boolean) {
   check("hint: undefined falls back to heuristics (rejects no-signal job)", processRawJob(noHint), null);
 }
 
+// ── ukHint behavior ──────────────────────────────────────────────────────────
+{
+  // Reed-style location: a real UK town+county not in the canonical city
+  // list. Without ukHint this was wrongly dropped; with it, it must pass.
+  const countyTown: RawATSJob = {
+    sourceDomain: "reed.co.uk",
+    sourceIdentifier: "2",
+    sourceType: "reed",
+    title: "Contract Test Analyst",
+    companyName: "Some Agency",
+    description: "Testing role for a public sector client.",
+    location: "Bracknell, Berkshire",
+    rawSalary: "£350 - £400",
+    applyUrl: "https://example.com/2",
+    postedAt: null,
+    rawPayload: {},
+    contractHint: true,
+    ukHint: true,
+  };
+  const processedCounty = processRawJob(countyTown);
+  checkTrue("ukHint: county-town location passes for hinted source", processedCounty !== null);
+  if (processedCounty) {
+    check("ukHint: location kept for display", processedCounty.location, "Bracknell, Berkshire");
+  }
+
+  // Same location WITHOUT ukHint must still be dropped (no UK marker, not in
+  // city list) — the gate is unchanged for unhinted sources.
+  const unhinted: RawATSJob = { ...countyTown, ukHint: undefined, description: "6 month contract engagement." };
+  check("ukHint: unhinted county-town still gated", processRawJob(unhinted), null);
+
+  // ukHint does NOT bypass the contract gate — a permanent-hinted job on a
+  // UK source is still rejected.
+  const ukButPerm: RawATSJob = { ...countyTown, contractHint: false };
+  check("ukHint: does not override contractHint false", processRawJob(ukButPerm), null);
+}
+
 // ── Adzuna mapper + end-to-end ───────────────────────────────────────────────
 {
   const fixture = {

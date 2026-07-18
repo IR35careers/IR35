@@ -54,6 +54,14 @@ export interface RawATSJob {
    * undefined → unknown; the processor's text heuristics decide.
    */
   contractHint?: boolean;
+  /**
+   * Set by sources that are UK-only by construction (Reed is a UK board;
+   * Adzuna is queried via its /gb/ country endpoint). When true, the
+   * processor skips the text-based UK gate — location strings like
+   * "Bracknell, Berkshire" are real UK places that no city list will ever
+   * fully cover.
+   */
+  ukHint?: boolean;
 }
 
 export type IR35Status = "inside" | "outside" | "unknown";

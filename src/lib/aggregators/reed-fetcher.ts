@@ -75,6 +75,7 @@ export function mapReedJob(job: ReedJob): RawATSJob {
     postedAt: reedDateToIso(job.date),
     rawPayload: job,
     contractHint: true, // fetched with contract=true — definitively contract
+    ukHint: true, // Reed is a UK job board — locations are UK by construction
   };
 }
 

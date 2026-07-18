@@ -5,7 +5,7 @@
  * Auth: app_id + app_key query params.
  * Get free credentials instantly at https://developer.adzuna.com
  *
- * We query with contract_type=contract so ONLY contract roles come back —
+ * We query with contract=1 so ONLY contract roles come back —
  * the processing engine's text heuristics are bypassed via contractHint.
  *
  * Response shape:
@@ -54,7 +54,8 @@ export function mapAdzunaJob(job: AdzunaJob): RawATSJob {
     applyUrl: job.redirect_url ?? "",
     postedAt: job.created ?? null,
     rawPayload: job,
-    contractHint: true, // fetched with contract_type=contract
+    contractHint: true, // fetched with contract=1
+    ukHint: true, // /gb/ country endpoint is UK-only by construction
   };
 }
 
@@ -78,7 +79,7 @@ export async function fetchAdzuna(
       `https://api.adzuna.com/v1/api/jobs/gb/search/${page}` +
       `?app_id=${encodeURIComponent(opts.appId)}` +
       `&app_key=${encodeURIComponent(opts.appKey)}` +
-      `&results_per_page=50&contract_type=contract&content-type=application/json`;
+      `&results_per_page=50&contract=1&content-type=application/json`;
     const data = await client.getJson<AdzunaResponse>(url);
     const results = Array.isArray(data?.results) ? data.results : [];
     for (const job of results) {
