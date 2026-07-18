@@ -200,8 +200,20 @@ function checkTrue(name: string, condition: boolean) {
     "Hello world \n One"
   );
   check("cleanTitle strips URGENT", cleanTitle("URGENT: React Developer"), "React Developer");
-  checkTrue("isContractRole: day rate counts", isContractRole("React Dev", "£550 per day role", ""));
+  checkTrue("isContractRole: day rate in desc", isContractRole("React Dev", "£550 per day contract role", ""));
+  checkTrue("isContractRole: title says Contract", isContractRole("Contract React Developer", "Great opportunity.", ""));
+  checkTrue("isContractRole: title says Outside IR35", isContractRole("Dev (Outside IR35)", "Some desc.", ""));
+  checkTrue("isContractRole: title says Interim", isContractRole("Interim CTO", "Join our team.", ""));
+  checkTrue("isContractRole: 6 month contract in desc", isContractRole("React Dev", "This is a 6 month contract engagement in London.", ""));
+  checkTrue("isContractRole: employment type Contract", isContractRole("React Dev", "Employment type: Contract. Build features.", ""));
+  checkTrue("isContractRole: freelance in title", isContractRole("Freelance Designer", "Design websites.", ""));
+
+  // These must NOT be detected as contract roles:
   checkTrue("isContractRole: permanent salaried role rejected", !isContractRole("React Developer", "Permanent position with £65k salary and pension.", ""));
+  checkTrue("isContractRole: bare 'contract' in legal boilerplate rejected", !isContractRole("Software Engineer", "Your employment contract includes health insurance and 25 days annual leave.", ""));
+  checkTrue("isContractRole: 'permanent contract' rejected", !isContractRole("Data Analyst", "This is a permanent contract with competitive salary.", ""));
+  checkTrue("isContractRole: no signals at all rejected", !isContractRole("Product Manager", "Lead a team of engineers. Competitive salary and benefits.", ""));
+  checkTrue("isContractRole: 'terms of the contract' rejected", !isContractRole("Backend Engineer", "You will agree to the terms of the contract upon joining. Full time role.", ""));
 
   const raw: RawATSJob = {
     sourceDomain: "boards.greenhouse.io",

@@ -53,7 +53,7 @@ export class HttpClient {
   }
 
   /** GET a URL and parse JSON. Throws HttpError / Error after retries exhausted. */
-  async getJson<T>(url: string): Promise<T> {
+  async getJson<T>(url: string, opts?: { headers?: Record<string, string> }): Promise<T> {
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -67,7 +67,11 @@ export class HttpClient {
       try {
         const res = await this.fetchImpl(url, {
           signal: controller.signal,
-          headers: { accept: "application/json", "user-agent": this.userAgent },
+          headers: {
+            accept: "application/json",
+            "user-agent": this.userAgent,
+            ...(opts?.headers ?? {}),
+          },
         });
 
         if (res.ok) {

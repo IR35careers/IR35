@@ -55,21 +55,56 @@ export function cleanTitle(title: string): string {
     .trim();
 }
 
-const CONTRACT_SIGNALS =
-  /\bcontract(?:or|ing)?\b|\bday\s*rate\b|\bper\s*day\b|\bp\/?d\b|\binterim\b|\bfreelance\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\b(?:3|6|9|12|18|24)\s*[\s-]*month\s+(?:contract|engagement|assignment)\b|\bdaily\s+rate\b|\boutside\s*ir35\b|\binside\s*ir35\b/i;
+// ── Contract detection ───────────────────────────────────────────────────
+// The word "contract" alone is NOT a reliable signal in descriptions —
+// permanent jobs routinely say "employment contract", "your contract
+// includes", "permanent contract". We split signals into title-level
+// (high confidence) and description-level (must be contextual).
 
-const PERMANENT_ONLY_SIGNALS = /\bpermanent\s+(?:role|position|opportunity)\b|\bfull[\s-]time\s+permanent\b/i;
+/** Strong signals: if ANY of these appear in the TITLE, it's a contract role. */
+const TITLE_CONTRACT_SIGNALS =
+  /\bcontract(?:or|ing)?\b|\binterim\b|\bfreelance\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\bday[\s-]*rate\b/i;
+
+/**
+ * Description-level signals: contextual phrases that indicate a contract
+ * engagement, NOT the bare word "contract" (which appears in every
+ * permanent job's legal boilerplate too).
+ */
+const DESC_CONTRACT_SIGNALS =
+  /\bcontract\s+(?:role|position|opportunity|engagement|assignment|basis|duration|length)\b|\b(?:3|6|9|12|18|24)\s*[\s-]*month\s+(?:contract|engagement|assignment|extension)\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b|\bdaily\s+rate\b|\bper\s*hour\b|\bfreelance\b|\binterim\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\binitial\s+(?:3|6|9|12|18|24)\s*[\s-]*month\b|\bcontract(?:or|ing)\s+(?:rate|pay|salary)\b|\brolling\s+contract\b|\b(?:via|through)\s+(?:an?\s+)?(?:umbrella|ltd|limited)\b/i;
+
+/** Phrases that strongly indicate a permanent role, overriding weak signals. */
+const PERMANENT_SIGNALS =
+  /\bpermanent\s+(?:role|position|opportunity|contract)\b|\bfull[\s-]time\s+permanent\b|\bpermanent\s+(?:full|part)[\s-]time\b|\bpermanent\s+staff\b|\bsalaried\s+(?:role|position)\b/i;
+
+/** ATS employment-type fields that definitively mark a role as contract. */
+const EMPLOYMENT_TYPE_CONTRACT =
+  /\bemployment\s+type:\s*contract\b/i;
 
 export function isContractRole(title: string, description: string, rawSalary: string): boolean {
-  const text = `${title} ${description} ${rawSalary}`;
-  if (!CONTRACT_SIGNALS.test(text)) return false;
-  // "Permanent" wording alongside no contract-specific rate → still allow if
-  // an explicit contract signal exists (some ads say "perm or contract");
-  // only a permanent-only ad with a coincidental keyword should be blocked,
-  // which the CONTRACT_SIGNALS gate above already mostly prevents.
-  if (PERMANENT_ONLY_SIGNALS.test(text) && !/\bcontract\b|\bir\s*-?\s*35\b|\bday\s*rate\b/i.test(text)) {
+  const t = title ?? "";
+  const d = description ?? "";
+  const s = rawSalary ?? "";
+
+  // 1. Title is the strongest signal — recruiters put "Contract" or
+  //    "Outside IR35" in titles deliberately, never accidentally.
+  if (TITLE_CONTRACT_SIGNALS.test(t)) return true;
+
+  // 2. ATS employment-type field (surfaced by fetchers into description
+  //    as "Employment type: Contract").
+  if (EMPLOYMENT_TYPE_CONTRACT.test(d)) return true;
+
+  // 3. Description-level contextual signals.
+  const fullText = `${d} ${s}`;
+  if (!DESC_CONTRACT_SIGNALS.test(fullText)) return false;
+
+  // 4. If the description also has strong permanent wording AND no
+  //    IR35/day-rate signal, it's probably a permanent role that
+  //    happened to mention "6 month contract" in passing.
+  if (PERMANENT_SIGNALS.test(fullText) && !/\bir\s*-?\s*35\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b/i.test(fullText)) {
     return false;
   }
+
   return true;
 }
 
@@ -84,7 +119,12 @@ export function processRawJob(raw: RawATSJob): ProcessedJob | null {
   if (!title || !raw.applyUrl) return null;
 
   // ── Gate 1: contract roles only ──────────────────────────────────────
-  if (!isContractRole(title, description, raw.rawSalary ?? "")) return null;
+  // Sources that pre-filter at the API level (Reed/Adzuna with contract-only
+  // queries) set contractHint and bypass text heuristics entirely.
+  if (raw.contractHint === false) return null;
+  if (raw.contractHint !== true && !isContractRole(title, description, raw.rawSalary ?? "")) {
+    return null;
+  }
 
   // ── Rate: structured field first, description fallback second ────────
   let rate = parseRate(raw.rawSalary);

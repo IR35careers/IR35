@@ -45,19 +45,10 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "Monzo", type: "greenhouse", slug: "monzo" },
   { name: "GoCardless", type: "greenhouse", slug: "gocardless" },
   { name: "Trustpilot", type: "greenhouse", slug: "trustpilot" },
-  { name: "Revolut", type: "greenhouse", slug: "revolut" },
-  { name: "Depop", type: "greenhouse", slug: "depop" },
-  { name: "Improbable", type: "greenhouse", slug: "improbable" },
-  { name: "Snyk", type: "greenhouse", slug: "snyk" },
-  { name: "Paddle", type: "greenhouse", slug: "paddle" },
   { name: "Form3", type: "greenhouse", slug: "form3" },
 
   // Lever (verified working)
   { name: "Octopus Energy", type: "lever", slug: "octoenergy" },
-  { name: "Checkout.com", type: "lever", slug: "checkout" },
-  { name: "Cazoo", type: "lever", slug: "cazoo" },
-  { name: "Onfido", type: "lever", slug: "onfido" },
-  { name: "Thought Machine", type: "lever", slug: "thoughtmachine" },
 
   // Ashby (verified working)
   { name: "Multiverse", type: "ashby", slug: "multiverse" },

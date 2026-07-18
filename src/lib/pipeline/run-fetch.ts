@@ -15,7 +15,10 @@
  */
 
 import { fetchAllCompanies, COMPANY_CONFIGS } from "../ats";
-import type { CompanyConfig, ProcessedJob } from "../ats/types";
+import { HttpClient } from "../ats/http-client";
+import type { CompanyConfig, ProcessedJob, RawATSJob } from "../ats/types";
+import { fetchReed } from "../aggregators/reed-fetcher";
+import { fetchAdzuna } from "../aggregators/adzuna-fetcher";
 import { processRawJob } from "../processing/job-processor";
 import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplicator";
 import { getSupabaseAdmin } from "../supabase-admin";
@@ -29,8 +32,15 @@ export interface PipelineSummary {
   upserted: number;
   expired: number;
   companyErrors: Array<{ company: string; error: string }>;
+  /** Jobs stored per source domain, e.g. { "reed.co.uk": 180, ... } */
+  bySource: Record<string, number>;
+  /** Operational notes: skipped sources, missing keys, time-budget cuts. */
+  notes: string[];
   durationMs: number;
 }
+
+/** Stop starting new fetches once this much of the run has elapsed. */
+const FETCH_TIME_BUDGET_MS = 42000;
 
 const STALE_DAYS = 14;
 const UPSERT_CHUNK = 100;
@@ -50,12 +60,58 @@ export async function runFetchPipeline(
   const started = Date.now();
   const supabase = getSupabaseAdmin();
 
-  // ── 1. Fetch ───────────────────────────────────────────────────────────
+  // ── 1. Fetch: direct-employer ATS boards ───────────────────────────────
   const results = await fetchAllCompanies(configs);
   const companyErrors = results
     .filter((r) => r.error)
     .map((r) => ({ company: r.company.name, error: r.error as string }));
-  const rawJobs = results.flatMap((r) => r.jobs);
+  const rawJobs: RawATSJob[] = results.flatMap((r) => r.jobs);
+  const notes: string[] = [];
+
+  // ── 1b. Fetch: job-board aggregators (the real contract volume) ────────
+  // These use contract-only queries at the API level. Each is optional —
+  // missing keys or an exhausted time budget produce a note, not a failure.
+  const aggregatorClient = new HttpClient({ minDelayMs: 400 });
+  const timeLeft = () => started + FETCH_TIME_BUDGET_MS - Date.now();
+
+  const reedKey = process.env.REED_API_KEY;
+  if (!reedKey) {
+    notes.push("Reed skipped: REED_API_KEY not set (free key: reed.co.uk/developers/jobseeker)");
+  } else if (timeLeft() < 8000) {
+    notes.push("Reed skipped: fetch time budget exhausted");
+  } else {
+    try {
+      const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 2 });
+      rawJobs.push(...reedJobs);
+    } catch (err) {
+      companyErrors.push({
+        company: "Reed",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  const adzunaId = process.env.ADZUNA_APP_ID;
+  const adzunaKey = process.env.ADZUNA_APP_KEY;
+  if (!adzunaId || !adzunaKey) {
+    notes.push("Adzuna skipped: ADZUNA_APP_ID / ADZUNA_APP_KEY not set (free: developer.adzuna.com)");
+  } else if (timeLeft() < 8000) {
+    notes.push("Adzuna skipped: fetch time budget exhausted");
+  } else {
+    try {
+      const adzunaJobs = await fetchAdzuna(aggregatorClient, {
+        appId: adzunaId,
+        appKey: adzunaKey,
+        pages: 2,
+      });
+      rawJobs.push(...adzunaJobs);
+    } catch (err) {
+      companyErrors.push({
+        company: "Adzuna",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 
   // ── 2. Process ─────────────────────────────────────────────────────────
   const processed: ProcessedJob[] = [];
@@ -145,6 +201,11 @@ export async function runFetchPipeline(
   const expired = expiredRows?.length ?? 0;
 
   // ── 6. Log ─────────────────────────────────────────────────────────────
+  const bySource: Record<string, number> = {};
+  for (const job of accepted) {
+    bySource[job.source_domain] = (bySource[job.source_domain] ?? 0) + 1;
+  }
+
   const summary: PipelineSummary = {
     companies: results.length,
     fetched: rawJobs.length,
@@ -154,6 +215,8 @@ export async function runFetchPipeline(
     upserted,
     expired,
     companyErrors,
+    bySource,
+    notes,
     durationMs: Date.now() - started,
   };
 

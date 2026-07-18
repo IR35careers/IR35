@@ -7,7 +7,15 @@
  * which maps 1:1 onto the `jobs` database table.
  */
 
-export type ATSType = "greenhouse" | "lever" | "ashby" | "workable" | "personio";
+export type ATSType =
+  | "greenhouse"
+  | "lever"
+  | "ashby"
+  | "workable"
+  | "personio"
+  // Aggregator sources (agency-posted jobs via official public APIs):
+  | "reed"
+  | "adzuna";
 
 export interface CompanyConfig {
   /** Display name, e.g. "Monzo" */
@@ -39,6 +47,13 @@ export interface RawATSJob {
   postedAt: string | null;
   /** The full original API object, stored for debugging/reprocessing */
   rawPayload: unknown;
+  /**
+   * Set by sources that already know the employment type as structured data:
+   * true  → definitively a contract role (e.g. fetched with contract=true)
+   * false → definitively permanent (skip it)
+   * undefined → unknown; the processor's text heuristics decide.
+   */
+  contractHint?: boolean;
 }
 
 export type IR35Status = "inside" | "outside" | "unknown";
