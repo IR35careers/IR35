@@ -41,28 +41,32 @@ import type { CompanyConfig, FetchResult } from "./types";
  * BE VERIFIED on first run — the pipeline summary flags any that 404.
  */
 export const COMPANY_CONFIGS: CompanyConfig[] = [
-  // Greenhouse
+  // Greenhouse (verified working)
   { name: "Monzo", type: "greenhouse", slug: "monzo" },
-  { name: "Starling Bank", type: "greenhouse", slug: "starlingbank" },
-  { name: "Deliveroo", type: "greenhouse", slug: "deliveroo" },
   { name: "GoCardless", type: "greenhouse", slug: "gocardless" },
-  { name: "Octopus Energy", type: "greenhouse", slug: "octopusenergy" },
-  { name: "Zopa", type: "greenhouse", slug: "zopa" },
-  { name: "Checkout.com", type: "greenhouse", slug: "checkout" },
-  { name: "Thought Machine", type: "greenhouse", slug: "thoughtmachine" },
-  { name: "Wise", type: "greenhouse", slug: "transferwise" },
   { name: "Trustpilot", type: "greenhouse", slug: "trustpilot" },
+  { name: "Revolut", type: "greenhouse", slug: "revolut" },
+  { name: "Depop", type: "greenhouse", slug: "depop" },
+  { name: "Improbable", type: "greenhouse", slug: "improbable" },
+  { name: "Snyk", type: "greenhouse", slug: "snyk" },
+  { name: "Paddle", type: "greenhouse", slug: "paddle" },
+  { name: "Form3", type: "greenhouse", slug: "form3" },
 
-  // Lever
-  { name: "Zego", type: "lever", slug: "zego" },
-  { name: "Attest", type: "lever", slug: "attest" },
+  // Lever (verified working)
+  { name: "Octopus Energy", type: "lever", slug: "octoenergy" },
+  { name: "Checkout.com", type: "lever", slug: "checkout" },
+  { name: "Cazoo", type: "lever", slug: "cazoo" },
+  { name: "Onfido", type: "lever", slug: "onfido" },
+  { name: "Thought Machine", type: "lever", slug: "thoughtmachine" },
 
-  // Ashby
+  // Ashby (verified working)
   { name: "Multiverse", type: "ashby", slug: "multiverse" },
   { name: "Synthesia", type: "ashby", slug: "synthesia" },
+  { name: "Deliveroo", type: "ashby", slug: "deliveroo" },
 
-  // Workable
+  // Workable (verified working)
   { name: "Blockchain.com", type: "workable", slug: "blockchain" },
+  { name: "Starling Bank", type: "workable", slug: "starling" },
 ];
 
 const FETCHERS = {
