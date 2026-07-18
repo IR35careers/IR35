@@ -38,3 +38,6 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# processing-engine test build output
+.test-build/
