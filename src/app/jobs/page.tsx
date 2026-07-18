@@ -116,8 +116,8 @@ export default function JobsPage() {
     <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
       {/* Ambient identity glows — emerald & sky, the two IR35 states */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
-        <div className="absolute -top-40 right-[-10%] h-[480px] w-[480px] rounded-full bg-emerald-500/[0.07] blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[520px] w-[520px] rounded-full bg-sky-500/[0.06] blur-[130px]" />
+        <div className="absolute -top-40 right-[-10%] h-[480px] w-[480px] rounded-full bg-emerald-500/[0.12] blur-[110px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[520px] w-[520px] rounded-full bg-sky-500/[0.11] blur-[120px]" />
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
       </div>
 

@@ -71,9 +71,9 @@ export async function GET(request: Request): Promise<Response> {
       query = query.order("rate_min", { ascending: true, nullsFirst: false });
     } else {
       query = query
-        .order("posted_at", { ascending: false, nullsFirst: false })
+        .order("posted_on", { ascending: false, nullsFirst: false })
         .order("rate_max", { ascending: false, nullsFirst: false })
-        .order("first_seen_at", { ascending: false });
+        .order("posted_at", { ascending: false, nullsFirst: false });
     }
 
     const from = (page - 1) * perPage;

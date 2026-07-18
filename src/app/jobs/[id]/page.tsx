@@ -79,7 +79,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div
           className={`absolute -top-40 right-[-10%] h-[420px] w-[420px] rounded-full blur-[120px] ${
-            job.ir35_status === "inside" ? "bg-sky-500/[0.08]" : "bg-emerald-500/[0.08]"
+            job.ir35_status === "inside" ? "bg-sky-500/[0.13]" : "bg-emerald-500/[0.13]"
           }`}
         />
         <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-white/[0.03] blur-[130px]" />
