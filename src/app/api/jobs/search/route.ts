@@ -72,6 +72,7 @@ export async function GET(request: Request): Promise<Response> {
     } else {
       query = query
         .order("posted_at", { ascending: false, nullsFirst: false })
+        .order("rate_max", { ascending: false, nullsFirst: false })
         .order("first_seen_at", { ascending: false });
     }
 

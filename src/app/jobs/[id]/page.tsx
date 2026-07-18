@@ -74,8 +74,18 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           : null;
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
+      {/* Ambient identity glows matching the board */}
+      <div className="pointer-events-none fixed inset-0" aria-hidden>
+        <div
+          className={`absolute -top-40 right-[-10%] h-[420px] w-[420px] rounded-full blur-[120px] ${
+            job.ir35_status === "inside" ? "bg-sky-500/[0.08]" : "bg-emerald-500/[0.08]"
+          }`}
+        />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-white/[0.03] blur-[130px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <Link
           href="/jobs"
           className="inline-flex items-center gap-1.5 text-sm text-white/50 transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded"
