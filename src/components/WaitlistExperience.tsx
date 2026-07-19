@@ -21,6 +21,7 @@ import { validateEmail } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import CountdownTimer from "./CountdownTimer";
+import { useAuth } from "@/lib/auth-context";
 
 const Input = React.forwardRef<
   HTMLInputElement,
@@ -54,6 +55,7 @@ const Button = React.forwardRef<
 Button.displayName = "Button";
 
 export function WaitlistExperience(): ReactElement {
+  const { user } = useAuth();
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<WebGLRenderer | null>(null);
   const animationIdRef = useRef<number>(0);
@@ -353,12 +355,20 @@ export function WaitlistExperience(): ReactElement {
               IR35<span className="text-white/70">Careers</span>
             </span>
           </div>
-          <Link
-            href="/jobs"
-            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-          >
-            Browse contracts
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/jobs"
+              className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            >
+              Browse contracts
+            </Link>
+            <Link
+              href={user ? "/dashboard" : "/account"}
+              className="rounded-full bg-gradient-to-r from-emerald-400 to-sky-400 px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            >
+              {user ? "Dashboard" : "Sign up"}
+            </Link>
+          </div>
         </div>
 
         {/* Hero */}
