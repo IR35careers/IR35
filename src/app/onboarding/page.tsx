@@ -133,19 +133,45 @@ export default function OnboardingPage() {
         <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-sky-500/[0.09] blur-[130px]" />
       </div>
 
-      <div className="relative mx-auto max-w-2xl px-4 py-12 sm:px-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-          Set up your profile
-        </p>
-        <h1 className="mt-2 text-3xl font-light tracking-tight sm:text-4xl">
-          Let&apos;s get you matched
-        </h1>
-        <p className="mt-2 text-sm text-white/55">
-          Two minutes now — personalised contract matches immediately after.
-        </p>
+      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[300px_1fr]">
+          {/* Sidebar: why we ask */}
+          <aside className="lg:border-r lg:border-white/[0.07] lg:pr-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+              Getting started
+            </p>
+            <h1 className="mt-2 text-2xl font-light tracking-tight sm:text-3xl">
+              Let&apos;s get you matched
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-white/55">
+              Two minutes now — personalised contract matches with real match
+              scores immediately after.
+            </p>
+            <ul className="mt-6 space-y-4 text-sm text-white/55">
+              <li className="flex gap-2.5">
+                <span className="mt-0.5 text-emerald-300">✓</span>
+                Your CV is stored privately — only you can ever access it.
+              </li>
+              <li className="flex gap-2.5">
+                <span className="mt-0.5 text-emerald-300">✓</span>
+                Skills power your match scores against every live contract.
+              </li>
+              <li className="flex gap-2.5">
+                <span className="mt-0.5 text-emerald-300">✓</span>
+                Preferences filter out roles you&apos;d never take.
+              </li>
+              <li className="flex gap-2.5">
+                <span className="mt-0.5 text-emerald-300">✓</span>
+                Edit any of this anytime from your dashboard.
+              </li>
+            </ul>
+          </aside>
+
+          {/* Content column */}
+          <div>
 
         {/* Step 1: name */}
-        <section className="mt-8">
+        <section>
           <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-white/80">
             Your name
           </label>
@@ -315,6 +341,8 @@ export default function OnboardingPage() {
             <CheckCircle2 size={13} className="text-emerald-300" /> CV on file: {existingCv}
           </p>
         )}
+          </div>
+        </div>
       </div>
     </main>
   );
