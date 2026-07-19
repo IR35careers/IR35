@@ -89,19 +89,19 @@ function AccountForm() {
 
   if (confirmSent) {
     return (
-      <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0d1219]/85 p-8 text-center backdrop-blur-xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-400/15">
-          <CheckCircle2 className="h-7 w-7 text-emerald-300" />
+      <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 text-center backdrop-blur-xl">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100">
+          <CheckCircle2 className="h-7 w-7 text-emerald-700" />
         </div>
-        <h1 className="mt-5 text-xl font-medium text-white">Check your inbox</h1>
-        <p className="mt-2 text-sm leading-relaxed text-white/60">
+        <h1 className="mt-5 text-xl font-medium text-slate-900">Check your inbox</h1>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
           We&apos;ve sent a confirmation link to{" "}
-          <span className="text-white/80">{email}</span>. Click it to activate your account, then
+          <span className="text-slate-800">{email}</span>. Click it to activate your account, then
           come back and sign in.
         </p>
         <Link
           href="/jobs"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm text-white/60 underline-offset-4 hover:text-white hover:underline"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline"
         >
           Browse contracts meanwhile
         </Link>
@@ -110,24 +110,24 @@ function AccountForm() {
   }
 
   return (
-    <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0d1219]/85 p-8 backdrop-blur-xl">
+    <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 backdrop-blur-xl">
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-sky-500">
           <Briefcase size={15} className="text-black" />
         </div>
-        <span className="text-sm font-bold text-white">
-          IR35<span className="text-white/70">Careers</span>
+        <span className="text-sm font-bold text-slate-900">
+          IR35<span className="text-slate-600">Careers</span>
         </span>
       </div>
 
-      <h1 className="mt-6 text-2xl font-light tracking-tight text-white">Sign in or create account</h1>
-      <p className="mt-1.5 text-sm text-white/55">
+      <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">Sign in or create account</h1>
+      <p className="mt-1.5 text-sm text-slate-500">
         One step — we&apos;ll sign you in, or set you up if you&apos;re new.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-white/60">
+          <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-slate-600">
             Email
           </label>
           <input
@@ -137,11 +137,11 @@ function AccountForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
+            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           />
         </div>
         <div>
-          <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-white/60">
+          <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-slate-600">
             Password
           </label>
           <input
@@ -151,12 +151,12 @@ function AccountForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
+            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           />
         </div>
 
         {error && (
-          <p className="rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2 text-xs text-red-300">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
             {error}
           </p>
         )}
@@ -164,7 +164,7 @@ function AccountForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
         >
           {submitting ? (
             <Loader2 size={16} className="animate-spin" />
@@ -177,9 +177,9 @@ function AccountForm() {
       </form>
 
       <div className="mt-4 flex items-center gap-3">
-        <span className="h-px flex-1 bg-white/10" aria-hidden />
-        <span className="text-xs text-white/40">or</span>
-        <span className="h-px flex-1 bg-white/10" aria-hidden />
+        <span className="h-px flex-1 bg-slate-200" aria-hidden />
+        <span className="text-xs text-slate-400">or</span>
+        <span className="h-px flex-1 bg-slate-200" aria-hidden />
       </div>
 
       <button
@@ -195,7 +195,7 @@ function AccountForm() {
             );
           }
         }}
-        className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/20 bg-white/[0.06] px-4 py-3 text-sm font-medium text-white transition-colors hover:border-white/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-medium text-slate-900 transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
@@ -206,7 +206,7 @@ function AccountForm() {
         Continue with Google
       </button>
 
-      <p className="mt-4 text-center text-xs text-white/40">
+      <p className="mt-4 text-center text-xs text-slate-400">
         By continuing you agree to browse and apply for roles via their original listings.
       </p>
     </div>
@@ -215,15 +215,15 @@ function AccountForm() {
 
 export default function AccountPage() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0f16] px-4">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-emerald-500/[0.10] blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-sky-500/[0.09] blur-[130px]" />
+        <div className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-emerald-200/50 blur-[120px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-sky-200/50 blur-[130px]" />
       </div>
       <div className="relative">
         <Suspense
           fallback={
-            <div className="flex h-64 items-center justify-center text-white/50">
+            <div className="flex h-64 items-center justify-center text-slate-500">
               <Loader2 className="animate-spin" size={22} />
             </div>
           }

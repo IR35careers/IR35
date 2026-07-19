@@ -58,12 +58,12 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
     <button
       onClick={cycle}
       disabled={busy}
-      className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+      className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
         status === "applied"
-          ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20"
+          ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
           : status === "saved"
-            ? "border-sky-400/40 bg-sky-400/10 text-sky-300 hover:bg-sky-400/20"
-            : "border-white/15 bg-white/[0.06] text-white/80 hover:border-white/30 hover:text-white"
+            ? "border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100"
+            : "border-slate-300 bg-slate-100 text-slate-800 hover:border-slate-400 hover:text-slate-900"
       }`}
     >
       <Icon size={15} /> {label}

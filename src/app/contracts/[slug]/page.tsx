@@ -88,30 +88,30 @@ export default async function ContractsSeoPage({
   const accent = page.filters.ir35 === "inside" ? "sky" : "emerald";
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div
           className={`absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full blur-[120px] ${
-            accent === "sky" ? "bg-sky-500/[0.12]" : "bg-emerald-500/[0.12]"
+            accent === "sky" ? "bg-sky-500/[0.12]" : "bg-emerald-200/50"
           }`}
         />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-white/[0.03] blur-[130px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-white blur-[130px]" />
       </div>
 
-      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <nav className="flex items-center gap-2 text-sm text-white/40" aria-label="Breadcrumb">
-          <Link href="/" className="transition-colors hover:text-white/70">
+      <div className="relative mx-auto max-w-[1500px] px-4 py-10 sm:px-6">
+        <nav className="flex items-center gap-2 text-sm text-slate-400" aria-label="Breadcrumb">
+          <Link href="/" className="transition-colors hover:text-slate-600">
             IR35Careers
           </Link>
           <span aria-hidden>/</span>
-          <Link href="/jobs" className="transition-colors hover:text-white/70">
+          <Link href="/jobs" className="transition-colors hover:text-slate-600">
             Contracts
           </Link>
         </nav>
 
         <header className="mt-5">
           <h1 className="text-3xl font-light tracking-tight sm:text-4xl">{page.h1}</h1>
-          <p className="mt-3 max-w-2xl text-white/60">
+          <p className="mt-3 max-w-2xl text-slate-600">
             {total > 0 ? (
               <>
                 <span className="font-medium text-white/90">{total.toLocaleString()}</span> live{" "}
@@ -125,7 +125,7 @@ export default async function ContractsSeoPage({
           </p>
           <Link
             href={boardLink(page)}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
           >
             Search &amp; filter these roles <ArrowRight size={14} />
           </Link>
@@ -140,22 +140,22 @@ export default async function ContractsSeoPage({
                 <li key={job.id}>
                   <Link
                     href={`/jobs/${job.id}`}
-                    className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 pl-6 transition-colors hover:border-white/25 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:flex-row sm:items-start sm:justify-between"
+                    className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 pl-6 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:flex-row sm:items-start sm:justify-between"
                   >
                     <span
                       className={`absolute inset-y-0 left-0 w-[3px] ${
                         job.ir35_status === "outside"
-                          ? "bg-emerald-400/70"
+                          ? "bg-emerald-500"
                           : job.ir35_status === "inside"
-                            ? "bg-sky-400/70"
-                            : "bg-white/10"
+                            ? "bg-sky-500"
+                            : "bg-slate-200"
                       }`}
                       aria-hidden
                     />
                     <div className="min-w-0">
                       <h2 className="text-base font-medium sm:truncate">{job.title}</h2>
-                      <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-white/50">
-                        <span className="text-white/75">{job.company_name}</span>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-slate-500">
+                        <span className="text-slate-700">{job.company_name}</span>
                         <span aria-hidden>·</span>
                         <span className="inline-flex items-center gap-1">
                           <MapPin size={12} /> {job.location}
@@ -168,15 +168,15 @@ export default async function ContractsSeoPage({
                       {hasRate ? (
                         <span className="font-semibold tabular-nums">{formatRate(job)}</span>
                       ) : (
-                        <span className="text-sm text-white/35">Rate on application</span>
+                        <span className="text-sm text-slate-400">Rate on application</span>
                       )}
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
                           job.ir35_status === "outside"
-                            ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                             : job.ir35_status === "inside"
-                              ? "border-sky-400/30 bg-sky-400/10 text-sky-300"
-                              : "border-white/15 bg-white/5 text-white/45"
+                              ? "border-sky-200 bg-sky-50 text-sky-700"
+                              : "border-slate-300 bg-slate-100 text-slate-500"
                         }`}
                       >
                         {job.ir35_status === "outside"
@@ -197,7 +197,7 @@ export default async function ContractsSeoPage({
           <p className="mt-6 text-center">
             <Link
               href={boardLink(page)}
-              className="inline-flex items-center gap-1.5 text-sm text-white/60 underline-offset-4 transition-colors hover:text-white hover:underline"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-600 underline-offset-4 transition-colors hover:text-slate-900 hover:underline"
             >
               View all {total.toLocaleString()} roles on the live board <ArrowRight size={13} />
             </Link>
@@ -206,8 +206,8 @@ export default async function ContractsSeoPage({
 
         {/* Internal links */}
         {related.length > 0 && (
-          <section className="mt-12 border-t border-white/[0.06] pt-8">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-white/40">
+          <section className="mt-12 border-t border-slate-200/70 pt-8">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">
               Related searches
             </h2>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -215,7 +215,7 @@ export default async function ContractsSeoPage({
                 <Link
                   key={r.slug}
                   href={`/contracts/${r.slug}`}
-                  className="rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-sm text-white/70 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                  className="rounded-full border border-slate-300 bg-slate-50 px-3.5 py-1.5 text-sm text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                 >
                   {r.h1}
                 </Link>
@@ -224,7 +224,7 @@ export default async function ContractsSeoPage({
           </section>
         )}
 
-        <footer className="mt-14 border-t border-white/[0.06] pt-6 text-center text-xs text-white/35">
+        <footer className="mt-14 border-t border-slate-200/70 pt-6 text-center text-xs text-slate-400">
           Updated daily · Sources: employer career boards, Reed, Adzuna
         </footer>
       </div>

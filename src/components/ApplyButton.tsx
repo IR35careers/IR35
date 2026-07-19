@@ -27,11 +27,11 @@ export function ApplyButton({
       <div>
         <Link
           href={`/account?next=${encodeURIComponent(`/jobs/${jobId}`)}`}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
         >
           <Lock size={14} /> Sign in to apply
         </Link>
-        <p className="mt-2 text-xs text-white/40">
+        <p className="mt-2 text-xs text-slate-400">
           Free account — takes under a minute, then you apply on the original listing.
         </p>
       </div>
@@ -44,11 +44,11 @@ export function ApplyButton({
         href={applyUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
       >
         Apply on {domainLabel} <ExternalLink size={14} />
       </a>
-      <p className="mt-2 text-xs text-white/40">
+      <p className="mt-2 text-xs text-slate-400">
         Applications open on the original listing — IR35Careers never sits between you and the
         client.
       </p>

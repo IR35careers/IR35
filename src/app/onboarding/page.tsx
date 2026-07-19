@@ -120,48 +120,48 @@ export default function OnboardingPage() {
 
   if (loading || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0a0f16] text-white/50">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />
       </main>
     );
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
       <div className="pointer-events-none fixed inset-0" aria-hidden>
-        <div className="absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full bg-emerald-500/[0.10] blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-sky-500/[0.09] blur-[130px]" />
+        <div className="absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full bg-emerald-200/50 blur-[120px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-sky-200/50 blur-[130px]" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div className="relative mx-auto max-w-[1500px] px-4 py-12 sm:px-6">
         <div className="grid gap-10 lg:grid-cols-[300px_1fr]">
           {/* Sidebar: why we ask */}
-          <aside className="lg:border-r lg:border-white/[0.07] lg:pr-8">
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+          <aside className="lg:border-r lg:border-slate-200/70 lg:pr-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
               Getting started
             </p>
             <h1 className="mt-2 text-2xl font-light tracking-tight sm:text-3xl">
               Let&apos;s get you matched
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-white/55">
+            <p className="mt-3 text-sm leading-relaxed text-slate-500">
               Two minutes now — personalised contract matches with real match
               scores immediately after.
             </p>
-            <ul className="mt-6 space-y-4 text-sm text-white/55">
+            <ul className="mt-6 space-y-4 text-sm text-slate-500">
               <li className="flex gap-2.5">
-                <span className="mt-0.5 text-emerald-300">✓</span>
+                <span className="mt-0.5 text-emerald-700">✓</span>
                 Your CV is stored privately — only you can ever access it.
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-0.5 text-emerald-300">✓</span>
+                <span className="mt-0.5 text-emerald-700">✓</span>
                 Skills power your match scores against every live contract.
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-0.5 text-emerald-300">✓</span>
+                <span className="mt-0.5 text-emerald-700">✓</span>
                 Preferences filter out roles you&apos;d never take.
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-0.5 text-emerald-300">✓</span>
+                <span className="mt-0.5 text-emerald-700">✓</span>
                 Edit any of this anytime from your dashboard.
               </li>
             </ul>
@@ -172,7 +172,7 @@ export default function OnboardingPage() {
 
         {/* Step 1: name */}
         <section>
-          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-white/80">
+          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-800">
             Your name
           </label>
           <input
@@ -181,14 +181,14 @@ export default function OnboardingPage() {
             autoComplete="name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="e.g. Anvesh Mannuru"
-            className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
+            placeholder="Your full name"
+            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
           />
         </section>
 
         {/* Step 2: CV */}
         <section className="mt-7">
-          <p className="mb-1.5 text-sm font-medium text-white/80">Your CV</p>
+          <p className="mb-1.5 text-sm font-medium text-slate-800">Your CV</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -197,15 +197,15 @@ export default function OnboardingPage() {
             onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
           />
           {cvFile ? (
-            <div className="flex items-center justify-between rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] px-4 py-3">
-              <span className="flex min-w-0 items-center gap-2 text-sm text-white/85">
-                <FileText size={16} className="shrink-0 text-emerald-300" />
+            <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <span className="flex min-w-0 items-center gap-2 text-sm text-slate-800">
+                <FileText size={16} className="shrink-0 text-emerald-700" />
                 <span className="truncate">{cvFile.name}</span>
               </span>
               <button
                 onClick={() => setCvFile(null)}
                 aria-label="Remove selected CV"
-                className="text-white/50 transition-colors hover:text-white"
+                className="text-slate-500 transition-colors hover:text-slate-900"
               >
                 <X size={16} />
               </button>
@@ -213,13 +213,13 @@ export default function OnboardingPage() {
           ) : (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[0.03] px-4 py-8 text-white/60 transition-colors hover:border-white/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               <UploadCloud size={22} />
               <span className="text-sm">
                 {existingCv ? (
                   <>
-                    <span className="text-emerald-300">{existingCv}</span> on file — upload a new
+                    <span className="text-emerald-700">{existingCv}</span> on file — upload a new
                     one to replace it
                   </>
                 ) : (
@@ -228,7 +228,7 @@ export default function OnboardingPage() {
               </span>
             </button>
           )}
-          <p className="mt-1.5 text-xs text-white/40">
+          <p className="mt-1.5 text-xs text-slate-400">
             Stored privately — only you can access it. AI CV reading arrives soon; for now, pick
             your skills below.
           </p>
@@ -236,8 +236,8 @@ export default function OnboardingPage() {
 
         {/* Step 3: skills */}
         <section className="mt-7">
-          <p className="mb-1.5 text-sm font-medium text-white/80">
-            Your skills <span className="text-white/40">(pick up to 12)</span>
+          <p className="mb-1.5 text-sm font-medium text-slate-800">
+            Your skills <span className="text-slate-400">(pick up to 12)</span>
           </p>
           <div className="flex flex-wrap gap-1.5">
             {PROFILE_SKILL_OPTIONS.map((skill) => {
@@ -246,10 +246,10 @@ export default function OnboardingPage() {
                 <button
                   key={skill}
                   onClick={() => toggleSkill(skill)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                     active
-                      ? "border-emerald-400/50 bg-emerald-400/15 text-emerald-200"
-                      : "border-white/15 bg-white/[0.05] text-white/60 hover:border-white/30 hover:text-white"
+                      ? "border-emerald-300 bg-emerald-100 text-emerald-700"
+                      : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:text-slate-900"
                   }`}
                 >
                   {skill}
@@ -262,14 +262,14 @@ export default function OnboardingPage() {
         {/* Preferences */}
         <section className="mt-7 grid gap-4 sm:grid-cols-3">
           <div>
-            <label htmlFor="rate" className="mb-1.5 block text-sm font-medium text-white/80">
+            <label htmlFor="rate" className="mb-1.5 block text-sm font-medium text-slate-800">
               Minimum day rate
             </label>
             <select
               id="rate"
               value={targetRate}
               onChange={(e) => setTargetRate(Number(e.target.value))}
-              className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm text-white/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 [&>option]:bg-neutral-900"
+              className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 [&>option]:bg-white"
             >
               {RATE_CHOICES.map((r) => (
                 <option key={r} value={r}>
@@ -279,14 +279,14 @@ export default function OnboardingPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="ir35" className="mb-1.5 block text-sm font-medium text-white/80">
+            <label htmlFor="ir35" className="mb-1.5 block text-sm font-medium text-slate-800">
               IR35 preference
             </label>
             <select
               id="ir35"
               value={ir35}
               onChange={(e) => setIr35(e.target.value as typeof ir35)}
-              className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm text-white/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 [&>option]:bg-neutral-900"
+              className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 [&>option]:bg-white"
             >
               <option value="either">Inside or Outside</option>
               <option value="outside">Outside IR35 only</option>
@@ -294,14 +294,14 @@ export default function OnboardingPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="remote" className="mb-1.5 block text-sm font-medium text-white/80">
+            <label htmlFor="remote" className="mb-1.5 block text-sm font-medium text-slate-800">
               Workplace
             </label>
             <select
               id="remote"
               value={remote}
               onChange={(e) => setRemote(e.target.value as typeof remote)}
-              className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm text-white/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 [&>option]:bg-neutral-900"
+              className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 [&>option]:bg-white"
             >
               <option value="any">Any</option>
               <option value="remote">Remote</option>
@@ -312,7 +312,7 @@ export default function OnboardingPage() {
         </section>
 
         {error && (
-          <p className="mt-5 rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2 text-sm text-red-300">
+          <p className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
             {error}
           </p>
         )}
@@ -321,7 +321,7 @@ export default function OnboardingPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
           >
             {saving ? (
               <Loader2 size={16} className="animate-spin" />
@@ -331,14 +331,14 @@ export default function OnboardingPage() {
               </>
             )}
           </button>
-          <Link href="/dashboard" className="text-sm text-white/45 underline-offset-4 hover:text-white/70 hover:underline">
+          <Link href="/dashboard" className="text-sm text-slate-500 underline-offset-4 hover:text-slate-600 hover:underline">
             Skip for now
           </Link>
         </div>
 
         {existingCv && !cvFile && (
-          <p className="mt-4 flex items-center gap-1.5 text-xs text-white/45">
-            <CheckCircle2 size={13} className="text-emerald-300" /> CV on file: {existingCv}
+          <p className="mt-4 flex items-center gap-1.5 text-xs text-slate-500">
+            <CheckCircle2 size={13} className="text-emerald-700" /> CV on file: {existingCv}
           </p>
         )}
           </div>

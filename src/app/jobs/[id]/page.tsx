@@ -44,18 +44,18 @@ export async function generateMetadata({
 function StatusBadge({ status }: { status: JobDetail["ir35_status"] }) {
   if (status === "outside")
     return (
-      <span className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-sm font-medium text-emerald-300">
+      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
         Outside IR35
       </span>
     );
   if (status === "inside")
     return (
-      <span className="inline-flex items-center rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-sm font-medium text-sky-300">
+      <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">
         Inside IR35
       </span>
     );
   return (
-    <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-white/50">
+    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-sm text-slate-500">
       IR35 status to be confirmed
     </span>
   );
@@ -119,37 +119,37 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           : null;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
       {/* Ambient identity glows matching the board */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div
           className={`absolute -top-40 right-[-10%] h-[420px] w-[420px] rounded-full blur-[120px] ${
-            job.ir35_status === "inside" ? "bg-sky-500/[0.13]" : "bg-emerald-500/[0.13]"
+            job.ir35_status === "inside" ? "bg-sky-200/50" : "bg-emerald-200/50"
           }`}
         />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-white/[0.03] blur-[130px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-white blur-[130px]" />
       </div>
 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingLd) }}
       />
-      <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <Link
           href="/jobs"
-          className="inline-flex items-center gap-1.5 text-sm text-white/50 transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded"
         >
           <ArrowLeft size={14} /> All contracts
         </Link>
 
         <header className="mt-6">
           <h1 className="text-2xl font-light tracking-tight sm:text-3xl">{job.title}</h1>
-          <p className="mt-2 text-white/70">{job.company_name}</p>
+          <p className="mt-2 text-slate-600">{job.company_name}</p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <StatusBadge status={job.ir35_status} />
             {remoteLabel && (
-              <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-white/70">
+              <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-sm text-slate-600">
                 {remoteLabel}
               </span>
             )}
@@ -157,21 +157,21 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         </header>
 
         {/* Key facts */}
-        <dl className="mt-6 grid grid-cols-1 gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:grid-cols-3">
+        <dl className="mt-6 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-3">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-white/40">Rate</dt>
+            <dt className="text-xs uppercase tracking-wide text-slate-400">Rate</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">{formatRate(job)}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-white/40">Location</dt>
+            <dt className="text-xs uppercase tracking-wide text-slate-400">Location</dt>
             <dd className="mt-1 inline-flex items-center gap-1.5 text-white/90">
-              <MapPin size={14} className="text-white/40" /> {job.location}
+              <MapPin size={14} className="text-slate-400" /> {job.location}
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-white/40">Posted</dt>
+            <dt className="text-xs uppercase tracking-wide text-slate-400">Posted</dt>
             <dd className="mt-1 inline-flex items-center gap-1.5 text-white/90">
-              <Clock size={14} className="text-white/40" /> {formatPosted(job)}
+              <Clock size={14} className="text-slate-400" /> {formatPosted(job)}
             </dd>
           </div>
         </dl>
@@ -184,10 +184,10 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
         {/* Description */}
         <section className="mt-8">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-white/40">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">
             Role description
           </h2>
-          <div className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-white/80">
+          <div className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-slate-800">
             {job.description || "Full details are on the original listing."}
           </div>
         </section>
@@ -195,12 +195,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         {/* Skills */}
         {job.skills.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-white/40">Skills</h2>
+            <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">Skills</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {job.skills.map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/70"
+                  className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm text-slate-600"
                 >
                   {skill}
                 </span>

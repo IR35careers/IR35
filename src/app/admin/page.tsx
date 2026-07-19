@@ -86,7 +86,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0a0f16] text-white/50">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />
       </main>
     );
@@ -94,13 +94,13 @@ export default function AdminPage() {
 
   if (forbidden) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#0a0f16] px-4 text-center text-white">
-        <ShieldAlert size={36} className="text-amber-300" />
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-4 text-center text-slate-900">
+        <ShieldAlert size={36} className="text-amber-600" />
         <h1 className="text-xl font-medium">Admin access required</h1>
-        <p className="max-w-sm text-sm text-white/55">
+        <p className="max-w-sm text-sm text-slate-500">
           Sign in with an account listed in ADMIN_EMAILS to open the control panel.
         </p>
-        <Link href="/account?next=/admin" className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black">
+        <Link href="/account?next=/admin" className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-black">
           Sign in
         </Link>
       </main>
@@ -108,11 +108,11 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0f16] text-white">
+    <div className="flex min-h-screen bg-slate-50 text-slate-900">
       {/* Sidebar */}
-      <aside className="flex w-56 shrink-0 flex-col border-r border-white/[0.07] bg-[#0d1219]/60 p-4">
+      <aside className="flex w-56 shrink-0 flex-col border-r border-slate-200/70 bg-white p-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-300">Admin panel</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Admin panel</p>
           <p className="mt-0.5 text-sm font-bold">IR35Careers</p>
         </div>
         <nav className="mt-6 space-y-1">
@@ -121,17 +121,17 @@ export default function AdminPage() {
               key={item.id}
               onClick={() => setSection(item.id)}
               className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-                section === item.id ? "bg-white text-black font-semibold" : "text-white/60 hover:bg-white/5 hover:text-white"
+                section === item.id ? "bg-slate-900 text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               <item.icon size={15} /> {item.label}
             </button>
           ))}
         </nav>
-        <div className="mt-auto border-t border-white/[0.07] pt-4">
-          <p className="truncate text-xs font-medium text-white/80">Admin</p>
-          <p className="truncate text-[11px] text-white/40">{user?.email}</p>
-          <button onClick={() => signOut()} className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white">
+        <div className="mt-auto border-t border-slate-200/70 pt-4">
+          <p className="truncate text-xs font-medium text-slate-800">Admin</p>
+          <p className="truncate text-[11px] text-slate-400">{user?.email}</p>
+          <button onClick={() => signOut()} className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
             <LogOut size={12} /> Sign out
           </button>
         </div>
@@ -141,10 +141,10 @@ export default function AdminPage() {
       <main className="min-w-0 flex-1 p-6">
         <h1 className="text-xl font-medium capitalize">{NAV.find((n) => n.id === section)?.label}</h1>
 
-        {error && <p className="mt-4 rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2 text-sm text-red-300">{error}</p>}
+        {error && <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
         {busy ? (
-          <div className="mt-16 flex justify-center text-white/50">
+          <div className="mt-16 flex justify-center text-slate-500">
             <Loader2 className="animate-spin" size={20} />
           </div>
         ) : section === "stats" && data ? (
@@ -158,27 +158,27 @@ export default function AdminPage() {
                 ["Live jobs", data.liveJobs],
                 ["Expired jobs", data.expiredJobs],
               ].map(([label, value]) => (
-                <div key={String(label)} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <div key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <p className="text-2xl font-semibold tabular-nums">{value ?? "—"}</p>
-                  <p className="mt-0.5 text-xs text-white/45">{label}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{label}</p>
                 </div>
               ))}
             </div>
             {data.lastPipelineRun && (
-              <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                <p className="text-sm font-medium text-white/80">
+              <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+                <p className="text-sm font-medium text-slate-800">
                   Last pipeline run · {new Date(data.lastPipelineRun.created_at).toLocaleString("en-GB")}
                 </p>
-                <pre className="mt-3 max-h-64 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-white/70">
+                <pre className="mt-3 max-h-64 overflow-auto rounded-lg bg-slate-100 p-3 text-xs text-slate-600">
                   {JSON.stringify(data.lastPipelineRun.summary, null, 2)}
                 </pre>
               </div>
             )}
           </>
         ) : section === "users" && data ? (
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-wide text-white/45">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Name</th>
@@ -188,43 +188,43 @@ export default function AdminPage() {
                   <th className="px-4 py-3">Joined</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
-                {data.users.map((u: any) => (
-                  <tr key={u.id} className="hover:bg-white/[0.03]">
-                    <td className="px-4 py-3 text-white/85">{u.email}</td>
-                    <td className="px-4 py-3 text-white/60">{u.profile?.full_name || "—"}</td>
-                    <td className="px-4 py-3 text-white/60">{u.provider}</td>
-                    <td className="px-4 py-3 tabular-nums text-white/60">{u.profile?.skills?.length ?? 0}</td>
-                    <td className="px-4 py-3">{u.profile?.cv_filename ? <span className="text-emerald-300">✓</span> : <span className="text-white/30">—</span>}</td>
-                    <td className="px-4 py-3 text-white/50">{new Date(u.created_at).toLocaleDateString("en-GB")}</td>
+              <tbody className="divide-y divide-slate-200">
+                {(data.users ?? []).map((u: any) => (
+                  <tr key={u.id} className="hover:bg-white">
+                    <td className="px-4 py-3 text-slate-800">{u.email}</td>
+                    <td className="px-4 py-3 text-slate-600">{u.profile?.full_name || "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{u.provider}</td>
+                    <td className="px-4 py-3 tabular-nums text-slate-600">{u.profile?.skills?.length ?? 0}</td>
+                    <td className="px-4 py-3">{u.profile?.cv_filename ? <span className="text-emerald-700">✓</span> : <span className="text-slate-300">—</span>}</td>
+                    <td className="px-4 py-3 text-slate-500">{new Date(u.created_at).toLocaleDateString("en-GB")}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : section === "waitlist" && data ? (
-          <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
             <table className="w-full text-sm">
-              <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-wide text-white/45">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Signed up</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
-                {data.waitlist.map((w: any) => (
-                  <tr key={w.email} className="hover:bg-white/[0.03]">
-                    <td className="px-4 py-3 text-white/85">{w.email}</td>
-                    <td className="px-4 py-3 text-white/50">{new Date(w.created_at).toLocaleString("en-GB")}</td>
+              <tbody className="divide-y divide-slate-200">
+                {(data.waitlist ?? []).map((w: any) => (
+                  <tr key={w.email} className="hover:bg-white">
+                    <td className="px-4 py-3 text-slate-800">{w.email}</td>
+                    <td className="px-4 py-3 text-slate-500">{new Date(w.created_at).toLocaleString("en-GB")}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : section === "jobs" && data ? (
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full min-w-[820px] text-sm">
-              <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-wide text-white/45">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Title</th>
                   <th className="px-4 py-3">Company</th>
@@ -234,23 +234,23 @@ export default function AdminPage() {
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
-                {data.jobs.map((j: any) => (
-                  <tr key={j.id} className="hover:bg-white/[0.03]">
-                    <td className="max-w-[280px] truncate px-4 py-3 text-white/85">
+              <tbody className="divide-y divide-slate-200">
+                {(data.jobs ?? []).map((j: any) => (
+                  <tr key={j.id} className="hover:bg-white">
+                    <td className="max-w-[280px] truncate px-4 py-3 text-slate-800">
                       <Link href={`/jobs/${j.id}`} className="hover:underline">{j.title}</Link>
                     </td>
-                    <td className="max-w-[160px] truncate px-4 py-3 text-white/60">{j.company_name}</td>
-                    <td className="px-4 py-3 text-white/50">{j.source_domain}</td>
-                    <td className="px-4 py-3 text-white/60">{j.ir35_status}</td>
+                    <td className="max-w-[160px] truncate px-4 py-3 text-slate-600">{j.company_name}</td>
+                    <td className="px-4 py-3 text-slate-500">{j.source_domain}</td>
+                    <td className="px-4 py-3 text-slate-600">{j.ir35_status}</td>
                     <td className="px-4 py-3">
-                      {j.expired_at ? <span className="text-white/35">expired</span> : <span className="text-emerald-300">live</span>}
+                      {j.expired_at ? <span className="text-slate-400">expired</span> : <span className="text-emerald-700">live</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {!j.expired_at && (
                         <button
                           onClick={() => expireJob(j.id)}
-                          className="rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-1 text-xs text-red-300 transition-colors hover:bg-red-400/20"
+                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-1 text-xs text-red-600 transition-colors hover:bg-red-100"
                         >
                           Expire
                         </button>
@@ -263,12 +263,12 @@ export default function AdminPage() {
           </div>
         ) : section === "runs" && data ? (
           <ul className="mt-5 space-y-3">
-            {data.runs.map((r: any, i: number) => (
-              <li key={i} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <p className="text-sm font-medium text-white/80">
+            {(data.runs ?? []).map((r: any, i: number) => (
+              <li key={i} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-medium text-slate-800">
                   {r.run_type} · {new Date(r.created_at).toLocaleString("en-GB")}
                 </p>
-                <pre className="mt-2 max-h-48 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-white/60">
+                <pre className="mt-2 max-h-48 overflow-auto rounded-lg bg-slate-100 p-3 text-xs text-slate-600">
                   {JSON.stringify(r.summary, null, 2)}
                 </pre>
               </li>
