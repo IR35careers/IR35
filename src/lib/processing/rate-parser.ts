@@ -60,7 +60,10 @@ function parseAmount(token: string): number | null {
   const kMatch = cleaned.match(/^(\d+(?:\.\d+)?)\s*k$/i);
   if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
   const n = parseFloat(cleaned);
-  return Number.isFinite(n) ? Math.round(n) : null;
+  if (!Number.isFinite(n)) return null;
+  const rounded = Math.round(n);
+  // £0 means "unspecified", never a real rate.
+  return rounded > 0 ? rounded : null;
 }
 
 /**

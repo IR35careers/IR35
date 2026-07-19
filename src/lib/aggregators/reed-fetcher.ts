@@ -53,8 +53,9 @@ export function reedDateToIso(date: string | undefined): string | null {
 
 /** Build a parseable salary string from Reed's numeric fields. */
 export function reedSalaryString(job: ReedJob): string {
-  const min = job.minimumSalary;
-  const max = job.maximumSalary;
+  // Reed uses 0 for "unspecified" — normalize to absent.
+  const min = job.minimumSalary ? job.minimumSalary : null;
+  const max = job.maximumSalary ? job.maximumSalary : null;
   if (min == null && max == null) return "";
   const symbol = !job.currency || job.currency === "GBP" ? "£" : `${job.currency} `;
   if (min != null && max != null && min !== max) return `${symbol}${min} - ${symbol}${max}`;

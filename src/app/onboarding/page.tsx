@@ -120,14 +120,14 @@ export default function OnboardingPage() {
 
   if (loading || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-black text-white/50">
+      <main className="flex min-h-screen items-center justify-center bg-[#0a0f16] text-white/50">
         <Loader2 className="animate-spin" size={22} />
       </main>
     );
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] text-white">
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div className="absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full bg-emerald-500/[0.10] blur-[120px]" />
         <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-sky-500/[0.09] blur-[130px]" />

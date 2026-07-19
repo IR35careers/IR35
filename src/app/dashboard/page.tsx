@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
   if (loading || !user || !profileChecked || (profileChecked && !profile)) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-black text-white/50">
+      <main className="flex min-h-screen items-center justify-center bg-[#0a0f16] text-white/50">
         <Loader2 className="animate-spin" size={22} />
       </main>
     );
@@ -155,7 +155,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[#0a0f16] text-white">
       <AppNav />
 
       <main className="relative overflow-x-hidden">

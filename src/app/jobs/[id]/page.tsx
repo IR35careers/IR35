@@ -118,7 +118,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           : null;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] text-white">
       {/* Ambient identity glows matching the board */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div

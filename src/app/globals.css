@@ -16,7 +16,8 @@
   }
 
   body {
-    @apply bg-black text-white;
+    @apply text-white;
+    background-color: #0a0f16;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

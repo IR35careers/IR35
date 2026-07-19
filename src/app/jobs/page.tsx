@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search, MapPin, Loader2, X } from "lucide-react";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 import { useAuth } from "@/lib/auth-context";
+import { AppNav } from "@/components/AppNav";
 
 interface SearchResponse {
   jobs: JobListing[];
@@ -142,7 +143,7 @@ function JobsBoard() {
 
   if (authLoading || !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-black text-white/50">
+      <main className="flex min-h-screen items-center justify-center bg-[#0a0f16] text-white/50">
         <Loader2 className="animate-spin" size={22} />
       </main>
     );
@@ -151,7 +152,9 @@ function JobsBoard() {
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.per_page)) : 1;
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
+    <div className="min-h-screen bg-[#0a0f16] text-white">
+      <AppNav />
+    <main className="relative overflow-x-hidden">
       {/* Ambient identity glows — emerald & sky, the two IR35 states */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div className="absolute -top-40 right-[-10%] h-[480px] w-[480px] rounded-full bg-emerald-500/[0.12] blur-[110px]" />
@@ -160,34 +163,13 @@ function JobsBoard() {
       </div>
 
       <div className="relative mx-auto max-w-5xl px-4 pb-16 sm:px-6">
-        {/* Header */}
-        <header className="flex items-center justify-between pt-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-          >
-            IR35Careers
-          </Link>
-          <Link
-            href={user ? "/dashboard" : "/account?next=/jobs"}
-            className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-          >
-            {user ? "Dashboard" : "Sign in"}
-          </Link>
-        </header>
-
-        <div className="mt-6">
-          <h1 className="text-3xl font-light tracking-tight sm:text-5xl">
-            UK contract roles,
-            <br className="sm:hidden" />{" "}
-            <span className="bg-gradient-to-r from-emerald-300 via-white/80 to-sky-300 bg-clip-text text-transparent">
-              IR35 status up front
-            </span>
-          </h1>
+        {/* Page title */}
+        <div className="flex items-center justify-between pt-7">
+          <h1 className="text-xl font-medium tracking-tight sm:text-2xl">Browse contracts</h1>
         </div>
 
         {/* Sticky filter bar */}
-        <div className="sticky top-0 z-20 -mx-4 mt-8 border-b border-white/[0.06] bg-black/70 px-4 py-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
+        <div className="sticky top-[104px] sm:top-16 z-20 -mx-4 mt-5 border-b border-white/[0.06] bg-[#0a0f16]/85 px-4 py-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
           <div className="relative">
             <Search
               size={16}
@@ -362,7 +344,7 @@ function JobsBoard() {
                 <li key={job.id}>
                   <Link
                     href={`/jobs/${job.id}`}
-                    className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 pl-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] hover:shadow-[0_8px_40px_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:flex-row sm:items-start sm:justify-between"
+                    className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-4 pl-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] hover:shadow-[0_8px_40px_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:flex-row sm:items-start sm:justify-between"
                   >
                     {/* Status accent bar */}
                     <span
@@ -371,7 +353,7 @@ function JobsBoard() {
                     />
 
                     <div className="min-w-0">
-                      <h2 className="text-base font-medium text-white sm:text-lg sm:truncate">
+                      <h2 className="text-[15px] font-medium text-white sm:truncate">
                         {job.title}
                       </h2>
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-white/50">
@@ -449,6 +431,7 @@ function JobsBoard() {
         </footer>
       </div>
     </main>
+    </div>
   );
 }
 
@@ -456,7 +439,7 @@ export default function JobsPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-black text-white/50">
+        <main className="flex min-h-screen items-center justify-center bg-[#0a0f16] text-white/50">
           <Loader2 className="animate-spin" size={22} />
         </main>
       }

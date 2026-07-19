@@ -89,7 +89,7 @@ function AccountForm() {
 
   if (confirmSent) {
     return (
-      <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-black/60 p-8 text-center backdrop-blur-xl">
+      <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0d1219]/85 p-8 text-center backdrop-blur-xl">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-400/15">
           <CheckCircle2 className="h-7 w-7 text-emerald-300" />
         </div>
@@ -110,7 +110,7 @@ function AccountForm() {
   }
 
   return (
-    <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-black/60 p-8 backdrop-blur-xl">
+    <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0d1219]/85 p-8 backdrop-blur-xl">
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-sky-500">
           <Briefcase size={15} className="text-black" />
@@ -215,7 +215,7 @@ function AccountForm() {
 
 export default function AccountPage() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0f16] px-4">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-emerald-500/[0.10] blur-[120px]" />
         <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-sky-500/[0.09] blur-[130px]" />

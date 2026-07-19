@@ -14,7 +14,7 @@ import { classifyIR35 } from "../src/lib/processing/ir35-classifier";
 import { extractSkills } from "../src/lib/processing/skills-extractor";
 import { normalizeLocation, detectRemoteType } from "../src/lib/processing/location-normalizer";
 import { findFuzzyDuplicate, jobSimilarity } from "../src/lib/processing/deduplicator";
-import { processRawJob, stripHtml, cleanTitle, isContractRole } from "../src/lib/processing/job-processor";
+import { processRawJob, stripHtml, cleanTitle, isContractRole, isProfessionalRole } from "../src/lib/processing/job-processor";
 import type { RawATSJob } from "../src/lib/ats/types";
 
 let passed = 0;
@@ -268,6 +268,24 @@ function checkTrue(name: string, condition: boolean) {
 
   const bareRemoteGBP: RawATSJob = { ...bareRemoteNoSignal, rawSalary: "£400 per day" };
   checkTrue("processor: bare Remote + GBP rate accepted", processRawJob(bareRemoteGBP) !== null);
+}
+
+
+// ── Zero-rate + professional gates ───────────────────────────────────────────
+{
+  const zero = parseRate("£0");
+  check("rate: £0 means unspecified", [zero.min, zero.max], [null, null]);
+  const zeroRange = parseRate("£0 - £0 per day");
+  check("rate: £0-£0 range means unspecified", [zeroRange.min, zeroRange.max], [null, null]);
+
+  checkTrue("professional: retail colleague rejected", !isProfessionalRole("Service Colleague", parseRate("£13 per hour")));
+  checkTrue("professional: warehouse operative rejected", !isProfessionalRole("Warehouse Operative - 6 month contract", parseRate("")));
+  checkTrue("professional: care assistant rejected", !isProfessionalRole("Care Assistant", parseRate("")));
+  checkTrue("professional: low hourly rejected", !isProfessionalRole("Data Entry Clerk", parseRate("£12 per hour")));
+  checkTrue("professional: low daily rejected", !isProfessionalRole("Admin Temp", parseRate("£90 per day")));
+  checkTrue("professional: real contractor kept", isProfessionalRole("Senior React Developer", parseRate("£550 per day")));
+  checkTrue("professional: unknown rate kept", isProfessionalRole("DevOps Engineer", parseRate("")));
+  checkTrue("professional: chef title in Chief not matched", isProfessionalRole("Chief Technology Officer (Interim)", parseRate("£900 per day")));
 }
 
 // ── Summary ──────────────────────────────────────────────────────────────────

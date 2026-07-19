@@ -15,7 +15,7 @@
 import type { ProcessedJob, RawATSJob } from "../ats/types";
 import { classifyIR35 } from "./ir35-classifier";
 import { detectRemoteType, normalizeLocation } from "./location-normalizer";
-import { findRateInText, parseRate } from "./rate-parser";
+import { findRateInText, parseRate, type ParsedRate } from "./rate-parser";
 import { extractSkills } from "./skills-extractor";
 
 /** Decode the handful of HTML entities ATS descriptions use. */
@@ -109,8 +109,29 @@ export function isContractRole(title: string, description: string, rawSalary: st
 }
 
 /**
+ * Professional-role gate. Reed/Adzuna's "contract" filters include retail,
+ * care, and manual temp work ("Service Colleague", "Warehouse Operative") —
+ * legitimate jobs, but not what a professional contractor board serves.
+ * Filters on obvious title patterns plus a sub-professional rate floor.
+ */
+const NON_PROFESSIONAL_TITLES =
+  /\b(colleague|shop\s+assistant|store\s+assistant|retail\s+assistant|sales\s+assistant|customer\s+(?:service|team)\s+(?:advisor|assistant|member)|checkout|shelf\s+stacker|warehouse\s+(?:operative|assistant|worker)|delivery\s+driver|courier|van\s+driver|hgv|forklift|cleaner|cleaning\s+operative|housekeep(?:er|ing)|janitor|barista|waiter|waitress|bartender|kitchen\s+(?:porter|assistant|staff)|chef\b|catering\s+assistant|care\s+(?:assistant|worker)|support\s+worker|healthcare\s+assistant|nursery\s+(?:nurse|assistant)|labourer|picker|packer|production\s+operative|assembly\s+operative|security\s+(?:officer|guard)|door\s+supervisor|steward|crew\s+member|shift\s+leader\b)/i;
+
+export function isProfessionalRole(title: string, rate: ParsedRate): boolean {
+  if (NON_PROFESSIONAL_TITLES.test(title ?? "")) return false;
+  // Known rates far below professional contracting: hourly under £18 or a
+  // day rate under £120 signal temp/casual work, not contracting.
+  const basis = rate.max ?? rate.min;
+  if (basis !== null) {
+    if (rate.type === "hourly" && basis < 18) return false;
+    if (rate.type === "daily" && basis < 120) return false;
+  }
+  return true;
+}
+
+/**
  * Process one raw ATS job. Returns null when the job should be skipped
- * (not a contract role, or not UK-relevant).
+ * (not a contract role, not UK-relevant, or not professional contracting).
  */
 export function processRawJob(raw: RawATSJob): ProcessedJob | null {
   const title = cleanTitle(raw.title);
@@ -131,6 +152,9 @@ export function processRawJob(raw: RawATSJob): ProcessedJob | null {
   if (rate.min === null && rate.max === null) {
     rate = findRateInText(description);
   }
+
+  // ── Gate 1b: professional roles only ─────────────────────────────────
+  if (!isProfessionalRole(title, rate)) return null;
 
   // ── IR35 ─────────────────────────────────────────────────────────────
   const ir35 = classifyIR35(title, description);

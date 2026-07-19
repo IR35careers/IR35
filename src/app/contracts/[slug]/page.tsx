@@ -88,7 +88,7 @@ export default async function ContractsSeoPage({
   const accent = page.filters.ir35 === "inside" ? "sky" : "emerald";
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] text-white">
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div
           className={`absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full blur-[120px] ${

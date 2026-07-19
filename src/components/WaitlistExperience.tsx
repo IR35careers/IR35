@@ -31,7 +31,7 @@ const Input = React.forwardRef<
   return (
     <input
       type={type}
-      className={`flex h-10 w-full rounded-md border border-white/20 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:border-white/40 disabled:cursor-not-allowed disabled:opacity-50 backdrop-blur-sm ${className ?? ""}`}
+      className={`flex h-10 w-full rounded-md border border-white/20 bg-[#0d1219]/70 px-3 py-2 text-sm text-white placeholder:text-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:border-white/40 disabled:cursor-not-allowed disabled:opacity-50 backdrop-blur-sm ${className ?? ""}`}
       ref={ref}
       {...props}
     />
@@ -336,7 +336,7 @@ export function WaitlistExperience(): ReactElement {
   };
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-black w-full">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0a0f16] w-full">
       {/* Three.js Background */}
       <div
         ref={mountRef}
@@ -346,7 +346,7 @@ export function WaitlistExperience(): ReactElement {
       />
       {/* Readability scrim over the streak */}
       <div
-        className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-black/40 via-transparent to-black/60"
+        className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#0a0f16]/50 via-transparent to-[#0a0f16]/70"
         aria-hidden="true"
       />
 
@@ -354,7 +354,7 @@ export function WaitlistExperience(): ReactElement {
       <div className="relative z-10 min-h-screen">
         {/* Top bar */}
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 pt-7 sm:px-8">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-md">
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#0d1219]/70 px-4 py-2 backdrop-blur-md">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-sky-500">
               <Briefcase size={14} className="text-black" />
             </div>
@@ -414,7 +414,7 @@ export function WaitlistExperience(): ReactElement {
             </div>
 
             {/* Waitlist strip */}
-            <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-black/50 p-4 backdrop-blur-md">
+            <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-[#0d1219]/80 p-4 backdrop-blur-md">
               {!isSubmitted ? (
                 <>
                   <p className="text-sm font-medium text-white/85">
@@ -482,7 +482,7 @@ export function WaitlistExperience(): ReactElement {
           {/* Right: live board proof */}
           <div className="relative">
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-emerald-500/10 to-sky-500/10 blur-2xl" aria-hidden />
-            <div className="relative rounded-3xl border border-white/15 bg-black/60 p-6 shadow-2xl backdrop-blur-xl">
+            <div className="relative rounded-3xl border border-white/15 bg-[#0d1219]/85 p-6 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-between">
                 <p className="flex items-center gap-2 text-sm text-white/70">
                   <span className="relative flex h-2 w-2" aria-hidden>
