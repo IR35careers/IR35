@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Clock } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
+import { SaveJobButton } from "@/components/SaveJobButton";
 import { supabase } from "@/lib/supabase";
 import { formatPosted, formatRate, type JobDetail } from "@/lib/job-types";
 
@@ -176,8 +177,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         </dl>
 
         {/* Apply */}
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap items-start gap-3">
           <ApplyButton applyUrl={job.apply_url} sourceDomain={job.source_domain} jobId={job.id} />
+          <SaveJobButton jobId={job.id} />
         </div>
 
         {/* Description */}

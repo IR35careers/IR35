@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 import { AppNav } from "@/components/AppNav";
+import { supabase } from "@/lib/supabase";
 import {
   fetchMatches,
   firstName,
@@ -76,6 +77,7 @@ export default function DashboardPage() {
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [liveTotal, setLiveTotal] = useState<number | null>(null);
   const [latest, setLatest] = useState<JobListing[]>([]);
+  const [tracked, setTracked] = useState<Array<{ status: string; job: JobListing }>>([]);
   const [q, setQ] = useState("");
 
   useEffect(() => {
@@ -98,6 +100,23 @@ export default function DashboardPage() {
       .then(setMatches)
       .finally(() => setMatchesLoading(false));
   }, [profile]);
+
+  // Saved / applied tracker.
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("saved_jobs")
+      .select("status, jobs(id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }: { data: Array<{ status: string; jobs: unknown }> | null }) => {
+        const rows = (data ?? [])
+          .filter((r) => r.jobs)
+          .map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing }));
+        setTracked(rows);
+      });
+  }, [user]);
 
   // Board stats + fresh contracts feed.
   useEffect(() => {
@@ -297,6 +316,35 @@ export default function DashboardPage() {
               </ul>
             )}
           </section>
+
+          {/* Your applications tracker */}
+          {tracked.length > 0 && (
+            <section className="mt-10">
+              <h2 className="text-sm font-medium uppercase tracking-wide text-white/50">Your applications</h2>
+              <ul className="mt-4 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+                {tracked.map(({ status, job }) => (
+                  <li key={job.id}>
+                    <Link href={`/jobs/${job.id}`} className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-white/[0.05]">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-white">{job.title}</p>
+                        <p className="truncate text-xs text-white/45">{job.company_name} · {job.location}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <span className="hidden text-sm font-semibold tabular-nums sm:block">{formatRate(job)}</span>
+                        <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${
+                          status === "applied"
+                            ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+                            : "border-sky-400/30 bg-sky-400/10 text-sky-300"
+                        }`}>
+                          {status === "applied" ? "Applied" : "Saved"}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Fresh on the board */}
           {latest.length > 0 && (
