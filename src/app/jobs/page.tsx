@@ -15,6 +15,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, MapPin, Loader2, X } from "lucide-react";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
+import { useAuth } from "@/lib/auth-context";
 
 interface SearchResponse {
   jobs: JobListing[];
@@ -67,6 +68,7 @@ function RemoteTag({ type }: { type: JobListing["remote_type"] }) {
 }
 
 function JobsBoard() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const spIr35 = searchParams.get("ir35");
   const spRemote = searchParams.get("remote");
@@ -140,21 +142,30 @@ function JobsBoard() {
 
       <div className="relative mx-auto max-w-5xl px-4 pb-16 sm:px-6">
         {/* Header */}
-        <header className="pt-10">
+        <header className="flex items-center justify-between pt-10">
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
           >
             IR35Careers
           </Link>
-          <h1 className="mt-5 text-3xl font-light tracking-tight sm:text-5xl">
+          <Link
+            href={user ? "/dashboard" : "/account?next=/jobs"}
+            className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          >
+            {user ? "Dashboard" : "Sign in"}
+          </Link>
+        </header>
+
+        <div className="mt-6">
+          <h1 className="text-3xl font-light tracking-tight sm:text-5xl">
             UK contract roles,
             <br className="sm:hidden" />{" "}
             <span className="bg-gradient-to-r from-emerald-300 via-white/80 to-sky-300 bg-clip-text text-transparent">
               IR35 status up front
             </span>
           </h1>
-        </header>
+        </div>
 
         {/* Sticky filter bar */}
         <div className="sticky top-0 z-20 -mx-4 mt-8 border-b border-white/[0.06] bg-black/70 px-4 py-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
