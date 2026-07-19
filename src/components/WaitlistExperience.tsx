@@ -15,6 +15,7 @@ import {
 } from "three";
 import type { ReactElement } from "react";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { Briefcase, Sparkles, ArrowRight, Loader2, CheckCircle2, Users } from "lucide-react";
 import { validateEmail } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -61,6 +62,54 @@ export function WaitlistExperience(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [signupCount, setSignupCount] = useState<number | null>(null);
+  const [jobCount, setJobCount] = useState<number | null>(null);
+  const [featuredJobs, setFeaturedJobs] = useState<
+    Array<{ id: string; title: string; rate: string; company: string }>
+  >([]);
+
+  // Live board preview: total contracts + 3 featured Outside IR35 roles.
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/jobs/search?ir35=outside&per_page=3&sort=rate_high")
+      .then((res) => (res.ok ? res.json() : null))
+      .then(
+        (json: {
+          total?: number;
+          jobs?: Array<{
+            id: string;
+            title: string;
+            company_name: string;
+            rate_min: number | null;
+            rate_max: number | null;
+            rate_type: string;
+          }>;
+        } | null) => {
+          if (!isMounted || !json) return;
+          setFeaturedJobs(
+            (json.jobs ?? []).map((j) => ({
+              id: j.id,
+              title: j.title,
+              company: j.company_name,
+              rate:
+                j.rate_max !== null || j.rate_min !== null
+                  ? `£${(j.rate_max ?? j.rate_min)!.toLocaleString()}${j.rate_type === "hourly" ? "/hr" : "/day"}`
+                  : "",
+            }))
+          );
+        }
+      )
+      .catch(() => undefined);
+    fetch("/api/jobs/search?per_page=1")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { total?: number } | null) => {
+        if (!isMounted || !json?.total) return;
+        setJobCount(json.total);
+      })
+      .catch(() => undefined);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Three.js background effect
   useEffect(() => {
@@ -317,20 +366,20 @@ export function WaitlistExperience(): ReactElement {
                   <>
                     <div className="mb-8 text-center">
                       {/* Badge */}
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 mb-4">
-                        <Sparkles size={12} className="text-white/70" />
-                        <span className="text-[10px] font-semibold text-white/70 uppercase tracking-wider">
-                          Launching Soon
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/30 mb-4">
+                        <Sparkles size={12} className="text-emerald-300" />
+                        <span className="text-[10px] font-semibold text-emerald-300 uppercase tracking-wider">
+                          Beta is live
                         </span>
                       </div>
 
                       <h1 className="text-3xl sm:text-4xl font-light text-white mb-4 tracking-wide">
-                        Join the waitlist
+                        UK contracts, IR35 status up front
                       </h1>
                       <p className="text-white/70 text-sm sm:text-base leading-relaxed">
-                        Get early access to IR35Careers — the UK&apos;s modern
+                        Browse live Inside &amp; Outside IR35 roles now — join the
                         <br />
-                        contract job platform launching soon
+                        list for launch updates and rate alerts
                       </p>
                     </div>
 
@@ -376,8 +425,60 @@ export function WaitlistExperience(): ReactElement {
                     )}
 
                     <div>
+                      {/* Live board — the product is real now */}
+                      {jobCount !== null && jobCount > 0 && (
+                        <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                          <div className="flex items-center justify-center gap-2 text-sm text-white/70">
+                            <span className="relative flex h-2 w-2" aria-hidden>
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
+                              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                            </span>
+                            <span>
+                              <span className="font-semibold text-white">
+                                {jobCount.toLocaleString()}
+                              </span>{" "}
+                              live contracts on the board — beta is open
+                            </span>
+                          </div>
+
+                          {featuredJobs.length > 0 && (
+                            <ul className="mt-3 space-y-1.5">
+                              {featuredJobs.map((job) => (
+                                <li key={job.id}>
+                                  <Link
+                                    href={`/jobs/${job.id}`}
+                                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-white/[0.06]"
+                                  >
+                                    <span className="min-w-0 truncate text-white/80">
+                                      {job.title}
+                                    </span>
+                                    <span className="flex shrink-0 items-center gap-2">
+                                      {job.rate && (
+                                        <span className="font-medium tabular-nums text-white">
+                                          {job.rate}
+                                        </span>
+                                      )}
+                                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                                        Outside IR35
+                                      </span>
+                                    </span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          <Link
+                            href="/jobs"
+                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+                          >
+                            Browse all contracts <ArrowRight size={14} />
+                          </Link>
+                        </div>
+                      )}
+
                       <p className="text-[10px] text-white/40 text-center uppercase tracking-widest mb-3">
-                        Counting down to launch
+                        Counting down to full launch
                       </p>
                       <CountdownTimer />
                     </div>
