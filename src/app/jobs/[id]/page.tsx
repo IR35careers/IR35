@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Clock } from "lucide-react";
+import { ArrowLeft, MapPin, Clock } from "lucide-react";
+import { ApplyButton } from "@/components/ApplyButton";
 import { supabase } from "@/lib/supabase";
 import { formatPosted, formatRate, type JobDetail } from "@/lib/job-types";
 
@@ -176,18 +177,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
         {/* Apply */}
         <div className="mt-6">
-          <a
-            href={job.apply_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-          >
-            Apply on {job.source_domain.replace("www.", "")} <ExternalLink size={14} />
-          </a>
-          <p className="mt-2 text-xs text-white/40">
-            Applications open on the original listing — IR35Careers never sits between you and the
-            client.
-          </p>
+          <ApplyButton applyUrl={job.apply_url} sourceDomain={job.source_domain} jobId={job.id} />
         </div>
 
         {/* Description */}

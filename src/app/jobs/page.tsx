@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search, MapPin, Loader2, X } from "lucide-react";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 import { useAuth } from "@/lib/auth-context";
@@ -68,7 +68,8 @@ function RemoteTag({ type }: { type: JobListing["remote_type"] }) {
 }
 
 function JobsBoard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const spIr35 = searchParams.get("ir35");
   const spRemote = searchParams.get("remote");
@@ -94,6 +95,15 @@ function JobsBoard() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The board requires an account: bounce logged-out visitors to sign-in,
+  // carrying the full intended destination (path + filters) as ?next=.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const target = `${window.location.pathname}${window.location.search}`;
+      router.replace(`/account?next=${encodeURIComponent(target)}`);
+    }
+  }, [user, authLoading, router]);
 
   const runSearch = useCallback(async (params: URLSearchParams) => {
     setLoading(true);
@@ -129,6 +139,15 @@ function JobsBoard() {
   }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, page, runSearch]);
 
   const resetPage = () => setPage(1);
+
+  if (authLoading || !user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white/50">
+        <Loader2 className="animate-spin" size={22} />
+      </main>
+    );
+  }
+
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.per_page)) : 1;
 
   return (

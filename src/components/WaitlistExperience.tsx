@@ -22,6 +22,7 @@ import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import CountdownTimer from "./CountdownTimer";
 import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 const Input = React.forwardRef<
   HTMLInputElement,
@@ -55,8 +56,14 @@ const Button = React.forwardRef<
 Button.displayName = "Button";
 
 export function WaitlistExperience(): ReactElement {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const mountRef = useRef<HTMLDivElement>(null);
+
+  // Signed-in visitors skip the marketing page and go to their dashboard.
+  useEffect(() => {
+    if (!authLoading && user) router.replace("/dashboard");
+  }, [user, authLoading, router]);
   const rendererRef = useRef<WebGLRenderer | null>(null);
   const animationIdRef = useRef<number>(0);
 
