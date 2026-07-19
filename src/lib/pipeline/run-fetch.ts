@@ -81,7 +81,7 @@ export async function runFetchPipeline(
     notes.push("Reed skipped: fetch time budget exhausted");
   } else {
     try {
-      const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 2 });
+      const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 4 });
       rawJobs.push(...reedJobs);
     } catch (err) {
       companyErrors.push({

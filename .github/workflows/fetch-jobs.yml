@@ -1,0 +1,32 @@
+name: Fetch jobs
+
+# Triggers the IR35Careers fetch pipeline every 6 hours.
+# Vercel's Hobby cron only runs daily — this keeps the board fresh through
+# the day at zero cost. The Vercel 5am cron stays as a backup; overlapping
+# runs are harmless because the pipeline upserts idempotently.
+#
+# Setup (one time): repo → Settings → Secrets and variables → Actions →
+# New repository secret → Name: CRON_SECRET, Value: same as in Vercel.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours, on the hour (UTC)
+  workflow_dispatch: {} # adds a manual "Run workflow" button in the Actions tab
+
+jobs:
+  trigger-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call fetch pipeline
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "CRON_SECRET repository secret is not set" >&2
+            exit 1
+          fi
+          curl -sS --fail-with-body \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "https://ir35careers.com/api/pipeline/fetch"
