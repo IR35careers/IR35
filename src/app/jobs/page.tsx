@@ -11,8 +11,9 @@
  */
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, MapPin, Loader2 } from "lucide-react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Search, MapPin, Loader2, X } from "lucide-react";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 
 interface SearchResponse {
@@ -65,13 +66,27 @@ function RemoteTag({ type }: { type: JobListing["remote_type"] }) {
   );
 }
 
-export default function JobsPage() {
-  const [q, setQ] = useState("");
-  const [ir35, setIr35] = useState<"" | "outside" | "inside">("");
-  const [remote, setRemote] = useState("");
-  const [minRate, setMinRate] = useState(0);
+function JobsBoard() {
+  const searchParams = useSearchParams();
+  const spIr35 = searchParams.get("ir35");
+  const spRemote = searchParams.get("remote");
+  const spMinRate = parseInt(searchParams.get("min_rate") ?? "", 10);
+
+  const [q, setQ] = useState(searchParams.get("q") ?? "");
+  const [ir35, setIr35] = useState<"" | "outside" | "inside">(
+    spIr35 === "outside" || spIr35 === "inside" ? spIr35 : ""
+  );
+  const [remote, setRemote] = useState(
+    spRemote === "remote" || spRemote === "hybrid" || spRemote === "onsite" ? spRemote : ""
+  );
+  const [minRate, setMinRate] = useState(Number.isFinite(spMinRate) && spMinRate > 0 ? spMinRate : 0);
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
+  // Deep-link-only filters (set by SEO pages); shown as removable chips.
+  const [skillsLock, setSkillsLock] = useState<string[]>(
+    (searchParams.get("skills") ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+  );
+  const [locationLock, setLocationLock] = useState(searchParams.get("location") ?? "");
 
   const [data, setData] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +114,8 @@ export default function JobsPage() {
     if (ir35) params.set("ir35", ir35);
     if (remote) params.set("remote", remote);
     if (minRate > 0) params.set("min_rate", String(minRate));
+    if (skillsLock.length > 0) params.set("skills", skillsLock.join(","));
+    if (locationLock) params.set("location", locationLock);
     if (sort !== "recent") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
 
@@ -107,7 +124,7 @@ export default function JobsPage() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [q, ir35, remote, minRate, sort, page, runSearch]);
+  }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, page, runSearch]);
 
   const resetPage = () => setPage(1);
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.per_page)) : 1;
@@ -239,6 +256,36 @@ export default function JobsPage() {
             </select>
           </div>
         </div>
+
+        {/* Deep-link filter chips */}
+        {(skillsLock.length > 0 || locationLock) && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-white/50">
+            <span>Filtered by:</span>
+            {skillsLock.map((skill) => (
+              <button
+                key={skill}
+                onClick={() => {
+                  setSkillsLock((prev) => prev.filter((s) => s !== skill));
+                  resetPage();
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/[0.07] px-3 py-1 text-white/80 transition-colors hover:border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              >
+                {skill} <X size={12} aria-label={`Remove ${skill} filter`} />
+              </button>
+            ))}
+            {locationLock && (
+              <button
+                onClick={() => {
+                  setLocationLock("");
+                  resetPage();
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/[0.07] px-3 py-1 text-white/80 transition-colors hover:border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              >
+                {locationLock} <X size={12} aria-label="Remove location filter" />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Result count */}
         <p className="mb-4 mt-6 flex items-center gap-2 text-sm text-white/50" aria-live="polite">
@@ -372,5 +419,19 @@ export default function JobsPage() {
         </footer>
       </div>
     </main>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-black text-white/50">
+          <Loader2 className="animate-spin" size={22} />
+        </main>
+      }
+    >
+      <JobsBoard />
+    </Suspense>
   );
 }

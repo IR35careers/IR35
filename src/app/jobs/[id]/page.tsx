@@ -64,6 +64,49 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const job = await getJob(id);
   if (!job) notFound();
 
+  // Google Jobs structured data. Only fields we actually know are included —
+  // never fabricated. validThrough: 30 days from the best-known date.
+  const postedIso = job.posted_at ?? job.first_seen_at;
+  const validThrough = new Date(new Date(postedIso).getTime() + 30 * 86_400_000).toISOString();
+  const jobPostingLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.title,
+    description: job.description || job.title,
+    datePosted: postedIso,
+    validThrough,
+    employmentType: "CONTRACTOR",
+    hiringOrganization: { "@type": "Organization", name: job.company_name },
+    directApply: false,
+  };
+  if (job.remote_type === "remote") {
+    jobPostingLd.jobLocationType = "TELECOMMUTE";
+    jobPostingLd.applicantLocationRequirements = { "@type": "Country", name: "United Kingdom" };
+  } else {
+    jobPostingLd.jobLocation = {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: job.location,
+        addressCountry: "GB",
+      },
+    };
+  }
+  const rateBasis = job.rate_max ?? job.rate_min;
+  if (rateBasis !== null && job.rate_type !== "unknown") {
+    jobPostingLd.baseSalary = {
+      "@type": "MonetaryAmount",
+      currency: job.rate_currency ?? "GBP",
+      value: {
+        "@type": "QuantitativeValue",
+        ...(job.rate_min !== null && job.rate_max !== null && job.rate_min !== job.rate_max
+          ? { minValue: job.rate_min, maxValue: job.rate_max }
+          : { value: rateBasis }),
+        unitText: job.rate_type === "daily" ? "DAY" : job.rate_type === "hourly" ? "HOUR" : "YEAR",
+      },
+    };
+  }
+
   const remoteLabel =
     job.remote_type === "remote"
       ? "Remote"
@@ -85,6 +128,10 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-white/[0.03] blur-[130px]" />
       </div>
 
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingLd) }}
+      />
       <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <Link
           href="/jobs"
