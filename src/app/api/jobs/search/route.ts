@@ -89,9 +89,41 @@ export async function GET(request: Request): Promise<Response> {
     const { data, error, count } = await query;
     if (error) throw new Error(error.message);
 
+    // Facet counts for the sidebar — reflect q + location + recency (the
+    // non-toggle filters), so each shows "how many match my search".
+    let facets: Record<string, number> | undefined;
+    if (p.get("with_facets") === "1") {
+      const withinDays2 = clampInt(p.get("within_days"), 0, 60, 0);
+      const cutoff2 = withinDays2 > 0 ? new Date(Date.now() - withinDays2 * 86_400_000).toISOString().slice(0, 10) : null;
+      const base = () => {
+        let b = supabase.from("jobs").select("id", { count: "exact", head: true }).is("expired_at", null);
+        if (q) b = b.textSearch("search_vector", q, { type: "websearch", config: "english" });
+        if (location) b = b.ilike("location", `%${location}%`);
+        if (cutoff2) b = b.gte("posted_on", cutoff2);
+        return b;
+      };
+      const [outside, inside, tbc, remoteC, hybridC, onsiteC] = await Promise.all([
+        base().eq("ir35_status", "outside"),
+        base().eq("ir35_status", "inside"),
+        base().eq("ir35_status", "unknown"),
+        base().eq("remote_type", "remote"),
+        base().eq("remote_type", "hybrid"),
+        base().eq("remote_type", "onsite"),
+      ]);
+      facets = {
+        outside: outside.count ?? 0,
+        inside: inside.count ?? 0,
+        tbc: tbc.count ?? 0,
+        remote: remoteC.count ?? 0,
+        hybrid: hybridC.count ?? 0,
+        onsite: onsiteC.count ?? 0,
+      };
+    }
+
     return Response.json({
       jobs: data ?? [],
       total: count ?? 0,
+      facets,
       page,
       per_page: perPage,
     });

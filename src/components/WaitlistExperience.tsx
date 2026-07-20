@@ -409,6 +409,15 @@ export function WaitlistExperience(): ReactElement {
               boards, refreshed through the day.
             </p>
 
+            {/* Trust signals */}
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/70">
+              {["IR35 status upfront", "Day rates shown", "Direct to employer", "Updated daily"].map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5">
+                  <span className="text-green-400">✓</span> {t}
+                </span>
+              ))}
+            </div>
+
             <div className="mt-8">
               <Link
                 href="/jobs"
@@ -417,6 +426,25 @@ export function WaitlistExperience(): ReactElement {
                 Browse {jobCount !== null && jobCount > 0 ? jobCount.toLocaleString() : "live"}{" "}
                 contracts <ArrowRight size={15} />
               </Link>
+            </div>
+
+            {/* Popular searches */}
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-wide text-white/40">Popular searches</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[
+                  ["Outside IR35", "/jobs?ir35=outside"],
+                  ["Remote", "/jobs?remote=remote"],
+                  ["React", "/jobs?skills=React"],
+                  ["AWS", "/jobs?skills=AWS"],
+                  ["DevOps", "/jobs?skills=DevOps"],
+                  ["£600+/day", "/jobs?min_rate=600"],
+                ].map(([label, href]) => (
+                  <Link key={label} href={href} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 transition-colors hover:border-white/30 hover:text-white">
+                    {label}
+                  </Link>
+                ))}
+              </div>
             </div>
 
             {/* Waitlist strip */}
