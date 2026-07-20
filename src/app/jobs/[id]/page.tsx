@@ -44,13 +44,13 @@ export async function generateMetadata({
 function StatusBadge({ status }: { status: JobDetail["ir35_status"] }) {
   if (status === "outside")
     return (
-      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
         Outside IR35
       </span>
     );
   if (status === "inside")
     return (
-      <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">
+      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-sm font-medium text-rose-600">
         Inside IR35
       </span>
     );
@@ -124,7 +124,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div
           className={`absolute -top-40 right-[-10%] h-[420px] w-[420px] rounded-full blur-[120px] ${
-            job.ir35_status === "inside" ? "bg-sky-200/50" : "bg-emerald-200/50"
+            job.ir35_status === "inside" ? "bg-green-200/50" : "bg-green-200/50"
           }`}
         />
         <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-white blur-[130px]" />

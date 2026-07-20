@@ -29,24 +29,24 @@ interface SearchResponse {
 const RATE_OPTIONS = [0, 300, 400, 500, 600, 700] as const;
 
 const STATUS_ACCENT: Record<JobListing["ir35_status"], string> = {
-  outside: "bg-gradient-to-b from-emerald-300/80 to-emerald-500/40",
-  inside: "bg-gradient-to-b from-sky-300/80 to-sky-500/40",
+  outside: "bg-gradient-to-b from-green-300/80 to-green-500/40",
+  inside: "bg-gradient-to-b from-green-300/80 to-green-500/40",
   unknown: "bg-slate-200",
 };
 
 function IR35Badge({ status }: { status: JobListing["ir35_status"] }) {
   if (status === "outside") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
+        <span className="h-1.5 w-1.5 rounded-full bg-green-400" aria-hidden />
         Outside IR35
       </span>
     );
   }
   if (status === "inside") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
-        <span className="h-1.5 w-1.5 rounded-full bg-sky-400" aria-hidden />
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-600">
+        <span className="h-1.5 w-1.5 rounded-full bg-green-400" aria-hidden />
         Inside IR35
       </span>
     );
@@ -157,8 +157,8 @@ function JobsBoard() {
     <main className="relative overflow-x-hidden">
       {/* Ambient identity glows — emerald & sky, the two IR35 states */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
-        <div className="absolute -top-40 right-[-10%] h-[480px] w-[480px] rounded-full bg-emerald-200/50 blur-[110px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[520px] w-[520px] rounded-full bg-sky-200/50 blur-[120px]" />
+        <div className="absolute -top-40 right-[-10%] h-[480px] w-[480px] rounded-full bg-green-200/50 blur-[110px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[520px] w-[520px] rounded-full bg-green-200/50 blur-[120px]" />
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
       </div>
 
@@ -210,10 +210,10 @@ function JobsBoard() {
                   className={`rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                     ir35 === value
                       ? value === "outside"
-                        ? "bg-emerald-400/90 text-black"
+                        ? "bg-green-400/90 text-black"
                         : value === "inside"
-                          ? "bg-sky-400/90 text-black"
-                          : "bg-slate-900 text-slate-900"
+                          ? "bg-green-400/90 text-black"
+                          : "bg-slate-900 text-white"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -306,8 +306,8 @@ function JobsBoard() {
           ) : data ? (
             <>
               <span className="relative flex h-2 w-2" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400/60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
               </span>
               <span>
                 <span className="font-medium text-slate-800">{data.total.toLocaleString()}</span> live

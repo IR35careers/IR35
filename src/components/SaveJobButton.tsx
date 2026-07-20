@@ -60,9 +60,9 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
       disabled={busy}
       className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
         status === "applied"
-          ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
           : status === "saved"
-            ? "border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100"
+            ? "border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100"
             : "border-slate-300 bg-slate-100 text-slate-800 hover:border-slate-400 hover:text-slate-900"
       }`}
     >

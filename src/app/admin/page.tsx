@@ -100,7 +100,7 @@ export default function AdminPage() {
         <p className="max-w-sm text-sm text-slate-500">
           Sign in with an account listed in ADMIN_EMAILS to open the control panel.
         </p>
-        <Link href="/account?next=/admin" className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-black">
+        <Link href="/account?next=/admin" className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white">
           Sign in
         </Link>
       </main>
@@ -112,7 +112,7 @@ export default function AdminPage() {
       {/* Sidebar */}
       <aside className="flex w-56 shrink-0 flex-col border-r border-slate-200/70 bg-white p-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Admin panel</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-green-700">Admin panel</p>
           <p className="mt-0.5 text-sm font-bold">IR35Careers</p>
         </div>
         <nav className="mt-6 space-y-1">
@@ -121,7 +121,7 @@ export default function AdminPage() {
               key={item.id}
               onClick={() => setSection(item.id)}
               className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-                section === item.id ? "bg-slate-900 text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                section === item.id ? "bg-slate-900 text-white font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               <item.icon size={15} /> {item.label}
@@ -195,7 +195,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3 text-slate-600">{u.profile?.full_name || "—"}</td>
                     <td className="px-4 py-3 text-slate-600">{u.provider}</td>
                     <td className="px-4 py-3 tabular-nums text-slate-600">{u.profile?.skills?.length ?? 0}</td>
-                    <td className="px-4 py-3">{u.profile?.cv_filename ? <span className="text-emerald-700">✓</span> : <span className="text-slate-300">—</span>}</td>
+                    <td className="px-4 py-3">{u.profile?.cv_filename ? <span className="text-green-700">✓</span> : <span className="text-slate-300">—</span>}</td>
                     <td className="px-4 py-3 text-slate-500">{new Date(u.created_at).toLocaleDateString("en-GB")}</td>
                   </tr>
                 ))}
@@ -244,7 +244,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3 text-slate-500">{j.source_domain}</td>
                     <td className="px-4 py-3 text-slate-600">{j.ir35_status}</td>
                     <td className="px-4 py-3">
-                      {j.expired_at ? <span className="text-slate-400">expired</span> : <span className="text-emerald-700">live</span>}
+                      {j.expired_at ? <span className="text-slate-400">expired</span> : <span className="text-green-700">live</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {!j.expired_at && (

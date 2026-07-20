@@ -92,7 +92,7 @@ export default async function ContractsSeoPage({
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div
           className={`absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full blur-[120px] ${
-            accent === "sky" ? "bg-sky-500/[0.12]" : "bg-emerald-200/50"
+            accent === "sky" ? "bg-rose-500/[0.12]" : "bg-green-200/50"
           }`}
         />
         <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-white blur-[130px]" />
@@ -125,7 +125,7 @@ export default async function ContractsSeoPage({
           </p>
           <Link
             href={boardLink(page)}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
           >
             Search &amp; filter these roles <ArrowRight size={14} />
           </Link>
@@ -145,9 +145,9 @@ export default async function ContractsSeoPage({
                     <span
                       className={`absolute inset-y-0 left-0 w-[3px] ${
                         job.ir35_status === "outside"
-                          ? "bg-emerald-500"
+                          ? "bg-green-500"
                           : job.ir35_status === "inside"
-                            ? "bg-sky-500"
+                            ? "bg-rose-500"
                             : "bg-slate-200"
                       }`}
                       aria-hidden
@@ -173,9 +173,9 @@ export default async function ContractsSeoPage({
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
                           job.ir35_status === "outside"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            ? "border-green-200 bg-green-50 text-green-700"
                             : job.ir35_status === "inside"
-                              ? "border-sky-200 bg-sky-50 text-sky-700"
+                              ? "border-rose-200 bg-rose-50 text-rose-600"
                               : "border-slate-300 bg-slate-100 text-slate-500"
                         }`}
                       >

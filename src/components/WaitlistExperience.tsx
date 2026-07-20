@@ -169,9 +169,9 @@ export function WaitlistExperience(): ReactElement {
       varying vec3 vPosition;
 
       void main() {
-        vec3 color1 = vec3(0.1, 0.9, 0.55);
-        vec3 color2 = vec3(0.15, 0.65, 0.95);
-        vec3 color3 = vec3(0.2, 0.4, 1.0);
+        vec3 color1 = vec3(0.13, 0.77, 0.37);
+        vec3 color2 = vec3(0.09, 0.64, 0.29);
+        vec3 color3 = vec3(0.05, 0.5, 0.22);
 
         vec3 finalColor = mix(color1, color2, vUv.x);
         finalColor = mix(finalColor, color3, vUv.x * 0.7);
@@ -214,8 +214,8 @@ export function WaitlistExperience(): ReactElement {
         varying vec3 vPosition;
 
         void main() {
-          vec3 color1 = vec3(0.15, 0.9, 0.6);
-          vec3 color2 = vec3(0.2, 0.6, 1.0);
+          vec3 color1 = vec3(0.13, 0.77, 0.37);
+          vec3 color2 = vec3(0.09, 0.64, 0.29);
 
           vec3 finalColor = mix(color1, color2, vUv.x);
 
@@ -355,7 +355,7 @@ export function WaitlistExperience(): ReactElement {
         {/* Top bar */}
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 pt-7 sm:px-8">
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#0d1219]/70 px-4 py-2 backdrop-blur-md">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-sky-500">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
               <Briefcase size={14} className="text-black" />
             </div>
             <span className="text-sm font-bold text-white">
@@ -371,7 +371,7 @@ export function WaitlistExperience(): ReactElement {
             </Link>
             <Link
               href={user ? "/dashboard" : "/account"}
-              className="rounded-full bg-gradient-to-r from-emerald-400 to-sky-400 px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="rounded-full bg-gradient-to-r from-green-400 to-green-400 px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
               {user ? "Dashboard" : "Sign up"}
             </Link>
@@ -382,9 +382,9 @@ export function WaitlistExperience(): ReactElement {
         <div className="mx-auto grid min-h-[calc(100vh-90px)] max-w-6xl items-center gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
           {/* Left: message + actions */}
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1">
-              <Sparkles size={12} className="text-emerald-300" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-green-400/30 bg-green-400/10 px-3 py-1">
+              <Sparkles size={12} className="text-green-300" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-green-300">
                 Beta is live
               </span>
             </div>
@@ -392,7 +392,7 @@ export function WaitlistExperience(): ReactElement {
             <h1 className="mt-5 text-4xl font-light leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
               UK contracts,
               <br />
-              <span className="bg-gradient-to-r from-emerald-300 to-sky-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">
                 IR35 status up front
               </span>
             </h1>
@@ -427,12 +427,12 @@ export function WaitlistExperience(): ReactElement {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="your@email.com"
                       aria-label="Email address"
-                      className="min-w-0 flex-1 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
+                      className="min-w-0 flex-1 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder:text-white/35 focus:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400/40"
                     />
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="shrink-0 gap-1.5 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-4 font-semibold text-black hover:opacity-90"
+                      className="shrink-0 gap-1.5 rounded-xl bg-gradient-to-r from-green-400 to-green-400 px-4 font-semibold text-black hover:opacity-90"
                     >
                       {isSubmitting ? (
                         <Loader2 size={16} className="animate-spin" />
@@ -457,8 +457,8 @@ export function WaitlistExperience(): ReactElement {
                 </>
               ) : (
                 <div className="flex items-center gap-3 py-1">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-400/15">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-400/40 bg-green-400/15">
+                    <CheckCircle2 className="h-5 w-5 text-green-300" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white">You&apos;re on the list!</p>
@@ -481,13 +481,13 @@ export function WaitlistExperience(): ReactElement {
 
           {/* Right: live board proof */}
           <div className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-emerald-500/10 to-sky-500/10 blur-2xl" aria-hidden />
+            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-green-500/10 to-green-500/10 blur-2xl" aria-hidden />
             <div className="relative rounded-3xl border border-white/15 bg-[#0d1219]/85 p-6 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-between">
                 <p className="flex items-center gap-2 text-sm text-white/70">
                   <span className="relative flex h-2 w-2" aria-hidden>
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400/60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
                   </span>
                   Live on the board
                 </p>
@@ -518,7 +518,7 @@ export function WaitlistExperience(): ReactElement {
                         </div>
                         <div className="mt-1.5 flex items-center justify-between gap-3">
                           <p className="min-w-0 truncate text-xs text-white/45">{job.company}</p>
-                          <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                          <span className="shrink-0 rounded-full border border-green-400/30 bg-green-400/10 px-2 py-0.5 text-[10px] font-medium text-green-300">
                             Outside IR35
                           </span>
                         </div>

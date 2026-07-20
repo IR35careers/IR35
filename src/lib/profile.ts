@@ -22,6 +22,10 @@ export interface Profile {
   skills: string[];
   cv_path: string | null;
   cv_filename: string | null;
+  phone: string | null;
+  linkedin_url: string | null;
+  job_title: string | null;
+  years_experience: number | null;
 }
 
 /** Curated skill options for onboarding (canonical names match jobs.skills). */
@@ -65,7 +69,7 @@ export const PROFILE_SKILL_OPTIONS = [
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, full_name, target_rate_min, preferred_ir35, preferred_remote, skills, cv_path, cv_filename")
+    .select("id, full_name, target_rate_min, preferred_ir35, preferred_remote, skills, cv_path, cv_filename, phone, linkedin_url, job_title, years_experience")
     .eq("id", userId)
     .maybeSingle();
   if (error || !data) return null;
@@ -208,4 +212,19 @@ export async function fetchMatches(profile: Profile, limit = 12): Promise<Scored
     .filter((s): s is ScoredJob => s !== null)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+}
+
+/** Real profile completeness score (0..100) based on fields filled in. */
+export function profileStrength(p: Profile | null): number {
+  if (!p) return 0;
+  let s = 0;
+  if (p.full_name?.trim()) s += 15;
+  if (p.cv_filename) s += 20;
+  if ((p.skills?.length ?? 0) >= 1) s += 15;
+  if ((p.skills?.length ?? 0) >= 5) s += 10;
+  if (p.target_rate_min) s += 10;
+  if (p.job_title?.trim()) s += 10;
+  if (p.years_experience != null) s += 10;
+  if (p.phone?.trim() || p.linkedin_url?.trim()) s += 10;
+  return Math.min(100, s);
 }

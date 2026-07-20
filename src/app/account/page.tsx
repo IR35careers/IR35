@@ -90,8 +90,8 @@ function AccountForm() {
   if (confirmSent) {
     return (
       <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 text-center backdrop-blur-xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100">
-          <CheckCircle2 className="h-7 w-7 text-emerald-700" />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-green-300 bg-green-100">
+          <CheckCircle2 className="h-7 w-7 text-green-700" />
         </div>
         <h1 className="mt-5 text-xl font-medium text-slate-900">Check your inbox</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
@@ -112,7 +112,7 @@ function AccountForm() {
   return (
     <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 backdrop-blur-xl">
       <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-sky-500">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
           <Briefcase size={15} className="text-black" />
         </div>
         <span className="text-sm font-bold text-slate-900">
@@ -137,7 +137,7 @@ function AccountForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
           />
         </div>
         <div>
@@ -151,7 +151,7 @@ function AccountForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
           />
         </div>
 
@@ -164,7 +164,7 @@ function AccountForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-400 to-green-400 px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
         >
           {submitting ? (
             <Loader2 size={16} className="animate-spin" />
@@ -217,8 +217,8 @@ export default function AccountPage() {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-emerald-200/50 blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-sky-200/50 blur-[130px]" />
+        <div className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-green-200/50 blur-[120px]" />
+        <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-green-200/50 blur-[130px]" />
       </div>
       <div className="relative">
         <Suspense
