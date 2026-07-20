@@ -107,3 +107,52 @@ export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Pro
   }
   return jobs;
 }
+
+interface ReedDetail {
+  jobDescription?: string;
+}
+
+/**
+ * Fetch the FULL description for a single Reed job. The search API only
+ * returns a truncated snippet; this per-job endpoint returns the complete
+ * text (which may contain HTML — the processor strips it).
+ */
+export async function fetchReedDetail(
+  client: HttpClient,
+  apiKey: string,
+  jobId: string
+): Promise<string | null> {
+  const auth = "Basic " + Buffer.from(`${apiKey}:`).toString("base64");
+  try {
+    const data = await client.getJson<ReedDetail>(
+      `https://www.reed.co.uk/api/1.0/jobs/${jobId}`,
+      { headers: { authorization: auth } }
+    );
+    const full = data?.jobDescription?.trim();
+    return full && full.length > 0 ? full : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Enrich a batch of Reed raw jobs with full descriptions, newest first,
+ * within a wall-clock budget. Jobs not reached keep their snippet.
+ */
+export async function enrichReedDescriptions(
+  client: HttpClient,
+  apiKey: string,
+  jobs: RawATSJob[],
+  deadlineMs: number
+): Promise<number> {
+  let enriched = 0;
+  for (const job of jobs) {
+    if (Date.now() > deadlineMs) break;
+    const full = await fetchReedDetail(client, apiKey, job.sourceIdentifier);
+    if (full) {
+      job.description = full;
+      enriched++;
+    }
+  }
+  return enriched;
+}

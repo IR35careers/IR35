@@ -17,7 +17,7 @@
 import { fetchAllCompanies, COMPANY_CONFIGS } from "../ats";
 import { HttpClient } from "../ats/http-client";
 import type { CompanyConfig, ProcessedJob, RawATSJob } from "../ats/types";
-import { fetchReed } from "../aggregators/reed-fetcher";
+import { fetchReed, enrichReedDescriptions } from "../aggregators/reed-fetcher";
 import { fetchAdzuna } from "../aggregators/adzuna-fetcher";
 import { processRawJob } from "../processing/job-processor";
 import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplicator";
@@ -82,6 +82,11 @@ export async function runFetchPipeline(
   } else {
     try {
       const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 4 });
+      // Fetch full descriptions (search API only returns a snippet). Newest
+      // first, bounded so it never blows the serverless time budget.
+      const enrichDeadline = Math.min(started + FETCH_TIME_BUDGET_MS, started + 38000);
+      const enriched = await enrichReedDescriptions(aggregatorClient, reedKey, reedJobs, enrichDeadline);
+      notes.push(`Reed: full descriptions fetched for ${enriched}/${reedJobs.length} jobs`);
       rawJobs.push(...reedJobs);
     } catch (err) {
       companyErrors.push({
