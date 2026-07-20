@@ -16,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/tools`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tools/take-home`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tools/ir35-status`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/resources`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     ...allSeoSlugs().map((slug) => ({
       url: `${BASE}/contracts/${slug}`,
       lastModified: now,

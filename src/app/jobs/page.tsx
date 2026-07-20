@@ -277,6 +277,22 @@ function JobsBoard() {
               ))}
             </select>
 
+            <Link
+              href={(() => {
+                const p = new URLSearchParams();
+                if (q) p.set("q", q);
+                if (ir35) p.set("ir35", ir35);
+                if (remote) p.set("remote", remote);
+                if (minRate > 0) p.set("min_rate", String(minRate));
+                if (skillsLock.length) p.set("skills", skillsLock.join(","));
+                p.set("prefill", "1");
+                return `/alerts?${p.toString()}`;
+              })()}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:border-green-300 hover:text-green-700"
+            >
+              🔔 Save as alert
+            </Link>
+
             <select
               value={sort}
               onChange={(e) => {
@@ -284,7 +300,7 @@ function JobsBoard() {
                 resetPage();
               }}
               aria-label="Sort order"
-              className="ml-auto rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 [&>option]:bg-white"
+              className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 [&>option]:bg-white"
             >
               <option value="recent">Newest first</option>
               <option value="rate_high">Highest rate</option>
