@@ -370,8 +370,14 @@ export function WaitlistExperience(): ReactElement {
               Browse contracts
             </Link>
             <Link
+              href="/tools"
+              className="hidden rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 backdrop-blur-md transition-colors hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:block"
+            >
+              Tools
+            </Link>
+            <Link
               href={user ? "/dashboard" : "/account"}
-              className="rounded-full bg-gradient-to-r from-green-400 to-green-400 px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="rounded-full bg-gradient-to-r from-green-400 to-emerald-500 px-4 py-2 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
               {user ? "Dashboard" : "Sign up"}
             </Link>

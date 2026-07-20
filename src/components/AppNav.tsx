@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 const TABS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/jobs", label: "Browse contracts" },
+  { href: "/tools", label: "Tools" },
 ] as const;
 
 export function AppNav() {
