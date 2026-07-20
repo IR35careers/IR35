@@ -135,7 +135,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           : null;
 
   const factCards = [
-    { icon: PoundSterling, label: "Day rate", value: formatRate(job) },
+    { icon: PoundSterling, label: job.rate_type === "annual" ? "Salary" : job.rate_type === "hourly" ? "Hourly rate" : "Day rate", value: formatRate(job) },
     { icon: MapPin, label: "Location", value: job.location || "—" },
     { icon: Briefcase, label: "Workplace", value: remoteLabel ?? "—" },
     { icon: Clock, label: "Posted", value: formatPosted(job) },

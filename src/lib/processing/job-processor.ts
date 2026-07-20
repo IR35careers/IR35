@@ -115,16 +115,17 @@ export function isContractRole(title: string, description: string, rawSalary: st
  * Filters on obvious title patterns plus a sub-professional rate floor.
  */
 const NON_PROFESSIONAL_TITLES =
-  /\b(colleague|shop\s+assistant|store\s+assistant|retail\s+assistant|sales\s+assistant|customer\s+(?:service|team)\s+(?:advisor|assistant|member)|checkout|shelf\s+stacker|warehouse\s+(?:operative|assistant|worker)|delivery\s+driver|courier|van\s+driver|hgv|forklift|cleaner|cleaning\s+operative|housekeep(?:er|ing)|janitor|barista|waiter|waitress|bartender|kitchen\s+(?:porter|assistant|staff)|chef\b|catering\s+assistant|care\s+(?:assistant|worker)|support\s+worker|healthcare\s+assistant|nursery\s+(?:nurse|assistant)|labourer|picker|packer|production\s+operative|assembly\s+operative|security\s+(?:officer|guard)|door\s+supervisor|steward|crew\s+member|shift\s+leader\b)/i;
+  /\b(colleague|shop\s+assistant|store\s+assistant|retail\s+assistant|sales\s+assistant|customer\s+(?:service|team)\s+(?:advisor|assistant|member)|checkout|shelf\s+stacker|warehouse\s+(?:operative|assistant|worker)|delivery\s+driver|courier|van\s+driver|hgv|forklift|cleaner|cleaning\s+operative|housekeep(?:er|ing)|janitor|barista|waiter|waitress|bartender|kitchen\s+(?:porter|assistant|staff)|chef\b|catering\s+assistant|care\s+(?:assistant|worker)|support\s+worker|healthcare\s+assistant|nursery\s+(?:nurse|assistant)|teaching\s+assistant|classroom\s+assistant|labourer|picker|packer|production\s+operative|assembly\s+operative|security\s+(?:officer|guard)|door\s+supervisor|steward|crew\s+member|shift\s+leader\b|admin(?:istration|istrative)?\s+(?:support\s+)?(?:assistant|officer|clerk|apprentice)|recruitment\s+(?:administration|admin|resourcing|support)\s+\w+|receptionist|data\s+entry|office\s+junior|apprentice\b)/i;
 
 export function isProfessionalRole(title: string, rate: ParsedRate): boolean {
   if (NON_PROFESSIONAL_TITLES.test(title ?? "")) return false;
-  // Known rates far below professional contracting: hourly under £18 or a
-  // day rate under £120 signal temp/casual work, not contracting.
+  // Known rates far below professional contracting: hourly under £18, day rate
+  // under £120, or an annual salary under £45k (permanent-junior territory).
   const basis = rate.max ?? rate.min;
   if (basis !== null) {
     if (rate.type === "hourly" && basis < 18) return false;
     if (rate.type === "daily" && basis < 120) return false;
+    if (rate.type === "annual" && basis < 45000) return false;
   }
   return true;
 }

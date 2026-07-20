@@ -283,7 +283,12 @@ function checkTrue(name: string, condition: boolean) {
   checkTrue("professional: care assistant rejected", !isProfessionalRole("Care Assistant", parseRate("")));
   checkTrue("professional: low hourly rejected", !isProfessionalRole("Data Entry Clerk", parseRate("£12 per hour")));
   checkTrue("professional: low daily rejected", !isProfessionalRole("Admin Temp", parseRate("£90 per day")));
-  checkTrue("professional: real contractor kept", isProfessionalRole("Senior React Developer", parseRate("£550 per day")));
+  checkTrue("professional: recruitment admin support rejected", !isProfessionalRole("Recruitment Administration Support Assistant", parseRate("£35000 per annum")));
+  checkTrue("professional: admin assistant rejected", !isProfessionalRole("Administrative Assistant", parseRate("")));
+  checkTrue("professional: teaching assistant rejected", !isProfessionalRole("Autism SEN Teaching Assistant", parseRate("")));
+  checkTrue("professional: receptionist rejected", !isProfessionalRole("Receptionist", parseRate("")));
+  checkTrue("professional: low annual salary rejected", !isProfessionalRole("Junior Analyst", parseRate("£28000 per annum")));
+  checkTrue("professional: high day-rate contractor kept", isProfessionalRole("Senior React Developer", parseRate("£550 per day")));
   checkTrue("professional: unknown rate kept", isProfessionalRole("DevOps Engineer", parseRate("")));
   checkTrue("professional: chef title in Chief not matched", isProfessionalRole("Chief Technology Officer (Interim)", parseRate("£900 per day")));
 }
