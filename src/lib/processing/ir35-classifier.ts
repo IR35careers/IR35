@@ -28,6 +28,10 @@ const OUTSIDE_PATTERNS = [
   /\bdeemed\s+outside\s+(?:of\s+)?ir\s*-?\s*35\b/i,
   /\bdetermined\s+(?:as\s+)?outside\b[^.]{0,30}\bir\s*-?\s*35\b/i,
   /\boutside\s*-\s*ir35\b/i,
+  /\boutside\s+(?:the\s+)?scope\s+of\s+ir\s*-?\s*35\b/i,
+  /\bir\s*-?\s*35\s+(?:exempt|does\s+not\s+apply)\b/i,
+  /\bnot\s+(?:caught|inside)\s+(?:by\s+)?ir\s*-?\s*35\b/i,
+  /\b(?:sds|status\s+determination(?:\s+statement)?)\s*[:\-–]?\s*outside\b/i,
 ];
 
 const INSIDE_PATTERNS = [
@@ -37,6 +41,10 @@ const INSIDE_PATTERNS = [
   /\bdeemed\s+inside\s+(?:of\s+)?ir\s*-?\s*35\b/i,
   /\bdetermined\s+(?:as\s+)?inside\b[^.]{0,30}\bir\s*-?\s*35\b/i,
   /\binside\s*-\s*ir35\b/i,
+  /\bwithin\s+(?:the\s+)?scope\s+of\s+ir\s*-?\s*35\b/i,
+  /\bir\s*-?\s*35\s+applies\b/i,
+  /(?<!not\s)caught\s+by\s+ir\s*-?\s*35\b/i,
+  /\b(?:sds|status\s+determination(?:\s+statement)?)\s*[:\-–]?\s*inside\b/i,
 ];
 
 // Near-explicit "inside" arrangements: umbrella-only / PAYE-only engagements

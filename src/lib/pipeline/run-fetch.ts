@@ -10,7 +10,7 @@
  *               sources* at the same company, and against each other
  *   4. UPSERT   in chunks; reappearing jobs get last_seen_at refreshed and
  *               expired_at cleared
- *   5. EXPIRE   active jobs not seen by any source for 14 days
+ *   5. EXPIRE   active jobs not seen by any source for 10 days
  *   6. LOG      one moderation_logs row per run with the full summary
  */
 
@@ -40,9 +40,9 @@ export interface PipelineSummary {
 }
 
 /** Stop starting new fetches once this much of the run has elapsed. */
-const FETCH_TIME_BUDGET_MS = 42000;
+const FETCH_TIME_BUDGET_MS = 40000;
 
-const STALE_DAYS = 14;
+const STALE_DAYS = 10;
 const UPSERT_CHUNK = 100;
 
 interface ExistingJob extends DedupCandidate {
@@ -84,7 +84,7 @@ export async function runFetchPipeline(
       const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 4 });
       // Fetch full descriptions (search API only returns a snippet). Newest
       // first, bounded so it never blows the serverless time budget.
-      const enrichDeadline = Math.min(started + FETCH_TIME_BUDGET_MS, started + 38000);
+      const enrichDeadline = started + 46000; // dedicated enrichment slice
       const enriched = await enrichReedDescriptions(aggregatorClient, reedKey, reedJobs, enrichDeadline);
       notes.push(`Reed: full descriptions fetched for ${enriched}/${reedJobs.length} jobs`);
       rawJobs.push(...reedJobs);
@@ -107,7 +107,7 @@ export async function runFetchPipeline(
       const adzunaJobs = await fetchAdzuna(aggregatorClient, {
         appId: adzunaId,
         appKey: adzunaKey,
-        pages: 2,
+        pages: 5,
       });
       rawJobs.push(...adzunaJobs);
     } catch (err) {

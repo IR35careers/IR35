@@ -27,6 +27,14 @@ interface SearchResponse {
 }
 
 const RATE_OPTIONS = [0, 300, 400, 500, 600, 700] as const;
+const RECENCY_OPTIONS = [
+  [0, "Any time"],
+  [1, "Last 24 hours"],
+  [3, "Last 3 days"],
+  [7, "Last week"],
+  [14, "Last 2 weeks"],
+] as const;
+const QUICK_SKILLS = ["React", "Python", "Java", ".NET", "AWS", "Azure", "DevOps", "Data Engineering", "Business Analysis", "Project Management"] as const;
 
 const STATUS_ACCENT: Record<JobListing["ir35_status"], string> = {
   outside: "bg-gradient-to-b from-green-300/80 to-green-500/40",
@@ -85,6 +93,7 @@ function JobsBoard() {
   );
   const [minRate, setMinRate] = useState(Number.isFinite(spMinRate) && spMinRate > 0 ? spMinRate : 0);
   const [sort, setSort] = useState("recent");
+  const [withinDays, setWithinDays] = useState(0);
   const [page, setPage] = useState(1);
   // Deep-link-only filters (set by SEO pages); shown as removable chips.
   const [skillsLock, setSkillsLock] = useState<string[]>(
@@ -129,6 +138,7 @@ function JobsBoard() {
     if (minRate > 0) params.set("min_rate", String(minRate));
     if (skillsLock.length > 0) params.set("skills", skillsLock.join(","));
     if (locationLock) params.set("location", locationLock);
+    if (withinDays > 0) params.set("within_days", String(withinDays));
     if (sort !== "recent") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
 
@@ -137,7 +147,7 @@ function JobsBoard() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, page, runSearch]);
+  }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, withinDays, page, runSearch]);
 
   const resetPage = () => setPage(1);
 
@@ -254,6 +264,20 @@ function JobsBoard() {
             </select>
 
             <select
+              value={withinDays}
+              onChange={(e) => {
+                setWithinDays(Number(e.target.value));
+                resetPage();
+              }}
+              aria-label="Posted within"
+              className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white"
+            >
+              {RECENCY_OPTIONS.map(([v, label]) => (
+                <option key={v} value={v}>{label}</option>
+              ))}
+            </select>
+
+            <select
               value={sort}
               onChange={(e) => {
                 setSort(e.target.value);
@@ -298,6 +322,29 @@ function JobsBoard() {
             )}
           </div>
         )}
+
+        {/* Skills quick-filter */}
+        <div className="mt-5 flex flex-wrap gap-1.5">
+          {QUICK_SKILLS.map((skill) => {
+            const active = skillsLock.includes(skill);
+            return (
+              <button
+                key={skill}
+                onClick={() => {
+                  setSkillsLock((prev) => (active ? prev.filter((s) => s !== skill) : [...prev, skill]));
+                  resetPage();
+                }}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? "border-green-300 bg-green-50 text-green-700"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                }`}
+              >
+                {skill}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Result count */}
         <p className="mb-4 mt-6 flex items-center gap-2 text-sm text-slate-500" aria-live="polite">

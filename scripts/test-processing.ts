@@ -291,6 +291,11 @@ function checkTrue(name: string, condition: boolean) {
   checkTrue("professional: high day-rate contractor kept", isProfessionalRole("Senior React Developer", parseRate("£550 per day")));
   checkTrue("professional: unknown rate kept", isProfessionalRole("DevOps Engineer", parseRate("")));
   checkTrue("professional: chef title in Chief not matched", isProfessionalRole("Chief Technology Officer (Interim)", parseRate("£900 per day")));
+  checkTrue("ir35: outside scope → outside", classifyIR35("Consultant", "This engagement is outside the scope of IR35.").status === "outside");
+  checkTrue("ir35: IR35 applies → inside", classifyIR35("Analyst", "Please note IR35 applies to this role.").status === "inside");
+  checkTrue("ir35: caught by IR35 → inside", classifyIR35("Developer", "This role is caught by IR35.").status === "inside");
+  checkTrue("ir35: not caught by IR35 → outside", classifyIR35("Developer", "This role is not caught by IR35.").status === "outside");
+  checkTrue("ir35: SDS Outside → outside", classifyIR35("Engineer", "Status Determination Statement: Outside.").status === "outside");
 }
 
 // ── Summary ──────────────────────────────────────────────────────────────────

@@ -65,6 +65,13 @@ export async function GET(request: Request): Promise<Response> {
     if (skills.length > 0) query = query.contains("skills", skills);
     if (minRate > 0) query = query.or(`rate_min.gte.${minRate},rate_max.gte.${minRate}`);
 
+    // Recency filter: posted within N days.
+    const withinDays = clampInt(p.get("within_days"), 0, 60, 0);
+    if (withinDays > 0) {
+      const cutoff = new Date(Date.now() - withinDays * 86_400_000).toISOString().slice(0, 10);
+      query = query.gte("posted_on", cutoff);
+    }
+
     if (sort === "rate_high") {
       query = query.order("rate_max", { ascending: false, nullsFirst: false });
     } else if (sort === "rate_low") {
