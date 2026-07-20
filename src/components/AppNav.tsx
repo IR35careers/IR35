@@ -6,7 +6,7 @@
  */
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Briefcase, LogOut, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -21,6 +21,7 @@ const TABS = [
 export function AppNav() {
   const { signOut } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <nav className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
@@ -63,7 +64,7 @@ export function AppNav() {
             <UserCircle2 size={14} /> <span className="hidden sm:inline">My Account</span>
           </Link>
           <button
-            onClick={() => signOut()}
+            onClick={() => { router.push("/"); void signOut(); }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40"
           >
             <LogOut size={14} /> <span className="hidden sm:inline">Sign out</span>

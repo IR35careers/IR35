@@ -44,7 +44,7 @@ async function adminFetch(path: string, init?: RequestInit) {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default function AdminPage() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const [section, setSection] = useState<Section>("stats");
   const [data, setData] = useState<any>(null);
   const [busy, setBusy] = useState(true);
@@ -131,7 +131,7 @@ export default function AdminPage() {
         <div className="mt-auto border-t border-slate-200/70 pt-4">
           <p className="truncate text-xs font-medium text-slate-800">Admin</p>
           <p className="truncate text-[11px] text-slate-400">{user?.email}</p>
-          <button onClick={() => signOut()} className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
+          <button onClick={() => { window.location.href = "/"; }} className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900">
             <LogOut size={12} /> Sign out
           </button>
         </div>
