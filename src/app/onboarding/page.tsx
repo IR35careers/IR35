@@ -10,8 +10,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, FileText, Loader2, UploadCloud, CheckCircle2, X } from "lucide-react";
+import { ArrowRight, ArrowLeft, FileText, Loader2, UploadCloud, CheckCircle2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { AppNav } from "@/components/AppNav";
 import {
   PROFILE_SKILL_OPTIONS,
   getProfile,
@@ -139,13 +140,18 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <AppNav />
+    <main className="relative overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div className="absolute -top-40 right-[-10%] h-[440px] w-[440px] rounded-full bg-green-200/50 blur-[120px]" />
         <div className="absolute bottom-[-15%] left-[-10%] h-[440px] w-[440px] rounded-full bg-green-200/50 blur-[130px]" />
       </div>
 
-      <div className="relative mx-auto max-w-[1500px] px-4 py-12 sm:px-6">
+      <div className="relative mx-auto max-w-[1500px] px-4 py-8 sm:px-6">
+        <Link href="/dashboard" className="mb-6 inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800">
+          <ArrowLeft size={14} /> Back to dashboard
+        </Link>
         <div className="grid gap-10 lg:grid-cols-[300px_1fr]">
           {/* Sidebar: why we ask */}
           <aside className="lg:border-r lg:border-slate-200/70 lg:pr-8">
@@ -418,5 +424,6 @@ export default function OnboardingPage() {
         </div>
       </div>
     </main>
+    </div>
   );
 }
