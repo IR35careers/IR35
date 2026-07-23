@@ -16,7 +16,7 @@ import { Suspense, useEffect, useState } from "react";
 import { ArrowRight, Loader2, Briefcase, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
-import { hasBetaAccess } from "@/lib/access";
+import { checkBetaAccess } from "@/lib/access";
 
 function AccountForm() {
   const { user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle, signOut } = useAuth();
@@ -54,7 +54,7 @@ function AccountForm() {
     // Try sign-in first.
     const signIn = await signInWithPassword(email, password);
     if (!signIn.error) {
-      if (!(await hasBetaAccess())) {
+      if ((await checkBetaAccess()) === "denied") {
         await signOut();
         setError("IR35Careers is in private beta — your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
         setSubmitting(false);
@@ -85,7 +85,7 @@ function AccountForm() {
         setSubmitting(false);
         return;
       }
-      if (!(await hasBetaAccess())) {
+      if ((await checkBetaAccess()) === "denied") {
         await signOut();
         setError("IR35Careers is in private beta — your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
         setSubmitting(false);

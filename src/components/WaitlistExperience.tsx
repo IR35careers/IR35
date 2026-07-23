@@ -87,8 +87,11 @@ export function WaitlistExperience(): ReactElement {
           </div>
           <span className="text-sm font-bold">IR35<span className="text-slate-400">Careers</span></span>
         </Link>
-        <Link href="/account" className="text-sm text-slate-500 transition-colors hover:text-slate-900">
-          Sign in
+        <Link
+          href="/account"
+          className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+        >
+          Sign in / Sign up
         </Link>
       </header>
 

@@ -10,7 +10,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Briefcase, LogOut, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect } from "react";
-import { hasBetaAccess } from "@/lib/access";
+import { checkBetaAccess } from "@/lib/access";
 
 const TABS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -26,14 +26,24 @@ export function AppNav() {
   const router = useRouter();
 
   // Private beta: only allowlisted accounts may use the signed-in app.
+  // Acts ONLY on an explicit denial — an "unknown" result (session still
+  // hydrating after an OAuth redirect, or a transient network failure) is
+  // retried once and otherwise ignored, so sign-in never bounces.
   useEffect(() => {
     if (!user) return;
     let active = true;
-    hasBetaAccess().then(async (ok) => {
-      if (!active || ok) return;
+    const run = async () => {
+      let state = await checkBetaAccess();
+      if (state === "unknown") {
+        await new Promise((r) => setTimeout(r, 1500));
+        if (!active) return;
+        state = await checkBetaAccess();
+      }
+      if (!active || state !== "denied") return;
       await signOut();
       router.replace("/account?denied=1");
-    });
+    };
+    void run();
     return () => {
       active = false;
     };
