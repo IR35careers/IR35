@@ -160,14 +160,33 @@ export function parseRate(input: string | null | undefined): ParsedRate {
     }
   }
 
-  // Sanity bounds per period — out-of-band numbers get low confidence.
+  // ── Correct implausible classifications ──────────────────────────────
+  // A "daily" rate above £5,000 is almost always an annual salary that was
+  // mislabelled (e.g. Adzuna annualises, or a description mixed figures).
+  // Reclassify by magnitude rather than showing "£93,000/day".
+  {
+    const basis0 = max ?? min;
+    if (basis0 !== null) {
+      if (type === "daily" && basis0 > 5000) {
+        type = basis0 >= 20000 ? "annual" : "daily";
+        if (type === "annual") confidence = "low";
+      }
+      if (type === "hourly" && basis0 > 500) {
+        type = basis0 >= 20000 ? "annual" : basis0 >= 150 ? "daily" : "hourly";
+        confidence = "low";
+      }
+    }
+  }
+
+  // Sanity bounds per period — genuinely out-of-band numbers are dropped
+  // entirely (better "Rate on application" than a wrong figure).
   const basis = max ?? min ?? 0;
-  if (
-    (type === "daily" && (basis < 100 || basis > 5000)) ||
-    (type === "hourly" && (basis < 10 || basis > 500)) ||
-    (type === "annual" && (basis < 15000 || basis > 500000))
-  ) {
-    confidence = "low";
+  const outOfBounds =
+    (type === "daily" && (basis < 80 || basis > 5000)) ||
+    (type === "hourly" && (basis < 8 || basis > 500)) ||
+    (type === "annual" && (basis < 12000 || basis > 750000));
+  if (outOfBounds) {
+    return { min: null, max: null, currency, type: "unknown", confidence: "low", raw };
   }
 
   return {

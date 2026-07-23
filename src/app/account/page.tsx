@@ -16,12 +16,14 @@ import { Suspense, useEffect, useState } from "react";
 import { ArrowRight, Loader2, Briefcase, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
+import { hasBetaAccess } from "@/lib/access";
 
 function AccountForm() {
-  const { user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
+  const denied = searchParams.get("denied") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,6 +54,12 @@ function AccountForm() {
     // Try sign-in first.
     const signIn = await signInWithPassword(email, password);
     if (!signIn.error) {
+      if (!(await hasBetaAccess())) {
+        await signOut();
+        setError("IR35Careers is in private beta — your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
+        setSubmitting(false);
+        return;
+      }
       router.replace(next);
       return;
     }
@@ -74,6 +82,12 @@ function AccountForm() {
       }
       if (signUp.needsConfirmation) {
         setConfirmSent(true);
+        setSubmitting(false);
+        return;
+      }
+      if (!(await hasBetaAccess())) {
+        await signOut();
+        setError("IR35Careers is in private beta — your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
         setSubmitting(false);
         return;
       }
@@ -111,14 +125,26 @@ function AccountForm() {
 
   return (
     <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 backdrop-blur-xl">
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-          <Briefcase size={15} className="text-black" />
-        </div>
-        <span className="text-sm font-bold text-slate-900">
-          IR35<span className="text-slate-600">Careers</span>
-        </span>
+      <div className="flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+            <Briefcase size={15} className="text-white" />
+          </div>
+          <span className="text-sm font-bold text-slate-900">
+            IR35<span className="text-slate-600">Careers</span>
+          </span>
+        </Link>
+        <Link href="/" className="text-xs text-slate-400 transition-colors hover:text-slate-700">
+          ← Back to home
+        </Link>
       </div>
+
+      {denied && (
+        <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
+          IR35Careers is in private beta. Your account isn&apos;t enabled yet —{" "}
+          <Link href="/" className="font-semibold underline">join the waitlist</Link> and we&apos;ll email you as soon as access opens.
+        </p>
+      )}
 
       <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">Sign in or create account</h1>
       <p className="mt-1.5 text-sm text-slate-500">
@@ -215,7 +241,7 @@ function AccountForm() {
 
 export default function AccountPage() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 [color-scheme:light]">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-green-200/50 blur-[120px]" />
         <div className="absolute bottom-[-15%] left-[-10%] h-[420px] w-[420px] rounded-full bg-green-200/50 blur-[130px]" />

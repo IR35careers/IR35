@@ -273,6 +273,15 @@ function checkTrue(name: string, condition: boolean) {
 
 // ── Zero-rate + professional gates ───────────────────────────────────────────
 {
+  // Implausible day rates are reclassified, not shown as "£93,000/day".
+  const bigDaily = parseRate("£93,000 per day");
+  checkTrue("rate: £93k/day reclassified off daily", bigDaily.type !== "daily");
+  const annualMislabel = parseRate("£93000");
+  check("rate: £93,000 bare → annual", annualMislabel.type, "annual");
+  const insaneDaily = parseRate("£50000 a day");
+  checkTrue("rate: £50k/day not left as daily", insaneDaily.type !== "daily");
+  const goodDaily = parseRate("£650 per day");
+  check("rate: normal day rate preserved", [goodDaily.min, goodDaily.type], [650, "daily"]);
   const zero = parseRate("£0");
   check("rate: £0 means unspecified", [zero.min, zero.max], [null, null]);
   const zeroRange = parseRate("£0 - £0 per day");

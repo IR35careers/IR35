@@ -123,7 +123,7 @@ export default function SettingsPage() {
                   <l.icon size={15} /> {l.label}
                 </Link>
               ))}
-              <button onClick={() => { router.push("/"); void signOut(); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+              <button onClick={async () => { await signOut(); router.replace("/"); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
                 <LogOut size={15} /> Log out
               </button>
             </nav>

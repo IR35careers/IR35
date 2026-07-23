@@ -27,6 +27,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { formatRate, type JobListing } from "@/lib/job-types";
 import { AppNav } from "@/components/AppNav";
+import { WelcomeModal } from "@/components/WelcomeModal";
 import {
   fetchMatches,
   firstName,
@@ -144,6 +145,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
+      <WelcomeModal name={name} />
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         {/* Greeting + search */}

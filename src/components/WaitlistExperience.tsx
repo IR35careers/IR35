@@ -3,7 +3,8 @@
 import type { ReactElement } from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Briefcase, Sparkles, ArrowRight, Loader2, CheckCircle2, Users, Search, ShieldCheck, PoundSterling } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Briefcase, ArrowRight, Loader2, CheckCircle2, Check } from "lucide-react";
 import { validateEmail } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
@@ -11,51 +12,35 @@ import CountdownTimer from "./CountdownTimer";
 import { useAuth } from "@/lib/auth-context";
 
 /**
- * Landing page — light green, matching the app. Keeps the waitlist form,
- * real signup + job counts, featured contracts, and the launch countdown.
- * Public and always accessible (no auto-redirect); signed-in users see a
- * "Dashboard" button instead of "Sign up".
+ * Landing page — minimal waitlist design: one story, one action.
+ * Signed-in users are sent straight to their dashboard.
  */
 export function WaitlistExperience(): ReactElement {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [signupCount, setSignupCount] = useState<number | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
-  const [featuredJobs, setFeaturedJobs] = useState<Array<{ id: string; title: string; rate: string; company: string }>>([]);
 
-  // Live board preview: total contracts + 3 featured Outside IR35 roles.
+  // Signed in → straight to the app.
   useEffect(() => {
-    let isMounted = true;
-    fetch("/api/jobs/search?ir35=outside&per_page=3&sort=rate_high")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json: { jobs?: Array<{ id: string; title: string; company_name: string; rate_min: number | null; rate_max: number | null; rate_type: string }> } | null) => {
-        if (!isMounted || !json) return;
-        setFeaturedJobs((json.jobs ?? []).map((j) => ({
-          id: j.id,
-          title: j.title,
-          company: j.company_name,
-          rate: j.rate_max !== null || j.rate_min !== null ? `£${(j.rate_max ?? j.rate_min)!.toLocaleString()}${j.rate_type === "hourly" ? "/hr" : "/day"}` : "",
-        })));
-      })
-      .catch(() => undefined);
+    if (!authLoading && user) router.replace("/dashboard");
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    let mounted = true;
     fetch("/api/jobs/search?per_page=1")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json: { total?: number } | null) => { if (isMounted && json?.total) setJobCount(json.total); })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { total?: number } | null) => { if (mounted && j?.total) setJobCount(j.total); })
       .catch(() => undefined);
-    return () => { isMounted = false; };
-  }, []);
-
-  // Real signup count for social proof (hidden if zero / unavailable).
-  useEffect(() => {
-    let isMounted = true;
     supabase.from("waitlist_count").select("total").single().then(({ data, error }) => {
-      if (!isMounted || error || !data) return;
+      if (!mounted || error || !data) return;
       setSignupCount(Number(data.total));
     });
-    return () => { isMounted = false; };
+    return () => { mounted = false; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,12 +51,13 @@ export function WaitlistExperience(): ReactElement {
     try {
       const { error } = await supabase.from("waitlist").insert([{ email: email.trim().toLowerCase() }]);
       if (error) {
-        toast.error(error.code === "23505" ? "This email is already on the waitlist!" : "Something went wrong. Please try again.");
+        toast.error(error.code === "23505" ? "You're already on the list!" : "Something went wrong. Please try again.");
         setIsSubmitting(false);
         return;
       }
       setIsSubmitted(true);
-      toast.success("You're on the list! 🎉");
+      setSignupCount((c) => (c === null ? c : c + 1));
+      toast.success("You're on the list 🎉");
       setEmail("");
     } catch {
       toast.error("Network error. Please check your connection.");
@@ -80,178 +66,191 @@ export function WaitlistExperience(): ReactElement {
     }
   };
 
-  const POPULAR: Array<[string, string]> = [
-    ["Outside IR35", "/jobs?ir35=outside"],
-    ["Remote", "/jobs?remote=remote"],
-    ["React", "/jobs?skills=React"],
-    ["AWS", "/jobs?skills=AWS"],
-    ["DevOps", "/jobs?skills=DevOps"],
-    ["£600+/day", "/jobs?min_rate=600"],
+  const STORY = [
+    {
+      k: "The problem",
+      t: "Six tabs, one contract",
+      b: "Contracts are scattered across Reed, Jobserve, LinkedIn and a dozen agency sites. IR35 status is buried in paragraph six — or missing entirely.",
+    },
+    {
+      k: "What we built",
+      t: "One board, status up front",
+      b: "Every UK contract in one place, each labelled Inside or Outside IR35 — only when the advert says so — with the day rate shown before you click.",
+    },
+    {
+      k: "What you get",
+      t: "First look, less noise",
+      b: "Match scores from your own skills, saved searches, and one place to track everything you've applied for. Applications go direct to the client.",
+    },
+  ];
+
+  const PLAN = [
+    "Every UK contract, IR35 status shown",
+    "Day rates up front — no guessing",
+    "Match scores from your CV & skills",
+    "Saved searches and application tracking",
+    "Apply direct — no middleman",
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900 [color-scheme:light]">
+      <style>{`:root{color-scheme:light}`}</style>
+
       {/* Nav */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-              <Briefcase size={15} className="text-white" />
-            </div>
-            <span className="text-sm font-bold text-slate-900">IR35<span className="text-slate-500">Careers</span></span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link href="/jobs" className="hidden rounded-full px-3.5 py-1.5 text-sm text-slate-600 transition-colors hover:text-slate-900 sm:block">Browse contracts</Link>
-            <Link href="/tools" className="hidden rounded-full px-3.5 py-1.5 text-sm text-slate-600 transition-colors hover:text-slate-900 sm:block">Tools</Link>
-            {user ? (
-              <Link href="/dashboard" className="rounded-full bg-green-600 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-green-700">Dashboard</Link>
-            ) : (
-              <>
-                <Link href="/account" className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400">Sign in</Link>
-                <Link href="/account" className="rounded-full bg-green-600 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-green-700">Sign up</Link>
-              </>
-            )}
+      <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-8">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+            <Briefcase size={15} className="text-white" />
           </div>
-        </div>
+          <span className="text-sm font-bold">IR35<span className="text-slate-400">Careers</span></span>
+        </Link>
+        <Link href="/account" className="text-sm text-slate-500 transition-colors hover:text-slate-900">
+          Sign in
+        </Link>
       </header>
 
       {/* Hero */}
-      <main className="mx-auto max-w-[1500px] px-4 py-12 sm:px-6 lg:py-16">
-        <div className="grid items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
-          {/* Left */}
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1">
-              <Sparkles size={12} className="text-green-600" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-green-700">Beta is live</span>
-            </div>
+      <main>
+        <section className="relative overflow-hidden px-5 pb-20 pt-10 sm:px-8 sm:pt-16">
+          {/* soft glow */}
+          <div className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-green-100/60 blur-[130px]" aria-hidden />
 
-            <h1 className="mt-5 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              UK contracts,
-              <br />
-              <span className="bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">IR35 status up front</span>
+          <div className="relative mx-auto max-w-3xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm">
+              <span className="relative flex h-1.5 w-1.5" aria-hidden>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+              </span>
+              Private beta · Opening soon
+            </span>
+
+            <h1 className="mt-7 text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+              Stop hunting six job boards
+              <br className="hidden sm:block" />{" "}
+              for <span className="text-green-600">one contract.</span>
             </h1>
 
-            <p className="mt-5 max-w-md text-base leading-relaxed text-slate-600">
-              Every role labelled Inside or Outside IR35, with day rates shown before you click.
-              Pulled live from Reed, Adzuna and employer boards, refreshed through the day.
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
+              IR35Careers brings every UK contract into one place — IR35 status and day rate shown
+              before you click. Be first to see new roles, and apply direct.
             </p>
 
-            {/* Trust signals */}
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
-              {[[ShieldCheck, "IR35 status upfront"], [PoundSterling, "Day rates shown"], [Briefcase, "Direct to employer"], [Search, "Updated daily"]].map(([Icon, t]) => {
-                const I = Icon as typeof ShieldCheck;
-                return <span key={t as string} className="inline-flex items-center gap-1.5"><I size={15} className="text-green-600" /> {t as string}</span>;
-              })}
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/jobs" className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-green-700">
-                Browse {jobCount !== null && jobCount > 0 ? jobCount.toLocaleString() : "live"} contracts <ArrowRight size={15} />
-              </Link>
-              {!user && (
-                <Link href="/account" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400">
-                  Create free account
-                </Link>
-              )}
-            </div>
-
-            {/* Popular searches */}
-            <div className="mt-6">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Popular searches</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {POPULAR.map(([label, href]) => (
-                  <Link key={label} href={href} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 transition-colors hover:border-green-300 hover:text-green-700">{label}</Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Waitlist + countdown */}
-            <div className="mt-8 max-w-md rounded-2xl border border-slate-200 bg-white p-5">
+            {/* Email capture */}
+            <div className="mx-auto mt-9 max-w-md">
               {!isSubmitted ? (
-                <>
-                  <p className="text-sm font-semibold text-slate-800">Get launch updates &amp; rate alerts</p>
-                  <form onSubmit={handleSubmit} className="mt-3 flex gap-2">
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" aria-label="Email address"
-                      className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40" />
-                    <button type="submit" disabled={isSubmitting} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-green-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-60">
-                      {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <>Notify me <ArrowRight size={14} /></>}
-                    </button>
-                  </form>
-                  {signupCount !== null && signupCount > 0 && (
-                    <p className="mt-2.5 flex items-center gap-1.5 text-xs text-slate-500">
-                      <Users size={12} /> <span><span className="font-semibold text-slate-700">{signupCount.toLocaleString()}</span> {signupCount === 1 ? "person" : "people"} already signed up</span>
-                    </p>
-                  )}
-                </>
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    aria-label="Email address"
+                    className="min-w-0 flex-1 rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm placeholder:text-slate-400 focus:border-green-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/30"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <>Get early access <ArrowRight size={15} /></>}
+                  </button>
+                </form>
               ) : (
-                <div className="flex items-center gap-3 py-1">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-green-300 bg-green-50"><CheckCircle2 className="h-5 w-5 text-green-600" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">You&apos;re on the list!</p>
-                    <p className="text-xs text-slate-500">We&apos;ll email you at launch — browse the board meanwhile.</p>
-                  </div>
+                <div className="flex items-center justify-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+                  <p className="text-sm font-medium text-green-800">
+                    You&apos;re on the list — we&apos;ll email you the moment access opens.
+                  </p>
                 </div>
               )}
-              <div className="mt-5 border-t border-slate-100 pt-4">
-                <p className="mb-2 text-[10px] uppercase tracking-widest text-slate-400">Full launch in</p>
-                <CountdownTimer />
-              </div>
-            </div>
-          </div>
 
-          {/* Right: live board preview */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <span className="relative flex h-2 w-2" aria-hidden>
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400/60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-                </span>
-                Live on the board
+              <p className="mt-3 text-xs text-slate-500">
+                {signupCount !== null && signupCount > 0 && (
+                  <><span className="font-semibold text-slate-700">{signupCount.toLocaleString()}</span> contractors already joined · </>
+                )}
+                Free while in beta
               </p>
-              {jobCount !== null && jobCount > 0 && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium tabular-nums text-slate-600">{jobCount.toLocaleString()} roles</span>}
             </div>
 
-            {featuredJobs.length > 0 ? (
-              <ul className="mt-4 space-y-2">
-                {featuredJobs.map((job) => (
-                  <li key={job.id}>
-                    <Link href={`/jobs/${job.id}`} className="block rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-green-300 hover:bg-green-50/30">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="min-w-0 truncate text-sm font-medium text-slate-900">{job.title}</p>
-                        {job.rate && <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{job.rate}</span>}
-                      </div>
-                      <div className="mt-1.5 flex items-center justify-between gap-3">
-                        <p className="min-w-0 truncate text-xs text-slate-500">{job.company}</p>
-                        <span className="shrink-0 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">Outside IR35</span>
-                      </div>
-                    </Link>
+            {/* Countdown */}
+            <div className="mx-auto mt-12 max-w-md rounded-2xl border border-slate-200 bg-white/70 p-5 backdrop-blur">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Full launch in
+              </p>
+              <CountdownTimer />
+            </div>
+
+            {/* Live proof */}
+            {jobCount !== null && jobCount > 0 && (
+              <p className="mt-8 text-sm text-slate-500">
+                <span className="font-semibold text-slate-800">{jobCount.toLocaleString()}</span> live UK contracts on the board today ·{" "}
+                <Link href="/contracts/outside-ir35-contracts" className="font-medium text-green-700 underline-offset-4 hover:underline">
+                  preview Outside IR35 roles
+                </Link>
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* Story */}
+        <section className="border-t border-slate-100 px-5 py-20 sm:px-8">
+          <div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-3">
+            {STORY.map((s) => (
+              <div key={s.k}>
+                <p className="text-xs font-semibold uppercase tracking-widest text-green-600">{s.k}</p>
+                <h2 className="mt-2 text-xl font-semibold tracking-tight">{s.t}</h2>
+                <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{s.b}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Founding offer */}
+        <section className="border-t border-slate-100 px-5 py-20 sm:px-8">
+          <div className="mx-auto max-w-md">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Founding member</p>
+              <div className="mt-3 flex items-end gap-1.5">
+                <span className="text-4xl font-semibold tracking-tight">£9.99</span>
+                <span className="pb-1.5 text-sm text-slate-500">/month at launch</span>
+              </div>
+              <p className="mt-1.5 text-sm text-slate-600">
+                First 7 days free. Join the waitlist now and lock in founding-member pricing.
+              </p>
+
+              <ul className="mt-6 space-y-2.5">
+                {PLAN.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-slate-700">
+                    <Check size={16} className="mt-0.5 shrink-0 text-green-600" /> {f}
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="mt-4 text-sm text-slate-500">Fresh contracts land here throughout the day.</p>
-            )}
 
-            <Link href="/jobs" className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-green-300 hover:text-green-700">
-              See all contracts <ArrowRight size={14} />
-            </Link>
-
-            {/* Mini how-it-works */}
-            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-slate-100 pt-5 text-center">
-              {[["1", "Search"], ["2", "See IR35 + rate"], ["3", "Apply direct"]].map(([n, label]) => (
-                <div key={n}>
-                  <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-full bg-green-50 text-xs font-bold text-green-700">{n}</div>
-                  <p className="mt-1.5 text-xs text-slate-500">{label}</p>
-                </div>
-              ))}
+              <a
+                href="#top"
+                onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                Join the waitlist <ArrowRight size={15} />
+              </a>
+              <p className="mt-3 text-center text-xs text-slate-400">
+                Nothing to pay today — the board is free while in beta.
+              </p>
             </div>
           </div>
-        </div>
+        </section>
       </main>
 
-      <footer className="border-t border-slate-200 py-8 text-center text-xs text-slate-400">
-        Updated daily · Sources: employer career boards, Reed, Adzuna · IR35 status shown only when stated in the original listing
+      <footer className="border-t border-slate-100 px-5 py-10 text-center text-xs text-slate-400 sm:px-8">
+        <p>
+          Sources: employer career boards, Reed, Adzuna · IR35 status shown only when stated in the
+          original listing · Updated through the day
+        </p>
+        <p className="mt-2">
+          <Link href="/tools" className="hover:text-slate-600">Free tools</Link>
+          <span className="mx-2">·</span>
+          <Link href="/resources" className="hover:text-slate-600">IR35 guides</Link>
+        </p>
       </footer>
     </div>
   );
