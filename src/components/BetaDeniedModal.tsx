@@ -9,7 +9,15 @@
 import Link from "next/link";
 import { Lock, X, ArrowRight } from "lucide-react";
 
-export function BetaDeniedModal({ email, onClose }: { email?: string | null; onClose: () => void }) {
+export function BetaDeniedModal({
+  email,
+  onJoin,
+  onClose,
+}: {
+  email?: string | null;
+  onJoin: () => void;
+  onClose: () => void;
+}) {
   return (
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
@@ -50,12 +58,12 @@ export function BetaDeniedModal({ email, onClose }: { email?: string | null; onC
           </p>
 
           <div className="mt-6 space-y-2.5">
-            <Link
-              href="/"
+            <button
+              onClick={onJoin}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-700"
             >
               Join the waitlist <ArrowRight size={15} />
-            </Link>
+            </button>
             <button
               onClick={onClose}
               className="w-full rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400"

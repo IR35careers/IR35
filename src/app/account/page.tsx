@@ -148,7 +148,11 @@ function AccountForm() {
       </div>
 
       {showDenied && (
-        <BetaDeniedModal email={deniedAccount} onClose={() => setShowDenied(false)} />
+        <BetaDeniedModal
+          email={deniedAccount}
+          onJoin={() => router.push("/")}
+          onClose={() => setShowDenied(false)}
+        />
       )}
 
       <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">Sign in or create account</h1>

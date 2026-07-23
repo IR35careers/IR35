@@ -11,6 +11,7 @@ import { Briefcase, LogOut, UserCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
 import { checkBetaAccess } from "@/lib/access";
+import { BetaDeniedModal } from "@/components/BetaDeniedModal";
 
 const TABS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -34,6 +35,7 @@ export function AppNav() {
   // Curtain: protected content stays hidden until beta access is confirmed,
   // so a refused account never glimpses the dashboard before being redirected.
   const [checking, setChecking] = useState(!accessConfirmed);
+  const [denied, setDenied] = useState<{ email?: string } | null>(null);
 
   // Acts ONLY on an explicit denial. An "unknown" result (session still
   // hydrating after an OAuth redirect, or a transient network failure) is
@@ -58,10 +60,10 @@ export function AppNav() {
       if (!active) return;
 
       if (result.state === "denied") {
-        const who = result.email ? `&as=${encodeURIComponent(result.email)}` : "";
-        await signOut();
-        router.replace(`/account?denied=1${who}`);
-        return; // keep the curtain up through the redirect
+        // Keep the session alive for now. Signing out here would trip each
+        // page's own auth guard, which redirects and loses this message.
+        setDenied({ email: result.email });
+        return; // curtain stays up behind the modal
       }
 
       accessConfirmed = true;
@@ -75,6 +77,19 @@ export function AppNav() {
 
   return (
     <>
+      {denied && (
+        <BetaDeniedModal
+          email={denied.email}
+          onJoin={async () => {
+            await signOut();
+            router.replace("/");
+          }}
+          onClose={async () => {
+            await signOut();
+            router.replace("/account");
+          }}
+        />
+      )}
       {checking && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50"
