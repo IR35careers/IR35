@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { Briefcase, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { validateEmail } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -11,23 +12,43 @@ import toast from "react-hot-toast";
 import CountdownTimer from "./CountdownTimer";
 import { useAuth } from "@/lib/auth-context";
 
-/**
- * Landing page — single viewport, no scrolling. One story, one action.
- * Signed-in users go straight to their dashboard.
- *
- * Height strategy: the page is locked to one screen (100dvh, overflow hidden).
- * On very short screens the bottom strip is hidden rather than clipped, so the
- * headline, email capture and countdown always remain reachable.
- */
+/** Fine film grain, kept very low opacity. Adds depth without visible noise. */
+const GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")";
+
+/** Animated count-up for the live contract figure. */
+function useCountUp(target: number | null, enabled: boolean, duration = 1100): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (target === null) return;
+    if (!enabled) {
+      setValue(target);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / duration);
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, enabled, duration]);
+  return value;
+}
+
 export function WaitlistExperience(): ReactElement {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const reduce = useReducedMotion();
 
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [signupCount, setSignupCount] = useState<number | null>(null);
   const [jobCount, setJobCount] = useState<number | null>(null);
+  const liveCount = useCountUp(jobCount, !reduce);
 
   useEffect(() => {
     if (!authLoading && user) router.replace("/dashboard");
@@ -54,13 +75,13 @@ export function WaitlistExperience(): ReactElement {
     try {
       const { error } = await supabase.from("waitlist").insert([{ email: email.trim().toLowerCase() }]);
       if (error) {
-        toast.error(error.code === "23505" ? "You're already on the list!" : "Something went wrong. Please try again.");
+        toast.error(error.code === "23505" ? "You're already on the list." : "Something went wrong. Please try again.");
         setIsSubmitting(false);
         return;
       }
       setIsSubmitted(true);
       setSignupCount((c) => (c === null ? c : c + 1));
-      toast.success("You're on the list 🎉");
+      toast.success("You're on the list.");
       setEmail("");
     } catch {
       toast.error("Network error. Please check your connection.");
@@ -69,14 +90,7 @@ export function WaitlistExperience(): ReactElement {
     }
   };
 
-  const POINTS = [
-    "Every UK contract, one board",
-    "IR35 status & day rate up front",
-    "Apply direct to the client",
-  ];
-
-  // Signed in (or still resolving): show a neutral splash rather than a flash
-  // of the marketing page before the dashboard redirect lands.
+  // Signed in, or still resolving: neutral splash, never a flash of marketing.
   if (authLoading || user) {
     return (
       <div className="flex h-[100dvh] items-center justify-center bg-white [color-scheme:light]">
@@ -85,120 +99,170 @@ export function WaitlistExperience(): ReactElement {
     );
   }
 
+  const rise = (delay: number) => ({
+    initial: reduce ? false : { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0 },
+    transition: { delay, duration: 0.7, ease: [0.16, 1, 0.3, 1] as const },
+  });
+
+  const drift = (dx: number[], dy: number[], seconds: number) =>
+    reduce ? {} : { animate: { x: dx, y: dy }, transition: { duration: seconds, repeat: Infinity, ease: "easeInOut" as const } };
+
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-white text-slate-900 [color-scheme:light]">
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-white text-slate-900 [color-scheme:light]">
       <style>{`:root{color-scheme:light}`}</style>
 
+      {/* Ambient field */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <motion.div
+          className="absolute -top-56 left-1/2 h-[620px] w-[820px] -translate-x-1/2 rounded-full bg-green-200/45 blur-[140px]"
+          {...drift([0, 30, -20, 0], [0, 20, -10, 0], 30)}
+        />
+        <motion.div
+          className="absolute -left-40 top-1/3 h-[420px] w-[420px] rounded-full bg-emerald-100/70 blur-[130px]"
+          {...drift([0, 40, 0], [0, -30, 0], 36)}
+        />
+        <motion.div
+          className="absolute -right-40 bottom-0 h-[460px] w-[460px] rounded-full bg-teal-100/60 blur-[130px]"
+          {...drift([0, -35, 0], [0, 25, 0], 32)}
+        />
+        <div className="absolute inset-0 opacity-[0.22] mix-blend-soft-light" style={{ backgroundImage: GRAIN }} />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent" />
+      </div>
+
       {/* Nav */}
-      <header className="flex h-16 shrink-0 items-center justify-between px-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+      <motion.header
+        {...rise(0)}
+        className="relative z-10 flex h-16 shrink-0 items-center justify-between px-5 sm:h-20 sm:px-10"
+      >
+        <Link href="/" className="group flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-green-500 to-green-600 shadow-[0_2px_8px_rgba(22,163,74,0.25)]">
             <Briefcase size={15} className="text-white" />
           </div>
-          <span className="text-sm font-bold">IR35<span className="text-slate-400">Careers</span></span>
+          <span className="text-[15px] font-semibold tracking-tight">
+            IR35<span className="text-slate-400">Careers</span>
+          </span>
         </Link>
         <Link
           href="/account"
-          className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+          className="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-[13px] font-medium text-slate-700 shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur transition-all hover:-translate-y-px hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(16,24,40,0.06)]"
         >
           Sign in / Sign up
         </Link>
-      </header>
+      </motion.header>
 
-      {/* Hero — fills remaining height, centred */}
-      <main className="relative flex min-h-0 flex-1 items-center justify-center px-5 sm:px-8">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[360px] w-[760px] -translate-x-1/2 rounded-full bg-green-100/60 blur-[130px]" aria-hidden />
-
-        <div className="relative w-full max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-medium text-slate-600 shadow-sm">
+      {/* Hero */}
+      <main className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-5 sm:px-8">
+        <div className="w-full max-w-3xl text-center">
+          <motion.span
+            {...rise(0.05)}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/80 px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-slate-600 shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur"
+          >
             <span className="relative flex h-1.5 w-1.5" aria-hidden>
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
             </span>
-            Private beta · Opening soon
-          </span>
+            Private beta, opening soon
+          </motion.span>
 
-          <h1 className="mt-4 text-[1.9rem] font-semibold leading-[1.08] tracking-tight sm:mt-5 sm:text-5xl lg:text-[3.4rem]">
+          <motion.h1
+            {...rise(0.12)}
+            className="mt-5 text-[2rem] font-semibold leading-[1.04] tracking-[-0.035em] sm:mt-6 sm:text-[3.4rem] lg:text-[4rem]"
+          >
             Stop hunting six job boards
             <br className="hidden sm:block" />{" "}
-            for <span className="text-green-600">one contract.</span>
-          </h1>
+            <span className="bg-gradient-to-br from-green-600 via-green-500 to-emerald-600 bg-clip-text text-transparent">
+              for one contract.
+            </span>
+          </motion.h1>
 
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:mt-4 sm:text-base">
+          <motion.p
+            {...rise(0.2)}
+            className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:mt-5 sm:text-[17px]"
+          >
             Every UK contract in one place, with IR35 status and day rate shown before you click.
             Be first to see new roles, and apply direct.
-          </p>
+          </motion.p>
 
-          {/* Email capture */}
-          <div className="mx-auto mt-5 max-w-md sm:mt-6">
+          {/* Capture */}
+          <motion.div {...rise(0.28)} className="mx-auto mt-6 max-w-md sm:mt-7">
             {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="flex gap-2">
+              <form onSubmit={handleSubmit} className="group flex gap-2">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   aria-label="Email address"
-                  className="min-w-0 flex-1 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm placeholder:text-slate-400 focus:border-green-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/30"
+                  className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/90 px-5 py-3.5 text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur transition-all placeholder:text-slate-400 focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.10)] focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60 sm:px-6"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-900 px-6 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-px hover:bg-slate-800 hover:shadow-[0_8px_22px_rgba(15,23,42,0.22)] active:translate-y-0 disabled:opacity-60"
                 >
                   {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <>Get early access <ArrowRight size={15} /></>}
                 </button>
               </form>
             ) : (
-              <div className="flex items-center justify-center gap-2.5 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+              <motion.div
+                initial={reduce ? false : { opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center justify-center gap-2.5 rounded-2xl border border-green-200 bg-green-50/90 px-5 py-3.5 backdrop-blur"
+              >
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
                 <p className="text-sm font-medium text-green-800">
                   You&apos;re on the list. We&apos;ll email you when access opens.
                 </p>
-              </div>
+              </motion.div>
             )}
 
-            <p className="mt-2.5 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-slate-500">
               {signupCount !== null && signupCount > 0 && (
-                <><span className="font-semibold text-slate-700">{signupCount.toLocaleString()}</span> contractors joined · </>
+                <><span className="font-semibold text-slate-700">{signupCount.toLocaleString()}</span> contractors joined <span className="mx-1 text-slate-300">·</span> </>
               )}
               7 days free, then £9.99/mo at launch
             </p>
-          </div>
+          </motion.div>
 
           {/* Countdown */}
-          <div className="mx-auto mt-6 max-w-sm sm:mt-7">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <motion.div {...rise(0.36)} className="mx-auto mt-7 max-w-xs sm:mt-8">
+            <p className="mb-2.5 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-400">
               Full launch in
             </p>
             <CountdownTimer />
-          </div>
+          </motion.div>
 
           {/* Live proof */}
           {jobCount !== null && jobCount > 0 && (
-            <p className="mt-5 text-xs text-slate-500 sm:mt-6 sm:text-sm">
-              <span className="font-semibold text-slate-800">{jobCount.toLocaleString()}</span> live UK contracts on the board today ·{" "}
-              <Link href="/contracts/outside-ir35-contracts" className="font-medium text-green-700 underline-offset-4 hover:underline">
+            <motion.p {...rise(0.46)} className="mt-6 text-[13px] text-slate-500 sm:mt-7">
+              <span className="font-semibold tabular-nums text-slate-800">{liveCount.toLocaleString()}</span> live UK contracts on the board today
+              <span className="mx-1.5 text-slate-300">·</span>
+              <Link href="/contracts/outside-ir35-contracts" className="font-medium text-green-700 underline-offset-4 transition-colors hover:text-green-800 hover:underline">
                 preview roles
               </Link>
-            </p>
+            </motion.p>
           )}
         </div>
       </main>
 
-      {/* Bottom strip — hidden on very short screens so nothing gets clipped */}
-      <footer className="hidden shrink-0 border-t border-slate-100 px-5 py-4 sm:px-8 min-[700px]:block">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs text-slate-500">
-          {POINTS.map((p) => (
+      {/* Foot */}
+      <motion.footer
+        {...rise(0.54)}
+        className="relative z-10 hidden shrink-0 border-t border-slate-100 px-5 py-4 sm:px-10 min-[700px]:block"
+      >
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-7 gap-y-2 text-[12px] text-slate-500">
+          {["Every UK contract, one board", "IR35 status and day rate up front", "Apply direct to the client"].map((p) => (
             <span key={p} className="inline-flex items-center gap-1.5">
-              <span className="text-green-600">✓</span> {p}
+              <CheckCircle2 size={13} className="text-green-600" /> {p}
             </span>
           ))}
-          <span className="hidden text-slate-300 lg:inline">|</span>
-          <Link href="/tools" className="hover:text-slate-800">Free tools</Link>
-          <Link href="/resources" className="hover:text-slate-800">IR35 guides</Link>
+          <span className="hidden text-slate-200 lg:inline">|</span>
+          <Link href="/tools" className="transition-colors hover:text-slate-800">Free tools</Link>
+          <Link href="/resources" className="transition-colors hover:text-slate-800">IR35 guides</Link>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 }

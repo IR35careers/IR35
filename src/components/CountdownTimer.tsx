@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface TimeLeft {
   days: number;
@@ -10,79 +10,56 @@ interface TimeLeft {
   seconds: number;
 }
 
-// Target launch date: use NEXT_PUBLIC_LAUNCH_DATE (ISO) or fallback to NEXT_PUBLIC_COUNTDOWN_DAYS (defaults to 40 days)
 const DEFAULT_DAYS = Number(process.env.NEXT_PUBLIC_COUNTDOWN_DAYS || "40");
 const LAUNCH_DATE = process.env.NEXT_PUBLIC_LAUNCH_DATE
   ? new Date(process.env.NEXT_PUBLIC_LAUNCH_DATE).getTime()
   : Date.now() + DEFAULT_DAYS * 24 * 60 * 60 * 1000;
 
 export default function CountdownTimer() {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+  const reduce = useReducedMotion();
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    const calculateTime = (): TimeLeft => {
-      const now = Date.now();
-      const difference = LAUNCH_DATE - now;
-
-      if (difference <= 0) {
-        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-      }
-
+    const calculate = (): TimeLeft => {
+      const diff = LAUNCH_DATE - Date.now();
+      if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
       return {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor(
-          (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        ),
-        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((difference % (1000 * 60)) / 1000),
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
       };
     };
-
-    setTimeLeft(calculateTime());
-
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTime());
-    }, 1000);
-
+    setTimeLeft(calculate());
+    const timer = setInterval(() => setTimeLeft(calculate()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const units = [
     { label: "Days", value: timeLeft.days },
-    { label: "Hours", value: timeLeft.hours },
-    { label: "Minutes", value: timeLeft.minutes },
-    { label: "Seconds", value: timeLeft.seconds },
+    { label: "Hrs", value: timeLeft.hours },
+    { label: "Min", value: timeLeft.minutes },
+    { label: "Sec", value: timeLeft.seconds },
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.8, duration: 0.6 }}
-      className="flex items-center justify-center gap-3 sm:gap-5"
-    >
+    <div className="flex items-stretch justify-center gap-2">
       {units.map((unit, i) => (
-        <div key={unit.label} className="flex items-center gap-3 sm:gap-5">
-          <div className="text-center min-w-[52px] sm:min-w-[64px]">
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-slate-900 tabular-nums tracking-tight">
-              {String(unit.value).padStart(2, "0")}
-            </div>
-            <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-widest mt-1">
-              {unit.label}
-            </div>
+        <motion.div
+          key={unit.label}
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative flex-1 rounded-xl border border-slate-200/80 bg-white/70 px-2 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur-sm"
+        >
+          <div className="text-center text-xl font-semibold tabular-nums tracking-tight text-slate-900 sm:text-2xl">
+            {String(unit.value).padStart(2, "0")}
           </div>
-          {i < units.length - 1 && (
-            <div className="text-slate-200 text-xl sm:text-2xl font-light">
-              |
-            </div>
-          )}
-        </div>
+          <div className="mt-0.5 text-center text-[9px] font-medium uppercase tracking-[0.18em] text-slate-400">
+            {unit.label}
+          </div>
+        </motion.div>
       ))}
-    </motion.div>
+    </div>
   );
 }
