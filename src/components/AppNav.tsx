@@ -7,9 +7,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Briefcase, LogOut, UserCircle2 } from "lucide-react";
+import { Briefcase, LogOut, UserCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { checkBetaAccess } from "@/lib/access";
 
 const TABS = [
@@ -20,17 +20,33 @@ const TABS = [
   { href: "/tools", label: "Tools" },
 ] as const;
 
+/**
+ * Cached for the lifetime of the page load. Once access is confirmed we skip
+ * the curtain on subsequent client-side navigations.
+ */
+let accessConfirmed = false;
+
 export function AppNav() {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
-  // Private beta: only allowlisted accounts may use the signed-in app.
-  // Acts ONLY on an explicit denial — an "unknown" result (session still
+  // Curtain: protected content stays hidden until beta access is confirmed,
+  // so a refused account never glimpses the dashboard before being redirected.
+  const [checking, setChecking] = useState(!accessConfirmed);
+
+  // Acts ONLY on an explicit denial. An "unknown" result (session still
   // hydrating after an OAuth redirect, or a transient network failure) is
-  // retried once and otherwise ignored, so sign-in never bounces.
+  // retried once, then allowed through so nobody is locked out by a blip.
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setChecking(false);
+      return;
+    }
+    if (accessConfirmed) {
+      setChecking(false);
+      return;
+    }
     let active = true;
     const run = async () => {
       let result = await checkBetaAccess();
@@ -39,10 +55,17 @@ export function AppNav() {
         if (!active) return;
         result = await checkBetaAccess();
       }
-      if (!active || result.state !== "denied") return;
-      const who = result.email ? `&as=${encodeURIComponent(result.email)}` : "";
-      await signOut();
-      router.replace(`/account?denied=1${who}`);
+      if (!active) return;
+
+      if (result.state === "denied") {
+        const who = result.email ? `&as=${encodeURIComponent(result.email)}` : "";
+        await signOut();
+        router.replace(`/account?denied=1${who}`);
+        return; // keep the curtain up through the redirect
+      }
+
+      accessConfirmed = true;
+      setChecking(false);
     };
     void run();
     return () => {
@@ -51,6 +74,17 @@ export function AppNav() {
   }, [user, signOut, router]);
 
   return (
+    <>
+      {checking && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <Loader2 className="animate-spin text-slate-300" size={24} />
+          <span className="sr-only">Checking access</span>
+        </div>
+      )}
     <nav className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-6">
@@ -116,5 +150,6 @@ export function AppNav() {
         })}
       </div>
     </nav>
+    </>
   );
 }

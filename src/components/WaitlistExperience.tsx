@@ -75,6 +75,16 @@ export function WaitlistExperience(): ReactElement {
     "Apply direct to the client",
   ];
 
+  // Signed in (or still resolving): show a neutral splash rather than a flash
+  // of the marketing page before the dashboard redirect lands.
+  if (authLoading || user) {
+    return (
+      <div className="flex h-[100dvh] items-center justify-center bg-white [color-scheme:light]">
+        <Loader2 className="animate-spin text-slate-300" size={24} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-white text-slate-900 [color-scheme:light]">
       <style>{`:root{color-scheme:light}`}</style>
