@@ -1,40 +1,39 @@
 import { supabase } from "@/lib/supabase";
 
-/**
- * Private-beta access state.
- *   allowed  — server confirmed this account may use the app
- *   denied   — server confirmed this account may NOT
- *   unknown  — we couldn't tell (session not hydrated, network blip, config)
- *
- * Callers must only act on an explicit "denied". Treating "unknown" as denied
- * causes sign-in bounce loops right after an OAuth redirect.
- */
 export type AccessState = "allowed" | "denied" | "unknown";
 
-export async function checkBetaAccess(): Promise<AccessState> {
+export interface AccessResult {
+  state: AccessState;
+  /** The signed-in address, so the UI can name the account that was refused. */
+  email?: string;
+}
+
+/**
+ * Check whether the current session may use the app during private beta.
+ * Callers must act only on an explicit "denied"; "unknown" means we could not
+ * tell (session still hydrating, network blip, or server misconfiguration).
+ */
+export async function checkBetaAccess(): Promise<AccessResult> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  if (!token) return "unknown"; // session still hydrating — don't punish
+  if (!token) return { state: "unknown" };
 
   try {
     const res = await fetch("/api/access", {
       headers: { authorization: `Bearer ${token}` },
       cache: "no-store",
     });
-    if (!res.ok) return "unknown";
-    const json = (await res.json()) as { allowed?: boolean | null };
-    if (json.allowed === true) return "allowed";
-    if (json.allowed === false) return "denied";
-    return "unknown";
+    if (!res.ok) return { state: "unknown" };
+    const json = (await res.json()) as { allowed?: boolean | null; email?: string };
+    if (json.allowed === true) return { state: "allowed", email: json.email };
+    if (json.allowed === false) return { state: "denied", email: json.email };
+    return { state: "unknown", email: json.email };
   } catch {
-    return "unknown";
+    return { state: "unknown" };
   }
 }
 
-/**
- * Convenience wrapper for flows that just need "should I block this?".
- * Fails OPEN: only an explicit denial blocks.
- */
+/** Fails OPEN: only an explicit denial blocks. */
 export async function hasBetaAccess(): Promise<boolean> {
-  return (await checkBetaAccess()) !== "denied";
+  return (await checkBetaAccess()).state !== "denied";
 }

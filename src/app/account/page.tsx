@@ -24,6 +24,7 @@ function AccountForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
   const denied = searchParams.get("denied") === "1";
+  const deniedEmail = searchParams.get("as");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,9 +55,12 @@ function AccountForm() {
     // Try sign-in first.
     const signIn = await signInWithPassword(email, password);
     if (!signIn.error) {
-      if ((await checkBetaAccess()) === "denied") {
+      const access = await checkBetaAccess();
+      if (access.state === "denied") {
         await signOut();
-        setError("IR35Careers is in private beta. Your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
+        setError(
+          `IR35Careers is in private beta and ${access.email ?? "this account"} isn't on the list yet. Join the waitlist and we'll email you the moment access opens.`
+        );
         setSubmitting(false);
         return;
       }
@@ -85,9 +89,12 @@ function AccountForm() {
         setSubmitting(false);
         return;
       }
-      if ((await checkBetaAccess()) === "denied") {
+      const access = await checkBetaAccess();
+      if (access.state === "denied") {
         await signOut();
-        setError("IR35Careers is in private beta. Your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
+        setError(
+          `IR35Careers is in private beta and ${access.email ?? "this account"} isn't on the list yet. Join the waitlist and we'll email you the moment access opens.`
+        );
         setSubmitting(false);
         return;
       }
@@ -141,7 +148,14 @@ function AccountForm() {
 
       {denied && (
         <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
-          IR35Careers is in private beta. Your account isn&apos;t enabled yet.{" "}
+          IR35Careers is in private beta.{" "}
+          {deniedEmail ? (
+            <>
+              <span className="font-semibold">{deniedEmail}</span> isn&apos;t on the beta list yet.
+            </>
+          ) : (
+            <>This account isn&apos;t on the beta list yet.</>
+          )}{" "}
           <Link href="/" className="font-semibold underline">Join the waitlist</Link> and we&apos;ll email you as soon as access opens.
         </p>
       )}

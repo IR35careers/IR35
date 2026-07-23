@@ -33,15 +33,16 @@ export function AppNav() {
     if (!user) return;
     let active = true;
     const run = async () => {
-      let state = await checkBetaAccess();
-      if (state === "unknown") {
+      let result = await checkBetaAccess();
+      if (result.state === "unknown") {
         await new Promise((r) => setTimeout(r, 1500));
         if (!active) return;
-        state = await checkBetaAccess();
+        result = await checkBetaAccess();
       }
-      if (!active || state !== "denied") return;
+      if (!active || result.state !== "denied") return;
+      const who = result.email ? `&as=${encodeURIComponent(result.email)}` : "";
       await signOut();
-      router.replace("/account?denied=1");
+      router.replace(`/account?denied=1${who}`);
     };
     void run();
     return () => {
