@@ -17,6 +17,7 @@ import { ArrowRight, Loader2, Briefcase, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
 import { checkBetaAccess } from "@/lib/access";
+import { BetaDeniedModal } from "@/components/BetaDeniedModal";
 
 function AccountForm() {
   const { user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle, signOut } = useAuth();
@@ -25,6 +26,8 @@ function AccountForm() {
   const next = searchParams.get("next") || "/dashboard";
   const denied = searchParams.get("denied") === "1";
   const deniedEmail = searchParams.get("as");
+  const [showDenied, setShowDenied] = useState(denied);
+  const [deniedAccount, setDeniedAccount] = useState<string | null>(deniedEmail);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,9 +61,8 @@ function AccountForm() {
       const access = await checkBetaAccess();
       if (access.state === "denied") {
         await signOut();
-        setError(
-          `IR35Careers is in private beta and ${access.email ?? "this account"} isn't on the list yet. Join the waitlist and we'll email you the moment access opens.`
-        );
+        setDeniedAccount(access.email ?? null);
+        setShowDenied(true);
         setSubmitting(false);
         return;
       }
@@ -92,9 +94,8 @@ function AccountForm() {
       const access = await checkBetaAccess();
       if (access.state === "denied") {
         await signOut();
-        setError(
-          `IR35Careers is in private beta and ${access.email ?? "this account"} isn't on the list yet. Join the waitlist and we'll email you the moment access opens.`
-        );
+        setDeniedAccount(access.email ?? null);
+        setShowDenied(true);
         setSubmitting(false);
         return;
       }
@@ -146,18 +147,8 @@ function AccountForm() {
         </Link>
       </div>
 
-      {denied && (
-        <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
-          IR35Careers is in private beta.{" "}
-          {deniedEmail ? (
-            <>
-              <span className="font-semibold">{deniedEmail}</span> isn&apos;t on the beta list yet.
-            </>
-          ) : (
-            <>This account isn&apos;t on the beta list yet.</>
-          )}{" "}
-          <Link href="/" className="font-semibold underline">Join the waitlist</Link> and we&apos;ll email you as soon as access opens.
-        </p>
+      {showDenied && (
+        <BetaDeniedModal email={deniedAccount} onClose={() => setShowDenied(false)} />
       )}
 
       <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">Sign in or create account</h1>
