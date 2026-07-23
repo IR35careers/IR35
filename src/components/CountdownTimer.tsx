@@ -69,15 +69,15 @@ export default function CountdownTimer() {
       {units.map((unit, i) => (
         <div key={unit.label} className="flex items-center gap-3 sm:gap-5">
           <div className="text-center min-w-[52px] sm:min-w-[64px]">
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-light text-white tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-slate-900 tabular-nums tracking-tight">
               {String(unit.value).padStart(2, "0")}
             </div>
-            <div className="text-[10px] sm:text-xs text-white/50 uppercase tracking-widest mt-1">
+            <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-widest mt-1">
               {unit.label}
             </div>
           </div>
           {i < units.length - 1 && (
-            <div className="text-white/20 text-xl sm:text-2xl font-light">
+            <div className="text-slate-200 text-xl sm:text-2xl font-light">
               |
             </div>
           )}
