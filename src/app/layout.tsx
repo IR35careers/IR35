@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | IR35Careers",
   },
   description:
-    "The UK's modern platform for Inside & Outside IR35 contract opportunities. Smart search, AI recommendations, daily alerts. Launching soon — join the waitlist.",
+    "The UK platform for Inside and Outside IR35 contract roles. Every contract labelled, day rates shown up front, personalised matches and saved searches. Launching soon. Join the waitlist.",
   keywords: [
     "IR35",
     "UK contractor jobs",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "IR35Careers – Find Better UK Contract Jobs",
+        alt: "IR35Careers | Find Better UK Contract Jobs",
       },
     ],
   },

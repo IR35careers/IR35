@@ -79,10 +79,10 @@ export default function TakeHomeCalculator() {
             <span className="text-right">Outside IR35</span>
           </div>
           <Row label="Annual gross / revenue" a={gbp(inside.gross)} b={gbp(outside.gross)} />
-          <Row label="Corporation tax" a="—" b={gbp(outside.corporationTax)} sub />
+          <Row label="Corporation tax" a="N/A" b={gbp(outside.corporationTax)} sub />
           <Row label="Income tax" a={gbp(inside.incomeTax)} b={gbp(outside.incomeTax)} sub />
           <Row label="National Insurance" a={gbp(inside.nationalInsurance)} b={gbp(outside.nationalInsurance)} sub />
-          <Row label="Dividend tax" a="—" b={gbp(outside.dividendTax)} sub />
+          <Row label="Dividend tax" a="N/A" b={gbp(outside.dividendTax)} sub />
           <div className="grid grid-cols-3 items-center gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold">
             <span>Take-home</span>
             <span className="text-right tabular-nums">{gbp(inside.takeHome)}</span>

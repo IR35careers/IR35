@@ -26,7 +26,7 @@ export interface JobDetail extends JobListing {
 export const JOB_LIST_COLUMNS =
   "id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at";
 
-/** Human-friendly rate string: "£550–£650/day", "£85k/yr", "Rate on application". */
+/** Human-friendly rate string: "£550-£650/day", "£85k/yr", "Rate on application". */
 export function formatRate(job: Pick<JobListing, "rate_min" | "rate_max" | "rate_currency" | "rate_type">): string {
   const { rate_min: min, rate_max: max, rate_type: type } = job;
   if (min === null && max === null) return "Rate on application";
@@ -34,7 +34,7 @@ export function formatRate(job: Pick<JobListing, "rate_min" | "rate_max" | "rate
   const fmt = (n: number) =>
     type === "annual" && n >= 1000 ? `${symbol}${Math.round(n / 1000)}k` : `${symbol}${n.toLocaleString()}`;
   const suffix = type === "daily" ? "/day" : type === "hourly" ? "/hr" : type === "annual" ? "/yr" : "";
-  if (min !== null && max !== null && min !== max) return `${fmt(min)}–${fmt(max)}${suffix}`;
+  if (min !== null && max !== null && min !== max) return `${fmt(min)}-${fmt(max)}${suffix}`;
   const single = (max ?? min) as number;
   const prefix = min === null && max !== null ? "Up to " : "";
   return `${prefix}${fmt(single)}${suffix}`;

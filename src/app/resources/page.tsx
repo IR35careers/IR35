@@ -14,12 +14,12 @@ const GUIDES = [
   {
     title: "What is IR35?",
     body:
-      "IR35 (the off-payroll working rules) decides whether a contractor is genuinely self-employed or, for tax purposes, effectively an employee of the client. If a role is 'inside IR35', income tax and National Insurance are deducted like employment. If 'outside IR35', you can work through your own limited company more tax-efficiently. Since April 2021, for medium and large private-sector clients, it's the client — not you — who determines the status.",
+      "IR35 (the off-payroll working rules) decides whether a contractor is genuinely self-employed or, for tax purposes, effectively an employee of the client. If a role is 'inside IR35', income tax and National Insurance are deducted like employment. If 'outside IR35', you can work through your own limited company more tax-efficiently. Since April 2021, for medium and large private-sector clients, it's the client, not you, who determines the status.",
   },
   {
-    title: "Inside vs Outside IR35 — what changes",
+    title: "Inside vs Outside IR35: what changes",
     body:
-      "Inside IR35 means you're taxed broadly like an employee: PAYE income tax and NI are deducted (often via an umbrella company), and your take-home is lower. Outside IR35 means HMRC accepts you're in business on your own account — you can pay yourself a mix of salary and dividends through a limited company, keeping more of your rate. The difference in take-home can be significant, which is why the status shown on a contract matters so much.",
+      "Inside IR35 means you're taxed broadly like an employee: PAYE income tax and NI are deducted (often via an umbrella company), and your take-home is lower. Outside IR35 means HMRC accepts you're in business on your own account, so you can pay yourself a mix of salary and dividends through a limited company, keeping more of your rate. The difference in take-home can be significant, which is why the status shown on a contract matters so much.",
   },
   {
     title: "How is IR35 status decided?",
@@ -29,7 +29,7 @@ const GUIDES = [
   {
     title: "Umbrella vs limited company",
     body:
-      "For inside-IR35 roles, contractors typically work through an umbrella company, which employs you and runs PAYE — simple, but employer NI and a margin come out of the assignment rate. For outside-IR35 roles, a limited company is usually more tax-efficient via low salary plus dividends, though it comes with accounting responsibilities. Which is better depends on the role's IR35 status and your day rate.",
+      "For inside-IR35 roles, contractors typically work through an umbrella company, which employs you and runs PAYE. That is simple, but employer NI and a margin come out of the assignment rate. For outside-IR35 roles, a limited company is usually more tax-efficient via low salary plus dividends, though it comes with accounting responsibilities. Which is better depends on the role's IR35 status and your day rate.",
   },
 ];
 
@@ -43,7 +43,7 @@ export default function ResourcesPage() {
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">IR35 resources</h1>
         </div>
         <p className="mt-2 max-w-2xl text-slate-600">
-          Plain-English guides to IR35 for UK contractors — and free tools to check a contract&apos;s
+          Plain-English guides to IR35 for UK contractors, plus free tools to check a contract&apos;s
           status and estimate your take-home.
         </p>
 

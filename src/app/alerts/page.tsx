@@ -114,7 +114,7 @@ function AlertsInner() {
         </button>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-slate-500">
-        Save searches you care about. Each opens as a live search — and once email delivery is
+        Save searches you care about. Each opens as a live search, and once email delivery is
         switched on, we&apos;ll notify you when new matching contracts appear.
       </p>
 

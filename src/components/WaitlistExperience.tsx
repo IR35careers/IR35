@@ -115,7 +115,7 @@ export function WaitlistExperience(): ReactElement {
           </h1>
 
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:mt-4 sm:text-base">
-            Every UK contract in one place — IR35 status and day rate shown before you click.
+            Every UK contract in one place, with IR35 status and day rate shown before you click.
             Be first to see new roles, and apply direct.
           </p>
 
@@ -143,7 +143,7 @@ export function WaitlistExperience(): ReactElement {
               <div className="flex items-center justify-center gap-2.5 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
                 <p className="text-sm font-medium text-green-800">
-                  You&apos;re on the list — we&apos;ll email you when access opens.
+                  You&apos;re on the list. We&apos;ll email you when access opens.
                 </p>
               </div>
             )}

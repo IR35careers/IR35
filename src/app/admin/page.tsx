@@ -159,7 +159,7 @@ export default function AdminPage() {
                 ["Expired jobs", data.expiredJobs],
               ].map(([label, value]) => (
                 <div key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-2xl font-semibold tabular-nums">{value ?? "—"}</p>
+                  <p className="text-2xl font-semibold tabular-nums">{value ?? "N/A"}</p>
                   <p className="mt-0.5 text-xs text-slate-500">{label}</p>
                 </div>
               ))}
@@ -192,10 +192,10 @@ export default function AdminPage() {
                 {(data.users ?? []).map((u: any) => (
                   <tr key={u.id} className="hover:bg-white">
                     <td className="px-4 py-3 text-slate-800">{u.email}</td>
-                    <td className="px-4 py-3 text-slate-600">{u.profile?.full_name || "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{u.profile?.full_name || "N/A"}</td>
                     <td className="px-4 py-3 text-slate-600">{u.provider}</td>
                     <td className="px-4 py-3 tabular-nums text-slate-600">{u.profile?.skills?.length ?? 0}</td>
-                    <td className="px-4 py-3">{u.profile?.cv_filename ? <span className="text-green-700">✓</span> : <span className="text-slate-300">—</span>}</td>
+                    <td className="px-4 py-3">{u.profile?.cv_filename ? <span className="text-green-700">✓</span> : <span className="text-slate-300">N/A</span>}</td>
                     <td className="px-4 py-3 text-slate-500">{new Date(u.created_at).toLocaleDateString("en-GB")}</td>
                   </tr>
                 ))}

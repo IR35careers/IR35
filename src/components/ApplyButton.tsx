@@ -32,7 +32,7 @@ export function ApplyButton({
           <Lock size={14} /> Sign in to apply
         </Link>
         <p className="mt-2 text-xs text-slate-400">
-          Free account — takes under a minute, then you apply on the original listing.
+          Free account. Takes under a minute, then you apply on the original listing.
         </p>
       </div>
     );
@@ -49,7 +49,7 @@ export function ApplyButton({
         Apply on {domainLabel} <ExternalLink size={14} />
       </a>
       <p className="mt-2 text-xs text-slate-400">
-        Applications open on the original listing — IR35Careers never sits between you and the
+        Applications open on the original listing. IR35Careers never sits between you and the
         client.
       </p>
     </div>

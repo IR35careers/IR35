@@ -16,7 +16,7 @@ const STEPS = [
   {
     icon: ShieldCheck,
     title: "Every role, IR35 status up front",
-    body: "We label each contract Inside or Outside IR35 — only when the advert actually states it — and show the day rate before you click.",
+    body: "We label each contract Inside or Outside IR35, but only when the advert actually states it, and show the day rate before you click.",
   },
   {
     icon: Target,
@@ -26,7 +26,7 @@ const STEPS = [
   {
     icon: LayoutList,
     title: "Apply direct, track everything",
-    body: "Applications go straight to the original listing — we never sit between you and the client. Save roles and track what you've applied for.",
+    body: "Applications go straight to the original listing. We never sit between you and the client. Save roles and track what you've applied for.",
   },
 ];
 

@@ -162,13 +162,13 @@ export default function OnboardingPage() {
               Let&apos;s get you matched
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-slate-500">
-              Two minutes now — personalised contract matches with real match
+              Two minutes now, and personalised contract matches with real match
               scores immediately after.
             </p>
             <ul className="mt-6 space-y-4 text-sm text-slate-500">
               <li className="flex gap-2.5">
                 <span className="mt-0.5 text-green-700">✓</span>
-                Your CV is stored privately — only you can ever access it.
+                Your CV is stored privately. Only you can ever access it.
               </li>
               <li className="flex gap-2.5">
                 <span className="mt-0.5 text-green-700">✓</span>
@@ -230,10 +230,10 @@ export default function OnboardingPage() {
               className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-3 text-sm text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
             >
               <option value="">Select…</option>
-              <option value="1">0–2 years</option>
-              <option value="3">3–5 years</option>
-              <option value="6">6–9 years</option>
-              <option value="10">10–15 years</option>
+              <option value="1">0-2 years</option>
+              <option value="3">3-5 years</option>
+              <option value="6">6-9 years</option>
+              <option value="10">10-15 years</option>
               <option value="16">15+ years</option>
             </select>
           </div>
@@ -298,17 +298,17 @@ export default function OnboardingPage() {
               <span className="text-sm">
                 {existingCv ? (
                   <>
-                    <span className="text-green-700">{existingCv}</span> on file — upload a new
+                    <span className="text-green-700">{existingCv}</span> on file. Upload a new
                     one to replace it
                   </>
                 ) : (
-                  "Upload your CV — PDF or Word, up to 5MB"
+                  "Upload your CV. PDF or Word, up to 5MB"
                 )}
               </span>
             </button>
           )}
           <p className="mt-1.5 text-xs text-slate-400">
-            Stored privately — only you can access it. AI CV reading arrives soon; for now, pick
+            Stored privately, so only you can access it. Pick
             your skills below.
           </p>
         </section>

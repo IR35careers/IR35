@@ -43,7 +43,7 @@ function rateSummary(jobs: JobListing[]): string | null {
   if (daily.length < 3) return null;
   const lo = daily[Math.floor(daily.length * 0.25)];
   const hi = daily[Math.floor(daily.length * 0.75)];
-  return `£${lo.toLocaleString()}–£${hi.toLocaleString()}/day typical`;
+  return `£${lo.toLocaleString()}-£${hi.toLocaleString()}/day typical`;
 }
 
 function boardLink(page: SeoPage): string {
@@ -120,7 +120,7 @@ export default async function ContractsSeoPage({
                 original listing.
               </>
             ) : (
-              <>No live roles right now — new contracts arrive throughout the day.</>
+              <>No live roles right now. New contracts arrive throughout the day.</>
             )}
           </p>
           <Link

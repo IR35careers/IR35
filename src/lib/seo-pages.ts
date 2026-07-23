@@ -79,7 +79,7 @@ function buildRegistry(): Map<string, SeoPage> {
     {
       slug: "outside-ir35-contracts",
       h1: "Outside IR35 Contract Jobs",
-      metaTitle: "Outside IR35 Contracts — Live UK Roles",
+      metaTitle: "Outside IR35 Contracts: Live UK Roles",
       metaDescription:
         "Live UK contract roles explicitly advertised as Outside IR35, with day rates shown up front. Updated throughout the day.",
       filters: { ir35: "outside" },
@@ -87,7 +87,7 @@ function buildRegistry(): Map<string, SeoPage> {
     {
       slug: "inside-ir35-contracts",
       h1: "Inside IR35 Contract Jobs",
-      metaTitle: "Inside IR35 Contracts — Live UK Roles",
+      metaTitle: "Inside IR35 Contracts: Live UK Roles",
       metaDescription:
         "Live UK contract roles advertised as Inside IR35, with rates and workplace type up front. Updated throughout the day.",
       filters: { ir35: "inside" },
@@ -95,7 +95,7 @@ function buildRegistry(): Map<string, SeoPage> {
     {
       slug: "remote-contracts",
       h1: "Remote UK Contract Jobs",
-      metaTitle: "Remote Contract Jobs UK — Inside & Outside IR35",
+      metaTitle: "Remote Contract Jobs UK: Inside & Outside IR35",
       metaDescription:
         "Fully remote UK contract roles with IR35 status and day rates shown up front. Updated throughout the day.",
       filters: { remote: true },
@@ -107,7 +107,7 @@ function buildRegistry(): Map<string, SeoPage> {
     pages.push({
       slug: `contracts-in-${locSlug}`,
       h1: `Contract Jobs in ${loc}`,
-      metaTitle: `Contract Jobs in ${loc} — IR35 Status Up Front`,
+      metaTitle: `Contract Jobs in ${loc}: IR35 Status Up Front`,
       metaDescription: `Live contract roles in ${loc} with day rates and IR35 status shown up front. Inside and Outside IR35. Updated daily.`,
       filters: { location: loc },
     });
@@ -118,7 +118,7 @@ function buildRegistry(): Map<string, SeoPage> {
     pages.push({
       slug: `${skillSlug}-contracts`,
       h1: `${skill} Contract Jobs`,
-      metaTitle: `${skill} Contracts UK — Day Rates & IR35 Status`,
+      metaTitle: `${skill} Contracts UK: Day Rates & IR35 Status`,
       metaDescription: `Live UK ${skill} contract roles with day rates and IR35 status up front. Inside and Outside IR35. Updated daily.`,
       filters: { skill },
     });
@@ -129,14 +129,14 @@ function buildRegistry(): Map<string, SeoPage> {
       {
         slug: `outside-ir35-${skillSlug}-contracts`,
         h1: `Outside IR35 ${skill} Contracts`,
-        metaTitle: `Outside IR35 ${skill} Contracts — Live UK Roles`,
+        metaTitle: `Outside IR35 ${skill} Contracts: Live UK Roles`,
         metaDescription: `${skill} contract roles explicitly advertised as Outside IR35, with day rates shown. Updated daily.`,
         filters: { skill, ir35: "outside" },
       },
       {
         slug: `remote-${skillSlug}-contracts`,
         h1: `Remote ${skill} Contracts`,
-        metaTitle: `Remote ${skill} Contract Jobs UK — IR35 Status Shown`,
+        metaTitle: `Remote ${skill} Contract Jobs UK: IR35 Status Shown`,
         metaDescription: `Fully remote UK ${skill} contract roles with IR35 status and day rates up front. Updated daily.`,
         filters: { skill, remote: true },
       }
@@ -146,7 +146,7 @@ function buildRegistry(): Map<string, SeoPage> {
       pages.push({
         slug: `${skillSlug}-contracts-${locSlug}`,
         h1: `${skill} Contract Jobs in ${loc}`,
-        metaTitle: `${skill} Contracts in ${loc} — Day Rates & IR35`,
+        metaTitle: `${skill} Contracts in ${loc}: Day Rates & IR35`,
         metaDescription: `Live ${skill} contract roles in ${loc} with day rates and IR35 status up front. Updated daily.`,
         filters: { skill, location: loc },
       });

@@ -51,7 +51,7 @@ export async function generateMetadata({
   const status =
     job.ir35_status === "outside" ? "Outside IR35" : job.ir35_status === "inside" ? "Inside IR35" : "";
   return {
-    title: `${job.title} — ${job.company_name}${status ? ` (${status})` : ""} | IR35Careers`,
+    title: `${job.title} at ${job.company_name}${status ? ` (${status})` : ""} | IR35Careers`,
     description: `${formatRate(job)} · ${job.location}. Apply for this UK contract role on IR35Careers.`,
   };
 }
@@ -136,8 +136,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   const factCards = [
     { icon: PoundSterling, label: job.rate_type === "annual" ? "Salary" : job.rate_type === "hourly" ? "Hourly rate" : "Day rate", value: formatRate(job) },
-    { icon: MapPin, label: "Location", value: job.location || "—" },
-    { icon: Briefcase, label: "Workplace", value: remoteLabel ?? "—" },
+    { icon: MapPin, label: "Location", value: job.location || "N/A" },
+    { icon: Briefcase, label: "Workplace", value: remoteLabel ?? "N/A" },
     { icon: Clock, label: "Posted", value: formatPosted(job) },
   ];
 
@@ -213,7 +213,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               </div>
               <p className="mt-2 text-sm text-slate-500">
                 This role is advertised via {job.source_domain.replace("www.", "")}. Applications open on the
-                original listing — IR35Careers never sits between you and the client.
+                original listing. IR35Careers never sits between you and the client.
               </p>
             </section>
           </div>

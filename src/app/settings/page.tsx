@@ -141,11 +141,11 @@ export default function SettingsPage() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Account overview</h2>
               <dl className="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
                 {[
-                  ["Name", profile?.full_name || "—"],
+                  ["Name", profile?.full_name || "N/A"],
                   ["Email", user.email],
                   ["Sign-in method", provider === "google" ? "Google" : "Email & password"],
                   ["Member since", memberSince],
-                  ["Current role", profile?.job_title || "—"],
+                  ["Current role", profile?.job_title || "N/A"],
                   ["Plan", "Free"],
                 ].map(([k, v]) => (
                   <div key={String(k)} className="flex justify-between gap-4 border-b border-slate-100 pb-2">
@@ -209,7 +209,7 @@ export default function SettingsPage() {
                   <p className="text-sm font-medium text-slate-800">Two-factor authentication</p>
                   <p className="text-xs text-slate-500">
                     {provider === "google"
-                      ? "Managed by your Google account — enable 2FA there for full protection."
+                      ? "Managed by your Google account. Enable 2FA there for full protection."
                       : "Sign in with Google to add two-factor protection to your account."}
                   </p>
                 </div>

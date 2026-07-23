@@ -56,7 +56,7 @@ function AccountForm() {
     if (!signIn.error) {
       if ((await checkBetaAccess()) === "denied") {
         await signOut();
-        setError("IR35Careers is in private beta — your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
+        setError("IR35Careers is in private beta. Your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
         setSubmitting(false);
         return;
       }
@@ -73,7 +73,7 @@ function AccountForm() {
       if (signUp.error) {
         // Account exists but password was wrong (sign-up rejects duplicate).
         if (/already registered|already exists|user already/i.test(signUp.error)) {
-          setError("That email is already registered — check your password and try again.");
+          setError("That email is already registered. Check your password and try again.");
         } else {
           setError(signUp.error);
         }
@@ -87,7 +87,7 @@ function AccountForm() {
       }
       if ((await checkBetaAccess()) === "denied") {
         await signOut();
-        setError("IR35Careers is in private beta — your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
+        setError("IR35Careers is in private beta. Your account isn't enabled yet. Join the waitlist and we'll email you the moment access opens.");
         setSubmitting(false);
         return;
       }
@@ -141,14 +141,14 @@ function AccountForm() {
 
       {denied && (
         <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
-          IR35Careers is in private beta. Your account isn&apos;t enabled yet —{" "}
-          <Link href="/" className="font-semibold underline">join the waitlist</Link> and we&apos;ll email you as soon as access opens.
+          IR35Careers is in private beta. Your account isn&apos;t enabled yet.{" "}
+          <Link href="/" className="font-semibold underline">Join the waitlist</Link> and we&apos;ll email you as soon as access opens.
         </p>
       )}
 
       <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">Sign in or create account</h1>
       <p className="mt-1.5 text-sm text-slate-500">
-        One step — we&apos;ll sign you in, or set you up if you&apos;re new.
+        One step. We&apos;ll sign you in, or set you up if you&apos;re new.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
@@ -216,7 +216,7 @@ function AccountForm() {
           if (res.error) {
             setError(
               /provider is not enabled|unsupported provider/i.test(res.error)
-                ? "Google sign-in isn't switched on yet — use email and password for now."
+                ? "Google sign-in isn't switched on yet. Use email and password for now."
                 : res.error
             );
           }

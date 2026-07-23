@@ -70,7 +70,7 @@ const QUESTIONS: Q[] = [
   {
     id: "in_business",
     question: "Do you market a business (website, other clients, own branding)?",
-    help: "Trading as a genuine business — multiple clients, marketing, a business identity — supports outside IR35.",
+    help: "Trading as a genuine business, with multiple clients, marketing and a business identity, supports outside IR35.",
     weight: 1,
   },
 ];
@@ -97,7 +97,7 @@ export default function IR35StatusChecker() {
       ? { label: "Likely Outside IR35", tone: "green" as const }
       : likelihood <= 40
         ? { label: "Likely Inside IR35", tone: "rose" as const }
-        : { label: "Borderline — seek review", tone: "amber" as const };
+        : { label: "Borderline: seek review", tone: "amber" as const };
 
   const reset = () => {
     setAnswers({});
@@ -181,7 +181,7 @@ export default function IR35StatusChecker() {
             </div>
             <p className="mt-2 text-sm text-slate-600">{likelihood}% toward outside IR35 on your answers.</p>
             <p className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-500">
-              This is indicative guidance only — <strong>not a status determination</strong> and not
+              This is indicative guidance only. It is <strong>not a status determination</strong> and not
               legal or tax advice. IR35 turns on the true facts of your engagement and the written
               contract. For a formal view, use HMRC&apos;s{" "}
               <a className="text-green-700 underline" href="https://www.gov.uk/guidance/check-employment-status-for-tax" target="_blank" rel="noopener noreferrer">

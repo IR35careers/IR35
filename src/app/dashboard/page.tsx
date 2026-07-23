@@ -132,8 +132,8 @@ export default function DashboardPage() {
   const stats = [
     { icon: Target, value: matches.length > 0 ? String(matches.length) : "0", label: "Matches for you", sub: "View matches", href: "#matches", accent: "green" },
     { icon: ShieldCheck, value: String(outsideCount), label: "Outside IR35", sub: "View jobs", href: "/jobs?ir35=outside", accent: "green" },
-    { icon: PoundSterling, value: avgRate ? `£${avgRate}` : "—", label: "Avg match day rate", sub: "Browse rates", href: "/jobs", accent: "green" },
-    { icon: Briefcase, value: liveTotal !== null ? liveTotal.toLocaleString() : "—", label: "Live contracts", sub: "Browse all", href: "/jobs", accent: "green" },
+    { icon: PoundSterling, value: avgRate ? `£${avgRate}` : "N/A", label: "Avg match day rate", sub: "Browse rates", href: "/jobs", accent: "green" },
+    { icon: Briefcase, value: liveTotal !== null ? liveTotal.toLocaleString() : "N/A", label: "Live contracts", sub: "Browse all", href: "/jobs", accent: "green" },
   ];
 
   const checklist = [
@@ -199,7 +199,7 @@ export default function DashboardPage() {
               ) : matchesLoading ? (
                 <div className="mt-8 flex justify-center text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
               ) : matches.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No matches yet — new contracts arrive through the day.</p>
+                <p className="mt-4 text-sm text-slate-500">No matches yet. New contracts arrive through the day.</p>
               ) : (
                 <ul className="mt-4 space-y-2">
                   {matches.slice(0, 6).map(({ job, score, matchedSkills }) => (
@@ -299,7 +299,7 @@ export default function DashboardPage() {
 
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
               <p className="text-sm font-semibold text-slate-800">Your plan</p>
-              <p className="mt-0.5 text-xs text-slate-500">Free — full access to the board, matches and tools.</p>
+              <p className="mt-0.5 text-xs text-slate-500">Free. Full access to the board, matches and tools.</p>
             </section>
           </div>
         </div>
