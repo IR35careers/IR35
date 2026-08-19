@@ -2,37 +2,33 @@
 
 /**
  * Apply button for job detail pages.
- * Signed in  → direct link to the original listing.
- * Signed out → "Sign in to apply", returning here after authentication.
+ * Direct link to the original listing for every visitor. Personal actions
+ * such as saving and match scoring remain authenticated.
  */
 
-import Link from "next/link";
-import { ExternalLink, Lock } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { ExternalLink } from "lucide-react";
 
 export function ApplyButton({
   applyUrl,
   sourceDomain,
-  jobId,
 }: {
   applyUrl: string;
   sourceDomain: string;
-  jobId: string;
 }) {
-  const { user, loading } = useAuth();
   const domainLabel = sourceDomain.replace("www.", "");
 
-  if (!loading && !user) {
+  if (sourceDomain === "demo.ir35careers.local") {
     return (
       <div>
-        <Link
-          href={`/account?next=${encodeURIComponent(`/jobs/${jobId}`)}`}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-400 to-green-400 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+        <button
+          type="button"
+          disabled
+          className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-slate-200 px-6 py-3 text-sm font-semibold text-slate-500"
         >
-          <Lock size={14} /> Sign in to apply
-        </Link>
-        <p className="mt-2 text-xs text-slate-400">
-          Free account. Takes under a minute, then you apply on the original listing.
+          Preview listing
+        </button>
+        <p className="mt-2 text-xs text-slate-600">
+          Demo data never submits an application.
         </p>
       </div>
     );
@@ -44,13 +40,12 @@ export function ApplyButton({
         href={applyUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+        className="ir35-focus inline-flex min-h-12 items-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
       >
         Apply on {domainLabel} <ExternalLink size={14} />
       </a>
-      <p className="mt-2 text-xs text-slate-400">
-        Applications open on the original listing. IR35Careers never sits between you and the
-        client.
+      <p className="mt-2 text-xs text-slate-600">
+        Opens the original listing. Review its details before submitting.
       </p>
     </div>
   );

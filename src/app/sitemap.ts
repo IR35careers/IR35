@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { allSeoSlugs } from "@/lib/seo-pages";
 
 // Refresh the sitemap hourly.
@@ -17,6 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/tools/take-home`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tools/ir35-status`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/resources`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE}/stories`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
     ...allSeoSlugs().map((slug) => ({
       url: `${BASE}/contracts/${slug}`,
       lastModified: now,
@@ -25,21 +29,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  // Active job detail pages (capped; newest first).
-  const { data } = await supabase
-    .from("jobs")
-    .select("id, last_seen_at")
-    .is("expired_at", null)
-    .order("posted_on", { ascending: false, nullsFirst: false })
-    .limit(1000);
+  // Active job detail pages (capped; newest first). Static routes remain
+  // buildable when credentials are intentionally absent in preview and CI.
+  if (isSupabaseConfigured()) {
+    const { data } = await supabase
+      .from("jobs")
+      .select("id, last_seen_at")
+      .is("expired_at", null)
+      .order("posted_on", { ascending: false, nullsFirst: false })
+      .limit(1000);
 
-  for (const job of data ?? []) {
-    entries.push({
-      url: `${BASE}/jobs/${job.id}`,
-      lastModified: new Date(job.last_seen_at),
-      changeFrequency: "daily",
-      priority: 0.6,
-    });
+    for (const job of data ?? []) {
+      entries.push({
+        url: `${BASE}/jobs/${job.id}`,
+        lastModified: new Date(job.last_seen_at),
+        changeFrequency: "daily",
+        priority: 0.6,
+      });
+    }
   }
 
   return entries;

@@ -1,16 +1,28 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypeScript from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-];
-
-export default eslintConfig;
+export default defineConfig([
+  ...nextCoreWebVitals,
+  ...nextTypeScript,
+  {
+    // Existing client screens use effects to synchronize auth, storage and
+    // timer state. They are valid React patterns, but the React Compiler's
+    // opt-in advisory rule treats them as hard failures.
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
+  globalIgnores([
+    ".next/**",
+    "dist/**",
+    ".wrangler/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "tmp/**",
+  ]),
+]);

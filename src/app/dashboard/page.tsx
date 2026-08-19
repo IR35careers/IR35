@@ -25,7 +25,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { formatRate, type JobListing } from "@/lib/job-types";
+import { DEMO_JOBS } from "@/lib/demo-jobs";
+import { useWorkspaceState } from "@/lib/workspace/store";
 import { AppNav } from "@/components/AppNav";
 import { WelcomeModal } from "@/components/WelcomeModal";
 import {
@@ -33,10 +36,26 @@ import {
   firstName,
   getProfile,
   profileStrength,
+  scoreJob,
   timeGreeting,
   type Profile,
   type ScoredJob,
 } from "@/lib/profile";
+
+const PREVIEW_PROFILE: Profile = {
+  id: "local-preview",
+  full_name: "Alex Morgan",
+  target_rate_min: 500,
+  preferred_ir35: "outside",
+  preferred_remote: "any",
+  skills: ["AWS", "Terraform", "Kubernetes", "DevOps", "CI/CD"],
+  cv_path: null,
+  cv_filename: "Platform Engineering CV v4",
+  phone: "+44 7700 900000",
+  linkedin_url: "https://www.linkedin.com/in/alex-morgan-example",
+  job_title: "Senior Platform Engineer",
+  years_experience: 8,
+};
 
 function ScoreRing({ score, size = 44 }: { score: number; size?: number }) {
   const r = size / 2 - 4;
@@ -65,6 +84,8 @@ function IR35Chip({ status }: { status: JobListing["ir35_status"] }) {
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const workspace = useWorkspaceState();
+  const preview = !isSupabaseConfigured();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [checked, setChecked] = useState(false);
@@ -75,25 +96,39 @@ export default function DashboardPage() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/account?next=/dashboard");
-  }, [user, loading, router]);
+    if (!preview && !loading && !user) router.replace("/account?next=/dashboard");
+  }, [user, loading, router, preview]);
 
   useEffect(() => {
+    if (preview) {
+      setProfile(PREVIEW_PROFILE);
+      setChecked(true);
+      return;
+    }
     if (!user) return;
     getProfile(user.id).then((p) => {
       setProfile(p);
       setChecked(true);
       if (!p) router.replace("/onboarding");
     });
-  }, [user, router]);
+  }, [user, router, preview]);
 
   useEffect(() => {
     if (!profile || profile.skills.length === 0) return;
+    if (preview) {
+      setMatches(DEMO_JOBS.map((job) => scoreJob(job, profile)).filter((item): item is ScoredJob => item !== null));
+      return;
+    }
     setMatchesLoading(true);
     fetchMatches(profile).then(setMatches).finally(() => setMatchesLoading(false));
-  }, [profile]);
+  }, [profile, preview]);
 
   useEffect(() => {
+    if (preview) {
+      setLiveTotal(DEMO_JOBS.length);
+      setTracked(workspace.applications.map((application) => ({ status: application.status, job: application.job })));
+      return;
+    }
     if (!user) return;
     fetch("/api/jobs/search?per_page=1")
       .then((r) => (r.ok ? r.json() : null))
@@ -108,9 +143,9 @@ export default function DashboardPage() {
       .then(({ data }: { data: Array<{ status: string; jobs: unknown }> | null }) => {
         setTracked((data ?? []).filter((r) => r.jobs).map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing })));
       });
-  }, [user]);
+  }, [user, preview, workspace.applications]);
 
-  if (loading || !user || !checked || (checked && !profile)) {
+  if ((!preview && (loading || !user)) || !checked || (checked && !profile)) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />
@@ -118,7 +153,7 @@ export default function DashboardPage() {
     );
   }
 
-  const name = firstName(profile, user.email ?? undefined);
+  const name = firstName(profile, user?.email ?? undefined);
   const pct = profileStrength(profile);
   const outsideCount = matches.filter((m) => m.job.ir35_status === "outside").length;
   const dailyRates = matches.map((m) => m.job.rate_max ?? m.job.rate_min).filter((n): n is number => n !== null);
@@ -194,7 +229,7 @@ export default function DashboardPage() {
               {profile && profile.skills.length === 0 ? (
                 <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center">
                   <p className="text-sm text-slate-700">Add your skills to unlock matches.</p>
-                  <Link href="/onboarding" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Complete profile <ArrowRight size={14} /></Link>
+                  <Link href={preview ? "/profile" : "/onboarding"} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Complete profile <ArrowRight size={14} /></Link>
                 </div>
               ) : matchesLoading ? (
                 <div className="mt-8 flex justify-center text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
@@ -263,7 +298,7 @@ export default function DashboardPage() {
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-slate-800">Profile strength</h2>
-                <Link href="/settings" className="text-xs font-semibold text-green-700 hover:underline">Edit</Link>
+                <Link href="/profile" className="text-xs font-semibold text-green-700 hover:underline">Edit</Link>
               </div>
               <div className="mt-4 flex items-center gap-4">
                 <ScoreRing score={pct} size={72} />
@@ -280,7 +315,7 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/onboarding" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Improve profile</Link>
+              <Link href={preview ? "/profile" : "/onboarding"} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Improve profile</Link>
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-6">

@@ -19,6 +19,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { JOB_LIST_COLUMNS } from "@/lib/job-types";
+import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,58 @@ export async function GET(request: Request): Promise<Response> {
   const sort = SORT_VALUES.has(p.get("sort") ?? "") ? (p.get("sort") as string) : "recent";
   const page = clampInt(p.get("page"), 1, 500, 1);
   const perPage = clampInt(p.get("per_page"), 1, 50, 20);
+
+  const configured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  if (!configured && isDemoDataAvailable()) {
+    const withinDays = clampInt(p.get("within_days"), 0, 60, 0);
+    const queryText = q.toLowerCase();
+    let jobs = DEMO_JOBS.filter((job) => {
+      const searchable = `${job.title} ${job.company_name} ${job.description} ${job.skills.join(" ")}`.toLowerCase();
+      if (queryText && !searchable.includes(queryText)) return false;
+      if (IR35_VALUES.has(ir35) && job.ir35_status !== ir35) return false;
+      if (REMOTE_VALUES.has(remote) && job.remote_type !== remote) return false;
+      if (location && !job.location.toLowerCase().includes(location.toLowerCase())) return false;
+      if (skills.length > 0 && !skills.every((skill) => job.skills.includes(skill))) return false;
+      if (minRate > 0 && Math.max(job.rate_min ?? 0, job.rate_max ?? 0) < minRate) return false;
+      if (withinDays > 0) {
+        const date = new Date(job.posted_at ?? job.first_seen_at).getTime();
+        if (date < Date.now() - withinDays * 86_400_000) return false;
+      }
+      return true;
+    });
+
+    jobs = jobs.sort((a, b) => {
+      if (sort === "rate_high") return (b.rate_max ?? b.rate_min ?? 0) - (a.rate_max ?? a.rate_min ?? 0);
+      if (sort === "rate_low") return (a.rate_min ?? a.rate_max ?? 0) - (b.rate_min ?? b.rate_max ?? 0);
+      return new Date(b.posted_at ?? b.first_seen_at).getTime() - new Date(a.posted_at ?? a.first_seen_at).getTime();
+    });
+
+    const total = jobs.length;
+    const from = (page - 1) * perPage;
+    const facets =
+      p.get("with_facets") === "1"
+        ? {
+            outside: DEMO_JOBS.filter((job) => job.ir35_status === "outside").length,
+            inside: DEMO_JOBS.filter((job) => job.ir35_status === "inside").length,
+            tbc: DEMO_JOBS.filter((job) => job.ir35_status === "unknown").length,
+            remote: DEMO_JOBS.filter((job) => job.remote_type === "remote").length,
+            hybrid: DEMO_JOBS.filter((job) => job.remote_type === "hybrid").length,
+            onsite: DEMO_JOBS.filter((job) => job.remote_type === "onsite").length,
+          }
+        : undefined;
+
+    return Response.json({
+      jobs: jobs.slice(from, from + perPage),
+      total,
+      facets,
+      page,
+      per_page: perPage,
+      data_source: "demo",
+    });
+  }
 
   try {
     let query = supabase
@@ -126,6 +179,7 @@ export async function GET(request: Request): Promise<Response> {
       facets,
       page,
       per_page: perPage,
+      data_source: "live",
     });
   } catch (err) {
     return Response.json(

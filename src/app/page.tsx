@@ -1,5 +1,5 @@
-import { WaitlistExperience } from "@/components/WaitlistExperience";
+import { HomeExperience } from "@/components/HomeExperience";
 
 export default function Home() {
-  return <WaitlistExperience />;
+  return <HomeExperience />;
 }

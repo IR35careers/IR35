@@ -33,7 +33,7 @@ export async function checkBetaAccess(): Promise<AccessResult> {
   }
 }
 
-/** Fails OPEN: only an explicit denial blocks. */
+/** Member/private access fails closed; callers can surface a recoverable retry. */
 export async function hasBetaAccess(): Promise<boolean> {
-  return (await checkBetaAccess()).state !== "denied";
+  return (await checkBetaAccess()).state === "allowed";
 }

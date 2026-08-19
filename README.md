@@ -1,183 +1,89 @@
-# IR35Careers — Waitlist Landing Page
+# IR35Careers
 
-> Find Better UK Contract Jobs. The UK's platform for Inside & Outside IR35 contract opportunities.
+IR35Careers is a UK contract-discovery product that puts advertised IR35 status, rates, location and working pattern up front. Public visitors can browse and open contract details without creating an account; authentication is reserved for personal actions such as saving roles, alerts and profile-based matching.
 
-A single-page, dark glassmorphic "coming soon" waitlist page built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, and Three.js. This is the pre-launch teaser page described in the 14-Day Launch Plan — it is **not** the full job board (search, listings, dashboards); its only job is to collect waitlist signups ahead of launch.
+## Current product slice
 
----
+- Responsive public landing page, search, filters and contract detail
+- Explicit Inside, Outside and TBC status with an evidence label
+- Direct links to original live listings; no silent or automated submission
+- Signed-in profile, CV storage, saved jobs, applied state and alerts
+- Role-specific CV Studio with PDF/DOCX extraction, transparent scoring, keyword gaps, truth-preserving suggestions, side-by-side approval, version history and PDF/DOCX export
+- Truth-first application workspace with editable cover letters, reviewed screening answers, three explicit approval gates and non-submitting receipts
+- Responsive application tracker, linked recruiter inbox, contractor profile and controlled automation-rule preview
+- Owner-only Supabase application/event/inbox/rule schema plus a signed, idempotent inbound-mail boundary
+- Product updates, private contact-request storage and consent-only contractor-story publishing
+- Plain-English IR35 resources, an indicative status checker and take-home calculator
+- Reed, Adzuna and selected public ATS ingestion adapters
+- Clearly labelled local preview data when Supabase is not configured
 
-## ✨ Features
+Generative resume writing is intentionally not required or presented as live. CV Studio and application preparation use deterministic evidence checks and user-approved edits. Local preview can exercise the complete prepare/approve/receipt/track/inbox flow; ATS submission, mail forwarding and billing remain behind the provider and approval gates in `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md`.
 
-- **Animated background** — a Three.js glowing light-streak scene behind a glassmorphic signup card
-- **Waitlist form** — connected to Supabase, with duplicate-email handling
-- **Live countdown** — counts down to a real launch date you configure (see Environment Variables)
-- **Real signup count** — shows the actual number of people on the waitlist once there is at least one, instead of a placeholder number
-- **Toast notifications** — success/error feedback via react-hot-toast
-- **SEO basics** — metadata, Open Graph, Twitter Card, JSON-LD, sitemap, robots.txt
+## Stack
 
----
+- Next.js 16 App Router and React 19
+- TypeScript and Tailwind CSS
+- Supabase authentication, Postgres and private storage
+- Lucide icons and lightweight CSS motion
+- Vitest for unit checks
+- Playwright and axe for responsive E2E, accessibility and visual regression
+- Mammoth and unpdf for in-memory DOCX/PDF text extraction; docx and PDFKit for downloadable CV exports
 
-## 🛠 Tech Stack
+## Local setup
 
-| Technology | Purpose |
-|---|---|
-| Next.js 15 (App Router) | Framework |
-| React 19 | UI Library |
-| TypeScript | Type Safety |
-| Tailwind CSS | Styling |
-| Framer Motion | Countdown entrance animation |
-| Lucide Icons | Icon set |
-| next-themes | Dark mode provider (wired up, not currently exposed as a toggle on this page) |
-| Supabase | Waitlist database |
-| react-hot-toast | Toast notifications |
-| Three.js | Animated background |
-
----
-
-## 📁 Project Structure
-
-```
-ir35careers/
-├── public/
-│   ├── robots.txt
-│   └── sitemap.xml
-├── src/
-│   ├── app/
-│   │   ├── globals.css          # Global styles & Tailwind directives
-│   │   ├── layout.tsx           # Root layout, metadata, ThemeProvider, Toaster
-│   │   └── page.tsx             # Renders WaitlistExperience — the entire page
-│   ├── components/
-│   │   ├── CountdownTimer.tsx   # Countdown to NEXT_PUBLIC_LAUNCH_DATE
-│   │   ├── ThemeProvider.tsx    # next-themes wrapper
-│   │   └── WaitlistExperience.tsx # The whole landing page: background, card, form
-│   ├── lib/
-│   │   ├── supabase.ts          # Supabase client (lazy-initialised)
-│   │   └── utils.ts             # cn() helper + email validation
-├── supabase/
-│   └── waitlist.sql             # Table, RLS policies, and public count view
-├── tailwind.config.ts
-├── next.config.ts
-├── postcss.config.mjs
-├── tsconfig.json
-├── package.json
-├── .env.local.example
-└── README.md
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Node.js** 18.17 or later
-- **npm** (or yarn/pnpm/bun)
-- A **Supabase** account (free tier works)
-
-### 1. Install
+Requires a current Node.js LTS release and npm.
 
 ```bash
-cd ir35careers
 npm install
-```
-
-### 2. Set Up Supabase
-
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Open **SQL Editor** and run the SQL from `supabase/waitlist.sql` (creates the table, Row Level Security policies, and the `waitlist_count` view the homepage reads for the real signup count)
-3. Go to **Settings > API** and copy your Project URL and `anon` public key
-
-### 3. Configure Environment Variables
-
-```bash
-cp .env.local.example .env.local
-```
-
-Edit `.env.local`:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_LAUNCH_DATE=2026-08-15T09:00:00Z
-```
-
-**Important:** set `NEXT_PUBLIC_LAUNCH_DATE` to your real, chosen launch date before going live. If it's left unset, the countdown falls back to a rough "N days from whenever the app was last started/deployed" placeholder, which will silently drift on every redeploy.
-
-### 4. Run Development Server
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open `http://localhost:3000`. With no `.env.local`, development mode serves six production-shaped demo contracts and a labelled fictional workspace. The UI uses non-routable demo domains, stores workspace changes in the browser and disables application submission, email forwarding and payment.
 
----
+To connect real product data, copy `.env.local.example` to `.env.local` and provide the Supabase public values. Server-side ingestion credentials are optional and should be added only when that pipeline is being exercised.
 
-## 🏗 Build for Production
+## Quality commands
+
+```bash
+npm run typecheck
+npm run lint
+npm run test
+npm run test:legacy
+npm run test:e2e
+npm run build
+```
+
+The Playwright suite covers the public search-to-detail journey, CV analysis/verification/version/export, application preparation/approval/receipt/tracker/inbox/automation, account intent states, the mobile menu, automated WCAG checks and reviewed screenshots at phone, tablet and desktop widths. It never sends an application, email or payment.
+
+## Production behaviour
 
 ```bash
 npm run build
 npm start
 ```
 
----
+Production never falls back to demo contracts. Missing Supabase credentials leave public data unavailable while the static product shell and sitemap continue to build safely. Configure credentials in the hosting provider rather than committing `.env.local`.
 
-## 🌐 Deployment
+## Documentation
 
-### Vercel (recommended — matches the project's Supabase/Vercel free-tier plan)
+- `docs/01-REQUIREMENTS-MATRIX.md` — honest capability and gap map
+- `docs/02-PHASE-0-AUDIT-ISSUES.md` — baseline issues and resolutions
+- `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md` — provider, security and credential gates
+- `docs/09-UI-UX-REFERENCE-AUDIT.md` — live reference research and original interpretation
+- `docs/10-DESIGN-SYSTEM-MOTION-SPEC.md` — visual, responsive and motion system
+- `docs/11-VISUAL-ASSET-MANIFEST.md` — asset decisions and approval state
+- `docs/12-FIRST-SLICE-RELEASE-REPORT.md` — delivered scope and verification evidence
+- `docs/13-CV-STUDIO.md` — scoring, truthfulness, versioning and export behaviour
+- `docs/14-APPLICATION-WORKSPACE.md` — Tsenta-inspired feature mapping, implemented workflow and provider gates
 
-1. Push this repo to GitHub
-2. Import the project at [vercel.com/new](https://vercel.com/new)
-3. Add the environment variables from `.env.local` in the Vercel dashboard (Project → Settings → Environment Variables):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_SITE_URL` (your real production domain)
-   - `NEXT_PUBLIC_LAUNCH_DATE`
-4. Deploy
+## Safety and content principles
 
-### Other platforms
+- IR35 tools are educational and not legal or tax advice.
+- Status evidence is surfaced instead of presenting uncertain classifications as fact.
+- Imported jobs retain their source; live applications open the original listing.
+- Missing CV keywords are not converted into claimed experience without explicit user confirmation.
+- AI, mail, billing and auto-apply providers must remain disabled until their documented review, consent and idempotency gates pass.
 
-Any platform that supports Next.js works: Netlify, Railway, AWS Amplify, etc.
-
----
-
-## 📊 Supabase Schema
-
-See `supabase/waitlist.sql` for the full script. Summary:
-
-```sql
-CREATE TABLE waitlist (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-Row Level Security is enabled with:
-- Anonymous **inserts** allowed (the public waitlist form)
-- Service role **reads** allowed (admin use)
-- A `waitlist_count` view, readable by `anon`, exposing only the total row count — this is what the homepage reads to show a real signup number without exposing any email addresses.
-
----
-
-## ♿ Accessibility
-
-- Semantic HTML, keyboard-navigable form
-- Decorative Three.js background is `aria-hidden`
-- Sufficient color contrast on the dark card
-- Page allows normal vertical scrolling if content ever exceeds the viewport (short/landscape screens), rather than trapping content off-screen
-
----
-
-## Notes
-
-- **Domain:** confirmed as `ir35careers.com` — used consistently in metadata, `robots.txt`, and `sitemap.xml`.
-- **Launch date:** countdown targets a 30-day launch window from 16 July 2026, i.e. **15 August 2026** (`NEXT_PUBLIC_LAUNCH_DATE=2026-08-15T09:00:00Z`). Update this env var if the target date changes.
-- **Theming:** `next-themes` and a `ThemeProvider` are wired up in the root layout, but the current page is unconditionally dark-themed and no light/dark toggle is rendered anywhere. This is harmless as-is, just noting it in case a toggle was expected.
-
----
-
-## 📄 License
+## Licence
 
 Proprietary. All rights reserved © 2026 IR35Careers.

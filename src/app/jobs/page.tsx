@@ -7,11 +7,12 @@
 
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Search, MapPin, Loader2, SlidersHorizontal, Bell } from "lucide-react";
-import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
-import { useAuth } from "@/lib/auth-context";
-import { AppNav } from "@/components/AppNav";
+import { formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
+import { PublicHeader } from "@/components/PublicHeader";
+import { PublicFooter } from "@/components/PublicFooter";
+import { IR35Badge } from "@/components/ui/ir35-badge";
 
 interface Facets {
   outside: number; inside: number; tbc: number;
@@ -23,6 +24,7 @@ interface SearchResponse {
   facets?: Facets;
   page: number;
   per_page: number;
+  data_source?: "live" | "demo";
   error?: string;
 }
 
@@ -30,20 +32,42 @@ const RATE_OPTIONS = [0, 300, 400, 500, 600, 700] as const;
 const RECENCY_OPTIONS = [[0, "Any time"], [1, "Last 24 hours"], [3, "Last 3 days"], [7, "Last week"], [14, "Last 2 weeks"]] as const;
 const QUICK_SKILLS = ["React", "Python", "Java", ".NET", "AWS", "Azure", "DevOps", "Data Engineering", "Business Analysis", "Project Management", "Cyber Security", "Salesforce"] as const;
 
-function IR35Badge({ status }: { status: JobListing["ir35_status"] }) {
-  if (status === "outside") return <span className="rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Outside IR35</span>;
-  if (status === "inside") return <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-600">Inside IR35</span>;
-  return <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">IR35: TBC</span>;
-}
 function RemoteTag({ type }: { type: JobListing["remote_type"] }) {
   if (type === "unknown") return null;
   const label = type === "remote" ? "Remote" : type === "hybrid" ? "Hybrid" : "On-site";
   return <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs text-slate-600">{label}</span>;
 }
 
+function FilterOption({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count?: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`ir35-focus flex min-h-10 w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-sm transition-colors ${active ? "bg-green-50 font-medium text-green-700" : "text-slate-600 hover:bg-slate-100"}`}
+    >
+      <span className="flex items-center gap-2">
+        <span className={`flex h-4 w-4 items-center justify-center rounded border ${active ? "border-green-500 bg-green-500" : "border-slate-300"}`}>
+          {active && <span className="text-[10px] text-white">✓</span>}
+        </span>
+        {label}
+      </span>
+      {count !== undefined && <span className="text-xs tabular-nums text-slate-500">{count}</span>}
+    </button>
+  );
+}
+
 function JobsBoard() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const spIr35 = searchParams.get("ir35");
   const spRemote = searchParams.get("remote");
@@ -64,23 +88,28 @@ function JobsBoard() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      const target = `${window.location.pathname}${window.location.search}`;
-      router.replace(`/account?next=${encodeURIComponent(target)}`);
-    }
-  }, [user, authLoading, router]);
+  const requestRef = useRef<AbortController | null>(null);
 
   const runSearch = useCallback(async (params: URLSearchParams) => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     setLoading(true); setFailed(false);
     try {
-      const res = await fetch(`/api/jobs/search?${params.toString()}`);
+      const res = await fetch(`/api/jobs/search?${params.toString()}`, { signal: controller.signal });
       const json = (await res.json()) as SearchResponse;
       if (!res.ok || json.error) throw new Error(json.error ?? "Search failed");
+      if (requestRef.current !== controller) return;
       setData(json);
-    } catch { setFailed(true); } finally { setLoading(false); }
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (requestRef.current === controller) setFailed(true);
+    } finally {
+      if (requestRef.current === controller) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => () => requestRef.current?.abort(), []);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -113,22 +142,6 @@ function JobsBoard() {
     p.set("prefill", "1");
     return `/alerts?${p.toString()}`;
   })();
-
-  if (authLoading || !user) {
-    return <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500"><Loader2 className="animate-spin" size={22} /></main>;
-  }
-
-  const FilterOption = ({ label, count, active, onClick }: { label: string; count?: number; active: boolean; onClick: () => void }) => (
-    <button onClick={onClick} className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-sm transition-colors ${active ? "bg-green-50 font-medium text-green-700" : "text-slate-600 hover:bg-slate-100"}`}>
-      <span className="flex items-center gap-2">
-        <span className={`flex h-4 w-4 items-center justify-center rounded border ${active ? "border-green-500 bg-green-500" : "border-slate-300"}`}>
-          {active && <span className="text-[10px] text-white">✓</span>}
-        </span>
-        {label}
-      </span>
-      {count !== undefined && <span className="text-xs tabular-nums text-slate-400">{count}</span>}
-    </button>
-  );
 
   const Sidebar = (
     <div className="space-y-5">
@@ -184,8 +197,20 @@ function JobsBoard() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <AppNav />
+      <PublicHeader />
       <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
+        <div className="mb-6 max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the original listing.</p>
+        </div>
+
+        {data?.data_source === "demo" && (
+          <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+            Preview data - connect Supabase to use live contract search locally.
+          </p>
+        )}
+
         {/* Search bar */}
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -251,6 +276,7 @@ function JobsBoard() {
                         <div className="flex shrink-0 items-center justify-between gap-2 sm:flex-col sm:items-end">
                           {hasRate ? <span className="text-lg font-semibold tabular-nums tracking-tight sm:text-right">{formatRate(job)}</span> : <span className="text-sm text-slate-400 sm:text-right">Rate on application</span>}
                           <IR35Badge status={job.ir35_status} />
+                          <span className="text-[11px] text-slate-400 sm:text-right">{ir35EvidenceLabel(job)}</span>
                         </div>
                       </Link>
                     </li>
@@ -269,6 +295,7 @@ function JobsBoard() {
           </div>
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

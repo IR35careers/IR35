@@ -10,7 +10,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
 
 interface AuthResult {
   error: string | null;
@@ -32,32 +32,47 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured());
 
   useEffect(() => {
     let mounted = true;
+    let unsubscribe: (() => void) | undefined;
 
-    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
-      if (!mounted) return;
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
+    if (!isSupabaseConfigured()) {
+      return () => {
+        mounted = false;
+      };
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
+    void import("@/lib/supabase").then(({ getSupabase }) => {
       if (!mounted) return;
-      setUser(session?.user ?? null);
-      setLoading(false);
+      const supabase = getSupabase();
+      void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+        if (!mounted) return;
+        setUser(data.session?.user ?? null);
+        setLoading(false);
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event: string, session: Session | null) => {
+          if (!mounted) return;
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      );
+      unsubscribe = () => subscription.unsubscribe();
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, []);
 
   const signInWithPassword = async (email: string, password: string): Promise<AuthResult> => {
+    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+    const { getSupabase } = await import("@/lib/supabase");
+    const supabase = getSupabase();
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
@@ -66,6 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUpWithPassword = async (email: string, password: string): Promise<AuthResult> => {
+    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+    const { getSupabase } = await import("@/lib/supabase");
+    const supabase = getSupabase();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
@@ -77,6 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async (next = "/dashboard"): Promise<AuthResult> => {
+    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+    const { getSupabase } = await import("@/lib/supabase");
+    const supabase = getSupabase();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}${next}` },
@@ -85,12 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePassword = async (newPassword: string): Promise<AuthResult> => {
+    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+    const { getSupabase } = await import("@/lib/supabase");
+    const supabase = getSupabase();
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error: error ? error.message : null };
   };
 
   const signOut = async (): Promise<void> => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured()) {
+      const { getSupabase } = await import("@/lib/supabase");
+      await getSupabase().auth.signOut();
+    }
     setUser(null);
   };
 

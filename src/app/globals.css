@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --ir35-ink: 11 18 32;
+    --ir35-muted: 82 96 116;
+    --ir35-canvas: 246 248 247;
+    --ir35-surface: 255 255 255;
+    --ir35-border: 221 228 225;
+    --ir35-brand: 8 122 91;
+    --ir35-focus: 8 122 91;
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
@@ -16,12 +27,52 @@
   }
 
   body {
-    @apply text-white;
-    background-color: #0a0f16;
+    @apply bg-[#f6f8f7] text-[#0b1220];
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   ::selection {
-    @apply bg-white/20 text-white;
+    @apply bg-brand-100 text-brand-950;
+  }
+
+  :focus-visible {
+    outline-color: rgb(var(--ir35-focus));
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .ir35-container {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .ir35-reading-measure {
+    max-width: 68ch;
+  }
+
+  .ir35-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

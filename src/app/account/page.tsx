@@ -1,14 +1,6 @@
 "use client";
 
-/**
- * /account — one combined email + password screen.
- *
- * The user enters email + password and hits continue. We try to sign in; if
- * the account doesn't exist yet, we transparently sign them up instead. No
- * separate login/register pages — one box, one button.
- *
- * Design: matches the site's dark emerald/sky identity.
- */
+/** /account — explicit sign-in and account-creation states. */
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,6 +23,9 @@ function AccountForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"sign-in" | "create">(
+    searchParams.get("mode") === "create" ? "create" : "sign-in"
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
@@ -55,9 +50,14 @@ function AccountForm() {
 
     setSubmitting(true);
 
-    // Try sign-in first.
-    const signIn = await signInWithPassword(email, password);
-    if (!signIn.error) {
+    if (mode === "sign-in") {
+      const signIn = await signInWithPassword(email, password);
+      if (signIn.error) {
+        setError("We couldn't sign you in with those details. Check them and try again.");
+        setSubmitting(false);
+        return;
+      }
+
       const access = await checkBetaAccess();
       if (access.state === "denied") {
         await signOut();
@@ -70,41 +70,30 @@ function AccountForm() {
       return;
     }
 
-    // "Invalid login credentials" means either wrong password OR no account.
-    // Attempt sign-up; if the email already exists, Supabase returns a clear
-    // error and we surface it as a wrong-password hint.
-    const looksLikeNoAccount = /invalid login credentials/i.test(signIn.error);
-    if (looksLikeNoAccount) {
-      const signUp = await signUpWithPassword(email, password);
-      if (signUp.error) {
-        // Account exists but password was wrong (sign-up rejects duplicate).
-        if (/already registered|already exists|user already/i.test(signUp.error)) {
-          setError("That email is already registered. Check your password and try again.");
-        } else {
-          setError(signUp.error);
-        }
-        setSubmitting(false);
-        return;
-      }
-      if (signUp.needsConfirmation) {
-        setConfirmSent(true);
-        setSubmitting(false);
-        return;
-      }
-      const access = await checkBetaAccess();
-      if (access.state === "denied") {
-        await signOut();
-        setDeniedAccount(access.email ?? null);
-        setShowDenied(true);
-        setSubmitting(false);
-        return;
-      }
-      router.replace(next);
+    const signUp = await signUpWithPassword(email, password);
+    if (signUp.error) {
+      setError(
+        /already registered|already exists|user already/i.test(signUp.error)
+          ? "We couldn't create that account. Try signing in, or use a different email address."
+          : signUp.error
+      );
+      setSubmitting(false);
       return;
     }
-
-    setError(signIn.error);
-    setSubmitting(false);
+    if (signUp.needsConfirmation) {
+      setConfirmSent(true);
+      setSubmitting(false);
+      return;
+    }
+    const access = await checkBetaAccess();
+    if (access.state === "denied") {
+      await signOut();
+      setDeniedAccount(access.email ?? null);
+      setShowDenied(true);
+      setSubmitting(false);
+      return;
+    }
+    router.replace(next);
   };
 
   if (!loading && user) return null;
@@ -142,7 +131,7 @@ function AccountForm() {
             IR35<span className="text-slate-600">Careers</span>
           </span>
         </Link>
-        <Link href="/" className="text-xs text-slate-400 transition-colors hover:text-slate-700">
+        <Link href="/" className="text-xs text-slate-600 transition-colors hover:text-slate-900">
           ← Back to home
         </Link>
       </div>
@@ -155,9 +144,32 @@ function AccountForm() {
         />
       )}
 
-      <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">Sign in or create account</h1>
+      <div className="mt-6 grid grid-cols-2 rounded-xl bg-slate-100 p-1" aria-label="Account action">
+        {(["sign-in", "create"] as const).map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => {
+              setMode(item);
+              setError(null);
+            }}
+            aria-pressed={mode === item}
+            className={`ir35-focus min-h-10 rounded-lg px-3 text-sm font-semibold transition-colors ${
+              mode === item ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            {item === "sign-in" ? "Sign in" : "Create account"}
+          </button>
+        ))}
+      </div>
+
+      <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">
+        {mode === "sign-in" ? "Welcome back" : "Create your account"}
+      </h1>
       <p className="mt-1.5 text-sm text-slate-500">
-        One step. We&apos;ll sign you in, or set you up if you&apos;re new.
+        {mode === "sign-in"
+          ? "Sign in to manage saved contracts and alerts."
+          : "Start saving relevant contracts and focused searches."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
@@ -168,7 +180,7 @@ function AccountForm() {
           <input
             id="email"
             type="email"
-            autoComplete="email"
+            autoComplete={mode === "sign-in" ? "username" : "email"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -182,7 +194,7 @@ function AccountForm() {
           <input
             id="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
@@ -191,7 +203,7 @@ function AccountForm() {
         </div>
 
         {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
             {error}
           </p>
         )}
@@ -205,7 +217,7 @@ function AccountForm() {
             <Loader2 size={16} className="animate-spin" />
           ) : (
             <>
-              Continue <ArrowRight size={15} />
+              {mode === "sign-in" ? "Sign in" : "Create account"} <ArrowRight size={15} />
             </>
           )}
         </button>
@@ -213,7 +225,7 @@ function AccountForm() {
 
       <div className="mt-4 flex items-center gap-3">
         <span className="h-px flex-1 bg-slate-200" aria-hidden />
-        <span className="text-xs text-slate-400">or</span>
+        <span className="text-xs text-slate-600">or</span>
         <span className="h-px flex-1 bg-slate-200" aria-hidden />
       </div>
 
@@ -238,11 +250,11 @@ function AccountForm() {
           <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.94l3.66-2.84z" />
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
         </svg>
-        Continue with Google
+        {mode === "sign-in" ? "Sign in" : "Continue"} with Google
       </button>
 
-      <p className="mt-4 text-center text-xs text-slate-400">
-        By continuing you agree to browse and apply for roles via their original listings.
+      <p className="mt-4 text-center text-xs text-slate-600">
+        We use your account to save contracts and searches. Applications still happen on the original listing.
       </p>
     </div>
   );

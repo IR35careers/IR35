@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, Clock, PoundSterling, Building2, Briefcase } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, PoundSterling, Building2, Briefcase, ClipboardCheck, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
 import { SaveJobButton } from "@/components/SaveJobButton";
 import { JobMatchPanel } from "@/components/JobMatchPanel";
 import { PublicHeader } from "@/components/PublicHeader";
+import { PublicFooter } from "@/components/PublicFooter";
+import { IR35Badge } from "@/components/ui/ir35-badge";
 import { supabase } from "@/lib/supabase";
-import { formatPosted, formatRate, type JobDetail, type JobListing } from "@/lib/job-types";
+import { formatPosted, formatRate, ir35EvidenceLabel, type JobDetail, type JobListing } from "@/lib/job-types";
+import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +20,12 @@ const DETAIL_COLUMNS =
 async function getJob(id: string): Promise<JobDetail | null> {
   // Guard: only well-formed UUIDs reach the database.
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
+  const configured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+  if (!configured && isDemoDataAvailable()) {
+    return DEMO_JOBS.find((job) => job.id === id) ?? null;
+  }
   const { data, error } = await supabase
     .from("jobs")
     .select(DETAIL_COLUMNS)
@@ -29,6 +38,16 @@ async function getJob(id: string): Promise<JobDetail | null> {
 
 /** Live "similar contracts": same skills, not this job, newest first. */
 async function getSimilar(job: JobDetail): Promise<JobListing[]> {
+  const configured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+  if (!configured && isDemoDataAvailable()) {
+    return DEMO_JOBS.filter(
+      (candidate) =>
+        candidate.id !== job.id &&
+        candidate.skills.some((skill) => job.skills.includes(skill))
+    ).slice(0, 6);
+  }
   let query = supabase
     .from("jobs")
     .select("id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at")
@@ -56,74 +75,12 @@ export async function generateMetadata({
   };
 }
 
-function StatusBadge({ status }: { status: JobDetail["ir35_status"] }) {
-  if (status === "outside")
-    return (
-      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
-        Outside IR35
-      </span>
-    );
-  if (status === "inside")
-    return (
-      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-sm font-medium text-rose-600">
-        Inside IR35
-      </span>
-    );
-  return (
-    <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-sm text-slate-500">
-      IR35 status to be confirmed
-    </span>
-  );
-}
-
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const job = await getJob(id);
   if (!job) notFound();
   const similar = await getSimilar(job);
-
-  // Google Jobs structured data. Only fields we actually know are included —
-  // never fabricated. validThrough: 30 days from the best-known date.
-  const postedIso = job.posted_at ?? job.first_seen_at;
-  const validThrough = new Date(new Date(postedIso).getTime() + 30 * 86_400_000).toISOString();
-  const jobPostingLd: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "JobPosting",
-    title: job.title,
-    description: job.description || job.title,
-    datePosted: postedIso,
-    validThrough,
-    employmentType: "CONTRACTOR",
-    hiringOrganization: { "@type": "Organization", name: job.company_name },
-    directApply: false,
-  };
-  if (job.remote_type === "remote") {
-    jobPostingLd.jobLocationType = "TELECOMMUTE";
-    jobPostingLd.applicantLocationRequirements = { "@type": "Country", name: "United Kingdom" };
-  } else {
-    jobPostingLd.jobLocation = {
-      "@type": "Place",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: job.location,
-        addressCountry: "GB",
-      },
-    };
-  }
-  const rateBasis = job.rate_max ?? job.rate_min;
-  if (rateBasis !== null && job.rate_type !== "unknown") {
-    jobPostingLd.baseSalary = {
-      "@type": "MonetaryAmount",
-      currency: job.rate_currency ?? "GBP",
-      value: {
-        "@type": "QuantitativeValue",
-        ...(job.rate_min !== null && job.rate_max !== null && job.rate_min !== job.rate_max
-          ? { minValue: job.rate_min, maxValue: job.rate_max }
-          : { value: rateBasis }),
-        unitText: job.rate_type === "daily" ? "DAY" : job.rate_type === "hourly" ? "HOUR" : "YEAR",
-      },
-    };
-  }
+  const isDemo = job.source_domain === "demo.ir35careers.local";
 
   const remoteLabel =
     job.remote_type === "remote"
@@ -144,10 +101,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <PublicHeader />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingLd) }} />
 
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
-        <Link href="/jobs" className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800">
+        <Link href="/jobs" className="inline-flex items-center gap-1.5 text-sm text-slate-600 transition-colors hover:text-slate-900">
           <ArrowLeft size={14} /> Back to contracts
         </Link>
 
@@ -157,27 +113,46 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{job.title}</h1>
             <p className="mt-1.5 text-slate-600">{job.company_name}</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <StatusBadge status={job.ir35_status} />
+              <IR35Badge status={job.ir35_status} />
               {remoteLabel && (
                 <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-sm text-slate-600">
                   {remoteLabel}
                 </span>
               )}
+              <span className="text-xs text-slate-600">{ir35EvidenceLabel(job)}</span>
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <ApplyButton applyUrl={job.apply_url} sourceDomain={job.source_domain} jobId={job.id} />
+            <Link
+              href={`/applications/new/${job.id}`}
+              className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-card hover:bg-brand-700"
+            >
+              <ClipboardCheck size={16} aria-hidden="true" /> Prepare application
+            </Link>
+            <Link
+              href={`/jobs/${job.id}/resume`}
+              className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-800 shadow-card hover:bg-brand-100"
+            >
+              <WandSparkles size={16} aria-hidden="true" /> Tailor CV to this role
+            </Link>
+            <ApplyButton applyUrl={job.apply_url} sourceDomain={job.source_domain} />
             <SaveJobButton jobId={job.id} />
           </div>
         </header>
+
+        {isDemo && (
+          <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+            Preview listing - connect Supabase locally to open live contract details.
+          </p>
+        )}
 
         {/* Fact cards */}
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {factCards.map((f) => (
             <div key={f.label} className="rounded-2xl border border-slate-200 bg-white p-4">
               <f.icon size={16} className="text-green-600" />
-              <p className="mt-2 truncate text-lg font-semibold tabular-nums text-slate-900">{f.value}</p>
-              <p className="text-xs uppercase tracking-wide text-slate-400">{f.label}</p>
+              <p className="mt-2 break-words text-base font-semibold tabular-nums text-slate-900 sm:text-lg">{f.value}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-600">{f.label}</p>
             </div>
           ))}
         </div>
@@ -187,7 +162,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           {/* Main content */}
           <div className="min-w-0 space-y-6">
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Role description</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Role description</h2>
               <div className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-slate-700">
                 {job.description || "Full details are on the original listing."}
               </div>
@@ -195,7 +170,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
             {job.skills.length > 0 && (
               <section className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Skills</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Skills</h2>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {job.skills.map((skill) => (
                     <span key={skill} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">
@@ -211,7 +186,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <Building2 size={16} className="text-slate-400" />
                 <h2 className="text-sm font-semibold text-slate-800">{job.company_name}</h2>
               </div>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-slate-600">
                 This role is advertised via {job.source_domain.replace("www.", "")}. Applications open on the
                 original listing. IR35Careers never sits between you and the client.
               </p>
@@ -230,16 +205,10 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                     <li key={s.id}>
                       <Link href={`/jobs/${s.id}`} className="block py-3 transition-colors hover:bg-slate-50">
                         <p className="truncate text-sm font-medium text-slate-900">{s.title}</p>
-                        <p className="truncate text-xs text-slate-500">{s.company_name} · {s.location}</p>
+                        <p className="truncate text-xs text-slate-600">{s.company_name} · {s.location}</p>
                         <div className="mt-1.5 flex items-center justify-between gap-2">
                           <span className="text-xs font-semibold tabular-nums text-slate-700">{formatRate(s)}</span>
-                          {s.ir35_status === "outside" ? (
-                            <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">Outside IR35</span>
-                          ) : s.ir35_status === "inside" ? (
-                            <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-600">Inside IR35</span>
-                          ) : (
-                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500">TBC</span>
-                          )}
+                          <IR35Badge status={s.ir35_status} size="xs" />
                         </div>
                       </Link>
                     </li>
@@ -250,14 +219,19 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-sm font-semibold text-slate-800">Contractor tools</p>
+              <Link href={`/jobs/${job.id}/resume`} className="mt-3 block rounded-xl border border-brand-200 bg-brand-50/60 p-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50">
+                <span className="flex items-center gap-2 font-semibold text-brand-800"><WandSparkles size={15} aria-hidden="true" /> CV Studio</span>
+                <span className="mt-1 block text-xs leading-5 text-brand-900/75">Score, tailor, approve and export for this role</span>
+              </Link>
               <Link href="/tools/take-home" className="mt-3 block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">
                 <span className="font-medium text-slate-800">Take-home calculator</span>
-                <span className="block text-xs text-slate-500">See what this rate nets you</span>
+                <span className="block text-xs text-slate-600">See what this rate nets you</span>
               </Link>
             </section>
           </div>
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

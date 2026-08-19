@@ -1,4 +1,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
+
+export { isSupabaseConfigured } from "@/lib/supabase-config";
 
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -8,7 +11,7 @@ export function getSupabase(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!isSupabaseConfigured()) {
     // Return a dummy client that throws meaningful errors on usage
     // This allows the build to succeed even without env vars
     throw new Error(

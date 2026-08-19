@@ -5,12 +5,18 @@ node_modules/
 
 # Testing
 coverage/
+playwright-report/
+test-results/
+tmp/
 
 # Next.js
 .next/
 out/
-build/
+build/*
+!build/sites-vite-plugin.ts
 dist/
+.vinext/
+.wrangler/
 
 # Production
 *.log

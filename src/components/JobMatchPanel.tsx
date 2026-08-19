@@ -9,7 +9,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2, Sparkles, WandSparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { getProfile, scoreJob } from "@/lib/profile";
 import type { JobListing } from "@/lib/job-types";
@@ -46,7 +46,7 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
         </p>
         <Link
           href={`/account?next=/jobs/${job.id}`}
-          className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700"
+          className="ir35-focus mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
         >
           Sign in to see match
         </Link>
@@ -106,6 +106,12 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
           </ul>
         </div>
       )}
+      <Link
+        href={`/jobs/${job.id}/resume`}
+        className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
+      >
+        <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your CV
+      </Link>
     </div>
   );
 }

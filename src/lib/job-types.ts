@@ -22,6 +22,16 @@ export interface JobDetail extends JobListing {
   source_domain: string;
 }
 
+/** Evidence label for the current strict explicit-mention classifier. */
+export function ir35EvidenceLabel(
+  job: Pick<JobListing, "ir35_status" | "ir35_confidence">
+): string {
+  if (job.ir35_status === "unknown") return "No explicit status found";
+  if (job.ir35_confidence === "high") return "Status stated in the job title";
+  if (job.ir35_confidence === "medium") return "Status stated in the listing";
+  return "Status needs review";
+}
+
 /** Columns fetched for list views — keep in sync with JobListing. */
 export const JOB_LIST_COLUMNS =
   "id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at";

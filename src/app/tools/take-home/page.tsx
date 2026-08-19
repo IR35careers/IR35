@@ -6,6 +6,16 @@ import { ArrowLeft } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { insideIR35TakeHome, outsideIR35TakeHome, gbp, TAX_YEAR } from "@/lib/tax";
 
+function ComparisonRow({ label, a, b, sub }: { label: string; a: string; b: string; sub?: boolean }) {
+  return (
+    <div className={`grid grid-cols-3 items-center gap-2 px-4 py-2.5 ${sub ? "text-sm text-slate-500" : "text-sm"}`}>
+      <span className={sub ? "" : "font-medium text-slate-700"}>{label}</span>
+      <span className="text-right tabular-nums text-slate-700">{a}</span>
+      <span className="text-right tabular-nums text-slate-700">{b}</span>
+    </div>
+  );
+}
+
 export default function TakeHomeCalculator() {
   const [dayRate, setDayRate] = useState(500);
   const [days, setDays] = useState(220);
@@ -16,14 +26,6 @@ export default function TakeHomeCalculator() {
   const outside = useMemo(() => outsideIR35TakeHome(revenue, expenses), [revenue, expenses]);
 
   const monthly = (n: number) => gbp(n / 12);
-
-  const Row = ({ label, a, b, sub }: { label: string; a: string; b: string; sub?: boolean }) => (
-    <div className={`grid grid-cols-3 items-center gap-2 px-4 py-2.5 ${sub ? "text-sm text-slate-500" : "text-sm"}`}>
-      <span className={sub ? "" : "font-medium text-slate-700"}>{label}</span>
-      <span className="text-right tabular-nums text-slate-700">{a}</span>
-      <span className="text-right tabular-nums text-slate-700">{b}</span>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -78,11 +80,11 @@ export default function TakeHomeCalculator() {
             <span className="text-right">Inside IR35</span>
             <span className="text-right">Outside IR35</span>
           </div>
-          <Row label="Annual gross / revenue" a={gbp(inside.gross)} b={gbp(outside.gross)} />
-          <Row label="Corporation tax" a="N/A" b={gbp(outside.corporationTax)} sub />
-          <Row label="Income tax" a={gbp(inside.incomeTax)} b={gbp(outside.incomeTax)} sub />
-          <Row label="National Insurance" a={gbp(inside.nationalInsurance)} b={gbp(outside.nationalInsurance)} sub />
-          <Row label="Dividend tax" a="N/A" b={gbp(outside.dividendTax)} sub />
+          <ComparisonRow label="Annual gross / revenue" a={gbp(inside.gross)} b={gbp(outside.gross)} />
+          <ComparisonRow label="Corporation tax" a="N/A" b={gbp(outside.corporationTax)} sub />
+          <ComparisonRow label="Income tax" a={gbp(inside.incomeTax)} b={gbp(outside.incomeTax)} sub />
+          <ComparisonRow label="National Insurance" a={gbp(inside.nationalInsurance)} b={gbp(outside.nationalInsurance)} sub />
+          <ComparisonRow label="Dividend tax" a="N/A" b={gbp(outside.dividendTax)} sub />
           <div className="grid grid-cols-3 items-center gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold">
             <span>Take-home</span>
             <span className="text-right tabular-nums">{gbp(inside.takeHome)}</span>
