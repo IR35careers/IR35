@@ -12,8 +12,7 @@ tmp/
 # Next.js
 .next/
 out/
-build/*
-!build/sites-vite-plugin.ts
+build/
 dist/
 .vinext/
 .wrangler/
