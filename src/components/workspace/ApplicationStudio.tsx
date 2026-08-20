@@ -1,84 +1,92 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useMemo, useState, useEffect, type ChangeEvent } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
-  Building2,
+  ArrowRight,
+  Bot,
+  BriefcaseBusiness,
   Check,
   CheckCircle2,
-  ClipboardCheck,
-  ExternalLink,
-  FileCheck2,
+  ChevronDown,
   FileText,
-  Flag,
   Loader2,
   LockKeyhole,
   MapPin,
-  ReceiptText,
+  RotateCcw,
+  Save,
   Send,
   ShieldCheck,
   Sparkles,
-  Target,
-  WandSparkles,
+  Upload,
 } from "lucide-react";
 import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage";
+import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
+import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
+import { detectSubmissionRoute, roleTypeWarning } from "@/lib/ats/submission-route";
 import type { JobDetail } from "@/lib/job-types";
-import { newWorkspaceId, reviewApplicationReceipt } from "@/lib/workspace/engine";
-import { SAMPLE_CONTRACTOR_PROFILE, SAMPLE_CV_TEXT } from "@/lib/workspace/seed";
-import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
-import type { ApplicationRecord, ApplicationReceiptReviewItem } from "@/lib/workspace/types";
+import { scoreResumeForRole } from "@/lib/resume/analysis";
 import { getSupabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
+import { newWorkspaceId } from "@/lib/workspace/engine";
+import { SAMPLE_CONTRACTOR_PROFILE, SAMPLE_CV_TEXT } from "@/lib/workspace/seed";
+import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
+import type { ApplicationRecord } from "@/lib/workspace/types";
 
-const REVIEW_ITEMS: Array<{ id: ApplicationReceiptReviewItem; label: string }> = [
-  { id: "cv", label: "CV version" },
-  { id: "cover_letter", label: "Cover letter" },
-  { id: "screening_answers", label: "Screening answers" },
-  { id: "destination", label: "Destination" },
-  { id: "other", label: "Something else" },
-];
+type BusyState = "parse" | "prepare" | "ai" | "save" | "submit" | null;
+type ConnectionState = "loading" | "connected" | "gated";
 
 const WORKFLOW_STEPS = [
-  { label: "Evidence", helper: "Choose your CV" },
-  { label: "Tailor", helper: "Check role fit" },
-  { label: "Review", helper: "Approve answers" },
-  { label: "Receipt", helper: "Create handoff" },
+  { label: "Add CV", helper: "Upload or paste" },
+  { label: "Tailor", helper: "Compare every edit" },
+  { label: "Review & submit", helper: "Approve the exact packet" },
 ] as const;
 
 function persistApplication(application: ApplicationRecord) {
   updateWorkspace((current) => ({
     ...current,
-    applications: [application, ...current.applications.filter((item) => item.id !== application.id)],
+    applications: [application, ...current.applications.filter((item) => item.id !== application.id && item.job.id !== application.job.id)],
   }));
+}
+
+function cleanExisting(application: ApplicationRecord | undefined): ApplicationRecord | null {
+  if (!application) return null;
+  if (application.receipt?.mode === "external_handoff") return application;
+  return { ...application, receipt: null };
 }
 
 export function ApplicationStudio({ job }: { job: JobDetail }) {
   const workspace = useWorkspaceState();
   const existing = workspace.applications.find((item) => item.job.id === job.id && item.id !== "app-demo-northstar");
-  const [cvText, setCvText] = useState(existing?.sourceCvText ?? "");
-  const [application, setApplication] = useState<ApplicationRecord | null>(existing ?? null);
-  const [busy, setBusy] = useState<"prepare" | "receipt" | "submit" | null>(null);
-  const [submissionProvider, setSubmissionProvider] = useState<"loading" | "connected" | "gated">(isSupabaseConfigured() ? "loading" : "gated");
+  const initialApplication = useMemo(() => cleanExisting(existing), [existing]);
+  const [cvText, setCvText] = useState(initialApplication?.sourceCvText ?? "");
+  const [cvFilename, setCvFilename] = useState(initialApplication?.resumeVersionLabel ?? "");
+  const [application, setApplication] = useState<ApplicationRecord | null>(initialApplication);
+  const [busy, setBusy] = useState<BusyState>(null);
+  const [aiConnection, setAiConnection] = useState<ConnectionState>(isSupabaseConfigured() ? "loading" : "gated");
+  const [submissionConnection, setSubmissionConnection] = useState<ConnectionState>(isSupabaseConfigured() ? "loading" : "gated");
+  const [aiConsent, setAiConsent] = useState(false);
+  const [useAiCoverLetter, setUseAiCoverLetter] = useState(false);
+  const [aiResult, setAiResult] = useState<AiTailoringResult | null>(null);
+  const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [reviewOutcome, setReviewOutcome] = useState<"accurate" | "changes_needed">(existing?.receipt?.review?.outcome ?? "accurate");
-  const [reviewFlags, setReviewFlags] = useState<ApplicationReceiptReviewItem[]>(existing?.receipt?.review?.flaggedItems ?? []);
-  const [reviewNotes, setReviewNotes] = useState(existing?.receipt?.review?.notes ?? "");
-  const reviewedSnapshot = application?.receipt?.reviewedSnapshot ?? (application ? {
-    resumeVersionLabel: application.resumeVersionLabel,
-    cvText: application.tailoredCvText,
-    coverLetter: application.coverLetter,
-    answers: application.questions.map(({ id, label, answer, source }) => ({ id, label, answer, source })),
-  } : null);
+
+  const submissionRoute = useMemo(() => detectSubmissionRoute(job), [job]);
+  const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
   const cvReady = cvText.trim().length >= 120;
   const answersReviewed = Boolean(application?.questions.every((item) => !item.required || (item.reviewed && item.answer.trim().length > 0)));
   const approvalsComplete = Boolean(application?.truthApproved && application.materialsApproved && application.submissionApproved);
-  const workflowComplete = [cvReady, Boolean(application), answersReviewed && approvalsComplete, Boolean(application?.receipt)];
-  const checklistComplete = [cvReady, Boolean(application), answersReviewed, approvalsComplete, Boolean(application?.receipt)];
-  const nextIncompleteStep = workflowComplete.findIndex((done) => !done);
-  const activeStep = nextIncompleteStep === -1 ? WORKFLOW_STEPS.length - 1 : nextIncompleteStep;
-  const progress = Math.round((checklistComplete.filter(Boolean).length / checklistComplete.length) * 100);
+  const submitted = application?.status === "applied" && application.receipt?.mode === "external_handoff";
+  const selectedSuggestions = aiResult?.suggestions.filter((item) => selectedSuggestionIds.includes(item.id)) ?? [];
+  const selectedPreview = aiResult ? applyAiTailoringSuggestions(application?.sourceCvText ?? cvText, selectedSuggestions) : "";
+  const selectedScore = selectedPreview ? scoreResumeForRole(selectedPreview, job, cvFilename || "Application CV").overall : application?.matchScore ?? 0;
+  const checklist = [cvReady, Boolean(application), answersReviewed, approvalsComplete];
+  const progress = Math.round((checklist.filter(Boolean).length / checklist.length) * 100);
+  const activeStep = !application ? 0 : answersReviewed && approvalsComplete ? 2 : 1;
+  const showDemoTools = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -86,26 +94,69 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     void getSupabase().auth.getSession().then(async ({ data }) => {
       const token = data.session?.access_token;
       if (!token) throw new Error("No session");
-      const response = await fetch("/api/integrations/status", { headers: { authorization: `Bearer ${token}` } });
+      const response = await fetch("/api/integrations/status", { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
       if (!response.ok) throw new Error("Status unavailable");
       const payload = (await response.json()) as { integrations?: Array<{ id: string; state: string }> };
-      const submission = payload.integrations?.find((item) => item.id === "ats_submission");
-      if (active) setSubmissionProvider(submission?.state === "connected" ? "connected" : "gated");
-    }).catch(() => { if (active) setSubmissionProvider("gated"); });
+      if (!active) return;
+      setAiConnection(payload.integrations?.find((item) => item.id === "ai_tailoring")?.state === "connected" ? "connected" : "gated");
+      setSubmissionConnection(payload.integrations?.find((item) => item.id === "ats_submission")?.state === "connected" ? "connected" : "gated");
+    }).catch(() => {
+      if (!active) return;
+      setAiConnection("gated");
+      setSubmissionConnection("gated");
+    });
     return () => { active = false; };
   }, []);
 
   const updateApplication = (updater: (current: ApplicationRecord) => ApplicationRecord) => {
-    if (!application) return;
-    const next = { ...updater(application), updatedAt: new Date().toISOString() };
+    if (!application || submitted) return;
+    const next: ApplicationRecord = {
+      ...updater(application),
+      receipt: application.receipt?.mode === "external_handoff" ? application.receipt : null,
+      updatedAt: new Date().toISOString(),
+    };
     setApplication(next);
     persistApplication(next);
   };
 
-  const prepare = async () => {
+  const sessionToken = async (): Promise<string> => {
+    const { data } = await getSupabase().auth.getSession();
+    if (!data.session?.access_token) throw new Error("Sign in again to use this secure feature.");
+    return data.session.access_token;
+  };
+
+  const parseCvFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setBusy("parse");
     setError(null);
     setNotice(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/resume/parse", { method: "POST", body: formData });
+      const payload = (await response.json()) as { text?: string; filename?: string; error?: string };
+      if (!response.ok || !payload.text) throw new Error(payload.error ?? "We could not read that CV.");
+      setCvText(payload.text);
+      setCvFilename(payload.filename || file.name);
+      setApplication(null);
+      setAiResult(null);
+      setSelectedSuggestionIds([]);
+      setNotice(`${payload.filename || file.name} is ready to analyse.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "We could not read that CV.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const prepare = async () => {
     setBusy("prepare");
+    setError(null);
+    setNotice(null);
+    setAiResult(null);
+    setSelectedSuggestionIds([]);
     try {
       const response = await fetch("/api/applications/prepare", {
         method: "POST",
@@ -114,98 +165,121 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           job,
           profile: workspace.profile ?? SAMPLE_CONTRACTOR_PROFILE,
           cvText,
-          resumeVersionLabel: workspace.profile.defaultCvLabel || "Application CV",
+          resumeVersionLabel: cvFilename || workspace.profile.defaultCvLabel || "Application CV",
         }),
       });
       const payload = (await response.json()) as { application?: ApplicationRecord; error?: string };
-      if (!response.ok || !payload.application) throw new Error(payload.error ?? "Could not prepare the application.");
+      if (!response.ok || !payload.application) throw new Error(payload.error ?? "Could not analyse this CV.");
       setApplication(payload.application);
       persistApplication(payload.application);
-      setNotice("Application packet prepared. Nothing has been sent.");
+      setNotice("Baseline match ready. Your original CV has not been changed.");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not prepare the application.");
+      setError(caught instanceof Error ? caught.message : "Could not analyse this CV.");
     } finally {
       setBusy(null);
     }
   };
 
-  const createReceipt = async () => {
-    if (!application) return;
+  const runAiTailoring = async () => {
+    if (!application || !aiConsent) return;
+    setBusy("ai");
     setError(null);
-    setBusy("receipt");
+    setNotice(null);
     try {
-      const response = await fetch("/api/applications/dry-run", {
+      const token = await sessionToken();
+      const response = await fetch("/api/applications/tailor", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ application, approval: "APPROVE_DRY_RUN" }),
+        headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ cvText: application.sourceCvText, job }),
       });
-      const payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; error?: string };
-      if (!response.ok || !payload.receipt) throw new Error(payload.error ?? "Could not create the receipt.");
+      const payload = (await response.json()) as { result?: AiTailoringResult; error?: string };
+      if (!response.ok || !payload.result) throw new Error(payload.error ?? "AI tailoring could not be completed.");
+      setAiResult(payload.result);
+      setSelectedSuggestionIds([]);
+      setNotice(`Found ${payload.result.suggestions.length} evidence-grounded edit${payload.result.suggestions.length === 1 ? "" : "s"}. Nothing has been applied.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "AI tailoring could not be completed. Your original CV is unchanged.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const applySelectedEdits = () => {
+    if (!application || !aiResult || selectedSuggestions.length === 0) {
+      setError("Select at least one suggested edit first.");
+      return;
+    }
+    const tailoredCvText = applyAiTailoringSuggestions(application.sourceCvText, selectedSuggestions);
+    const score = scoreResumeForRole(tailoredCvText, job, application.resumeVersionLabel);
+    updateApplication((current) => ({
+      ...current,
+      tailoredCvText,
+      coverLetter: useAiCoverLetter && aiResult.coverLetter ? aiResult.coverLetter : current.coverLetter,
+      matchScore: score.overall,
+      matchedKeywords: score.matchedKeywords,
+      missingKeywords: score.missingKeywords,
+      status: "needs_review",
+      truthApproved: false,
+      materialsApproved: false,
+      submissionApproved: false,
+    }));
+    setError(null);
+    setNotice(`${selectedSuggestions.length} approved edit${selectedSuggestions.length === 1 ? "" : "s"} applied to the tailored copy. Review the full text below.`);
+  };
+
+  const recalculateEditedCv = () => {
+    if (!application) return;
+    const score = scoreResumeForRole(application.tailoredCvText, job, application.resumeVersionLabel);
+    updateApplication((current) => ({ ...current, matchScore: score.overall, matchedKeywords: score.matchedKeywords, missingKeywords: score.missingKeywords }));
+  };
+
+  const saveReviewedPacket = async (): Promise<boolean> => {
+    if (!application) return false;
+    if (!answersReviewed || !approvalsComplete) {
+      setError("Review every required answer and complete all three approval checks first.");
+      return false;
+    }
+    setBusy("save");
+    setError(null);
+    try {
       const now = new Date().toISOString();
-      const next: ApplicationRecord = {
+      const ready: ApplicationRecord = {
         ...application,
         status: "ready",
-        receipt: payload.receipt,
+        mode: "dry_run",
+        receipt: null,
         updatedAt: now,
-        events: [
-          ...application.events,
-          { id: newWorkspaceId(), applicationId: application.id, type: "approved", label: "Dry-run packet approved and receipt created", createdAt: now },
-        ],
+        events: [...application.events, { id: newWorkspaceId(), applicationId: application.id, type: "approved", label: "Application packet reviewed and saved", createdAt: now }],
       };
-      setApplication(next);
-      persistApplication(next);
-      setNotice("Dry-run receipt created. No application or personal data was sent.");
+      setApplication(ready);
+      persistApplication(ready);
+      if (isSupabaseConfigured()) {
+        const { data } = await getSupabase().auth.getSession();
+        if (!data.session) throw new Error("Sign in again before saving this packet.");
+        const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
+        await saveCloudWorkspace(data.session.user.id, {
+          ...workspace,
+          applications: [ready, ...workspace.applications.filter((item) => item.id !== ready.id && item.job.id !== ready.job.id)],
+        });
+      }
+      setNotice("Reviewed packet saved. It has not been sent to the employer.");
+      return true;
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not create the receipt.");
+      setError(caught instanceof Error ? caught.message : "Could not save this packet.");
+      return false;
     } finally {
       setBusy(null);
-    }
-  };
-
-  const saveReceiptReview = () => {
-    if (!application?.receipt) return;
-    setError(null);
-    try {
-      updateApplication((current) => current.receipt ? {
-        ...current,
-        receipt: reviewApplicationReceipt(current.receipt, {
-          outcome: reviewOutcome,
-          flaggedItems: reviewFlags,
-          notes: reviewNotes,
-        }),
-        events: [
-          ...current.events,
-          {
-            id: newWorkspaceId(),
-            applicationId: current.id,
-            type: "note",
-            label: reviewOutcome === "accurate" ? "Receipt reviewed as accurate" : "Receipt feedback saved for future preparation",
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      } : current);
-      setNotice("Receipt feedback saved to this application.");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save receipt feedback.");
     }
   };
 
   const submitApprovedApplication = async () => {
-    if (!application || !approvalsComplete || !answersReviewed) return;
+    if (!application || submissionConnection !== "connected") return;
+    if (application.status !== "ready" && !(await saveReviewedPacket())) return;
     setBusy("submit");
     setError(null);
     setNotice(null);
     try {
-      const { data } = await getSupabase().auth.getSession();
-      const session = data.session;
-      const token = session?.access_token;
-      if (!session || !token) throw new Error("Sign in again before submitting.");
-      const workspaceSnapshot = {
-        ...workspace,
-        applications: [application, ...workspace.applications.filter((item) => item.id !== application.id)],
-      };
-      const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
-      await saveCloudWorkspace(session.user.id, workspaceSnapshot);
+      const token = await sessionToken();
       const response = await fetch("/api/applications/submit", {
         method: "POST",
         headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -214,7 +288,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       const payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; error?: string };
       if (!response.ok || !payload.receipt) throw new Error(payload.error ?? "The application was not submitted.");
       const now = new Date().toISOString();
-      const next: ApplicationRecord = {
+      const submittedApplication: ApplicationRecord = {
         ...application,
         status: "applied",
         mode: "external_handoff",
@@ -222,11 +296,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         updatedAt: now,
         events: [...application.events, { id: newWorkspaceId(), applicationId: application.id, type: "status_changed", label: "Application submitted through the approved provider", createdAt: now }],
       };
-      setApplication(next);
-      persistApplication(next);
-      setNotice("Application submitted. The provider receipt is saved below.");
+      setApplication(submittedApplication);
+      persistApplication(submittedApplication);
+      setNotice("Application submitted. The verified employer receipt is saved below.");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "The application was not submitted.");
+      setError(caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.");
     } finally {
       setBusy(null);
     }
@@ -235,259 +309,91 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   return (
     <WorkspacePage
       density="compact"
-      eyebrow="Application / review"
-      title={`Prepare for ${job.company_name}`}
-      description="Build a role-specific packet from evidence you control. Every answer and edit stays visible until you approve it."
-      actions={<Link href={`/jobs/${job.id}`} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"><ArrowLeft size={15} /> Role details</Link>}
+      eyebrow="Application workspace"
+      title={`Apply to ${job.company_name}`}
+      description="Match your evidence to the role, approve every change, then submit only through a verified employer connection."
+      actions={<Link href={`/jobs/${job.id}`} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><ArrowLeft size={15} /> Role details</Link>}
     >
-      <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-card" aria-labelledby="application-role-title">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card" aria-labelledby="application-role-title">
         <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="flex min-w-0 items-start gap-4">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-lg font-bold text-white">{job.company_name.slice(0, 1).toUpperCase()}</span>
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-700 text-lg font-bold text-white">{job.company_name.slice(0, 1).toUpperCase()}</span>
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 id="application-role-title" className="text-lg font-semibold tracking-tight text-slate-950 sm:text-xl">{job.title}</h2>
-                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${job.ir35_status === "outside" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : job.ir35_status === "inside" ? "border-rose-200 bg-rose-50 text-rose-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}>{job.ir35_status === "unknown" ? "IR35 TBC" : `${job.ir35_status} IR35`}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500">
-                <span className="inline-flex items-center gap-1.5"><Building2 size={14} aria-hidden="true" />{job.company_name}</span>
-                <span className="inline-flex items-center gap-1.5"><MapPin size={14} aria-hidden="true" />{job.location} · {job.remote_type}</span>
-              </div>
+              <h2 id="application-role-title" className="text-lg font-semibold tracking-tight text-slate-950 sm:text-xl">{job.title}</h2>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500"><span className="inline-flex items-center gap-1.5"><BriefcaseBusiness size={14} />{job.company_name}</span><span className="inline-flex items-center gap-1.5"><MapPin size={14} />{job.location} · {job.remote_type}</span><span>{submissionRoute.label}</span></div>
             </div>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            {application && <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{application.matchScore}% match</span>}
-            {application && <StatusPill status={application.status} />}
-          </div>
+          <div className="flex items-center gap-2">{application && <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{application.matchScore}% match</span>}{application && <StatusPill status={application.status} />}</div>
         </div>
-
-        <div className="border-t border-slate-200 bg-[#fafaf9] p-3 sm:p-4">
-          <ol className="grid grid-cols-2 gap-2 md:grid-cols-4" aria-label="Application preparation progress">
-            {WORKFLOW_STEPS.map((step, index) => {
-              const done = workflowComplete[index];
-              const active = index === activeStep;
-              return (
-                <li key={step.label} aria-current={active ? "step" : undefined} className={`flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 transition-colors ${active ? "border-slate-950 bg-slate-950 text-white" : done ? "border-brand-200 bg-brand-50 text-brand-950" : "border-slate-200 bg-white text-slate-500"}`}>
-                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${active ? "border-white/25 bg-white/10" : done ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white"}`}>{done ? <Check size={14} aria-hidden="true" /> : `0${index + 1}`}</span>
-                  <span className="min-w-0"><span className="block text-xs font-bold">{step.label}</span><span className={`block truncate text-[10px] ${active ? "text-slate-300" : "text-slate-500"}`}>{step.helper}</span></span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+        <ol className="grid gap-2 border-t border-slate-200 bg-slate-50 p-3 sm:grid-cols-3" aria-label="Application progress">
+          {WORKFLOW_STEPS.map((step, index) => <li key={step.label} aria-current={activeStep === index ? "step" : undefined} className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${activeStep === index ? "border-slate-950 bg-slate-950 text-white" : index < activeStep ? "border-emerald-200 bg-emerald-50 text-emerald-950" : "border-slate-200 bg-white text-slate-500"}`}><span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${index < activeStep ? "bg-emerald-600 text-white" : "border border-current"}`}>{index < activeStep ? <Check size={14} /> : index + 1}</span><span><strong className="block text-xs">{step.label}</strong><span className="block text-[10px] opacity-75">{step.helper}</span></span></li>)}
+        </ol>
       </section>
 
-      {(error || notice) && <p role={error ? "alert" : "status"} className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${error ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{error ?? notice}</p>}
+      {engagementWarning && <div className="mt-4 flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><AlertTriangle className="mt-0.5 shrink-0" size={19} /><p><strong>Check the engagement type.</strong> {engagementWarning}</p></div>}
+      {(error || notice) && <p role={error ? "alert" : "status"} className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${error ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>{error ?? notice}</p>}
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 space-y-5">
+      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <main className="min-w-0 space-y-5">
           {!application ? (
-            <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-card">
-              <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><FileText size={19} /></span>
-                  <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Step 01 · Evidence</p><h2 className="mt-0.5 font-semibold text-slate-950">1. Choose the CV evidence</h2></div>
-                </div>
-              </div>
-              <div className="grid lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
-                <div className="p-5 sm:p-6">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div><h3 className="text-sm font-semibold text-slate-950">Paste the CV you want to use</h3><p className="mt-1 text-xs leading-5 text-slate-500">We compare only this evidence with the role. Nothing is invented or silently added.</p></div>
-                    <button type="button" onClick={() => { setCvText(SAMPLE_CV_TEXT); setNotice("Fictional sample CV loaded for local testing."); }} className="ir35-focus inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 text-xs font-bold text-brand-800 hover:bg-brand-100"><Sparkles size={14} aria-hidden="true" /> Load labelled sample CV</button>
-                  </div>
-                  <div className="relative mt-4">
-                    <textarea
-                      value={cvText}
-                      onChange={(event) => setCvText(event.target.value)}
-                      rows={11}
-                      maxLength={80_000}
-                      aria-label="CV text for this application"
-                      placeholder="Paste your CV text here…"
-                      className="ir35-focus w-full resize-y rounded-2xl border border-slate-300 bg-[#f7f7f5] p-4 pb-10 font-mono text-sm leading-6 text-slate-800 placeholder:text-slate-400"
-                    />
-                    <span className="pointer-events-none absolute bottom-3 right-4 text-[10px] font-medium text-slate-400">{cvText.length.toLocaleString("en-GB")} / 80,000</span>
-                  </div>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className={`text-xs font-medium ${cvReady ? "text-brand-700" : "text-slate-500"}`}>{cvReady ? "Ready to compare with this role" : "Add at least 120 characters to continue"}</p>
-                    <button type="button" onClick={prepare} disabled={busy !== null || !cvReady} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
-                      {busy === "prepare" ? <Loader2 className="animate-spin" size={17} /> : <WandSparkles size={17} />} Prepare application
-                    </button>
-                  </div>
-                </div>
-
-                <aside className="border-t border-slate-200 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0 sm:p-6" aria-label="Role requirements preview">
-                  <div className="flex items-center gap-2 text-emerald-300"><Target size={17} aria-hidden="true" /><p className="text-[10px] font-bold uppercase tracking-[0.16em]">Reads the role</p></div>
-                  <h3 className="mt-4 text-xl font-semibold tracking-tight">What your CV will be checked against</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">We score evidence, surface missing keywords, and prepare truthful role-specific materials for your review.</p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {job.skills.slice(0, 8).map((skill) => <span key={skill} className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-slate-200">{skill}</span>)}
-                    {job.skills.length === 0 && <span className="rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-slate-200">Requirements from the job description</span>}
-                  </div>
-                  <div className="mt-6 rounded-2xl border border-white/15 bg-white/5 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold"><LockKeyhole size={16} className="text-emerald-300" aria-hidden="true" /> Review before anything is used</div>
-                    <p className="mt-2 text-xs leading-5 text-slate-400">This step prepares a private preview. It does not contact the employer or submit an application.</p>
-                  </div>
-                </aside>
-              </div>
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+              <div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><FileText size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Step 1</p><h2 className="font-semibold text-slate-950">Add the CV you want to use</h2><p className="mt-1 text-sm text-slate-600">PDF, DOCX or text, up to 5MB. You can check the extracted text before analysis.</p></div></div>
+              <label className="ir35-focus mt-5 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center hover:border-brand-400 hover:bg-brand-50/40"><input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" onChange={parseCvFile} className="sr-only" /><Upload size={22} className="text-brand-700" /><span className="mt-2 text-sm font-bold text-slate-900">{busy === "parse" ? "Reading your CV…" : "Choose CV file"}</span><span className="mt-1 text-xs text-slate-500">or paste the extracted text below</span></label>
+              <div className="mt-4 flex items-center justify-between gap-3"><label htmlFor="application-cv" className="text-sm font-semibold text-slate-900">CV text</label>{showDemoTools && <button type="button" onClick={() => { setCvText(SAMPLE_CV_TEXT); setCvFilename("Platform Engineering CV v4"); }} className="text-xs font-semibold text-brand-700">Load labelled sample CV</button>}</div>
+              <textarea id="application-cv" value={cvText} onChange={(event) => setCvText(event.target.value)} rows={12} maxLength={80_000} placeholder="Paste your CV here…" className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800" />
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-slate-500">{cvFilename || `${cvText.length.toLocaleString("en-GB")} characters`} · Nothing is sent to an AI provider at this step.</p><button type="button" onClick={prepare} disabled={!cvReady || busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40">{busy === "prepare" ? <Loader2 className="animate-spin" size={17} /> : <ArrowRight size={17} />} Analyse role fit</button></div>
             </section>
           ) : (
             <>
-              <section className="grid overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-card lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Step 2 · Role match</p><h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Your evidence matches {application.matchScore}%</h2><p className="mt-2 text-sm leading-6 text-slate-600">The baseline score is deterministic. It is a preparation aid, not an ATS or hiring prediction.</p></div><button type="button" onClick={() => { setApplication(null); setAiResult(null); setSelectedSuggestionIds([]); }} className="ir35-focus inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700"><RotateCcw size={14} /> Change CV</button></div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Evidence found</p><div className="mt-3 flex flex-wrap gap-2">{application.matchedKeywords.length ? application.matchedKeywords.map((term) => <span key={term} className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-emerald-900">{term}</span>) : <span className="text-sm text-emerald-900">No strong keyword matches yet.</span>}</div></div><div className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-amber-800">Missing — never assumed</p><div className="mt-3 flex flex-wrap gap-2">{application.missingKeywords.length ? application.missingKeywords.map((term) => <span key={term} className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-amber-950">{term}</span>) : <span className="text-sm text-amber-950">No material gaps detected.</span>}</div></div></div>
+              </section>
+
+              <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+                <div className="border-b border-slate-200 p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Bot size={19} /></span><div><div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold text-slate-950">Optional AI tailoring</h2><span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${aiConnection === "connected" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{aiConnection === "loading" ? "Checking" : aiConnection === "connected" ? "Connected" : "Not connected"}</span></div><p className="mt-1 text-sm leading-6 text-slate-600">OpenRouter proposes evidence-grounded edits. It cannot submit applications and it never edits your CV automatically.</p></div></div></div>
                 <div className="p-5 sm:p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Step 02 · Role fit</p>
-                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">{application.matchScore}% CV match</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Keywords are scored against the role. Missing terms stay clearly marked and are never assumed.</p>
-                  <div className="mt-5">
-                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Evidence found</p>
-                    <div className="mt-2 flex flex-wrap gap-2">{application.matchedKeywords.length ? application.matchedKeywords.map((term) => <span key={term} className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-900">{term}</span>) : <span className="text-xs text-slate-500">No strong keyword matches yet.</span>}</div>
-                  </div>
-                  <div className="mt-5 border-t border-slate-200 pt-5">
-                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Missing—not assumed</p>
-                    <div className="mt-2 flex flex-wrap gap-2">{application.missingKeywords.length ? application.missingKeywords.map((term) => <span key={term} className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-950">{term}</span>) : <span className="text-xs text-emerald-800">No material gaps detected.</span>}</div>
-                  </div>
-                </div>
-                <div className="bg-slate-950 p-5 text-white sm:p-6">
-                  <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">You approve every edit</p><ShieldCheck size={19} className="text-emerald-300" aria-hidden="true" /></div>
-                  <h3 className="mt-4 text-xl font-semibold tracking-tight">No silent rewriting</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">Open CV Studio to review the role score, missing keywords and each suggested edit side by side. Only confirmed experience can be added.</p>
-                  <div className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4">
-                    <div className="flex items-center justify-between gap-3 text-xs"><span className="text-slate-400">Source version</span><span className="font-semibold text-white">{application.resumeVersionLabel}</span></div>
-                    <div className="my-3 h-px bg-white/10" />
-                    <div className="flex items-center justify-between gap-3 text-xs"><span className="text-slate-400">Truth controls</span><span className="font-semibold text-emerald-300">Required</span></div>
-                  </div>
-                  <Link href={`/jobs/${job.id}/resume`} className="ir35-focus mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-sm font-bold text-emerald-950 transition-colors hover:bg-emerald-300"><WandSparkles size={15} /> Review in CV Studio</Link>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} disabled={aiConnection !== "connected"} className="mt-0.5 h-5 w-5 accent-brand-700" /><span><strong className="block text-slate-950">Use AI for this CV and role</strong><span className="mt-1 block leading-6">Direct email, phone and common profile URLs are redacted first. Zero-data-retention routing is requested. Review the <Link href="/ai-disclosure" target="_blank" className="font-semibold text-brand-700 underline">AI disclosure</Link>.</span></span></label>
+                  <button type="button" onClick={runAiTailoring} disabled={busy !== null || aiConnection !== "connected" || !aiConsent} className="ir35-focus mt-4 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-40">{busy === "ai" ? <Loader2 className="animate-spin" size={17} /> : <Sparkles size={17} />} Generate role-specific suggestions</button>
+                  {aiConnection === "gated" && <p className="mt-3 text-xs leading-5 text-slate-500">Secure AI tailoring will appear after a server-only OpenRouter key is configured. Baseline scoring and manual editing remain available.</p>}
+
+                  {aiResult && <div className="mt-6 border-t border-slate-200 pt-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-wide text-violet-700">Compare before approving</p><h3 className="mt-1 text-lg font-semibold text-slate-950">{aiResult.suggestions.length} suggested edits</h3><p className="mt-1 text-sm text-slate-600">Selected preview: {application.matchScore}% → {selectedScore}%</p></div><label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={useAiCoverLetter} onChange={(event) => setUseAiCoverLetter(event.target.checked)} className="h-5 w-5 accent-violet-700" /> Use AI cover-letter draft</label></div>
+                    <div className="mt-4 space-y-3">{aiResult.suggestions.map((suggestion) => { const selected = selectedSuggestionIds.includes(suggestion.id); return <article key={suggestion.id} className={`rounded-2xl border p-4 ${selected ? "border-violet-300 bg-violet-50/40" : "border-slate-200"}`}><label className="flex cursor-pointer items-start gap-3"><input type="checkbox" checked={selected} onChange={(event) => setSelectedSuggestionIds((current) => event.target.checked ? [...current, suggestion.id] : current.filter((id) => id !== suggestion.id))} className="mt-0.5 h-5 w-5 accent-violet-700" /><span><strong className="text-sm text-slate-950">{suggestion.section}</strong><span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">{suggestion.impact} impact</span><span className="mt-1 block text-xs leading-5 text-slate-600">{suggestion.rationale}</span></span></label><div className="mt-4 grid gap-3 lg:grid-cols-2"><div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wide text-rose-700">Current</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-700">{suggestion.original}</p></div><div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3"><p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Suggested</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-800">{suggestion.replacement}</p></div></div></article>; })}</div>
+                    <button type="button" onClick={applySelectedEdits} disabled={selectedSuggestions.length === 0} className="ir35-focus mt-4 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white disabled:opacity-40"><Check size={16} /> Apply selected edits</button>
+                  </div>}
                 </div>
               </section>
 
-              <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-                <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><FileCheck2 size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Application material</p><h2 className="font-semibold">2. Review the cover letter</h2></div></div>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Generated only from job details and evidence already in the CV. Edit the wording before approval.</p>
-                <textarea value={application.coverLetter} onChange={(event) => updateApplication((current) => ({ ...current, coverLetter: event.target.value }))} rows={10} aria-label="Role-specific cover letter" className="ir35-focus mt-4 w-full resize-y rounded-2xl border border-slate-300 bg-[#f7f7f5] p-4 text-sm leading-6 text-slate-800" />
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+                <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Your final materials</p><h2 className="mt-1 font-semibold text-slate-950">Review the complete tailored copy</h2></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Editable</span></div>
+                <label className="mt-5 block text-sm font-semibold text-slate-900">Tailored CV<textarea value={application.tailoredCvText} onChange={(event) => updateApplication((current) => ({ ...current, tailoredCvText: event.target.value, status: "needs_review", truthApproved: false, materialsApproved: false, submissionApproved: false }))} onBlur={recalculateEditedCv} rows={14} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm font-normal leading-6" /></label>
+                <label className="mt-5 block text-sm font-semibold text-slate-900">Cover letter<textarea value={application.coverLetter} onChange={(event) => updateApplication((current) => ({ ...current, coverLetter: event.target.value, status: "needs_review", materialsApproved: false, submissionApproved: false }))} rows={9} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm font-normal leading-6" /></label>
               </section>
 
-              <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-                <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><ClipboardCheck size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-700">Step 03 · Answers</p><h2 className="font-semibold">3. Review screening answers</h2></div></div>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Each answer shows its source and remains unapproved until you check it.</p>
-                <div className="mt-5 grid gap-3">
-                  {application.questions.map((question) => (
-                    <div key={question.id} className={`rounded-2xl border p-4 ${question.reviewed ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-white"}`}>
-                      <div className="flex flex-wrap items-center justify-between gap-2"><label htmlFor={`question-${question.id}`} className="text-sm font-semibold text-slate-900">{question.label}</label><span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600">Source: {question.source}</span></div>
-                      <input id={`question-${question.id}`} value={question.answer} onChange={(event) => updateApplication((current) => ({ ...current, questions: current.questions.map((item) => item.id === question.id ? { ...item, answer: event.target.value, reviewed: false } : item) }))} className="ir35-focus mt-3 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm" />
-                      <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={question.reviewed} onChange={(event) => updateApplication((current) => ({ ...current, questions: current.questions.map((item) => item.id === question.id ? { ...item, reviewed: event.target.checked } : item) }))} className="h-5 w-5 rounded border-slate-300 accent-emerald-700" /> I confirm this answer is accurate</label>
-                    </div>
-                  ))}
-                </div>
+              <details open className="group rounded-3xl border border-slate-200 bg-white shadow-card">
+                <summary className="ir35-focus flex cursor-pointer list-none items-center justify-between gap-3 p-5 sm:p-6"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Candidate facts</p><h2 className="mt-1 font-semibold text-slate-950">Review required answers</h2></div><ChevronDown className="transition-transform group-open:rotate-180" size={19} /></summary>
+                <div className="border-t border-slate-200 p-5 sm:p-6"><p className="text-sm leading-6 text-slate-600">These are reusable candidate facts—not a claim that every {submissionRoute.label} question has been loaded. A verified connector must inspect the live form before submission and pause for CAPTCHA, legal or demographic questions.</p><div className="mt-4 space-y-3">{application.questions.map((question) => <div key={question.id} className={`rounded-2xl border p-4 ${question.reviewed ? "border-emerald-200 bg-emerald-50/40" : "border-slate-200"}`}><label htmlFor={`question-${question.id}`} className="text-sm font-semibold text-slate-950">{question.label}</label><input id={`question-${question.id}`} value={question.answer} onChange={(event) => updateApplication((current) => ({ ...current, questions: current.questions.map((item) => item.id === question.id ? { ...item, answer: event.target.value, reviewed: false } : item), status: "needs_review", submissionApproved: false }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm" /><label className="mt-2 flex min-h-10 cursor-pointer items-center gap-3 text-sm text-slate-700"><input type="checkbox" checked={question.reviewed} onChange={(event) => updateApplication((current) => ({ ...current, questions: current.questions.map((item) => item.id === question.id ? { ...item, reviewed: event.target.checked } : item), status: "needs_review", submissionApproved: false }))} className="h-5 w-5 accent-emerald-700" /> I confirm this answer is accurate</label></div>)}</div></div>
+              </details>
+
+              <section className="rounded-3xl border border-slate-800 bg-slate-950 p-5 text-white shadow-floating sm:p-6">
+                <div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-emerald-300"><ShieldCheck size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">Step 3</p><h2 className="font-semibold">Final review and submission</h2><p className="mt-1 text-sm leading-6 text-slate-300">Saving keeps the packet private. Submitting is a separate action and succeeds only with a verified provider receipt.</p></div></div>
+                <div className="mt-5 space-y-2">{[
+                  ["truthApproved", "The CV and cover letter are truthful and supported by my evidence."],
+                  ["materialsApproved", "I reviewed the complete CV, cover letter and required answers."],
+                  ["submissionApproved", `I approve this exact packet for ${submissionRoute.label} submission.`],
+                ].map(([field, label]) => <label key={field} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm ${application[field as keyof ApplicationRecord] ? "border-emerald-400/40 bg-emerald-400/10" : "border-white/15 bg-white/5"}`}><input type="checkbox" checked={Boolean(application[field as keyof ApplicationRecord])} onChange={(event) => updateApplication((current) => ({ ...current, [field]: event.target.checked, status: "needs_review" }))} className="h-5 w-5 accent-emerald-400" />{label}</label>)}</div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row"><button type="button" onClick={() => void saveReviewedPacket()} disabled={busy !== null || !answersReviewed || !approvalsComplete || submitted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-bold text-white hover:bg-white/15 disabled:opacity-40">{busy === "save" ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save reviewed packet</button>{submissionConnection === "connected" && !submitted ? <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !answersReviewed || !approvalsComplete} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:opacity-40">{busy === "submit" ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} Submit application</button> : submitted ? <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200"><CheckCircle2 size={17} /> Submitted with receipt</span> : <span aria-disabled="true" className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300/10 px-4 text-sm font-bold text-amber-200"><LockKeyhole size={16} /> Submission connection required</span>}</div>
               </section>
 
-              <section className="rounded-[28px] border border-slate-800 bg-slate-950 p-5 text-white shadow-floating sm:p-6">
-                <div className="flex items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-emerald-300"><ShieldCheck size={20} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">Step 04 · Approval</p><h2 className="font-semibold">4. Final approval</h2></div></div><span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-300">Nothing sent</span></div>
-                <p className="mt-3 text-sm leading-6 text-slate-300">Confirm the exact packet below. Approval creates a private receipt only and never contacts the employer.</p>
-                <div className="mt-5 grid gap-2">
-                  {[
-                    ["truthApproved", "I confirm the CV and cover letter contain only truthful information."],
-                    ["materialsApproved", "I reviewed the exact materials and screening answers."],
-                    ["submissionApproved", "I approve creation of a dry-run handoff receipt."],
-                  ].map(([field, label]) => (
-                    <label key={field} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm transition-colors ${application[field as keyof ApplicationRecord] ? "border-emerald-400/40 bg-emerald-400/10" : "border-white/15 bg-white/5"}`}><input type="checkbox" checked={Boolean(application[field as keyof ApplicationRecord])} onChange={(event) => updateApplication((current) => ({ ...current, [field]: event.target.checked }))} className="h-5 w-5 accent-emerald-400" /> {label}</label>
-                  ))}
-                </div>
-                <button type="button" onClick={createReceipt} disabled={busy !== null || Boolean(application.receipt)} className="ir35-focus mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 text-sm font-bold text-emerald-950 transition-colors hover:bg-emerald-300 disabled:opacity-50">
-                  {busy === "receipt" ? <Loader2 className="animate-spin" size={17} /> : application.receipt ? <Check size={17} /> : <Send size={17} />} {application.receipt ? "Receipt created" : "Approve dry run"}
-                </button>
-              </section>
-
-              <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-card" data-testid="application-handoff">
-                <div className="grid lg:grid-cols-[minmax(0,1fr)_290px]">
-                  <div className="p-5 sm:p-6">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Final handoff</p>
-                    <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Apply from IR35Careers with the packet you approved</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">A supported employer connection sends the exact reviewed CV and answers from this workspace and returns an ATS receipt. Unsupported destinations remain safely queued here and are never falsely marked as submitted.</p>
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                      {submissionProvider === "connected" && application.status !== "applied" ? (
-                        <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !approvalsComplete || !answersReviewed} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"><Send size={16} />{busy === "submit" ? "Applying securely…" : "Apply now with approved packet"}</button>
-                      ) : application.status === "applied" && application.receipt?.mode === "external_handoff" ? (
-                        <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-50 px-4 text-sm font-bold text-emerald-900"><CheckCircle2 size={17} /> Submitted with receipt</span>
-                      ) : (
-                        <span aria-disabled="true" className="inline-flex min-h-12 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 text-sm font-bold text-amber-900"><LockKeyhole size={15} /> Employer connection required</span>
-                      )}
-                      <Link href="/applications" className="ir35-focus inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 hover:border-brand-300">View all applications</Link>
-                    </div>
-                  </div>
-                  <aside className={`border-t p-5 lg:border-l lg:border-t-0 sm:p-6 ${submissionProvider === "connected" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
-                    <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionProvider === "connected" ? "text-emerald-700" : "text-amber-800"}`}>{submissionProvider === "loading" ? "Checking employer connection" : submissionProvider === "connected" ? "Direct apply connected" : "Connection unavailable"}</p>
-                    <p className={`mt-3 text-sm font-semibold ${submissionProvider === "connected" ? "text-emerald-950" : "text-amber-950"}`}>{submissionProvider === "connected" ? "One click sends only this approved packet. Duplicate submissions are blocked and the ATS receipt is saved." : "Your reviewed packet stays in IR35Careers until this employer has a verified submission route."}</p>
-                  </aside>
-                </div>
-              </section>
-
-              {application.receipt && reviewedSnapshot && (
-                <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-card sm:p-6" data-testid="application-receipt-review">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><ReceiptText size={19} /></span>
-                    <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">Receipt · reviewed snapshot</p><h2 className="mt-0.5 font-semibold text-slate-950">5. Inspect the reviewed packet</h2><p className="mt-1 text-sm leading-6 text-slate-600">This immutable snapshot records what you approved for the dry run. It is not an ATS submission confirmation.</p></div>
-                  </div>
-                  <dl className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-[#f7f7f5] p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-600">CV version</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{reviewedSnapshot.resumeVersionLabel}</dd></div>
-                    <div className="rounded-2xl bg-[#f7f7f5] p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-600">Answers reviewed</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{reviewedSnapshot.answers.length}</dd></div>
-                    <div className="rounded-2xl bg-[#f7f7f5] p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-600">Destination</dt><dd className="mt-1 truncate text-sm font-semibold text-slate-900">{application.receipt.destination}</dd></div>
-                  </dl>
-                  <details className="mt-4 rounded-2xl border border-slate-200 bg-[#f7f7f5] p-4">
-                    <summary className="ir35-focus cursor-pointer rounded-lg text-sm font-semibold text-brand-800">Review the exact screening answers</summary>
-                    <dl className="mt-4 space-y-4">{reviewedSnapshot.answers.map((answer) => <div key={answer.id}><dt className="text-xs font-semibold text-slate-600">{answer.label}</dt><dd className="mt-1 whitespace-pre-wrap text-sm text-slate-900">{answer.answer}</dd></div>)}</dl>
-                  </details>
-
-                  <div className="mt-6 border-t border-slate-200 pt-6">
-                    <div className="flex items-start gap-3"><Flag className="mt-0.5 shrink-0 text-brand-700" size={19} /><div><h3 className="font-semibold text-slate-950">Review this receipt</h3><p className="mt-1 text-sm leading-6 text-slate-600">Record anything you would change before preparing another application.</p></div></div>
-                    <fieldset className="mt-4"><legend className="sr-only">Receipt review outcome</legend><div className="grid gap-2 sm:grid-cols-2">
-                      <label className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm font-semibold ${reviewOutcome === "accurate" ? "border-emerald-300 bg-emerald-50 text-emerald-950" : "border-slate-200 text-slate-700"}`}><input type="radio" name="receipt-outcome" value="accurate" checked={reviewOutcome === "accurate"} onChange={() => { setReviewOutcome("accurate"); setReviewFlags([]); }} className="h-5 w-5 accent-emerald-700" />Everything looks accurate</label>
-                      <label className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm font-semibold ${reviewOutcome === "changes_needed" ? "border-amber-300 bg-amber-50 text-amber-950" : "border-slate-200 text-slate-700"}`}><input type="radio" name="receipt-outcome" value="changes_needed" checked={reviewOutcome === "changes_needed"} onChange={() => setReviewOutcome("changes_needed")} className="h-5 w-5 accent-amber-700" />I would change something</label>
-                    </div></fieldset>
-                    {reviewOutcome === "changes_needed" && <fieldset className="mt-4"><legend className="text-sm font-semibold text-slate-800">What should change?</legend><div className="mt-2 flex flex-wrap gap-2">{REVIEW_ITEMS.map((item) => <label key={item.id} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${reviewFlags.includes(item.id) ? "border-amber-300 bg-amber-50 text-amber-950" : "border-slate-200 bg-white text-slate-700"}`}><input type="checkbox" checked={reviewFlags.includes(item.id)} onChange={(event) => setReviewFlags((current) => event.target.checked ? [...current, item.id] : current.filter((value) => value !== item.id))} className="h-5 w-5 accent-amber-700" />{item.label}</label>)}</div></fieldset>}
-                    <label className="mt-4 block text-sm font-semibold text-slate-800">Notes for next time<textarea value={reviewNotes} onChange={(event) => setReviewNotes(event.target.value.slice(0, 1_200))} rows={4} maxLength={1_200} placeholder="Optional, unless no item is selected" className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-[#f7f7f5] p-3 text-sm font-normal leading-6" /></label>
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-slate-500">{reviewNotes.length}/1,200 characters</p><button type="button" onClick={saveReceiptReview} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800"><Check size={16} /> Save receipt review</button></div>
-                    {application.receipt.review && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900" role="status">Saved {new Date(application.receipt.review.savedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}.</p>}
-                  </div>
-                </section>
-              )}
+              {submitted && application.receipt && <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6" data-testid="application-receipt"><CheckCircle2 className="text-emerald-700" size={24} /><h2 className="mt-3 font-semibold text-emerald-950">Employer submission confirmed</h2><p className="mt-1 font-mono text-xs text-emerald-800">Receipt {application.receipt.receiptId}</p><p className="mt-3 text-sm leading-6 text-emerald-900">{application.receipt.message}</p></section>}
             </>
           )}
-        </div>
+        </main>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:h-max">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-card">
-            <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Packet readiness</p><h2 className="mt-1 text-sm font-semibold text-slate-950">Preparation checklist</h2></div><strong className="text-2xl tracking-tight text-slate-950">{progress}%</strong></div>
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true"><div className="h-full rounded-full bg-brand-600 transition-all" style={{ width: `${progress}%` }} /></div>
-            <ul className="mt-5 space-y-3 text-sm">
-              {[
-                ["CV evidence supplied", cvReady],
-                ["Packet prepared", Boolean(application)],
-                ["Answers reviewed", answersReviewed],
-                ["Approvals complete", approvalsComplete],
-                ["Receipt created", Boolean(application?.receipt)],
-              ].map(([label, done]) => <li key={String(label)} className="flex items-center gap-2.5">{done ? <CheckCircle2 className="shrink-0 text-emerald-600" size={17} /> : <span className="h-[17px] w-[17px] shrink-0 rounded-full border border-slate-300" />}<span className={done ? "font-medium text-slate-800" : "text-slate-500"}>{label}</span></li>)}
-            </ul>
-          </section>
-
-          <section className="rounded-[28px] border border-slate-800 bg-slate-950 p-5 text-white">
-            <div className="flex items-center gap-2 text-emerald-300"><LockKeyhole size={16} aria-hidden="true" /><p className="text-[10px] font-bold uppercase tracking-[0.16em]">Human approval stays on</p></div>
-            <h2 className="mt-3 font-semibold">{application ? application.receipt ? "Packet ready to inspect" : "Review every field" : "Start with your evidence"}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">{application ? application.receipt ? "Your receipt records the exact reviewed packet. The employer has not been contacted." : "Complete the answers and approval checks before a private receipt can be created." : "Paste a CV or load the labelled sample to see role-specific scoring and missing keywords."}</p>
-          </section>
-
-          {application?.receipt && (
-            <section className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-5" data-testid="application-receipt">
-              <CheckCircle2 className="text-emerald-700" size={22} />
-              <h2 className="mt-3 font-semibold text-emerald-950">Preparation receipt</h2>
-              <p className="mt-1 font-mono text-xs text-emerald-800">{application.receipt.receiptId}</p>
-              <p className="mt-3 text-sm leading-6 text-emerald-900">{application.receipt.message}</p>
-              <Link href="/applications" className="ir35-focus mt-4 inline-flex min-h-11 items-center gap-2 font-semibold text-emerald-900">Open tracker <ExternalLink size={14} /></Link>
-            </section>
-          )}
-
-          <section className="rounded-[28px] border border-slate-200 bg-white p-5 text-sm text-slate-600">
-            <p className="font-semibold text-slate-900">Submission method</p>
-            <p className="mt-2 leading-6">{submissionProvider === "connected" ? "Direct apply is connected. Your final click submits the approved packet and stores the provider receipt." : "Direct apply is waiting for a verified employer or ATS connection. This role remains inside your workspace and is not marked as applied."}</p>
-          </section>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Readiness</p><h2 className="mt-1 text-sm font-semibold text-slate-950">Application checklist</h2></div><strong className="text-2xl text-slate-950">{progress}%</strong></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} /></div><ul className="mt-5 space-y-3 text-sm">{[["CV supplied", cvReady], ["Role match complete", Boolean(application)], ["Answers confirmed", answersReviewed], ["Final approval complete", approvalsComplete]].map(([label, done]) => <li key={String(label)} className="flex items-center gap-2.5">{done ? <CheckCircle2 size={17} className="text-emerald-600" /> : <span className="h-[17px] w-[17px] rounded-full border border-slate-300" />}<span className={done ? "font-medium text-slate-800" : "text-slate-500"}>{label}</span></li>)}</ul></section>
+          <section className={`rounded-3xl border p-5 ${submissionConnection === "connected" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}><p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionConnection === "connected" ? "text-emerald-700" : "text-amber-800"}`}>{submissionRoute.label} submission</p><h2 className="mt-2 font-semibold text-slate-950">{submissionConnection === "loading" ? "Checking connection…" : submissionConnection === "connected" ? "Verified route connected" : "Not connected yet"}</h2><p className="mt-2 text-sm leading-6 text-slate-700">{submissionConnection === "connected" ? "The approved packet can be sent and must return a unique provider receipt." : `IR35Careers has no authorised ${submissionRoute.label} or browser-automation gateway. OpenRouter cannot solve this—it only tailors text.`}</p></section>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-2 text-brand-700"><LockKeyhole size={16} /><p className="text-[10px] font-bold uppercase tracking-[0.16em]">Safety boundary</p></div><p className="mt-3 text-sm leading-6 text-slate-600">CAPTCHA, identity, right-to-work, salary, legal and demographic questions always pause for you. The service never reports “applied” without an external receipt.</p></section>
         </aside>
       </div>
     </WorkspacePage>

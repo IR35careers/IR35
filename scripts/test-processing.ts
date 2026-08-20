@@ -206,6 +206,7 @@ function checkTrue(name: string, condition: boolean) {
   checkTrue("isContractRole: title says Interim", isContractRole("Interim CTO", "Join our team.", ""));
   checkTrue("isContractRole: 6 month contract in desc", isContractRole("React Dev", "This is a 6 month contract engagement in London.", ""));
   checkTrue("isContractRole: employment type Contract", isContractRole("React Dev", "Employment type: Contract. Build features.", ""));
+  checkTrue("isContractRole: salaried FTC is rejected", !isContractRole("Marketing Manager - FTC", "Employment type: FullTime. Six month fixed-term employment.", "£80,000 per annum"));
   checkTrue("isContractRole: freelance in title", isContractRole("Freelance Designer", "Design websites.", ""));
 
   // These must NOT be detected as contract roles:

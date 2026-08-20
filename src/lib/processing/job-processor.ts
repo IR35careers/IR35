@@ -5,7 +5,7 @@
  *
  * A job is skipped when it fails either gate:
  *   1. Contract gate — permanent/salaried roles are dropped; this is a
- *      contract-only board. Signals: contract/interim/freelance/fixed-term
+ *      contract-only board. Signals: contract/interim/freelance/day-rate
  *      wording, day/hour rate wording, or any IR35 mention.
  *   2. UK gate — non-UK roles are dropped. A bare "Remote" with no country
  *      is accepted only when a UK-market signal exists (GBP day rate or an
@@ -63,7 +63,7 @@ export function cleanTitle(title: string): string {
 
 /** Strong signals: if ANY of these appear in the TITLE, it's a contract role. */
 const TITLE_CONTRACT_SIGNALS =
-  /\bcontract(?:or|ing)?\b|\binterim\b|\bfreelance\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\bday[\s-]*rate\b/i;
+  /\bcontract(?:or|ing)?\b|\binterim\b|\bfreelance\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\bday[\s-]*rate\b/i;
 
 /**
  * Description-level signals: contextual phrases that indicate a contract
@@ -71,7 +71,7 @@ const TITLE_CONTRACT_SIGNALS =
  * permanent job's legal boilerplate too).
  */
 const DESC_CONTRACT_SIGNALS =
-  /\bcontract\s+(?:role|position|opportunity|engagement|assignment|basis|duration|length)\b|\b(?:3|6|9|12|18|24)\s*[\s-]*month\s+(?:contract|engagement|assignment|extension)\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b|\bdaily\s+rate\b|\bper\s*hour\b|\bfreelance\b|\binterim\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\binitial\s+(?:3|6|9|12|18|24)\s*[\s-]*month\b|\bcontract(?:or|ing)\s+(?:rate|pay|salary)\b|\brolling\s+contract\b|\b(?:via|through)\s+(?:an?\s+)?(?:umbrella|ltd|limited)\b/i;
+  /\bcontract\s+(?:role|position|opportunity|engagement|assignment|basis|duration|length)\b|\b(?:3|6|9|12|18|24)\s*[\s-]*month\s+(?:contract|engagement|assignment|extension)\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b|\bdaily\s+rate\b|\bper\s*hour\b|\bfreelance\b|\binterim\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\binitial\s+(?:3|6|9|12|18|24)\s*[\s-]*month\b|\bcontract(?:or|ing)\s+(?:rate|pay|salary)\b|\brolling\s+contract\b|\b(?:via|through)\s+(?:an?\s+)?(?:umbrella|ltd|limited)\b/i;
 
 /** Phrases that strongly indicate a permanent role, overriding weak signals. */
 const PERMANENT_SIGNALS =
@@ -81,10 +81,21 @@ const PERMANENT_SIGNALS =
 const EMPLOYMENT_TYPE_CONTRACT =
   /\bemployment\s+type:\s*contract\b/i;
 
+/** Fixed-term employment is not automatically an IR35 contractor engagement. */
+const EMPLOYMENT_TYPE_EMPLOYEE =
+  /\bemployment\s+type:\s*(?:full\s*time|fulltime|part\s*time|parttime|permanent|employee)\b/i;
+
 export function isContractRole(title: string, description: string, rawSalary: string): boolean {
   const t = title ?? "";
   const d = description ?? "";
   const s = rawSalary ?? "";
+
+  // Structured ATS employment data overrides a vague "FTC" or fixed-term
+  // title. Keep the role only if the advertiser also states IR35 or day-rate
+  // evidence that clearly makes it a contractor engagement.
+  if (EMPLOYMENT_TYPE_EMPLOYEE.test(d) && !/\bir\s*-?\s*35\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b/i.test(`${t} ${d} ${s}`)) {
+    return false;
+  }
 
   // 1. Title is the strongest signal — recruiters put "Contract" or
   //    "Outside IR35" in titles deliberately, never accidentally.

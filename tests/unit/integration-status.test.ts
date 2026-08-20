@@ -24,6 +24,13 @@ describe("integration status", () => {
     expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("connected");
   });
 
+  it("reports AI tailoring only when a server-side OpenRouter key exists", () => {
+    expect(getIntegrationStatuses().find((item) => item.id === "ai_tailoring")?.state).toBe("provider_gate");
+    vi.stubEnv("OPENROUTER_API_KEY", "server-only-test-key");
+    expect(getIntegrationStatuses().find((item) => item.id === "ai_tailoring")?.state).toBe("connected");
+    expect(JSON.stringify(getIntegrationStatuses())).not.toContain("server-only-test-key");
+  });
+
   it("returns capability state without returning credential values", () => {
     vi.stubEnv("REED_API_KEY", "do-not-expose-this-value");
     const serialized = JSON.stringify(getIntegrationStatuses());

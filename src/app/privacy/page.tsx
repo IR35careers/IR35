@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           <li>You can review, reject and edit suggestions side by side and download the version you approve.</li>
           <li>You may ask us to explain the scoring approach or raise an accuracy or bias concern through the contact form.</li>
         </ul>
-        <p className="mt-3">IR35Careers does not currently use solely automated processing to make decisions that produce legal or similarly significant effects about you.</p>
+        <p className="mt-3">If you request optional AI tailoring, the provider receives redacted CV evidence and the role description to return structured suggestions. You must choose each edit. IR35Careers does not use solely automated processing to make decisions that produce legal or similarly significant effects about you.</p>
       </section>
 
       <section aria-labelledby="sharing">
@@ -90,6 +90,7 @@ export default function PrivacyPage() {
           <li><strong>Vercel:</strong> website hosting, delivery, operational logs and security.</li>
           <li><strong>Stripe:</strong> hosted checkout, subscription billing and customer-portal services only if you choose a paid plan. IR35Careers does not store full card details.</li>
           <li><strong>Authentication providers:</strong> for example Google, only when you choose that sign-in method.</li>
+          <li><strong>OpenRouter and the selected model provider:</strong> only when you deliberately request optional AI tailoring. We redact direct email, phone and common profile identifiers first, request zero-data-retention routing and deny providers that require data collection. The remaining CV evidence and job description are still personal data and may be processed outside the UK.</li>
           <li><strong>Professional advisers, regulators or authorities:</strong> where reasonably necessary or legally required.</li>
           <li><strong>Original job websites:</strong> when you choose an Apply or source link, that independent website receives information from your visit under its own notice.</li>
         </ul>

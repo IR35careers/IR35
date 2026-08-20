@@ -376,34 +376,31 @@ test("CV Studio analyses, verifies, versions and exports a role-tailored CV", as
   await expectNoSeriousA11yViolations(page);
 });
 
-test("application workspace prepares, approves, receipts and tracks without submitting", async ({ page }) => {
+test("application workspace tailors, reviews and saves without claiming submission", async ({ page }) => {
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
-  await expect(page.getByRole("heading", { name: "Prepare for Northstar Digital" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
   await expect(page.getByText(/Data stays in this browser/)).toBeVisible();
   await page.getByRole("button", { name: "Load labelled sample CV" }).click();
-  await page.getByRole("button", { name: "Prepare application" }).click();
+  await page.getByRole("button", { name: "Analyse role fit" }).click();
 
-  await expect(page.getByRole("heading", { name: /CV match/ })).toBeVisible();
-  await expect(page.getByText("Missing—not assumed")).toBeVisible();
-  const checkboxes = page.getByRole("checkbox");
+  await expect(page.getByRole("heading", { name: /Your evidence matches/ })).toBeVisible();
+  await expect(page.getByText("Missing — never assumed")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Optional AI tailoring" })).toBeVisible();
+  const checkboxes = page.locator('input[type="checkbox"]:enabled');
   const checkboxCount = await checkboxes.count();
   expect(checkboxCount).toBeGreaterThanOrEqual(7);
   for (let index = 0; index < checkboxCount; index += 1) {
     await checkboxes.nth(index).check();
   }
 
-  await page.getByRole("button", { name: "Approve dry run" }).click();
-  await expect(page.getByTestId("application-receipt")).toContainText("No application or personal data was sent");
-  await expect(page.getByTestId("application-receipt-review")).toContainText("Platform Engineering CV v4");
-  await page.getByRole("radio", { name: "I would change something" }).check();
-  await page.getByRole("checkbox", { name: "Cover letter", exact: true }).check();
-  await page.getByLabel("Notes for next time").fill("Use a shorter opening for similar roles.");
-  await page.getByRole("button", { name: "Save receipt review" }).click();
-  await expect(page.getByText("Receipt feedback saved to this application.")).toBeVisible();
+  await page.getByRole("button", { name: "Save reviewed packet" }).click();
+  await expect(page.getByText("Reviewed packet saved. It has not been sent to the employer.")).toBeVisible();
+  await expect(page.getByText(/OpenRouter cannot solve this/i)).toBeVisible();
+  await expect(page.getByText("Employer submission confirmed")).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
 
-  await page.getByRole("link", { name: /Open tracker/ }).click();
+  await page.goto("/applications");
   await expect(page.getByRole("heading", { name: "Your contract pipeline" })).toBeVisible();
   await expect(page.getByText("Ready", { exact: true }).first()).toBeVisible();
 

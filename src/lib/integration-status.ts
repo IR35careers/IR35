@@ -1,5 +1,6 @@
 import { billingConfig, stripeManagementConfig } from "@/lib/billing/stripe";
 import { resendInboundConfig } from "@/lib/email/resend";
+import { openRouterTailoringConfig } from "@/lib/ai/openrouter-tailoring";
 
 export type IntegrationState = "available" | "connected" | "provider_gate" | "not_configured";
 
@@ -30,6 +31,7 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
   const reedConnected = Boolean(process.env.REED_API_KEY);
   const adzunaConnected = Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
   const inboundConnected = Boolean(enabled(process.env.ENABLE_INBOUND_MAIL) && resendInboundConfig());
+  const aiTailoringConnected = Boolean(openRouterTailoringConfig());
   let validSubmissionEndpoint = false;
   try {
     validSubmissionEndpoint = new URL(process.env.APPLICATION_SUBMISSION_PROVIDER_URL ?? "").protocol === "https:";
@@ -77,11 +79,18 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       nextStep: inboundConnected ? "Users can activate a private address from their recruiter inbox." : "Verify an inbound domain and add the provider key, signing secret and feature flag.",
     },
     {
+      id: "ai_tailoring",
+      name: "Role-specific CV tailoring",
+      state: aiTailoringConnected ? "connected" : "provider_gate",
+      scope: "Optional, user-triggered OpenRouter analysis with direct identifiers redacted and zero-data-retention routing requested.",
+      nextStep: aiTailoringConnected ? "Users can request evidence-grounded suggestions and approve each edit." : "Add OPENROUTER_API_KEY as a server-only Vercel environment variable, then redeploy.",
+    },
+    {
       id: "ats_submission",
       name: "Live ATS submission",
       state: submissionConnected ? "connected" : "provider_gate",
       scope: "Provider-specific application submission with final human approval.",
-      nextStep: submissionConnected ? "Approved packets can be sent through the configured submission gateway." : "Connect an authorised ATS or browser-automation gateway and pass sandbox, idempotency and receipt tests.",
+      nextStep: submissionConnected ? "Approved packets can be sent through the configured submission gateway." : "Connect an authorised employer ATS or browser-automation gateway and pass form-discovery, CAPTCHA handoff, idempotency and receipt tests.",
     },
     {
       id: "billing",
