@@ -14,7 +14,9 @@ async function expectNoSeriousA11yViolations(page: import("@playwright/test").Pa
 
 async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
   const button = page.getByRole("button", { name: "Understood", exact: true });
-  if (await button.isVisible().catch(() => false)) await button.click();
+  if (await button.waitFor({ state: "visible", timeout: 3_000 }).then(() => true).catch(() => false)) {
+    await button.click();
+  }
 }
 
 test("public search-to-detail journey is usable and truthful", async ({ page, request }) => {
@@ -51,6 +53,9 @@ test("account flow has explicit modes and neutral sign-in errors", async ({ page
   await page.goto("/account?next=%2Fdashboard");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+  await page.getByRole("button", { name: "Forgot your password?" }).click();
+  await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+  await page.getByRole("button", { name: "Back to sign in" }).click();
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -59,6 +64,83 @@ test("account flow has explicit modes and neutral sign-in errors", async ({ page
   await page.getByRole("button", { name: "Sign in", exact: true }).last().click();
   await expect(page.getByText(/couldn't sign you in with those details/i)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
+});
+
+test("an external job can be previewed and opened in local CV Studio", async ({ page }) => {
+  await page.route("**/api/jobs/preview", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ job: {
+        id: "33333333-3333-4333-8333-333333333333",
+        title: "Platform Engineer Contract - Outside IR35",
+        company_name: "Example Systems",
+        location: "Manchester, GB",
+        remote_type: "hybrid",
+        ir35_status: "outside",
+        ir35_confidence: "high",
+        rate_min: 600,
+        rate_max: 700,
+        rate_currency: "GBP",
+        rate_type: "daily",
+        skills: ["TypeScript", "AWS", "Terraform"],
+        posted_at: "2026-08-20",
+        first_seen_at: "2026-08-20T00:00:00.000Z",
+        last_seen_at: "2026-08-20T00:00:00.000Z",
+        description: "Six month platform contract using TypeScript, AWS and Terraform. Outside IR35.",
+        apply_url: "https://jobs.example.com/platform",
+        source_domain: "jobs.example.com",
+      } }),
+    });
+  });
+  await page.goto("/analyse-job");
+  await dismissPrivacyNotice(page);
+  await page.getByLabel("Public job URL").fill("https://jobs.example.com/platform");
+  await page.getByRole("button", { name: "Analyse job" }).click();
+  await expect(page.getByRole("heading", { name: /Platform Engineer Contract/ })).toBeVisible();
+  await expect(page.getByText("Status stated in the job title")).toBeVisible();
+  await page.getByRole("button", { name: "Tailor CV locally" }).click();
+  await expect(page.getByRole("heading", { name: "Tailor your CV with evidence you control" })).toBeVisible();
+  await expect(page.getByText(/Scores are transparent, missing keywords are never treated as experience/)).toBeVisible();
+  await expectNoSeriousA11yViolations(page);
+});
+
+test("public trust and platform surfaces are available", async ({ page }) => {
+  const pages = [
+    ["/pricing", "Free while the provider-backed service is being verified."],
+    ["/platforms", "One contractor workspace, across every useful screen."],
+    ["/developers", "Contract search, with IR35 context."],
+    ["/ai-disclosure", "AI and Automation Disclosure"],
+    ["/security", "Security and Responsible Disclosure"],
+    ["/delete-account", "Delete your account"],
+  ] as const;
+  for (const [url, heading] of pages) {
+    await page.goto(url);
+    await dismissPrivacyNotice(page);
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+  }
+  await expectNoSeriousA11yViolations(page);
+});
+
+test("public platform assets and safety boundaries respond correctly", async ({ request }) => {
+  const manifest = await request.get("/manifest.webmanifest");
+  expect(manifest.ok()).toBeTruthy();
+  expect((await manifest.json()).name).toBe("IR35Careers");
+
+  const extension = await request.get("/downloads/ir35careers-chrome-extension-v1.zip");
+  expect(extension.ok()).toBeTruthy();
+  expect(extension.headers()["content-type"]).toContain("zip");
+
+  const cli = await request.get("/downloads/ir35careers-cli.mjs");
+  expect(cli.ok()).toBeTruthy();
+  expect(await cli.text()).toContain("never submits an application");
+
+  const accountExport = await request.get("/api/account");
+  expect(accountExport.status()).toBe(401);
+
+  const privatePreview = await request.post("/api/jobs/preview", { data: { url: "https://127.0.0.1/private" } });
+  expect(privatePreview.status()).toBe(400);
+  expect((await privatePreview.json()).error).toMatch(/public (?:HTTPS|website)/i);
 });
 
 test("mobile navigation exposes all primary destinations", async ({ page }, testInfo) => {

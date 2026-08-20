@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "IR35Careers Job Analyser",
+  "version": "1.0.0",
+  "description": "Send the current public job page to IR35Careers for IR35 evidence and role-specific CV review.",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_title": "Analyse with IR35Careers",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

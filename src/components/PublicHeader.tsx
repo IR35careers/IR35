@@ -61,7 +61,7 @@ export function PublicHeader() {
               <LayoutDashboard size={15} aria-hidden="true" /> Dashboard
             </Link>
           )}
-          {!loading && !user && preview && (
+          {!user && preview && (
             <Link
               href="/dashboard"
               className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
@@ -69,7 +69,7 @@ export function PublicHeader() {
               <LayoutDashboard size={15} aria-hidden="true" /> Preview workspace
             </Link>
           )}
-          {!loading && !user && !preview && (
+          {!user && !preview && (
             <>
               <Link
                 href={`/account?next=${encodeURIComponent(pathname || "/dashboard")}`}

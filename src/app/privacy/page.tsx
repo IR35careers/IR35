@@ -96,6 +96,7 @@ export default function PrivacyPage() {
       <section aria-labelledby="rights">
         <h2 id="rights">Your rights</h2>
         <p className="mt-3">Depending on the purpose and lawful basis, you may have rights to be informed, access your data, correct it, erase it, restrict processing, object, receive portable data and withdraw consent. You also have the right to object to direct marketing at any time.</p>
+        <p className="mt-3">Signed-in users can download a portable account export and permanently delete their account and private CV files in <Link href="/settings">Settings</Link>. You can also read the <Link href="/delete-account">account deletion instructions</Link>.</p>
         <p className="mt-3">We may ask for proportionate information to verify identity before disclosing or changing account data. Rights are not absolute, and we will explain any lawful reason why a request cannot be completed in full.</p>
       </section>
 

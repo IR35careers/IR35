@@ -5,14 +5,15 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { ArrowRight, Loader2, Briefcase, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
 import { checkBetaAccess } from "@/lib/access";
 import { BetaDeniedModal } from "@/components/BetaDeniedModal";
+import { Brand } from "@/components/ui/brand";
 
 function AccountForm() {
-  const { user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
@@ -23,12 +24,13 @@ function AccountForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"sign-in" | "create">(
+  const [mode, setMode] = useState<"sign-in" | "create" | "forgot">(
     searchParams.get("mode") === "create" ? "create" : "sign-in"
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
 
   // Already signed in → leave this page.
@@ -44,7 +46,7 @@ function AccountForm() {
       setError("Please enter a valid email address.");
       return;
     }
-    if (password.length < 8) {
+    if (mode !== "forgot" && password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
     }
@@ -54,6 +56,17 @@ function AccountForm() {
     }
 
     setSubmitting(true);
+
+    if (mode === "forgot") {
+      const reset = await requestPasswordReset(email);
+      setSubmitting(false);
+      if (reset.error) {
+        setError(reset.error);
+        return;
+      }
+      setResetSent(true);
+      return;
+    }
 
     if (mode === "sign-in") {
       const signIn = await signInWithPassword(email, password);
@@ -103,7 +116,7 @@ function AccountForm() {
 
   if (!loading && user) return null;
 
-  if (confirmSent) {
+  if (confirmSent || resetSent) {
     return (
       <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 text-center backdrop-blur-xl">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-green-300 bg-green-100">
@@ -111,9 +124,8 @@ function AccountForm() {
         </div>
         <h1 className="mt-5 text-xl font-medium text-slate-900">Check your inbox</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          We&apos;ve sent a confirmation link to{" "}
-          <span className="text-slate-800">{email}</span>. Click it to activate your account, then
-          come back and sign in.
+          We&apos;ve sent {resetSent ? "a secure password-reset link" : "an account-confirmation link"} to{" "}
+          <span className="text-slate-800">{email}</span>. {resetSent ? "Use it once to choose a new password." : "Click it to activate your account, then come back and sign in."}
         </p>
         <Link
           href="/jobs"
@@ -128,14 +140,7 @@ function AccountForm() {
   return (
     <div className="w-full max-w-sm rounded-3xl border border-slate-300 bg-white/95 p-8 backdrop-blur-xl">
       <div className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-            <Briefcase size={15} className="text-white" />
-          </div>
-          <span className="text-sm font-bold text-slate-900">
-            IR35<span className="text-slate-600">Careers</span>
-          </span>
-        </Link>
+        <Brand />
         <Link href="/" className="text-xs text-slate-600 transition-colors hover:text-slate-900">
           ← Back to home
         </Link>
@@ -169,16 +174,18 @@ function AccountForm() {
       </div>
 
       <h1 className="mt-6 text-2xl font-light tracking-tight text-slate-900">
-        {mode === "sign-in" ? "Welcome back" : "Create your account"}
+        {mode === "sign-in" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your account"}
       </h1>
       <p className="mt-1.5 text-sm text-slate-500">
         {mode === "sign-in"
           ? "Sign in to manage saved contracts and alerts."
-          : "Start saving relevant contracts and focused searches."}
+          : mode === "forgot"
+            ? "Enter your account email and we will send a one-use reset link."
+            : "Start saving relevant contracts and focused searches."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-        <div>
+        {mode !== "forgot" && <div>
           <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-slate-600">
             Email
           </label>
@@ -191,7 +198,13 @@ function AccountForm() {
             placeholder="you@example.com"
             className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
           />
-        </div>
+        </div>}
+
+        {mode === "sign-in" && (
+          <button type="button" onClick={() => { setMode("forgot"); setError(null); }} className="ir35-focus min-h-10 rounded-lg text-sm font-semibold text-brand-700 hover:underline">
+            Forgot your password?
+          </button>
+        )}
         <div>
           <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-slate-600">
             Password
@@ -231,25 +244,31 @@ function AccountForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-400 to-green-400 px-4 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+          className="ir35-focus flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-card transition-colors hover:bg-brand-700 disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 size={16} className="animate-spin" />
           ) : (
             <>
-              {mode === "sign-in" ? "Sign in" : "Create account"} <ArrowRight size={15} />
+              {mode === "sign-in" ? "Sign in" : mode === "forgot" ? "Send reset link" : "Create account"} <ArrowRight size={15} />
             </>
           )}
         </button>
       </form>
 
-      <div className="mt-4 flex items-center gap-3">
+      {mode === "forgot" && (
+        <button type="button" onClick={() => { setMode("sign-in"); setError(null); }} className="ir35-focus mt-4 min-h-10 w-full rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-950">
+          Back to sign in
+        </button>
+      )}
+
+      {mode !== "forgot" && <div className="mt-4 flex items-center gap-3">
         <span className="h-px flex-1 bg-slate-200" aria-hidden />
         <span className="text-xs text-slate-600">or</span>
         <span className="h-px flex-1 bg-slate-200" aria-hidden />
-      </div>
+      </div>}
 
-      <button
+      {mode !== "forgot" && <button
         type="button"
         onClick={async () => {
           setError(null);
@@ -271,7 +290,7 @@ function AccountForm() {
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
         </svg>
         {mode === "sign-in" ? "Sign in" : "Continue"} with Google
-      </button>
+      </button>}
 
       <p className="mt-4 text-center text-xs leading-5 text-slate-600">
         We use your account to save contracts and searches. Applications still happen on the original listing. Read our <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">Privacy Notice</Link>.

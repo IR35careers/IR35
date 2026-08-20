@@ -8,7 +8,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Briefcase, ArrowRight, Loader2, CheckCircle2, Check } from "lucide-react";
 import { validateEmail } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import CountdownTimer from "./CountdownTimer";
 import { useAuth } from "@/lib/auth-context";
 
@@ -109,6 +109,7 @@ export function WaitlistExperience(): ReactElement {
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-white text-slate-900 [color-scheme:light] lg:h-[100dvh] lg:overflow-hidden">
+      <Toaster position="bottom-right" />
       <style>{`:root{color-scheme:light}`}</style>
 
       {/* Ambient field */}

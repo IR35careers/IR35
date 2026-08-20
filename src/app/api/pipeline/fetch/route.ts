@@ -1,10 +1,9 @@
 /**
  * Pipeline trigger endpoint: GET /api/pipeline/fetch
  *
- * Two ways to call it, both requiring the CRON_SECRET env var:
- *   1. Vercel Cron (configured in vercel.json) — Vercel automatically sends
- *      `Authorization: Bearer ${CRON_SECRET}` when that env var exists.
- *   2. Manually in a browser: /api/pipeline/fetch?secret=YOUR_CRON_SECRET
+ * Vercel Cron (configured in vercel.json) sends
+ * `Authorization: Bearer ${CRON_SECRET}` when that env var exists. Manual
+ * runs must use the same header; secrets are never accepted in URLs or logs.
  *
  * Returns the full pipeline summary as JSON — company errors included, so a
  * wrong ATS slug is immediately visible.
@@ -24,10 +23,8 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
-  const url = new URL(request.url);
   const authHeader = request.headers.get("authorization") ?? "";
-  const querySecret = url.searchParams.get("secret") ?? "";
-  const authorized = authHeader === `Bearer ${secret}` || querySecret === secret;
+  const authorized = authHeader === `Bearer ${secret}`;
 
   if (!authorized) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

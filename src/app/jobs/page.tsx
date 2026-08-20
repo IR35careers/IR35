@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, MapPin, Loader2, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2 } from "lucide-react";
+import { Search, MapPin, Loader2, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles } from "lucide-react";
 import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
@@ -91,8 +91,10 @@ function JobsBoard() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const lastParamsRef = useRef(new URLSearchParams());
+  const lastFacetKeyRef = useRef("");
+  const facetCacheRef = useRef(new Map<string, Facets>());
 
-  const runSearch = useCallback(async (params: URLSearchParams) => {
+  const runSearch = useCallback(async (params: URLSearchParams, facetKey: string) => {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
@@ -102,7 +104,8 @@ function JobsBoard() {
       const json = (await res.json()) as SearchResponse;
       if (!res.ok || json.error) throw new Error(json.error ?? "Search failed");
       if (requestRef.current !== controller) return;
-      setData(json);
+      if (json.facets) facetCacheRef.current.set(facetKey, json.facets);
+      setData({ ...json, facets: json.facets ?? facetCacheRef.current.get(facetKey) });
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       if (requestRef.current === controller) setFailed(true);
@@ -124,14 +127,16 @@ function JobsBoard() {
     if (withinDays > 0) params.set("within_days", String(withinDays));
     if (sort !== "recent") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
-    params.set("with_facets", "1");
+    const facetKey = JSON.stringify([q, minRate, skillsLock, locationLock, withinDays]);
+    if (!facetCacheRef.current.has(facetKey)) params.set("with_facets", "1");
     lastParamsRef.current = params;
+    lastFacetKeyRef.current = facetKey;
     const visibleParams = new URLSearchParams(params);
     visibleParams.delete("with_facets");
     const nextUrl = visibleParams.size > 0 ? `/jobs?${visibleParams.toString()}` : "/jobs";
     window.history.replaceState(window.history.state, "", nextUrl);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => runSearch(params), q ? 350 : 0);
+    debounceRef.current = setTimeout(() => runSearch(params, facetKey), q ? 350 : 0);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, withinDays, page, runSearch]);
 
@@ -248,6 +253,9 @@ function JobsBoard() {
             {!loading && data?.generated_at && <p className="mt-0.5 text-[11px] text-slate-400">Search refreshed {new Date(data.generated_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>}
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/analyse-job" className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-green-300 hover:text-green-700 md:inline-flex">
+              <WandSparkles size={13} /> Analyse a job URL
+            </Link>
             <Link href={alertHref} className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-green-300 hover:text-green-700 sm:inline-flex">
               <Bell size={13} /> Save as alert
             </Link>
@@ -271,7 +279,7 @@ function JobsBoard() {
           {/* Results */}
           <div className={`min-w-0 transition-opacity ${loading && data ? "opacity-60" : "opacity-100"}`} aria-busy={loading}>
             {failed ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><p className="font-semibold text-slate-800">Couldn&apos;t load contracts.</p><p className="mt-1 text-sm text-slate-500">Your filters are still here. Retry the search when your connection is ready.</p><button type="button" onClick={() => void runSearch(lastParamsRef.current)} className="ir35-focus mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Retry search</button></div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><p className="font-semibold text-slate-800">Couldn&apos;t load contracts.</p><p className="mt-1 text-sm text-slate-500">Your filters are still here. Retry the search when your connection is ready.</p><button type="button" onClick={() => void runSearch(lastParamsRef.current, lastFacetKeyRef.current)} className="ir35-focus mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Retry search</button></div>
             ) : loading && !data ? (
               <div className="flex items-center justify-center py-24 text-slate-400"><Loader2 className="animate-spin" size={22} /></div>
             ) : data && data.jobs.length === 0 ? (

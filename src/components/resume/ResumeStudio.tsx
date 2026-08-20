@@ -142,7 +142,7 @@ function StepRail({ phase }: { phase: StudioPhase }) {
         return (
           <li key={label} className="min-w-0">
             <div className={`h-1 rounded-full ${number <= active ? "bg-brand-600" : "bg-slate-200"}`} />
-            <p className={`mt-2 truncate text-xs font-semibold ${current ? "text-brand-700" : complete ? "text-slate-700" : "text-slate-400"}`}>
+            <p className={`mt-2 truncate text-xs font-semibold ${current ? "text-brand-700" : complete ? "text-slate-700" : "text-slate-500"}`}>
               {complete ? <Check size={12} className="mr-1 inline" aria-hidden="true" /> : `${number}. `}{label}
             </p>
           </li>
@@ -192,7 +192,7 @@ function SuggestionCard({
       {suggestion.kind === "verified-keyword" ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">CV evidence</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">CV evidence</p>
             <p className="mt-1 text-sm text-slate-600">{suggestion.original}</p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -203,7 +203,7 @@ function SuggestionCard({
       ) : (
         <div className="mt-3 grid gap-2 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Original</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Original</p>
             <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{suggestion.original || "No profile section found."}</p>
           </div>
           <div className="rounded-xl border border-brand-200 bg-white p-3">
@@ -220,8 +220,9 @@ function formatVersionDate(value: string): string {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
-export function ResumeStudio({ job }: { job: JobDetail }) {
+export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job: JobDetail; backHref?: string; forceLocalHistory?: boolean }) {
   const { user } = useAuth();
+  const historyUserId = forceLocalHistory ? null : user?.id ?? null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<StudioPhase>("source");
   const [sourceText, setSourceText] = useState("");
@@ -239,7 +240,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
 
   const refreshVersions = async () => {
     try {
-      setVersions(await loadResumeVersions(job.id, user?.id ?? null));
+      setVersions(await loadResumeVersions(job.id, historyUserId));
     } catch (versionError) {
       setError(versionError instanceof Error ? versionError.message : "Version history is unavailable.");
     }
@@ -249,7 +250,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
     void refreshVersions();
     // job and signed-in user determine the private history scope.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job.id, user?.id]);
+  }, [job.id, historyUserId]);
 
   const previewText = useMemo(() => {
     if (!analysis) return sourceText;
@@ -355,7 +356,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
     setBusy(status === "approved" ? "approve" : "save");
     setError("");
     try {
-      await saveResumeVersion(version, user?.id ?? null);
+      await saveResumeVersion(version, historyUserId);
       await refreshVersions();
       setNotice(status === "approved" ? "Version approved and saved. It is ready to export." : "Draft version saved.");
     } catch (saveError) {
@@ -421,7 +422,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
   const removeVersion = async (version: ResumeVersion) => {
     setError("");
     try {
-      await deleteResumeVersion(version.id, user?.id ?? null);
+      await deleteResumeVersion(version.id, historyUserId);
       await refreshVersions();
       setNotice(`Deleted ${version.label}.`);
     } catch (deleteError) {
@@ -434,7 +435,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
       <div className="ir35-container py-6 sm:py-8">
         <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <Link href={`/jobs/${job.id}`} className="ir35-focus inline-flex min-h-10 items-center gap-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-950">
+            <Link href={backHref ?? `/jobs/${job.id}`} className="ir35-focus inline-flex min-h-10 items-center gap-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-950">
               <ArrowLeft size={15} /> Back to role
             </Link>
             <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-brand-700">CV Studio</p>
@@ -470,6 +471,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
               <input
                 ref={fileInputRef}
                 type="file"
+                aria-label="Upload CV file"
                 accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                 className="sr-only"
                 onChange={(event) => { const file = event.target.files?.[0]; if (file) void parseAndSetFile(file); }}
@@ -490,7 +492,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
                 {sourceFilename !== "Pasted CV" && sourceText && <p className="mt-3 text-xs font-medium text-brand-700">Ready: {sourceFilename}</p>}
               </div>
 
-              <div className="my-5 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200" />or paste the text<span className="h-px flex-1 bg-slate-200" /></div>
+              <div className="my-5 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-slate-200" />or paste the text<span className="h-px flex-1 bg-slate-200" /></div>
               <label htmlFor="cv-source" className="text-sm font-semibold text-slate-800">CV text</label>
               <textarea
                 id="cv-source"
@@ -512,7 +514,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
 
             <aside className="space-y-4">
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Scoring rubric</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Scoring rubric</p>
                 <h2 className="mt-2 text-base font-bold">No hidden “AI score”</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">The rating is a deterministic, inspectable calculation. It does not predict hiring success.</p>
                 <div className="mt-4 space-y-3 text-sm">
@@ -555,7 +557,7 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
           <div className="mt-6">
             <div className="grid gap-4 md:grid-cols-2">
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-                <div className="flex items-center gap-4"><ScoreRing score={analysis.baseline.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Current CV</p><h2 className="mt-1 text-lg font-bold">Role-specific score</h2><p className="mt-1 text-sm text-slate-600">Before approved changes</p></div></div>
+                <div className="flex items-center gap-4"><ScoreRing score={analysis.baseline.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Current CV</p><h2 className="mt-1 text-lg font-bold">Role-specific score</h2><p className="mt-1 text-sm text-slate-600">Before approved changes</p></div></div>
               </section>
               <section className="rounded-2xl border border-brand-200 bg-brand-50/60 p-5 shadow-card">
                 <div className="flex items-center gap-4"><ScoreRing score={previewScore.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Live projection</p><h2 className="mt-1 text-lg font-bold">{previewScore.overall - analysis.baseline.overall >= 0 ? "+" : ""}{previewScore.overall - analysis.baseline.overall} points</h2><p className="mt-1 text-sm text-slate-600">Based only on approved or confirmed edits</p></div></div>
@@ -628,14 +630,14 @@ export function ResumeStudio({ job }: { job: JobDetail }) {
               </section>
 
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-                <div className="flex items-center justify-between gap-3"><p className="flex items-center gap-2 text-sm font-bold"><History size={16} className="text-brand-700" /> Version history</p><span className="text-xs text-slate-400">{versions.length}</span></div>
-                <p className="mt-2 text-xs leading-5 text-slate-600">{user && isSupabaseConfigured() ? "Private account history" : "Stored only in this browser"}</p>
+                <div className="flex items-center justify-between gap-3"><p className="flex items-center gap-2 text-sm font-bold"><History size={16} className="text-brand-700" /> Version history</p><span className="text-xs text-slate-500">{versions.length}</span></div>
+                <p className="mt-2 text-xs leading-5 text-slate-600">{!forceLocalHistory && user && isSupabaseConfigured() ? "Private account history" : "Stored only in this browser"}</p>
                 {versions.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-500">Save a draft or approved version to start the history.</p> : (
                   <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
                     {versions.map((version) => (
                       <li key={version.id} className="rounded-xl border border-slate-200 p-3">
                         <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{version.label}</p><p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500"><Clock3 size={11} /> {formatVersionDate(version.createdAt)}</p></div><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${version.status === "approved" ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-600"}`}>{version.status}</span></div>
-                        <div className="mt-3 flex items-center justify-between gap-2"><span className="text-xs font-bold tabular-nums text-slate-700">{version.score.overall}% score</span><div className="flex items-center gap-1"><button type="button" onClick={() => restoreVersion(version)} className="ir35-focus min-h-9 rounded-lg px-2 text-xs font-semibold text-brand-700 hover:bg-brand-50">Restore</button><button type="button" onClick={() => void removeVersion(version)} className="ir35-focus inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-700" aria-label={`Delete ${version.label}`}><Trash2 size={14} /></button></div></div>
+                        <div className="mt-3 flex items-center justify-between gap-2"><span className="text-xs font-bold tabular-nums text-slate-700">{version.score.overall}% score</span><div className="flex items-center gap-1"><button type="button" onClick={() => restoreVersion(version)} className="ir35-focus min-h-9 rounded-lg px-2 text-xs font-semibold text-brand-700 hover:bg-brand-50">Restore</button><button type="button" onClick={() => void removeVersion(version)} className="ir35-focus inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-700" aria-label={`Delete ${version.label}`}><Trash2 size={14} /></button></div></div>
                       </li>
                     ))}
                   </ul>

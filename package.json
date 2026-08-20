@@ -10,8 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
     "test:unit": "vitest run",
-    "test:legacy": "tsx scripts/test-processing.ts && tsx scripts/test-tax.ts && tsx scripts/test-aggregators.ts",
-    "test:e2e": "playwright test"
+    "test:legacy": "tsx scripts/test-processing.ts && tsx scripts/test-tax.ts && tsx scripts/test-aggregators.ts && tsx scripts/test-fetchers.ts",
+    "test:e2e": "playwright test",
+    "cli": "node public/downloads/ir35careers-cli.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",

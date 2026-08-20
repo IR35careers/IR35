@@ -68,6 +68,15 @@ const WORKFLOW = [
   { icon: Inbox, title: "Respond", body: "Keep recruiter messages linked to the contract that generated them.", href: "/inbox" },
 ] as const;
 
+const FAQS = [
+  ["How does IR35Careers find contracts?", "Authorised job-board APIs and public employer ATS feeds are normalised, deduplicated and refreshed. Every result keeps its original source link and last-seen evidence."],
+  ["Does an Outside IR35 label guarantee the status?", "No. The label reports what the advert explicitly says. The client determination and the real working practices still matter, so TBC is shown when no clear status was found."],
+  ["Will CV Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
+  ["Does IR35Careers submit applications automatically?", "Not today. The workspace prepares materials, screening answers and a dry-run receipt. Live submission remains disabled until a supported provider, sandbox, approval token and kill switch are verified."],
+  ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private CV files from Settings."],
+  ["Is there a paid plan?", "The current contractor preview is free. Paid pricing and checkout will appear only after provider-backed features and billing safeguards are production-tested."],
+] as const;
+
 export function HomeExperience() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f6f8f7] text-slate-950">
@@ -152,7 +161,7 @@ export function HomeExperience() {
           </div>
         </section>
 
-        <section className="bg-white py-16 sm:py-20">
+        <section className="bg-white py-16 [contain-intrinsic-size:900px] [content-visibility:auto] sm:py-20">
           <div className="ir35-container">
             <div className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">A better contractor search</p>
@@ -176,14 +185,14 @@ export function HomeExperience() {
 
         <section className="border-y border-slate-200 bg-slate-950 py-16 text-white sm:py-20">
           <div className="ir35-container">
-            <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">The contractor workspace</p><h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Discover, prepare and track—with you in control.</h2><p className="mt-4 text-base leading-7 text-slate-300">The workflow is connected end to end in local preview. External submission, mail forwarding and payments stay behind provider and approval gates.</p></div>
+            <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">The contractor workspace</p><h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Discover, prepare and track—with you in control.</h2><p className="mt-4 text-base leading-7 text-slate-300">The core review workflow is connected end to end. External submission, mail forwarding and payments stay behind visible provider and approval gates.</p></div>
             <div className="mt-10 grid gap-3 md:grid-cols-5">
               {WORKFLOW.map((step, index) => <Link key={step.title} href={step.href} className="ir35-focus group rounded-2xl border border-white/10 bg-white/5 p-5 transition-colors hover:border-emerald-300/50 hover:bg-white/10"><div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={19} /></span><span className="text-xs font-bold text-slate-300">0{index + 1}</span></div><h3 className="mt-5 font-semibold">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-300">{step.body}</p><span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-emerald-300">Open <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span></Link>)}
             </div>
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-[#eef5f1] py-16 sm:py-20">
+        <section className="border-y border-slate-200 bg-[#eef5f1] py-16 [contain-intrinsic-size:900px] [content-visibility:auto] sm:py-20">
           <div className="ir35-container grid items-start gap-10 lg:grid-cols-[0.72fr_1.28fr]">
             <div className="lg:sticky lg:top-28">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">Understand before you apply</p>
@@ -204,7 +213,28 @@ export function HomeExperience() {
           </div>
         </section>
 
-        <section className="bg-slate-950 py-16 text-white sm:py-20">
+        <section className="border-t border-slate-200 bg-white py-16 [contain-intrinsic-size:900px] [content-visibility:auto] sm:py-20">
+          <div className="ir35-container grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">Frequently asked</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">The important questions, answered plainly.</h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600">Product state and safety gates are published so a contractor never has to guess what happened.</p>
+              <Link href="/pricing" className={buttonClassName({ variant: "secondary", className: "mt-6" })}>View current access <ArrowRight size={15} /></Link>
+            </div>
+            <div className="divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-slate-50 px-5 sm:px-7">
+              {FAQS.map(([question, answer], index) => (
+                <details key={question} className="group py-5" open={index === 0}>
+                  <summary className="ir35-focus flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-bold text-slate-950 marker:content-none">
+                    <span>{question}</span><span className="text-xl text-brand-700 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+                  </summary>
+                  <p className="pb-1 pr-8 text-sm leading-6 text-slate-600">{answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-slate-950 py-16 text-white [contain-intrinsic-size:700px] [content-visibility:auto] sm:py-20">
           <div className="ir35-container grid items-center gap-8 lg:grid-cols-[1fr_auto]">
             <div>
               <p className="text-sm font-semibold text-emerald-300">Your next contract, with the important details visible.</p>

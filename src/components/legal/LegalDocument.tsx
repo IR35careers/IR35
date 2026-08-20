@@ -52,7 +52,7 @@ export function LegalDocument({
                 {sections.map((section, index) => (
                   <li key={section.id}>
                     <a href={`#${section.id}`} className="ir35-focus flex rounded-lg px-2 py-2 text-sm leading-5 text-slate-600 hover:bg-brand-50 hover:text-brand-800">
-                      <span className="mr-2 text-xs font-bold tabular-nums text-slate-400">{String(index + 1).padStart(2, "0")}</span>{section.label}
+                      <span className="mr-2 text-xs font-bold tabular-nums text-slate-500">{String(index + 1).padStart(2, "0")}</span>{section.label}
                     </a>
                   </li>
                 ))}

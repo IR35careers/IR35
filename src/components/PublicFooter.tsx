@@ -6,6 +6,7 @@ const GROUPS = [
     title: "Find work",
     links: [
       ["Browse contracts", "/jobs"],
+      ["Analyse external role", "/analyse-job"],
       ["Outside IR35", "/jobs?ir35=outside"],
       ["Remote contracts", "/jobs?remote=remote"],
     ],
@@ -22,7 +23,11 @@ const GROUPS = [
     title: "IR35Careers",
     links: [
       ["Contractor workspace", "/dashboard"],
+      ["Platforms", "/platforms"],
+      ["Pricing", "/pricing"],
+      ["Developer API", "/developers"],
       ["Product updates", "/blog"],
+      ["Changelog", "/changelog"],
       ["Contractor stories", "/stories"],
       ["Contact", "/contact"],
     ],
@@ -34,7 +39,10 @@ const GROUPS = [
       ["Cookie policy", "/cookies"],
       ["Terms of use", "/terms"],
       ["Accessibility", "/accessibility"],
+      ["AI disclosure", "/ai-disclosure"],
+      ["Security", "/security"],
       ["Job listing policy", "/job-listing-policy"],
+      ["Delete account", "/delete-account"],
     ],
   },
 ] as const;

@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   Circle,
   ExternalLink,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AppNav } from "@/components/AppNav";
@@ -49,6 +51,10 @@ export default function SettingsPage() {
   const [pw2, setPw2] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [dataBusy, setDataBusy] = useState<"export" | "delete" | null>(null);
+  const [dataMsg, setDataMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteEmail, setDeleteEmail] = useState("");
 
   useEffect(() => {
     if (!loading && !user) router.replace("/account?next=/settings");
@@ -75,6 +81,57 @@ export default function SettingsPage() {
       setPwMsg({ ok: true, text: "Password updated." });
       setPw1("");
       setPw2("");
+    }
+  };
+
+  const accountRequest = async (method: "GET" | "DELETE") => {
+    const { getSupabase } = await import("@/lib/supabase");
+    const { data } = await getSupabase().auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Your session has expired. Sign in again and retry.");
+    return fetch("/api/account", {
+      method,
+      headers: {
+        authorization: `Bearer ${token}`,
+        ...(method === "DELETE" ? { "Content-Type": "application/json" } : {}),
+      },
+      body: method === "DELETE" ? JSON.stringify({ email: deleteEmail, confirmation: "DELETE" }) : undefined,
+    });
+  };
+
+  const downloadData = async () => {
+    setDataBusy("export");
+    setDataMsg(null);
+    try {
+      const response = await accountRequest("GET");
+      if (!response.ok) throw new Error(((await response.json()) as { error?: string }).error ?? "Export failed.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `ir35careers-account-export-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setDataMsg({ ok: true, text: "Your account export has downloaded." });
+    } catch (error) {
+      setDataMsg({ ok: false, text: error instanceof Error ? error.message : "Export failed." });
+    } finally {
+      setDataBusy(null);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (deleteEmail.trim().toLowerCase() !== (user?.email ?? "").trim().toLowerCase()) return;
+    setDataBusy("delete");
+    setDataMsg(null);
+    try {
+      const response = await accountRequest("DELETE");
+      if (!response.ok) throw new Error(((await response.json()) as { error?: string }).error ?? "Deletion failed.");
+      await signOut();
+      router.replace("/?account=deleted");
+    } catch (error) {
+      setDataMsg({ ok: false, text: error instanceof Error ? error.message : "Deletion failed." });
+      setDataBusy(null);
     }
   };
 
@@ -217,6 +274,37 @@ export default function SettingsPage() {
                   {provider === "google" ? "Via Google" : "Not set"}
                 </span>
               </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                <Download size={15} /> Your data and account
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Download a portable JSON copy of your profile, saved roles, alerts, CV versions, application workspace, inbox and automation records.</p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={() => void downloadData()} disabled={dataBusy !== null} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:border-brand-300 disabled:opacity-60">
+                  {dataBusy === "export" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download account data
+                </button>
+                <button type="button" onClick={() => setDeleteOpen((value) => !value)} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-800 hover:bg-rose-100">
+                  <Trash2 size={15} /> Delete account
+                </button>
+              </div>
+              {deleteOpen && (
+                <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                  <p className="text-sm font-bold text-rose-950">This permanently deletes the account and private CV files.</p>
+                  <p className="mt-1 text-xs leading-5 text-rose-800">Download your data first. To confirm, enter the signed-in email address <span className="font-semibold">{user.email}</span>.</p>
+                  <label className="mt-3 block text-xs font-semibold text-rose-900">Account email
+                    <input value={deleteEmail} onChange={(event) => setDeleteEmail(event.target.value)} type="email" autoComplete="email" className="ir35-focus mt-1.5 min-h-11 w-full rounded-xl border border-rose-300 bg-white px-3 text-sm text-slate-950" />
+                  </label>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => void deleteAccount()} disabled={dataBusy !== null || deleteEmail.trim().toLowerCase() !== (user.email ?? "").trim().toLowerCase()} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rose-700 px-4 text-sm font-bold text-white hover:bg-rose-800 disabled:opacity-50">
+                      {dataBusy === "delete" ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />} Permanently delete account
+                    </button>
+                    <button type="button" onClick={() => { setDeleteOpen(false); setDeleteEmail(""); }} className="ir35-focus min-h-11 rounded-xl px-4 text-sm font-semibold text-slate-700">Cancel</button>
+                  </div>
+                </div>
+              )}
+              {dataMsg && <p role={dataMsg.ok ? "status" : "alert"} className={`mt-4 rounded-xl border px-4 py-3 text-sm ${dataMsg.ok ? "border-brand-200 bg-brand-50 text-brand-900" : "border-rose-200 bg-rose-50 text-rose-800"}`}>{dataMsg.text}</p>}
             </section>
           </div>
 

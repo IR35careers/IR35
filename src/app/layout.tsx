@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
-import { Toaster } from "react-hot-toast";
 import { CookieNotice } from "@/components/CookieNotice";
+import { PwaRegister } from "@/components/PwaRegister";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -85,32 +85,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>{children}</AuthProvider>
         <CookieNotice />
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              borderRadius: "1rem",
-              padding: "1rem 1.25rem",
-              fontSize: "0.9rem",
-              fontWeight: 500,
-            },
-            success: {
-              style: {
-                background: "#f0fdf4",
-                color: "#166534",
-                border: "1px solid #bbf7d0",
-              },
-            },
-            error: {
-              style: {
-                background: "#fef2f2",
-                color: "#991b1b",
-                border: "1px solid #fecaca",
-              },
-            },
-          }}
-        />
+        <PwaRegister />
       </body>
     </html>
   );

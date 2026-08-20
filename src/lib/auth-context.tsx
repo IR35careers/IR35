@@ -23,6 +23,7 @@ interface AuthContextValue {
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
   signUpWithPassword: (email: string, password: string) => Promise<AuthResult>;
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
   signInWithGoogle: (next?: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let unsubscribe: (() => void) | undefined;
+    let initialized = false;
 
     if (!isSupabaseConfigured()) {
       return () => {
@@ -44,28 +46,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    void import("@/lib/supabase").then(({ getSupabase }) => {
-      if (!mounted) return;
-      const supabase = getSupabase();
-      void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+    const initialiseSession = () => {
+      if (initialized) return;
+      initialized = true;
+      void import("@/lib/supabase").then(({ getSupabase }) => {
         if (!mounted) return;
-        setUser(data.session?.user ?? null);
-        setLoading(false);
-      });
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event: string, session: Session | null) => {
+        const supabase = getSupabase();
+        void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
           if (!mounted) return;
-          setUser(session?.user ?? null);
+          setUser(data.session?.user ?? null);
           setLoading(false);
-        }
-      );
-      unsubscribe = () => subscription.unsubscribe();
-    });
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (_event: string, session: Session | null) => {
+            if (!mounted) return;
+            setUser(session?.user ?? null);
+            setLoading(false);
+          }
+        );
+        unsubscribe = () => subscription.unsubscribe();
+      });
+    };
+
+    const isSessionKey = (key: string | null) => Boolean(key?.startsWith("sb-") && key.endsWith("-auth-token"));
+    let hasStoredSession = false;
+    try {
+      hasStoredSession = Object.keys(window.localStorage).some((key) => isSessionKey(key));
+    } catch {
+      // Storage may be disabled; account actions can still report their provider result.
+    }
+    if (hasStoredSession) initialiseSession();
+    else setLoading(false);
+
+    const handleStorage = (event: StorageEvent) => {
+      if (!isSessionKey(event.key)) return;
+      if (event.newValue) {
+        setLoading(true);
+        initialiseSession();
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
 
     return () => {
       mounted = false;
       unsubscribe?.();
+      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 
@@ -73,10 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
     const { getSupabase } = await import("@/lib/supabase");
     const supabase = getSupabase();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
+    if (!error) {
+      setUser(data.user);
+      setLoading(false);
+    }
     return { error: error ? error.message : null };
   };
 
@@ -96,6 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) return { error: error.message };
+    if (data.session?.user) {
+      setUser(data.session.user);
+      setLoading(false);
+    }
     // If email confirmation is ON, there's a user but no active session yet.
     const needsConfirmation = !!data.user && !data.session;
     return { error: null, needsConfirmation };
@@ -112,11 +149,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const requestPasswordReset = async (email: string): Promise<AuthResult> => {
+    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+    const { getSupabase } = await import("@/lib/supabase");
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: `${window.location.origin}/account/reset`,
+    });
+    return { error: error ? error.message : null };
+  };
+
   const updatePassword = async (newPassword: string): Promise<AuthResult> => {
     if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
     const { getSupabase } = await import("@/lib/supabase");
     const supabase = getSupabase();
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+    if (!error && data.user) setUser(data.user);
     return { error: error ? error.message : null };
   };
 
@@ -130,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle, updatePassword, signOut }}
+      value={{ user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle, updatePassword, signOut }}
     >
       {children}
     </AuthContext.Provider>

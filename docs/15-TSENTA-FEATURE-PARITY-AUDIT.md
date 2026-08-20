@@ -1,0 +1,51 @@
+# IR35Careers — Tsenta feature-parity audit
+
+Audit date: 20 August 2026  
+Reference: public pages on `https://tsenta.com/`, including its jobs directory and a public job-detail page. Authenticated or private areas were not bypassed.
+
+This ledger separates working product behaviour from provider-dependent integrations. IR35Careers must not present a dry run, local preview, or unconnected provider as a completed live service.
+
+| Capability seen in the reference | IR35Careers state | Evidence / boundary |
+|---|---|---|
+| Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`; IR35, workplace, rate, recency, skills, location and sorting |
+| Public job detail and original-source handoff | Live | `/jobs/[id]`; status evidence, freshness, rate, source and explicit handoff |
+| Dashboard and role matching | Live | `/dashboard`; deterministic profile-to-role scoring |
+| Paste an external role URL | Live | `/analyse-job`, `/api/jobs/preview`; public HTTPS only with SSRF and size controls |
+| CV analysis and role-specific score | Live | CV Studio; transparent scoring categories and evidence |
+| Missing-keyword identification | Live | Missing terms are labelled as absent and never converted into claimed experience |
+| Suggested edits and truth-preserving rewriting | Live | Suggestions require contractor verification and approval |
+| Side-by-side approval | Live | Original and proposed content remain visible before building a version |
+| CV version history | Live | Browser storage for previews and account-owned persistence when signed in |
+| PDF and DOCX export | Live | Client-requested export from an approved CV version |
+| Cover letter and screening preparation | Live | Application workspace; every generated/selected answer is reviewable |
+| Application receipt and tracker | Live as dry run | A receipt and tracker entry are created without transmitting an application |
+| Automated ATS submission | Provider gate | Adapter boundary exists; live submission is deliberately disabled until ATS-specific credentials, consent and verification exist |
+| Recruiter inbox and reply classification | Product surface + provider gate | Inbox, linking and deterministic classification exist; real inbound email/SMS/WhatsApp delivery needs approved providers |
+| Saved searches and alerts | Live workspace + delivery gate | Searches are account-owned; outbound email delivery remains provider-labelled |
+| Subscription/credit controls | Entitlement foundation | `/pricing` states that payment checkout is not connected; no fake paid tier is sold |
+| Responsive web app | Live | Desktop, tablet and mobile layouts |
+| Installable mobile experience | Live PWA | Manifest, app icons, service worker and offline recovery page |
+| Browser helper | Developer preview | Minimal-permission Chrome extension ZIP; not represented as Chrome Web Store approved |
+| Public developer access | Live, read-only | `/developers`, `/api/jobs/search`, downloadable CLI helper |
+| Native iOS/Android apps | Not connected | PWA covers installable mobile use; native-store builds require separate signing and review |
+| iMessage, WhatsApp and SMS | Provider gate | Requires approved provider accounts, user consent, verified sender identity and message-retention policy |
+| MCP server | Not connected | The read-only HTTP API is the supported automation surface today |
+| Networking/referral automation | Not connected | Not included in the verified contractor workflow and must not be claimed |
+| Account sign-up/sign-in/reset | Live | `/account`, `/account/reset` with Supabase Auth |
+| Data export and permanent account deletion | Live | `/settings`, `/api/account`; authenticated export and explicit email-confirmed deletion |
+| Pricing, changelog, AI disclosure, security and legal pages | Live | Public trust and product pages linked in the footer and sitemap |
+
+## Release rule
+
+A provider-gated row may become **Live** only after the integration has: valid production credentials, least-privilege scopes, consent and revocation controls, audit events, retry/idempotency handling, redacted error logs, provider sandbox tests, a manual end-to-end test, and an updated privacy/retention disclosure.
+
+## Credentials still required for provider-dependent parity
+
+- Approved transactional/inbound email provider and verified sending domain.
+- ATS-specific partner credentials or documented application APIs; browser scraping and CAPTCHA bypass are out of scope.
+- Stripe product/price IDs and webhook secret if paid plans are enabled.
+- WhatsApp Business/SMS provider approval and consent records if messaging is enabled.
+- Apple/Google developer accounts only if native store apps are commissioned.
+- Chrome Web Store developer account only for store distribution of the reviewed extension.
+
+No credential should be pasted into chat or committed to Git. Use Vercel environment variables and provider secret stores.
