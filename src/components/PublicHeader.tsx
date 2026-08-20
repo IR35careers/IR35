@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { href: "/tools", label: "Tools" },
 ] as const;
 
-export function PublicHeader() {
+export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorkspaceMembers?: boolean }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -25,6 +25,8 @@ export function PublicHeader() {
   // Keep the server-rendered menu control inert until its click handler is
   // attached, so a fast tap during hydration is never silently lost.
   useEffect(() => setHydrated(true), []);
+
+  if (hideForWorkspaceMembers && (user || preview)) return null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">

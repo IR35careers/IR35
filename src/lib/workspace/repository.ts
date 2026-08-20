@@ -210,4 +210,16 @@ export async function saveCloudWorkspace(userId: string, state: WorkspaceState):
     const failedMessage = messageResults.find((result) => result.error);
     if (failedMessage?.error) throw new Error(failedMessage.error.message);
   }
+
+  if (state.automationRuns.length > 0) {
+    const runsResult = await supabase.from("automation_runs").upsert(state.automationRuns.map((run) => ({
+      id: run.id,
+      user_id: userId,
+      mode: "dry_run",
+      matching_job_ids: run.matchingJobIds,
+      skipped: run.skipped,
+      created_at: run.createdAt,
+    })));
+    if (runsResult.error) throw new Error(runsResult.error.message);
+  }
 }

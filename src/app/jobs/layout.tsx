@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JobsWorkspaceShell } from "@/components/workspace/JobsWorkspaceShell";
 
 export const metadata: Metadata = {
   title: "UK Contract Jobs: Inside & Outside IR35 | IR35Careers",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function JobsLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <JobsWorkspaceShell>{children}</JobsWorkspaceShell>;
 }

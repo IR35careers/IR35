@@ -161,7 +161,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]">
       <AppNav />
     <main className="relative overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0" aria-hidden>

@@ -63,7 +63,7 @@ const GUIDE_CARDS = [
 const WORKFLOW = [
   { icon: Search, title: "Discover", body: "Filter UK contracts by IR35 status, rate, skill and working pattern.", href: "/jobs" },
   { icon: FileCheck2, title: "Understand", body: "Review status evidence, match factors and gaps before investing time.", href: "/analyse-job" },
-  { icon: ClipboardCheck, title: "Prepare", body: "Tailor the CV, draft a grounded letter and approve every screening answer.", href: "/dashboard#matches" },
+  { icon: ClipboardCheck, title: "Prepare", body: "Tailor the CV, draft a grounded letter and approve every screening answer.", href: "/applications" },
   { icon: ListChecks, title: "Track", body: "Move applications through a readable pipeline without drag-and-drop.", href: "/applications" },
   { icon: Inbox, title: "Respond", body: "Keep recruiter messages linked to the contract that generated them.", href: "/inbox" },
 ] as const;

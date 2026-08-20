@@ -414,7 +414,7 @@ test("application workspace prepares, approves, receipts and tracks without subm
   await page.goto("/automation");
   await expect(page.getByRole("heading", { name: "Set the rules once. Review every packet." })).toBeVisible();
   await page.getByRole("switch", { name: "Paused" }).click();
-  await page.getByRole("button", { name: "Run preview now" }).click();
+  await page.getByRole("button", { name: "Run live preview" }).click();
   await expect(page.getByText(/contracts entered the review queue/)).toBeVisible();
 });
 

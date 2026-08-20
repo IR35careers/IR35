@@ -280,7 +280,7 @@ function JobsBoard() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <PublicHeader />
+      <PublicHeader hideForWorkspaceMembers />
       <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
         <div className="mb-6 max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p>

@@ -42,8 +42,7 @@ Each external provider implements a narrow interface with timeouts, rate limits,
 - `ENABLE_EMAIL_ALERT_DELIVERY=false`
 - `ENABLE_RESUME_AI=false`
 - `ENABLE_APPLICATION_PREP=false`
-- `ENABLE_AUTO_APPLY=false`
-- `AUTO_APPLY_DRY_RUN=true`
+- `ENABLE_APPLICATION_SUBMISSION=false`
 - `ENABLE_BILLING=false`
 
 Flags must default to the safe/off state for integrations that can send, submit, charge or expose user data.
@@ -68,8 +67,9 @@ The current CV Studio does not require an AI provider. PDF/DOCX extraction, the 
 
 | Integration | Expected variables | Gate and fallback |
 | --- | --- | --- |
-| Transactional email | `EMAIL_PROVIDER_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | Request when alert/contact templates and sandbox tests pass; log-to-console provider before that |
-| Inbound application mailbox | Provider signing secret, inbound domain, encryption key | Request after per-user alias, retention and webhook replay tests exist; disabled before that |
+| Transactional email | `EMAIL_PROVIDER_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | Required for contact notifications, alerts and optional personal-email forwarding; storage-only flows continue without it |
+| Inbound application mailbox | `EMAIL_PROVIDER_API_KEY`, `INBOUND_MAIL_SIGNING_SECRET`, `INBOUND_EMAIL_DOMAIN`, `ENABLE_INBOUND_MAIL=true` | Activates deterministic private aliases after DNS, signed-webhook and replay tests pass |
+| Application submission gateway | `APPLICATION_SUBMISSION_PROVIDER_URL`, `APPLICATION_SUBMISSION_PROVIDER_API_KEY`, `APPLICATION_SUBMISSION_PROVIDER_NAME`, `ENABLE_APPLICATION_SUBMISSION=true` | Enables only the final explicit-submit action; monitoring and review work without it |
 | Google/Microsoft mailbox | OAuth client ID/secret and callback URL | Request only for an explicit connect-email feature; never ask for mailbox passwords |
 | Text AI | `AI_API_KEY`, model IDs | Request after structured schemas, truthfulness checks, redaction and cost limits pass; deterministic mock before that |
 | Billing | Stripe values plus `NEXT_PUBLIC_PRO_PLAN_PRICE_LABEL`, `NEXT_PUBLIC_PRO_PLAN_FEATURES`, `BILLING_RELEASE_APPROVED`, and the public legal-operator values documented in `.env.local.example` | Apply migration 011 and approve the delivered benefits plus exact GBP interval/VAT copy first; test mode cannot grant Pro, and production remains off until a signed live event passes |

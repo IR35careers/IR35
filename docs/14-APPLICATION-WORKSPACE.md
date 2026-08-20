@@ -17,11 +17,11 @@ The local preview is fully exercisable without credentials and is explicitly lab
 | Resume optimisation | Four-part CV score, missing keywords, conservative suggestions, verified additions, side-by-side approval, history and PDF/DOCX export | Optional AI provider is off |
 | Cover letter | Editable deterministic draft using only job facts and CV-evidenced terms | No invented achievements or outcomes |
 | Application questions | Work authorisation, availability, working-pattern and IR35 confirmations; every required answer needs explicit review | Employer-specific schemas require an ATS adapter |
-| One-click preparation | Prepare endpoint, exact-material review, three approvals and a dry-run receipt | No live submit button or silent handoff |
+| One-click preparation | Prepare endpoint, exact-material review, three approvals and a dry-run receipt | Live handoff requires an authorised provider |
 | Tracker | Event-based statuses with validated forward transitions and an accessible select alternative to drag-and-drop | Migration 010 requires staging RLS verification |
 | Analytics | Account-owned application funnel, response/interview/offer rates, source and status mix, weekly activity, follow-up signals and role-only CSV export | Descriptive only; no hiring prediction or third-party tracking |
-| Private email/inbox | Alias model, inbox UI, deterministic classification, application linking and signed idempotent inbound endpoint | Inbound domain and forwarding provider not connected |
-| Auto-apply settings | Match, rate, IR35, workplace, company exclusion and daily-limit rules with decision log | Enforced dry-run-only and human approval |
+| Private email/inbox | Alias activation, inbox UI, deterministic classification, application linking and signed idempotent inbound endpoint | Requires a verified inbound domain and provider credentials |
+| Auto-apply settings | Live-role preview, match, rate, IR35, workplace, company exclusion and daily-limit rules with a persisted decision log | Discovery prepares a queue; every external submission still requires explicit approval |
 | Profile | Personal details, work authorisation, availability, clearance, limited-company details, document and forwarding defaults | Cloud sync requires Supabase migration 010 |
 | Billing | Hosted Stripe Checkout, customer portal, explicit pre-checkout consent, signed webhook ledger, account-owned entitlement updates, sandbox-safe access and a public billing/cancellation policy | Disabled until migration 011, delivered plan benefits, approved pricing and provider acceptance tests pass |
 | Networking and referrals | Account-owned contact map, follow-up queue, application-linked editable drafts, explicit review and manual copy | No contact discovery, scraping or automated messaging |
@@ -39,6 +39,7 @@ The local preview is fully exercisable without credentials and is explicitly lab
 - Published articles require reviewed `published` state. Testimonials require both recorded consent and approval.
 - Production workspace routes fail closed when Supabase is configured but the user or migration is unavailable.
 - The inbound mail boundary requires `ENABLE_INBOUND_MAIL=true`, a SHA-256 HMAC signature, a known private alias and a unique provider message ID.
+- `application_submissions` is a server-written, owner-readable queue with payload hashes, provider receipts and per-application idempotency.
 
 ## Provider gates
 
@@ -48,10 +49,10 @@ The local preview is fully exercisable without credentials and is explicitly lab
 - Reed and/or Adzuna read credentials for authorised live contract feeds.
 - Stripe sandbox credentials after migration 011 and approval of the exact plan price, interval and VAT copy. Production enablement additionally requires the live acceptance gate in `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md`.
 
-### Not ready for live credentials
+### Ready for provider sandbox credentials
 
-- ATS submission: requires a named provider, sandbox employer, field capability contract, CAPTCHA/login handoff, final approval token, receipt and kill switch.
-- Inbound email: the normalised signed webhook exists, but a provider adapter, inbound domain, retention job and forwarding delivery need staging verification.
+- ATS submission gateway: set the three `APPLICATION_SUBMISSION_PROVIDER_*` values only after the provider accepts the JSON contract, honours idempotency, returns receipts and passes a sandbox employer flow. The UI remains manual while disabled.
+- Inbound email: verify `INBOUND_EMAIL_DOMAIN`, connect the normalised signed webhook and set the provider/signing values. Personal-email forwarding remains off until outbound delivery is separately verified.
 - Generative AI: not required. Any future provider must pass structured-output, redaction, grounding, injection and cost controls.
 
 ## Local verification path
@@ -61,6 +62,7 @@ The local preview is fully exercisable without credentials and is explicitly lab
 3. Load the labelled sample CV and prepare the packet.
 4. Review the cover letter and each screening answer.
 5. Complete all three approvals and create the dry-run receipt.
-6. Open **Applications**, **Inbox**, **Automation**, **Network** and **Profile** from the workspace navigation.
+6. Confirm the handoff remains manual when no provider is configured.
+7. Open **Applications**, **Inbox**, **Automation**, **Network** and **Profile** from the workspace navigation.
 
-No external side effect occurs anywhere in this path.
+No external side effect occurs anywhere in this path unless the submission feature flag and authorised gateway values are deliberately enabled.
