@@ -35,6 +35,15 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
         ],
       },
+      {
+        // Email clients fetch the public brand mark through their own image
+        // proxies. This narrow exception lets the logo render without relaxing
+        // the same-origin policy used by the rest of the application.
+        source: "/images/generated/brand/:path*",
+        headers: [
+          { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
+        ],
+      },
     ];
   },
 };

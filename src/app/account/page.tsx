@@ -125,7 +125,7 @@ function AccountForm() {
         <h1 className="mt-5 text-xl font-medium text-slate-900">Check your inbox</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
           We&apos;ve sent {resetSent ? "a secure password-reset link" : "an account-confirmation link"} to{" "}
-          <span className="text-slate-800">{email}</span>. {resetSent ? "Use it once to choose a new password." : "Click it to activate your account, then come back and sign in."}
+          <span className="text-slate-800">{email}</span>. {resetSent ? "Use it once to choose a new password." : "Click it to activate your account. Once confirmed, we’ll send a short getting-started guide."}
         </p>
         <Link
           href="/jobs"
