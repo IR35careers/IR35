@@ -40,6 +40,7 @@ const listeners = new Set<() => void>();
 let sessionInitialising = false;
 let sessionSubscribed = false;
 let storageSubscribed = false;
+const welcomeRequestedFor = new Set<string>();
 
 function publish(next: AuthState) {
   if (state.user === next.user && state.loading === next.loading) return;
@@ -92,6 +93,18 @@ function installStorageListener() {
   });
 }
 
+function requestWelcomeEmail(session: Session | null) {
+  if (!session?.user?.id || !session.access_token || welcomeRequestedFor.has(session.user.id)) return;
+  welcomeRequestedFor.add(session.user.id);
+  void fetch("/api/email/welcome", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${session.access_token}` },
+    keepalive: true,
+  }).then((response) => {
+    if (response.status >= 500) welcomeRequestedFor.delete(session.user.id);
+  }).catch(() => welcomeRequestedFor.delete(session.user.id));
+}
+
 function initialiseSession(force = false) {
   if (!isSupabaseConfigured()) {
     publish({ user: null, loading: false });
@@ -110,10 +123,12 @@ function initialiseSession(force = false) {
       const supabase = getSupabase();
       void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
         publish({ user: data.session?.user ?? null, loading: false });
+        requestWelcomeEmail(data.session);
       });
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (_event: string, session: Session | null) => {
           publish({ user: session?.user ?? null, loading: false });
+          requestWelcomeEmail(session);
         }
       );
       sessionSubscribed = true;
@@ -149,6 +164,7 @@ async function signUpWithPassword(email: string, password: string): Promise<Auth
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-08-20",
         privacy_notice_version: "2026-08-20",
+        welcome_email_eligible_at: new Date().toISOString(),
       },
     },
   });
