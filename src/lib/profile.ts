@@ -28,6 +28,21 @@ export interface Profile {
   years_experience: number | null;
 }
 
+export const PREVIEW_PROFILE: Profile = {
+  id: "local-preview",
+  full_name: "Alex Morgan",
+  target_rate_min: 500,
+  preferred_ir35: "outside",
+  preferred_remote: "any",
+  skills: ["AWS", "Terraform", "Kubernetes", "DevOps", "CI/CD"],
+  cv_path: null,
+  cv_filename: "Platform Engineering CV v4",
+  phone: "+44 7700 900000",
+  linkedin_url: "https://www.linkedin.com/in/alex-morgan-example",
+  job_title: "Senior Platform Engineer",
+  years_experience: 8,
+};
+
 /** Curated skill options for onboarding (canonical names match jobs.skills). */
 export const PROFILE_SKILL_OPTIONS = [
   "React",
@@ -137,14 +152,26 @@ export interface ScoredJob {
   job: JobListing;
   score: number;
   matchedSkills: string[];
+  unmatchedSkills: string[];
+  factors: MatchFactor[];
+}
+
+export interface MatchFactor {
+  id: "skills" | "rate" | "ir35" | "workplace";
+  label: string;
+  weight: number;
+  fit: number;
+  points: number;
+  explanation: string;
 }
 
 export function scoreJob(job: JobListing, profile: Profile): ScoredJob | null {
   const profileSkills = profile.skills ?? [];
   if (profileSkills.length === 0) return null;
 
-  const jobSkills = new Set(job.skills ?? []);
-  const matchedSkills = profileSkills.filter((s) => jobSkills.has(s));
+  const jobSkills = new Set((job.skills ?? []).map((skill) => skill.trim().toLocaleLowerCase("en-GB")));
+  const matchedSkills = profileSkills.filter((skill) => jobSkills.has(skill.trim().toLocaleLowerCase("en-GB")));
+  const unmatchedSkills = profileSkills.filter((skill) => !jobSkills.has(skill.trim().toLocaleLowerCase("en-GB")));
   if (matchedSkills.length === 0) return null;
 
   const skillScore = matchedSkills.length / profileSkills.length; // 0..1
@@ -181,7 +208,60 @@ export function scoreJob(job: JobListing, profile: Profile): ScoredJob | null {
   const score = Math.round(
     (skillScore * 0.55 + rateScore * 0.2 + ir35Score * 0.15 + remoteScore * 0.1) * 100
   );
-  return { job, score, matchedSkills };
+  const advertisedRate = job.rate_max ?? job.rate_min;
+  const factors: MatchFactor[] = [
+    {
+      id: "skills",
+      label: "Skill overlap",
+      weight: 55,
+      fit: Math.round(skillScore * 100),
+      points: Number((skillScore * 55).toFixed(1)),
+      explanation: `${matchedSkills.length} of ${profileSkills.length} profile skills appear in the structured listing.`,
+    },
+    {
+      id: "rate",
+      label: "Rate fit",
+      weight: 20,
+      fit: Math.round(rateScore * 100),
+      points: Number((rateScore * 20).toFixed(1)),
+      explanation: !profile.target_rate_min
+        ? "No minimum day-rate preference is set, so this factor stays neutral."
+        : advertisedRate === null || (job.rate_type !== "daily" && job.rate_type !== "unknown")
+          ? "The listing has no comparable day rate, so this factor stays neutral."
+          : advertisedRate >= profile.target_rate_min
+            ? `The advertised rate meets your £${profile.target_rate_min}/day minimum.`
+            : `The advertised rate is below your £${profile.target_rate_min}/day minimum.`,
+    },
+    {
+      id: "ir35",
+      label: "IR35 preference",
+      weight: 15,
+      fit: Math.round(ir35Score * 100),
+      points: Number((ir35Score * 15).toFixed(1)),
+      explanation: profile.preferred_ir35 === "either"
+        ? "Your profile accepts either advertised IR35 status."
+        : job.ir35_status === "unknown"
+          ? "The listing does not state a clear IR35 status."
+          : job.ir35_status === profile.preferred_ir35
+            ? `The advertised ${job.ir35_status} status matches your preference.`
+            : `The advertised ${job.ir35_status} status differs from your preference.`,
+    },
+    {
+      id: "workplace",
+      label: "Working pattern",
+      weight: 10,
+      fit: Math.round(remoteScore * 100),
+      points: Number((remoteScore * 10).toFixed(1)),
+      explanation: profile.preferred_remote === "any"
+        ? "Your profile accepts any working pattern."
+        : job.remote_type === "unknown"
+          ? "The listing does not state a clear working pattern."
+          : job.remote_type === profile.preferred_remote
+            ? `The advertised ${job.remote_type} pattern matches your preference.`
+            : `The advertised ${job.remote_type} pattern differs from your preference.`,
+    },
+  ];
+  return { job, score, matchedSkills, unmatchedSkills, factors };
 }
 
 /** Fetch and score matching jobs for a profile. */

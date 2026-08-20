@@ -36,26 +36,12 @@ import {
   firstName,
   getProfile,
   profileStrength,
+  PREVIEW_PROFILE,
   scoreJob,
   timeGreeting,
   type Profile,
   type ScoredJob,
 } from "@/lib/profile";
-
-const PREVIEW_PROFILE: Profile = {
-  id: "local-preview",
-  full_name: "Alex Morgan",
-  target_rate_min: 500,
-  preferred_ir35: "outside",
-  preferred_remote: "any",
-  skills: ["AWS", "Terraform", "Kubernetes", "DevOps", "CI/CD"],
-  cv_path: null,
-  cv_filename: "Platform Engineering CV v4",
-  phone: "+44 7700 900000",
-  linkedin_url: "https://www.linkedin.com/in/alex-morgan-example",
-  job_title: "Senior Platform Engineer",
-  years_experience: 8,
-};
 
 function ScoreRing({ score, size = 44 }: { score: number; size?: number }) {
   const r = size / 2 - 4;

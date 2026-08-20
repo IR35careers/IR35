@@ -12,7 +12,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Loading, empty, error, success states | P0 | Present on some routes, inconsistent | Partial | Shared state components used by the first end-to-end slice |
 | Purposeful motion and reduced motion | P0 | Framer Motion only on waitlist; reduced motion partly handled | Partial | Motion tokens, interruptible transitions, reduced-motion test |
 | Profile and onboarding | P0 | Supabase profile, skills, preferences and CV upload | Implemented | Responsive and accessible browser test with production-shaped data |
-| Job matching and explanations | P0 | Deterministic weighted scorer and match panel | Partial | Explain contributing factors and avoid presenting score as AI certainty |
+| Job matching and explanations | P0 | Deterministic weighted scorer, case-insensitive skill comparison, four-factor point breakdown, evidence text and truthful no-overlap state | Implemented | Validate weight usefulness against consented production outcomes before changing the published formula |
 | Save and mark applied | P0 | `saved_jobs`, signed-out return path and optimistic rollback | Implemented | Authenticated database/RLS test in staging |
 | Job alerts | P1 | Owner-scoped saved searches plus on-demand, cancellable live match previews with loading, empty, error and retry states | Implemented for in-product curation | Delivery provider abstraction, schedule and unsubscribe before claiming email alerts |
 | IR35 provenance | P1 | Status plus high/medium/low confidence | Partial | Persist and display advertised/inferred/manual source and evidence timestamp |

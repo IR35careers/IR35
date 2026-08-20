@@ -47,6 +47,10 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expect(page.getByRole("link", { name: "Sign in to save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Preview listing" })).toBeDisabled();
   await expect(page.getByText("Demo data never submits an application.")).toBeVisible();
+  await page.getByText("How this score is calculated").click();
+  await expect(page.getByText("Skill overlap")).toBeVisible();
+  await expect(page.getByText("Rate fit")).toBeVisible();
+  await expect(page.getByText(/not an AI assessment, hiring prediction or guarantee/i)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 });
 
