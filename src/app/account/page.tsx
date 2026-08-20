@@ -8,20 +8,13 @@ import { Suspense, useEffect, useState } from "react";
 import { ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
-import { checkBetaAccess } from "@/lib/access";
-import { BetaDeniedModal } from "@/components/BetaDeniedModal";
 import { Brand } from "@/components/ui/brand";
 
 function AccountForm() {
-  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
-  const denied = searchParams.get("denied") === "1";
-  const deniedEmail = searchParams.get("as");
-  const [showDenied, setShowDenied] = useState(denied);
-  const [deniedAccount, setDeniedAccount] = useState<string | null>(deniedEmail);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"sign-in" | "create" | "forgot">(
@@ -76,14 +69,6 @@ function AccountForm() {
         return;
       }
 
-      const access = await checkBetaAccess();
-      if (access.state === "denied") {
-        await signOut();
-        setDeniedAccount(access.email ?? null);
-        setShowDenied(true);
-        setSubmitting(false);
-        return;
-      }
       router.replace(next);
       return;
     }
@@ -100,14 +85,6 @@ function AccountForm() {
     }
     if (signUp.needsConfirmation) {
       setConfirmSent(true);
-      setSubmitting(false);
-      return;
-    }
-    const access = await checkBetaAccess();
-    if (access.state === "denied") {
-      await signOut();
-      setDeniedAccount(access.email ?? null);
-      setShowDenied(true);
       setSubmitting(false);
       return;
     }
@@ -145,14 +122,6 @@ function AccountForm() {
           ← Back to home
         </Link>
       </div>
-
-      {showDenied && (
-        <BetaDeniedModal
-          email={deniedAccount}
-          onJoin={() => router.push("/")}
-          onClose={() => setShowDenied(false)}
-        />
-      )}
 
       <div className="mt-6 grid grid-cols-2 rounded-xl bg-slate-100 p-1" aria-label="Account action">
         {(["sign-in", "create"] as const).map((item) => (

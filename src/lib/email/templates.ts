@@ -24,6 +24,11 @@ export interface WelcomeEmailInput {
   siteUrl?: string;
 }
 
+export interface LaunchOpenEmailInput {
+  logoSource?: string;
+  siteUrl?: string;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -168,8 +173,113 @@ This service email was sent because you created and confirmed an IR35Careers acc
   return { subject, html, text };
 }
 
+export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailContent {
+  const siteUrl = normaliseSiteUrl(input.siteUrl);
+  const logoSource = escapeHtml(input.logoSource || DEFAULT_LOGO_URL);
+  const subject = "IR35Careers is now open — your access is ready";
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:${BRAND.page};word-spacing:normal;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Public access is open. Create your IR35Careers account and start building your contractor workspace.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:${BRAND.page};">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:${BRAND.white};border:1px solid ${BRAND.border};border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(7,17,31,.08);">
+        <tr><td style="background:${BRAND.navy};padding:24px 30px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="vertical-align:middle;"><img src="${logoSource}" width="42" height="42" alt="IR35Careers" style="display:block;width:42px;height:42px;border:0;border-radius:10px;"></td>
+            <td style="padding-left:12px;vertical-align:middle;color:#ffffff;font-family:Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.3px;">IR35<span style="color:#a9b8c8;font-weight:600;">Careers</span></td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:38px 30px 12px;">
+          <p style="margin:0 0 14px;color:${BRAND.green};font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Public access is open</p>
+          <h1 style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.8px;line-height:38px;">Your IR35Careers access is ready.</h1>
+          <p style="margin:16px 0 0;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:25px;">You joined the IR35Careers waitlist to hear when access opened. You can now create an account and use the contractor workspace without a beta invitation.</p>
+        </td></tr>
+        <tr><td style="padding:22px 30px 30px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
+            <a href="${siteUrl}/account?mode=create" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Create your free account&nbsp;&nbsp;→</a>
+          </td></tr></table>
+          <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">Already registered? <a href="${siteUrl}/account" style="color:${BRAND.green};text-decoration:underline;">Sign in to your workspace</a>.</p>
+        </td></tr>
+        <tr><td style="border-top:1px solid ${BRAND.border};padding:30px;">
+          <h2 style="margin:0 0 22px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:20px;line-height:27px;">What you can do</h2>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            ${featureRow("1", "Find relevant UK contract roles", "Search by IR35 status, rate, location, skill and working pattern, with the original source kept visible.")}
+            ${featureRow("2", "Measure your fit for a role", "Compare a role with your CV using an explainable score, matched evidence and missing-keyword identification.")}
+            ${featureRow("3", "Improve your CV without inventing experience", "Review suggested edits side by side, approve only what is accurate, keep version history and export PDF or DOCX.")}
+            ${featureRow("4", "Prepare and track applications", "Build a reviewable application pack and keep progress organised. Nothing is submitted without your review and approval.")}
+          </table>
+        </td></tr>
+        <tr><td style="padding:0 30px 30px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${BRAND.greenLight};border:1px solid #bfe9d9;border-radius:14px;"><tr><td style="padding:18px 20px;">
+            <p style="margin:0 0 5px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Clear guidance, with you in control</p>
+            <p style="margin:0;color:#365d52;font-family:Arial,sans-serif;font-size:13px;line-height:21px;">IR35Careers does not invent experience or make hiring decisions. IR35 guidance and scoring are informational, not legal or tax advice.</p>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="border-top:1px solid ${BRAND.border};padding:26px 30px;background:#fbfdfc;">
+          <p style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Thanks,<br>The IR35Careers Team</p>
+          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">Built for UK contractors.</p>
+          <p style="margin:0;color:#718094;font-family:Arial,sans-serif;font-size:11px;line-height:18px;">
+            <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a>&nbsp;&nbsp;·&nbsp;&nbsp;
+            <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a>&nbsp;&nbsp;·&nbsp;&nbsp;
+            <a href="${siteUrl}/contact" style="color:${BRAND.green};text-decoration:underline;">Contact</a>
+          </p>
+          <p style="margin:12px 0 0;color:#8995a3;font-family:Arial,sans-serif;font-size:10px;line-height:16px;">This is the one-time access update you requested when you joined the IR35Careers waitlist. You have not been added to a marketing list. <a href="${siteUrl}/privacy" style="color:#667789;text-decoration:underline;">Privacy Notice</a> · <a href="${siteUrl}/terms" style="color:#667789;text-decoration:underline;">Terms of Use</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `IR35Careers is now open — your access is ready
+
+You joined the IR35Careers waitlist to hear when access opened. You can now create an account and use the contractor workspace without a beta invitation.
+
+CREATE YOUR FREE ACCOUNT
+${siteUrl}/account?mode=create
+
+Already registered? Sign in: ${siteUrl}/account
+
+WHAT YOU CAN DO
+
+1. Find relevant UK contract roles
+Search by IR35 status, rate, location, skill and working pattern, with the original source kept visible.
+
+2. Measure your fit for a role
+Compare a role with your CV using an explainable score, matched evidence and missing-keyword identification.
+
+3. Improve your CV without inventing experience
+Review suggested edits side by side, approve only what is accurate, keep version history and export PDF or DOCX.
+
+4. Prepare and track applications
+Build a reviewable application pack and keep progress organised. Nothing is submitted without your review and approval.
+
+IR35Careers does not invent experience or make hiring decisions. IR35 guidance and scoring are informational, not legal or tax advice.
+
+Thanks,
+The IR35Careers Team
+Built for UK contractors.
+
+Browse contracts: ${siteUrl}/jobs
+IR35 guides: ${siteUrl}/resources
+Contact: ${siteUrl}/contact
+Privacy Notice: ${siteUrl}/privacy
+Terms of Use: ${siteUrl}/terms
+
+This is the one-time access update you requested when you joined the IR35Careers waitlist. You have not been added to a marketing list.`;
+
+  return { subject, html, text };
+}
+
 export const emailTemplateDefaults = {
   logoUrl: DEFAULT_LOGO_URL,
   siteUrl: DEFAULT_SITE_URL,
 } as const;
-

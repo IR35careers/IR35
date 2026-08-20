@@ -2,24 +2,21 @@
  * Admin API: GET /api/admin?section=stats|users|waitlist|jobs|runs
  *            POST /api/admin  { action: "expire_job", jobId }
  *
- * Access: the caller must be signed in AND their email must appear in the
- * ADMIN_EMAILS env var (comma-separated). The client sends its Supabase
- * access token as a Bearer header; we verify it server-side with the
- * service client, then act with service-level access. Every mutating
- * action is written to moderation_logs as an audit record.
+ * Access requires two server-verified proofs: a live Supabase user token for
+ * an allowlisted administrator and a short-lived, signed, HttpOnly admin
+ * session cookie. Every mutating action is written to moderation_logs.
  */
 
+import { adminAllowlist, adminSessionCookieName, cookieValue, verifyAdminSession } from "@/lib/admin-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function verifyAdmin(request: Request): Promise<{ email: string } | Response> {
-  const allowlist = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
+async function verifyAdmin(request: Request): Promise<{ id: string; email: string } | Response> {
+  const allowlist = adminAllowlist();
   if (allowlist.length === 0) {
-    return Response.json({ error: "ADMIN_EMAILS is not configured." }, { status: 500 });
+    return Response.json({ error: "Secure administration is not configured." }, { status: 503 });
   }
 
   const auth = request.headers.get("authorization") ?? "";
@@ -28,11 +25,17 @@ async function verifyAdmin(request: Request): Promise<{ email: string } | Respon
 
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.auth.getUser(token);
-  const email = data?.user?.email?.toLowerCase();
-  if (error || !email || !allowlist.includes(email)) {
+  const user = data?.user;
+  const email = user?.email?.toLowerCase();
+  if (error || !user || !email || !allowlist.includes(email)) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
-  return { email };
+
+  const session = verifyAdminSession(cookieValue(request, adminSessionCookieName()));
+  if (!session || session.sub !== user.id || session.email !== email) {
+    return Response.json({ error: "Admin session expired. Unlock the admin area again." }, { status: 401 });
+  }
+  return { id: user.id, email };
 }
 
 export async function GET(request: Request): Promise<Response> {

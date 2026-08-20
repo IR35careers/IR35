@@ -6,11 +6,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowRight,
-  BarChart3,
   BriefcaseBusiness,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   Database,
   ExternalLink,
   FileCheck2,
@@ -18,7 +16,9 @@ import {
   Home,
   LayoutDashboard,
   Loader2,
+  LockKeyhole,
   LogOut,
+  Mail,
   Menu,
   RefreshCw,
   Search,
@@ -101,8 +101,8 @@ const NAV_GROUPS: Array<{
     ],
   },
   {
-    label: "Growth",
-    items: [{ id: "waitlist", label: "Waitlist", icon: Clock3 }],
+    label: "Communications",
+    items: [{ id: "waitlist", label: "Launch audience", icon: Mail }],
   },
   {
     label: "System",
@@ -127,9 +127,9 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     description: "Understand registrations, profile readiness and CV adoption.",
   },
   waitlist: {
-    eyebrow: "Growth",
-    title: "Waitlist",
-    description: "Track early demand and the people waiting to hear from IR35Careers.",
+    eyebrow: "One-time notice",
+    title: "Launch audience",
+    description: "Review the former waitlist retained only for the approved public-access announcement.",
   },
   runs: {
     eyebrow: "System health",
@@ -237,6 +237,8 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null);
   const [busy, setBusy] = useState(true);
   const [forbidden, setForbidden] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -248,7 +250,11 @@ export default function AdminPage() {
     setError(null);
     try {
       const response = await adminFetch(`/api/admin?section=${target}`);
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (response.status === 403) {
         setForbidden(true);
         return;
       }
@@ -263,12 +269,12 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && user) load(section);
+    if (!loading && user && sessionReady) load(section);
     if (!loading && !user) {
       setBusy(false);
       setForbidden(true);
     }
-  }, [user, loading, section, load]);
+  }, [user, loading, section, load, sessionReady]);
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -286,6 +292,38 @@ export default function AdminPage() {
     setQuery("");
     setNotice(null);
     setMobileOpen(false);
+  };
+
+  const unlockAdmin = async () => {
+    setUnlocking(true);
+    setError(null);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token ?? "";
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const json = await response.json();
+      if (response.status === 401 || response.status === 403) {
+        setForbidden(true);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "Unable to unlock secure administration");
+      setForbidden(false);
+      setBusy(true);
+      setSessionReady(true);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to unlock secure administration");
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
+  const lockAndSignOut = async (destination = "/") => {
+    await fetch("/api/admin/session", { method: "DELETE" }).catch(() => undefined);
+    await signOut();
+    router.replace(destination);
   };
 
   const expireJob = async (job: JobRow) => {
@@ -335,10 +373,36 @@ export default function AdminPage() {
           </span>
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">Protected workspace</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin access required</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-400">Sign in with an approved IR35Careers administrator account to open the operations dashboard.</p>
-          <Link href="/account?next=/admin" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
-            Continue to sign in <ArrowRight size={15} />
-          </Link>
+          <p className="mt-3 text-sm leading-6 text-slate-400">Only approved IR35Careers administrator accounts can create a short-lived admin session.</p>
+          {user ? (
+            <button type="button" onClick={() => void lockAndSignOut("/account?next=/admin")} className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+              Try a different account <ArrowRight size={15} />
+            </button>
+          ) : (
+            <Link href="/account?next=/admin" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+              Continue to sign in <ArrowRight size={15} />
+            </Link>
+          )}
+          <Link href="/" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!sessionReady) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0f17] px-5 py-12 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_35%)]" />
+        <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.055] p-7 text-center shadow-2xl backdrop-blur-xl sm:p-9">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"><LockKeyhole size={25} /></span>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">Short-lived secure session</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Unlock administration</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-400">Your account will be verified on the server before a protected, HttpOnly admin session is opened for 20 minutes.</p>
+          <p className="mt-5 rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3 text-xs text-slate-400">Signed in as <span className="font-semibold text-slate-200">{user?.email}</span></p>
+          {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
+          <button type="button" onClick={() => void unlockAdmin()} disabled={unlocking} className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+            {unlocking ? <Loader2 className="animate-spin" size={16} /> : <LockKeyhole size={16} />} {unlocking ? "Verifying account…" : "Unlock for 20 minutes"}
+          </button>
           <Link href="/" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
         </div>
       </main>
@@ -392,7 +456,7 @@ export default function AdminPage() {
         <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-slate-300"><UserRound size={16} /></span>
           <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-white">Administrator</p><p className="truncate text-[11px] text-slate-500">{user?.email}</p></div>
-          <button type="button" onClick={async () => { await signOut(); router.replace("/"); }} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="Sign out"><LogOut size={15} /></button>
+          <button type="button" onClick={() => void lockAndSignOut()} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="Lock admin and sign out"><LogOut size={15} /></button>
         </div>
       </div>
     </>
@@ -441,7 +505,7 @@ export default function AdminPage() {
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
           ) : section === "waitlist" && data ? (
-            <WaitlistPanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} />
+            <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} />
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
           ) : null}
@@ -466,7 +530,7 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
     { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-50 text-emerald-700", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
     { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-blue-50 text-blue-700", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
     { label: "CV readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
-    { label: "Waitlist", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Clock3, tone: "bg-amber-50 text-amber-700", detail: "People awaiting product updates", badge: "Demand" },
+    { label: "Launch audience", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Mail, tone: "bg-amber-50 text-amber-700", detail: "Former opt-ins for one access notice", badge: "Private" },
   ];
 
   return (
@@ -563,13 +627,13 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
   );
 }
 
-function WaitlistPanel({ entries, total, query }: { entries: Array<{ email: string; created_at: string }>; total: number; query: string }) {
+function LaunchAudiencePanel({ entries, total, query }: { entries: Array<{ email: string; created_at: string }>; total: number; query: string }) {
   return (
     <div className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <Panel title="Waiting list" description={`${formatNumber(total)} email sign-ups · newest first`}>
-        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div><span className="hidden text-xs font-medium text-slate-400 sm:block">{timeAgo(entry.created_at)}</span></div>)}</div> : <EmptyState title={query ? "No matching sign-ups" : "The waitlist is empty"} detail={query ? "Try a different email search." : "New waitlist registrations will appear here."} />}
+      <Panel title="Former waitlist recipients" description={`${formatNumber(total)} permission-based sign-ups · newest first`}>
+        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div><span className="hidden text-xs font-medium text-slate-400 sm:block">{timeAgo(entry.created_at)}</span></div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No launch recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
       </Panel>
-      <Panel title="Growth signal" description="A concise view of early product demand."><div className="p-6"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><BarChart3 size={19} /></span><p className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-slate-950 tabular-nums">{formatNumber(total)}</p><p className="mt-1 text-sm font-medium text-slate-700">Total sign-ups</p><p className="mt-4 text-xs leading-5 text-slate-500">Use this list for permission-based product updates only. Keep consent and unsubscribe handling in your email workflow.</p></div></Panel>
+      <Panel title="Launch notice" description="Prepared, but deliberately not sent."><div className="p-6"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Mail size={19} /></span><p className="mt-5 text-sm font-semibold text-slate-950">IR35Careers is now open — your access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">A branded one-time access email is ready for review. Delivery remains disabled until the final preview and recipient audit are explicitly approved.</p><span className="mt-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800">Approval required</span></div></Panel>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { renderWelcomeEmail } from "@/lib/email/templates";
+import { renderLaunchOpenEmail, renderWelcomeEmail } from "@/lib/email/templates";
 import { transactionalEmailConfig } from "@/lib/email/transactional";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -33,6 +33,18 @@ describe("transactional email", () => {
     expect(email.html).toContain("https://www.ir35careers.com/onboarding");
   });
 
+  it("renders the one-time public-launch notice without claiming an account already exists", () => {
+    const email = renderLaunchOpenEmail({ logoSource: "cid:ir35careers-mark" });
+    expect(email.subject).toBe("IR35Careers is now open — your access is ready");
+    expect(email.html).toContain("You joined the IR35Careers waitlist");
+    expect(email.html).toContain("Create your free account");
+    expect(email.html).toContain("missing-keyword identification");
+    expect(email.html).toContain("Nothing is submitted without your review and approval");
+    expect(email.html).toContain("You have not been added to a marketing list");
+    expect(email.html).not.toContain("Your account is ready");
+    expect(email.text).toContain("one-time access update");
+  });
+
   it("keeps delivery disabled unless the provider flag and credentials are valid", () => {
     vi.stubEnv("ENABLE_WELCOME_EMAIL", "false");
     vi.stubEnv("RESEND_API_KEY", "re_test-key");
@@ -51,4 +63,3 @@ describe("transactional email", () => {
     expect(transactionalEmailConfig()).toBeNull();
   });
 });
-

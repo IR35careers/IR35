@@ -15,15 +15,12 @@ import {
   LogOut,
   Menu,
   Network,
-  RefreshCw,
   Search,
   Settings,
   UserRound,
   X,
 } from "lucide-react";
-import { BetaDeniedModal } from "@/components/BetaDeniedModal";
 import { Brand } from "@/components/ui/brand";
-import { checkBetaAccess } from "@/lib/access";
 import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { useWorkspaceCloudSync, useWorkspaceState } from "@/lib/workspace/store";
@@ -57,8 +54,6 @@ const NAV_GROUPS = [
   },
 ] as const;
 
-let accessConfirmed = false;
-
 function activeRoute(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -69,10 +64,6 @@ export function AppNav() {
   const cloud = useWorkspaceCloudSync(isSupabaseConfigured() ? user?.id ?? null : null, user?.email ?? "");
   const pathname = usePathname();
   const router = useRouter();
-  const [checking, setChecking] = useState(!accessConfirmed);
-  const [denied, setDenied] = useState<{ email?: string } | null>(null);
-  const [accessError, setAccessError] = useState(false);
-  const [retryNonce, setRetryNonce] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const counts = useMemo(() => cloud.error ? { applications: 0, unread: 0 } : ({
@@ -83,40 +74,6 @@ export function AppNav() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (!user) {
-      setChecking(false);
-      return;
-    }
-    if (accessConfirmed) {
-      setChecking(false);
-      return;
-    }
-    let active = true;
-    const run = async () => {
-      let result = await checkBetaAccess();
-      if (result.state === "unknown") {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        if (!active) return;
-        result = await checkBetaAccess();
-      }
-      if (!active) return;
-      if (result.state === "denied") {
-        setDenied({ email: result.email });
-        return;
-      }
-      if (result.state === "unknown") {
-        setAccessError(true);
-        setChecking(false);
-        return;
-      }
-      accessConfirmed = true;
-      setChecking(false);
-    };
-    void run();
-    return () => { active = false; };
-  }, [retryNonce, user]);
 
   const leaveWorkspace = async () => {
     await signOut();
@@ -178,18 +135,7 @@ export function AppNav() {
 
   return (
     <>
-      {denied && <BetaDeniedModal email={denied.email} onJoin={async () => { await leaveWorkspace(); }} onClose={async () => { await signOut(); router.replace("/account"); }} />}
-      {(checking || cloud.loading) && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50" aria-live="polite" aria-busy="true"><Loader2 className="animate-spin text-slate-300" size={24} /><span className="sr-only">Loading your workspace</span></div>}
-      {accessError && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true" aria-labelledby="access-check-title">
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-floating">
-            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><RefreshCw size={20} aria-hidden="true" /></span>
-            <h2 id="access-check-title" className="mt-4 text-lg font-semibold text-slate-950">We couldn&apos;t confirm access</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Your session is still safe. Check your connection and try again.</p>
-            <button type="button" onClick={() => { setAccessError(false); setChecking(true); setRetryNonce((value) => value + 1); }} className="ir35-focus mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Try again</button>
-          </div>
-        </div>
-      )}
+      {cloud.loading && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50" aria-live="polite" aria-busy="true"><Loader2 className="animate-spin text-slate-300" size={24} /><span className="sr-only">Loading your workspace</span></div>}
 
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-slate-200 lg:block" aria-label="Workspace sidebar">
         {sidebar()}
