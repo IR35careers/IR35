@@ -29,6 +29,7 @@ yarn-error.log*
 
 # Vercel
 .vercel
+supabase/.temp/
 
 # TypeScript
 *.tsbuildinfo
@@ -46,3 +47,5 @@ Thumbs.db
 
 # processing-engine test build output
 .test-build/
+
+.vercel

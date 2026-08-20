@@ -39,38 +39,25 @@ export async function POST(request: Request): Promise<Response> {
     if (!eligibleForWelcome(auth.user)) return new Response(null, { status: 204, headers: NO_STORE });
 
     const admin = getSupabaseAdmin();
-    const { data: existing, error: lookupError } = await admin
-      .from("email_delivery_events")
-      .select("status, attempts")
-      .eq("user_id", auth.user.id)
-      .eq("event_type", EVENT_TYPE)
-      .maybeSingle();
-    if (lookupError) throw new Error("delivery-ledger-unavailable");
-    if (existing?.status === "sent" || existing?.status === "processing") {
-      return Response.json({ delivered: existing.status === "sent" }, { headers: NO_STORE });
+    const metadata = auth.user.app_metadata ?? {};
+    if (metadata.welcome_email_sent_at) return Response.json({ delivered: true }, { headers: NO_STORE });
+    const attempts = Number(metadata.welcome_email_attempts ?? 0);
+    if (attempts >= 3) return new Response(null, { status: 204, headers: NO_STORE });
+    const processingAt = new Date(String(metadata.welcome_email_processing_at ?? "")).getTime();
+    if (metadata.welcome_email_status === "processing" && Number.isFinite(processingAt) && Date.now() - processingAt < 10 * 60 * 1000) {
+      return Response.json({ delivered: false }, { status: 202, headers: NO_STORE });
     }
 
-    if (existing?.status === "failed") {
-      if ((existing.attempts ?? 0) >= 3) return new Response(null, { status: 204, headers: NO_STORE });
-      const { data: claimed, error: claimError } = await admin
-        .from("email_delivery_events")
-        .update({ status: "processing", attempts: (existing.attempts ?? 1) + 1, error_code: "", updated_at: new Date().toISOString() })
-        .eq("user_id", auth.user.id)
-        .eq("event_type", EVENT_TYPE)
-        .eq("status", "failed")
-        .select("id")
-        .maybeSingle();
-      if (claimError) throw new Error("delivery-claim-failed");
-      if (!claimed) return Response.json({ delivered: false }, { status: 202, headers: NO_STORE });
-    } else {
-      const { error: insertError } = await admin.from("email_delivery_events").insert({
-        user_id: auth.user.id,
-        event_type: EVENT_TYPE,
-        status: "processing",
-      });
-      if (insertError?.code === "23505") return Response.json({ delivered: false }, { status: 202, headers: NO_STORE });
-      if (insertError) throw new Error("delivery-claim-failed");
-    }
+    const processingAtIso = new Date().toISOString();
+    const { error: claimError } = await admin.auth.admin.updateUserById(auth.user.id, {
+      app_metadata: {
+        ...metadata,
+        welcome_email_status: "processing",
+        welcome_email_processing_at: processingAtIso,
+        welcome_email_attempts: attempts + 1,
+      },
+    });
+    if (claimError) throw new Error("delivery-claim-failed");
 
     const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.ir35careers.com").replace(/\/$/, "");
     const content = renderWelcomeEmail({ firstName: firstName(auth.user), siteUrl, logoSource: "cid:ir35careers-mark" });
@@ -96,21 +83,25 @@ export async function POST(request: Request): Promise<Response> {
     );
 
     if (error || !data?.id) {
-      await admin.from("email_delivery_events").update({
-        status: "failed",
-        error_code: error?.name || "provider_error",
-        updated_at: new Date().toISOString(),
-      }).eq("user_id", auth.user.id).eq("event_type", EVENT_TYPE);
+      await admin.auth.admin.updateUserById(auth.user.id, {
+        app_metadata: {
+          ...metadata,
+          welcome_email_status: "failed",
+          welcome_email_attempts: attempts + 1,
+        },
+      });
       return Response.json({ error: "Welcome email delivery is temporarily unavailable." }, { status: 503, headers: NO_STORE });
     }
 
     const now = new Date().toISOString();
-    const { error: saveError } = await admin.from("email_delivery_events").update({
-      status: "sent",
-      provider_message_id: data.id,
-      sent_at: now,
-      updated_at: now,
-    }).eq("user_id", auth.user.id).eq("event_type", EVENT_TYPE);
+    const { error: saveError } = await admin.auth.admin.updateUserById(auth.user.id, {
+      app_metadata: {
+        ...metadata,
+        welcome_email_status: "sent",
+        welcome_email_sent_at: now,
+        welcome_email_attempts: attempts + 1,
+      },
+    });
     if (saveError) throw new Error("delivery-ledger-save-failed");
 
     return Response.json({ delivered: true }, { status: 201, headers: NO_STORE });
@@ -118,4 +109,3 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "Welcome email delivery is temporarily unavailable." }, { status: 503, headers: NO_STORE });
   }
 }
-
