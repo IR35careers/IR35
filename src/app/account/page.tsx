@@ -185,7 +185,7 @@ function AccountForm() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-        {mode !== "forgot" && <div>
+        <div>
           <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-slate-600">
             Email
           </label>
@@ -198,27 +198,29 @@ function AccountForm() {
             placeholder="you@example.com"
             className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
           />
-        </div>}
+        </div>
 
         {mode === "sign-in" && (
           <button type="button" onClick={() => { setMode("forgot"); setError(null); }} className="ir35-focus min-h-10 rounded-lg text-sm font-semibold text-brand-700 hover:underline">
             Forgot your password?
           </button>
         )}
-        <div>
-          <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-slate-600">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
-          />
-        </div>
+        {mode !== "forgot" && (
+          <div>
+            <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters"
+              className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
+            />
+          </div>
+        )}
 
         {error && (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">

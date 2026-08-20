@@ -60,6 +60,9 @@ test("account flow has explicit modes and neutral sign-in errors", async ({ page
   await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   await page.getByRole("button", { name: "Forgot your password?" }).click();
   await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
+  await expect(page.getByLabel("Password")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Send reset link" })).toBeVisible();
   await page.getByRole("button", { name: "Back to sign in" }).click();
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
