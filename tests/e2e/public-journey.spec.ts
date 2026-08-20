@@ -245,6 +245,12 @@ test("application workspace prepares, approves, receipts and tracks without subm
 
   await page.getByRole("button", { name: "Approve dry run" }).click();
   await expect(page.getByTestId("application-receipt")).toContainText("No application or personal data was sent");
+  await expect(page.getByTestId("application-receipt-review")).toContainText("Platform Engineering CV v4");
+  await page.getByRole("radio", { name: "I would change something" }).check();
+  await page.getByRole("checkbox", { name: "Cover letter", exact: true }).check();
+  await page.getByLabel("Notes for next time").fill("Use a shorter opening for similar roles.");
+  await page.getByRole("button", { name: "Save receipt review" }).click();
+  await expect(page.getByText("Receipt feedback saved to this application.")).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
   await page.getByRole("link", { name: /Open tracker/ }).click();

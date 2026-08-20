@@ -88,7 +88,23 @@ export interface ApplicationReceipt {
   destination: string;
   reviewedFields: string[];
   skippedFields: string[];
+  reviewedSnapshot?: {
+    resumeVersionLabel: string;
+    cvText: string;
+    coverLetter: string;
+    answers: Array<Pick<ApplicationQuestion, "id" | "label" | "answer" | "source">>;
+  };
+  review?: ApplicationReceiptReview | null;
   message: string;
+}
+
+export type ApplicationReceiptReviewItem = "cv" | "cover_letter" | "screening_answers" | "destination" | "other";
+
+export interface ApplicationReceiptReview {
+  outcome: "accurate" | "changes_needed";
+  flaggedItems: ApplicationReceiptReviewItem[];
+  notes: string;
+  savedAt: string;
 }
 
 export interface ApplicationEvent {

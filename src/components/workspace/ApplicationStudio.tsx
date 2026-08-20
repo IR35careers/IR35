@@ -10,17 +10,27 @@ import {
   ExternalLink,
   FileCheck2,
   FileText,
+  Flag,
   Loader2,
+  ReceiptText,
   Send,
   ShieldCheck,
   WandSparkles,
 } from "lucide-react";
 import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage";
 import type { JobDetail } from "@/lib/job-types";
-import { newWorkspaceId } from "@/lib/workspace/engine";
+import { newWorkspaceId, reviewApplicationReceipt } from "@/lib/workspace/engine";
 import { SAMPLE_CONTRACTOR_PROFILE, SAMPLE_CV_TEXT } from "@/lib/workspace/seed";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
-import type { ApplicationRecord } from "@/lib/workspace/types";
+import type { ApplicationRecord, ApplicationReceiptReviewItem } from "@/lib/workspace/types";
+
+const REVIEW_ITEMS: Array<{ id: ApplicationReceiptReviewItem; label: string }> = [
+  { id: "cv", label: "CV version" },
+  { id: "cover_letter", label: "Cover letter" },
+  { id: "screening_answers", label: "Screening answers" },
+  { id: "destination", label: "Destination" },
+  { id: "other", label: "Something else" },
+];
 
 function persistApplication(application: ApplicationRecord) {
   updateWorkspace((current) => ({
@@ -37,6 +47,15 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [busy, setBusy] = useState<"prepare" | "receipt" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [reviewOutcome, setReviewOutcome] = useState<"accurate" | "changes_needed">(existing?.receipt?.review?.outcome ?? "accurate");
+  const [reviewFlags, setReviewFlags] = useState<ApplicationReceiptReviewItem[]>(existing?.receipt?.review?.flaggedItems ?? []);
+  const [reviewNotes, setReviewNotes] = useState(existing?.receipt?.review?.notes ?? "");
+  const reviewedSnapshot = application?.receipt?.reviewedSnapshot ?? (application ? {
+    resumeVersionLabel: application.resumeVersionLabel,
+    cvText: application.tailoredCvText,
+    coverLetter: application.coverLetter,
+    answers: application.questions.map(({ id, label, answer, source }) => ({ id, label, answer, source })),
+  } : null);
 
   const updateApplication = (updater: (current: ApplicationRecord) => ApplicationRecord) => {
     if (!application) return;
@@ -102,6 +121,34 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setError(caught instanceof Error ? caught.message : "Could not create the receipt.");
     } finally {
       setBusy(null);
+    }
+  };
+
+  const saveReceiptReview = () => {
+    if (!application?.receipt) return;
+    setError(null);
+    try {
+      updateApplication((current) => current.receipt ? {
+        ...current,
+        receipt: reviewApplicationReceipt(current.receipt, {
+          outcome: reviewOutcome,
+          flaggedItems: reviewFlags,
+          notes: reviewNotes,
+        }),
+        events: [
+          ...current.events,
+          {
+            id: newWorkspaceId(),
+            applicationId: current.id,
+            type: "note",
+            label: reviewOutcome === "accurate" ? "Receipt reviewed as accurate" : "Receipt feedback saved for future preparation",
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      } : current);
+      setNotice("Receipt feedback saved to this application.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not save receipt feedback.");
     }
   };
 
@@ -192,6 +239,41 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   {busy === "receipt" ? <Loader2 className="animate-spin" size={17} /> : application.receipt ? <Check size={17} /> : <Send size={17} />} {application.receipt ? "Receipt created" : "Approve dry run"}
                 </button>
               </section>
+
+              {application.receipt && reviewedSnapshot && (
+                <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6" data-testid="application-receipt-review">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><ReceiptText size={20} /></span>
+                    <div><h2 className="font-semibold text-slate-950">5. Inspect the reviewed packet</h2><p className="mt-1 text-sm leading-6 text-slate-600">This immutable snapshot records what you approved for the dry run. It is not an ATS submission confirmation.</p></div>
+                  </div>
+                  <dl className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl bg-slate-50 p-4"><dt className="text-xs font-bold uppercase tracking-wide text-slate-500">CV version</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{reviewedSnapshot.resumeVersionLabel}</dd></div>
+                    <div className="rounded-2xl bg-slate-50 p-4"><dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Answers reviewed</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{reviewedSnapshot.answers.length}</dd></div>
+                    <div className="rounded-2xl bg-slate-50 p-4"><dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Destination</dt><dd className="mt-1 truncate text-sm font-semibold text-slate-900">{application.receipt.destination}</dd></div>
+                  </dl>
+                  <details className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <summary className="ir35-focus cursor-pointer rounded-lg text-sm font-semibold text-brand-800">Review the exact screening answers</summary>
+                    <dl className="mt-4 space-y-4">
+                      {reviewedSnapshot.answers.map((answer) => <div key={answer.id}><dt className="text-xs font-semibold text-slate-600">{answer.label}</dt><dd className="mt-1 whitespace-pre-wrap text-sm text-slate-900">{answer.answer}</dd></div>)}
+                    </dl>
+                  </details>
+
+                  <div className="mt-6 border-t border-slate-200 pt-6">
+                    <div className="flex items-start gap-3"><Flag className="mt-0.5 shrink-0 text-brand-700" size={19} /><div><h3 className="font-semibold text-slate-950">Review this receipt</h3><p className="mt-1 text-sm leading-6 text-slate-600">Record anything you would change before preparing another application.</p></div></div>
+                    <fieldset className="mt-4">
+                      <legend className="sr-only">Receipt review outcome</legend>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <label className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm font-semibold ${reviewOutcome === "accurate" ? "border-emerald-300 bg-emerald-50 text-emerald-950" : "border-slate-200 text-slate-700"}`}><input type="radio" name="receipt-outcome" value="accurate" checked={reviewOutcome === "accurate"} onChange={() => { setReviewOutcome("accurate"); setReviewFlags([]); }} className="h-5 w-5 accent-emerald-700" />Everything looks accurate</label>
+                        <label className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm font-semibold ${reviewOutcome === "changes_needed" ? "border-amber-300 bg-amber-50 text-amber-950" : "border-slate-200 text-slate-700"}`}><input type="radio" name="receipt-outcome" value="changes_needed" checked={reviewOutcome === "changes_needed"} onChange={() => setReviewOutcome("changes_needed")} className="h-5 w-5 accent-amber-700" />I would change something</label>
+                      </div>
+                    </fieldset>
+                    {reviewOutcome === "changes_needed" && <fieldset className="mt-4"><legend className="text-sm font-semibold text-slate-800">What should change?</legend><div className="mt-2 flex flex-wrap gap-2">{REVIEW_ITEMS.map((item) => <label key={item.id} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${reviewFlags.includes(item.id) ? "border-amber-300 bg-amber-50 text-amber-950" : "border-slate-200 bg-white text-slate-700"}`}><input type="checkbox" checked={reviewFlags.includes(item.id)} onChange={(event) => setReviewFlags((current) => event.target.checked ? [...current, item.id] : current.filter((value) => value !== item.id))} className="h-5 w-5 accent-amber-700" />{item.label}</label>)}</div></fieldset>}
+                    <label className="mt-4 block text-sm font-semibold text-slate-800">Notes for next time<textarea value={reviewNotes} onChange={(event) => setReviewNotes(event.target.value.slice(0, 1_200))} rows={4} maxLength={1_200} placeholder="Optional, unless no item is selected" className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-3 text-sm font-normal leading-6" /></label>
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-slate-500">{reviewNotes.length}/1,200 characters</p><button type="button" onClick={saveReceiptReview} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800"><Check size={16} /> Save receipt review</button></div>
+                    {application.receipt.review && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900" role="status">Saved {new Date(application.receipt.review.savedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}.</p>}
+                  </div>
+                </section>
+              )}
             </>
           )}
 

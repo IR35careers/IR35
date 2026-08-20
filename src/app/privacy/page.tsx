@@ -40,7 +40,7 @@ export default function PrivacyPage() {
         <ul className="mt-4">
           <li><strong>Account information:</strong> email address, authentication identifiers, sign-in events and account preferences.</li>
           <li><strong>Contractor profile information:</strong> skills, work preferences, availability and optional limited-company details you choose to provide.</li>
-          <li><strong>CV and application-workspace information:</strong> uploaded CV text, edits, role-specific scores, approved versions, screening-answer drafts and application-tracking records.</li>
+          <li><strong>CV and application-workspace information:</strong> uploaded CV text, edits, role-specific scores, approved versions, screening-answer drafts, reviewed-material receipt snapshots, receipt feedback and application-tracking records.</li>
           <li><strong>Application analytics:</strong> summaries calculated from your own application records, status events and linked responses. CSV analytics exports exclude CV text, screening answers and message bodies.</li>
           <li><strong>Search and alert information:</strong> queries, filters, saved contracts and alert preferences.</li>
           <li><strong>Networking and referral information:</strong> contact names, professional context, private notes, follow-up dates and referral drafts that you choose to store. IR35Careers does not contact those people for you.</li>

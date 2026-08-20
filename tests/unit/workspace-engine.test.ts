@@ -6,6 +6,7 @@ import {
   evaluateAutomationJob,
   issueDryRunReceipt,
   prepareApplication,
+  reviewApplicationReceipt,
 } from "@/lib/workspace/engine";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
@@ -69,6 +70,18 @@ describe("application workspace engine", () => {
     const receipt = issueDryRunReceipt(approved);
     expect(receipt.mode).toBe("dry_run");
     expect(receipt.message).toMatch(/No application or personal data was sent/);
+    expect(receipt.reviewedSnapshot?.resumeVersionLabel).toBe("Application CV");
+    expect(receipt.reviewedSnapshot?.answers).toHaveLength(approved.questions.length);
+    expect(receipt.review).toBeNull();
+
+    const reviewed = reviewApplicationReceipt(receipt, {
+      outcome: "changes_needed",
+      flaggedItems: ["cover_letter", "cover_letter"],
+      notes: "Use a shorter opening next time.",
+    });
+    expect(reviewed.review?.flaggedItems).toEqual(["cover_letter"]);
+    expect(reviewed.review?.notes).toBe("Use a shorter opening next time.");
+    expect(() => reviewApplicationReceipt(receipt, { outcome: "changes_needed", flaggedItems: [], notes: "" })).toThrow(/Flag at least one item/);
   });
 
   it("keeps controlled automation in a review-first dry run", () => {

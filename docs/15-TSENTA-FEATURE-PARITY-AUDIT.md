@@ -19,7 +19,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | CV version history | Live | Browser storage for previews and account-owned persistence when signed in |
 | PDF and DOCX export | Live | Client-requested export from an approved CV version |
 | Cover letter and screening preparation | Live | Application workspace; every generated/selected answer is reviewable |
-| Application receipt and tracker | Live as dry run | A receipt and tracker entry are created without transmitting an application |
+| Application receipt and tracker | Live as dry run | A receipt and tracker entry are created without transmitting an application; the receipt preserves the reviewed CV label, CV text, cover letter and screening-answer snapshot, and supports account-owned accuracy/change feedback |
 | Automated ATS submission | Provider gate | Adapter boundary exists; live submission is deliberately disabled until ATS-specific credentials, consent and verification exist |
 | Recruiter inbox and reply classification | Product surface + provider gate | Inbox, linking and deterministic classification exist; real inbound email/SMS/WhatsApp delivery needs approved providers |
 | Saved searches and alerts | Live workspace + delivery gate | Searches are account-owned; outbound email delivery remains provider-labelled |
@@ -34,6 +34,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Networking and referral preparation | Live, user-controlled | `/network`; account-owned contacts, follow-up queue, role-linked editable drafts, review gate, manual copy and JSON export. No message is sent by IR35Careers |
 | Autonomous networking/referral outreach | Not connected | Social-network discovery, profile scraping and unsupervised messaging are deliberately not claimed |
 | Account sign-up/sign-in/reset | Live | `/account`, `/account/reset` with Supabase Auth |
+| Work-authorisation and sponsorship answers | Live, user-declared | Profile records UK right-to-work/sponsorship state without inferring it from nationality or CV text; the value becomes a review-required screening answer |
 | Data export and permanent account deletion | Live | `/settings`, `/api/account`; authenticated export and explicit email-confirmed deletion |
 | Pricing, changelog, AI disclosure, security and legal pages | Live | Public trust and product pages linked in the footer and sitemap |
 

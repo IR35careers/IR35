@@ -3,6 +3,8 @@ import type {
   ApplicationEvent,
   ApplicationQuestion,
   ApplicationReceipt,
+  ApplicationReceiptReview,
+  ApplicationReceiptReviewItem,
   ApplicationRecord,
   ApplicationStatus,
   AutomationRules,
@@ -176,7 +178,39 @@ export function issueDryRunReceipt(application: ApplicationRecord): ApplicationR
     destination: application.job.source_domain,
     reviewedFields,
     skippedFields: application.questions.filter((question) => !question.reviewed).map((question) => question.label),
+    reviewedSnapshot: {
+      resumeVersionLabel: application.resumeVersionLabel,
+      cvText: application.tailoredCvText,
+      coverLetter: application.coverLetter,
+      answers: application.questions.map(({ id, label, answer, source }) => ({ id, label, answer, source })),
+    },
+    review: null,
     message: "Preparation complete. No application or personal data was sent to the employer, and no email was sent.",
+  };
+}
+
+const RECEIPT_REVIEW_ITEMS = new Set<ApplicationReceiptReviewItem>(["cv", "cover_letter", "screening_answers", "destination", "other"]);
+
+export function reviewApplicationReceipt(
+  receipt: ApplicationReceipt,
+  input: Pick<ApplicationReceiptReview, "outcome" | "flaggedItems" | "notes">
+): ApplicationReceipt {
+  if (input.outcome !== "accurate" && input.outcome !== "changes_needed") {
+    throw new Error("Choose whether the reviewed packet was accurate or needs changes.");
+  }
+  const flaggedItems = [...new Set(input.flaggedItems)].filter((item) => RECEIPT_REVIEW_ITEMS.has(item));
+  const notes = input.notes.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 1_200);
+  if (input.outcome === "changes_needed" && flaggedItems.length === 0 && notes.length === 0) {
+    throw new Error("Flag at least one item or add a note describing what should change.");
+  }
+  return {
+    ...receipt,
+    review: {
+      outcome: input.outcome,
+      flaggedItems,
+      notes,
+      savedAt: new Date().toISOString(),
+    },
   };
 }
 
