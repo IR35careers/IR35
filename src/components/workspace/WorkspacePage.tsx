@@ -15,12 +15,14 @@ export function WorkspacePage({
   eyebrow,
   actions,
   children,
+  density = "default",
 }: {
   title: string;
   description: string;
   eyebrow?: string;
   actions?: ReactNode;
   children: ReactNode;
+  density?: "default" | "compact";
 }) {
   const configured = isSupabaseConfigured();
   const { user, loading: authLoading } = useAuth();
@@ -42,22 +44,22 @@ export function WorkspacePage({
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <AppNav />
-      <main className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 lg:py-9">
+      <main className={`mx-auto max-w-[1600px] px-4 sm:px-6 ${density === "compact" ? "py-5 lg:py-6" : "py-7 lg:py-9"}`}>
         {!configured && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
             <FlaskConical className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
             <p><span className="font-semibold">Local preview.</span> Data stays in this browser. Email, payment and application submission providers are not connected.</p>
           </div>
         )}
-        <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <header className={`flex flex-col gap-4 border-b border-slate-200 lg:flex-row lg:items-end lg:justify-between ${density === "compact" ? "pb-5" : "pb-6"}`}>
           <div className="max-w-3xl">
             {eyebrow && <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">{eyebrow}</p>}
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">{description}</p>
+            <h1 className={`mt-1 font-semibold tracking-tight text-slate-950 ${density === "compact" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>{title}</h1>
+            <p className={`mt-2 text-slate-600 ${density === "compact" ? "max-w-2xl text-sm leading-5" : "text-sm leading-6 sm:text-base"}`}>{description}</p>
           </div>
           {actions}
         </header>
-        <div className="mt-6">{children}</div>
+        <div className={density === "compact" ? "mt-5" : "mt-6"}>{children}</div>
       </main>
     </div>
   );
