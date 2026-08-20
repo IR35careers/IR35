@@ -75,6 +75,37 @@ test("contract search keeps a stable shell while initial results load", async ({
   await expect(page.getByText(/[\d,]+ contracts found/)).toBeVisible();
 });
 
+test("contract results do not wait for facet aggregation", async ({ page }) => {
+  let releaseFacets: () => void = () => undefined;
+  let noteFacetRequest: () => void = () => undefined;
+  const facetGate = new Promise<void>((resolve) => { releaseFacets = resolve; });
+  const facetRequestSeen = new Promise<void>((resolve) => { noteFacetRequest = resolve; });
+  const searchRequests: URL[] = [];
+
+  await page.route("**/api/jobs/search**", async (route) => {
+    const url = new URL(route.request().url());
+    searchRequests.push(url);
+    if (url.searchParams.get("with_facets") === "1") {
+      noteFacetRequest();
+      await facetGate;
+    }
+    await route.continue();
+  });
+
+  try {
+    await page.goto("/jobs");
+    await expect(page.getByText("6 contracts found")).toBeVisible();
+    await facetRequestSeen;
+
+    const resultRequest = searchRequests.find((url) => url.searchParams.get("with_facets") !== "1");
+    const facetRequest = searchRequests.find((url) => url.searchParams.get("with_facets") === "1");
+    expect(resultRequest?.searchParams.get("per_page")).toBe("12");
+    expect(facetRequest?.searchParams.get("per_page")).toBe("1");
+  } finally {
+    releaseFacets();
+  }
+});
+
 test("account flow has explicit modes and neutral sign-in errors", async ({ page }) => {
   await page.goto("/account?next=%2Fdashboard");
   await dismissPrivacyNotice(page);

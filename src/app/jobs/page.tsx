@@ -102,12 +102,29 @@ function JobsBoard() {
     requestRef.current = controller;
     setLoading(true); setFailed(false);
     try {
-      const res = await fetch(`/api/jobs/search?${params.toString()}`, { signal: controller.signal });
+      const baseParams = new URLSearchParams(params);
+      baseParams.delete("with_facets");
+      const cachedFacets = facetCacheRef.current.get(facetKey);
+      const res = await fetch(`/api/jobs/search?${baseParams.toString()}`, { signal: controller.signal });
       const json = (await res.json()) as SearchResponse;
       if (!res.ok || json.error) throw new Error(json.error ?? "Search failed");
       if (requestRef.current !== controller) return;
-      if (json.facets) facetCacheRef.current.set(facetKey, json.facets);
-      setData({ ...json, facets: json.facets ?? facetCacheRef.current.get(facetKey) });
+      setData({ ...json, facets: cachedFacets });
+
+      if (!cachedFacets) {
+        const facetParams = new URLSearchParams(baseParams);
+        facetParams.set("with_facets", "1");
+        facetParams.set("per_page", "1");
+        void fetch(`/api/jobs/search?${facetParams.toString()}`, { signal: controller.signal })
+          .then(async (facetResponse) => {
+            const facetJson = (await facetResponse.json()) as SearchResponse;
+            if (!facetResponse.ok || facetJson.error || !facetJson.facets) return;
+            if (requestRef.current !== controller) return;
+            facetCacheRef.current.set(facetKey, facetJson.facets);
+            setData((current) => current ? { ...current, facets: facetJson.facets } : current);
+          })
+          .catch(() => undefined);
+      }
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       if (requestRef.current === controller) setFailed(true);
@@ -131,7 +148,6 @@ function JobsBoard() {
     if (page > 1) params.set("page", String(page));
     params.set("per_page", String(JOBS_PER_PAGE));
     const facetKey = JSON.stringify([q, minRate, skillsLock, locationLock, withinDays]);
-    if (!facetCacheRef.current.has(facetKey)) params.set("with_facets", "1");
     lastParamsRef.current = params;
     lastFacetKeyRef.current = facetKey;
     const visibleParams = new URLSearchParams(params);
