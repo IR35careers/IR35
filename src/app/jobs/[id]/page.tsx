@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { ArrowLeft, MapPin, Clock, PoundSterling, Building2, Briefcase, ClipboardCheck, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
+import { IR35EvidencePanel } from "@/components/IR35EvidencePanel";
 import { SaveJobButton } from "@/components/SaveJobButton";
 import { JobMatchPanel } from "@/components/JobMatchPanel";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { IR35Badge } from "@/components/ui/ir35-badge";
-import { formatPosted, formatRate, ir35EvidenceLabel, type JobDetail, type JobListing } from "@/lib/job-types";
+import { formatPosted, formatRate, type JobDetail, type JobListing } from "@/lib/job-types";
+import { deriveIR35Provenance } from "@/lib/ir35-provenance";
 import { getPublicJob, getSimilarPublicJobs } from "@/lib/public-jobs";
 
 export const dynamic = "force-static";
@@ -44,6 +46,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   if (!job) notFound();
   const similar = await getSimilar(job);
   const isDemo = job.source_domain === "demo.ir35careers.local";
+  const ir35Provenance = deriveIR35Provenance(job);
 
   const remoteLabel =
     job.remote_type === "remote"
@@ -82,7 +85,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                   {remoteLabel}
                 </span>
               )}
-              <span className="text-xs text-slate-600">{ir35EvidenceLabel(job)}</span>
+              <span className="text-xs text-slate-600">{ir35Provenance.shortLabel}</span>
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
@@ -158,6 +161,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
           {/* Right rail */}
           <div className="space-y-6">
+            <IR35EvidencePanel job={job} />
             <JobMatchPanel job={job} />
 
             {similar.length > 0 && (

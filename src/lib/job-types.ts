@@ -30,7 +30,7 @@ export function ir35EvidenceLabel(
 ): string {
   if (job.ir35_status === "unknown") return "No explicit status found";
   if (job.ir35_confidence === "high") return "Status stated in the job title";
-  if (job.ir35_confidence === "medium") return "Status stated in the listing";
+  if (job.ir35_confidence === "medium") return "Status signal found in the listing";
   return "Status needs review";
 }
 

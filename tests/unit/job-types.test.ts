@@ -27,7 +27,7 @@ describe("formatRate", () => {
 describe("IR35 evidence", () => {
   it("maps only explicit evidence to confident labels", () => {
     expect(ir35EvidenceLabel({ ir35_status: "outside", ir35_confidence: "high" })).toBe("Status stated in the job title");
-    expect(ir35EvidenceLabel({ ir35_status: "inside", ir35_confidence: "medium" })).toBe("Status stated in the listing");
+    expect(ir35EvidenceLabel({ ir35_status: "inside", ir35_confidence: "medium" })).toBe("Status signal found in the listing");
     expect(ir35EvidenceLabel({ ir35_status: "unknown", ir35_confidence: "low" })).toBe("No explicit status found");
   });
 });

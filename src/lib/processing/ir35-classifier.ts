@@ -19,6 +19,18 @@ export interface IR35Classification {
   confidence: Confidence;
 }
 
+export type IR35EvidenceBasis =
+  | "advertiser_title"
+  | "advertiser_listing"
+  | "arrangement_inference"
+  | "conflict"
+  | "not_found";
+
+export interface IR35ClassificationEvidence extends IR35Classification {
+  basis: IR35EvidenceBasis;
+  evidence: string | null;
+}
+
 // "outside ir35", "outside of ir-35", "ir35: outside", "determination: outside",
 // "deemed outside", "outside ir35 contract" ...
 const OUTSIDE_PATTERNS = [
@@ -61,7 +73,19 @@ function matchesAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((re) => re.test(text));
 }
 
-export function classifyIR35(title: string, description: string): IR35Classification {
+function firstMatch(text: string, patterns: RegExp[]): string | null {
+  for (const pattern of patterns) {
+    const match = text.match(pattern)?.[0];
+    if (match) return match.replace(/\s+/g, " ").trim();
+  }
+  return null;
+}
+
+/**
+ * Return the exact classification boundary used by the product plus the
+ * smallest matching phrase. This is display evidence, never a legal SDS.
+ */
+export function classifyIR35Evidence(title: string, description: string): IR35ClassificationEvidence {
   const t = title ?? "";
   const d = description ?? "";
 
@@ -69,25 +93,30 @@ export function classifyIR35(title: string, description: string): IR35Classifica
   const titleInside = matchesAny(t, INSIDE_PATTERNS);
 
   // Title is the strongest signal — recruiters put status there deliberately.
-  if (titleOutside && !titleInside) return { status: "outside", confidence: "high" };
-  if (titleInside && !titleOutside) return { status: "inside", confidence: "high" };
-  if (titleOutside && titleInside) return { status: "unknown", confidence: "low" };
+  if (titleOutside && !titleInside) return { status: "outside", confidence: "high", basis: "advertiser_title", evidence: firstMatch(t, OUTSIDE_PATTERNS) };
+  if (titleInside && !titleOutside) return { status: "inside", confidence: "high", basis: "advertiser_title", evidence: firstMatch(t, INSIDE_PATTERNS) };
+  if (titleOutside && titleInside) return { status: "unknown", confidence: "low", basis: "conflict", evidence: "Both Inside and Outside IR35 wording appears in the title" };
 
   const descOutside = matchesAny(d, OUTSIDE_PATTERNS);
   const descInside = matchesAny(d, INSIDE_PATTERNS);
 
-  if (descOutside && !descInside) return { status: "outside", confidence: "medium" };
-  if (descInside && !descOutside) return { status: "inside", confidence: "medium" };
+  if (descOutside && !descInside) return { status: "outside", confidence: "medium", basis: "advertiser_listing", evidence: firstMatch(d, OUTSIDE_PATTERNS) };
+  if (descInside && !descOutside) return { status: "inside", confidence: "medium", basis: "advertiser_listing", evidence: firstMatch(d, INSIDE_PATTERNS) };
   if (descOutside && descInside) {
     // Both mentioned — often "inside or outside considered" or a comparison.
     // Never guess.
-    return { status: "unknown", confidence: "low" };
+    return { status: "unknown", confidence: "low", basis: "conflict", evidence: "Both Inside and Outside IR35 wording appears in the listing" };
   }
 
   // No explicit IR35 wording — check near-explicit inside arrangements.
   if (matchesAny(`${t} ${d}`, INSIDE_ARRANGEMENT_PATTERNS)) {
-    return { status: "inside", confidence: "medium" };
+    return { status: "inside", confidence: "medium", basis: "arrangement_inference", evidence: firstMatch(`${t} ${d}`, INSIDE_ARRANGEMENT_PATTERNS) };
   }
 
-  return { status: "unknown", confidence: "low" };
+  return { status: "unknown", confidence: "low", basis: "not_found", evidence: null };
+}
+
+export function classifyIR35(title: string, description: string): IR35Classification {
+  const { status, confidence } = classifyIR35Evidence(title, description);
+  return { status, confidence };
 }

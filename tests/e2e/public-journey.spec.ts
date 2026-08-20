@@ -47,6 +47,10 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expect(page.getByRole("link", { name: "Sign in to save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Preview listing" })).toBeDisabled();
   await expect(page.getByText("Demo data never submits an application.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Advertiser-stated" })).toBeVisible();
+  await expect(page.getByText("IR35 evidence", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Evidence checked/)).toBeVisible();
+  await expect(page.getByText(/not an independent legal determination/i)).toBeVisible();
   await page.getByText("How this score is calculated").click();
   await expect(page.getByText("Skill overlap")).toBeVisible();
   await expect(page.getByText("Rate fit")).toBeVisible();
@@ -106,7 +110,7 @@ test("an external job can be previewed and opened in local CV Studio", async ({ 
   await page.getByLabel("Public job URL").fill("https://jobs.example.com/platform");
   await page.getByRole("button", { name: "Analyse job" }).click();
   await expect(page.getByRole("heading", { name: /Platform Engineer Contract/ })).toBeVisible();
-  await expect(page.getByText("Status stated in the job title")).toBeVisible();
+  await expect(page.getByText("Advertiser-stated in the job title")).toBeVisible();
   await page.getByRole("button", { name: "Tailor CV locally" }).click();
   await expect(page.getByRole("heading", { name: "Tailor your CV with evidence you control" })).toBeVisible();
   await expect(page.getByText(/Scores are transparent, missing keywords are never treated as experience/)).toBeVisible();

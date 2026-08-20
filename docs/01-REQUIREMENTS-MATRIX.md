@@ -15,7 +15,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Job matching and explanations | P0 | Deterministic weighted scorer, case-insensitive skill comparison, four-factor point breakdown, evidence text and truthful no-overlap state | Implemented | Validate weight usefulness against consented production outcomes before changing the published formula |
 | Save and mark applied | P0 | `saved_jobs`, signed-out return path and optimistic rollback | Implemented | Authenticated database/RLS test in staging |
 | Job alerts | P1 | Owner-scoped saved searches plus on-demand, cancellable live match previews with loading, empty, error and retry states | Implemented for in-product curation | Delivery provider abstraction, schedule and unsubscribe before claiming email alerts |
-| IR35 provenance | P1 | Status plus high/medium/low confidence | Partial | Persist and display advertised/inferred/manual source and evidence timestamp |
+| IR35 provenance | P1 | Public details distinguish advertiser-stated, arrangement-derived, source/review and unconfirmed states; exact matched wording and last-observed date are shown | Implemented for deterministic public evidence | Persist reviewer identity and an immutable audit event before claiming a status was manually reviewed |
 | Resume upload | P1 | Private Supabase bucket and profile reference | Implemented | File signature/virus strategy, signed access and deletion tests |
 | Resume builder/editor/rating | P1 | `/jobs/[id]/resume`, four-part deterministic rubric, editable final copy, private/local versions and PDF/DOCX export | Implemented | Apply migration 009 and run authenticated RLS, storage-retention and real-CV acceptance tests in staging |
 | Resume optimisation per job | P1 | Role keywords, evidence gaps, conservative rewrites, explicit skill confirmation and side-by-side approval | Implemented without generative AI | Add optional provider only after structured-output, grounding, redaction and cost gates pass |
@@ -44,7 +44,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 - “Email alert” is not shown until a delivery provider is connected and verified.
 - “AI match” is not used for the current deterministic job or CV scores. CV Studio exposes the formula and never presents it as a hiring prediction.
 - A missing role keyword is never inserted unless the user explicitly confirms that they genuinely have that skill.
-- “Outside IR35” must show whether it was stated by the advertiser, inferred from listing text, or manually reviewed.
+- “Outside IR35” must show whether it was stated by the advertiser, derived from an arrangement signal, or supplied by a source/review process; a manual-review claim requires an audit record.
 - “Auto-apply” remains disabled until the user can review the exact resume, answers, destination and submission receipt.
 - No real application, email or payment is sent by automated tests.
 - Networking tools never discover contacts or send outreach; the user supplies, reviews and manually copies each message.
