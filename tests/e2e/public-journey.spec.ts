@@ -110,6 +110,7 @@ test("public trust and platform surfaces are available", async ({ page }) => {
     ["/pricing", "Free while the provider-backed service is being verified."],
     ["/platforms", "One contractor workspace, across every useful screen."],
     ["/developers", "Contract search, with IR35 context."],
+    ["/connections", "Every integration, in its real state."],
     ["/ai-disclosure", "AI and Automation Disclosure"],
     ["/security", "Security and Responsible Disclosure"],
     ["/delete-account", "Delete your account"],
@@ -134,6 +135,18 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   const cli = await request.get("/downloads/ir35careers-cli.mjs");
   expect(cli.ok()).toBeTruthy();
   expect(await cli.text()).toContain("never submits an application");
+
+  const mcp = await request.get("/downloads/ir35careers-mcp-v1.zip");
+  expect(mcp.ok()).toBeTruthy();
+  expect(mcp.headers()["content-type"]).toContain("zip");
+
+  const detail = await request.get("/api/jobs/11111111-1111-4111-8111-111111111111");
+  expect(detail.ok()).toBeTruthy();
+  expect((await detail.json()).job.title).toContain("DevOps Engineer");
+
+  const connections = await request.get("/api/integrations/status");
+  expect(connections.ok()).toBeTruthy();
+  expect((await connections.json()).secret_values_exposed).toBe(false);
 
   const accountExport = await request.get("/api/account");
   expect(accountExport.status()).toBe(401);
@@ -232,4 +245,32 @@ test("application workspace prepares, approves, receipts and tracks without subm
   await page.getByRole("switch", { name: "Paused" }).click();
   await page.getByRole("button", { name: "Run preview now" }).click();
   await expect(page.getByText(/contracts entered the review queue/)).toBeVisible();
+});
+
+test("network workspace prepares reviewed outreach without sending it", async ({ page }) => {
+  await page.goto("/network");
+  await dismissPrivacyNotice(page);
+  await expect(page.getByRole("heading", { name: "Turn real relationships into thoughtful outreach" })).toBeVisible();
+  await expect(page.getByText("IR35Careers never contacts anyone for you.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByLabel("Contact name").fill("Jordan Lee");
+  await page.getByLabel("Contact company").fill("Example Client");
+  await page.getByLabel("Relationship").fill("former project colleague");
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.getByText("Contact saved.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Create truth-safe draft" }).click();
+  await expect(page.getByLabel("Referral message")).toHaveValue(/Hi Jordan/);
+  await expect(page.getByLabel("Referral message")).toHaveValue(/No pressure/);
+  await page.getByRole("checkbox", { name: /I reviewed this message/ }).check();
+  await page.getByRole("button", { name: "Save reviewed" }).click();
+  await expect(page.getByText("Reviewed referral draft saved.")).toBeVisible();
+  await expect(page.getByText("Jordan Lee", { exact: true })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("Jordan Lee", { exact: true })).toBeVisible();
+  await expect(page.getByText("reviewed", { exact: true }).first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  await expectNoSeriousA11yViolations(page);
 });

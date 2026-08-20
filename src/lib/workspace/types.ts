@@ -37,6 +37,39 @@ export interface ContractorProfile {
   clearance: string;
   defaultCvLabel: string;
   forwardingEmail: string;
+  networkContacts?: NetworkContact[];
+  referralRequests?: ReferralRequest[];
+}
+
+export type NetworkContactStage = "identified" | "warm" | "asked" | "referred" | "closed";
+
+export interface NetworkContact {
+  id: string;
+  name: string;
+  company: string;
+  role: string;
+  relationship: string;
+  channel: string;
+  notes: string;
+  nextFollowUp: string;
+  stage: NetworkContactStage;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ReferralRequestStatus = "draft" | "reviewed" | "copied" | "responded";
+
+export interface ReferralRequest {
+  id: string;
+  contactId: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  listingUrl: string;
+  message: string;
+  status: ReferralRequestStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ApplicationQuestion {
@@ -150,4 +183,3 @@ export interface PrepareApplicationInput {
   cvText: string;
   resumeVersionLabel?: string;
 }
-

@@ -39,6 +39,7 @@ export default function PrivacyPage() {
           <li><strong>Contractor profile information:</strong> skills, work preferences, availability and optional limited-company details you choose to provide.</li>
           <li><strong>CV and application-workspace information:</strong> uploaded CV text, edits, role-specific scores, approved versions, screening-answer drafts and application-tracking records.</li>
           <li><strong>Search and alert information:</strong> queries, filters, saved contracts and alert preferences.</li>
+          <li><strong>Networking and referral information:</strong> contact names, professional context, private notes, follow-up dates and referral drafts that you choose to store. IR35Careers does not contact those people for you.</li>
           <li><strong>Communications:</strong> enquiries, feedback and recruiter messages routed through enabled workspace features.</li>
           <li><strong>Technical and security information:</strong> device/browser information, IP-derived security signals, timestamps, error logs and essential storage identifiers.</li>
           <li><strong>Job listing information:</strong> role data obtained from employers, authorised feeds, job boards and public applicant-tracking-system endpoints. This normally concerns organisations and vacancies rather than site users.</li>
@@ -55,6 +56,7 @@ export default function PrivacyPage() {
               <tr><td className="border-b border-slate-100 px-3 py-3">Create and secure your account; provide saved jobs, CV tools and workspace functions</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Operate, protect, debug and improve the service; prevent abuse; keep accurate source links</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests in running a safe, useful contractor platform</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Respond to enquiries and data-rights requests</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests, contract steps or legal obligation, depending on the request</td></tr>
+              <tr><td className="border-b border-slate-100 px-3 py-3">Store contacts, follow-up reminders and referral drafts at your direction</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you; you are responsible for using contact details fairly and lawfully</td></tr>
               <tr><td className="px-3 py-3">Send optional marketing or activate non-essential analytics if introduced</td><td className="px-3 py-3">Consent, which can be withdrawn</td></tr>
             </tbody>
           </table>
@@ -90,6 +92,7 @@ export default function PrivacyPage() {
       <section aria-labelledby="retention">
         <h2 id="retention">Retention and security</h2>
         <p className="mt-3">We keep personal information only for as long as it is needed for the purpose described, your active account, dispute handling, security and legal obligations. The criteria include account activity, whether you still use a workspace record, source freshness, the nature of an enquiry and applicable limitation periods. When information is no longer needed, it is deleted or anonymised; provider backups expire on their managed schedules.</p>
+        <p className="mt-3">You can delete individual networking contacts and referral drafts from the workspace. Account export and deletion include the account-owned profile document where those records are stored.</p>
         <p className="mt-3">We use row-level access controls, authenticated sessions, encrypted transport, restricted administrative access and provider security controls. No internet service can guarantee absolute security, so please use a unique password and tell us promptly if you suspect account misuse.</p>
       </section>
 

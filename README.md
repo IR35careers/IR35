@@ -15,6 +15,9 @@ IR35Careers is a UK contract-discovery product that puts advertised IR35 status,
 - Product updates, private contact-request storage and consent-only contractor-story publishing
 - Plain-English IR35 resources, an indicative status checker and take-home calculator
 - Reed, Adzuna and selected public ATS ingestion adapters
+- Downloadable, protocol-tested read-only MCP server for public contract discovery
+- Account-owned networking contacts, follow-up dates and manually sent referral drafts
+- Public connection-state dashboard that never exposes provider secrets
 - Clearly labelled local preview data when Supabase is not configured
 
 Generative resume writing is intentionally not required or presented as live. CV Studio and application preparation use deterministic evidence checks and user-approved edits. Local preview can exercise the complete prepare/approve/receipt/track/inbox flow; ATS submission, mail forwarding and billing remain behind the provider and approval gates in `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md`.
@@ -27,6 +30,7 @@ Generative resume writing is intentionally not required or presented as live. CV
 - Lucide icons and lightweight CSS motion
 - Vitest for unit checks
 - Playwright and axe for responsive E2E, accessibility and visual regression
+- Official Model Context Protocol v2 server/client packages for the isolated MCP integration
 - Mammoth and unpdf for in-memory DOCX/PDF text extraction; docx and PDFKit for downloadable CV exports
 
 ## Local setup
@@ -51,6 +55,15 @@ npm run test
 npm run test:legacy
 npm run test:e2e
 npm run build
+```
+
+The isolated MCP integration has its own protocol and live-endpoint checks:
+
+```bash
+cd integrations/ir35careers-mcp
+npm install
+npm test
+npm run self-test
 ```
 
 The Playwright suite covers the public search-to-detail journey, CV analysis/verification/version/export, application preparation/approval/receipt/tracker/inbox/automation, account intent states, the mobile menu, automated WCAG checks and reviewed screenshots at phone, tablet and desktop widths. It never sends an application, email or payment.

@@ -18,6 +18,22 @@ export const SAMPLE_CONTRACTOR_PROFILE: ContractorProfile = {
   clearance: "Eligible for BPSS; no active SC clearance claimed",
   defaultCvLabel: "Platform Engineering CV v4",
   forwardingEmail: "alex.morgan@example.test",
+  networkContacts: [
+    {
+      id: "network-demo-sam",
+      name: "Sam Taylor",
+      company: "Northstar Digital",
+      role: "Platform Engineering Lead",
+      relationship: "Former delivery colleague",
+      channel: "LinkedIn",
+      notes: "Worked together on a cloud migration. Ask for context, not an assumed referral.",
+      nextFollowUp: "2026-08-22",
+      stage: "warm",
+      createdAt: "2026-08-19T12:00:00.000Z",
+      updatedAt: "2026-08-19T12:00:00.000Z",
+    },
+  ],
+  referralRequests: [],
 };
 
 export const SAMPLE_CV_TEXT = `Alex Morgan

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Code2, ExternalLink, Globe2, Mail, Puzzle, Smartphone } from "lucide-react";
+import { BellRing, Bot, Code2, ExternalLink, Globe2, Mail, Puzzle, Smartphone } from "lucide-react";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 
@@ -10,6 +10,7 @@ const platforms = [
   { icon: Smartphone, state: "Available", title: "Installable mobile web app", body: "Add IR35Careers to an iPhone, iPad or Android home screen for a standalone app window and offline recovery.", href: "#install", action: "Installation steps" },
   { icon: BellRing, state: "Available", title: "Saved searches and alerts", body: "Keep focused contract searches together. Provider-backed email delivery stays labelled until connected.", href: "/alerts", action: "Manage alerts" },
   { icon: Code2, state: "Available", title: "Developer search API", body: "Use the read-only public endpoint for IR35-aware search, rate filtering and source freshness.", href: "/developers", action: "Read API docs" },
+  { icon: Bot, state: "Available", title: "MCP server", body: "Connect read-only contract search, detail and public-URL analysis tools to a compatible local MCP host.", href: "/downloads/ir35careers-mcp-v1.zip", action: "Download MCP server" },
   { icon: Puzzle, state: "Developer preview", title: "Chrome job analyser", body: "A minimal-permission extension sends the active public job URL to the same safe external-role analyser. It cannot read forms or submit applications.", href: "/downloads/ir35careers-chrome-extension-v1.zip", action: "Download extension ZIP" },
   { icon: ExternalLink, state: "Safe handoff", title: "Original job websites", body: "Every indexed role retains its source. Unsupported login or CAPTCHA steps remain with the original provider.", href: "/jobs", action: "Browse contracts" },
   { icon: Mail, state: "Provider gate", title: "Recruiter email and messaging", body: "The linked inbox and classifier exist, but real forwarding, WhatsApp and SMS require approved providers and consent controls.", href: "/inbox", action: "Preview inbox" },

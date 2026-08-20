@@ -24,6 +24,7 @@ const GROUPS = [
     links: [
       ["Contractor workspace", "/dashboard"],
       ["Platforms", "/platforms"],
+      ["Connections", "/connections"],
       ["Pricing", "/pricing"],
       ["Developer API", "/developers"],
       ["Product updates", "/blog"],

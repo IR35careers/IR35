@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE}/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/platforms`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/connections`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/developers`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/stories`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },

@@ -21,6 +21,7 @@ const TABS = [
   { href: "/inbox", label: "Inbox" },
   { href: "/automation", label: "Automation" },
   { href: "/alerts", label: "Alerts" },
+  { href: "/network", label: "Network" },
   { href: "/research", label: "Research" },
 ] as const;
 
@@ -136,7 +137,7 @@ export function AppNav() {
         <div className="flex min-w-0 items-center gap-6">
           <Brand href="/dashboard" />
 
-          <div className="hidden items-center gap-1 lg:flex">
+          <div className="hidden items-center gap-1 xl:flex">
             {TABS.map((tab) => {
               const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
               return (
@@ -177,7 +178,7 @@ export function AppNav() {
           <button
             type="button"
             onClick={() => setMobileOpen((value) => !value)}
-            className="ir35-focus inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 lg:hidden"
+            className="ir35-focus inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 xl:hidden"
             aria-expanded={mobileOpen}
             aria-controls="member-mobile-menu"
             aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
@@ -188,7 +189,7 @@ export function AppNav() {
       </div>
 
       {mobileOpen && (
-        <div id="member-mobile-menu" className="animate-slide-down border-t border-slate-200 bg-white p-3 lg:hidden">
+        <div id="member-mobile-menu" className="animate-slide-down border-t border-slate-200 bg-white p-3 xl:hidden">
           <div className="grid gap-1">
             {TABS.map((tab) => {
               const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);

@@ -29,8 +29,9 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Public developer access | Live, read-only | `/developers`, `/api/jobs/search`, downloadable CLI helper |
 | Native iOS/Android apps | Not connected | PWA covers installable mobile use; native-store builds require separate signing and review |
 | iMessage, WhatsApp and SMS | Provider gate | Requires approved provider accounts, user consent, verified sender identity and message-retention policy |
-| MCP server | Not connected | The read-only HTTP API is the supported automation surface today |
-| Networking/referral automation | Not connected | Not included in the verified contractor workflow and must not be claimed |
+| MCP server | Live, read-only | Downloadable Node.js MCP server; protocol-tested public search, contract detail, URL analysis and IR35 evidence tools with no account or write scope |
+| Networking and referral preparation | Live, user-controlled | `/network`; account-owned contacts, follow-up queue, role-linked editable drafts, review gate, manual copy and JSON export. No message is sent by IR35Careers |
+| Autonomous networking/referral outreach | Not connected | Social-network discovery, profile scraping and unsupervised messaging are deliberately not claimed |
 | Account sign-up/sign-in/reset | Live | `/account`, `/account/reset` with Supabase Auth |
 | Data export and permanent account deletion | Live | `/settings`, `/api/account`; authenticated export and explicit email-confirmed deletion |
 | Pricing, changelog, AI disclosure, security and legal pages | Live | Public trust and product pages linked in the footer and sitemap |

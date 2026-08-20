@@ -8,55 +8,18 @@ import { JobMatchPanel } from "@/components/JobMatchPanel";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { IR35Badge } from "@/components/ui/ir35-badge";
-import { supabase } from "@/lib/supabase";
 import { formatPosted, formatRate, ir35EvidenceLabel, type JobDetail, type JobListing } from "@/lib/job-types";
-import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
+import { getPublicJob, getSimilarPublicJobs } from "@/lib/public-jobs";
 
 export const dynamic = "force-dynamic";
 
-const DETAIL_COLUMNS =
-  "id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at, description, apply_url, source_domain";
-
 async function getJob(id: string): Promise<JobDetail | null> {
-  // Guard: only well-formed UUIDs reach the database.
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
-  const configured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-  if (!configured && isDemoDataAvailable()) {
-    return DEMO_JOBS.find((job) => job.id === id) ?? null;
-  }
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(DETAIL_COLUMNS)
-    .eq("id", id)
-    .is("expired_at", null)
-    .maybeSingle();
-  if (error || !data) return null;
-  return data as unknown as JobDetail;
+  return getPublicJob(id);
 }
 
 /** Live "similar contracts": same skills, not this job, newest first. */
 async function getSimilar(job: JobDetail): Promise<JobListing[]> {
-  const configured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-  if (!configured && isDemoDataAvailable()) {
-    return DEMO_JOBS.filter(
-      (candidate) =>
-        candidate.id !== job.id &&
-        candidate.skills.some((skill) => job.skills.includes(skill))
-    ).slice(0, 6);
-  }
-  let query = supabase
-    .from("jobs")
-    .select("id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at")
-    .is("expired_at", null)
-    .neq("id", job.id)
-    .limit(6);
-  if (job.skills.length > 0) query = query.overlaps("skills", job.skills.slice(0, 8));
-  const { data } = await query;
-  return (data ?? []) as unknown as JobListing[];
+  return getSimilarPublicJobs(job);
 }
 
 export async function generateMetadata({

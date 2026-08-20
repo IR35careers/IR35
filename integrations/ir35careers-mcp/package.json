@@ -1,0 +1,22 @@
+{
+  "name": "ir35careers-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read-only MCP server for IR35Careers public UK contract discovery",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "self-test": "node server.mjs --self-test",
+    "test": "node protocol-test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0"
+  }
+}

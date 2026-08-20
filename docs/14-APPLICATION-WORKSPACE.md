@@ -23,6 +23,8 @@ The local preview is fully exercisable without credentials and is explicitly lab
 | Auto-apply settings | Match, rate, IR35, workplace, company exclusion and daily-limit rules with decision log | Enforced dry-run-only and human approval |
 | Profile | Personal details, work authorisation, availability, clearance, limited-company details, document and forwarding defaults | Cloud sync requires Supabase migration 010 |
 | Billing | Plan/entitlement model and honest disabled checkout UI | Pricing and billing provider not approved |
+| Networking and referrals | Account-owned contact map, follow-up queue, application-linked editable drafts, explicit review and manual copy | No contact discovery, scraping or automated messaging |
+| MCP developer access | Downloadable read-only server for public job search, detail, URL analysis and evidence explanation | No account, CV, messaging or submission permission |
 | Research/blog/contact/stories | Research hub, update feed, private contact storage and consent-only testimonial publishing | Editorial admin and real consented content remain launch work |
 
 ## Backend and security model
@@ -58,6 +60,6 @@ The local preview is fully exercisable without credentials and is explicitly lab
 3. Load the labelled sample CV and prepare the packet.
 4. Review the cover letter and each screening answer.
 5. Complete all three approvals and create the dry-run receipt.
-6. Open **Applications**, **Inbox**, **Automation** and **Profile** from the workspace navigation.
+6. Open **Applications**, **Inbox**, **Automation**, **Network** and **Profile** from the workspace navigation.
 
 No external side effect occurs anywhere in this path.

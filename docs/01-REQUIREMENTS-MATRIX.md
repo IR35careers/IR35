@@ -1,6 +1,6 @@
 # IR35Careers requirements matrix
 
-Reviewed: 2026-08-19
+Reviewed: 2026-08-20
 
 This matrix reconciles the existing repository, the 52-page product PDF, and the UI/UX-first execution brief. `Implemented` means the repository contains a production-shaped path. The first public vertical slice has passed its release gates; later authenticated and provider-backed capabilities retain their own gates below.
 
@@ -30,6 +30,8 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Research/articles | P1 | Resource hub, research route, update feed and versioned article schema with review fields | Partial | Connect an editorial admin workflow and publish sourced long-form articles |
 | Contact, testimonials and blog | P1 | Validated private contact storage, product-update feed and consent-only testimonial model/empty state | Partial | Configure production contact storage, publish only approved stories and add editorial admin controls |
 | Billing and entitlements | P2 | Plan UI, owner entitlement model and disabled provider contract | Partial | Product/pricing decision, provider sandbox, webhook idempotency and entitlement tests |
+| Networking and referrals | P2 | `/network` account-owned relationship map, follow-up dates, role-linked reviewable drafts, manual copy and export | Implemented for user-controlled preparation | Any delivery provider needs consent, revocation and anti-spam review; autonomous outreach remains off |
+| MCP access | P2 | Downloadable v2 MCP server with four read-only tools and protocol-level client test | Implemented, read-only | Add authenticated tools only after OAuth, consent, scope and revocation design |
 | Accessibility | P0 | Axe reports no serious/critical defects in the public journey and account shell | Implemented for first slice | Manual screen-reader, 200% zoom and forced-colours review on staging |
 | Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path | Partial | Establish p75 field data; local simulated results remain variable |
 | Automated testing | P0 | Vitest, 146 legacy domain checks, Playwright E2E, axe and visual baselines | Implemented for first slice | Add CI and authenticated/provider integration coverage |
@@ -44,3 +46,4 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 - “Outside IR35” must show whether it was stated by the advertiser, inferred from listing text, or manually reviewed.
 - “Auto-apply” remains disabled until the user can review the exact resume, answers, destination and submission receipt.
 - No real application, email or payment is sent by automated tests.
+- Networking tools never discover contacts or send outreach; the user supplies, reviews and manually copies each message.
