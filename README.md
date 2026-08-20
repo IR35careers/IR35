@@ -58,7 +58,10 @@ npm run test
 npm run test:legacy
 npm run test:e2e
 npm run build
+npm run verify:release
 ```
+
+Vercel runs `npm run vercel-build`, so type, lint, unit and domain failures stop a deployment before the production build. GitHub Actions additionally runs the full responsive Playwright and axe suite. See `docs/16-RELEASE-GATES.md` for the exact gates and the one-time branch-protection setting.
 
 The isolated MCP integration has its own protocol and live-endpoint checks:
 
@@ -91,6 +94,7 @@ Production never falls back to demo contracts. Missing Supabase credentials leav
 - `docs/12-FIRST-SLICE-RELEASE-REPORT.md` — delivered scope and verification evidence
 - `docs/13-CV-STUDIO.md` — scoring, truthfulness, versioning and export behaviour
 - `docs/14-APPLICATION-WORKSPACE.md` — Tsenta-inspired feature mapping, implemented workflow and provider gates
+- `docs/16-RELEASE-GATES.md` — Vercel and GitHub quality gates, failure evidence and branch protection
 
 ## Safety and content principles
 

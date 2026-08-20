@@ -12,6 +12,8 @@
     "test:unit": "vitest run",
     "test:legacy": "tsx scripts/test-processing.ts && tsx scripts/test-tax.ts && tsx scripts/test-aggregators.ts && tsx scripts/test-fetchers.ts",
     "test:e2e": "playwright test",
+    "verify:release": "npm run typecheck && npm run lint && npm run test:unit && npm run test:legacy",
+    "vercel-build": "npm run verify:release && next build",
     "cli": "node public/downloads/ir35careers-cli.mjs"
   },
   "dependencies": {

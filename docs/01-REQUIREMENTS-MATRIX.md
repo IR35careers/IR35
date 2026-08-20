@@ -35,7 +35,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | MCP access | P2 | Downloadable v2 MCP server with four read-only tools and protocol-level client test | Implemented, read-only | Add authenticated tools only after OAuth, consent, scope and revocation design |
 | Accessibility | P0 | Axe reports no serious/critical defects in the public journey and account shell | Implemented for first slice | Manual screen-reader, 200% zoom and forced-colours review on staging |
 | Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path; featured jobs server-rendered; public detail pages request-deduplicated and cached for 60 seconds | Partial | Establish p75 field data; local simulated results remain variable |
-| Automated testing | P0 | Vitest, 186 legacy domain checks, Playwright E2E, axe and visual baselines | Implemented for current local gates | Add CI and authenticated/provider integration coverage |
+| Automated testing | P0 | Vitest, 186 legacy domain checks, Playwright/axe at three viewports, Vercel pre-build gate and two-stage GitHub Actions workflow with failure evidence | Implemented for provider-independent release gates | Add authenticated Supabase and provider-sandbox integration jobs after test credentials exist |
 | Security and privacy | P1 | RLS, fail-closed provider gates, account export/deletion, validated CV ingestion and private storage boundaries | Partial | Complete formal threat model, authenticated RLS/deletion test and provider audit monitoring |
 
 ## Scope truthfulness rules
