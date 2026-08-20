@@ -19,6 +19,7 @@ The local preview is fully exercisable without credentials and is explicitly lab
 | Application questions | Work authorisation, availability, working-pattern and IR35 confirmations; every required answer needs explicit review | Employer-specific schemas require an ATS adapter |
 | One-click preparation | Prepare endpoint, exact-material review, three approvals and a dry-run receipt | No live submit button or silent handoff |
 | Tracker | Event-based statuses with validated forward transitions and an accessible select alternative to drag-and-drop | Migration 010 requires staging RLS verification |
+| Analytics | Account-owned application funnel, response/interview/offer rates, source and status mix, weekly activity, follow-up signals and role-only CSV export | Descriptive only; no hiring prediction or third-party tracking |
 | Private email/inbox | Alias model, inbox UI, deterministic classification, application linking and signed idempotent inbound endpoint | Inbound domain and forwarding provider not connected |
 | Auto-apply settings | Match, rate, IR35, workplace, company exclusion and daily-limit rules with decision log | Enforced dry-run-only and human approval |
 | Profile | Personal details, work authorisation, availability, clearance, limited-company details, document and forwarding defaults | Cloud sync requires Supabase migration 010 |

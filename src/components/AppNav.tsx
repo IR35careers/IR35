@@ -22,7 +22,7 @@ const TABS = [
   { href: "/automation", label: "Automation" },
   { href: "/alerts", label: "Alerts" },
   { href: "/network", label: "Network" },
-  { href: "/research", label: "Research" },
+  { href: "/analytics", label: "Analytics" },
 ] as const;
 
 /**

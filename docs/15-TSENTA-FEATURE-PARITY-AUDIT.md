@@ -10,6 +10,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`; IR35, workplace, rate, recency, skills, location and sorting |
 | Public job detail and original-source handoff | Live | `/jobs/[id]`; status evidence, freshness, rate, source and explicit handoff |
 | Dashboard and role matching | Live | `/dashboard`; deterministic profile-to-role scoring |
+| Application and pipeline analytics | Live | `/analytics`; account-owned funnel, response/interview/offer rates, source/IR35/workplace mix, activity, review signals and privacy-bounded CSV export |
 | Paste an external role URL | Live | `/analyse-job`, `/api/jobs/preview`; public HTTPS only with SSRF and size controls |
 | CV analysis and role-specific score | Live | CV Studio; transparent scoring categories and evidence |
 | Missing-keyword identification | Live | Missing terms are labelled as absent and never converted into claimed experience |

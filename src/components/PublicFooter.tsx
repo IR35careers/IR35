@@ -17,12 +17,14 @@ const GROUPS = [
       ["IR35 resources", "/resources"],
       ["Status checker", "/tools/ir35-status"],
       ["Take-home calculator", "/tools/take-home"],
+      ["Contractor research", "/research"],
     ],
   },
   {
     title: "IR35Careers",
     links: [
       ["Contractor workspace", "/dashboard"],
+      ["Application analytics", "/analytics"],
       ["Platforms", "/platforms"],
       ["Connections", "/connections"],
       ["Pricing", "/pricing"],

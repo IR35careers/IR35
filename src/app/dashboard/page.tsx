@@ -321,6 +321,10 @@ export default function DashboardPage() {
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
               <p className="text-sm font-semibold text-slate-800">Contractor tools</p>
               <div className="mt-3 space-y-2">
+                <Link href="/analytics" className="block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">
+                  <span className="font-medium text-slate-800">Application analytics</span>
+                  <span className="block text-xs text-slate-500">Funnel, responses and follow-up signals</span>
+                </Link>
                 <Link href="/tools/take-home" className="block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">
                   <span className="font-medium text-slate-800">Take-home calculator</span>
                   <span className="block text-xs text-slate-500">Inside vs outside IR35, 2026/27</span>

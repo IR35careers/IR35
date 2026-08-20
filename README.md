@@ -17,6 +17,7 @@ IR35Careers is a UK contract-discovery product that puts advertised IR35 status,
 - Reed, Adzuna and selected public ATS ingestion adapters
 - Downloadable, protocol-tested read-only MCP server for public contract discovery
 - Account-owned networking contacts, follow-up dates and manually sent referral drafts
+- Private application analytics with funnel, outcomes, activity signals and privacy-bounded CSV export
 - Public connection-state dashboard that never exposes provider secrets
 - Clearly labelled local preview data when Supabase is not configured
 

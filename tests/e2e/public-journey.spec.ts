@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 async function expectNoSeriousA11yViolations(page: import("@playwright/test").Page) {
   const results = await new AxeBuilder({ page })
@@ -271,6 +272,31 @@ test("network workspace prepares reviewed outreach without sending it", async ({
   await page.reload();
   await expect(page.getByText("Jordan Lee", { exact: true })).toBeVisible();
   await expect(page.getByText("reviewed", { exact: true }).first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  await expectNoSeriousA11yViolations(page);
+});
+
+test("application analytics explains outcomes and exports bounded role data", async ({ page }) => {
+  await page.goto("/analytics");
+  await dismissPrivacyNotice(page);
+  await expect(page.getByRole("heading", { name: "See what is moving your contract search forward" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Application analytics summary" }).getByText("Prepared", { exact: true })).toBeVisible();
+  await expect(page.getByText("100%", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Review signals" })).toBeVisible();
+  await expect(page.getByText(/1 recruiter message needs review/i)).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export CSV" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^ir35careers-application-analytics-.*\.csv$/);
+  const downloadPath = await download.path();
+  expect(downloadPath).not.toBeNull();
+  const csv = await readFile(downloadPath as string, "utf8");
+  expect(csv).toContain("Application ID,Role,Company,Status");
+  expect(csv).toContain("Northstar Digital");
+  expect(csv).not.toContain("PROFESSIONAL SUMMARY");
+  expect(csv).not.toContain("Thanks for sharing your details");
+
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
   await expectNoSeriousA11yViolations(page);
 });
