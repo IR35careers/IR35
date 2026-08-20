@@ -7,6 +7,7 @@ const GROUPS = [
     title: "Find work",
     links: [
       ["Browse contracts", "/jobs"],
+      ["Feed health", "/jobs/sources"],
       ["Analyse external role", "/analyse-job"],
       ["Outside IR35", "/jobs?ir35=outside"],
       ["Remote contracts", "/jobs?remote=remote"],

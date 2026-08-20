@@ -127,12 +127,30 @@ test("public trust and platform surfaces are available", async ({ page }) => {
     ["/security", "Security and Responsible Disclosure"],
     ["/billing-policy", "Billing, Cancellation and Refund Policy"],
     ["/delete-account", "Delete your account"],
+    ["/jobs/sources", "Contract feed health"],
   ] as const;
   for (const [url, heading] of pages) {
     await page.goto(url);
     await dismissPrivacyNotice(page);
     await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
   }
+  await expectNoSeriousA11yViolations(page);
+});
+
+test("public feed health exposes freshness without provider secrets", async ({ page, request }) => {
+  const response = await request.get("/api/jobs/health");
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.activeJobs).toBeGreaterThan(0);
+  expect(payload.sources.length).toBeGreaterThan(0);
+  expect(JSON.stringify(payload)).not.toMatch(/api[_-]?key|secret|companyErrors/i);
+
+  await page.goto("/jobs/sources");
+  await dismissPrivacyNotice(page);
+  await expect(page.getByRole("heading", { name: "Contract feed health" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Feed health summary" })).toBeVisible();
+  await expect(page.getByText("Ten-day expiry")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
   await expectNoSeriousA11yViolations(page);
 });
 

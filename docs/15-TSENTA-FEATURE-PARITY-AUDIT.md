@@ -7,7 +7,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 
 | Capability seen in the reference | IR35Careers state | Evidence / boundary |
 |---|---|---|
-| Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`; IR35, workplace, rate, recency, skills, location and sorting |
+| Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`, `/jobs/sources`; IR35, workplace, rate, recency, skills, location, sorting and cached per-source freshness |
 | Public job detail and original-source handoff | Live | `/jobs/[id]`; advertiser/inference/source-review IR35 provenance, matched evidence, evidence date, freshness, rate, source and explicit handoff |
 | Dashboard and role matching | Live | `/dashboard`; deterministic profile-to-role scoring with an inspectable 55/20/15/10 skills, rate, IR35 and workplace breakdown, plus a no-score state when structured skill overlap is absent |
 | Application and pipeline analytics | Live | `/analytics`; account-owned funnel, response/interview/offer rates, source/IR35/workplace mix, activity, review signals and privacy-bounded CSV export |

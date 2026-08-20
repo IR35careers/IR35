@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, MapPin, Loader2, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles } from "lucide-react";
+import { Search, MapPin, Loader2, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles, Activity } from "lucide-react";
 import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
@@ -242,6 +242,7 @@ function JobsBoard() {
           <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} aria-hidden="true" /> Explicit IR35 evidence labels</span>
           <span className="inline-flex items-center gap-1.5"><Link2 size={14} aria-hidden="true" /> Original source retained</span>
           <span>Daily source refresh and duplicate reduction</span>
+          <Link href="/jobs/sources" className="ir35-focus ml-auto inline-flex items-center gap-1.5 rounded-md font-bold underline decoration-emerald-300 underline-offset-4 hover:text-brand-700"><Activity size={14} aria-hidden="true" /> View feed health</Link>
         </div>
 
         {/* Header row */}
