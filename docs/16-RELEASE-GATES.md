@@ -14,7 +14,7 @@ If any command fails, Vercel keeps the previous successful production deployment
 
 ## What GitHub Actions checks
 
-`.github/workflows/quality.yml` runs for `main`, `codex/**` branches, pull requests to `main`, and manual dispatches. It uses Node.js 22 and exact locked dependencies (`npm ci`).
+`.github/workflows/quality.yml` runs for `main`, `codex/**` branches, pull requests to `main`, and manual dispatches. It uses Node.js 22, pinned npm 11.6.2 and exact locked dependencies (`npm ci`) on both Linux and Windows runners.
 
 - **Code quality and production build** repeats the release verification and compiles every route.
 - **Responsive browser and accessibility** installs Playwright Chrome and runs the full phone, tablet and desktop suite, including axe checks and provider safety boundaries.
