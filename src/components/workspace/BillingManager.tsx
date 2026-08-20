@@ -45,8 +45,16 @@ export function BillingManager() {
     const query = new URLSearchParams(window.location.search);
     if (query.get("checkout") === "success") setMessage("Checkout completed. Stripe is confirming your entitlement through its signed webhook.");
     if (query.get("checkout") === "cancelled") setMessage("Checkout was cancelled. No plan change was made.");
-    fetch("/api/integrations/status", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
+    void import("@/lib/supabase").then(async ({ getSupabase }) => {
+      const { data } = await getSupabase().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return null;
+      return fetch("/api/integrations/status", {
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    })
+      .then((response) => response?.ok ? response.json() : null)
       .then((body: { integrations?: Array<{ id: string; checkoutAvailable?: boolean; managementAvailable?: boolean }> } | null) => {
         const billing = body?.integrations?.find((item) => item.id === "billing");
         setCheckoutReady(Boolean(billing?.checkoutAvailable));
