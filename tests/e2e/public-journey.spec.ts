@@ -138,10 +138,13 @@ test("public trust and platform surfaces are available", async ({ page }) => {
   const pages = [
     ["/pricing", "Free while the provider-backed service is being verified."],
     ["/platforms", "One contractor workspace, across every useful screen."],
+    ["/mobile", "Your IR35 contract search, ready on any screen."],
+    ["/messaging", "Responses linked to the contract that started them."],
     ["/developers", "Contract search, with IR35 context."],
     ["/connections", "Every integration, in its real state."],
     ["/ai-disclosure", "AI and Automation Disclosure"],
     ["/security", "Security and Responsible Disclosure"],
+    ["/bug-bounty", "Report a security issue safely."],
     ["/billing-policy", "Billing, Cancellation and Refund Policy"],
     ["/delete-account", "Delete your account"],
     ["/jobs/sources", "Contract feed health"],
@@ -175,6 +178,11 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   const manifest = await request.get("/manifest.webmanifest");
   expect(manifest.ok()).toBeTruthy();
   expect((await manifest.json()).name).toBe("IR35Careers");
+
+  const securityPolicy = await request.get("/.well-known/security.txt");
+  expect(securityPolicy.ok()).toBeTruthy();
+  expect(securityPolicy.headers()["content-type"]).toContain("text/plain");
+  expect(await securityPolicy.text()).toContain("Policy: https://www.ir35careers.com/bug-bounty");
 
   const extension = await request.get("/downloads/ir35careers-chrome-extension-v1.zip");
   expect(extension.ok()).toBeTruthy();
@@ -215,6 +223,30 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   const privatePreview = await request.post("/api/jobs/preview", { data: { url: "https://127.0.0.1/private" } });
   expect(privatePreview.status()).toBe(400);
   expect((await privatePreview.json()).error).toMatch(/public (?:HTTPS|website)/i);
+});
+
+test("reduced motion preserves navigation and removes routine animation", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/mobile");
+  await dismissPrivacyNotice(page);
+  await expect(page.getByRole("heading", { name: "Your IR35 contract search, ready on any screen." })).toBeVisible();
+  await expect(page.getByRole("status", { name: "Mobile app readiness" })).toBeVisible();
+  const motion = await page.evaluate(() => {
+    const control = document.querySelector("main a");
+    const duration = control ? getComputedStyle(control).transitionDuration : "0s";
+    const value = Number.parseFloat(duration);
+    return {
+      media: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
+      transitionMilliseconds: Number.isFinite(value) ? value * (duration.includes("ms") ? 1 : 1000) : 0,
+      overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+    };
+  });
+  expect(motion.media).toBe(true);
+  expect(motion.scrollBehavior).toBe("auto");
+  expect(motion.transitionMilliseconds).toBeLessThanOrEqual(0.02);
+  expect(motion.overflow).toBe(false);
+  await expectNoSeriousA11yViolations(page);
 });
 
 test("mobile navigation exposes all primary destinations", async ({ page }, testInfo) => {

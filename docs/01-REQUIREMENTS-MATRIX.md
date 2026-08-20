@@ -10,7 +10,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Public Inside and Outside IR35 discovery | P0 | Public landing, `/jobs` search and `/jobs/[id]` detail | Implemented | Connect production Supabase data and run staging smoke test |
 | Responsive navigation | P0 | Public and member menus adapt across phone, tablet and desktop | Implemented | Authenticated device test with a real staging session |
 | Loading, empty, error, success states | P0 | Shared state panels and layout-stable skeletons cover public search, job details, alerts, account and CV/application actions | Implemented for public and preparation journeys | Extend route-level skeleton/error boundaries to every authenticated settings/admin surface |
-| Purposeful motion and reduced motion | P0 | Framer Motion only on waitlist; reduced motion partly handled | Partial | Motion tokens, interruptible transitions, reduced-motion test |
+| Purposeful motion and reduced motion | P0 | Motion uses short transform/opacity or colour transitions; global reduced-motion rules disable smooth scrolling and collapse animation/transition durations; Playwright verifies the media state, control behavior and overflow | Implemented | Add manual vestibular review when introducing any new orchestrated animation |
 | Profile and onboarding | P0 | Supabase profile, skills, preferences and CV upload | Implemented | Responsive and accessible browser test with production-shaped data |
 | Job matching and explanations | P0 | Deterministic weighted scorer, case-insensitive skill comparison, four-factor point breakdown, evidence text and truthful no-overlap state | Implemented | Validate weight usefulness against consented production outcomes before changing the published formula |
 | Save and mark applied | P0 | `saved_jobs`, signed-out return path and optimistic rollback | Implemented | Authenticated database/RLS test in staging |
@@ -36,7 +36,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Accessibility | P0 | Axe reports no serious/critical defects in the public journey and account shell | Implemented for first slice | Manual screen-reader, 200% zoom and forced-colours review on staging |
 | Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path; featured jobs server-rendered; public detail pages request-deduplicated and cached for 60 seconds | Partial | Establish p75 field data; local simulated results remain variable |
 | Automated testing | P0 | Vitest, 186 legacy domain checks, Playwright/axe at three viewports, Vercel pre-build gate and two-stage GitHub Actions workflow with failure evidence | Implemented for provider-independent release gates | Add authenticated Supabase and provider-sandbox integration jobs after test credentials exist |
-| Security and privacy | P1 | RLS, fail-closed provider gates, account export/deletion, validated CV ingestion and private storage boundaries | Partial | Complete formal threat model, authenticated RLS/deletion test and provider audit monitoring |
+| Security and privacy | P1 | RLS, fail-closed provider gates, account export/deletion, validated CV ingestion, private storage boundaries, public reporting rules and RFC-style `security.txt` discovery | Partial | Complete formal threat model, authenticated RLS/deletion test and provider audit monitoring |
 
 ## Scope truthfulness rules
 

@@ -23,6 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE}/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/platforms`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/mobile`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/messaging`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/connections`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/developers`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
@@ -35,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/accessibility`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/ai-disclosure`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/security`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/bug-bounty`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/job-listing-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
     { url: `${BASE}/delete-account`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     ...allSeoSlugs().map((slug) => ({

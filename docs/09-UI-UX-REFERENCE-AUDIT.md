@@ -1,6 +1,6 @@
 # UI/UX reference audit
 
-Reviewed: 2026-08-19  
+Reviewed: 2026-08-20
 Viewports captured: 390x844, 768x1024 and 1440x900.  
 Method: live public URLs checked through web access and headless Chrome. The in-app browser runtime failed before tab creation, so logged-in interactions and screen-reader trees were not claimed as verified. PDF screenshots were reviewed for product-flow context only.
 
@@ -38,6 +38,8 @@ Reference captures remain under `tmp/ui-audit/` during implementation and are ne
 
 The live public site was checked again on 2026-08-19. Its current public narrative exposes find, role-specific preparation, ATS submission receipts, tracking, recruiter-message routing, multi-surface access, volume pricing, FAQ and public blog/legal routes. The supplied PDF pages 2-24 add dashboard screens for onboarding source capture, job detail/openings, job-card and tracker views, auto-apply filters, networking, CV/profile editing, work authorisation, job-board connections, referrals, email integrations, private forwarding address, inbox filters and pipeline analytics.
 
+The live public site and linked product pages were rechecked on 2026-08-20. The current surface additionally makes native mobile apps, iMessage/WhatsApp, Chrome, OAuth MCP, a write-capable developer API, review-before-submit, changelog and bug-bounty links explicit. Its public job directory exposes keyword, location, seniority, workplace, employment type, recency and sponsorship filters; the public detail page exposes skills, pay, experience and an auto-apply handoff. These are recorded as distinct capabilities rather than inferred from the older PDF. IR35Careers adapts the mobile, messaging and disclosure information architecture through truthful `/mobile`, `/messaging` and `/bug-bounty` routes; native stores, message delivery, write-capable OAuth tools and ATS submission remain provider-gated.
+
 IR35Careers now adapts the relevant workflow as an original UK contractor product:
 
 - job discovery and explicit IR35 evidence;
@@ -48,6 +50,9 @@ IR35Careers now adapts the relevant workflow as an original UK contractor produc
 - contractor/company/work-authorisation profile;
 - dry-run match/rate/status/workplace automation rules;
 - billing, inbound mail and live submission held behind provider gates.
+- installable PWA readiness, live browser install affordance and offline-recovery status;
+- dedicated messaging readiness with production-derived connection state;
+- standard responsible-disclosure discovery through `/.well-known/security.txt`.
 
 It does not reproduce Tsenta branding, copy, screenshots, company logos, exact layout, pricing, proprietary automation, or claims of universal ATS coverage.
 

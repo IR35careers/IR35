@@ -25,11 +25,11 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Saved searches, curated list and alerts | Live workspace + delivery gate | Searches are account-owned and each alert can load a cancellable, stale-safe preview of its latest live matches; outbound email delivery remains visibly provider-gated |
 | Subscription/credit controls | Provider-ready, safely gated | Hosted Stripe Checkout, customer portal, explicit consent record, signed idempotent webhook ledger, entitlement downgrade rules, billing policy and charge-safe account deletion exist; the paid plan stays hidden/disabled until delivered benefits and complete production configuration pass acceptance checks |
 | Responsive web app | Live | Desktop, tablet and mobile layouts |
-| Installable mobile experience | Live PWA | Manifest, app icons, service worker and offline recovery page |
+| Installable mobile experience | Live PWA | `/mobile`; manifest, original app icons, live browser install affordance, device/network readiness, service worker and truthful offline recovery boundary |
 | Browser helper | Developer preview | Minimal-permission Chrome extension ZIP; not represented as Chrome Web Store approved |
 | Public developer access | Live, read-only | `/developers`, `/api/jobs/search`, downloadable CLI helper |
 | Native iOS/Android apps | Not connected | PWA covers installable mobile use; native-store builds require separate signing and review |
-| iMessage, WhatsApp and SMS | Provider gate | Requires approved provider accounts, user consent, verified sender identity and message-retention policy |
+| iMessage, WhatsApp and SMS | Product surface + provider gate | `/messaging` reports the production-derived email/channel state and explains consent/retention boundaries; delivery requires approved provider accounts, user consent and verified sender identity |
 | MCP server | Live, read-only | Downloadable Node.js MCP server; protocol-tested public search, contract detail, URL analysis and IR35 evidence tools with no account or write scope |
 | Networking and referral preparation | Live, user-controlled | `/network`; account-owned contacts, follow-up queue, role-linked editable drafts, review gate, manual copy and JSON export. No message is sent by IR35Careers |
 | Autonomous networking/referral outreach | Not connected | Social-network discovery, profile scraping and unsupervised messaging are deliberately not claimed |
@@ -37,6 +37,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Work-authorisation and sponsorship answers | Live, user-declared | Profile records UK right-to-work/sponsorship state without inferring it from nationality or CV text; the value becomes a review-required screening answer |
 | Data export and permanent account deletion | Live | `/settings`, `/api/account`; authenticated export and explicit email-confirmed deletion |
 | Pricing, changelog, AI disclosure, security and legal pages | Live | Public trust and product pages linked in the footer and sitemap |
+| Responsible vulnerability reporting | Live | `/bug-bounty`, `/security` and `/.well-known/security.txt`; good-faith rules are public and the absence of a paid reward programme is explicit |
 
 ## Release rule
 
