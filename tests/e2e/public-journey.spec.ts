@@ -189,11 +189,9 @@ test("an external job can be previewed and opened in local CV Studio", async ({ 
 test("public trust and platform surfaces are available", async ({ page }) => {
   const pages = [
     ["/pricing", "Free while the provider-backed service is being verified."],
-    ["/platforms", "One contractor workspace, across every useful screen."],
+    ["/platforms", "One contractor workspace, on every screen."],
     ["/mobile", "Your IR35 contract search, ready on any screen."],
-    ["/messaging", "Responses linked to the contract that started them."],
-    ["/developers", "Contract search, with IR35 context."],
-    ["/connections", "Every integration, in its real state."],
+    ["/messaging", "Responses linked to the right role."],
     ["/ai-disclosure", "AI and Automation Disclosure"],
     ["/security", "Security and Responsible Disclosure"],
     ["/bug-bounty", "Report a security issue safely."],
@@ -206,6 +204,10 @@ test("public trust and platform surfaces are available", async ({ page }) => {
     await dismissPrivacyNotice(page);
     await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
   }
+  await page.goto("/developers");
+  await expect(page).toHaveURL(/\/jobs(?:\?|$)/);
+  await page.goto("/connections");
+  await expect(page).toHaveURL(/\/platforms(?:\?|$)/);
   await expectNoSeriousA11yViolations(page);
 });
 
@@ -236,31 +238,37 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   expect(securityPolicy.headers()["content-type"]).toContain("text/plain");
   expect(await securityPolicy.text()).toContain("Policy: https://www.ir35careers.com/bug-bounty");
 
-  const extension = await request.get("/downloads/ir35careers-chrome-extension-v1.zip");
-  expect(extension.ok()).toBeTruthy();
-  expect(extension.headers()["content-type"]).toContain("zip");
-
-  const cli = await request.get("/downloads/ir35careers-cli.mjs");
-  expect(cli.ok()).toBeTruthy();
-  expect(await cli.text()).toContain("never submits an application");
-
-  const mcp = await request.get("/downloads/ir35careers-mcp-v1.zip");
-  expect(mcp.ok()).toBeTruthy();
-  expect(mcp.headers()["content-type"]).toContain("zip");
+  const retiredDownloads = [
+    ["/downloads/ir35careers-chrome-extension-v1.zip", "/analyse-job"],
+    ["/downloads/ir35careers-cli.mjs", "/jobs"],
+    ["/downloads/ir35careers-mcp-v1.zip", "/jobs"],
+  ] as const;
+  for (const [path, destination] of retiredDownloads) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    expect(response.headers().location).toBe(destination);
+  }
 
   const search = await request.get("/api/jobs/search?per_page=1");
   expect(search.ok()).toBeTruthy();
   const searchPayload = await search.json();
   expect(searchPayload.jobs.length).toBeGreaterThan(0);
   const firstJob = searchPayload.jobs[0];
+  const publicJobFields = new Set([
+    "id", "title", "company_name", "location", "remote_type", "ir35_status", "ir35_confidence",
+    "rate_min", "rate_max", "rate_currency", "rate_type", "skills", "posted_at", "first_seen_at",
+    "last_seen_at", "source_domain",
+  ]);
+  expect(Object.keys(firstJob).every((key) => publicJobFields.has(key))).toBe(true);
+  expect(firstJob).not.toHaveProperty("description");
+  expect(firstJob).not.toHaveProperty("apply_url");
 
   const detail = await request.get(`/api/jobs/${firstJob.id}`);
   expect(detail.ok()).toBeTruthy();
   expect((await detail.json()).job.id).toBe(firstJob.id);
 
   const connections = await request.get("/api/integrations/status");
-  expect(connections.ok()).toBeTruthy();
-  expect((await connections.json()).secret_values_exposed).toBe(false);
+  expect(connections.status()).toBe(401);
 
   const accountExport = await request.get("/api/account");
   expect(accountExport.status()).toBe(401);

@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  async redirects() {
+    return [
+      { source: "/developers", destination: "/jobs", permanent: true },
+      { source: "/connections", destination: "/platforms", permanent: true },
+      { source: "/downloads/ir35careers-cli.mjs", destination: "/jobs", permanent: true },
+      { source: "/downloads/ir35careers-mcp-v1.zip", destination: "/jobs", permanent: true },
+      { source: "/downloads/ir35careers-chrome-extension-v1.zip", destination: "/analyse-job", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

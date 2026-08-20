@@ -23,6 +23,7 @@
 import { supabase } from "@/lib/supabase";
 import { JOB_LIST_COLUMNS } from "@/lib/job-types";
 import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
+import type { JobDetail, JobListing } from "@/lib/job-types";
 import {
   hasStatedSponsorship,
   isRateTypeFilter,
@@ -37,6 +38,27 @@ export const dynamic = "force-dynamic";
 const IR35_VALUES = new Set(["inside", "outside", "unknown"]);
 const REMOTE_VALUES = new Set(["remote", "hybrid", "onsite"]);
 const SORT_VALUES = new Set(["recent", "rate_high", "rate_low"]);
+
+function toPublicListing(job: JobDetail): JobListing {
+  return {
+    id: job.id,
+    title: job.title,
+    company_name: job.company_name,
+    location: job.location,
+    remote_type: job.remote_type,
+    ir35_status: job.ir35_status,
+    ir35_confidence: job.ir35_confidence,
+    rate_min: job.rate_min,
+    rate_max: job.rate_max,
+    rate_currency: job.rate_currency,
+    rate_type: job.rate_type,
+    skills: job.skills,
+    posted_at: job.posted_at,
+    first_seen_at: job.first_seen_at,
+    last_seen_at: job.last_seen_at,
+    source_domain: job.source_domain,
+  };
+}
 
 function clampInt(value: string | null, min: number, max: number, fallback: number): number {
   const n = value === null ? NaN : parseInt(value, 10);
@@ -128,7 +150,7 @@ export async function GET(request: Request): Promise<Response> {
         : undefined;
 
     return searchResponse({
-      jobs: jobs.slice(from, from + perPage),
+      jobs: jobs.slice(from, from + perPage).map(toPublicListing),
       total,
       facets,
       page,
