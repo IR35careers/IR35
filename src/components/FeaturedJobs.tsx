@@ -1,43 +1,42 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { IR35Badge } from "@/components/ui/ir35-badge";
-import { JobCardSkeleton } from "@/components/ui/state-panel";
 import { buttonClassName } from "@/components/ui/button";
-import { formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
+import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
+import { formatPosted, formatRate, ir35EvidenceLabel, JOB_LIST_COLUMNS, type JobListing } from "@/lib/job-types";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
+import { supabase } from "@/lib/supabase";
 
-interface FeaturedResponse {
+interface FeaturedResult {
   jobs: JobListing[];
   total: number;
-  data_source?: "live" | "demo";
-  error?: string;
+  dataSource: "live" | "demo";
+  error: boolean;
 }
 
-export function FeaturedJobs() {
-  const [featured, setFeatured] = useState<JobListing[]>([]);
-  const [total, setTotal] = useState<number | null>(null);
-  const [dataSource, setDataSource] = useState<"live" | "demo" | null>(null);
-  const [jobsState, setJobsState] = useState<"loading" | "ready" | "error">("loading");
+async function loadFeaturedJobs(): Promise<FeaturedResult> {
+  if (!isSupabaseConfigured() && isDemoDataAvailable()) {
+    return { jobs: DEMO_JOBS.slice(0, 3), total: DEMO_JOBS.length, dataSource: "demo", error: false };
+  }
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/jobs/search?per_page=4", { signal: controller.signal })
-      .then(async (response) => {
-        const json = (await response.json()) as FeaturedResponse;
-        if (!response.ok || json.error) throw new Error(json.error ?? "Search unavailable");
-        setFeatured(json.jobs);
-        setTotal(json.total);
-        setDataSource(json.data_source ?? "live");
-        setJobsState("ready");
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setJobsState("error");
-      });
-    return () => controller.abort();
-  }, []);
+  try {
+    const { data, error, count } = await supabase
+      .from("jobs")
+      .select(JOB_LIST_COLUMNS, { count: "exact" })
+      .is("expired_at", null)
+      .order("posted_on", { ascending: false, nullsFirst: false })
+      .order("posted_at", { ascending: false, nullsFirst: false })
+      .order("rate_max", { ascending: false, nullsFirst: false })
+      .limit(3);
+    if (error) throw error;
+    return { jobs: (data ?? []) as JobListing[], total: count ?? 0, dataSource: "live", error: false };
+  } catch {
+    return { jobs: [], total: 0, dataSource: "live", error: true };
+  }
+}
+
+export async function FeaturedJobs() {
+  const featured = await loadFeaturedJobs();
 
   return (
     <div className="relative min-w-0">
@@ -45,8 +44,8 @@ export function FeaturedJobs() {
         <div className="flex items-center justify-between gap-4 px-2 py-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Fresh contract opportunities</p>
-            <p className="mt-1 text-sm font-medium text-slate-950" aria-live="polite">
-              {total !== null ? `${total.toLocaleString()} active roles` : jobsState === "error" ? "Live search temporarily unavailable" : "Checking the latest roles…"}
+            <p className="mt-1 text-sm font-medium text-slate-950">
+              {featured.error ? "Live search temporarily unavailable" : `${featured.total.toLocaleString()} active roles`}
             </p>
           </div>
           <Link href="/jobs" className="ir35-focus hidden min-h-10 items-center rounded-xl px-3 text-sm font-semibold text-brand-700 hover:bg-brand-50 sm:inline-flex">
@@ -54,22 +53,21 @@ export function FeaturedJobs() {
           </Link>
         </div>
 
-        {dataSource === "demo" && (
+        {featured.dataSource === "demo" && (
           <p className="mx-2 mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
             Preview data - connect Supabase to display live contracts locally.
           </p>
         )}
 
         <div className="space-y-2">
-          {jobsState === "loading" && [0, 1, 2].map((item) => <JobCardSkeleton key={item} compact />)}
-          {jobsState === "error" && (
+          {featured.error && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
               <p className="text-sm font-semibold text-slate-900">We couldn&apos;t load the preview.</p>
               <p className="mt-1 text-xs leading-5 text-slate-600">You can still open contract search and try again.</p>
               <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-4" })}>Open search</Link>
             </div>
           )}
-          {jobsState === "ready" && featured.slice(0, 3).map((job) => (
+          {!featured.error && featured.jobs.map((job) => (
             <Link
               key={job.id}
               href={`/jobs/${job.id}`}

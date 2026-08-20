@@ -72,7 +72,7 @@ export function PublicFooter() {
             <ul className="mt-3 space-y-2.5">
               {group.links.map(([label, href]) => (
                 <li key={href}>
-                  <Link href={href} className="ir35-focus rounded text-sm text-slate-600 hover:text-brand-700">
+                  <Link href={href} prefetch={false} className="ir35-focus rounded text-sm text-slate-600 hover:text-brand-700">
                     {label}
                   </Link>
                 </li>

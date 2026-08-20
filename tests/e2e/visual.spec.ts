@@ -18,9 +18,10 @@ test("public homepage visual baseline", async ({ page }) => {
   });
   await page.goto("/");
   await expect(page.getByText(/Preview data - connect Supabase/i)).toBeVisible();
+  await page.waitForTimeout(1_000);
   await expect(page).toHaveScreenshot("homepage.png", {
     animations: "disabled",
-    caret: "hide",
+    caret: "initial",
     fullPage: false,
   });
 });

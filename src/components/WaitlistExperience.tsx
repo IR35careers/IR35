@@ -140,6 +140,7 @@ export function WaitlistExperience(): ReactElement {
         </Link>
         <Link
           href="/account"
+          prefetch={false}
           className="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-[13px] font-medium text-slate-700 shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur transition-all hover:-translate-y-px hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(16,24,40,0.06)]"
         >
           Sign in / Sign up

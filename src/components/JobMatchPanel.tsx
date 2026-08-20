@@ -46,6 +46,7 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
         </p>
         <Link
           href={`/account?next=/jobs/${job.id}`}
+          prefetch={false}
           className="ir35-focus mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
         >
           Sign in to see match

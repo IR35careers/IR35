@@ -37,6 +37,7 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
     return (
       <Link
         href={`/account?next=${encodeURIComponent(`/jobs/${jobId}`)}`}
+        prefetch={false}
         className="ir35-focus inline-flex min-h-12 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-300 hover:bg-brand-50"
       >
         <Bookmark size={15} aria-hidden="true" /> Sign in to save

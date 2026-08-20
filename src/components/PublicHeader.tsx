@@ -73,12 +73,14 @@ export function PublicHeader() {
             <>
               <Link
                 href={`/account?next=${encodeURIComponent(pathname || "/dashboard")}`}
+                prefetch={false}
                 className={buttonClassName({ variant: "quiet", size: "sm", className: "hidden sm:inline-flex" })}
               >
                 Sign in
               </Link>
               <Link
                 href={`/account?mode=create&next=${encodeURIComponent(pathname || "/dashboard")}`}
+                prefetch={false}
                 className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
               >
                 <UserPlus size={15} aria-hidden="true" /> Sign up free
@@ -124,6 +126,7 @@ export function PublicHeader() {
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <Link
                   href={`/account?next=${encodeURIComponent(pathname || "/dashboard")}`}
+                  prefetch={false}
                   onClick={() => setOpen(false)}
                   className={buttonClassName({ variant: "secondary", className: "w-full" })}
                 >
@@ -131,6 +134,7 @@ export function PublicHeader() {
                 </Link>
                 <Link
                   href={`/account?mode=create&next=${encodeURIComponent(pathname || "/dashboard")}`}
+                  prefetch={false}
                   onClick={() => setOpen(false)}
                   className={buttonClassName({ variant: "primary", className: "w-full" })}
                 >

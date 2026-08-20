@@ -245,7 +245,7 @@ export function HomeExperience() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
               <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "lg", className: "border-white bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} aria-hidden="true" /></Link>
-              <Link href="/account?mode=create&next=%2Fdashboard" className={buttonClassName({ variant: "accent", size: "lg" })}>Create free account</Link>
+              <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ variant: "accent", size: "lg" })}>Create free account</Link>
             </div>
           </div>
         </section>
