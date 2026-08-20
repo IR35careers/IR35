@@ -169,7 +169,7 @@ function JobsBoard() {
   const Sidebar = (
     <div className="space-y-5">
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">IR35 status</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">IR35 status</p>
         <div className="space-y-0.5">
           <FilterOption label="Outside IR35" count={f?.outside} active={ir35 === "outside"} onClick={() => { setIr35(ir35 === "outside" ? "" : "outside"); resetPage(); }} />
           <FilterOption label="Inside IR35" count={f?.inside} active={ir35 === "inside"} onClick={() => { setIr35(ir35 === "inside" ? "" : "inside"); resetPage(); }} />
@@ -177,7 +177,7 @@ function JobsBoard() {
         </div>
       </div>
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Workplace</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Workplace</p>
         <div className="space-y-0.5">
           <FilterOption label="Remote" count={f?.remote} active={remote === "remote"} onClick={() => { setRemote(remote === "remote" ? "" : "remote"); resetPage(); }} />
           <FilterOption label="Hybrid" count={f?.hybrid} active={remote === "hybrid"} onClick={() => { setRemote(remote === "hybrid" ? "" : "hybrid"); resetPage(); }} />
@@ -185,19 +185,19 @@ function JobsBoard() {
         </div>
       </div>
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Minimum day rate</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Minimum day rate</p>
         <select value={minRate} onChange={(e) => { setMinRate(Number(e.target.value)); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
           {RATE_OPTIONS.map((r) => <option key={r} value={r}>{r === 0 ? "Any rate" : `£${r}+/day`}</option>)}
         </select>
       </div>
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Posted within</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Posted within</p>
         <select value={withinDays} onChange={(e) => { setWithinDays(Number(e.target.value)); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
           {RECENCY_OPTIONS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
         </select>
       </div>
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Skills</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Skills</p>
         <div className="flex flex-wrap gap-1.5">
           {QUICK_SKILLS.map((skill) => {
             const active = skillsLock.includes(skill);
@@ -262,7 +262,7 @@ function JobsBoard() {
             <p className="text-sm text-slate-500">
               {loading ? "Searching…" : data ? <><span className="font-semibold text-slate-800">{data.total.toLocaleString()}</span> contracts found</> : ""}
             </p>
-            {!loading && data?.generated_at && <p className="mt-0.5 text-[11px] text-slate-400">Search refreshed {new Date(data.generated_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>}
+            {!loading && data?.generated_at && <p className="mt-0.5 text-[11px] text-slate-600">Search refreshed {new Date(data.generated_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>}
           </div>
           <div className="flex items-center gap-2">
             <Link href="/analyse-job" className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-green-300 hover:text-green-700 md:inline-flex">
@@ -313,15 +313,15 @@ function JobsBoard() {
                           </p>
                           <div className="mt-3 flex flex-wrap items-center gap-1.5">
                             <RemoteTag type={job.remote_type} />
-                            {job.skills.slice(0, 5).map((s) => <span key={s} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{s}</span>)}
-                            {job.skills.length > 5 && <span className="text-xs text-slate-400">+{job.skills.length - 5}</span>}
+                            {job.skills.slice(0, 5).map((s) => <span key={s} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{s}</span>)}
+                            {job.skills.length > 5 && <span className="text-xs text-slate-600">+{job.skills.length - 5}</span>}
                           </div>
-                          <p className="mt-3 text-[11px] text-slate-400">{formatFreshness(job)}{job.source_domain ? ` · Source: ${job.source_domain.replace("www.", "")}` : ""}</p>
+                          <p className="mt-3 text-[11px] text-slate-600">{formatFreshness(job)}{job.source_domain ? ` · Source: ${job.source_domain.replace("www.", "")}` : ""}</p>
                         </div>
                         <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 pt-3 lg:flex-col lg:items-end lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
-                          {hasRate ? <span className="text-lg font-semibold tabular-nums tracking-tight sm:text-right">{formatRate(job)}</span> : <span className="text-sm text-slate-400 sm:text-right">Rate on application</span>}
+                          {hasRate ? <span className="text-lg font-semibold tabular-nums tracking-tight sm:text-right">{formatRate(job)}</span> : <span className="text-sm text-slate-600 sm:text-right">Rate on application</span>}
                           <IR35Badge status={job.ir35_status} />
-                          <span className="text-[11px] text-slate-400 sm:text-right">{ir35EvidenceLabel(job)}</span>
+                          <span className="text-[11px] text-slate-600 sm:text-right">{ir35EvidenceLabel(job)}</span>
                         </div>
                       </Link>
                     </li>
