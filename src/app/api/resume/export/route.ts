@@ -31,8 +31,8 @@ export async function POST(request: Request) {
       body = (await request.json()) as Partial<ResumeExportRequest>;
     }
     if (body.format !== "pdf" && body.format !== "docx") return invalid("Choose PDF or DOCX export.");
-    if (!body.resumeText?.trim()) return invalid("The tailored CV is empty.");
-    if (body.resumeText.length > MAX_TEXT_CHARS) return invalid("The tailored CV is too large to export.", 413);
+    if (!body.resumeText?.trim()) return invalid("The CV is empty.");
+    if (body.resumeText.length > MAX_TEXT_CHARS) return invalid("The CV is too large to export.", 413);
 
     const payload: ResumeExportRequest = {
       format: body.format,
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       versionLabel: body.versionLabel?.slice(0, 80) ?? "Approved version",
     };
     const bytes = body.format === "pdf" ? await buildResumePdf(payload) : await buildResumeDocx(payload);
-    const filename = `${safeFilename(`${payload.candidateName}-${payload.jobTitle}`)}.${body.format}`;
+    const filename = `${safeFilename(`${payload.candidateName}-CV`)}.${body.format}`;
     const responseContentType =
       body.format === "pdf"
         ? "application/pdf"

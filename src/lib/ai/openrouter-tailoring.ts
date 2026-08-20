@@ -165,7 +165,7 @@ export async function tailorResumeWithOpenRouter(input: {
             "Every suggestion.original and suggestion.evidence_quote must be exact contiguous text copied from the supplied CV.",
             "A replacement may reorder or clarify that evidence, but must not add employers, dates, technologies, responsibilities, seniority, quantities, outcomes or credentials absent from its evidence quote.",
             "Do not add missing job keywords unless the CV already evidences the same skill. Put gaps only in the requirements lists.",
-            "Write a concise cover letter using only CV evidence and job facts. Never claim an unverified skill or result.",
+            "Write a concise cover letter using only CV evidence and job facts. Never claim an unverified skill or result. End with 'Kind regards,' but do not invent or add a signature name, job label or placeholder; the verified applicant name is inserted separately.",
           ].join(" "),
         },
         {

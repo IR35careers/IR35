@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Tailor your CV to a contract | IR35Careers",
-  description: "Score, review, edit and export a role-tailored CV without inventing experience.",
+  description: "Score, review, improve and export your CV for a role without inventing experience.",
   robots: { index: false, follow: false },
 };
 

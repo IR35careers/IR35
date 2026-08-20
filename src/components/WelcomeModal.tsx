@@ -43,7 +43,7 @@ const TOUR_STEPS = [
     icon: Target,
     eyebrow: "Prepare and apply",
     title: "Follow one clear application path",
-    body: "Move from profile to role, tailored CV, approval, submission and tracking. Supported employer connections submit your approved packet from IR35Careers and return a receipt.",
+    body: "Move from profile to role, CV improvements, approval, submission and tracking. Supported employer connections submit your approved application from IR35Careers and return a receipt.",
   },
   {
     target: "profile-progress",

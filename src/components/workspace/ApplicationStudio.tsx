@@ -25,8 +25,9 @@ import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage"
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
 import { roleTypeWarning } from "@/lib/ats/submission-route";
+import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import type { JobDetail } from "@/lib/job-types";
-import { parseResumeText, scoreResumeForRole } from "@/lib/resume/analysis";
+import { scoreResumeForRole } from "@/lib/resume/analysis";
 import { getSupabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
@@ -50,12 +51,10 @@ function persistApplication(application: ApplicationRecord) {
   }));
 }
 
-function cleanExisting(application: ApplicationRecord | undefined): ApplicationRecord | null {
+function cleanExisting(application: ApplicationRecord | undefined, profileName: string): ApplicationRecord | null {
   if (!application) return null;
-  const candidateName = parseResumeText(application.sourceCvText).candidateName;
-  const coverLetter = /Kind regards,\s*\n\s*Contractor\s*$/i.test(application.coverLetter) && candidateName
-    ? application.coverLetter.replace(/Contractor\s*$/i, candidateName)
-    : application.coverLetter;
+  const candidateName = resolveCandidateName(profileName, application.sourceCvText);
+  const coverLetter = candidateName ? normaliseCoverLetterSignoff(application.coverLetter, candidateName) : application.coverLetter;
   if (application.receipt?.mode === "external_handoff") return { ...application, coverLetter };
   return { ...application, coverLetter, receipt: null };
 }
@@ -63,7 +62,7 @@ function cleanExisting(application: ApplicationRecord | undefined): ApplicationR
 export function ApplicationStudio({ job }: { job: JobDetail }) {
   const workspace = useWorkspaceState();
   const existing = workspace.applications.find((item) => item.job.id === job.id && item.id !== "app-demo-northstar");
-  const initialApplication = useMemo(() => cleanExisting(existing), [existing]);
+  const initialApplication = useMemo(() => cleanExisting(existing, workspace.profile.fullName), [existing, workspace.profile.fullName]);
   const [cvText, setCvText] = useState(initialApplication?.sourceCvText ?? "");
   const [cvFilename, setCvFilename] = useState(initialApplication?.resumeVersionLabel ?? "");
   const [application, setApplication] = useState<ApplicationRecord | null>(initialApplication);
@@ -209,10 +208,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
     const tailoredCvText = applyAiTailoringSuggestions(application.sourceCvText, selectedSuggestions);
     const score = scoreResumeForRole(tailoredCvText, job, application.resumeVersionLabel);
+    const candidateName = resolveCandidateName(workspace.profile.fullName, application.sourceCvText);
     updateApplication((current) => ({
       ...current,
       tailoredCvText,
-      coverLetter: useAiCoverLetter && aiResult.coverLetter ? aiResult.coverLetter : current.coverLetter,
+      coverLetter: useAiCoverLetter && aiResult.coverLetter && candidateName
+        ? normaliseCoverLetterSignoff(aiResult.coverLetter, candidateName)
+        : current.coverLetter,
       matchScore: score.overall,
       matchedKeywords: score.matchedKeywords,
       missingKeywords: score.missingKeywords,
@@ -222,7 +224,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       submissionApproved: false,
     }));
     setError(null);
-    setNotice(`${selectedSuggestions.length} approved edit${selectedSuggestions.length === 1 ? "" : "s"} applied to the tailored copy. Review the full text below.`);
+    setNotice(`${selectedSuggestions.length} approved edit${selectedSuggestions.length === 1 ? "" : "s"} applied to your CV. Review the full text below.`);
   };
 
   const recalculateEditedCv = () => {
@@ -382,8 +384,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-                <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Your final materials</p><h2 className="mt-1 font-semibold text-slate-950">Review the complete tailored copy</h2></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Editable</span></div>
-                <label className="mt-5 block text-sm font-semibold text-slate-900">Tailored CV<textarea value={application.tailoredCvText} onChange={(event) => updateApplication((current) => ({ ...current, tailoredCvText: event.target.value, status: "needs_review", truthApproved: false, materialsApproved: false, submissionApproved: false }))} onBlur={recalculateEditedCv} rows={14} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm font-normal leading-6" /></label>
+                <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Your final materials</p><h2 className="mt-1 font-semibold text-slate-950">Review your final CV and cover letter</h2></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Editable</span></div>
+                <label className="mt-5 block text-sm font-semibold text-slate-900">CV<textarea value={application.tailoredCvText} onChange={(event) => updateApplication((current) => ({ ...current, tailoredCvText: event.target.value, status: "needs_review", truthApproved: false, materialsApproved: false, submissionApproved: false }))} onBlur={recalculateEditedCv} rows={14} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm font-normal leading-6" /></label>
                 <label className="mt-5 block text-sm font-semibold text-slate-900">Cover letter<textarea value={application.coverLetter} onChange={(event) => updateApplication((current) => ({ ...current, coverLetter: event.target.value, status: "needs_review", materialsApproved: false, submissionApproved: false }))} rows={9} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm font-normal leading-6" /></label>
               </section>
 

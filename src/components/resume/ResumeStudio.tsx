@@ -231,7 +231,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   const [acceptedIds, setAcceptedIds] = useState<string[]>([]);
   const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
   const [tailoredText, setTailoredText] = useState("");
-  const [versionLabel, setVersionLabel] = useState("Role-tailored CV");
+  const [versionLabel, setVersionLabel] = useState("Application CV");
   const [versions, setVersions] = useState<ResumeVersion[]>([]);
   const [busy, setBusy] = useState<"parse" | "save" | "approve" | "pdf" | "docx" | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -338,7 +338,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
       jobTitle: job.title,
       companyName: job.company_name,
       sourceFilename,
-      label: versionLabel.trim() || "Role-tailored CV",
+      label: versionLabel.trim() || "Application CV",
       status,
       sourceText,
       tailoredText,
@@ -607,7 +607,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               </div>
               <label htmlFor="version-label" className="mt-6 block text-sm font-semibold text-slate-800">Version name</label>
               <input id="version-label" value={versionLabel} onChange={(event) => setVersionLabel(event.target.value)} maxLength={80} className="ir35-focus mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900" />
-              <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">Tailored CV text</label>
+              <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">CV text</label>
               <textarea id="tailored-cv" value={tailoredText} onChange={(event) => setTailoredText(event.target.value)} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-sm leading-6 text-slate-800" />
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => void persistVersion("draft")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 hover:border-slate-400 disabled:opacity-50">{busy === "save" ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save new version</button>

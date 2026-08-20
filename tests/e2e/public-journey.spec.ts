@@ -320,7 +320,7 @@ test("mobile navigation exposes all primary destinations", async ({ page }, test
   await expect(page.getByRole("link", { name: "Tools" })).toBeVisible();
 });
 
-test("CV Studio analyses, verifies, versions and exports a role-tailored CV", async ({ page, request }) => {
+test("CV Studio analyses, verifies, versions and exports a role-ready CV", async ({ page, request }) => {
   const parsed = await request.post("/api/resume/parse", {
     multipart: {
       file: {
@@ -359,12 +359,12 @@ test("CV Studio analyses, verifies, versions and exports a role-tailored CV", as
   await expect(kubernetesSuggestion.getByRole("button", { name: "Experience confirmed" })).toBeVisible();
 
   await page.getByRole("button", { name: "Build approved version" }).click();
-  const editor = page.getByLabel("Tailored CV text");
+  const editor = page.getByLabel("CV text");
   await expect(editor).toHaveValue(/VERIFIED ROLE SKILLS/);
   await expect(editor).toHaveValue(/Kubernetes/);
   await page.getByRole("button", { name: "Save new version" }).click();
   await expect(page.getByText("Draft version saved.")).toBeVisible();
-  await expect(page.getByText("Role-tailored CV").last()).toBeVisible();
+  await expect(page.getByText("Application CV").last()).toBeVisible();
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "PDF", exact: true }).click();

@@ -8,6 +8,7 @@ import {
   prepareApplication,
   reviewApplicationReceipt,
 } from "@/lib/workspace/engine";
+import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
 const job: JobDetail = {
@@ -58,6 +59,22 @@ describe("application workspace engine", () => {
     const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cv });
     expect(application.coverLetter).toMatch(/Kind regards,\nAlex Morgan$/);
     expect(application.coverLetter).not.toMatch(/Kind regards,\nContractor$/);
+  });
+
+  it("prefers the saved profile name over a different CV heading", () => {
+    const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Priya Shah" }, cvText: cv });
+    expect(application.coverLetter).toMatch(/Kind regards,\nPriya Shah$/);
+  });
+
+  it("rejects preparation when neither profile nor CV contains a real name", () => {
+    const cvWithoutName = cv.replace("Alex Morgan", "PROFESSIONAL PROFILE");
+    expect(resolveCandidateName("Contractor", cvWithoutName)).toBeNull();
+    expect(() => prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cvWithoutName })).toThrow(/Add your full name/);
+  });
+
+  it("replaces generic generated signatures with the applicant name", () => {
+    expect(normaliseCoverLetterSignoff("Dear team,\n\nI am applying.\n\nKind regards,\nContractor", "Alex Morgan")).toMatch(/Kind regards,\nAlex Morgan$/);
+    expect(normaliseCoverLetterSignoff("Dear team,\n\nI am applying.", "Alex Morgan")).toMatch(/Kind regards,\nAlex Morgan$/);
   });
 
   it("requires every answer and all approvals before issuing a receipt", () => {

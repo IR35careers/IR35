@@ -1,4 +1,5 @@
-import { analyseResumeForRole, parseResumeText } from "@/lib/resume/analysis";
+import { analyseResumeForRole } from "@/lib/resume/analysis";
+import { resolveCandidateName } from "@/lib/candidate-name";
 import type {
   ApplicationEvent,
   ApplicationQuestion,
@@ -45,14 +46,8 @@ export function buildTruthPreservingCoverLetter(
   matchedKeywords: string[],
   cvText = ""
 ): string {
-  const suppliedName = cleanLine(profile.fullName, 100);
-  const parsedName = cvText ? cleanLine(parseResumeText(cvText).candidateName, 100) : "";
-  const genericName = /^(contractor|candidate|cv|resume|curriculum vitae)$/i;
-  const name = suppliedName && !genericName.test(suppliedName)
-    ? suppliedName
-    : parsedName && !genericName.test(parsedName)
-      ? parsedName
-      : "Candidate";
+  const name = resolveCandidateName(profile.fullName, cvText);
+  if (!name) throw new Error("Add your full name to your profile or place it at the top of your CV before continuing.");
   const title = cleanLine(job.title, 160);
   const company = cleanLine(job.company_name, 120);
   const availability = cleanLine(profile.availability, 120);
@@ -130,6 +125,9 @@ export function prepareApplication(input: PrepareApplicationInput): ApplicationR
   if (cvText.length < 120) throw new Error("Add at least 120 characters of CV evidence before preparing an application.");
   if (cvText.length > MAX_CV_CHARACTERS) throw new Error("CV text is too large. Keep it below 80,000 characters.");
   if (!input.job.id || !input.job.title || !input.job.company_name) throw new Error("The role is missing required details.");
+  if (!resolveCandidateName(input.profile.fullName, cvText)) {
+    throw new Error("Add your full name to your profile or place it at the top of your CV before continuing.");
+  }
 
   const analysis = analyseResumeForRole(cvText, input.resumeVersionLabel ?? "Application CV", input.job);
   const now = new Date().toISOString();

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { submitWithProvider, submissionProviderConfig } from "@/lib/application-submission";
+import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import { buildResumePdf } from "@/lib/resume/export";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { ApplicationQuestion, ApplicationReceipt, ContractorProfile } from "@/lib/workspace/types";
@@ -73,12 +74,18 @@ export async function POST(request: Request): Promise<Response> {
     try {
       const candidate = ((profileRow?.application_profile ?? {}) as ContractorProfile);
       const resumeText = String(packet.tailored_cv_text || packet.source_cv_text || "");
+      const candidateName = resolveCandidateName(candidate.fullName || "", resumeText);
+      if (!candidateName) {
+        return Response.json({ error: "Add your full name to your Application Profile or CV before submitting.", action: "/profile" }, { status: 422, headers: NO_STORE });
+      }
+      const submissionCandidate = { ...candidate, fullName: candidateName };
+      const coverLetter = normaliseCoverLetterSignoff(String(packet.cover_letter || ""), candidateName);
       let resumeUrl: string | undefined;
       if (provider.kind === "tsenta") {
         const resumeBuffer = await buildResumePdf({
           format: "pdf",
           resumeText,
-          candidateName: candidate.fullName || "Candidate",
+          candidateName,
           jobTitle: job.title,
           companyName: job.company_name,
           versionLabel: String(packet.resume_version_label || "Application CV"),
@@ -95,9 +102,9 @@ export async function POST(request: Request): Promise<Response> {
         applicationId: String(packet.id),
         destination,
         job,
-        candidate,
+        candidate: submissionCandidate,
         resume: { label: String(packet.resume_version_label || "Application CV"), text: resumeText, url: resumeUrl },
-        coverLetter: String(packet.cover_letter || ""),
+        coverLetter,
         screeningAnswers: ((packet.screening_answers as ApplicationQuestion[]) ?? []).map(({ label, answer, source }) => ({ label, answer, source })),
       }, idempotencyKey);
       if (providerReceipt.state !== "submitted") {
