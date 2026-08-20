@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "IR35Careers",
+    name: "IR35Careers Public Beta",
     short_name: "IR35Careers",
     description: "Find and prepare for UK contract roles with IR35 status, rates and working patterns visible.",
     start_url: "/dashboard",

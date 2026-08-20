@@ -102,7 +102,7 @@ const NAV_GROUPS: Array<{
   },
   {
     label: "Communications",
-    items: [{ id: "waitlist", label: "Launch audience", icon: Mail }],
+    items: [{ id: "waitlist", label: "Beta audience", icon: Mail }],
   },
   {
     label: "System",
@@ -128,7 +128,7 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
   },
   waitlist: {
     eyebrow: "One-time notice",
-    title: "Launch audience",
+    title: "Beta audience",
     description: "Review the former waitlist retained only for the approved public-access announcement.",
   },
   runs: {
@@ -530,7 +530,7 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
     { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-50 text-emerald-700", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
     { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-blue-50 text-blue-700", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
     { label: "CV readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
-    { label: "Launch audience", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Mail, tone: "bg-amber-50 text-amber-700", detail: "Former opt-ins for one access notice", badge: "Private" },
+    { label: "Beta audience", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Mail, tone: "bg-amber-50 text-amber-700", detail: "Former opt-ins for one beta invitation", badge: "Private" },
   ];
 
   return (
@@ -631,9 +631,9 @@ function LaunchAudiencePanel({ entries, total, query }: { entries: Array<{ email
   return (
     <div className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
       <Panel title="Former waitlist recipients" description={`${formatNumber(total)} permission-based sign-ups · newest first`}>
-        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div><span className="hidden text-xs font-medium text-slate-400 sm:block">{timeAgo(entry.created_at)}</span></div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No launch recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
+        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div><span className="hidden text-xs font-medium text-slate-400 sm:block">{timeAgo(entry.created_at)}</span></div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No beta recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
       </Panel>
-      <Panel title="Launch notice" description="Prepared, but deliberately not sent."><div className="p-6"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Mail size={19} /></span><p className="mt-5 text-sm font-semibold text-slate-950">IR35Careers is now open — your access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">A branded one-time access email is ready for review. Delivery remains disabled until the final preview and recipient audit are explicitly approved.</p><span className="mt-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800">Approval required</span></div></Panel>
+      <Panel title="Beta invitation" description="Prepared, but deliberately not sent."><div className="p-6"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Mail size={19} /></span><p className="mt-5 text-sm font-semibold text-slate-950">IR35Careers public beta is open — your early access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">A branded one-time beta invitation is ready for review. Delivery remains disabled until the final preview and recipient audit are explicitly approved.</p><span className="mt-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800">Approval required</span></div></Panel>
     </div>
   );
 }

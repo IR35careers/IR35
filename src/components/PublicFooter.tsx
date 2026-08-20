@@ -23,6 +23,7 @@ const GROUPS = [
     title: "IR35Careers",
     links: [
       ["Contractor workspace", "/dashboard"],
+      ["Public beta", "/beta"],
       ["Pricing", "/pricing"],
       ["Product updates", "/blog"],
       ["Contractor stories", "/stories"],
@@ -74,7 +75,7 @@ export function PublicFooter() {
       </div>
       <div className="border-t border-slate-100">
         <div className="ir35-container flex flex-col gap-3 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} IR35Careers · Built for UK contractors.{operator && <><br />Operated by {operator.legalName}{operator.companyNumber ? ` · Company ${operator.companyNumber}` : ""}{operator.vatNumber ? ` · VAT ${operator.vatNumber}` : ""}</>}</span>
+          <span>© {new Date().getFullYear()} IR35Careers · Public beta · Built for UK contractors.{operator && <><br />Operated by {operator.legalName}{operator.companyNumber ? ` · Company ${operator.companyNumber}` : ""}{operator.vatNumber ? ` · VAT ${operator.vatNumber}` : ""}</>}</span>
           <span className="max-w-2xl sm:text-right">Job and IR35 information is educational, may be supplied by third parties and should be independently checked before you act.</span>
         </div>
       </div>

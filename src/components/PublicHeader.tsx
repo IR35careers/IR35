@@ -85,7 +85,7 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
                 prefetch={false}
                 className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
               >
-                <UserPlus size={15} aria-hidden="true" /> Sign up free
+                <UserPlus size={15} aria-hidden="true" /> Join beta
               </Link>
             </>
           )}
@@ -140,7 +140,7 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
                   onClick={() => setOpen(false)}
                   className={buttonClassName({ variant: "primary", className: "w-full" })}
                 >
-                  Sign up
+                  Join beta
                 </Link>
               </div>
             )}

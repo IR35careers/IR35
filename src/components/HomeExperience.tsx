@@ -74,7 +74,7 @@ const FAQS = [
   ["Will CV Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
   ["Does IR35Careers submit applications automatically?", "Not today. The workspace prepares materials, screening answers and a dry-run receipt. Live submission remains disabled until a supported provider, sandbox, approval token and kill switch are verified."],
   ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private CV files from Settings."],
-  ["Is there a paid plan?", "The current contractor preview is free. Paid pricing and checkout will appear only after provider-backed features and billing safeguards are production-tested."],
+  ["Is there a paid plan?", "The current public beta is free. Paid pricing and checkout will appear only after provider-backed features, billing safeguards and the beta review are complete."],
 ] as const;
 
 export function HomeExperience() {
@@ -93,7 +93,7 @@ export function HomeExperience() {
           <div className="ir35-container grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16 lg:py-24">
             <div className="min-w-0">
               <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 text-xs font-semibold text-brand-800 shadow-sm backdrop-blur">
-                <Sparkles size={13} aria-hidden="true" /> Built for UK contractors
+                <Sparkles size={13} aria-hidden="true" /> Open public beta · Built for UK contractors
               </span>
               <h1 className="mt-6 max-w-[760px] text-[2.45rem] font-bold leading-[1.04] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[3.75rem]">
                 Contract work, without the <span className="text-brand-600">IR35 guesswork.</span>
@@ -245,7 +245,7 @@ export function HomeExperience() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
               <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "lg", className: "border-white bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} aria-hidden="true" /></Link>
-              <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ variant: "accent", size: "lg" })}>Create free account</Link>
+              <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ variant: "accent", size: "lg" })}>Join the public beta</Link>
             </div>
           </div>
         </section>

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { renderLaunchOpenEmail, renderWelcomeEmail } from "@/lib/email/templates";
+import { renderBetaLaunchEmail, renderWelcomeEmail } from "@/lib/email/templates";
 import { transactionalEmailConfig } from "@/lib/email/transactional";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -12,7 +12,7 @@ describe("transactional email", () => {
       siteUrl: "https://www.ir35careers.com/",
     });
 
-    expect(email.subject).toContain("Welcome to IR35Careers");
+    expect(email.subject).toContain("Welcome to IR35Careers Beta");
     expect(email.html).toContain("Welcome, Anvesh.");
     expect(email.html).toContain('src="cid:ir35careers-mark"');
     expect(email.html).toContain('bgcolor="#effaf5"');
@@ -34,17 +34,18 @@ describe("transactional email", () => {
     expect(email.html).toContain("https://www.ir35careers.com/onboarding");
   });
 
-  it("renders the one-time public-launch notice without claiming an account already exists", () => {
-    const email = renderLaunchOpenEmail({ logoSource: "cid:ir35careers-mark" });
-    expect(email.subject).toBe("IR35Careers is now open — your access is ready");
+  it("renders the one-time public-beta invitation without claiming an account already exists", () => {
+    const email = renderBetaLaunchEmail({ logoSource: "cid:ir35careers-mark" });
+    expect(email.subject).toBe("IR35Careers public beta is open — your early access is ready");
     expect(email.html).toContain("You joined the IR35Careers waitlist");
     expect(email.html).toContain('bgcolor="#effaf5"');
-    expect(email.html).toContain("Create your free account");
+    expect(email.html).toContain("Join the public beta");
     expect(email.html).toContain("missing-keyword identification");
     expect(email.html).toContain("Nothing is submitted without your review and approval");
     expect(email.html).toContain("You have not been added to a marketing list");
     expect(email.html).not.toContain("Your account is ready");
     expect(email.text).toContain("one-time access update");
+    expect(email.text).toContain("WHAT PUBLIC BETA MEANS");
   });
 
   it("keeps delivery disabled unless the provider flag and credentials are valid", () => {

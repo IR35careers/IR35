@@ -150,7 +150,7 @@ function AccountForm() {
           ? "Sign in to manage saved contracts and alerts."
           : mode === "forgot"
             ? "Enter your account email and we will send a one-use reset link."
-            : "Start saving relevant contracts and focused searches."}
+            : "Join the public beta and start saving relevant contracts and focused searches."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">

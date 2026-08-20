@@ -25,7 +25,7 @@ export interface WelcomeEmailInput {
   siteUrl?: string;
 }
 
-export interface LaunchOpenEmailInput {
+export interface BetaLaunchEmailInput {
   logoSource?: string;
   siteUrl?: string;
 }
@@ -71,7 +71,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
   const greeting = firstName ? `Welcome, ${escapeHtml(firstName)}.` : "Welcome to IR35Careers.";
   const textGreeting = firstName ? `Welcome, ${firstName}.` : "Welcome to IR35Careers.";
 
-  const subject = "Welcome to IR35Careers — your contractor workspace is ready";
+  const subject = "Welcome to IR35Careers Beta — your workspace is ready";
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -82,7 +82,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
   <title>${subject}</title>
 </head>
 <body style="margin:0;padding:0;background:${BRAND.page};word-spacing:normal;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your IR35Careers workspace is ready. Set up your profile, analyse roles and prepare stronger applications.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your IR35Careers public-beta workspace is ready. Set up your profile, analyse roles and prepare stronger applications.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:${BRAND.page};">
     <tr><td align="center" style="padding:28px 12px;">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:${BRAND.white};border:1px solid ${BRAND.border};border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(7,17,31,.08);">
@@ -90,12 +90,13 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
             <td bgcolor="${BRAND.logoSurface}" style="vertical-align:middle;background:${BRAND.logoSurface};border:1px solid #cfeadd;border-radius:12px;padding:2px;"><img src="${logoSource}" width="38" height="38" alt="IR35Careers" style="display:block;width:38px;height:38px;border:0;border-radius:9px;"></td>
             <td style="padding-left:12px;vertical-align:middle;color:#ffffff;font-family:Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.3px;">IR35<span style="color:#a9b8c8;font-weight:600;">Careers</span></td>
+            <td style="padding-left:9px;vertical-align:middle;"><span style="display:inline-block;border:1px solid #4ba88d;border-radius:999px;padding:3px 7px;color:#9ff3d5;font-family:Arial,sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Beta</span></td>
           </tr></table>
         </td></tr>
         <tr><td style="padding:38px 30px 12px;">
-          <p style="margin:0 0 14px;color:${BRAND.green};font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Your account is ready</p>
+          <p style="margin:0 0 14px;color:${BRAND.green};font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Welcome to the public beta</p>
           <h1 style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.8px;line-height:38px;">${greeting}</h1>
-          <p style="margin:16px 0 0;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:25px;">Thanks for joining. IR35Careers helps UK contractors find relevant roles, understand what each listing actually says and prepare evidence-led applications without inventing experience.</p>
+          <p style="margin:16px 0 0;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:25px;">Thanks for joining the IR35Careers public beta. You can find relevant roles, understand what each listing actually says and prepare evidence-led applications without inventing experience.</p>
         </td></tr>
         <tr><td style="padding:22px 30px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
@@ -115,13 +116,13 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
         </td></tr>
         <tr><td style="padding:0 30px 30px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${BRAND.greenLight};border:1px solid #bfe9d9;border-radius:14px;"><tr><td style="padding:18px 20px;">
-            <p style="margin:0 0 5px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">You remain in control</p>
-            <p style="margin:0;color:#365d52;font-family:Arial,sans-serif;font-size:13px;line-height:21px;">We do not invent experience or make hiring decisions. IR35 guidance and scoring are informational, not legal or tax advice.</p>
+            <p style="margin:0 0 5px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Public beta, with you in control</p>
+            <p style="margin:0;color:#365d52;font-family:Arial,sans-serif;font-size:13px;line-height:21px;">Features may change as we improve reliability and usability. We do not invent experience or make hiring decisions. Verify job and IR35 information independently; guidance and scoring are informational, not legal or tax advice.</p>
           </td></tr></table>
         </td></tr>
         <tr><td style="border-top:1px solid ${BRAND.border};padding:26px 30px;background:#fbfdfc;">
           <p style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Thanks,<br>The IR35Careers Team</p>
-          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">Built for UK contractors.</p>
+          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">IR35Careers public beta · Built for UK contractors.</p>
           <p style="margin:0;color:#718094;font-family:Arial,sans-serif;font-size:11px;line-height:18px;">
             <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a>&nbsp;&nbsp;·&nbsp;&nbsp;
             <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a>&nbsp;&nbsp;·&nbsp;&nbsp;
@@ -137,7 +138,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
 
   const text = `${textGreeting}
 
-Thanks for joining. IR35Careers helps UK contractors find relevant roles, understand what each listing actually says and prepare evidence-led applications without inventing experience.
+Thanks for joining the IR35Careers public beta. You can find relevant roles, understand what each listing actually says and prepare evidence-led applications without inventing experience.
 
 GET STARTED
 Set up your contractor profile: ${siteUrl}/onboarding
@@ -157,11 +158,12 @@ Review truth-preserving suggestions side by side, approve edits and keep version
 5. Prepare and track applications
 Build a reviewable application pack, submit only with your approval and keep recruiter responses linked to the role when inbox features are enabled.
 
-You remain in control. We do not invent experience or make hiring decisions. IR35 guidance and scoring are informational, not legal or tax advice.
+PUBLIC BETA
+Features may change as we improve reliability and usability. We do not invent experience or make hiring decisions. Verify job and IR35 information independently; guidance and scoring are informational, not legal or tax advice.
 
 Thanks,
 The IR35Careers Team
-Built for UK contractors.
+IR35Careers public beta. Built for UK contractors.
 
 Browse contracts: ${siteUrl}/jobs
 IR35 guides: ${siteUrl}/resources
@@ -174,10 +176,10 @@ This service email was sent because you created and confirmed an IR35Careers acc
   return { subject, html, text };
 }
 
-export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailContent {
+export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailContent {
   const siteUrl = normaliseSiteUrl(input.siteUrl);
   const logoSource = escapeHtml(input.logoSource || DEFAULT_LOGO_URL);
-  const subject = "IR35Careers is now open — your access is ready";
+  const subject = "IR35Careers public beta is open — your early access is ready";
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -188,7 +190,7 @@ export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailCo
   <title>${subject}</title>
 </head>
 <body style="margin:0;padding:0;background:${BRAND.page};word-spacing:normal;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Public access is open. Create your IR35Careers account and start building your contractor workspace.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">The IR35Careers public beta is open. Create your account and help us improve the contractor workspace.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:${BRAND.page};">
     <tr><td align="center" style="padding:28px 12px;">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:${BRAND.white};border:1px solid ${BRAND.border};border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(7,17,31,.08);">
@@ -196,16 +198,17 @@ export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailCo
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
             <td bgcolor="${BRAND.logoSurface}" style="vertical-align:middle;background:${BRAND.logoSurface};border:1px solid #cfeadd;border-radius:12px;padding:2px;"><img src="${logoSource}" width="38" height="38" alt="IR35Careers" style="display:block;width:38px;height:38px;border:0;border-radius:9px;"></td>
             <td style="padding-left:12px;vertical-align:middle;color:#ffffff;font-family:Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.3px;">IR35<span style="color:#a9b8c8;font-weight:600;">Careers</span></td>
+            <td style="padding-left:9px;vertical-align:middle;"><span style="display:inline-block;border:1px solid #4ba88d;border-radius:999px;padding:3px 7px;color:#9ff3d5;font-family:Arial,sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Beta</span></td>
           </tr></table>
         </td></tr>
         <tr><td style="padding:38px 30px 12px;">
-          <p style="margin:0 0 14px;color:${BRAND.green};font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Public access is open</p>
-          <h1 style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.8px;line-height:38px;">Your IR35Careers access is ready.</h1>
-          <p style="margin:16px 0 0;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:25px;">You joined the IR35Careers waitlist to hear when access opened. You can now create an account and use the contractor workspace without a beta invitation.</p>
+          <p style="margin:0 0 14px;color:${BRAND.green};font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Public beta access is open</p>
+          <h1 style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.8px;line-height:38px;">You&apos;re invited to the IR35Careers public beta.</h1>
+          <p style="margin:16px 0 0;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:25px;">You joined the IR35Careers waitlist to hear when early access opened. You can now create a free account without an invitation code and help us improve the contractor workspace before the official launch.</p>
         </td></tr>
         <tr><td style="padding:22px 30px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
-            <a href="${siteUrl}/account?mode=create" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Create your free account&nbsp;&nbsp;→</a>
+            <a href="${siteUrl}/account?mode=create" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Join the public beta&nbsp;&nbsp;→</a>
           </td></tr></table>
           <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">Already registered? <a href="${siteUrl}/account" style="color:${BRAND.green};text-decoration:underline;">Sign in to your workspace</a>.</p>
         </td></tr>
@@ -220,13 +223,13 @@ export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailCo
         </td></tr>
         <tr><td style="padding:0 30px 30px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${BRAND.greenLight};border:1px solid #bfe9d9;border-radius:14px;"><tr><td style="padding:18px 20px;">
-            <p style="margin:0 0 5px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Clear guidance, with you in control</p>
-            <p style="margin:0;color:#365d52;font-family:Arial,sans-serif;font-size:13px;line-height:21px;">IR35Careers does not invent experience or make hiring decisions. IR35 guidance and scoring are informational, not legal or tax advice.</p>
+            <p style="margin:0 0 5px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">What public beta means</p>
+            <p style="margin:0;color:#365d52;font-family:Arial,sans-serif;font-size:13px;line-height:21px;">Core workflows are available, but features and wording may change and occasional issues may occur. Nothing is submitted without your approval. Verify job and IR35 information independently; guidance and scoring are informational, not legal or tax advice.</p>
           </td></tr></table>
         </td></tr>
         <tr><td style="border-top:1px solid ${BRAND.border};padding:26px 30px;background:#fbfdfc;">
           <p style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Thanks,<br>The IR35Careers Team</p>
-          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">Built for UK contractors.</p>
+          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">IR35Careers public beta · Built for UK contractors.</p>
           <p style="margin:0;color:#718094;font-family:Arial,sans-serif;font-size:11px;line-height:18px;">
             <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a>&nbsp;&nbsp;·&nbsp;&nbsp;
             <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a>&nbsp;&nbsp;·&nbsp;&nbsp;
@@ -240,11 +243,11 @@ export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailCo
 </body>
 </html>`;
 
-  const text = `IR35Careers is now open — your access is ready
+  const text = `IR35Careers public beta is open — your early access is ready
 
-You joined the IR35Careers waitlist to hear when access opened. You can now create an account and use the contractor workspace without a beta invitation.
+You joined the IR35Careers waitlist to hear when early access opened. You can now create a free account without an invitation code and help us improve the contractor workspace before the official launch.
 
-CREATE YOUR FREE ACCOUNT
+JOIN THE PUBLIC BETA
 ${siteUrl}/account?mode=create
 
 Already registered? Sign in: ${siteUrl}/account
@@ -263,11 +266,12 @@ Review suggested edits side by side, approve only what is accurate, keep version
 4. Prepare and track applications
 Build a reviewable application pack and keep progress organised. Nothing is submitted without your review and approval.
 
-IR35Careers does not invent experience or make hiring decisions. IR35 guidance and scoring are informational, not legal or tax advice.
+WHAT PUBLIC BETA MEANS
+Core workflows are available, but features and wording may change and occasional issues may occur. Nothing is submitted without your approval. Verify job and IR35 information independently; guidance and scoring are informational, not legal or tax advice.
 
 Thanks,
 The IR35Careers Team
-Built for UK contractors.
+IR35Careers public beta. Built for UK contractors.
 
 Browse contracts: ${siteUrl}/jobs
 IR35 guides: ${siteUrl}/resources
