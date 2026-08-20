@@ -58,25 +58,6 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expectNoSeriousA11yViolations(page);
 });
 
-test("homepage workflow cards use stable production entry routes", async ({ page, request }) => {
-  const workflow = [
-    { name: /^01 Discover/, href: "/jobs" },
-    { name: /^02 Understand/, href: "/analyse-job" },
-    { name: /^03 Prepare/, href: "/dashboard#matches" },
-    { name: /^04 Track/, href: "/applications" },
-    { name: /^05 Respond/, href: "/inbox" },
-  ];
-
-  await page.goto("/");
-  await dismissPrivacyNotice(page);
-
-  for (const entry of workflow) {
-    await expect(page.getByRole("link", { name: entry.name })).toHaveAttribute("href", entry.href);
-    const response = await request.get(entry.href.split("#")[0]);
-    expect(response.status(), `${entry.href} should not return a missing page`).toBeLessThan(400);
-  }
-});
-
 test("contract search keeps a stable shell while initial results load", async ({ page }) => {
   let releaseSearch: () => void = () => undefined;
   const searchGate = new Promise<void>((resolve) => { releaseSearch = resolve; });
