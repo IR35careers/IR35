@@ -285,7 +285,7 @@ function JobsBoard() {
         <div className="mb-6 max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p>
           <h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the original listing.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the full role and prepare your application.</p>
         </div>
 
         {data?.data_source === "demo" && (
@@ -418,7 +418,7 @@ function JobsPageSkeleton() {
     <div className="min-h-screen bg-slate-50 text-slate-900" aria-busy="true">
       <PublicHeader />
       <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
-        <div className="mb-6 max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p><h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1><p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the original listing.</p></div>
+        <div className="mb-6 max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p><h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1><p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the full role and prepare your application.</p></div>
         <div className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white sm:h-14" aria-hidden="true" />
         <div className="mt-16 grid gap-6 lg:grid-cols-[260px_1fr]"><div className="hidden h-[420px] animate-pulse rounded-2xl border border-slate-200 bg-white lg:block" aria-hidden="true" /><div className="space-y-3" role="status" aria-label="Loading contracts"><span className="sr-only">Loading contracts</span>{Array.from({ length: 5 }, (_, index) => <JobCardSkeleton key={index} />)}</div></div>
       </main>

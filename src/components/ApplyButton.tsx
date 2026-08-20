@@ -2,21 +2,20 @@
 
 /**
  * Apply button for job detail pages.
- * Direct link to the original listing for every visitor. Personal actions
- * such as saving and match scoring remain authenticated.
+ * Starts the application inside IR35Careers. The reviewed packet can be sent
+ * only when the employer's submission connection is verified.
  */
 
-import { ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { Send } from "lucide-react";
 
 export function ApplyButton({
-  applyUrl,
+  jobId,
   sourceDomain,
 }: {
-  applyUrl: string;
+  jobId: string;
   sourceDomain: string;
 }) {
-  const domainLabel = sourceDomain.replace("www.", "");
-
   if (sourceDomain === "demo.ir35careers.local") {
     return (
       <div>
@@ -36,16 +35,14 @@ export function ApplyButton({
 
   return (
     <div>
-      <a
-        href={applyUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={`/applications/new/${jobId}`}
         className="ir35-focus inline-flex min-h-12 items-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
       >
-        Apply on {domainLabel} <ExternalLink size={14} />
-      </a>
+        Apply with IR35Careers <Send size={14} aria-hidden="true" />
+      </Link>
       <p className="mt-2 text-xs text-slate-600">
-        Opens the original listing. Review its details before submitting.
+        Prepare, approve and submit without leaving your workspace when this employer connection is supported.
       </p>
     </div>
   );

@@ -11,6 +11,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
+import { resolvePostAuthPath } from "@/lib/auth-routing";
 
 interface AuthResult {
   error: string | null;
@@ -22,7 +23,7 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
-  signUpWithPassword: (email: string, password: string) => Promise<AuthResult>;
+  signUpWithPassword: (email: string, password: string, next?: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   signInWithGoogle: (next?: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
@@ -153,13 +154,14 @@ async function signInWithPassword(email: string, password: string): Promise<Auth
   return { error: error ? error.message : null };
 }
 
-async function signUpWithPassword(email: string, password: string): Promise<AuthResult> {
+async function signUpWithPassword(email: string, password: string, next = "/dashboard"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
   const { data, error } = await getSupabase().auth.signUp({
     email: email.trim().toLowerCase(),
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}${resolvePostAuthPath(next)}`,
       data: {
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-08-20",
@@ -181,7 +183,7 @@ async function signInWithGoogle(next = "/dashboard"): Promise<AuthResult> {
   const { getSupabase } = await import("@/lib/supabase");
   const { error } = await getSupabase().auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${window.location.origin}${next}` },
+    options: { redirectTo: `${window.location.origin}${resolvePostAuthPath(next)}` },
   });
   return { error: error ? error.message : null };
 }

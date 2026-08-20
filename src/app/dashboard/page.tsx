@@ -68,6 +68,31 @@ function IR35Chip({ status }: { status: JobListing["ir35_status"] }) {
   return <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500">IR35: TBC</span>;
 }
 
+function starterProfile(userId: string, email: string | undefined, fullName: string | undefined): Profile {
+  return {
+    id: userId,
+    full_name: fullName?.trim() || email?.split("@")[0] || "",
+    target_rate_min: null,
+    preferred_ir35: "either",
+    preferred_remote: "any",
+    skills: [],
+    cv_path: null,
+    cv_filename: null,
+    phone: null,
+    linkedin_url: null,
+    job_title: null,
+    years_experience: null,
+  };
+}
+
+function uniqueTrackedJobs(items: Array<{ status: string; job: JobListing }>): Array<{ status: string; job: JobListing }> {
+  const byJob = new Map<string, { status: string; job: JobListing }>();
+  items.forEach((item) => {
+    if (!byJob.has(item.job.id)) byJob.set(item.job.id, item);
+  });
+  return Array.from(byJob.values());
+}
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -94,11 +119,10 @@ export default function DashboardPage() {
     }
     if (!user) return;
     getProfile(user.id).then((p) => {
-      setProfile(p);
+      setProfile(p ?? starterProfile(user.id, user.email, typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : undefined));
       setChecked(true);
-      if (!p) router.replace("/onboarding");
     });
-  }, [user, router, preview]);
+  }, [user, preview]);
 
   useEffect(() => {
     if (!profile || profile.skills.length === 0) return;
@@ -113,7 +137,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (preview) {
       setLiveTotal(DEMO_JOBS.length);
-      setTracked(workspace.applications.map((application) => ({ status: application.status, job: application.job })));
+      setTracked(uniqueTrackedJobs(workspace.applications.map((application) => ({ status: application.status, job: application.job }))));
       return;
     }
     if (!user) return;
@@ -128,7 +152,7 @@ export default function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(10)
       .then(({ data }: { data: Array<{ status: string; jobs: unknown }> | null }) => {
-        setTracked((data ?? []).filter((r) => r.jobs).map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing })));
+        setTracked(uniqueTrackedJobs((data ?? []).filter((r) => r.jobs).map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing }))));
       });
   }, [user, preview, workspace.applications]);
 
@@ -167,7 +191,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]">
-      <WelcomeModal name={name} />
+      <WelcomeModal name={name} userId={user?.id ?? PREVIEW_PROFILE.id} />
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         {/* Greeting + search */}
@@ -178,7 +202,7 @@ export default function DashboardPage() {
             </h1>
             <p className="mt-1 text-sm text-slate-500">Here&apos;s your contract overview.</p>
           </div>
-          <form onSubmit={onSearch} className="relative w-full lg:w-[420px]">
+          <form onSubmit={onSearch} className="relative w-full lg:w-[420px]" data-tour="dashboard-search">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="search" value={q} onChange={(e) => setQ(e.target.value)}
@@ -287,7 +311,7 @@ export default function DashboardPage() {
 
           {/* Right rail */}
           <div className="space-y-6">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6" data-tour="profile-progress">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-slate-800">Profile strength</h2>
                 <Link href="/profile" className="text-xs font-semibold text-green-700 hover:underline">Edit</Link>

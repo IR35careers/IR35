@@ -197,8 +197,15 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     setNotice(null);
     try {
       const { data } = await getSupabase().auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) throw new Error("Sign in again before submitting.");
+      const session = data.session;
+      const token = session?.access_token;
+      if (!session || !token) throw new Error("Sign in again before submitting.");
+      const workspaceSnapshot = {
+        ...workspace,
+        applications: [application, ...workspace.applications.filter((item) => item.id !== application.id)],
+      };
+      const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
+      await saveCloudWorkspace(session.user.id, workspaceSnapshot);
       const response = await fetch("/api/applications/submit", {
         method: "POST",
         headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -393,22 +400,22 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_290px]">
                   <div className="p-5 sm:p-6">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Final handoff</p>
-                    <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Submit only the packet you approved</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Live submission becomes available only when an authorised provider is connected. Otherwise, continue on the original listing and keep this packet as your reviewed source of truth.</p>
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Apply from IR35Careers with the packet you approved</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">A supported employer connection sends the exact reviewed CV and answers from this workspace and returns an ATS receipt. Unsupported destinations remain safely queued here and are never falsely marked as submitted.</p>
                     <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       {submissionProvider === "connected" && application.status !== "applied" ? (
-                        <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !approvalsComplete || !answersReviewed} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"><Send size={16} />{busy === "submit" ? "Submitting securely…" : "Submit approved application"}</button>
+                        <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !approvalsComplete || !answersReviewed} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"><Send size={16} />{busy === "submit" ? "Applying securely…" : "Apply now with approved packet"}</button>
                       ) : application.status === "applied" && application.receipt?.mode === "external_handoff" ? (
                         <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-50 px-4 text-sm font-bold text-emerald-900"><CheckCircle2 size={17} /> Submitted with receipt</span>
                       ) : (
-                        <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700">Open original listing <ExternalLink size={15} /></a>
+                        <span aria-disabled="true" className="inline-flex min-h-12 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-5 text-sm font-bold text-amber-900"><LockKeyhole size={15} /> Employer connection required</span>
                       )}
                       <Link href="/applications" className="ir35-focus inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 hover:border-brand-300">View all applications</Link>
                     </div>
                   </div>
                   <aside className={`border-t p-5 lg:border-l lg:border-t-0 sm:p-6 ${submissionProvider === "connected" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
-                    <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionProvider === "connected" ? "text-emerald-700" : "text-amber-800"}`}>{submissionProvider === "loading" ? "Checking provider" : submissionProvider === "connected" ? "Provider connected" : "Manual submission"}</p>
-                    <p className={`mt-3 text-sm font-semibold ${submissionProvider === "connected" ? "text-emerald-950" : "text-amber-950"}`}>{submissionProvider === "connected" ? "Approval, idempotency and receipts are enforced server-side." : "No automatic submission will be attempted from this screen."}</p>
+                    <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionProvider === "connected" ? "text-emerald-700" : "text-amber-800"}`}>{submissionProvider === "loading" ? "Checking employer connection" : submissionProvider === "connected" ? "Direct apply connected" : "Connection unavailable"}</p>
+                    <p className={`mt-3 text-sm font-semibold ${submissionProvider === "connected" ? "text-emerald-950" : "text-amber-950"}`}>{submissionProvider === "connected" ? "One click sends only this approved packet. Duplicate submissions are blocked and the ATS receipt is saved." : "Your reviewed packet stays in IR35Careers until this employer has a verified submission route."}</p>
                   </aside>
                 </div>
               </section>
@@ -479,7 +486,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
           <section className="rounded-[28px] border border-slate-200 bg-white p-5 text-sm text-slate-600">
             <p className="font-semibold text-slate-900">Submission method</p>
-            <p className="mt-2 leading-6">{submissionProvider === "connected" ? "An authorised provider is connected. Submission still requires your final explicit approval." : "Use the original listing until an authorised submission provider is connected."}</p>
+            <p className="mt-2 leading-6">{submissionProvider === "connected" ? "Direct apply is connected. Your final click submits the approved packet and stores the provider receipt." : "Direct apply is waiting for a verified employer or ATS connection. This role remains inside your workspace and is not marked as applied."}</p>
           </section>
         </aside>
       </div>

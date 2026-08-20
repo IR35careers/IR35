@@ -4,7 +4,7 @@ Reviewed: 2026-08-19
 
 ## Outcome
 
-The first useful IR35Careers journey is implemented end to end: a contractor can land on the product, search or filter contracts, compare status/rate/location evidence, open a detail page and follow the original listing. Saving remains a personal action and therefore presents an explicit sign-in return path.
+The first useful IR35Careers journey is implemented end to end: a contractor can land on the product, search or filter contracts, compare status/rate/location evidence, open a detail page and begin a reviewed application inside IR35Careers. Saving remains a personal action and therefore presents an explicit sign-in return path. Direct submission still requires a verified employer/ATS connection and an explicit user approval.
 
 When Supabase is absent in development, six production-shaped fixtures exercise the same API and UI contracts. Every fixture is labelled preview data, uses `demo.ir35careers.local`, and cannot submit an application. Production never uses this fallback.
 

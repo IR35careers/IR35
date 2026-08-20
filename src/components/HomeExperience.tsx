@@ -20,6 +20,7 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { FeaturedJobs } from "@/components/FeaturedJobs";
 import { buttonClassName } from "@/components/ui/button";
+import { AuthenticatedHomeRedirect } from "@/components/AuthenticatedHomeRedirect";
 
 const PRINCIPLES = [
   {
@@ -72,7 +73,7 @@ const FAQS = [
   ["How does IR35Careers find contracts?", "Authorised job-board APIs and public employer ATS feeds are normalised, deduplicated and refreshed. Every result keeps its original source link and last-seen evidence."],
   ["Does an Outside IR35 label guarantee the status?", "No. The label reports what the advert explicitly says. The client determination and the real working practices still matter, so TBC is shown when no clear status was found."],
   ["Will CV Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
-  ["Does IR35Careers submit applications automatically?", "Not today. The workspace prepares materials, screening answers and a dry-run receipt. Live submission remains disabled until a supported provider, sandbox, approval token and kill switch are verified."],
+  ["Can I apply without leaving IR35Careers?", "Yes for employers with a verified ATS connection: review the tailored packet, approve it and choose Apply now. Unsupported destinations stay queued in your workspace and are never falsely shown as submitted."],
   ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private CV files from Settings."],
   ["Is there a paid plan?", "The current public beta is free. Paid pricing and checkout will appear only after provider-backed features, billing safeguards and the beta review are complete."],
 ] as const;
@@ -80,6 +81,7 @@ const FAQS = [
 export function HomeExperience() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f6f8f7] text-slate-950">
+      <AuthenticatedHomeRedirect />
       <PublicHeader />
 
       <main>
@@ -185,7 +187,7 @@ export function HomeExperience() {
 
         <section className="border-y border-slate-200 bg-slate-950 py-16 text-white sm:py-20">
           <div className="ir35-container">
-            <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">The contractor workspace</p><h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Discover, prepare and track—with you in control.</h2><p className="mt-4 text-base leading-7 text-slate-300">The core review workflow is connected end to end. External submission, mail forwarding and payments stay behind visible provider and approval gates.</p></div>
+            <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">The contractor workspace</p><h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Discover, prepare and track—with you in control.</h2><p className="mt-4 text-base leading-7 text-slate-300">The review workflow stays inside IR35Careers end to end. Direct submission is enabled only for verified employer connections and only after your approval.</p></div>
             <div className="mt-10 grid gap-3 md:grid-cols-5">
               {WORKFLOW.map((step, index) => <Link key={step.title} href={step.href} className="ir35-focus group rounded-2xl border border-white/10 bg-white/5 p-5 transition-colors hover:border-emerald-300/50 hover:bg-white/10"><div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={19} /></span><span className="text-xs font-bold text-slate-300">0{index + 1}</span></div><h3 className="mt-5 font-semibold">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-300">{step.body}</p><span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-emerald-300">Open <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span></Link>)}
             </div>

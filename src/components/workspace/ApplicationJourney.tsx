@@ -28,11 +28,11 @@ export function ApplicationJourney({ profileReady, applications }: { profileRead
       : !approved
         ? { title: `Review ${current?.job.title ?? "your application"}`, body: "Check the tailored CV, missing keywords, cover letter and screening answers before approval.", href: `/applications/new/${current?.job.id}`, action: "Continue review" }
         : !submitted
-          ? { title: "Your approved packet is ready", body: "Submit through a connected provider, or use the original listing and record the outcome.", href: `/applications/new/${current?.job.id}`, action: "Open approved packet" }
+          ? { title: "Your approved packet is ready", body: "Apply from IR35Careers when the employer connection is verified. Otherwise the packet remains safely queued here.", href: `/applications/new/${current?.job.id}`, action: "Open approved packet" }
           : { title: "Track the employer response", body: "Keep recruiter messages, interviews and next actions tied to the application.", href: "/applications", action: "Open applications" };
 
   return (
-    <section className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card" aria-labelledby="journey-title">
+    <section className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card" aria-labelledby="journey-title" data-tour="application-journey">
       <div className="grid gap-5 bg-slate-950 p-5 text-white sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-emerald-300">Your next best action</p>

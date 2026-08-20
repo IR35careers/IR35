@@ -34,7 +34,7 @@ Indicative expert assessment, based only on observable evidence:
 | Application journey | Live | Find, prepare, approve, handoff and track now share one visible progression |
 | Application tracker and analytics | Live | Account-owned status and event history; employer responses require email delivery |
 | Live job-monitor preview | Live after this release | Uses current jobs and the signed-in profile, not hard-coded production demo scores |
-| Automatic application submission | Backend-ready, provider-gated | Server queue, explicit approval, idempotency and receipts exist; no authorised gateway is connected |
+| Automatic application submission | Backend-ready, provider-gated | Server queue, explicit approval, idempotency and receipts exist; the UI stays inside IR35Careers and unsupported roles remain queued, but no authorised gateway is connected |
 | Recruiter inbox | Backend-ready, provider-gated | Signed inbound route and private alias activation exist; DNS/provider values are still required |
 | Personal-email forwarding | Not connected | Deliberately no longer shown as a working toggle |
 | Email job-alert delivery | Not connected | Saved alerts and current-match previews work; scheduled outbound delivery still needs a provider and scheduler |

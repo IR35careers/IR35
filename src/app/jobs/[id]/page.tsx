@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { ArrowLeft, MapPin, Clock, PoundSterling, Building2, Briefcase, ClipboardCheck, WandSparkles } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, PoundSterling, Building2, Briefcase, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
 import { IR35EvidencePanel } from "@/components/IR35EvidencePanel";
 import { SaveJobButton } from "@/components/SaveJobButton";
@@ -89,19 +89,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <Link
-              href={`/applications/new/${job.id}`}
-              className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-card hover:bg-brand-700"
-            >
-              <ClipboardCheck size={16} aria-hidden="true" /> Prepare application
-            </Link>
+            <ApplyButton jobId={job.id} sourceDomain={job.source_domain} />
             <Link
               href={`/jobs/${job.id}/resume`}
               className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-800 shadow-card hover:bg-brand-100"
             >
               <WandSparkles size={16} aria-hidden="true" /> Tailor CV to this role
             </Link>
-            <ApplyButton applyUrl={job.apply_url} sourceDomain={job.source_domain} />
             <SaveJobButton jobId={job.id} />
           </div>
         </header>
@@ -153,8 +147,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <h2 className="text-sm font-semibold text-slate-800">{job.company_name}</h2>
               </div>
               <p className="mt-2 text-sm text-slate-600">
-                This role is advertised via {job.source_domain.replace("www.", "")}. Applications open on the
-                original listing. IR35Careers never sits between you and the client.
+                This role is advertised via {job.source_domain.replace("www.", "")}. IR35Careers keeps the source
+                reference for accuracy while your CV review, answers, approval and supported submission stay in this workspace.
               </p>
             </section>
           </div>

@@ -9,12 +9,13 @@ import { ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
 import { Brand } from "@/components/ui/brand";
+import { resolvePostAuthPath } from "@/lib/auth-routing";
 
 function AccountForm() {
   const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  const next = resolvePostAuthPath(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"sign-in" | "create" | "forgot">(
@@ -73,7 +74,7 @@ function AccountForm() {
       return;
     }
 
-    const signUp = await signUpWithPassword(email, password);
+    const signUp = await signUpWithPassword(email, password, next);
     if (signUp.error) {
       setError(
         /already registered|already exists|user already/i.test(signUp.error)
@@ -264,7 +265,7 @@ function AccountForm() {
       </button>}
 
       <p className="mt-4 text-center text-xs leading-5 text-slate-600">
-        We use your account to save contracts and searches. Applications still happen on the original listing. Read our <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">Privacy Notice</Link>.
+        We use your account to save contracts, searches and reviewed application packets. Submission happens only from IR35Careers when an employer connection is verified and you approve it. Read our <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">Privacy Notice</Link>.
       </p>
     </div>
   );
