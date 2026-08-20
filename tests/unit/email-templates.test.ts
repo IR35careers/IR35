@@ -15,6 +15,7 @@ describe("transactional email", () => {
     expect(email.subject).toContain("Welcome to IR35Careers");
     expect(email.html).toContain("Welcome, Anvesh.");
     expect(email.html).toContain('src="cid:ir35careers-mark"');
+    expect(email.html).toContain('bgcolor="#effaf5"');
     expect(email.html).toContain("https://www.ir35careers.com/onboarding");
     expect(email.html).toContain("truth-preserving");
     expect(email.html).toContain("The IR35Careers Team");
@@ -37,6 +38,7 @@ describe("transactional email", () => {
     const email = renderLaunchOpenEmail({ logoSource: "cid:ir35careers-mark" });
     expect(email.subject).toBe("IR35Careers is now open — your access is ready");
     expect(email.html).toContain("You joined the IR35Careers waitlist");
+    expect(email.html).toContain('bgcolor="#effaf5"');
     expect(email.html).toContain("Create your free account");
     expect(email.html).toContain("missing-keyword identification");
     expect(email.html).toContain("Nothing is submitted without your review and approval");

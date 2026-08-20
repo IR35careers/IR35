@@ -1,6 +1,10 @@
-const CACHE_NAME = "ir35careers-shell-v1";
+const CACHE_NAME = "ir35careers-shell-v2";
 const OFFLINE_URL = "/offline";
-const STATIC_URLS = [OFFLINE_URL, "/images/generated/brand/ir35careers-mark-256.png"];
+const STATIC_URLS = [
+  OFFLINE_URL,
+  "/images/generated/brand/ir35careers-mark-256.png",
+  "/images/generated/brand/ir35careers-app-icon-256.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_URLS)));

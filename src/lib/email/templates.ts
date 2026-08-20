@@ -7,6 +7,7 @@ const BRAND = {
   border: "#dbe5e1",
   page: "#f3f7f5",
   white: "#ffffff",
+  logoSurface: "#effaf5",
 };
 
 const DEFAULT_SITE_URL = "https://www.ir35careers.com";
@@ -87,7 +88,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:${BRAND.white};border:1px solid ${BRAND.border};border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(7,17,31,.08);">
         <tr><td style="background:${BRAND.navy};padding:24px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
-            <td style="vertical-align:middle;"><img src="${logoSource}" width="42" height="42" alt="IR35Careers" style="display:block;width:42px;height:42px;border:0;border-radius:10px;"></td>
+            <td bgcolor="${BRAND.logoSurface}" style="vertical-align:middle;background:${BRAND.logoSurface};border:1px solid #cfeadd;border-radius:12px;padding:2px;"><img src="${logoSource}" width="38" height="38" alt="IR35Careers" style="display:block;width:38px;height:38px;border:0;border-radius:9px;"></td>
             <td style="padding-left:12px;vertical-align:middle;color:#ffffff;font-family:Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.3px;">IR35<span style="color:#a9b8c8;font-weight:600;">Careers</span></td>
           </tr></table>
         </td></tr>
@@ -193,7 +194,7 @@ export function renderLaunchOpenEmail(input: LaunchOpenEmailInput = {}): EmailCo
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;background:${BRAND.white};border:1px solid ${BRAND.border};border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(7,17,31,.08);">
         <tr><td style="background:${BRAND.navy};padding:24px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
-            <td style="vertical-align:middle;"><img src="${logoSource}" width="42" height="42" alt="IR35Careers" style="display:block;width:42px;height:42px;border:0;border-radius:10px;"></td>
+            <td bgcolor="${BRAND.logoSurface}" style="vertical-align:middle;background:${BRAND.logoSurface};border:1px solid #cfeadd;border-radius:12px;padding:2px;"><img src="${logoSource}" width="38" height="38" alt="IR35Careers" style="display:block;width:38px;height:38px;border:0;border-radius:9px;"></td>
             <td style="padding-left:12px;vertical-align:middle;color:#ffffff;font-family:Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.3px;">IR35<span style="color:#a9b8c8;font-weight:600;">Careers</span></td>
           </tr></table>
         </td></tr>
