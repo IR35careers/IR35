@@ -23,7 +23,7 @@ The local preview is fully exercisable without credentials and is explicitly lab
 | Private email/inbox | Alias model, inbox UI, deterministic classification, application linking and signed idempotent inbound endpoint | Inbound domain and forwarding provider not connected |
 | Auto-apply settings | Match, rate, IR35, workplace, company exclusion and daily-limit rules with decision log | Enforced dry-run-only and human approval |
 | Profile | Personal details, work authorisation, availability, clearance, limited-company details, document and forwarding defaults | Cloud sync requires Supabase migration 010 |
-| Billing | Plan/entitlement model and honest disabled checkout UI | Pricing and billing provider not approved |
+| Billing | Hosted Stripe Checkout, customer portal, explicit pre-checkout consent, signed webhook ledger, account-owned entitlement updates, sandbox-safe access and a public billing/cancellation policy | Disabled until migration 011, delivered plan benefits, approved pricing and provider acceptance tests pass |
 | Networking and referrals | Account-owned contact map, follow-up queue, application-linked editable drafts, explicit review and manual copy | No contact discovery, scraping or automated messaging |
 | MCP developer access | Downloadable read-only server for public job search, detail, URL analysis and evidence explanation | No account, CV, messaging or submission permission |
 | Research/blog/contact/stories | Research hub, update feed, private contact storage and consent-only testimonial publishing | Editorial admin and real consented content remain launch work |
@@ -42,16 +42,16 @@ The local preview is fully exercisable without credentials and is explicitly lab
 
 ## Provider gates
 
-### Ready for credentials after migration 010
+### Ready for credentials after the named migration
 
 - Supabase URL, anon key and secret key for authenticated state, ingestion and private contact storage.
 - Reed and/or Adzuna read credentials for authorised live contract feeds.
+- Stripe sandbox credentials after migration 011 and approval of the exact plan price, interval and VAT copy. Production enablement additionally requires the live acceptance gate in `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md`.
 
 ### Not ready for live credentials
 
 - ATS submission: requires a named provider, sandbox employer, field capability contract, CAPTCHA/login handoff, final approval token, receipt and kill switch.
 - Inbound email: the normalised signed webhook exists, but a provider adapter, inbound domain, retention job and forwarding delivery need staging verification.
-- Billing: requires approved pricing, sandbox checkout, signed webhook, cancellation/refund policy and idempotent entitlement processing.
 - Generative AI: not required. Any future provider must pass structured-output, redaction, grounding, injection and cost controls.
 
 ## Local verification path

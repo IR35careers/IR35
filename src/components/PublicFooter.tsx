@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Brand } from "@/components/ui/brand";
+import { legalOperatorConfig } from "@/lib/legal/operator";
 
 const GROUPS = [
   {
@@ -40,6 +41,7 @@ const GROUPS = [
     links: [
       ["Privacy notice", "/privacy"],
       ["Cookie policy", "/cookies"],
+      ["Billing & refunds", "/billing-policy"],
       ["Terms of use", "/terms"],
       ["Accessibility", "/accessibility"],
       ["AI disclosure", "/ai-disclosure"],
@@ -51,6 +53,7 @@ const GROUPS = [
 ] as const;
 
 export function PublicFooter() {
+  const operator = legalOperatorConfig();
   return (
     <footer className="border-t border-slate-200 bg-white">
       <div className="ir35-container grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.2fr_repeat(4,minmax(0,auto))] lg:gap-10 xl:gap-14">
@@ -80,7 +83,7 @@ export function PublicFooter() {
       </div>
       <div className="border-t border-slate-100">
         <div className="ir35-container flex flex-col gap-3 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} IR35Careers · Built for UK contractors.</span>
+          <span>© {new Date().getFullYear()} IR35Careers · Built for UK contractors.{operator && <><br />Operated by {operator.legalName}{operator.companyNumber ? ` · Company ${operator.companyNumber}` : ""}{operator.vatNumber ? ` · VAT ${operator.vatNumber}` : ""}</>}</span>
           <span className="max-w-2xl sm:text-right">Job and IR35 information is educational, may be supplied by third parties and should be independently checked before you act.</span>
         </div>
       </div>

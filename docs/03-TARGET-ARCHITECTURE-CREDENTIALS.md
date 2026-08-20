@@ -12,6 +12,7 @@ Next.js public and member UI
       -> deterministic CV analysis and export service
       -> optional AI provider adapter (disabled by default)
       -> application provider adapters (dry-run by default)
+      -> Stripe hosted checkout, portal and signed webhook adapter (disabled by default)
     -> audit events, metrics and error reporting
 ```
 
@@ -47,6 +48,8 @@ Each external provider implements a narrow interface with timeouts, rate limits,
 
 Flags must default to the safe/off state for integrations that can send, submit, charge or expose user data.
 
+`ENABLE_BILLING` and `BILLING_RELEASE_APPROVED` control new sales only. Once Stripe has been used, keep the server-side Stripe credentials available during a sales pause so the customer portal, signed cancellation/failure webhooks and charge-safe account deletion continue to work.
+
 The current CV Studio does not require an AI provider. PDF/DOCX extraction, the published scoring rubric, conservative wording cleanup, explicit keyword verification, side-by-side approval, versioning and export are deterministic. `ENABLE_RESUME_AI` remains reserved for a future optional provider; it must not bypass evidence or approval controls.
 
 ## Credentials - request only at the relevant gate
@@ -69,7 +72,7 @@ The current CV Studio does not require an AI provider. PDF/DOCX extraction, the 
 | Inbound application mailbox | Provider signing secret, inbound domain, encryption key | Request after per-user alias, retention and webhook replay tests exist; disabled before that |
 | Google/Microsoft mailbox | OAuth client ID/secret and callback URL | Request only for an explicit connect-email feature; never ask for mailbox passwords |
 | Text AI | `AI_API_KEY`, model IDs | Request after structured schemas, truthfulness checks, redaction and cost limits pass; deterministic mock before that |
-| Billing | Sandbox secret and webhook secret | Request after product/pricing approval and entitlement model; sandbox only |
+| Billing | Stripe values plus `NEXT_PUBLIC_PRO_PLAN_PRICE_LABEL`, `NEXT_PUBLIC_PRO_PLAN_FEATURES`, `BILLING_RELEASE_APPROVED`, and the public legal-operator values documented in `.env.local.example` | Apply migration 011 and approve the delivered benefits plus exact GBP interval/VAT copy first; test mode cannot grant Pro, and production remains off until a signed live event passes |
 | Error monitoring | DSN and server token | Request before staging release; local structured logger before that |
 | Visual regression/device cloud | Project token | Optional after local baselines; local screenshots remain available |
 
@@ -85,6 +88,18 @@ The current CV Studio does not require an AI provider. PDF/DOCX extraction, the 
 - Authentication: production Supabase callback under `https://ir35careers.com/auth/callback` if a server callback route is introduced.
 - Mailbox OAuth: `https://ir35careers.com/api/integrations/email/callback`.
 - Inbound email: `https://ir35careers.com/api/webhooks/email/inbound`.
-- Billing: `https://ir35careers.com/api/webhooks/billing`.
+- Billing: `https://ir35careers.com/api/integrations/billing/webhook`.
 
 Exact URLs must not be registered until the matching routes, signature validation and staging smoke tests exist.
+
+## Stripe billing acceptance gate
+
+1. Apply `supabase/migrations/011_billing_provider.sql` and confirm browser roles cannot update provider entitlement columns or read the webhook ledger.
+2. Publish the operator's real legal name, geographic/service address and monitored privacy email; add company, VAT and ICO numbers where applicable. Checkout fails closed without the three required identity values.
+3. Create one recurring GBP price, write the exact amount, interval and VAT treatment into `NEXT_PUBLIC_PRO_PLAN_PRICE_LABEL`, and list only currently delivered benefits in `NEXT_PUBLIC_PRO_PLAN_FEATURES` separated by `|`.
+4. Configure Stripe Checkout and the customer portal; allow subscription cancellation without contacting sales.
+5. Register the production webhook URL for checkout, subscription and failed-invoice events, then store its signing secret only in Vercel.
+6. In test mode, verify checkout, portal access, duplicate-event handling, cancellation and failed-payment behaviour. Test-mode events must leave the account on the free sandbox entitlement.
+7. Repeat a controlled live-mode purchase and cancellation with an internal account. Confirm only signed live `active` or `trialing` subscriptions grant Pro.
+8. Verify account deletion removes the linked Stripe customer before local data is erased; an unavailable provider must fail closed so a subscription cannot be orphaned.
+9. Only then set both `ENABLE_BILLING=true` and `BILLING_RELEASE_APPROVED=true` in the intended Vercel environment. To pause new sales, turn those flags off but retain the provider credentials until every subscription/customer is closed. Never place secret or webhook values in a public variable, Git or browser code.

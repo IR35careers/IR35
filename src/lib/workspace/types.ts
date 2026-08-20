@@ -163,7 +163,7 @@ export interface InboxSettings {
 export interface Entitlement {
   plan: "preview" | "free" | "pro";
   preparationCredits: number;
-  billingState: "not_connected" | "sandbox" | "active";
+  billingState: "not_connected" | "sandbox" | "active" | "past_due" | "cancelled";
 }
 
 export interface WorkspaceState {

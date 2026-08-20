@@ -1,3 +1,5 @@
+import { billingConfig, stripeManagementConfig } from "@/lib/billing/stripe";
+
 export type IntegrationState = "available" | "connected" | "provider_gate" | "not_configured";
 
 export interface IntegrationStatus {
@@ -6,6 +8,8 @@ export interface IntegrationStatus {
   state: IntegrationState;
   scope: string;
   nextStep: string;
+  checkoutAvailable?: boolean;
+  managementAvailable?: boolean;
 }
 
 function enabled(value: string | undefined): boolean {
@@ -29,11 +33,8 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
     process.env.EMAIL_PROVIDER_API_KEY &&
     process.env.INBOUND_MAIL_SIGNING_SECRET
   );
-  const billingConnected = Boolean(
-    enabled(process.env.ENABLE_BILLING) &&
-    process.env.BILLING_PROVIDER_SECRET_KEY &&
-    process.env.BILLING_WEBHOOK_SECRET
-  );
+  const billingConnected = Boolean(billingConfig());
+  const billingManagementConnected = Boolean(stripeManagementConfig());
 
   return [
     {
@@ -81,9 +82,11 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
     {
       id: "billing",
       name: "Paid plans and billing",
-      state: billingConnected ? "connected" : "provider_gate",
+      state: billingConnected ? "connected" : billingManagementConnected ? "available" : "provider_gate",
       scope: "Checkout, webhook verification, entitlements, refunds and cancellation.",
-      nextStep: billingConnected ? "Monitor signed webhook delivery." : "Approve prices, connect a billing sandbox and verify webhooks before enabling checkout.",
+      nextStep: billingConnected ? "Monitor signed webhook delivery." : billingManagementConnected ? "Existing billing management is available; new checkout remains gated." : "Approve prices, connect a billing sandbox and verify webhooks before enabling checkout.",
+      checkoutAvailable: billingConnected,
+      managementAvailable: billingManagementConnected,
     },
     {
       id: "messaging",

@@ -23,7 +23,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Automated ATS submission | Provider gate | Adapter boundary exists; live submission is deliberately disabled until ATS-specific credentials, consent and verification exist |
 | Recruiter inbox and reply classification | Product surface + provider gate | Inbox, linking and deterministic classification exist; real inbound email/SMS/WhatsApp delivery needs approved providers |
 | Saved searches and alerts | Live workspace + delivery gate | Searches are account-owned; outbound email delivery remains provider-labelled |
-| Subscription/credit controls | Entitlement foundation | `/pricing` states that payment checkout is not connected; no fake paid tier is sold |
+| Subscription/credit controls | Provider-ready, safely gated | Hosted Stripe Checkout, customer portal, explicit consent record, signed idempotent webhook ledger, entitlement downgrade rules, billing policy and charge-safe account deletion exist; the paid plan stays hidden/disabled until delivered benefits and complete production configuration pass acceptance checks |
 | Responsive web app | Live | Desktop, tablet and mobile layouts |
 | Installable mobile experience | Live PWA | Manifest, app icons, service worker and offline recovery page |
 | Browser helper | Developer preview | Minimal-permission Chrome extension ZIP; not represented as Chrome Web Store approved |
@@ -45,7 +45,7 @@ A provider-gated row may become **Live** only after the integration has: valid p
 
 - Approved transactional/inbound email provider and verified sending domain.
 - ATS-specific partner credentials or documented application APIs; browser scraping and CAPTCHA bypass are out of scope.
-- Stripe product/price IDs and webhook secret if paid plans are enabled.
+- Stripe secret key, recurring product/price ID, webhook signing secret, approved VAT-aware display price and optional customer-portal configuration if paid plans are enabled.
 - WhatsApp Business/SMS provider approval and consent records if messaging is enabled.
 - Apple/Google developer accounts only if native store apps are commissioned.
 - Chrome Web Store developer account only for store distribution of the reviewed extension.

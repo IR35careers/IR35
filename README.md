@@ -19,9 +19,10 @@ IR35Careers is a UK contract-discovery product that puts advertised IR35 status,
 - Account-owned networking contacts, follow-up dates and manually sent referral drafts
 - Private application analytics with funnel, outcomes, activity signals and privacy-bounded CSV export
 - Public connection-state dashboard that never exposes provider secrets
+- Provider-ready Stripe Checkout, customer portal, signed webhook ledger and fail-safe account cancellation behind an off-by-default billing gate
 - Clearly labelled local preview data when Supabase is not configured
 
-Generative resume writing is intentionally not required or presented as live. CV Studio and application preparation use deterministic evidence checks and user-approved edits. Local preview can exercise the complete prepare/approve/receipt/track/inbox flow; ATS submission, mail forwarding and billing remain behind the provider and approval gates in `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md`.
+Generative resume writing is intentionally not required or presented as live. CV Studio and application preparation use deterministic evidence checks and user-approved edits. Local preview can exercise the complete prepare/approve/receipt/track/inbox flow; ATS submission and mail forwarding remain behind provider and approval gates. Billing has a production-shaped Stripe adapter but remains unavailable until migration 011, approved pricing, provider configuration and live acceptance checks are complete.
 
 ## Stack
 
@@ -32,6 +33,7 @@ Generative resume writing is intentionally not required or presented as live. CV
 - Vitest for unit checks
 - Playwright and axe for responsive E2E, accessibility and visual regression
 - Official Model Context Protocol v2 server/client packages for the isolated MCP integration
+- Official Stripe server SDK for hosted checkout, portal sessions and signed billing webhooks
 - Mammoth and unpdf for in-memory DOCX/PDF text extraction; docx and PDFKit for downloadable CV exports
 
 ## Local setup
@@ -45,7 +47,7 @@ npm run dev
 
 Open `http://localhost:3000`. With no `.env.local`, development mode serves six production-shaped demo contracts and a labelled fictional workspace. The UI uses non-routable demo domains, stores workspace changes in the browser and disables application submission, email forwarding and payment.
 
-To connect real product data, copy `.env.local.example` to `.env.local` and provide the Supabase public values. Server-side ingestion credentials are optional and should be added only when that pipeline is being exercised.
+To connect real product data, copy `.env.local.example` to `.env.local` and provide the Supabase public values. Server-side ingestion credentials are optional and should be added only when that pipeline is being exercised. Do not enable billing locally or in Vercel until migration 011 and the Stripe sandbox acceptance path in `docs/03-TARGET-ARCHITECTURE-CREDENTIALS.md` have passed.
 
 ## Quality commands
 
@@ -96,7 +98,7 @@ Production never falls back to demo contracts. Missing Supabase credentials leav
 - Status evidence is surfaced instead of presenting uncertain classifications as fact.
 - Imported jobs retain their source; live applications open the original listing.
 - Missing CV keywords are not converted into claimed experience without explicit user confirmation.
-- AI, mail, billing and auto-apply providers must remain disabled until their documented review, consent and idempotency gates pass.
+- AI, mail, billing and auto-apply providers must remain disabled until their documented review, consent and idempotency gates pass. Stripe test-mode events never grant production Pro access.
 
 ## Licence
 

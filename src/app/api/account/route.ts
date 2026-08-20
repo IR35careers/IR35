@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
+import { getStripe, stripeManagementConfig } from "@/lib/billing/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
   const admin = getSupabaseAdmin();
   const userId = auth.user.id;
 
-  const [profile, savedJobs, alerts, resumes, packets, events, alias, messages, automation, runs, entitlement] = await Promise.all([
+  const [profile, savedJobs, alerts, resumes, packets, events, alias, messages, automation, runs, entitlement, billingConsents] = await Promise.all([
     admin.from("profiles").select("*").eq("id", userId).maybeSingle(),
     admin.from("saved_jobs").select("status, created_at, job_id, jobs(title, company_name, location, apply_url)").eq("user_id", userId),
     admin.from("job_alerts").select("*").eq("user_id", userId),
@@ -33,11 +34,16 @@ export async function GET(request: Request) {
     admin.from("automation_rules").select("*").eq("user_id", userId).maybeSingle(),
     admin.from("automation_runs").select("*").eq("user_id", userId),
     admin.from("user_entitlements").select("plan, preparation_credits, billing_state, updated_at").eq("user_id", userId).maybeSingle(),
+    admin.from("billing_consents").select("policy_version, price_label, immediate_access_requested, status, consented_at").eq("user_id", userId).order("consented_at", { ascending: false }),
   ]);
 
   const results = [profile, savedJobs, alerts, resumes, packets, events, alias, messages, automation, runs, entitlement];
   const failure = results.find((result) => result.error);
   if (failure?.error) {
+    return NextResponse.json({ error: "Your export could not be prepared. Please try again." }, { status: 500, headers: NO_STORE });
+  }
+  const billingConsentError = billingConsents.error;
+  if (billingConsentError && !["42P01", "PGRST205"].includes(billingConsentError.code ?? "")) {
     return NextResponse.json({ error: "Your export could not be prepared. Please try again." }, { status: 500, headers: NO_STORE });
   }
 
@@ -61,6 +67,7 @@ export async function GET(request: Request) {
     automation_rules: automation.data,
     automation_runs: runs.data ?? [],
     entitlement: entitlement.data,
+    billing_consents: billingConsentError ? [] : billingConsents.data ?? [],
   }, { headers: { ...NO_STORE, "Content-Disposition": "attachment; filename=ir35careers-account-export.json" } });
 }
 
@@ -83,6 +90,34 @@ export async function DELETE(request: Request) {
   }
 
   const admin = getSupabaseAdmin();
+  const entitlement = await admin
+    .from("user_entitlements")
+    .select("provider_customer_id")
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+  if (entitlement.error) {
+    return NextResponse.json({ error: "Your billing status could not be checked. Nothing was deleted." }, { status: 500, headers: NO_STORE });
+  }
+
+  const providerCustomerId = entitlement.data?.provider_customer_id;
+  if (providerCustomerId) {
+    const config = stripeManagementConfig();
+    if (!config) {
+      return NextResponse.json(
+        { error: "Your billing account must be disconnected before deletion. Please retry later or contact support. Nothing was deleted." },
+        { status: 503, headers: NO_STORE },
+      );
+    }
+    try {
+      await getStripe(config).customers.del(providerCustomerId, {}, { idempotencyKey: `delete-account-${auth.user.id}` });
+    } catch {
+      return NextResponse.json(
+        { error: "Your billing account could not be cancelled. Nothing was deleted; please retry or contact support." },
+        { status: 502, headers: NO_STORE },
+      );
+    }
+  }
+
   const privateFiles: string[] = [];
   for (let offset = 0; ; offset += 1_000) {
     const listed = await admin.storage.from("cvs").list(auth.user.id, { limit: 1_000, offset });

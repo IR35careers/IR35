@@ -30,12 +30,12 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | LinkedIn/Indeed acquisition | P2 | No authorised integration | Blocked by provider terms/credentials | Use only an authorised API, commercial feed or user-provided link; do not scrape or bypass controls |
 | Research/articles | P1 | Resource hub, research route, update feed and versioned article schema with review fields | Partial | Connect an editorial admin workflow and publish sourced long-form articles |
 | Contact, testimonials and blog | P1 | Validated private contact storage, product-update feed and consent-only testimonial model/empty state | Partial | Configure production contact storage, publish only approved stories and add editorial admin controls |
-| Billing and entitlements | P2 | Plan UI, owner entitlement model and disabled provider contract | Partial | Product/pricing decision, provider sandbox, webhook idempotency and entitlement tests |
+| Billing and entitlements | P2 | Hosted Checkout and portal routes, signed/idempotent Stripe webhook ledger, owner entitlement model, sandbox-safe access, billing policy and charge-safe account deletion | Provider-ready, disabled by default | Apply migration 011, approve product/price and tax copy, then pass Stripe test and live-mode acceptance checks before enabling |
 | Networking and referrals | P2 | `/network` account-owned relationship map, follow-up dates, role-linked reviewable drafts, manual copy and export | Implemented for user-controlled preparation | Any delivery provider needs consent, revocation and anti-spam review; autonomous outreach remains off |
 | MCP access | P2 | Downloadable v2 MCP server with four read-only tools and protocol-level client test | Implemented, read-only | Add authenticated tools only after OAuth, consent, scope and revocation design |
 | Accessibility | P0 | Axe reports no serious/critical defects in the public journey and account shell | Implemented for first slice | Manual screen-reader, 200% zoom and forced-colours review on staging |
 | Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path | Partial | Establish p75 field data; local simulated results remain variable |
-| Automated testing | P0 | Vitest, 146 legacy domain checks, Playwright E2E, axe and visual baselines | Implemented for first slice | Add CI and authenticated/provider integration coverage |
+| Automated testing | P0 | Vitest, 186 legacy domain checks, Playwright E2E, axe and visual baselines | Implemented for current local gates | Add CI and authenticated/provider integration coverage |
 | Security and privacy | P1 | RLS on current user data | Partial | Threat model, fail-closed auth decisions, upload controls, export/deletion and auditability |
 
 ## Scope truthfulness rules

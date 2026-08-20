@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
+import { legalOperatorConfig } from "@/lib/legal/operator";
 
 export const metadata: Metadata = {
   title: "Privacy Notice",
@@ -19,6 +20,7 @@ const sections = [
 ] as const;
 
 export default function PrivacyPage() {
+  const operator = legalOperatorConfig();
   return (
     <LegalDocument
       eyebrow="Legal & trust"
@@ -28,7 +30,8 @@ export default function PrivacyPage() {
     >
       <section aria-labelledby="who-we-are">
         <h2 id="who-we-are">Who we are</h2>
-        <p className="mt-3"><strong>IR35Careers</strong> is responsible for the personal information processed through this website and contractor workspace. In data-protection terms, IR35Careers acts as the controller for account, profile, CV, application-workspace and support information.</p>
+        <p className="mt-3"><strong>{operator?.legalName || "IR35Careers"}</strong>{operator?.legalName && operator.legalName !== "IR35Careers" ? ", trading as IR35Careers," : ""} is responsible for the personal information processed through this website and contractor workspace. In data-protection terms, this operator acts as the controller for account, profile, CV, application-workspace and support information.</p>
+        {operator && <address className="mt-3 not-italic text-sm leading-7 text-slate-600"><strong>Controller address:</strong> {operator.legalAddress}<br /><strong>Privacy email:</strong> <a href={`mailto:${operator.privacyEmail}`}>{operator.privacyEmail}</a>{operator.icoNumber && <><br /><strong>ICO registration:</strong> {operator.icoNumber}</>}</address>}
         <p className="mt-3">You can contact us using the <Link href="/contact">contact form</Link>. Choose a privacy or data-rights enquiry and include the email address linked to your account so we can verify and respond securely.</p>
       </section>
 
@@ -42,6 +45,7 @@ export default function PrivacyPage() {
           <li><strong>Search and alert information:</strong> queries, filters, saved contracts and alert preferences.</li>
           <li><strong>Networking and referral information:</strong> contact names, professional context, private notes, follow-up dates and referral drafts that you choose to store. IR35Careers does not contact those people for you.</li>
           <li><strong>Communications:</strong> enquiries, feedback and recruiter messages routed through enabled workspace features.</li>
+          <li><strong>Billing information:</strong> plan state, the price and policy version you accepted, checkout consent time and Stripe customer/subscription references. Full card details remain with Stripe.</li>
           <li><strong>Technical and security information:</strong> device/browser information, IP-derived security signals, timestamps, error logs and essential storage identifiers.</li>
           <li><strong>Job listing information:</strong> role data obtained from employers, authorised feeds, job boards and public applicant-tracking-system endpoints. This normally concerns organisations and vacancies rather than site users.</li>
         </ul>
@@ -58,6 +62,7 @@ export default function PrivacyPage() {
               <tr><td className="border-b border-slate-100 px-3 py-3">Operate, protect, debug and improve the service; prevent abuse; keep accurate source links</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests in running a safe, useful contractor platform</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Respond to enquiries and data-rights requests</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests, contract steps or legal obligation, depending on the request</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Store contacts, follow-up reminders and referral drafts at your direction</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you; you are responsible for using contact details fairly and lawfully</td></tr>
+              <tr><td className="border-b border-slate-100 px-3 py-3">Create and administer an optional paid plan, record your checkout request and handle cancellation or disputes</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract, legal obligation and legitimate interests in accurate financial records</td></tr>
               <tr><td className="px-3 py-3">Send optional marketing or activate non-essential analytics if introduced</td><td className="px-3 py-3">Consent, which can be withdrawn</td></tr>
             </tbody>
           </table>
@@ -83,6 +88,7 @@ export default function PrivacyPage() {
         <ul className="mt-4">
           <li><strong>Supabase:</strong> authentication, database and account-session services.</li>
           <li><strong>Vercel:</strong> website hosting, delivery, operational logs and security.</li>
+          <li><strong>Stripe:</strong> hosted checkout, subscription billing and customer-portal services only if you choose a paid plan. IR35Careers does not store full card details.</li>
           <li><strong>Authentication providers:</strong> for example Google, only when you choose that sign-in method.</li>
           <li><strong>Professional advisers, regulators or authorities:</strong> where reasonably necessary or legally required.</li>
           <li><strong>Original job websites:</strong> when you choose an Apply or source link, that independent website receives information from your visit under its own notice.</li>
@@ -93,7 +99,7 @@ export default function PrivacyPage() {
       <section aria-labelledby="retention">
         <h2 id="retention">Retention and security</h2>
         <p className="mt-3">We keep personal information only for as long as it is needed for the purpose described, your active account, dispute handling, security and legal obligations. The criteria include account activity, whether you still use a workspace record, source freshness, the nature of an enquiry and applicable limitation periods. When information is no longer needed, it is deleted or anonymised; provider backups expire on their managed schedules.</p>
-        <p className="mt-3">You can delete individual networking contacts and referral drafts from the workspace. Account export and deletion include the account-owned profile document where those records are stored.</p>
+        <p className="mt-3">You can delete individual networking contacts and referral drafts from the workspace. Account export includes account-owned billing-consent history without full card data. Account deletion first cancels and removes the linked Stripe customer, then removes local account records; Stripe or financial records may still be retained where law, fraud prevention or dispute handling requires it.</p>
         <p className="mt-3">We use row-level access controls, authenticated sessions, encrypted transport, restricted administrative access and provider security controls. No internet service can guarantee absolute security, so please use a unique password and tell us promptly if you suspect account misuse.</p>
       </section>
 

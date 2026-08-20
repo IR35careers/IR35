@@ -136,7 +136,7 @@ export async function loadCloudWorkspace(userId: string, email: string): Promise
   const entitlement: Entitlement = entitlementRow ? {
     plan: entitlementRow.plan === "pro" ? "pro" : "free",
     preparationCredits: Number(entitlementRow.preparation_credits ?? 0),
-    billingState: entitlementRow.billing_state === "active" ? "active" : entitlementRow.billing_state === "sandbox" ? "sandbox" : "not_connected",
+    billingState: entitlementRow.billing_state === "active" ? "active" : entitlementRow.billing_state === "sandbox" ? "sandbox" : entitlementRow.billing_state === "past_due" ? "past_due" : entitlementRow.billing_state === "cancelled" ? "cancelled" : "not_connected",
   } : state.entitlement;
 
   return {

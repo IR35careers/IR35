@@ -114,6 +114,7 @@ test("public trust and platform surfaces are available", async ({ page }) => {
     ["/connections", "Every integration, in its real state."],
     ["/ai-disclosure", "AI and Automation Disclosure"],
     ["/security", "Security and Responsible Disclosure"],
+    ["/billing-policy", "Billing, Cancellation and Refund Policy"],
     ["/delete-account", "Delete your account"],
   ] as const;
   for (const [url, heading] of pages) {
@@ -141,9 +142,15 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   expect(mcp.ok()).toBeTruthy();
   expect(mcp.headers()["content-type"]).toContain("zip");
 
-  const detail = await request.get("/api/jobs/11111111-1111-4111-8111-111111111111");
+  const search = await request.get("/api/jobs/search?per_page=1");
+  expect(search.ok()).toBeTruthy();
+  const searchPayload = await search.json();
+  expect(searchPayload.jobs.length).toBeGreaterThan(0);
+  const firstJob = searchPayload.jobs[0];
+
+  const detail = await request.get(`/api/jobs/${firstJob.id}`);
   expect(detail.ok()).toBeTruthy();
-  expect((await detail.json()).job.title).toContain("DevOps Engineer");
+  expect((await detail.json()).job.id).toBe(firstJob.id);
 
   const connections = await request.get("/api/integrations/status");
   expect(connections.ok()).toBeTruthy();
@@ -151,6 +158,13 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
 
   const accountExport = await request.get("/api/account");
   expect(accountExport.status()).toBe(401);
+
+  const checkout = await request.post("/api/billing/checkout");
+  expect(checkout.status()).toBe(503);
+  expect((await checkout.json()).error).toMatch(/not connected/i);
+
+  const billingWebhook = await request.post("/api/integrations/billing/webhook", { data: {} });
+  expect(billingWebhook.status()).toBe(503);
 
   const privatePreview = await request.post("/api/jobs/preview", { data: { url: "https://127.0.0.1/private" } });
   expect(privatePreview.status()).toBe(400);
@@ -298,5 +312,16 @@ test("application analytics explains outcomes and exports bounded role data", as
   expect(csv).not.toContain("Thanks for sharing your details");
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  await expectNoSeriousA11yViolations(page);
+});
+
+test("billing remains transparent and disabled without a complete provider configuration", async ({ page }) => {
+  await page.goto("/billing");
+  await dismissPrivacyNotice(page);
+  await expect(page.getByRole("heading", { name: "Choose capacity, not hidden automation" })).toBeVisible();
+  await expect(page.getByText("Contractor Free", { exact: true })).toBeVisible();
+  await expect(page.getByText("Contractor Pro", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Checkout not connected" })).toBeDisabled();
+  await expect(page.getByText(/Sandbox events never unlock a production Pro plan/)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 });
