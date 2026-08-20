@@ -20,7 +20,16 @@ function invalid(message: string, status = 400) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Partial<ResumeExportRequest>;
+    const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+    let body: Partial<ResumeExportRequest>;
+    if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      const encoded = form.get("payload");
+      if (typeof encoded !== "string" || encoded.length > 200_000) return invalid("The export request is invalid.", 413);
+      body = JSON.parse(encoded) as Partial<ResumeExportRequest>;
+    } else {
+      body = (await request.json()) as Partial<ResumeExportRequest>;
+    }
     if (body.format !== "pdf" && body.format !== "docx") return invalid("Choose PDF or DOCX export.");
     if (!body.resumeText?.trim()) return invalid("The tailored CV is empty.");
     if (body.resumeText.length > MAX_TEXT_CHARS) return invalid("The tailored CV is too large to export.", 413);
@@ -35,7 +44,7 @@ export async function POST(request: Request) {
     };
     const bytes = body.format === "pdf" ? await buildResumePdf(payload) : await buildResumeDocx(payload);
     const filename = `${safeFilename(`${payload.candidateName}-${payload.jobTitle}`)}.${body.format}`;
-    const contentType =
+    const responseContentType =
       body.format === "pdf"
         ? "application/pdf"
         : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -44,7 +53,7 @@ export async function POST(request: Request) {
       headers: {
         "Cache-Control": "no-store",
         "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Type": contentType,
+        "Content-Type": responseContentType,
         "X-Content-Type-Options": "nosniff",
       },
     });

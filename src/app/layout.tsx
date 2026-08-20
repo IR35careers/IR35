@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/lib/auth-context";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
 
@@ -83,7 +82,7 @@ export default function RootLayout({
   return (
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        {children}
         <CookieNotice />
         <PwaRegister />
       </body>

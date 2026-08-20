@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Auth context — tracks the current Supabase user across the app.
+ * Shared Supabase auth state without a root-level client boundary.
  *
- * Wraps the app in layout.tsx. Any client component can call useAuth() to read
- * { user, loading } and the sign-in / sign-up / sign-out actions. Sessions are
- * persisted by supabase-js in the browser, so a refresh keeps you logged in.
+ * Public server-rendered pages stay outside React hydration. Components that
+ * call useAuth subscribe to this small external store, and the Supabase SDK is
+ * loaded only when a session/callback exists or an account action is used.
  */
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 
@@ -29,164 +29,182 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+interface AuthState {
+  user: User | null;
+  loading: boolean;
+}
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(isSupabaseConfigured());
+let state: AuthState = { user: null, loading: isSupabaseConfigured() };
+const serverState: AuthState = { user: null, loading: isSupabaseConfigured() };
+const listeners = new Set<() => void>();
+let sessionInitialising = false;
+let sessionSubscribed = false;
+let storageSubscribed = false;
 
-  useEffect(() => {
-    let mounted = true;
-    let unsubscribe: (() => void) | undefined;
-    let initialized = false;
+function publish(next: AuthState) {
+  if (state.user === next.user && state.loading === next.loading) return;
+  state = next;
+  listeners.forEach((listener) => listener());
+}
 
-    if (!isSupabaseConfigured()) {
-      return () => {
-        mounted = false;
-      };
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot() {
+  return state;
+}
+
+function getServerSnapshot() {
+  return serverState;
+}
+
+function isSessionKey(key: string | null): boolean {
+  return Boolean(key?.startsWith("sb-") && key.endsWith("-auth-token"));
+}
+
+function hasStoredSession(): boolean {
+  try {
+    return Object.keys(window.localStorage).some((key) => isSessionKey(key));
+  } catch {
+    return false;
+  }
+}
+
+function hasAuthCallback(): boolean {
+  const query = new URLSearchParams(window.location.search);
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return query.has("code") || query.has("error") || hash.has("access_token") || hash.has("refresh_token") || hash.has("error");
+}
+
+function installStorageListener() {
+  if (storageSubscribed) return;
+  storageSubscribed = true;
+  window.addEventListener("storage", (event) => {
+    if (!isSessionKey(event.key)) return;
+    if (event.newValue) {
+      publish({ ...state, loading: true });
+      initialiseSession(true);
+    } else {
+      publish({ user: null, loading: false });
     }
+  });
+}
 
-    const initialiseSession = () => {
-      if (initialized) return;
-      initialized = true;
-      void import("@/lib/supabase").then(({ getSupabase }) => {
-        if (!mounted) return;
-        const supabase = getSupabase();
-        void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
-          if (!mounted) return;
-          setUser(data.session?.user ?? null);
-          setLoading(false);
-        });
+function initialiseSession(force = false) {
+  if (!isSupabaseConfigured()) {
+    publish({ user: null, loading: false });
+    return;
+  }
+  installStorageListener();
+  if (!force && !hasStoredSession() && !hasAuthCallback()) {
+    publish({ user: null, loading: false });
+    return;
+  }
+  if (sessionInitialising || sessionSubscribed) return;
+  sessionInitialising = true;
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (_event: string, session: Session | null) => {
-            if (!mounted) return;
-            setUser(session?.user ?? null);
-            setLoading(false);
-          }
-        );
-        unsubscribe = () => subscription.unsubscribe();
+  void import("@/lib/supabase")
+    .then(({ getSupabase }) => {
+      const supabase = getSupabase();
+      void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+        publish({ user: data.session?.user ?? null, loading: false });
       });
-    };
-
-    const isSessionKey = (key: string | null) => Boolean(key?.startsWith("sb-") && key.endsWith("-auth-token"));
-    let hasStoredSession = false;
-    try {
-      hasStoredSession = Object.keys(window.localStorage).some((key) => isSessionKey(key));
-    } catch {
-      // Storage may be disabled; account actions can still report their provider result.
-    }
-    if (hasStoredSession) initialiseSession();
-    else setLoading(false);
-
-    const handleStorage = (event: StorageEvent) => {
-      if (!isSessionKey(event.key)) return;
-      if (event.newValue) {
-        setLoading(true);
-        initialiseSession();
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-
-    return () => {
-      mounted = false;
-      unsubscribe?.();
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
-
-  const signInWithPassword = async (email: string, password: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-    const { getSupabase } = await import("@/lib/supabase");
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event: string, session: Session | null) => {
+          publish({ user: session?.user ?? null, loading: false });
+        }
+      );
+      sessionSubscribed = true;
+      sessionInitialising = false;
+      // Keep the listener for the lifetime of this browser document.
+      void subscription;
+    })
+    .catch(() => {
+      sessionInitialising = false;
+      publish({ user: null, loading: false });
     });
-    if (!error) {
-      setUser(data.user);
-      setLoading(false);
-    }
-    return { error: error ? error.message : null };
-  };
+}
 
-  const signUpWithPassword = async (email: string, password: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-    const { getSupabase } = await import("@/lib/supabase");
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        data: {
-          terms_accepted_at: new Date().toISOString(),
-          terms_version: "2026-08-20",
-          privacy_notice_version: "2026-08-20",
-        },
+async function signInWithPassword(email: string, password: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { data, error } = await getSupabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+  if (!error) {
+    publish({ user: data.user, loading: false });
+    initialiseSession(true);
+  }
+  return { error: error ? error.message : null };
+}
+
+async function signUpWithPassword(email: string, password: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { data, error } = await getSupabase().auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: {
+      data: {
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: "2026-08-20",
+        privacy_notice_version: "2026-08-20",
       },
-    });
-    if (error) return { error: error.message };
-    if (data.session?.user) {
-      setUser(data.session.user);
-      setLoading(false);
-    }
-    // If email confirmation is ON, there's a user but no active session yet.
-    const needsConfirmation = !!data.user && !data.session;
-    return { error: null, needsConfirmation };
-  };
+    },
+  });
+  if (error) return { error: error.message };
+  if (data.session?.user) {
+    publish({ user: data.session.user, loading: false });
+    initialiseSession(true);
+  }
+  return { error: null, needsConfirmation: Boolean(data.user && !data.session) };
+}
 
-  const signInWithGoogle = async (next = "/dashboard"): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+async function signInWithGoogle(next = "/dashboard"): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { error } = await getSupabase().auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${window.location.origin}${next}` },
+  });
+  return { error: error ? error.message : null };
+}
+
+async function requestPasswordReset(email: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo: `${window.location.origin}/account/reset`,
+  });
+  return { error: error ? error.message : null };
+}
+
+async function updatePassword(newPassword: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { data, error } = await getSupabase().auth.updateUser({ password: newPassword });
+  if (!error && data.user) publish({ user: data.user, loading: false });
+  return { error: error ? error.message : null };
+}
+
+async function signOut(): Promise<void> {
+  if (isSupabaseConfigured()) {
     const { getSupabase } = await import("@/lib/supabase");
-    const supabase = getSupabase();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}${next}` },
-    });
-    return { error: error ? error.message : null };
-  };
-
-  const requestPasswordReset = async (email: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-    const { getSupabase } = await import("@/lib/supabase");
-    const supabase = getSupabase();
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: `${window.location.origin}/account/reset`,
-    });
-    return { error: error ? error.message : null };
-  };
-
-  const updatePassword = async (newPassword: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-    const { getSupabase } = await import("@/lib/supabase");
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-    if (!error && data.user) setUser(data.user);
-    return { error: error ? error.message : null };
-  };
-
-  const signOut = async (): Promise<void> => {
-    if (isSupabaseConfigured()) {
-      const { getSupabase } = await import("@/lib/supabase");
-      await getSupabase().auth.signOut();
-    }
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{ user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle, updatePassword, signOut }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+    await getSupabase().auth.signOut();
+  }
+  publish({ user: null, loading: false });
 }
 
 export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within <AuthProvider>");
-  return ctx;
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  useEffect(() => initialiseSession(), []);
+  return {
+    ...snapshot,
+    signInWithPassword,
+    signUpWithPassword,
+    requestPasswordReset,
+    signInWithGoogle,
+    updatePassword,
+    signOut,
+  };
 }

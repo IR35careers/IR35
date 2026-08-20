@@ -379,25 +379,26 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     setBusy(format);
     setError("");
     try {
-      const response = await fetch("/api/resume/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const result = (await response.json()) as { error?: string };
-        throw new Error(result.error ?? "Export failed.");
-      }
-      const blob = await response.blob();
-      const disposition = response.headers.get("content-disposition") ?? "";
-      const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? `tailored-cv.${format}`;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(url);
-      setNotice(`${format.toLocaleUpperCase("en-GB")} downloaded from the version currently shown.`);
+      const frameName = `ir35-cv-export-${Date.now()}`;
+      const frame = document.createElement("iframe");
+      frame.name = frameName;
+      frame.title = "CV export download";
+      frame.hidden = true;
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/api/resume/export";
+      form.target = frameName;
+      form.hidden = true;
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "payload";
+      input.value = JSON.stringify(payload);
+      form.appendChild(input);
+      document.body.append(frame, form);
+      form.submit();
+      form.remove();
+      window.setTimeout(() => frame.remove(), 30_000);
+      setNotice(`${format.toLocaleUpperCase("en-GB")} export requested from the version currently shown.`);
     } catch (exportError) {
       setError(exportError instanceof Error ? exportError.message : "Export failed.");
     } finally {
