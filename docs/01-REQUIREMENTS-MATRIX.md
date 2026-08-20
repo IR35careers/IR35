@@ -14,7 +14,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Profile and onboarding | P0 | Supabase profile, skills, preferences and CV upload | Implemented | Responsive and accessible browser test with production-shaped data |
 | Job matching and explanations | P0 | Deterministic weighted scorer and match panel | Partial | Explain contributing factors and avoid presenting score as AI certainty |
 | Save and mark applied | P0 | `saved_jobs`, signed-out return path and optimistic rollback | Implemented | Authenticated database/RLS test in staging |
-| Job alerts | P1 | Saved search records exist | Partial | Delivery provider abstraction, schedule and unsubscribe before claiming email alerts |
+| Job alerts | P1 | Owner-scoped saved searches plus on-demand, cancellable live match previews with loading, empty, error and retry states | Implemented for in-product curation | Delivery provider abstraction, schedule and unsubscribe before claiming email alerts |
 | IR35 provenance | P1 | Status plus high/medium/low confidence | Partial | Persist and display advertised/inferred/manual source and evidence timestamp |
 | Resume upload | P1 | Private Supabase bucket and profile reference | Implemented | File signature/virus strategy, signed access and deletion tests |
 | Resume builder/editor/rating | P1 | `/jobs/[id]/resume`, four-part deterministic rubric, editable final copy, private/local versions and PDF/DOCX export | Implemented | Apply migration 009 and run authenticated RLS, storage-retention and real-CV acceptance tests in staging |

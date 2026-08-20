@@ -268,6 +268,32 @@ test("application workspace prepares, approves, receipts and tracks without subm
   await expect(page.getByText(/contracts entered the review queue/)).toBeVisible();
 });
 
+test("saved alerts preview current matches without claiming email delivery", async ({ page }) => {
+  await page.goto("/alerts");
+  await dismissPrivacyNotice(page);
+  await expect(page.getByRole("heading", { name: "Job alerts" })).toBeVisible();
+  await expect(page.getByText("Email not connected")).toBeVisible();
+
+  await page.getByRole("button", { name: "Preview matches" }).first().click();
+  await expect(page.getByText(/current matches/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /Senior DevOps Engineer/ })).toBeVisible();
+
+  await page.getByRole("button", { name: "New alert" }).click();
+  await page.getByLabel("Alert name").fill("Remote cloud contracts");
+  await page.getByLabel("Keyword").fill("AWS");
+  await page.getByRole("combobox", { name: "IR35", exact: true }).selectOption("outside");
+  await page.getByRole("button", { name: "AWS", exact: true }).click();
+  await page.getByRole("button", { name: "Save alert" }).click();
+  await expect(page.getByText("Preview alert saved in this browser session.")).toBeVisible();
+
+  const createdAlert = page.locator("article").filter({ hasText: "Remote cloud contracts" });
+  await expect(createdAlert).toBeVisible();
+  await createdAlert.getByRole("button", { name: "Delete Remote cloud contracts" }).click();
+  await createdAlert.getByRole("button", { name: "Confirm delete Remote cloud contracts" }).click();
+  await expect(page.getByText("Alert deleted.")).toBeVisible();
+  await expectNoSeriousA11yViolations(page);
+});
+
 test("network workspace prepares reviewed outreach without sending it", async ({ page }) => {
   await page.goto("/network");
   await dismissPrivacyNotice(page);

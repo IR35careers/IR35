@@ -22,7 +22,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Application receipt and tracker | Live as dry run | A receipt and tracker entry are created without transmitting an application; the receipt preserves the reviewed CV label, CV text, cover letter and screening-answer snapshot, and supports account-owned accuracy/change feedback |
 | Automated ATS submission | Provider gate | Adapter boundary exists; live submission is deliberately disabled until ATS-specific credentials, consent and verification exist |
 | Recruiter inbox and reply classification | Product surface + provider gate | Inbox, linking and deterministic classification exist; real inbound email/SMS/WhatsApp delivery needs approved providers |
-| Saved searches and alerts | Live workspace + delivery gate | Searches are account-owned; outbound email delivery remains provider-labelled |
+| Saved searches, curated list and alerts | Live workspace + delivery gate | Searches are account-owned and each alert can load a cancellable, stale-safe preview of its latest live matches; outbound email delivery remains visibly provider-gated |
 | Subscription/credit controls | Provider-ready, safely gated | Hosted Stripe Checkout, customer portal, explicit consent record, signed idempotent webhook ledger, entitlement downgrade rules, billing policy and charge-safe account deletion exist; the paid plan stays hidden/disabled until delivered benefits and complete production configuration pass acceptance checks |
 | Responsive web app | Live | Desktop, tablet and mobile layouts |
 | Installable mobile experience | Live PWA | Manifest, app icons, service worker and offline recovery page |
