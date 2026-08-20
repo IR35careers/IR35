@@ -39,7 +39,7 @@ export default function PrivacyPage() {
         <h2 id="data-we-use">Information we use</h2>
         <ul className="mt-4">
           <li><strong>Account information:</strong> email address, authentication identifiers, sign-in events and account preferences.</li>
-          <li><strong>Contractor profile information:</strong> skills, work preferences, availability and optional limited-company details you choose to provide.</li>
+          <li><strong>Contractor profile information:</strong> identity and contact details, address, education, work authorisation, work preferences, application defaults, availability and optional limited-company details you choose to provide.</li>
           <li><strong>CV and application-workspace information:</strong> uploaded CV text, edits, role-specific scores, approved versions, screening-answer drafts, reviewed-material receipt snapshots, receipt feedback and application-tracking records.</li>
           <li><strong>Application analytics:</strong> summaries calculated from your own application records, status events and linked responses. CSV analytics exports exclude CV text, screening answers and message bodies.</li>
           <li><strong>Search and alert information:</strong> queries, filters, saved contracts and alert preferences.</li>
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
           <table className="w-full min-w-[620px] border-separate border-spacing-0 text-left text-sm">
             <thead><tr><th className="border-b border-slate-200 px-3 py-3 font-bold">Purpose</th><th className="border-b border-slate-200 px-3 py-3 font-bold">Typical lawful basis</th></tr></thead>
             <tbody className="text-slate-600">
-              <tr><td className="border-b border-slate-100 px-3 py-3">Create and secure your account; provide saved jobs, CV tools and workspace functions</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you</td></tr>
+              <tr><td className="border-b border-slate-100 px-3 py-3">Create and secure your account; provide saved jobs, CV tools, workspace functions and applications you ask us to submit</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Operate, protect, debug and improve the service; prevent abuse; keep accurate source links</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests in running a safe, useful contractor platform</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Respond to enquiries and data-rights requests</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests, contract steps or legal obligation, depending on the request</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Store contacts, follow-up reminders and referral drafts at your direction</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you; you are responsible for using contact details fairly and lawfully</td></tr>
@@ -91,6 +91,7 @@ export default function PrivacyPage() {
           <li><strong>Stripe:</strong> hosted checkout, subscription billing and customer-portal services only if you choose a paid plan. IR35Careers does not store full card details.</li>
           <li><strong>Authentication providers:</strong> for example Google, only when you choose that sign-in method.</li>
           <li><strong>OpenRouter and the selected model provider:</strong> only when you deliberately request optional AI tailoring. We redact direct email, phone and common profile identifiers first, request zero-data-retention routing and deny providers that require data collection. The remaining CV evidence and job description are still personal data and may be processed outside the UK.</li>
+          <li><strong>Application-processing provider:</strong> when you choose one-click apply, the approved candidate profile, CV and job URL are sent to the configured application service so it can complete the employer form, return questions that need you and record the outcome. Tsenta is the currently supported managed provider when enabled; an employer or applicant-tracking system receives the submitted application under its own privacy notice.</li>
           <li><strong>Professional advisers, regulators or authorities:</strong> where reasonably necessary or legally required.</li>
           <li><strong>Original job websites:</strong> when you choose an Apply or source link, that independent website receives information from your visit under its own notice.</li>
         </ul>

@@ -54,6 +54,12 @@ describe("application workspace engine", () => {
     expect(application.status).toBe("needs_review");
   });
 
+  it("uses the CV name when an old generic contractor label is stored", () => {
+    const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cv });
+    expect(application.coverLetter).toMatch(/Kind regards,\nAlex Morgan$/);
+    expect(application.coverLetter).not.toMatch(/Kind regards,\nContractor$/);
+  });
+
   it("requires every answer and all approvals before issuing a receipt", () => {
     const application = prepareApplication({ job, profile: SAMPLE_CONTRACTOR_PROFILE, cvText: cv });
     expect(applicationIsReady(application)).toBe(false);

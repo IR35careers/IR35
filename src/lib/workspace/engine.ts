@@ -1,4 +1,4 @@
-import { analyseResumeForRole } from "@/lib/resume/analysis";
+import { analyseResumeForRole, parseResumeText } from "@/lib/resume/analysis";
 import type {
   ApplicationEvent,
   ApplicationQuestion,
@@ -42,9 +42,17 @@ function evidenceSentence(matched: string[]): string {
 export function buildTruthPreservingCoverLetter(
   job: JobDetail,
   profile: ContractorProfile,
-  matchedKeywords: string[]
+  matchedKeywords: string[],
+  cvText = ""
 ): string {
-  const name = cleanLine(profile.fullName || "Contractor", 100);
+  const suppliedName = cleanLine(profile.fullName, 100);
+  const parsedName = cvText ? cleanLine(parseResumeText(cvText).candidateName, 100) : "";
+  const genericName = /^(contractor|candidate|cv|resume|curriculum vitae)$/i;
+  const name = suppliedName && !genericName.test(suppliedName)
+    ? suppliedName
+    : parsedName && !genericName.test(parsedName)
+      ? parsedName
+      : "Candidate";
   const title = cleanLine(job.title, 160);
   const company = cleanLine(job.company_name, 120);
   const availability = cleanLine(profile.availability, 120);
@@ -144,7 +152,7 @@ export function prepareApplication(input: PrepareApplicationInput): ApplicationR
     sourceCvText: cvText,
     tailoredCvText: cvText,
     resumeVersionLabel: input.resumeVersionLabel ?? "Application CV",
-    coverLetter: buildTruthPreservingCoverLetter(input.job, input.profile, analysis.baseline.matchedKeywords),
+    coverLetter: buildTruthPreservingCoverLetter(input.job, input.profile, analysis.baseline.matchedKeywords, cvText),
     questions: buildScreeningQuestions(input.job, input.profile),
     truthApproved: false,
     materialsApproved: false,

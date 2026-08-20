@@ -376,7 +376,7 @@ test("CV Studio analyses, verifies, versions and exports a role-tailored CV", as
   await expectNoSeriousA11yViolations(page);
 });
 
-test("application workspace tailors, reviews and saves without claiming submission", async ({ page }) => {
+test("application workspace presents a clean review flow and never claims an unconfirmed submission", async ({ page }) => {
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
@@ -386,17 +386,18 @@ test("application workspace tailors, reviews and saves without claiming submissi
 
   await expect(page.getByRole("heading", { name: /Your evidence matches/ })).toBeVisible();
   await expect(page.getByText("Missing — never assumed")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Optional AI tailoring" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Improve your CV for this role" })).toBeVisible();
   const checkboxes = page.locator('input[type="checkbox"]:enabled');
   const checkboxCount = await checkboxes.count();
-  expect(checkboxCount).toBeGreaterThanOrEqual(7);
+  expect(checkboxCount).toBeGreaterThanOrEqual(5);
   for (let index = 0; index < checkboxCount; index += 1) {
     await checkboxes.nth(index).check();
   }
 
-  await page.getByRole("button", { name: "Save reviewed packet" }).click();
+  await page.getByRole("button", { name: "Save application" }).click();
   await expect(page.getByText("Reviewed packet saved. It has not been sent to the employer.")).toBeVisible();
-  await expect(page.getByText(/OpenRouter cannot solve this/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your work is saved" })).toBeVisible();
+  await expect(page.getByText(/OpenRouter|browser-automation gateway|authorised Ashby/i)).toHaveCount(0);
   await expect(page.getByText("Employer submission confirmed")).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
 

@@ -24,6 +24,13 @@ describe("integration status", () => {
     expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("connected");
   });
 
+  it("recognises the managed one-click application key without exposing it", () => {
+    vi.stubEnv("ENABLE_APPLICATION_SUBMISSION", "true");
+    vi.stubEnv("TSENTA_API_KEY", "sk_live_do-not-expose");
+    expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("connected");
+    expect(JSON.stringify(getIntegrationStatuses())).not.toContain("sk_live_do-not-expose");
+  });
+
   it("reports AI tailoring only when a server-side OpenRouter key exists", () => {
     expect(getIntegrationStatuses().find((item) => item.id === "ai_tailoring")?.state).toBe("provider_gate");
     vi.stubEnv("OPENROUTER_API_KEY", "server-only-test-key");

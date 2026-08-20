@@ -1,4 +1,5 @@
-import { tailorResumeWithOpenRouter } from "@/lib/ai/openrouter-tailoring";
+import { openRouterTailoringConfig, tailorResumeWithOpenRouter } from "@/lib/ai/openrouter-tailoring";
+import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import type { JobDetail } from "@/lib/job-types";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -44,7 +45,9 @@ export async function POST(request: Request): Promise<Response> {
     if (!body.job?.id || !body.job.title || !body.job.company_name || typeof body.cvText !== "string") {
       return Response.json({ error: "A CV and complete role are required." }, { status: 400, headers: NO_STORE });
     }
-    const result = await tailorResumeWithOpenRouter({ cvText: body.cvText, job: body.job });
+    const result = openRouterTailoringConfig()
+      ? await tailorResumeWithOpenRouter({ cvText: body.cvText, job: body.job })
+      : buildLocalTailoringResult(body.cvText, body.job);
     return Response.json({ result }, { headers: NO_STORE });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI tailoring failed.";

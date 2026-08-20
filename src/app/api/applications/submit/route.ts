@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 import { submitWithProvider, submissionProviderConfig } from "@/lib/application-submission";
+import { buildResumePdf } from "@/lib/resume/export";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { ApplicationQuestion, ApplicationReceipt, ContractorProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
@@ -19,7 +21,8 @@ export async function POST(request: Request): Promise<Response> {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   if (!token) return Response.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
-  if (!submissionProviderConfig()) return Response.json({ error: "Live submission is not connected yet." }, { status: 503, headers: NO_STORE });
+  const provider = submissionProviderConfig();
+  if (!provider) return Response.json({ error: "One-click apply is not available for this role yet." }, { status: 503, headers: NO_STORE });
 
   try {
     const body = (await request.json()) as { applicationId?: string; approval?: string };
@@ -58,7 +61,7 @@ export async function POST(request: Request): Promise<Response> {
     const { error: queueError } = await admin.from("application_submissions").upsert({
       user_id: userId,
       application_id: packet.id,
-      provider_name: submissionProviderConfig()?.name,
+      provider_name: provider.name,
       idempotency_key: idempotencyKey,
       payload_hash: payloadHash,
       status: "processing",
@@ -68,15 +71,45 @@ export async function POST(request: Request): Promise<Response> {
     if (queueError) throw new Error(queueError.message);
 
     try {
+      const candidate = ((profileRow?.application_profile ?? {}) as ContractorProfile);
+      const resumeText = String(packet.tailored_cv_text || packet.source_cv_text || "");
+      let resumeUrl: string | undefined;
+      if (provider.kind === "tsenta") {
+        const resumeBuffer = await buildResumePdf({
+          format: "pdf",
+          resumeText,
+          candidateName: candidate.fullName || "Candidate",
+          jobTitle: job.title,
+          companyName: job.company_name,
+          versionLabel: String(packet.resume_version_label || "Application CV"),
+        });
+        const storagePath = `${userId}/applications/${packet.id}.pdf`;
+        const { error: uploadError } = await admin.storage.from("cvs").upload(storagePath, resumeBuffer, { contentType: "application/pdf", upsert: true });
+        if (uploadError) throw new Error("Your approved CV could not be prepared for the employer form.");
+        const { data: signedResume, error: signedError } = await admin.storage.from("cvs").createSignedUrl(storagePath, 60 * 60);
+        if (signedError || !signedResume?.signedUrl) throw new Error("Your approved CV could not be prepared for the employer form.");
+        resumeUrl = signedResume.signedUrl;
+      }
+
       const providerReceipt = await submitWithProvider({
         applicationId: String(packet.id),
         destination,
         job,
-        candidate: ((profileRow?.application_profile ?? {}) as ContractorProfile),
-        resume: { label: String(packet.resume_version_label || "Application CV"), text: String(packet.tailored_cv_text || packet.source_cv_text || "") },
+        candidate,
+        resume: { label: String(packet.resume_version_label || "Application CV"), text: resumeText, url: resumeUrl },
         coverLetter: String(packet.cover_letter || ""),
         screeningAnswers: ((packet.screening_answers as ApplicationQuestion[]) ?? []).map(({ label, answer, source }) => ({ label, answer, source })),
       }, idempotencyKey);
+      if (providerReceipt.state !== "submitted") {
+        await admin.from("application_submissions").update({
+          status: "processing",
+          provider_submission_id: providerReceipt.providerSubmissionId,
+          error_code: providerReceipt.state === "needs_user" ? "needs_user" : null,
+          receipt: { state: providerReceipt.state, review: providerReceipt.review ?? null, message: providerReceipt.message },
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
+        return Response.json({ state: providerReceipt.state, message: providerReceipt.message, review: providerReceipt.review ?? null }, { status: 202, headers: NO_STORE });
+      }
       const receipt: ApplicationReceipt = {
         receiptId: providerReceipt.providerSubmissionId,
         mode: "external_handoff",
@@ -96,6 +129,10 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ receipt }, { status: 201, headers: NO_STORE });
     } catch (providerError) {
       await admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
+      const providerMessage = providerError instanceof Error ? providerError.message : "";
+      if (providerMessage.startsWith("Complete your Application Profile")) {
+        return Response.json({ error: providerMessage, action: "/profile" }, { status: 422, headers: NO_STORE });
+      }
       throw providerError;
     }
   } catch {

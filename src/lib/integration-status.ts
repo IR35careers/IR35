@@ -1,6 +1,7 @@
 import { billingConfig, stripeManagementConfig } from "@/lib/billing/stripe";
 import { resendInboundConfig } from "@/lib/email/resend";
 import { openRouterTailoringConfig } from "@/lib/ai/openrouter-tailoring";
+import { submissionProviderConfig } from "@/lib/application-submission";
 
 export type IntegrationState = "available" | "connected" | "provider_gate" | "not_configured";
 
@@ -32,13 +33,7 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
   const adzunaConnected = Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
   const inboundConnected = Boolean(enabled(process.env.ENABLE_INBOUND_MAIL) && resendInboundConfig());
   const aiTailoringConnected = Boolean(openRouterTailoringConfig());
-  let validSubmissionEndpoint = false;
-  try {
-    validSubmissionEndpoint = new URL(process.env.APPLICATION_SUBMISSION_PROVIDER_URL ?? "").protocol === "https:";
-  } catch {
-    validSubmissionEndpoint = false;
-  }
-  const submissionConnected = Boolean(enabled(process.env.ENABLE_APPLICATION_SUBMISSION) && validSubmissionEndpoint && process.env.APPLICATION_SUBMISSION_PROVIDER_API_KEY);
+  const submissionConnected = Boolean(submissionProviderConfig());
   const billingConnected = Boolean(billingConfig());
   const billingManagementConnected = Boolean(stripeManagementConfig());
 
@@ -82,15 +77,15 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       id: "ai_tailoring",
       name: "Role-specific CV tailoring",
       state: aiTailoringConnected ? "connected" : "provider_gate",
-      scope: "Optional, user-triggered OpenRouter analysis with direct identifiers redacted and zero-data-retention routing requested.",
-      nextStep: aiTailoringConnected ? "Users can request evidence-grounded suggestions and approve each edit." : "Add OPENROUTER_API_KEY as a server-only Vercel environment variable, then redeploy.",
+      scope: "Evidence-grounded role tailoring with a local fallback and optional enhanced language-model suggestions.",
+      nextStep: aiTailoringConnected ? "Users can request enhanced suggestions and approve each edit." : "Local evidence-based suggestions remain available. Add OPENROUTER_API_KEY for enhanced language suggestions.",
     },
     {
       id: "ats_submission",
       name: "Live ATS submission",
       state: submissionConnected ? "connected" : "provider_gate",
       scope: "Provider-specific application submission with final human approval.",
-      nextStep: submissionConnected ? "Approved packets can be sent through the configured submission gateway." : "Connect an authorised employer ATS or browser-automation gateway and pass form-discovery, CAPTCHA handoff, idempotency and receipt tests.",
+      nextStep: submissionConnected ? "Approved packets can be submitted and tracked from the workspace." : "Add a server-side one-click application API key or an authorised submission gateway.",
     },
     {
       id: "billing",
