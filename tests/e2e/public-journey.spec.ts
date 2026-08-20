@@ -106,6 +106,27 @@ test("contract results do not wait for facet aggregation", async ({ page }) => {
   }
 });
 
+test("advanced contract filters use explicit listing evidence", async ({ page }) => {
+  await page.goto("/jobs");
+  await expect(page.getByText("6 contracts found")).toBeVisible();
+
+  if (await page.locator("aside:visible").count() === 0) {
+    await page.getByRole("button", { name: "Filters" }).click();
+  }
+  const filters = page.locator("aside:visible").first();
+  await filters.getByLabel("Seniority").selectOption("senior");
+  await expect(page.getByText("2 contracts found")).toBeVisible();
+  await filters.getByLabel("Rate basis").selectOption("daily");
+  await filters.getByRole("button", { name: "Sponsorship explicitly offered" }).click();
+  await expect(page.getByText("1 contracts found")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Senior DevOps Engineer/ })).toBeVisible();
+  await expect(page).toHaveURL(/seniority=senior/);
+  await expect(page).toHaveURL(/rate_type=daily/);
+  await expect(page).toHaveURL(/sponsorship=stated/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  await expectNoSeriousA11yViolations(page);
+});
+
 test("account flow has explicit modes and neutral sign-in errors", async ({ page }) => {
   await page.goto("/account?next=%2Fdashboard");
   await dismissPrivacyNotice(page);
@@ -403,12 +424,17 @@ test("saved alerts preview current matches without claiming email delivery", asy
   await page.getByLabel("Alert name").fill("Remote cloud contracts");
   await page.getByLabel("Keyword").fill("AWS");
   await page.getByRole("combobox", { name: "IR35", exact: true }).selectOption("outside");
+  await page.getByLabel("Seniority").selectOption("senior");
+  await page.getByLabel("Rate basis").selectOption("daily");
+  await page.getByLabel("Sponsorship explicitly offered").check();
   await page.getByRole("button", { name: "AWS", exact: true }).click();
   await page.getByRole("button", { name: "Save alert" }).click();
   await expect(page.getByText("Preview alert saved in this browser session.")).toBeVisible();
 
   const createdAlert = page.locator("article").filter({ hasText: "Remote cloud contracts" });
   await expect(createdAlert).toBeVisible();
+  await expect(createdAlert).toContainText("Senior");
+  await expect(createdAlert).toContainText("Sponsorship explicitly offered");
   await createdAlert.getByRole("button", { name: "Delete Remote cloud contracts" }).click();
   await createdAlert.getByRole("button", { name: "Confirm delete Remote cloud contracts" }).click();
   await expect(page.getByText("Alert deleted.")).toBeVisible();

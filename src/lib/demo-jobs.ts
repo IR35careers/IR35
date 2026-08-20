@@ -1,5 +1,8 @@
 import type { JobDetail } from "@/lib/job-types";
 
+const DEMO_CLOCK = Date.now();
+const hoursAgo = (hours: number) => new Date(DEMO_CLOCK - hours * 3_600_000).toISOString();
+
 /**
  * Production-shaped local fixtures. They are returned only in development
  * when Supabase is not configured, and every consuming screen labels them as
@@ -19,10 +22,10 @@ export const DEMO_JOBS: JobDetail[] = [
     rate_currency: "GBP",
     rate_type: "daily",
     skills: ["AWS", "Terraform", "Kubernetes", "DevOps"],
-    posted_at: "2026-08-19T08:30:00Z",
-    first_seen_at: "2026-08-19T08:35:00Z",
+    posted_at: hoursAgo(3),
+    first_seen_at: hoursAgo(2.9),
     description:
-      "Six-month Outside IR35 contract for a senior DevOps engineer. You will improve AWS platform reliability, Terraform modules and Kubernetes delivery workflows. Hybrid working in London two days per week.",
+      "Six-month Outside IR35 contract for a senior DevOps engineer. Visa sponsorship is available for this engagement. You will improve AWS platform reliability, Terraform modules and Kubernetes delivery workflows. Hybrid working in London two days per week.",
     apply_url: "https://example.com/jobs/devops",
     source_domain: "demo.ir35careers.local",
   },
@@ -39,8 +42,8 @@ export const DEMO_JOBS: JobDetail[] = [
     rate_currency: "GBP",
     rate_type: "daily",
     skills: ["Data Engineering", "SQL", "Azure", "Stakeholder Management"],
-    posted_at: "2026-08-18T13:00:00Z",
-    first_seen_at: "2026-08-18T13:15:00Z",
+    posted_at: hoursAgo(27),
+    first_seen_at: hoursAgo(26.75),
     description:
       "Inside IR35 engagement leading a complex Azure data migration. Remote within the UK with occasional stakeholder workshops.",
     apply_url: "https://example.com/jobs/data-migration",
@@ -59,8 +62,8 @@ export const DEMO_JOBS: JobDetail[] = [
     rate_currency: "GBP",
     rate_type: "daily",
     skills: ["ServiceNow", "Change Management", "Stakeholder Management"],
-    posted_at: "2026-08-18T09:20:00Z",
-    first_seen_at: "2026-08-18T09:30:00Z",
+    posted_at: hoursAgo(31),
+    first_seen_at: hoursAgo(30.8),
     description:
       "Initial six-month contract supporting ServiceNow implementation and stakeholder adoption. The listing does not state an IR35 determination.",
     apply_url: "https://example.com/jobs/servicenow",
@@ -79,8 +82,8 @@ export const DEMO_JOBS: JobDetail[] = [
     rate_currency: "GBP",
     rate_type: "daily",
     skills: ["Delivery Manager", "Agile", "SC Cleared", "Stakeholder Management"],
-    posted_at: "2026-08-17T12:00:00Z",
-    first_seen_at: "2026-08-17T12:10:00Z",
+    posted_at: hoursAgo(51),
+    first_seen_at: hoursAgo(50.8),
     description:
       "Outside IR35 delivery leadership contract for a public-sector digital programme. Active SC clearance and weekly Bristol attendance required.",
     apply_url: "https://example.com/jobs/delivery",
@@ -99,8 +102,8 @@ export const DEMO_JOBS: JobDetail[] = [
     rate_currency: "GBP",
     rate_type: "daily",
     skills: ["React", "TypeScript", "Next.js", "AWS"],
-    posted_at: "2026-08-16T15:00:00Z",
-    first_seen_at: "2026-08-16T15:10:00Z",
+    posted_at: hoursAgo(75),
+    first_seen_at: hoursAgo(74.8),
     description:
       "The engagement is stated as Outside IR35 in the listing. Build accessible React and TypeScript product surfaces for a UK research platform.",
     apply_url: "https://example.com/jobs/react",
@@ -119,8 +122,8 @@ export const DEMO_JOBS: JobDetail[] = [
     rate_currency: "GBP",
     rate_type: "daily",
     skills: ["Cyber Security", "Project Management", "GRC"],
-    posted_at: "2026-08-15T10:00:00Z",
-    first_seen_at: "2026-08-15T10:20:00Z",
+    posted_at: hoursAgo(99),
+    first_seen_at: hoursAgo(98.7),
     description:
       "Inside IR35 programme role coordinating security controls, governance and executive reporting. Four days per week on-site in Edinburgh.",
     apply_url: "https://example.com/jobs/cyber",
@@ -131,4 +134,3 @@ export const DEMO_JOBS: JobDetail[] = [
 export function isDemoDataAvailable(): boolean {
   return process.env.NODE_ENV !== "production";
 }
-

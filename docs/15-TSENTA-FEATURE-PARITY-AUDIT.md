@@ -7,7 +7,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 
 | Capability seen in the reference | IR35Careers state | Evidence / boundary |
 |---|---|---|
-| Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`, `/jobs/sources`; IR35, workplace, rate, recency, skills, location, sorting, cached per-source freshness and non-blocking background facet counts |
+| Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`, `/jobs/sources`; IR35, workplace, rate, recency, skills, location, sorting, explicit-title seniority, rate basis, positive sponsorship evidence, cached per-source freshness and non-blocking background facet counts |
 | Public job detail and original-source handoff | Live | `/jobs/[id]`; advertiser/inference/source-review IR35 provenance, matched evidence, evidence date, freshness, rate, source and explicit handoff |
 | Dashboard and role matching | Live | `/dashboard`; deterministic profile-to-role scoring with an inspectable 55/20/15/10 skills, rate, IR35 and workplace breakdown, plus a no-score state when structured skill overlap is absent |
 | Application and pipeline analytics | Live | `/analytics`; account-owned funnel, response/interview/offer rates, source/IR35/workplace mix, activity, review signals and privacy-bounded CSV export |
@@ -22,7 +22,7 @@ This ledger separates working product behaviour from provider-dependent integrat
 | Application receipt and tracker | Live as dry run | A receipt and tracker entry are created without transmitting an application; the receipt preserves the reviewed CV label, CV text, cover letter and screening-answer snapshot, and supports account-owned accuracy/change feedback |
 | Automated ATS submission | Provider gate | Adapter boundary exists; live submission is deliberately disabled until ATS-specific credentials, consent and verification exist |
 | Recruiter inbox and reply classification | Product surface + provider gate | Inbox, linking and deterministic classification exist; real inbound email/SMS/WhatsApp delivery needs approved providers |
-| Saved searches, curated list and alerts | Live workspace + delivery gate | Searches are account-owned and each alert can load a cancellable, stale-safe preview of its latest live matches; outbound email delivery remains visibly provider-gated |
+| Saved searches, curated list and alerts | Live workspace + delivery gate | Searches are account-owned, preserve advanced discovery filters after migration 012, and each alert can load a cancellable, stale-safe preview of its latest live matches; outbound email delivery remains visibly provider-gated |
 | Subscription/credit controls | Provider-ready, safely gated | Hosted Stripe Checkout, customer portal, explicit consent record, signed idempotent webhook ledger, entitlement downgrade rules, billing policy and charge-safe account deletion exist; the paid plan stays hidden/disabled until delivered benefits and complete production configuration pass acceptance checks |
 | Responsive web app | Live | Desktop, tablet and mobile layouts |
 | Installable mobile experience | Live PWA | `/mobile`; manifest, original app icons, live browser install affordance, device/network readiness, service worker and truthful offline recovery boundary |

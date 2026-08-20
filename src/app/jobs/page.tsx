@@ -10,6 +10,14 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, MapPin, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles, Activity } from "lucide-react";
 import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
+import {
+  isRateTypeFilter,
+  isSeniorityFilter,
+  RATE_TYPE_FILTER_OPTIONS,
+  SENIORITY_FILTER_OPTIONS,
+  type RateTypeFilter,
+  type SeniorityFilter,
+} from "@/lib/job-search-filters";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { IR35Badge } from "@/components/ui/ir35-badge";
@@ -75,6 +83,8 @@ function JobsBoard() {
   const spIr35 = searchParams.get("ir35");
   const spRemote = searchParams.get("remote");
   const spMinRate = parseInt(searchParams.get("min_rate") ?? "", 10);
+  const spSeniority = searchParams.get("seniority") ?? "";
+  const spRateType = searchParams.get("rate_type") ?? "";
 
   const [q, setQ] = useState(searchParams.get("q") ?? "");
   const [ir35, setIr35] = useState<"" | "outside" | "inside" | "tbc">(spIr35 === "outside" || spIr35 === "inside" || spIr35 === "tbc" || spIr35 === "unknown" ? (spIr35 === "unknown" ? "tbc" : spIr35) : "");
@@ -82,6 +92,9 @@ function JobsBoard() {
   const [minRate, setMinRate] = useState(Number.isFinite(spMinRate) && spMinRate > 0 ? spMinRate : 0);
   const [sort, setSort] = useState("recent");
   const [withinDays, setWithinDays] = useState(0);
+  const [seniority, setSeniority] = useState<"" | SeniorityFilter>(isSeniorityFilter(spSeniority) ? spSeniority : "");
+  const [rateType, setRateType] = useState<"" | RateTypeFilter>(isRateTypeFilter(spRateType) ? spRateType : "");
+  const [sponsorship, setSponsorship] = useState(searchParams.get("sponsorship") === "stated");
   const [page, setPage] = useState(1);
   const [skillsLock, setSkillsLock] = useState<string[]>((searchParams.get("skills") ?? "").split(",").map((s) => s.trim()).filter(Boolean));
   const [locationLock, setLocationLock] = useState(searchParams.get("location") ?? "");
@@ -144,10 +157,13 @@ function JobsBoard() {
     if (skillsLock.length > 0) params.set("skills", skillsLock.join(","));
     if (locationLock) params.set("location", locationLock);
     if (withinDays > 0) params.set("within_days", String(withinDays));
+    if (seniority) params.set("seniority", seniority);
+    if (rateType) params.set("rate_type", rateType);
+    if (sponsorship) params.set("sponsorship", "stated");
     if (sort !== "recent") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
     params.set("per_page", String(JOBS_PER_PAGE));
-    const facetKey = JSON.stringify([q, minRate, skillsLock, locationLock, withinDays]);
+    const facetKey = JSON.stringify([q, minRate, skillsLock, locationLock, withinDays, seniority, rateType, sponsorship]);
     lastParamsRef.current = params;
     lastFacetKeyRef.current = facetKey;
     const visibleParams = new URLSearchParams(params);
@@ -158,7 +174,7 @@ function JobsBoard() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => runSearch(params, facetKey), q ? 350 : 0);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, withinDays, page, runSearch]);
+  }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, withinDays, seniority, rateType, sponsorship, page, runSearch]);
 
   const resetPage = () => setPage(1);
   const clearFilters = () => {
@@ -167,6 +183,9 @@ function JobsBoard() {
     setRemote("");
     setMinRate(0);
     setWithinDays(0);
+    setSeniority("");
+    setRateType("");
+    setSponsorship(false);
     setSkillsLock([]);
     setLocationLock("");
     setPage(1);
@@ -181,6 +200,9 @@ function JobsBoard() {
     if (remote) p.set("remote", remote);
     if (minRate > 0) p.set("min_rate", String(minRate));
     if (skillsLock.length) p.set("skills", skillsLock.join(","));
+    if (seniority) p.set("seniority", seniority);
+    if (rateType) p.set("rate_type", rateType);
+    if (sponsorship) p.set("sponsorship", "stated");
     p.set("prefill", "1");
     return `/alerts?${p.toString()}`;
   })();
@@ -204,14 +226,28 @@ function JobsBoard() {
         </div>
       </div>
       <div>
+        <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600">Seniority</span>
+        <select value={seniority} onChange={(event) => { const value = event.target.value; setSeniority(isSeniorityFilter(value) ? value : ""); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
+          <option value="">Any seniority</option>
+          {SENIORITY_FILTER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select></label>
+      </div>
+      <div>
+        <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600">Rate basis</span>
+        <select value={rateType} onChange={(event) => { const value = event.target.value; const next = isRateTypeFilter(value) ? value : ""; setRateType(next); if (next && next !== "daily") setMinRate(0); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
+          <option value="">Any rate basis</option>
+          {RATE_TYPE_FILTER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select></label>
+      </div>
+      <div>
         <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Minimum day rate</p>
-        <select value={minRate} onChange={(e) => { setMinRate(Number(e.target.value)); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
+        <select aria-label="Minimum day rate" value={minRate} disabled={Boolean(rateType && rateType !== "daily")} onChange={(e) => { const value = Number(e.target.value); setMinRate(value); if (value > 0) setRateType("daily"); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 [&>option]:bg-white">
           {RATE_OPTIONS.map((r) => <option key={r} value={r}>{r === 0 ? "Any rate" : `£${r}+/day`}</option>)}
         </select>
       </div>
       <div>
         <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Posted within</p>
-        <select value={withinDays} onChange={(e) => { setWithinDays(Number(e.target.value)); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
+        <select aria-label="Posted within" value={withinDays} onChange={(e) => { setWithinDays(Number(e.target.value)); resetPage(); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
           {RECENCY_OPTIONS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
         </select>
       </div>
@@ -229,7 +265,12 @@ function JobsBoard() {
           })}
         </div>
       </div>
-      {(ir35 || remote || minRate > 0 || withinDays > 0 || skillsLock.length > 0 || locationLock) && (
+      <div>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">Eligibility evidence</p>
+        <FilterOption label="Sponsorship explicitly offered" active={sponsorship} onClick={() => { setSponsorship((value) => !value); resetPage(); }} />
+        <p className="mt-1.5 text-[11px] leading-4 text-slate-600">Matches positive wording in the listing. Unknown does not mean unavailable.</p>
+      </div>
+      {(ir35 || remote || minRate > 0 || withinDays > 0 || seniority || rateType || sponsorship || skillsLock.length > 0 || locationLock) && (
         <button onClick={clearFilters} className="text-sm font-medium text-green-700 hover:underline">
           Clear all filters
         </button>

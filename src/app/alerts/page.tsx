@@ -11,6 +11,7 @@ import { buttonClassName } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { alertToPreviewApi, alertToSearch, type JobAlertFilter } from "@/lib/alerts";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
+import { isRateTypeFilter, isSeniorityFilter, RATE_TYPE_FILTER_OPTIONS, SENIORITY_FILTER_OPTIONS } from "@/lib/job-search-filters";
 import { PROFILE_SKILL_OPTIONS } from "@/lib/profile";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { supabase } from "@/lib/supabase";
@@ -44,6 +45,9 @@ function filterSummary(alert: JobAlertFilter): string {
     alert.ir35 && (alert.ir35 === "outside" ? "Outside IR35" : "Inside IR35"),
     alert.remote && (alert.remote === "onsite" ? "On-site" : `${alert.remote[0].toUpperCase()}${alert.remote.slice(1)}`),
     alert.min_rate && `£${alert.min_rate}+/day`,
+    alert.seniority && SENIORITY_FILTER_OPTIONS.find((option) => option.value === alert.seniority)?.label,
+    alert.rate_type && RATE_TYPE_FILTER_OPTIONS.find((option) => option.value === alert.rate_type)?.label,
+    alert.sponsorship === "stated" && "Sponsorship explicitly offered",
     alert.q,
     ...alert.skills,
   ].filter(Boolean).join(" · ") || "Any UK contract";
@@ -67,6 +71,9 @@ function AlertsInner() {
   const [ir35, setIr35] = useState(searchParams.get("ir35") ?? "");
   const [remote, setRemote] = useState(searchParams.get("remote") ?? "");
   const [minRate, setMinRate] = useState(Number(searchParams.get("min_rate") ?? "0"));
+  const [seniority, setSeniority] = useState(() => { const value = searchParams.get("seniority") ?? ""; return isSeniorityFilter(value) ? value : ""; });
+  const [rateType, setRateType] = useState(() => { const value = searchParams.get("rate_type") ?? ""; return isRateTypeFilter(value) ? value : ""; });
+  const [sponsorship, setSponsorship] = useState(searchParams.get("sponsorship") === "stated");
   const [skills, setSkills] = useState<string[]>((searchParams.get("skills") ?? "").split(",").map((skill) => skill.trim()).filter(Boolean));
 
   useEffect(() => () => previewController.current?.abort(), []);
@@ -82,7 +89,7 @@ function AlertsInner() {
     setError(null);
     void supabase
       .from("job_alerts")
-      .select("id, name, q, ir35, remote, min_rate, skills")
+      .select("id, name, q, ir35, remote, min_rate, skills, seniority, rate_type, sponsorship")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data, error: loadError }: { data: JobAlertFilter[] | null; error: { message: string } | null }) => {
@@ -98,7 +105,7 @@ function AlertsInner() {
     if (!configured || !user) return;
     const { data, error: loadError } = await supabase
       .from("job_alerts")
-      .select("id, name, q, ir35, remote, min_rate, skills")
+      .select("id, name, q, ir35, remote, min_rate, skills, seniority, rate_type, sponsorship")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (loadError) throw new Error(loadError.message);
@@ -111,6 +118,9 @@ function AlertsInner() {
     setIr35("");
     setRemote("");
     setMinRate(0);
+    setSeniority("");
+    setRateType("");
+    setSponsorship(false);
     setSkills([]);
     setShowForm(false);
   };
@@ -127,6 +137,9 @@ function AlertsInner() {
       remote: remote || null,
       min_rate: minRate > 0 ? minRate : null,
       skills,
+      seniority: seniority || null,
+      rate_type: rateType || null,
+      sponsorship: sponsorship ? "stated" : null,
     };
     try {
       if (!configured) {
@@ -141,6 +154,9 @@ function AlertsInner() {
           remote: alert.remote,
           min_rate: alert.min_rate,
           skills: alert.skills,
+          seniority: alert.seniority,
+          rate_type: alert.rate_type,
+          sponsorship: alert.sponsorship,
         });
         if (saveError) throw saveError;
         await reload();
@@ -217,7 +233,10 @@ function AlertsInner() {
             <label className="text-sm font-semibold text-slate-800">Keyword<input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Developer or company" maxLength={120} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal" /></label>
             <label className="text-sm font-semibold text-slate-800">IR35<select value={ir35} onChange={(event) => setIr35(event.target.value)} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal"><option value="">Any status</option><option value="outside">Outside IR35</option><option value="inside">Inside IR35</option></select></label>
             <label className="text-sm font-semibold text-slate-800">Workplace<select value={remote} onChange={(event) => setRemote(event.target.value)} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal"><option value="">Any pattern</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="onsite">On-site</option></select></label>
-            <label className="text-sm font-semibold text-slate-800">Minimum day rate<select value={minRate} onChange={(event) => setMinRate(Number(event.target.value))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal">{[0, 300, 400, 500, 600, 700].map((rate) => <option key={rate} value={rate}>{rate === 0 ? "Any rate" : `£${rate}+/day`}</option>)}</select></label>
+            <label className="text-sm font-semibold text-slate-800">Minimum day rate<select value={minRate} disabled={Boolean(rateType && rateType !== "daily")} onChange={(event) => { const value = Number(event.target.value); setMinRate(value); if (value > 0) setRateType("daily"); }} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500">{[0, 300, 400, 500, 600, 700].map((rate) => <option key={rate} value={rate}>{rate === 0 ? "Any rate" : `£${rate}+/day`}</option>)}</select></label>
+            <label className="text-sm font-semibold text-slate-800">Seniority<select value={seniority} onChange={(event) => { const value = event.target.value; setSeniority(isSeniorityFilter(value) ? value : ""); }} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal"><option value="">Any seniority</option>{SENIORITY_FILTER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label className="text-sm font-semibold text-slate-800">Rate basis<select value={rateType} onChange={(event) => { const value = event.target.value; const next = isRateTypeFilter(value) ? value : ""; setRateType(next); if (next && next !== "daily") setMinRate(0); }} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 font-normal"><option value="">Any rate basis</option>{RATE_TYPE_FILTER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label className="flex min-h-11 items-center gap-3 self-end rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-800"><input type="checkbox" checked={sponsorship} onChange={(event) => setSponsorship(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-brand-600" />Sponsorship explicitly offered</label>
           </div>
           <fieldset className="mt-5"><legend className="text-sm font-semibold text-slate-800">Skills</legend><div className="mt-2 flex flex-wrap gap-2">{PROFILE_SKILL_OPTIONS.slice(0, 18).map((skill) => { const selected = skills.includes(skill); return <button key={skill} type="button" aria-pressed={selected} onClick={() => setSkills((current) => selected ? current.filter((item) => item !== skill) : [...current, skill])} className={`ir35-focus min-h-10 rounded-full border px-3 text-xs font-semibold ${selected ? "border-brand-300 bg-brand-50 text-brand-800" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}>{selected && <Check size={13} className="mr-1 inline" />}{skill}</button>; })}</div></fieldset>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={resetForm} className={buttonClassName({ variant: "secondary" })}>Cancel</button><button type="button" onClick={() => void save()} disabled={saving} className={buttonClassName()}>{saving ? <Loader2 className="animate-spin" size={16} /> : <Bell size={16} />}Save alert</button></div>

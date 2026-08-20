@@ -9,6 +9,9 @@ const alert: JobAlertFilter = {
   remote: "hybrid",
   min_rate: 600,
   skills: ["AWS", "Terraform"],
+  seniority: "senior",
+  rate_type: "daily",
+  sponsorship: "stated",
 };
 
 describe("job alert links", () => {
@@ -21,11 +24,14 @@ describe("job alert links", () => {
       remote: "hybrid",
       min_rate: "600",
       skills: "AWS,Terraform",
+      seniority: "senior",
+      rate_type: "daily",
+      sponsorship: "stated",
     });
   });
 
   it("builds a bounded preview request and supports an unfiltered alert", () => {
     expect(new URL(alertToPreviewApi(alert, 50), "https://www.ir35careers.com").searchParams.get("per_page")).toBe("10");
-    expect(alertToSearch({ ...alert, q: null, ir35: null, remote: null, min_rate: null, skills: [] })).toBe("/jobs");
+    expect(alertToSearch({ ...alert, q: null, ir35: null, remote: null, min_rate: null, skills: [], seniority: null, rate_type: null, sponsorship: null })).toBe("/jobs");
   });
 });

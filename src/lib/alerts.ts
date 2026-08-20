@@ -6,6 +6,9 @@ export interface JobAlertFilter {
   remote: string | null;
   min_rate: number | null;
   skills: string[];
+  seniority?: string | null;
+  rate_type?: string | null;
+  sponsorship?: string | null;
 }
 
 export function alertSearchParams(alert: JobAlertFilter): URLSearchParams {
@@ -15,6 +18,9 @@ export function alertSearchParams(alert: JobAlertFilter): URLSearchParams {
   if (alert.remote) params.set("remote", alert.remote);
   if (alert.min_rate && alert.min_rate > 0) params.set("min_rate", String(alert.min_rate));
   if (alert.skills.length > 0) params.set("skills", alert.skills.join(","));
+  if (alert.seniority) params.set("seniority", alert.seniority);
+  if (alert.rate_type) params.set("rate_type", alert.rate_type);
+  if (alert.sponsorship) params.set("sponsorship", alert.sponsorship);
   return params;
 }
 

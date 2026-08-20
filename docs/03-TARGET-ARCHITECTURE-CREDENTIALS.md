@@ -92,6 +92,10 @@ The current CV Studio does not require an AI provider. PDF/DOCX extraction, the 
 
 Exact URLs must not be registered until the matching routes, signature validation and staging smoke tests exist.
 
+## Advanced discovery migration gate
+
+Apply `supabase/migrations/012_job_alert_discovery_filters.sql` before deploying the matching alert UI. The migration only adds nullable, constrained `seniority`, `rate_type` and `sponsorship` fields to `job_alerts`; it does not rewrite or delete existing alerts. After applying it, verify an authenticated user can create, reload, preview and delete an alert containing all three values while another user cannot read it.
+
 ## Stripe billing acceptance gate
 
 1. Apply `supabase/migrations/011_billing_provider.sql` and confirm browser roles cannot update provider entitlement columns or read the webhook ledger.
