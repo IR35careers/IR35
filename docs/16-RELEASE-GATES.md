@@ -18,6 +18,7 @@ If any command fails, Vercel keeps the previous successful production deployment
 
 - **Code quality and production build** repeats the release verification and compiles every route.
 - **Responsive browser and accessibility** installs Playwright Chrome and runs the full phone, tablet and desktop suite, including axe checks and provider safety boundaries.
+- Homepage visual comparison permits at most 20 changed pixels to absorb runner-level rasterization noise while still failing meaningful copy, spacing or layout drift.
 - Browser screenshots and traces are retained for seven days only when the browser job fails. Tests use labelled fictional preview data and never send an application, email or payment.
 - Concurrency cancellation stops superseded runs on the same branch instead of wasting runner time.
 

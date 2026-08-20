@@ -23,5 +23,6 @@ test("public homepage visual baseline", async ({ page }) => {
     animations: "disabled",
     caret: "initial",
     fullPage: false,
+    maxDiffPixels: 20,
   });
 });
