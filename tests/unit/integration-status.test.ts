@@ -6,11 +6,11 @@ afterEach(() => vi.unstubAllEnvs());
 describe("integration status", () => {
   it("requires every email gate before reporting a connection", () => {
     vi.stubEnv("ENABLE_INBOUND_MAIL", "true");
-    vi.stubEnv("EMAIL_PROVIDER_API_KEY", "test-secret");
-    vi.stubEnv("INBOUND_MAIL_SIGNING_SECRET", "");
+    vi.stubEnv("RESEND_API_KEY", "re_test-secret");
+    vi.stubEnv("RESEND_WEBHOOK_SECRET", "");
     expect(getIntegrationStatuses().find((item) => item.id === "inbound_email")?.state).toBe("provider_gate");
 
-    vi.stubEnv("INBOUND_MAIL_SIGNING_SECRET", "test-signing-secret");
+    vi.stubEnv("RESEND_WEBHOOK_SECRET", "whsec_test-signing-secret");
     vi.stubEnv("INBOUND_EMAIL_DOMAIN", "apply.example.com");
     expect(getIntegrationStatuses().find((item) => item.id === "inbound_email")?.state).toBe("connected");
   });
