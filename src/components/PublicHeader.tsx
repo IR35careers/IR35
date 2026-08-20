@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Menu, X } from "lucide-react";
+import { LayoutDashboard, Menu, UserPlus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Brand } from "@/components/ui/brand";
 import { buttonClassName } from "@/components/ui/button";
@@ -53,14 +53,37 @@ export function PublicHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          {!loading && (
+          {!loading && user && (
             <Link
-              href={user || preview ? "/dashboard" : `/account?next=${encodeURIComponent(pathname || "/dashboard")}`}
-              className={buttonClassName({ variant: user ? "secondary" : "primary", size: "sm", className: "hidden sm:inline-flex" })}
+              href="/dashboard"
+              className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
             >
-              {(user || preview) && <LayoutDashboard size={15} aria-hidden="true" />}
-              {user ? "Dashboard" : preview ? "Preview workspace" : "Sign in"}
+              <LayoutDashboard size={15} aria-hidden="true" /> Dashboard
             </Link>
+          )}
+          {!loading && !user && preview && (
+            <Link
+              href="/dashboard"
+              className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
+            >
+              <LayoutDashboard size={15} aria-hidden="true" /> Preview workspace
+            </Link>
+          )}
+          {!loading && !user && !preview && (
+            <>
+              <Link
+                href={`/account?next=${encodeURIComponent(pathname || "/dashboard")}`}
+                className={buttonClassName({ variant: "quiet", size: "sm", className: "hidden sm:inline-flex" })}
+              >
+                Sign in
+              </Link>
+              <Link
+                href={`/account?mode=create&next=${encodeURIComponent(pathname || "/dashboard")}`}
+                className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
+              >
+                <UserPlus size={15} aria-hidden="true" /> Sign up free
+              </Link>
+            </>
           )}
           <button
             type="button"
@@ -89,13 +112,32 @@ export function PublicHeader() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href={user || preview ? "/dashboard" : `/account?next=${encodeURIComponent(pathname || "/dashboard")}`}
-              onClick={() => setOpen(false)}
-              className={buttonClassName({ variant: "primary", className: "mt-2 w-full" })}
-            >
-              {user ? "Open dashboard" : preview ? "Open preview workspace" : "Sign in or create account"}
-            </Link>
+            {user || preview ? (
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className={buttonClassName({ variant: "primary", className: "mt-2 w-full" })}
+              >
+                <LayoutDashboard size={16} aria-hidden="true" /> {user ? "Open dashboard" : "Open preview workspace"}
+              </Link>
+            ) : (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Link
+                  href={`/account?next=${encodeURIComponent(pathname || "/dashboard")}`}
+                  onClick={() => setOpen(false)}
+                  className={buttonClassName({ variant: "secondary", className: "w-full" })}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href={`/account?mode=create&next=${encodeURIComponent(pathname || "/dashboard")}`}
+                  onClick={() => setOpen(false)}
+                  className={buttonClassName({ variant: "primary", className: "w-full" })}
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
           </nav>
         </div>
       )}

@@ -1,4 +1,4 @@
-export type ButtonVariant = "primary" | "secondary" | "quiet" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "quiet" | "accent" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 export function buttonClassName({
@@ -16,6 +16,7 @@ export function buttonClassName({
     secondary:
       "border border-slate-300 bg-white text-slate-800 shadow-sm hover:border-brand-300 hover:bg-brand-50",
     quiet: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+    accent: "border border-emerald-300 bg-emerald-300 text-slate-950 shadow-sm hover:bg-emerald-200",
     danger: "bg-red-600 text-white hover:bg-red-700",
   };
   const sizes: Record<ButtonSize, string> = {
@@ -25,4 +26,3 @@ export function buttonClassName({
   };
   return `ir35-focus inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70 ${variants[variant]} ${sizes[size]} ${className}`;
 }
-

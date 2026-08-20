@@ -21,6 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE}/stories`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${BASE}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/cookies`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/accessibility`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/job-listing-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
     ...allSeoSlugs().map((slug) => ({
       url: `${BASE}/contracts/${slug}`,
       lastModified: now,

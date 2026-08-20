@@ -8,8 +8,8 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, MapPin, Loader2, SlidersHorizontal, Bell } from "lucide-react";
-import { formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
+import { Search, MapPin, Loader2, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2 } from "lucide-react";
+import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { IR35Badge } from "@/components/ui/ir35-badge";
@@ -25,6 +25,7 @@ interface SearchResponse {
   page: number;
   per_page: number;
   data_source?: "live" | "demo";
+  generated_at?: string;
   error?: string;
 }
 
@@ -74,7 +75,7 @@ function JobsBoard() {
   const spMinRate = parseInt(searchParams.get("min_rate") ?? "", 10);
 
   const [q, setQ] = useState(searchParams.get("q") ?? "");
-  const [ir35, setIr35] = useState<"" | "outside" | "inside" | "tbc">(spIr35 === "outside" || spIr35 === "inside" ? spIr35 : "");
+  const [ir35, setIr35] = useState<"" | "outside" | "inside" | "tbc">(spIr35 === "outside" || spIr35 === "inside" || spIr35 === "tbc" || spIr35 === "unknown" ? (spIr35 === "unknown" ? "tbc" : spIr35) : "");
   const [remote, setRemote] = useState(spRemote === "remote" || spRemote === "hybrid" || spRemote === "onsite" ? spRemote : "");
   const [minRate, setMinRate] = useState(Number.isFinite(spMinRate) && spMinRate > 0 ? spMinRate : 0);
   const [sort, setSort] = useState("recent");
@@ -89,6 +90,7 @@ function JobsBoard() {
   const [failed, setFailed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const lastParamsRef = useRef(new URLSearchParams());
 
   const runSearch = useCallback(async (params: URLSearchParams) => {
     requestRef.current?.abort();
@@ -114,7 +116,7 @@ function JobsBoard() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
-    if (ir35) params.set("ir35", ir35 === "tbc" ? "" : ir35);
+    if (ir35) params.set("ir35", ir35);
     if (remote) params.set("remote", remote);
     if (minRate > 0) params.set("min_rate", String(minRate));
     if (skillsLock.length > 0) params.set("skills", skillsLock.join(","));
@@ -123,6 +125,11 @@ function JobsBoard() {
     if (sort !== "recent") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
     params.set("with_facets", "1");
+    lastParamsRef.current = params;
+    const visibleParams = new URLSearchParams(params);
+    visibleParams.delete("with_facets");
+    const nextUrl = visibleParams.size > 0 ? `/jobs?${visibleParams.toString()}` : "/jobs";
+    window.history.replaceState(window.history.state, "", nextUrl);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => runSearch(params), q ? 350 : 0);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
@@ -211,26 +218,43 @@ function JobsBoard() {
           </p>
         )}
 
-        {/* Search bar */}
-        <div className="relative">
-          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input type="search" value={q} onChange={(e) => { setQ(e.target.value); resetPage(); }} placeholder="Search roles, skills, companies…"
-            className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40" aria-label="Search contracts" />
+        <div className="grid overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-card sm:grid-cols-[1fr_0.55fr]">
+          <label className="relative block">
+            <span className="sr-only">Search contracts</span>
+            <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <input type="search" value={q} onChange={(e) => { setQ(e.target.value); resetPage(); }} placeholder="Role, skill or company"
+              className="ir35-focus min-h-14 w-full border-0 bg-white pl-11 pr-4 text-sm placeholder:text-slate-500" aria-label="Search contracts" />
+          </label>
+          <label className="relative block border-t border-slate-200 sm:border-l sm:border-t-0">
+            <span className="sr-only">Location</span>
+            <MapPin size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <input type="search" value={locationLock} onChange={(e) => { setLocationLock(e.target.value); resetPage(); }} placeholder="Town, region or UK"
+              className="ir35-focus min-h-14 w-full border-0 bg-white pl-11 pr-4 text-sm placeholder:text-slate-500" aria-label="Filter by location" />
+          </label>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-xs font-medium text-emerald-950">
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} aria-hidden="true" /> Explicit IR35 evidence labels</span>
+          <span className="inline-flex items-center gap-1.5"><Link2 size={14} aria-hidden="true" /> Original source retained</span>
+          <span>Daily source refresh and duplicate reduction</span>
         </div>
 
         {/* Header row */}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="text-sm text-slate-500" aria-live="polite">
-            {loading ? "Searching…" : data ? <><span className="font-semibold text-slate-800">{data.total.toLocaleString()}</span> contracts found</> : ""}
-          </p>
+          <div aria-live="polite">
+            <p className="text-sm text-slate-500">
+              {loading ? "Searching…" : data ? <><span className="font-semibold text-slate-800">{data.total.toLocaleString()}</span> contracts found</> : ""}
+            </p>
+            {!loading && data?.generated_at && <p className="mt-0.5 text-[11px] text-slate-400">Search refreshed {new Date(data.generated_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>}
+          </div>
           <div className="flex items-center gap-2">
             <Link href={alertHref} className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-green-300 hover:text-green-700 sm:inline-flex">
               <Bell size={13} /> Save as alert
             </Link>
             <select value={sort} onChange={(e) => { setSort(e.target.value); resetPage(); }} aria-label="Sort order" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 [&>option]:bg-white">
               <option value="recent">Newest first</option>
-              <option value="rate_high">Highest rate</option>
-              <option value="rate_low">Lowest rate</option>
+              <option value="rate_high">Highest day rate</option>
+              <option value="rate_low">Lowest day rate</option>
             </select>
             <button onClick={() => setMobileFilters((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 lg:hidden">
               <SlidersHorizontal size={13} /> Filters
@@ -240,14 +264,14 @@ function JobsBoard() {
 
         <div className="mt-4 grid gap-6 lg:grid-cols-[260px_1fr]">
           {/* Sidebar (desktop) */}
-          <aside className="hidden h-max rounded-2xl border border-slate-200 bg-white p-5 lg:block">{Sidebar}</aside>
+          <aside className="hidden h-max rounded-2xl border border-slate-200 bg-white p-5 lg:sticky lg:top-24 lg:block">{Sidebar}</aside>
           {/* Sidebar (mobile) */}
           {mobileFilters && <aside className="rounded-2xl border border-slate-200 bg-white p-5 lg:hidden">{Sidebar}</aside>}
 
           {/* Results */}
-          <div className="min-w-0">
+          <div className={`min-w-0 transition-opacity ${loading && data ? "opacity-60" : "opacity-100"}`} aria-busy={loading}>
             {failed ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><p className="text-slate-700">Couldn&apos;t load contracts.</p><p className="mt-1 text-sm text-slate-500">Refresh to try again.</p></div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><p className="font-semibold text-slate-800">Couldn&apos;t load contracts.</p><p className="mt-1 text-sm text-slate-500">Your filters are still here. Retry the search when your connection is ready.</p><button type="button" onClick={() => void runSearch(lastParamsRef.current)} className="ir35-focus mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Retry search</button></div>
             ) : loading && !data ? (
               <div className="flex items-center justify-center py-24 text-slate-400"><Loader2 className="animate-spin" size={22} /></div>
             ) : data && data.jobs.length === 0 ? (
@@ -258,11 +282,11 @@ function JobsBoard() {
                   const hasRate = job.rate_min !== null || job.rate_max !== null;
                   return (
                     <li key={job.id}>
-                      <Link href={`/jobs/${job.id}`} className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 pl-6 transition-all hover:-translate-y-0.5 hover:border-green-300 hover:shadow-sm sm:flex-row sm:items-start sm:justify-between">
+                      <Link href={`/jobs/${job.id}`} className="group relative grid gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 pl-6 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card lg:grid-cols-[minmax(0,1fr)_210px]">
                         <span className={`absolute inset-y-0 left-0 w-[3px] ${job.ir35_status === "outside" ? "bg-green-500" : job.ir35_status === "inside" ? "bg-rose-500" : "bg-slate-200"}`} aria-hidden />
                         <div className="min-w-0">
                           <h2 className="text-[15px] font-medium text-slate-900 sm:truncate">{job.title}</h2>
-                          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-slate-500">
+                          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
                             <span className="text-slate-700">{job.company_name}</span><span aria-hidden>·</span>
                             <span className="inline-flex items-center gap-1"><MapPin size={12} /> {job.location}</span><span aria-hidden>·</span>
                             <span>{formatPosted(job)}</span>
@@ -272,8 +296,9 @@ function JobsBoard() {
                             {job.skills.slice(0, 5).map((s) => <span key={s} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{s}</span>)}
                             {job.skills.length > 5 && <span className="text-xs text-slate-400">+{job.skills.length - 5}</span>}
                           </div>
+                          <p className="mt-3 text-[11px] text-slate-400">{formatFreshness(job)}{job.source_domain ? ` · Source: ${job.source_domain.replace("www.", "")}` : ""}</p>
                         </div>
-                        <div className="flex shrink-0 items-center justify-between gap-2 sm:flex-col sm:items-end">
+                        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 pt-3 lg:flex-col lg:items-end lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
                           {hasRate ? <span className="text-lg font-semibold tabular-nums tracking-tight sm:text-right">{formatRate(job)}</span> : <span className="text-sm text-slate-400 sm:text-right">Rate on application</span>}
                           <IR35Badge status={job.ir35_status} />
                           <span className="text-[11px] text-slate-400 sm:text-right">{ir35EvidenceLabel(job)}</span>

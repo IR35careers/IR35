@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "react-hot-toast";
+import { CookieNotice } from "@/components/CookieNotice";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -83,6 +84,7 @@ export default function RootLayout({
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>{children}</AuthProvider>
+        <CookieNotice />
         <Toaster
           position="bottom-right"
           toastOptions={{

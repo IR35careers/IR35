@@ -14,6 +14,8 @@ export interface JobListing {
   skills: string[];
   posted_at: string | null;
   first_seen_at: string;
+  last_seen_at?: string;
+  source_domain?: string;
 }
 
 export interface JobDetail extends JobListing {
@@ -34,7 +36,7 @@ export function ir35EvidenceLabel(
 
 /** Columns fetched for list views — keep in sync with JobListing. */
 export const JOB_LIST_COLUMNS =
-  "id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at";
+  "id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at, last_seen_at, source_domain";
 
 /** Human-friendly rate string: "£550-£650/day", "£85k/yr", "Rate on application". */
 export function formatRate(job: Pick<JobListing, "rate_min" | "rate_max" | "rate_currency" | "rate_type">): string {
@@ -61,4 +63,15 @@ export function formatPosted(job: Pick<JobListing, "posted_at" | "first_seen_at"
   if (days < 7) return `${days} days ago`;
   const weeks = Math.floor(days / 7);
   return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+}
+
+/** A transparent source-freshness label that does not imply the vacancy is guaranteed open. */
+export function formatFreshness(job: Pick<JobListing, "last_seen_at">): string {
+  if (!job.last_seen_at) return "Source freshness unavailable";
+  const then = new Date(job.last_seen_at).getTime();
+  if (!Number.isFinite(then)) return "Source freshness unavailable";
+  const days = Math.max(0, Math.floor((Date.now() - then) / 86_400_000));
+  if (days === 0) return "Seen in today’s source refresh";
+  if (days === 1) return "Seen in yesterday’s source refresh";
+  return `Last seen in source ${days} days ago`;
 }

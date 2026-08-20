@@ -27,12 +27,22 @@ const GROUPS = [
       ["Contact", "/contact"],
     ],
   },
+  {
+    title: "Legal & trust",
+    links: [
+      ["Privacy notice", "/privacy"],
+      ["Cookie policy", "/cookies"],
+      ["Terms of use", "/terms"],
+      ["Accessibility", "/accessibility"],
+      ["Job listing policy", "/job-listing-policy"],
+    ],
+  },
 ] as const;
 
 export function PublicFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white">
-      <div className="ir35-container grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1fr_auto_auto_auto] lg:gap-16">
+      <div className="ir35-container grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.2fr_repeat(4,minmax(0,auto))] lg:gap-10 xl:gap-14">
         <div className="max-w-sm">
           <Brand />
           <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -58,9 +68,9 @@ export function PublicFooter() {
         ))}
       </div>
       <div className="border-t border-slate-100">
-        <div className="ir35-container flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} IR35Careers</span>
-          <span>Built for UK contractors.</span>
+        <div className="ir35-container flex flex-col gap-3 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} IR35Careers · Built for UK contractors.</span>
+          <span className="max-w-2xl sm:text-right">Job and IR35 information is educational, may be supplied by third parties and should be independently checked before you act.</span>
         </div>
       </div>
     </footer>

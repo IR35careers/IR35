@@ -1,0 +1,29 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
+
+export const metadata: Metadata = { title: "Terms of Use", description: "Terms governing use of IR35Careers job discovery and contractor workspace tools." };
+
+const sections = [
+  { id: "service", label: "The service" },
+  { id: "accounts", label: "Accounts and acceptable use" },
+  { id: "jobs", label: "Jobs and third-party links" },
+  { id: "ir35", label: "IR35 and tax information" },
+  { id: "cv-tools", label: "CV and application tools" },
+  { id: "availability", label: "Availability and liability" },
+  { id: "ending", label: "Ending use and law" },
+] as const;
+
+export default function TermsPage() {
+  return (
+    <LegalDocument eyebrow="Legal & trust" title="Terms of Use" summary="These terms set fair boundaries for using IR35Careers, its job information and contractor preparation tools." sections={[...sections]}>
+      <section aria-labelledby="service"><h2 id="service">The service</h2><p className="mt-3">IR35Careers provides UK contract-job discovery, educational IR35 resources and optional contractor-workspace tools. By creating an account or using the workspace, you agree to these terms and acknowledge the <Link href="/privacy">Privacy Notice</Link>.</p><p className="mt-3">You must be at least 18 years old and legally able to enter into these terms. Public job browsing does not require an account.</p></section>
+      <section aria-labelledby="accounts"><h2 id="accounts">Accounts and acceptable use</h2><ul className="mt-4"><li>Provide accurate account information, protect your credentials and tell us about suspected misuse.</li><li>Use the service only for lawful contractor-search and career-preparation purposes.</li><li>Do not scrape at scale, bypass access controls, interfere with security, upload malicious content, impersonate another person or use the service to discriminate.</li><li>Do not upload confidential information you do not have permission to process.</li></ul><p className="mt-3">We may restrict access where reasonably necessary to protect users, providers or the service and will act proportionately where practical.</p></section>
+      <section aria-labelledby="jobs"><h2 id="jobs">Job listings and third-party links</h2><p className="mt-3">Listings may come from employers, authorised feeds, job boards and public ATS endpoints. IR35Careers normalises and deduplicates the data but does not employ the advertiser, guarantee a vacancy, endorse a recruiter or control the original application process.</p><p className="mt-3">Check the original listing before applying. Its terms and privacy notice apply when you leave IR35Careers. Report expired, misleading or rights-infringing listings through <Link href="/contact">Contact</Link>.</p></section>
+      <section aria-labelledby="ir35"><h2 id="ir35">IR35, tax and take-home information</h2><LegalCallout><strong>Educational information, not professional advice.</strong> IR35 status depends on the written terms and actual working practices of each engagement. Calculators and labels are indicative and may not reflect your circumstances.</LegalCallout><p className="mt-3">Obtain advice from a suitably qualified tax, legal or employment-status professional before relying on a status assessment, contract structure or financial estimate.</p></section>
+      <section aria-labelledby="cv-tools"><h2 id="cv-tools">CV, scoring and application tools</h2><p className="mt-3">Role-match scores and suggested edits are preparation aids, not promises of applicant-tracking-system performance, interviews or work. You remain responsible for truthfulness, accuracy and the version you use.</p><ul className="mt-4"><li>IR35Careers does not add missing experience unless you explicitly confirm that it is true.</li><li>You can review and edit suggested text before saving or exporting it.</li><li>No application is submitted without an explicit action by you; a preparation receipt is not proof of submission.</li><li>Do not use generated text to misrepresent qualifications, identity, work history or right to work.</li></ul></section>
+      <section aria-labelledby="availability"><h2 id="availability">Availability, intellectual property and liability</h2><p className="mt-3">We aim to provide a reliable and accessible service but cannot promise uninterrupted availability or error-free third-party data. We may change or discontinue features, with reasonable notice for material account features where practical.</p><p className="mt-3">The IR35Careers brand, interface and original guidance are protected by applicable intellectual-property law. Job-advertisement rights remain with their respective owners. You retain rights in material you upload and give us the limited permission needed to process it for the features you request.</p><p className="mt-3">Nothing in these terms excludes liability that cannot lawfully be excluded. Subject to that, IR35Careers is not responsible for hiring decisions, third-party websites, indirect losses or decisions made solely from educational status labels or estimates.</p></section>
+      <section aria-labelledby="ending"><h2 id="ending">Ending use, changes and governing law</h2><p className="mt-3">You can stop using the service and request account deletion through <Link href="/contact">Contact</Link>. Provisions that logically continue—such as ownership, disclaimers and dispute terms—survive closure.</p><p className="mt-3">These terms are governed by the law of England and Wales, and the courts of England and Wales have jurisdiction, without removing any mandatory consumer rights that apply where you live. We will date material updates and ask account holders to accept a new version when appropriate.</p></section>
+    </LegalDocument>
+  );
+}

@@ -87,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
+      options: {
+        data: {
+          terms_accepted_at: new Date().toISOString(),
+          terms_version: "2026-08-20",
+          privacy_notice_version: "2026-08-20",
+        },
+      },
     });
     if (error) return { error: error.message };
     // If email confirmation is ON, there's a user but no active session yet.

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
+import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
 
 const base = {
   rate_min: null,
@@ -38,6 +38,16 @@ describe("formatPosted", () => {
     expect(formatPosted({ posted_at: "2026-08-19T08:00:00Z", first_seen_at: "2026-08-18T08:00:00Z" })).toBe("Today");
     expect(formatPosted({ posted_at: null, first_seen_at: "2026-08-18T08:00:00Z" })).toBe("Yesterday");
     expect(formatPosted({ posted_at: "2026-08-05T08:00:00Z", first_seen_at: "2026-08-05T08:00:00Z" })).toBe("2 weeks ago");
+    vi.useRealTimers();
+  });
+});
+
+describe("formatFreshness", () => {
+  it("separates source freshness from the advertised post date", () => {
+    vi.setSystemTime(new Date("2026-08-20T12:00:00Z"));
+    expect(formatFreshness({ last_seen_at: "2026-08-20T05:00:00Z" })).toBe("Seen in today’s source refresh");
+    expect(formatFreshness({ last_seen_at: "2026-08-18T05:00:00Z" })).toBe("Last seen in source 2 days ago");
+    expect(formatFreshness({})).toBe("Source freshness unavailable");
     vi.useRealTimers();
   });
 });

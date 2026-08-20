@@ -213,7 +213,10 @@ export function HomeExperience() {
                 {["Free to browse", "Original source links", "No application submitted without you"].map((item) => <li key={item} className="flex items-center gap-2"><Check size={15} className="text-emerald-300" aria-hidden="true" />{item}</li>)}
               </ul>
             </div>
-            <Link href="/jobs" className={buttonClassName({ size: "lg", className: "bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} aria-hidden="true" /></Link>
+            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+              <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "lg", className: "border-white bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} aria-hidden="true" /></Link>
+              <Link href="/account?mode=create&next=%2Fdashboard" className={buttonClassName({ variant: "accent", size: "lg" })}>Create free account</Link>
+            </div>
           </div>
         </section>
       </main>

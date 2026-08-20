@@ -12,6 +12,11 @@ async function expectNoSeriousA11yViolations(page: import("@playwright/test").Pa
   expect(serious, serious.map((item) => `${item.id}: ${item.help}`).join("\n")).toEqual([]);
 }
 
+async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
+  const button = page.getByRole("button", { name: "Understood", exact: true });
+  if (await button.isVisible().catch(() => false)) await button.click();
+}
+
 test("public search-to-detail journey is usable and truthful", async ({ page, request }) => {
   const response = await request.get("/api/jobs/search?q=DevOps&with_facets=1");
   expect(response.ok()).toBeTruthy();
@@ -20,6 +25,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   expect(payload.jobs).toHaveLength(1);
 
   await page.goto("/");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: /Contract work, without the IR35 guesswork/i })).toBeVisible();
   await expect(page.getByText(/Preview data - connect Supabase/i)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
@@ -43,6 +49,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
 
 test("account flow has explicit modes and neutral sign-in errors", async ({ page }) => {
   await page.goto("/account?next=%2Fdashboard");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
@@ -57,6 +64,7 @@ test("account flow has explicit modes and neutral sign-in errors", async ({ page
 test("mobile navigation exposes all primary destinations", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile-only interaction");
   await page.goto("/");
+  await dismissPrivacyNotice(page);
   await page.getByRole("button", { name: "Open navigation" }).click();
   await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Find contracts" })).toBeVisible();
@@ -78,6 +86,7 @@ test("CV Studio analyses, verifies, versions and exports a role-tailored CV", as
   expect((await parsed.json()).text).toContain("AWS Terraform");
 
   await page.goto("/jobs/11111111-1111-4111-8111-111111111111/resume");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Tailor your CV with evidence you control" })).toBeVisible();
   await page.getByRole("button", { name: "Try the labelled sample CV" }).click();
   await page.getByRole("button", { name: "Analyse against this role" }).click();
@@ -109,6 +118,7 @@ test("CV Studio analyses, verifies, versions and exports a role-tailored CV", as
 
 test("application workspace prepares, approves, receipts and tracks without submitting", async ({ page }) => {
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Prepare for Northstar Digital" })).toBeVisible();
   await expect(page.getByText(/Data stays in this browser/)).toBeVisible();
   await page.getByRole("button", { name: "Load labelled sample CV" }).click();

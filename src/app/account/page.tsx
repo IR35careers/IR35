@@ -29,6 +29,7 @@ function AccountForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(false);
 
   // Already signed in → leave this page.
   useEffect(() => {
@@ -45,6 +46,10 @@ function AccountForm() {
     }
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (mode === "create" && !legalAccepted) {
+      setError("Please accept the Terms of Use and acknowledge the Privacy Notice to create an account.");
       return;
     }
 
@@ -208,6 +213,21 @@ function AccountForm() {
           </p>
         )}
 
+        {mode === "create" && (
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+            <input
+              type="checkbox"
+              checked={legalAccepted}
+              onChange={(event) => setLegalAccepted(event.target.checked)}
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-700"
+            />
+            <span>
+              I agree to the <Link href="/terms" target="_blank" className="font-semibold text-brand-700 underline underline-offset-2">Terms of Use</Link> and acknowledge the <Link href="/privacy" target="_blank" className="font-semibold text-brand-700 underline underline-offset-2">Privacy Notice</Link>. CV scoring is advisory and does not make hiring decisions.
+            </span>
+          </label>
+        )}
+
         <button
           type="submit"
           disabled={submitting}
@@ -253,8 +273,8 @@ function AccountForm() {
         {mode === "sign-in" ? "Sign in" : "Continue"} with Google
       </button>
 
-      <p className="mt-4 text-center text-xs text-slate-600">
-        We use your account to save contracts and searches. Applications still happen on the original listing.
+      <p className="mt-4 text-center text-xs leading-5 text-slate-600">
+        We use your account to save contracts and searches. Applications still happen on the original listing. Read our <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">Privacy Notice</Link>.
       </p>
     </div>
   );
