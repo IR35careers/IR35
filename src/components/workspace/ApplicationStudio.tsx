@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Building2,
@@ -28,6 +28,8 @@ import { newWorkspaceId, reviewApplicationReceipt } from "@/lib/workspace/engine
 import { SAMPLE_CONTRACTOR_PROFILE, SAMPLE_CV_TEXT } from "@/lib/workspace/seed";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { ApplicationRecord, ApplicationReceiptReviewItem } from "@/lib/workspace/types";
+import { getSupabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
 
 const REVIEW_ITEMS: Array<{ id: ApplicationReceiptReviewItem; label: string }> = [
   { id: "cv", label: "CV version" },
@@ -56,7 +58,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const existing = workspace.applications.find((item) => item.job.id === job.id && item.id !== "app-demo-northstar");
   const [cvText, setCvText] = useState(existing?.sourceCvText ?? "");
   const [application, setApplication] = useState<ApplicationRecord | null>(existing ?? null);
-  const [busy, setBusy] = useState<"prepare" | "receipt" | null>(null);
+  const [busy, setBusy] = useState<"prepare" | "receipt" | "submit" | null>(null);
+  const [submissionProvider, setSubmissionProvider] = useState<"loading" | "connected" | "gated">(isSupabaseConfigured() ? "loading" : "gated");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [reviewOutcome, setReviewOutcome] = useState<"accurate" | "changes_needed">(existing?.receipt?.review?.outcome ?? "accurate");
@@ -76,6 +79,21 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const nextIncompleteStep = workflowComplete.findIndex((done) => !done);
   const activeStep = nextIncompleteStep === -1 ? WORKFLOW_STEPS.length - 1 : nextIncompleteStep;
   const progress = Math.round((checklistComplete.filter(Boolean).length / checklistComplete.length) * 100);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let active = true;
+    void getSupabase().auth.getSession().then(async ({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) throw new Error("No session");
+      const response = await fetch("/api/integrations/status", { headers: { authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error("Status unavailable");
+      const payload = (await response.json()) as { integrations?: Array<{ id: string; state: string }> };
+      const submission = payload.integrations?.find((item) => item.id === "ats_submission");
+      if (active) setSubmissionProvider(submission?.state === "connected" ? "connected" : "gated");
+    }).catch(() => { if (active) setSubmissionProvider("gated"); });
+    return () => { active = false; };
+  }, []);
 
   const updateApplication = (updater: (current: ApplicationRecord) => ApplicationRecord) => {
     if (!application) return;
@@ -169,6 +187,41 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setNotice("Receipt feedback saved to this application.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not save receipt feedback.");
+    }
+  };
+
+  const submitApprovedApplication = async () => {
+    if (!application || !approvalsComplete || !answersReviewed) return;
+    setBusy("submit");
+    setError(null);
+    setNotice(null);
+    try {
+      const { data } = await getSupabase().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("Sign in again before submitting.");
+      const response = await fetch("/api/applications/submit", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: application.id, approval: "SUBMIT_APPROVED_APPLICATION" }),
+      });
+      const payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; error?: string };
+      if (!response.ok || !payload.receipt) throw new Error(payload.error ?? "The application was not submitted.");
+      const now = new Date().toISOString();
+      const next: ApplicationRecord = {
+        ...application,
+        status: "applied",
+        mode: "external_handoff",
+        receipt: payload.receipt,
+        updatedAt: now,
+        events: [...application.events, { id: newWorkspaceId(), applicationId: application.id, type: "status_changed", label: "Application submitted through the approved provider", createdAt: now }],
+      };
+      setApplication(next);
+      persistApplication(next);
+      setNotice("Application submitted. The provider receipt is saved below.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The application was not submitted.");
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -336,6 +389,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 </button>
               </section>
 
+              <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-card" data-testid="application-handoff">
+                <div className="grid lg:grid-cols-[minmax(0,1fr)_290px]">
+                  <div className="p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Final handoff</p>
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Submit only the packet you approved</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Live submission becomes available only when an authorised provider is connected. Otherwise, continue on the original listing and keep this packet as your reviewed source of truth.</p>
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                      {submissionProvider === "connected" && application.status !== "applied" ? (
+                        <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !approvalsComplete || !answersReviewed} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"><Send size={16} />{busy === "submit" ? "Submitting securely…" : "Submit approved application"}</button>
+                      ) : application.status === "applied" && application.receipt?.mode === "external_handoff" ? (
+                        <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-50 px-4 text-sm font-bold text-emerald-900"><CheckCircle2 size={17} /> Submitted with receipt</span>
+                      ) : (
+                        <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700">Open original listing <ExternalLink size={15} /></a>
+                      )}
+                      <Link href="/applications" className="ir35-focus inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 hover:border-brand-300">View all applications</Link>
+                    </div>
+                  </div>
+                  <aside className={`border-t p-5 lg:border-l lg:border-t-0 sm:p-6 ${submissionProvider === "connected" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionProvider === "connected" ? "text-emerald-700" : "text-amber-800"}`}>{submissionProvider === "loading" ? "Checking provider" : submissionProvider === "connected" ? "Provider connected" : "Manual submission"}</p>
+                    <p className={`mt-3 text-sm font-semibold ${submissionProvider === "connected" ? "text-emerald-950" : "text-amber-950"}`}>{submissionProvider === "connected" ? "Approval, idempotency and receipts are enforced server-side." : "No automatic submission will be attempted from this screen."}</p>
+                  </aside>
+                </div>
+              </section>
+
               {application.receipt && reviewedSnapshot && (
                 <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-card sm:p-6" data-testid="application-receipt-review">
                   <div className="flex items-start gap-3">
@@ -401,8 +478,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           )}
 
           <section className="rounded-[28px] border border-slate-200 bg-white p-5 text-sm text-slate-600">
-            <p className="font-semibold text-slate-900">Manual handoff</p>
-            <p className="mt-2 leading-6">Open the original listing and submit it yourself when you are ready. Any future ATS connection will require a separate approval step.</p>
+            <p className="font-semibold text-slate-900">Submission method</p>
+            <p className="mt-2 leading-6">{submissionProvider === "connected" ? "An authorised provider is connected. Submission still requires your final explicit approval." : "Use the original listing until an authorised submission provider is connected."}</p>
           </section>
         </aside>
       </div>

@@ -25,7 +25,7 @@ export const DEMO_JOBS: JobDetail[] = [
     posted_at: hoursAgo(3),
     first_seen_at: hoursAgo(2.9),
     description:
-      "Six-month Outside IR35 contract for a senior DevOps engineer. You will improve AWS platform reliability, Terraform modules and Kubernetes delivery workflows. Hybrid working in London two days per week.",
+      "Six-month Outside IR35 contract for a senior DevOps engineer. Visa sponsorship is available for this engagement. You will improve AWS platform reliability, Terraform modules and Kubernetes delivery workflows. Hybrid working in London two days per week.",
     apply_url: "https://example.com/jobs/devops",
     source_domain: "demo.ir35careers.local",
   },
@@ -134,4 +134,3 @@ export const DEMO_JOBS: JobDetail[] = [
 export function isDemoDataAvailable(): boolean {
   return process.env.NODE_ENV !== "production";
 }
-

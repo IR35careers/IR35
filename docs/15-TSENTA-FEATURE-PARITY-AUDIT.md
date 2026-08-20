@@ -1,55 +1,71 @@
-# IR35Careers — Tsenta feature-parity audit
+# IR35Careers — honest Tsenta comparison and release audit
 
 Audit date: 20 August 2026  
-Reference: public pages on `https://tsenta.com/`, including its jobs directory and a public job-detail page. Authenticated or private areas were not bypassed.
+Reviewed: live public IR35Careers and Tsenta pages, Tsenta sign-in, the supplied 52-page reference PDF, IR35Careers routes, database migrations and provider boundaries. No private Tsenta area was bypassed.
 
-This ledger separates working product behaviour from provider-dependent integrations. IR35Careers must not present a dry run, local preview, or unconnected provider as a completed live service.
+## Executive verdict
 
-| Capability seen in the reference | IR35Careers state | Evidence / boundary |
+No: IR35Careers does not yet have all Tsenta capabilities, and the signed-in product is not yet better overall.
+
+IR35Careers is stronger at UK contractor discovery: IR35 evidence, rate and workplace filters, source provenance, and its real mobile homepage are clearer than Tsenta's generic job-search positioning. Tsenta is stronger at product narrative and operational automation: it presents one obvious workflow, broader ATS coverage, live submission claims, account creation on employer systems, recruiter-response handling and a more mature product demonstration.
+
+Indicative expert assessment, based only on observable evidence:
+
+| Area | IR35Careers | Tsenta | Verdict |
+|---|---:|---:|---|
+| Public desktop design | 8.1/10 | 8.6/10 | Tsenta is calmer and more focused; IR35Careers is richer but denser |
+| Public mobile behaviour | 8.6/10 | 5.8/10 | IR35Careers reflows cleanly; the audited Tsenta page retained a wide desktop canvas |
+| Contractor/IR35 relevance | 9.0/10 | 5.5/10 | IR35Careers has a clear niche advantage |
+| Signed-in information architecture | 7.4/10 after this release | 8.5/10 | The new grouped workspace closes part of the gap |
+| End-to-end application workflow | 6.8/10 after this release | 9.0/10 | Review and receipts are strong; provider coverage is the major gap |
+| Operational integrations | 4.5/10 | 9.0/10 claimed | Email delivery and ATS submission still need authorised providers |
+
+## Capability ledger
+
+| Capability | IR35Careers state | Honest boundary |
 |---|---|---|
-| Public job discovery, filters and pagination | Live | `/jobs`, `/api/jobs/search`, `/jobs/sources`; IR35, workplace, rate, recency, skills, location, sorting, cached per-source freshness and non-blocking background facet counts |
-| Public job detail and original-source handoff | Live | `/jobs/[id]`; advertiser/inference/source-review IR35 provenance, matched evidence, evidence date, freshness, rate, source and explicit handoff |
-| Dashboard and role matching | Live | `/dashboard`; deterministic profile-to-role scoring with an inspectable 55/20/15/10 skills, rate, IR35 and workplace breakdown, plus a no-score state when structured skill overlap is absent |
-| Application and pipeline analytics | Live | `/analytics`; account-owned funnel, response/interview/offer rates, source/IR35/workplace mix, activity, review signals and privacy-bounded CSV export |
-| Paste an external role URL | Live | `/analyse-job`, `/api/jobs/preview`; public HTTPS only with SSRF and size controls |
-| CV analysis and role-specific score | Live | CV Studio; transparent scoring categories and evidence |
-| Missing-keyword identification | Live | Missing terms are labelled as absent and never converted into claimed experience |
-| Suggested edits and truth-preserving rewriting | Live | Suggestions require contractor verification and approval |
-| Side-by-side approval | Live | Original and proposed content remain visible before building a version |
-| CV version history | Live | Browser storage for previews and account-owned persistence when signed in |
-| PDF and DOCX export | Live | Client-requested export from an approved CV version |
-| Cover letter and screening preparation | Live | Application workspace; every generated/selected answer is reviewable |
-| Application receipt and tracker | Live as dry run | A receipt and tracker entry are created without transmitting an application; the receipt preserves the reviewed CV label, CV text, cover letter and screening-answer snapshot, and supports account-owned accuracy/change feedback |
-| Automated ATS submission | Provider gate | Adapter boundary exists; live submission is deliberately disabled until ATS-specific credentials, consent and verification exist |
-| Recruiter inbox and reply classification | Product surface + provider gate | Inbox, linking and deterministic classification exist; real inbound email/SMS/WhatsApp delivery needs approved providers |
-| Saved searches, curated list and alerts | Live workspace + delivery gate | Searches are account-owned and each alert can load a cancellable, stale-safe preview of its latest live matches; outbound email delivery remains visibly provider-gated |
-| Subscription/credit controls | Provider-ready, safely gated | Hosted Stripe Checkout, customer portal, explicit consent record, signed idempotent webhook ledger, entitlement downgrade rules, billing policy and charge-safe account deletion exist; the paid plan stays hidden/disabled until delivered benefits and complete production configuration pass acceptance checks |
-| Responsive web app | Live | Desktop, tablet and mobile layouts |
-| Installable mobile experience | Live PWA | `/mobile`; manifest, original app icons, live browser install affordance, device/network readiness, service worker and truthful offline recovery boundary |
-| Browser helper | Developer preview | Minimal-permission Chrome extension ZIP; not represented as Chrome Web Store approved |
-| Public developer access | Live, read-only | `/developers`, `/api/jobs/search`, downloadable CLI helper |
-| Native iOS/Android apps | Not connected | PWA covers installable mobile use; native-store builds require separate signing and review |
-| iMessage, WhatsApp and SMS | Product surface + provider gate | `/messaging` reports the production-derived email/channel state and explains consent/retention boundaries; delivery requires approved provider accounts, user consent and verified sender identity |
-| MCP server | Live, read-only | Downloadable Node.js MCP server; protocol-tested public search, contract detail, URL analysis and IR35 evidence tools with no account or write scope |
-| Networking and referral preparation | Live, user-controlled | `/network`; account-owned contacts, follow-up queue, role-linked editable drafts, review gate, manual copy and JSON export. No message is sent by IR35Careers |
-| Autonomous networking/referral outreach | Not connected | Social-network discovery, profile scraping and unsupervised messaging are deliberately not claimed |
-| Account sign-up/sign-in/reset | Live | `/account`, `/account/reset` with Supabase Auth |
-| Work-authorisation and sponsorship answers | Live, user-declared | Profile records UK right-to-work/sponsorship state without inferring it from nationality or CV text; the value becomes a review-required screening answer |
-| Data export and permanent account deletion | Live | `/settings`, `/api/account`; authenticated export and explicit email-confirmed deletion |
-| Pricing, changelog, AI disclosure, security and legal pages | Live | Public trust and product pages linked in the footer and sitemap |
-| Responsible vulnerability reporting | Live | `/bug-bounty`, `/security` and `/.well-known/security.txt`; good-faith rules are public and the absence of a paid reward programme is explicit |
+| UK contract discovery | Live | Search, pagination and authorised feed ingestion exist |
+| IR35, rate, workplace and freshness evidence | Live | Strong differentiator; TBC is never presented as Outside IR35 |
+| Profile-to-role scoring | Live | Deterministic and inspectable; profile data remains split across legacy and workspace models |
+| CV analysis and role score | Live | Includes missing terms, conservative suggestions and explicit evidence checks |
+| Truth-preserving rewrite approval | Live | Original and proposed wording remain visible before approval |
+| Version history and PDF/DOCX export | Live | Works for approved role-specific CV versions |
+| Cover letter and screening preparation | Live | Every field stays editable and reviewable |
+| Application journey | Live | Find, prepare, approve, handoff and track now share one visible progression |
+| Application tracker and analytics | Live | Account-owned status and event history; employer responses require email delivery |
+| Live job-monitor preview | Live after this release | Uses current jobs and the signed-in profile, not hard-coded production demo scores |
+| Automatic application submission | Backend-ready, provider-gated | Server queue, explicit approval, idempotency and receipts exist; no authorised gateway is connected |
+| Recruiter inbox | Backend-ready, provider-gated | Signed inbound route and private alias activation exist; DNS/provider values are still required |
+| Personal-email forwarding | Not connected | Deliberately no longer shown as a working toggle |
+| Email job-alert delivery | Not connected | Saved alerts and current-match previews work; scheduled outbound delivery still needs a provider and scheduler |
+| Employer ATS account creation/login | Not connected | Requires provider-specific consent, credential storage, MFA/CAPTCHA handoff and security review |
+| Messaging channels | Not connected | WhatsApp, SMS and iMessage require separate approved providers and consent |
+| Native mobile apps | Not connected | Responsive web/PWA is not the same as App Store or Play Store delivery |
+| Sign-in, export and deletion | Live | Supabase Auth, account export and explicit deletion flow exist |
+
+## Changes made from this audit
+
+1. Replaced the flat eight-item member header with a grouped, responsive workspace sidebar.
+2. Kept contract search inside the same signed-in workspace chrome, so navigation no longer changes when a member opens Jobs.
+3. Added a single next-action journey from profile through tracking.
+4. Replaced the misleading inbox preview switch with production-derived connection state, private-alias activation and a clean copy action.
+5. Added an owner-readable, server-written submission queue with idempotency, payload hashing, provider receipts and explicit approval.
+6. Added the authorised submission-gateway route and final-review handoff UI. It remains unavailable when provider values are absent.
+7. Changed automation preview from hard-coded production demo scores to live roles plus the signed-in profile, and persisted preview runs.
+8. Removed secondary and speculative links from the public footer.
+9. Corrected the homepage Prepare route so it enters the application workflow instead of a dashboard fragment.
+
+## Remaining release blockers
+
+These are external resources, not missing UI polish:
+
+- Apply database migration `013_application_submission_queue.sql` in Supabase.
+- Choose an authorised application-submission gateway and provide its sandbox endpoint, server key and provider name through Vercel environment variables.
+- Choose an inbound/transactional email provider, verify a subdomain such as `apply.ir35careers.com`, and configure the signed webhook secret.
+- Configure Supabase custom SMTP for sign-up, magic-link and password-reset delivery.
+- Decide whether alerts should be daily or immediate, then add a Vercel schedule and an approved outbound sender.
+- Provide sandbox employer roles for Workday, Greenhouse, Lever and Ashby acceptance tests. CAPTCHA or MFA must hand control back to the user.
 
 ## Release rule
 
-A provider-gated row may become **Live** only after the integration has: valid production credentials, least-privilege scopes, consent and revocation controls, audit events, retry/idempotency handling, redacted error logs, provider sandbox tests, a manual end-to-end test, and an updated privacy/retention disclosure.
-
-## Credentials still required for provider-dependent parity
-
-- Approved transactional/inbound email provider and verified sending domain.
-- ATS-specific partner credentials or documented application APIs; browser scraping and CAPTCHA bypass are out of scope.
-- Stripe secret key, recurring product/price ID, webhook signing secret, approved VAT-aware display price and optional customer-portal configuration if paid plans are enabled.
-- WhatsApp Business/SMS provider approval and consent records if messaging is enabled.
-- Apple/Google developer accounts only if native store apps are commissioned.
-- Chrome Web Store developer account only for store distribution of the reviewed extension.
-
-No credential should be pasted into chat or committed to Git. Use Vercel environment variables and provider secret stores.
+Never label a provider-gated capability as live until production credentials, least-privilege scopes, consent/revocation, idempotency, redacted logs, sandbox tests, a manual end-to-end test, retention rules and updated privacy disclosures are all verified. Secrets belong in Vercel/provider stores and must never be committed or pasted into a support message.

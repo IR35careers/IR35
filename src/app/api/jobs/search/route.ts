@@ -6,6 +6,9 @@
  *   ir35      inside | outside | unknown ("tbc" is accepted as an alias)
  *   remote    remote | hybrid | onsite
  *   min_rate  integer — matches jobs whose known rate reaches this figure
+ *   seniority entry | senior | lead | manager — explicit title evidence
+ *   rate_type daily | hourly | annual
+ *   sponsorship stated — explicit positive sponsorship wording only
  *   location  substring match, e.g. "london"
  *   skills    comma-separated canonical skills, e.g. "React,AWS"
  *   sort      recent (default) | rate_high | rate_low
@@ -21,6 +24,14 @@ import { supabase } from "@/lib/supabase";
 import { JOB_LIST_COLUMNS } from "@/lib/job-types";
 import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 import type { JobDetail, JobListing } from "@/lib/job-types";
+import {
+  hasStatedSponsorship,
+  isRateTypeFilter,
+  isSeniorityFilter,
+  matchesSeniorityTitle,
+  seniorityPostgrestFilter,
+  SPONSORSHIP_POSTGREST,
+} from "@/lib/job-search-filters";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +86,11 @@ export async function GET(request: Request): Promise<Response> {
   const remote = p.get("remote") ?? "";
   const location = (p.get("location") ?? "").slice(0, 60).trim();
   const minRate = clampInt(p.get("min_rate"), 0, 10000, 0);
+  const seniorityParam = p.get("seniority") ?? "";
+  const seniority = isSeniorityFilter(seniorityParam) ? seniorityParam : null;
+  const rateTypeParam = p.get("rate_type") ?? "";
+  const rateType = isRateTypeFilter(rateTypeParam) ? rateTypeParam : null;
+  const sponsorship = p.get("sponsorship") === "stated";
   const skills = (p.get("skills") ?? "")
     .split(",")
     .map((s) => s.trim())
@@ -99,6 +115,9 @@ export async function GET(request: Request): Promise<Response> {
       if (location && !job.location.toLowerCase().includes(location.toLowerCase())) return false;
       if (skills.length > 0 && !skills.every((skill) => job.skills.includes(skill))) return false;
       if (minRate > 0 && (job.rate_type !== "daily" || Math.max(job.rate_min ?? 0, job.rate_max ?? 0) < minRate)) return false;
+      if (seniority && !matchesSeniorityTitle(job.title, seniority)) return false;
+      if (rateType && job.rate_type !== rateType) return false;
+      if (sponsorship && !hasStatedSponsorship(job.description)) return false;
       if (withinDays > 0) {
         const date = new Date(job.posted_at ?? job.first_seen_at).getTime();
         if (date < Date.now() - withinDays * 86_400_000) return false;
@@ -155,6 +174,9 @@ export async function GET(request: Request): Promise<Response> {
     if (location) query = query.ilike("location", `%${location}%`);
     if (skills.length > 0) query = query.contains("skills", skills);
     if (minRate > 0) query = query.eq("rate_type", "daily").or(`rate_min.gte.${minRate},rate_max.gte.${minRate}`);
+    if (seniority) query = query.or(seniorityPostgrestFilter(seniority));
+    if (rateType) query = query.eq("rate_type", rateType);
+    if (sponsorship) query = query.or(SPONSORSHIP_POSTGREST);
 
     // Recency filter: posted within N days.
     const withinDays = clampInt(p.get("within_days"), 0, 60, 0);
@@ -193,6 +215,9 @@ export async function GET(request: Request): Promise<Response> {
         if (cutoff2) b = b.gte("posted_on", cutoff2);
         if (skills.length > 0) b = b.contains("skills", skills);
         if (minRate > 0) b = b.eq("rate_type", "daily").or(`rate_min.gte.${minRate},rate_max.gte.${minRate}`);
+        if (seniority) b = b.or(seniorityPostgrestFilter(seniority));
+        if (rateType) b = b.eq("rate_type", rateType);
+        if (sponsorship) b = b.or(SPONSORSHIP_POSTGREST);
         return b;
       };
       const [outside, inside, tbc, remoteC, hybridC, onsiteC] = await Promise.all([

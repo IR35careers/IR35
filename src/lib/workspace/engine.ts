@@ -11,7 +11,7 @@ import type {
   ContractorProfile,
   PrepareApplicationInput,
 } from "@/lib/workspace/types";
-import type { JobDetail } from "@/lib/job-types";
+import type { JobDetail, JobListing } from "@/lib/job-types";
 
 const MAX_CV_CHARACTERS = 80_000;
 
@@ -225,7 +225,7 @@ export function canMoveStatus(from: ApplicationStatus, to: ApplicationStatus): b
 }
 
 export function evaluateAutomationJob(
-  job: JobDetail,
+  job: JobListing,
   score: number,
   rules: AutomationRules
 ): string | null {

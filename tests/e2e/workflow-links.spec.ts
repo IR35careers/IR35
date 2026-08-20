@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const WORKFLOW_ROUTES = [
   { name: /^01 Discover/, href: "/jobs" },
   { name: /^02 Understand/, href: "/analyse-job" },
-  { name: /^03 Prepare/, href: "/dashboard#matches" },
+  { name: /^03 Prepare/, href: "/applications" },
   { name: /^04 Track/, href: "/applications" },
   { name: /^05 Respond/, href: "/inbox" },
 ];

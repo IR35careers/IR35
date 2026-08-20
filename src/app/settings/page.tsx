@@ -162,7 +162,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]">
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[240px_1fr_320px]">

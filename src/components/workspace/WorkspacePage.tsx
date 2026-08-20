@@ -38,11 +38,11 @@ export function WorkspacePage({
   }
 
   if (configured && cloud.error) {
-    return <div className="min-h-screen bg-slate-50"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">Your private workspace could not be loaded</h1><p className="mt-2 text-sm leading-6">{cloud.error}</p><p className="mt-3 text-sm leading-6">Apply migration 010 and retry before using sensitive production data. The workspace fails closed, so local fixtures are not shown here.</p></div></main></div>;
+    return <div className="min-h-screen bg-slate-50 lg:pl-[248px]"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">Your private workspace could not be loaded</h1><p className="mt-2 text-sm leading-6">{cloud.error}</p><p className="mt-3 text-sm leading-6">Apply the latest workspace migrations and retry before using sensitive production data. The workspace fails closed, so preview records are never shown in your account.</p></div></main></div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="min-h-screen bg-slate-50 text-slate-950 lg:pl-[248px]">
       <AppNav />
       <main className={`mx-auto max-w-[1600px] px-4 sm:px-6 ${density === "compact" ? "py-5 lg:py-6" : "py-7 lg:py-9"}`}>
         {!configured && (

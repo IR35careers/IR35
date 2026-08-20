@@ -30,6 +30,7 @@ import { formatRate, type JobListing } from "@/lib/job-types";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { useWorkspaceState } from "@/lib/workspace/store";
 import { AppNav } from "@/components/AppNav";
+import { ApplicationJourney } from "@/components/workspace/ApplicationJourney";
 import { WelcomeModal } from "@/components/WelcomeModal";
 import {
   fetchMatches,
@@ -165,7 +166,7 @@ export default function DashboardPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]">
       <WelcomeModal name={name} />
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
@@ -187,6 +188,11 @@ export default function DashboardPage() {
             <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg bg-green-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-green-700">Search</button>
           </form>
         </div>
+
+        <ApplicationJourney
+          profileReady={(profile?.skills.length ?? 0) > 0 && Boolean(profile?.cv_filename)}
+          applications={workspace.applications}
+        />
 
         {/* Quick stats */}
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">

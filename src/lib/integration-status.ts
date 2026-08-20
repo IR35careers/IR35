@@ -31,8 +31,16 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
   const inboundConnected = Boolean(
     enabled(process.env.ENABLE_INBOUND_MAIL) &&
     process.env.EMAIL_PROVIDER_API_KEY &&
-    process.env.INBOUND_MAIL_SIGNING_SECRET
+    process.env.INBOUND_MAIL_SIGNING_SECRET &&
+    process.env.INBOUND_EMAIL_DOMAIN
   );
+  let validSubmissionEndpoint = false;
+  try {
+    validSubmissionEndpoint = new URL(process.env.APPLICATION_SUBMISSION_PROVIDER_URL ?? "").protocol === "https:";
+  } catch {
+    validSubmissionEndpoint = false;
+  }
+  const submissionConnected = Boolean(enabled(process.env.ENABLE_APPLICATION_SUBMISSION) && validSubmissionEndpoint && process.env.APPLICATION_SUBMISSION_PROVIDER_API_KEY);
   const billingConnected = Boolean(billingConfig());
   const billingManagementConnected = Boolean(stripeManagementConfig());
 
@@ -70,14 +78,14 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       name: "Recruiter email delivery",
       state: inboundConnected ? "connected" : "provider_gate",
       scope: "Signed inbound webhook, forwarding, consent and message retention.",
-      nextStep: inboundConnected ? "Monitor webhook receipts and retention jobs." : "Choose an approved provider, verify the domain and add signing credentials.",
+      nextStep: inboundConnected ? "Users can activate a private address from their recruiter inbox." : "Verify an inbound domain and add the provider key, signing secret and feature flag.",
     },
     {
       id: "ats_submission",
       name: "Live ATS submission",
-      state: "provider_gate",
+      state: submissionConnected ? "connected" : "provider_gate",
       scope: "Provider-specific application submission with final human approval.",
-      nextStep: "Obtain an authorised ATS partner API and pass sandbox, idempotency and receipt tests.",
+      nextStep: submissionConnected ? "Approved packets can be sent through the configured submission gateway." : "Connect an authorised ATS or browser-automation gateway and pass sandbox, idempotency and receipt tests.",
     },
     {
       id: "billing",

@@ -66,7 +66,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <PublicHeader />
+      <PublicHeader hideForWorkspaceMembers />
 
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         <Link href="/jobs" className="inline-flex items-center gap-1.5 text-sm text-slate-600 transition-colors hover:text-slate-900">
