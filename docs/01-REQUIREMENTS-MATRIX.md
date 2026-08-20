@@ -16,7 +16,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Save and mark applied | P0 | `saved_jobs`, signed-out return path and optimistic rollback | Implemented | Authenticated database/RLS test in staging |
 | Job alerts | P1 | Owner-scoped saved searches plus on-demand, cancellable live match previews with loading, empty, error and retry states | Implemented for in-product curation | Delivery provider abstraction, schedule and unsubscribe before claiming email alerts |
 | IR35 provenance | P1 | Public details distinguish advertiser-stated, arrangement-derived, source/review and unconfirmed states; exact matched wording and last-observed date are shown | Implemented for deterministic public evidence | Persist reviewer identity and an immutable audit event before claiming a status was manually reviewed |
-| Resume upload | P1 | Private Supabase bucket and profile reference | Implemented | File signature/virus strategy, signed access and deletion tests |
+| Resume upload | P1 | Private owner-scoped bucket; PDF/DOCX signature, active-content, embedded-object, archive-size and replacement/rollback controls | Implemented with local safety checks | Add an approved malware-scanning provider only if the privacy, latency and retention trade-off is accepted; run authenticated storage RLS/deletion tests |
 | Resume builder/editor/rating | P1 | `/jobs/[id]/resume`, four-part deterministic rubric, editable final copy, private/local versions and PDF/DOCX export | Implemented | Apply migration 009 and run authenticated RLS, storage-retention and real-CV acceptance tests in staging |
 | Resume optimisation per job | P1 | Role keywords, evidence gaps, conservative rewrites, explicit skill confirmation and side-by-side approval | Implemented without generative AI | Add optional provider only after structured-output, grounding, redaction and cost gates pass |
 | Cover-letter generation | P1 | Deterministic role-grounded draft using CV evidence, editable before approval | Implemented without generative AI | Optional provider requires structured-output, grounding, redaction and cost gates |
@@ -36,7 +36,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Accessibility | P0 | Axe reports no serious/critical defects in the public journey and account shell | Implemented for first slice | Manual screen-reader, 200% zoom and forced-colours review on staging |
 | Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path; featured jobs server-rendered; public detail pages request-deduplicated and cached for 60 seconds | Partial | Establish p75 field data; local simulated results remain variable |
 | Automated testing | P0 | Vitest, 186 legacy domain checks, Playwright E2E, axe and visual baselines | Implemented for current local gates | Add CI and authenticated/provider integration coverage |
-| Security and privacy | P1 | RLS on current user data | Partial | Threat model, fail-closed auth decisions, upload controls, export/deletion and auditability |
+| Security and privacy | P1 | RLS, fail-closed provider gates, account export/deletion, validated CV ingestion and private storage boundaries | Partial | Complete formal threat model, authenticated RLS/deletion test and provider audit monitoring |
 
 ## Scope truthfulness rules
 

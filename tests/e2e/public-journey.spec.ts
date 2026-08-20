@@ -206,6 +206,18 @@ test("CV Studio analyses, verifies, versions and exports a role-tailored CV", as
   expect(parsed.ok()).toBeTruthy();
   expect((await parsed.json()).text).toContain("AWS Terraform");
 
+  const blockedActivePdf = await request.post("/api/resume/parse", {
+    multipart: {
+      file: {
+        name: "active.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.7\n1 0 obj <</OpenAction 2 0 R>>"),
+      },
+    },
+  });
+  expect(blockedActivePdf.status()).toBe(400);
+  expect((await blockedActivePdf.json()).error).toMatch(/active or embedded content/i);
+
   await page.goto("/jobs/11111111-1111-4111-8111-111111111111/resume");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Tailor your CV with evidence you control" })).toBeVisible();

@@ -15,10 +15,12 @@ import { useAuth } from "@/lib/auth-context";
 import { AppNav } from "@/components/AppNav";
 import {
   PROFILE_SKILL_OPTIONS,
+  deleteCv,
   getProfile,
   upsertProfile,
   uploadCv,
   validateCvFile,
+  validateCvFileContents,
 } from "@/lib/profile";
 
 const RATE_CHOICES = [0, 300, 400, 500, 600, 700, 800];
@@ -31,6 +33,8 @@ export default function OnboardingPage() {
   const [fullName, setFullName] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [existingCv, setExistingCv] = useState<string | null>(null);
+  const [existingCvPath, setExistingCvPath] = useState<string | null>(null);
+  const [checkingCv, setCheckingCv] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [targetRate, setTargetRate] = useState(0);
   const [ir35, setIr35] = useState<"outside" | "inside" | "either">("either");
@@ -58,6 +62,7 @@ export default function OnboardingPage() {
       setIr35(profile.preferred_ir35 ?? "either");
       setRemote(profile.preferred_remote ?? "any");
       setExistingCv(profile.cv_filename);
+      setExistingCvPath(profile.cv_path);
       setJobTitle(profile.job_title ?? "");
       setYearsExp(profile.years_experience != null ? String(profile.years_experience) : "");
       setPhone(profile.phone ?? "");
@@ -71,15 +76,27 @@ export default function OnboardingPage() {
     );
   };
 
-  const onPickFile = (file: File | null) => {
+  const onPickFile = async (file: File | null) => {
     setError(null);
     if (!file) return;
+    setCvFile(null);
     const invalid = validateCvFile(file);
     if (invalid) {
       setError(invalid);
       return;
     }
-    setCvFile(file);
+    setCheckingCv(true);
+    try {
+      const contentError = await validateCvFileContents(file);
+      if (contentError) {
+        setError(contentError);
+        setCvFile(null);
+        return;
+      }
+      setCvFile(file);
+    } finally {
+      setCheckingCv(false);
+    }
   };
 
   const handleSave = async () => {
@@ -124,9 +141,13 @@ export default function OnboardingPage() {
     });
 
     if (saveError) {
+      if (cv_path) await deleteCv(user.id, cv_path);
       setError(saveError);
       setSaving(false);
       return;
+    }
+    if (cv_path && existingCvPath && existingCvPath !== cv_path) {
+      await deleteCv(user.id, existingCvPath);
     }
     router.replace("/dashboard");
   };
@@ -271,9 +292,13 @@ export default function OnboardingPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.doc,.docx"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="hidden"
-            onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0] ?? null;
+              event.currentTarget.value = "";
+              void onPickFile(file);
+            }}
           />
           {cvFile ? (
             <div className="flex items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3">
@@ -291,25 +316,26 @@ export default function OnboardingPage() {
             </div>
           ) : (
             <button
+              type="button"
+              disabled={checkingCv}
               onClick={() => fileInputRef.current?.click()}
-              className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-wait disabled:opacity-60"
             >
-              <UploadCloud size={22} />
+              {checkingCv ? <Loader2 className="animate-spin" size={22} /> : <UploadCloud size={22} />}
               <span className="text-sm">
-                {existingCv ? (
+                {checkingCv ? "Checking the file before upload…" : existingCv ? (
                   <>
                     <span className="text-green-700">{existingCv}</span> on file. Upload a new
                     one to replace it
                   </>
                 ) : (
-                  "Upload your CV. PDF or Word, up to 5MB"
+                  "Upload your CV. PDF or DOCX, up to 5MB"
                 )}
               </span>
             </button>
           )}
-          <p className="mt-1.5 text-xs text-slate-400">
-            Stored privately, so only you can access it. Pick
-            your skills below.
+          <p className="mt-1.5 text-xs text-slate-500">
+            Signature and active-content checks run before private storage. Replacement cleanup starts only after the new profile reference saves successfully.
           </p>
         </section>
 
@@ -391,7 +417,7 @@ export default function OnboardingPage() {
         </section>
 
         {error && (
-          <p className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <p role="alert" className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
             {error}
           </p>
         )}
@@ -399,10 +425,10 @@ export default function OnboardingPage() {
         <div className="mt-7 flex items-center gap-4">
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || checkingCv}
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-400 to-green-400 px-6 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
           >
-            {saving ? (
+            {saving || checkingCv ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <>

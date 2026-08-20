@@ -38,7 +38,7 @@ The UI shows all four component scores. Job-board skills carry more weight than 
 - Migration `009_resume_studio.sql` creates `resume_versions` with owner-only Supabase RLS policies.
 - Signed-in, configured environments save chosen versions to the user's private account history.
 - Unconfigured/local preview uses browser storage only and labels that behaviour. Nothing is saved until the user presses a save action.
-- The parse and export routes set `Cache-Control: no-store`, validate file/text size and do not log CV content.
+- The parse and export routes set `Cache-Control: no-store`, validate file/text size and do not log CV content. PDF/DOCX signatures, active PDF features, unsafe archive paths, Word macros/embedded objects, entry count and expansion size are checked before extraction.
 - PDF/DOCX export is generated per request and returned directly; the server does not persist the output.
 
 ## Verification

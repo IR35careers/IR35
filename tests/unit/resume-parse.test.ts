@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import JSZip from "jszip";
 import { POST as parseResume } from "@/app/api/resume/parse/route";
 import { buildResumeDocx, buildResumePdf } from "@/lib/resume/export";
 import type { ResumeExportRequest } from "@/lib/resume/types";
@@ -53,5 +54,29 @@ describe("CV parsing route", () => {
     const response = await parseFile("not-really.pdf", "application/pdf", Buffer.from("not a pdf"));
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "That file is not a valid PDF." });
+  });
+
+  it("rejects active PDF content before parsing", async () => {
+    const response = await parseFile(
+      "active.pdf",
+      "application/pdf",
+      Buffer.from("%PDF-1.7\n1 0 obj <</OpenAction 2 0 R>>")
+    );
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/active or embedded content/i);
+  });
+
+  it("rejects embedded Word objects before extraction", async () => {
+    const archive = new JSZip();
+    archive.file("word/document.xml", "<w:document />");
+    archive.file("word/embeddings/oleObject1.bin", "embedded content");
+    const bytes = await archive.generateAsync({ type: "nodebuffer" });
+    const response = await parseFile(
+      "embedded.docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      bytes
+    );
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/macros or embedded objects/i);
   });
 });

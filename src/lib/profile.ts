@@ -102,17 +102,77 @@ export async function upsertProfile(
 }
 
 const CV_MAX_BYTES = 5 * 1024 * 1024;
-const CV_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
+const CV_MAX_DOCX_ENTRIES = 1_000;
+const CV_MAX_DOCX_UNCOMPRESSED_BYTES = 40 * 1024 * 1024;
+const PDF_ACTIVE_CONTENT = /\/(?:JavaScript|JS|OpenAction|AA|Launch|EmbeddedFile|RichMedia)\b/;
+
+function cvExtension(file: Pick<File, "name">): "pdf" | "docx" | null {
+  const extension = file.name.split(".").pop()?.toLocaleLowerCase("en-GB");
+  return extension === "pdf" || extension === "docx" ? extension : null;
+}
 
 export function validateCvFile(file: File): string | null {
+  if (file.size === 0) return "That CV file is empty.";
   if (file.size > CV_MAX_BYTES) return "CV must be under 5MB.";
-  const okType = CV_TYPES.includes(file.type) || /\.(pdf|docx?)$/i.test(file.name);
-  if (!okType) return "Please upload a PDF or Word document.";
+  if (/\.doc$/i.test(file.name)) return "Older .doc files cannot be checked safely. Save the CV as .docx or PDF.";
+  if (!cvExtension(file)) return "Please upload a PDF or DOCX document.";
   return null;
+}
+
+/**
+ * Inspect the bytes before a CV enters private storage. This is intentionally
+ * strict and local: it verifies the real container and rejects active PDF or
+ * embedded Word content without sending the file to another provider.
+ */
+export async function validateCvFileContents(file: File): Promise<string | null> {
+  const metadataError = validateCvFile(file);
+  if (metadataError) return metadataError;
+
+  const extension = cvExtension(file);
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  if (extension === "pdf") {
+    if (new TextDecoder("ascii").decode(bytes.subarray(0, 5)) !== "%PDF-") {
+      return "That file is not a valid PDF.";
+    }
+    const searchable = new TextDecoder("latin1").decode(bytes);
+    if (PDF_ACTIVE_CONTENT.test(searchable)) {
+      return "That PDF contains active or embedded content. Export a flattened PDF and try again.";
+    }
+    return null;
+  }
+
+  if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) return "That file is not a valid DOCX.";
+
+  try {
+    const JSZip = (await import("jszip")).default;
+    const archive = await JSZip.loadAsync(bytes);
+    const entries = Object.values(archive.files);
+    if (!archive.file("word/document.xml")) return "That file is not a readable Word document.";
+    if (entries.length > CV_MAX_DOCX_ENTRIES) return "That Word document contains too many embedded parts.";
+
+    let expandedBytes = 0;
+    for (const entry of entries) {
+      const internal = entry as typeof entry & {
+        unsafeOriginalName?: string;
+        _data?: { uncompressedSize?: number };
+      };
+      const originalName = internal.unsafeOriginalName ?? entry.name;
+      if (originalName.startsWith("/") || originalName.split(/[\\/]/).includes("..")) {
+        return "That Word document contains an unsafe file path.";
+      }
+      if (/^word\/(?:embeddings|activeX)\//i.test(entry.name) || /(?:^|\/)vbaProject\.bin$/i.test(entry.name)) {
+        return "That Word document contains macros or embedded objects. Export a clean DOCX and try again.";
+      }
+      expandedBytes += internal._data?.uncompressedSize ?? 0;
+      if (expandedBytes > CV_MAX_DOCX_UNCOMPRESSED_BYTES) {
+        return "That Word document expands beyond the safe processing limit.";
+      }
+    }
+    return null;
+  } catch {
+    return "That file is not a valid DOCX.";
+  }
 }
 
 /** Upload a CV into the user's private folder; returns { path } or { error }. */
@@ -120,17 +180,25 @@ export async function uploadCv(
   userId: string,
   file: File
 ): Promise<{ path: string | null; error: string | null }> {
-  const invalid = validateCvFile(file);
+  const invalid = await validateCvFileContents(file);
   if (invalid) return { path: null, error: invalid };
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(-80);
   const path = `${userId}/${Date.now()}-${safeName}`;
   const { error } = await supabase.storage.from("cvs").upload(path, file, {
     cacheControl: "3600",
+    contentType: cvExtension(file) === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     upsert: false,
   });
   if (error) return { path: null, error: error.message };
   return { path, error: null };
+}
+
+/** Remove only a path inside the current user's private CV folder. */
+export async function deleteCv(userId: string, path: string): Promise<string | null> {
+  if (!path.startsWith(`${userId}/`) || path.includes("..")) return "Invalid CV storage path.";
+  const { error } = await supabase.storage.from("cvs").remove([path]);
+  return error?.message ?? null;
 }
 
 /** "Good morning" / afternoon / evening / night-owl by local time. */
