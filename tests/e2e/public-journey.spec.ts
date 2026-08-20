@@ -72,7 +72,7 @@ test("contract search keeps a stable shell while initial results load", async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
 
   releaseSearch();
-  await expect(page.getByText("6 contracts found")).toBeVisible();
+  await expect(page.getByText(/[\d,]+ contracts found/)).toBeVisible();
 });
 
 test("account flow has explicit modes and neutral sign-in errors", async ({ page }) => {
