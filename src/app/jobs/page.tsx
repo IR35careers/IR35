@@ -33,6 +33,7 @@ interface SearchResponse {
 const RATE_OPTIONS = [0, 300, 400, 500, 600, 700] as const;
 const RECENCY_OPTIONS = [[0, "Any time"], [1, "Last 24 hours"], [3, "Last 3 days"], [7, "Last week"], [14, "Last 2 weeks"]] as const;
 const QUICK_SKILLS = ["React", "Python", "Java", ".NET", "AWS", "Azure", "DevOps", "Data Engineering", "Business Analysis", "Project Management", "Cyber Security", "Salesforce"] as const;
+const JOBS_PER_PAGE = 12;
 
 function RemoteTag({ type }: { type: JobListing["remote_type"] }) {
   if (type === "unknown") return null;
@@ -128,12 +129,14 @@ function JobsBoard() {
     if (withinDays > 0) params.set("within_days", String(withinDays));
     if (sort !== "recent") params.set("sort", sort);
     if (page > 1) params.set("page", String(page));
+    params.set("per_page", String(JOBS_PER_PAGE));
     const facetKey = JSON.stringify([q, minRate, skillsLock, locationLock, withinDays]);
     if (!facetCacheRef.current.has(facetKey)) params.set("with_facets", "1");
     lastParamsRef.current = params;
     lastFacetKeyRef.current = facetKey;
     const visibleParams = new URLSearchParams(params);
     visibleParams.delete("with_facets");
+    visibleParams.delete("per_page");
     const nextUrl = visibleParams.size > 0 ? `/jobs?${visibleParams.toString()}` : "/jobs";
     window.history.replaceState(window.history.state, "", nextUrl);
     if (debounceRef.current) clearTimeout(debounceRef.current);
