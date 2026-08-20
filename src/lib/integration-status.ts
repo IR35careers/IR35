@@ -1,4 +1,5 @@
 import { billingConfig, stripeManagementConfig } from "@/lib/billing/stripe";
+import { resendInboundConfig } from "@/lib/email/resend";
 
 export type IntegrationState = "available" | "connected" | "provider_gate" | "not_configured";
 
@@ -28,12 +29,7 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
   );
   const reedConnected = Boolean(process.env.REED_API_KEY);
   const adzunaConnected = Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
-  const inboundConnected = Boolean(
-    enabled(process.env.ENABLE_INBOUND_MAIL) &&
-    process.env.EMAIL_PROVIDER_API_KEY &&
-    process.env.INBOUND_MAIL_SIGNING_SECRET &&
-    process.env.INBOUND_EMAIL_DOMAIN
-  );
+  const inboundConnected = Boolean(enabled(process.env.ENABLE_INBOUND_MAIL) && resendInboundConfig());
   let validSubmissionEndpoint = false;
   try {
     validSubmissionEndpoint = new URL(process.env.APPLICATION_SUBMISSION_PROVIDER_URL ?? "").protocol === "https:";
