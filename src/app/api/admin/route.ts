@@ -44,16 +44,44 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     if (section === "stats") {
-      const [{ count: liveJobs }, { count: expiredJobs }, { count: profiles }, { count: cvs }, { count: waitlist }, usersRes, lastRun] =
+      const [{ count: liveJobs }, { count: expiredJobs }, { count: profiles }, { count: cvs }, { count: waitlist }, usersRes, recentJobs, recentRuns] =
         await Promise.all([
           supabase.from("jobs").select("id", { count: "exact", head: true }).is("expired_at", null),
           supabase.from("jobs").select("id", { count: "exact", head: true }).not("expired_at", "is", null),
           supabase.from("profiles").select("id", { count: "exact", head: true }),
           supabase.from("profiles").select("id", { count: "exact", head: true }).not("cv_path", "is", null),
           supabase.from("waitlist").select("id", { count: "exact", head: true }),
-          supabase.auth.admin.listUsers({ page: 1, perPage: 1 }),
-          supabase.from("moderation_logs").select("run_type, summary, created_at").eq("run_type", "fetch_jobs").order("created_at", { ascending: false }).limit(1),
+          supabase.auth.admin.listUsers({ page: 1, perPage: 5 }),
+          supabase
+            .from("jobs")
+            .select("id, title, company_name, location, ir35_status, source_domain, rate_min, rate_max, rate_type, first_seen_at, posted_at")
+            .is("expired_at", null)
+            .order("first_seen_at", { ascending: false })
+            .limit(250),
+          supabase
+            .from("moderation_logs")
+            .select("run_type, summary, created_at")
+            .order("created_at", { ascending: false })
+            .limit(6),
         ]);
+
+      const jobs = recentJobs.data ?? [];
+      const statusCounts = jobs.reduce<Record<string, number>>((counts, job) => {
+        const status = String(job.ir35_status || "TBC").toLowerCase();
+        const key = status.includes("outside") ? "outside" : status.includes("inside") ? "inside" : "tbc";
+        counts[key] = (counts[key] ?? 0) + 1;
+        return counts;
+      }, { outside: 0, inside: 0, tbc: 0 });
+      const sourceCounts = jobs.reduce<Record<string, number>>((counts, job) => {
+        const source = job.source_domain || "Unknown source";
+        counts[source] = (counts[source] ?? 0) + 1;
+        return counts;
+      }, {});
+      const topSources = Object.entries(sourceCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([source, count]) => ({ source, count }));
+
       return Response.json({
         totalUsers: (usersRes.data as { total?: number } | null)?.total ?? null,
         profiles: profiles ?? 0,
@@ -61,7 +89,17 @@ export async function GET(request: Request): Promise<Response> {
         waitlist: waitlist ?? 0,
         liveJobs: liveJobs ?? 0,
         expiredJobs: expiredJobs ?? 0,
-        lastPipelineRun: lastRun.data?.[0] ?? null,
+        ir35Breakdown: statusCounts,
+        topSources,
+        recentJobs: jobs.slice(0, 6),
+        recentUsers: (usersRes.data?.users ?? []).map((user) => ({
+          id: user.id,
+          email: user.email,
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at,
+        })),
+        recentRuns: recentRuns.data ?? [],
+        lastPipelineRun: (recentRuns.data ?? []).find((run) => run.run_type === "fetch_jobs") ?? null,
       });
     }
 
