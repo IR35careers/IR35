@@ -58,6 +58,23 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expectNoSeriousA11yViolations(page);
 });
 
+test("contract search keeps a stable shell while initial results load", async ({ page }) => {
+  let releaseSearch: () => void = () => undefined;
+  const searchGate = new Promise<void>((resolve) => { releaseSearch = resolve; });
+  await page.route("**/api/jobs/search**", async (route) => {
+    await searchGate;
+    await route.continue();
+  });
+
+  await page.goto("/jobs", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Find your next contract" })).toBeVisible();
+  await expect(page.getByRole("status", { name: "Loading contracts" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+
+  releaseSearch();
+  await expect(page.getByText("6 contracts found")).toBeVisible();
+});
+
 test("account flow has explicit modes and neutral sign-in errors", async ({ page }) => {
   await page.goto("/account?next=%2Fdashboard");
   await dismissPrivacyNotice(page);

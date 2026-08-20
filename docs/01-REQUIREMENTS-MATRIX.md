@@ -9,7 +9,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Premium, calm, contractor-specific UI | P0 | Tokenised light public shell, contractor-first hierarchy and shared primitives | Implemented for first slice | Extend the same system to every authenticated route |
 | Public Inside and Outside IR35 discovery | P0 | Public landing, `/jobs` search and `/jobs/[id]` detail | Implemented | Connect production Supabase data and run staging smoke test |
 | Responsive navigation | P0 | Public and member menus adapt across phone, tablet and desktop | Implemented | Authenticated device test with a real staging session |
-| Loading, empty, error, success states | P0 | Present on some routes, inconsistent | Partial | Shared state components used by the first end-to-end slice |
+| Loading, empty, error, success states | P0 | Shared state panels and layout-stable skeletons cover public search, job details, alerts, account and CV/application actions | Implemented for public and preparation journeys | Extend route-level skeleton/error boundaries to every authenticated settings/admin surface |
 | Purposeful motion and reduced motion | P0 | Framer Motion only on waitlist; reduced motion partly handled | Partial | Motion tokens, interruptible transitions, reduced-motion test |
 | Profile and onboarding | P0 | Supabase profile, skills, preferences and CV upload | Implemented | Responsive and accessible browser test with production-shaped data |
 | Job matching and explanations | P0 | Deterministic weighted scorer, case-insensitive skill comparison, four-factor point breakdown, evidence text and truthful no-overlap state | Implemented | Validate weight usefulness against consented production outcomes before changing the published formula |

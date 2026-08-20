@@ -8,11 +8,12 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, MapPin, Loader2, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles, Activity } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles, Activity } from "lucide-react";
 import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { IR35Badge } from "@/components/ui/ir35-badge";
+import { JobCardSkeleton, StatePanel } from "@/components/ui/state-panel";
 
 interface Facets {
   outside: number; inside: number; tbc: number;
@@ -141,6 +142,16 @@ function JobsBoard() {
   }, [q, ir35, remote, minRate, skillsLock, locationLock, sort, withinDays, page, runSearch]);
 
   const resetPage = () => setPage(1);
+  const clearFilters = () => {
+    setQ("");
+    setIr35("");
+    setRemote("");
+    setMinRate(0);
+    setWithinDays(0);
+    setSkillsLock([]);
+    setLocationLock("");
+    setPage(1);
+  };
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.per_page)) : 1;
   const f = data?.facets;
 
@@ -200,7 +211,7 @@ function JobsBoard() {
         </div>
       </div>
       {(ir35 || remote || minRate > 0 || withinDays > 0 || skillsLock.length > 0 || locationLock) && (
-        <button onClick={() => { setIr35(""); setRemote(""); setMinRate(0); setWithinDays(0); setSkillsLock([]); setLocationLock(""); resetPage(); }} className="text-sm font-medium text-green-700 hover:underline">
+        <button onClick={clearFilters} className="text-sm font-medium text-green-700 hover:underline">
           Clear all filters
         </button>
       )}
@@ -280,11 +291,11 @@ function JobsBoard() {
           {/* Results */}
           <div className={`min-w-0 transition-opacity ${loading && data ? "opacity-60" : "opacity-100"}`} aria-busy={loading}>
             {failed ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><p className="font-semibold text-slate-800">Couldn&apos;t load contracts.</p><p className="mt-1 text-sm text-slate-500">Your filters are still here. Retry the search when your connection is ready.</p><button type="button" onClick={() => void runSearch(lastParamsRef.current, lastFacetKeyRef.current)} className="ir35-focus mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Retry search</button></div>
+              <StatePanel kind="error" title="Couldn&apos;t load contracts" body="Your filters are still here. Retry the search when your connection is ready." action={<button type="button" onClick={() => void runSearch(lastParamsRef.current, lastFacetKeyRef.current)} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Retry search</button>} />
             ) : loading && !data ? (
-              <div className="flex items-center justify-center py-24 text-slate-400"><Loader2 className="animate-spin" size={22} /></div>
+              <div className="space-y-3" role="status" aria-label="Loading contracts"><span className="sr-only">Loading contracts</span>{Array.from({ length: 5 }, (_, index) => <JobCardSkeleton key={index} />)}</div>
             ) : data && data.jobs.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><p className="text-slate-700">No contracts match these filters.</p><p className="mt-1 text-sm text-slate-500">Try clearing a filter or broadening your search.</p></div>
+              <StatePanel title="No contracts match these filters" body="Try clearing a filter or broadening your search." action={<button type="button" onClick={clearFilters} className="ir35-focus inline-flex min-h-10 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Clear filters</button>} />
             ) : (
               <ul className="space-y-3">
                 {data?.jobs.map((job) => {
@@ -336,8 +347,22 @@ function JobsBoard() {
 
 export default function JobsPage() {
   return (
-    <Suspense fallback={<main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500"><Loader2 className="animate-spin" size={22} /></main>}>
+    <Suspense fallback={<JobsPageSkeleton />}>
       <JobsBoard />
     </Suspense>
+  );
+}
+
+function JobsPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900" aria-busy="true">
+      <PublicHeader />
+      <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
+        <div className="mb-6 max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p><h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1><p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the original listing.</p></div>
+        <div className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white sm:h-14" aria-hidden="true" />
+        <div className="mt-16 grid gap-6 lg:grid-cols-[260px_1fr]"><div className="hidden h-[420px] animate-pulse rounded-2xl border border-slate-200 bg-white lg:block" aria-hidden="true" /><div className="space-y-3" role="status" aria-label="Loading contracts"><span className="sr-only">Loading contracts</span>{Array.from({ length: 5 }, (_, index) => <JobCardSkeleton key={index} />)}</div></div>
+      </main>
+      <PublicFooter />
+    </div>
   );
 }
