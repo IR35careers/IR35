@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { ArrowLeft, MapPin, Clock, PoundSterling, Building2, Briefcase, ClipboardCheck, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
 import { SaveJobButton } from "@/components/SaveJobButton";
@@ -11,11 +12,10 @@ import { IR35Badge } from "@/components/ui/ir35-badge";
 import { formatPosted, formatRate, ir35EvidenceLabel, type JobDetail, type JobListing } from "@/lib/job-types";
 import { getPublicJob, getSimilarPublicJobs } from "@/lib/public-jobs";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 60;
 
-async function getJob(id: string): Promise<JobDetail | null> {
-  return getPublicJob(id);
-}
+const getJob = cache((id: string): Promise<JobDetail | null> => getPublicJob(id));
 
 /** Live "similar contracts": same skills, not this job, newest first. */
 async function getSimilar(job: JobDetail): Promise<JobListing[]> {

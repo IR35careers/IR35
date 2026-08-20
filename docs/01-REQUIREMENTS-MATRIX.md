@@ -34,7 +34,7 @@ This matrix reconciles the existing repository, the 52-page product PDF, and the
 | Networking and referrals | P2 | `/network` account-owned relationship map, follow-up dates, role-linked reviewable drafts, manual copy and export | Implemented for user-controlled preparation | Any delivery provider needs consent, revocation and anti-spam review; autonomous outreach remains off |
 | MCP access | P2 | Downloadable v2 MCP server with four read-only tools and protocol-level client test | Implemented, read-only | Add authenticated tools only after OAuth, consent, scope and revocation design |
 | Accessibility | P0 | Axe reports no serious/critical defects in the public journey and account shell | Implemented for first slice | Manual screen-reader, 200% zoom and forced-colours review on staging |
-| Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path | Partial | Establish p75 field data; local simulated results remain variable |
+| Performance | P0 | Production Lighthouse baseline captured; public Supabase SDK moved off the initial path; featured jobs server-rendered; public detail pages request-deduplicated and cached for 60 seconds | Partial | Establish p75 field data; local simulated results remain variable |
 | Automated testing | P0 | Vitest, 186 legacy domain checks, Playwright E2E, axe and visual baselines | Implemented for current local gates | Add CI and authenticated/provider integration coverage |
 | Security and privacy | P1 | RLS on current user data | Partial | Threat model, fail-closed auth decisions, upload controls, export/deletion and auditability |
 
