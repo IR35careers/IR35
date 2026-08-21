@@ -52,6 +52,7 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "Liquid Personnel", type: "greenhouse", slug: "liquidpersonnel" },
   { name: "Capco", type: "greenhouse", slug: "capco" },
   { name: "WongDoody", type: "greenhouse", slug: "wongdoody" },
+  { name: "Pulse Healthcare", type: "greenhouse", slug: "pulse" },
 
   // Lever (verified working)
   { name: "Octopus Energy", type: "lever", slug: "octoenergy" },
@@ -67,6 +68,8 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "Focus Group", type: "workable", slug: "focus-group" },
   { name: "OnBuy", type: "workable", slug: "onbuy" },
   { name: "Safran Engineering Services UK", type: "workable", slug: "safrangroup" },
+  { name: "Mindera", type: "workable", slug: "minderacraft" },
+  { name: "Sword Group", type: "workable", slug: "sword-group" },
 ];
 
 const FETCHERS = {
