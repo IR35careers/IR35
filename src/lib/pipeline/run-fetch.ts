@@ -294,6 +294,7 @@ export async function runFetchPipeline(
   }
 
   const accepted: ProcessedJob[] = [];
+  const acceptedByCompany = new Map<string, ProcessedJob[]>();
   let fuzzyDuplicatesSkipped = 0;
 
   for (const job of processed) {
@@ -303,22 +304,23 @@ export async function runFetchPipeline(
     // A fuzzy match only counts as a duplicate when it comes from a
     // DIFFERENT source posting — the same (source_domain, source_identifier)
     // is this very job re-fetched, which the upsert handles.
-    const fuzzyMatch = findFuzzyDuplicate(job, sameCompanyExisting);
-    const isCrossSourceDupe =
-      fuzzyMatch !== null &&
-      !(
-        fuzzyMatch.source_domain === job.source_domain &&
-        fuzzyMatch.source_identifier === job.source_identifier
-      );
+    // Filter the exact source row before matching. Otherwise it may be the
+    // first fuzzy result and hide a later duplicate from another provider.
+    const crossSourceExisting = sameCompanyExisting.filter(
+      (candidate) =>
+        !(candidate.source_domain === job.source_domain &&
+          candidate.source_identifier === job.source_identifier)
+    );
+    const fuzzyMatch = findFuzzyDuplicate(job, crossSourceExisting);
+    const isCrossSourceDupe = fuzzyMatch !== null;
 
     // Also compare against jobs already accepted in THIS batch (different
     // source keys only).
+    const sameCompanyAccepted = acceptedByCompany.get(companyKey) ?? [];
     const batchMatch = findFuzzyDuplicate(
       job,
-      accepted.filter(
-        (a) =>
-          normCompany(a.company_name) === companyKey &&
-          !(a.source_domain === job.source_domain && a.source_identifier === job.source_identifier)
+      sameCompanyAccepted.filter(
+        (a) => !(a.source_domain === job.source_domain && a.source_identifier === job.source_identifier)
       )
     );
 
@@ -327,6 +329,8 @@ export async function runFetchPipeline(
       continue;
     }
     accepted.push(job);
+    sameCompanyAccepted.push(job);
+    acceptedByCompany.set(companyKey, sameCompanyAccepted);
   }
 
   // ── 4. Upsert ──────────────────────────────────────────────────────────

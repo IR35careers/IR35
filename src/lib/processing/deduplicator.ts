@@ -30,6 +30,23 @@ export interface DedupCandidate {
   location: string;
 }
 
+const NORMALIZE_CACHE_LIMIT = 20_000;
+const SIMILARITY_CACHE_LIMIT = 50_000;
+const normalizedCache = new Map<string, string>();
+const similarityCache = new Map<string, number>();
+const titleSimilarityCache = new Map<string, number>();
+
+function boundedSet<K, V>(cache: Map<K, V>, key: K, value: V, limit: number): void {
+  // Pipeline functions are short lived, but a bound prevents a large agency
+  // board from turning string memoisation into unbounded server memory.
+  if (cache.size >= limit) cache.clear();
+  cache.set(key, value);
+}
+
+function pairKey(a: string, b: string): string {
+  return a <= b ? `${a}\u0000${b}` : `${b}\u0000${a}`;
+}
+
 /** Iterative two-row Levenshtein distance. */
 export function levenshtein(a: string, b: string): number {
   if (a === b) return 0;
@@ -55,10 +72,16 @@ export function levenshtein(a: string, b: string): number {
 export function similarity(a: string, b: string): number {
   const x = normalize(a);
   const y = normalize(b);
+  const key = pairKey(x, y);
+  const cached = similarityCache.get(key);
+  if (cached !== undefined) return cached;
+
   if (!x.length && !y.length) return 1;
   const maxLen = Math.max(x.length, y.length);
   if (maxLen === 0) return 1;
-  return 1 - levenshtein(x, y) / maxLen;
+  const score = 1 - levenshtein(x, y) / maxLen;
+  boundedSet(similarityCache, key, score, SIMILARITY_CACHE_LIMIT);
+  return score;
 }
 
 /**
@@ -71,19 +94,35 @@ export function similarity(a: string, b: string): number {
  * containment scores 0.95, deliberately just below a verbatim match.
  */
 export function titleSimilarity(a: string, b: string): number {
-  const lev = similarity(a, b);
-  const ta = new Set(normalize(a).split(" ").filter(Boolean));
-  const tb = new Set(normalize(b).split(" ").filter(Boolean));
-  if (ta.size === 0 || tb.size === 0) return lev;
+  const normalizedA = normalize(a);
+  const normalizedB = normalize(b);
+  const key = pairKey(normalizedA, normalizedB);
+  const cached = titleSimilarityCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const lev = similarity(normalizedA, normalizedB);
+  const ta = new Set(normalizedA.split(" ").filter(Boolean));
+  const tb = new Set(normalizedB.split(" ").filter(Boolean));
+  if (ta.size === 0 || tb.size === 0) {
+    boundedSet(titleSimilarityCache, key, lev, SIMILARITY_CACHE_LIMIT);
+    return lev;
+  }
   const [small, large] = ta.size <= tb.size ? [ta, tb] : [tb, ta];
   let overlap = 0;
   for (const token of small) if (large.has(token)) overlap++;
   const containment = overlap / small.size;
-  return Math.max(lev, containment * 0.95);
+  const score = Math.max(lev, containment * 0.95);
+  boundedSet(titleSimilarityCache, key, score, SIMILARITY_CACHE_LIMIT);
+  return score;
 }
 
 function normalize(s: string): string {
-  return (s ?? "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  const raw = s ?? "";
+  const cached = normalizedCache.get(raw);
+  if (cached !== undefined) return cached;
+  const normalized = raw.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  boundedSet(normalizedCache, raw, normalized, NORMALIZE_CACHE_LIMIT);
+  return normalized;
 }
 
 function rateMidpoint(job: DedupCandidate): number | null {
