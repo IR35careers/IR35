@@ -9,9 +9,12 @@ import {
 } from "@/lib/email/resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { sendApplicationNotification, type ApplicationNotificationKind } from "@/lib/email/application-notifications";
+import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
+import { isVerifiedRecruiterRecipient } from "@/lib/email/recruiter-reply";
 import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
 import type { ApplicationRecord, ApplicationStatus, InboxClassification } from "@/lib/workspace/types";
 import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
+import { consumeRateLimitKey } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -85,6 +88,10 @@ export async function POST(request: Request) {
     if (!alias) {
       return NextResponse.json({ accepted: true, ignored: true, reason: "unknown_alias" }, { status: 200, headers: RESPONSE_HEADERS });
     }
+    const inboundRate = await consumeRateLimitKey("inbound_mail", String(alias.user_id), 200, 24 * 60 * 60_000);
+    if (!inboundRate.allowed) {
+      return NextResponse.json({ accepted: true, ignored: true, reason: "rate_limit" }, { status: 200, headers: RESPONSE_HEADERS });
+    }
 
     const { data: email, error: emailError } = await resend.emails.receiving.get(event.data.email_id, { html_format: "cid" });
     if (emailError || !email) throw new Error(emailError?.message ?? "Received email content is unavailable.");
@@ -110,7 +117,13 @@ export async function POST(request: Request) {
     if (packetError) throw new Error(packetError.message);
     const candidates = (packetRows ?? []).map((row) => ({ id: row.id, job: row.job_snapshot })) as Array<Pick<ApplicationRecord, "id" | "job">>;
     const applicationId = findLinkedApplication(payload.subject, payload.text, candidates);
-    const classification = classifyInboundMessage(payload.subject, payload.text);
+    const linkedPacket = applicationId ? (packetRows ?? []).find((row) => String(row.id) === applicationId) : undefined;
+    const linkedJob = linkedPacket?.job_snapshot as ApplicationRecord["job"] | undefined;
+    const verifiedDestination = linkedJob
+      ? await resolveEmployerDestinationForJob(linkedJob, admin)
+      : null;
+    const trustedSender = Boolean(verifiedDestination && isVerifiedRecruiterRecipient(payload.sender, verifiedDestination.email));
+    const classification = trustedSender ? classifyInboundMessage(payload.subject, payload.text) : "other";
 
     const { error: messageError } = await admin.from("inbox_messages").upsert({
       user_id: alias.user_id,
@@ -126,8 +139,7 @@ export async function POST(request: Request) {
     }, { onConflict: "user_id,provider_message_id", ignoreDuplicates: true });
     if (messageError) throw new Error(messageError.message);
 
-    if (applicationId) {
-      const linkedPacket = (packetRows ?? []).find((row) => String(row.id) === applicationId);
+    if (applicationId && trustedSender) {
       const currentStatus = (linkedPacket?.status ?? "applied") as ApplicationStatus;
       const transition = messageTransition(classification, currentStatus);
       await admin.from("application_packets").update({ status: transition.status, updated_at: new Date().toISOString() }).eq("id", applicationId).eq("user_id", alias.user_id);
@@ -140,7 +152,7 @@ export async function POST(request: Request) {
         idempotency_key: `mail:${payload.providerMessageId}`,
       }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true });
 
-      const job = linkedPacket?.job_snapshot as ApplicationRecord["job"] | undefined;
+      const job = linkedJob;
       if (job && alias.forwarding_enabled && alias.forwarding_email) {
         await sendApplicationNotification({
           kind: transition.notification,
@@ -156,7 +168,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId) }, { status: 200, headers: RESPONSE_HEADERS });
+    return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId), trustedSender }, { status: 200, headers: RESPONSE_HEADERS });
   } catch {
     return NextResponse.json({ error: "Inbound message could not be processed." }, { status: 500, headers: RESPONSE_HEADERS });
   }

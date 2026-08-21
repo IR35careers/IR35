@@ -36,6 +36,10 @@ export function proxy(request: NextRequest) {
   forwardedHeaders.set("x-nonce", nonce);
   const protect = (response: NextResponse) => {
     response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
+    if (request.nextUrl.pathname === "/api/admin" || request.nextUrl.pathname.startsWith("/api/admin/")) {
+      response.headers.set("Cache-Control", "no-store, private");
+      response.headers.set("Pragma", "no-cache");
+    }
     return response;
   };
   const next = () => protect(NextResponse.next({ request: { headers: forwardedHeaders } }));

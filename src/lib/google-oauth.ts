@@ -8,7 +8,7 @@ function canonicalOrigin(requestOrigin: string): { origin: string; admin: boolea
   if (parsed.hostname.toLowerCase() === "admin.ir35careers.com") {
     return { origin: ADMIN_ORIGIN, admin: true };
   }
-  if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+  if (process.env.NODE_ENV !== "production" && (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1")) {
     return { origin: parsed.origin, admin: false };
   }
   return { origin: CUSTOMER_ORIGIN, admin: false };

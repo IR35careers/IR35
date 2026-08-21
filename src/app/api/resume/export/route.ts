@@ -64,7 +64,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof RequestBodyError) return invalid(error.message, error.status);
-    console.error("Resume export failed", error);
+    console.error("resume_export_failed", {
+      type: error instanceof Error ? error.name : "UnknownError",
+    });
     return invalid("The CV could not be exported. Review the text and try again.", 422);
   }
 }

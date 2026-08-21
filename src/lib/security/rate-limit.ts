@@ -43,6 +43,27 @@ export async function consumeRateLimitKey(
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) return memory;
   try {
     const admin = getSupabaseAdmin();
+    const atomic = await admin.rpc("consume_security_rate_limit", {
+      p_scope: scope,
+      p_rate_key: key,
+      p_limit: limit,
+      p_window_seconds: Math.max(1, Math.ceil(windowMs / 1_000)),
+    });
+    if (!atomic.error) {
+      const result = Array.isArray(atomic.data) ? atomic.data[0] : atomic.data;
+      const allowed = Boolean((result as { allowed?: unknown } | null)?.allowed);
+      const retryAfter = Number((result as { retry_after?: unknown } | null)?.retry_after ?? 0);
+      if (Math.random() < 0.01) {
+        await admin.from("moderation_logs")
+          .delete()
+          .eq("run_type", "security_rate_limit")
+          .lt("created_at", new Date(Date.now() - 2 * 24 * 60 * 60_000).toISOString());
+      }
+      return { allowed, retryAfter: allowed ? 0 : Math.max(1, retryAfter || Math.ceil(windowMs / 1_000)) };
+    }
+
+    // Compatibility path while migration 017 is being rolled out. Once the
+    // RPC exists, the advisory lock above is the authoritative durable guard.
     const since = new Date(Date.now() - windowMs).toISOString();
     const existing = await admin
       .from("moderation_logs")
@@ -58,12 +79,6 @@ export async function consumeRateLimitKey(
       summary: { rate_key: key, scope },
     });
     if (inserted.error) throw inserted.error;
-    if (Math.random() < 0.01) {
-      await admin.from("moderation_logs")
-        .delete()
-        .eq("run_type", "security_rate_limit")
-        .lt("created_at", new Date(Date.now() - 2 * 24 * 60 * 60_000).toISOString());
-    }
   } catch {
     // The process-local guard remains active if the durable audit store is
     // temporarily unavailable. Requests never receive details about storage.

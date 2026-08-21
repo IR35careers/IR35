@@ -1,5 +1,7 @@
 import { extractEmailAddress } from "@/lib/email/resend";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
+import { isVerifiedRecruiterRecipient, normaliseReplySubject, recruiterReplyIdempotencyKey } from "@/lib/email/recruiter-reply";
+import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumeRateLimitKey, rateLimitResponse } from "@/lib/security/rate-limit";
@@ -32,12 +34,12 @@ export async function POST(request: Request): Promise<Response> {
   if (!token) return Response.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
 
   try {
-    const body = await readJsonBody<{ to?: unknown; subject?: unknown; message?: unknown }>(request, 50_000);
-    const recipient = extractEmailAddress(clean(body.to, 254));
-    const subject = clean(body.subject, 180).replace(/[\r\n]+/g, " ");
+    const body = await readJsonBody<{ replyToMessageId?: unknown; message?: unknown }>(request, 50_000);
+    const replyToMessageId = clean(body.replyToMessageId, 36);
     const message = clean(body.message, 40_000);
-    if (!recipient || !subject || !message) {
-      return Response.json({ error: "Add a valid recipient, subject and message." }, { status: 400, headers: NO_STORE });
+    const requestKey = request.headers.get("x-idempotency-key")?.trim() ?? "";
+    if (!/^[0-9a-f-]{36}$/i.test(replyToMessageId) || !/^[0-9a-f-]{36}$/i.test(requestKey) || !message) {
+      return Response.json({ error: "Open an existing recruiter message and write your reply." }, { status: 400, headers: NO_STORE });
     }
 
     const config = transactionalEmailConfig();
@@ -49,15 +51,40 @@ export async function POST(request: Request): Promise<Response> {
     const rate = await consumeRateLimitKey("recruiter_email", data.user.id, 20, 60 * 60_000);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
 
-    const { data: inbox, error: inboxError } = await admin
-      .from("inbox_aliases")
-      .select("alias, provider_state")
-      .eq("user_id", data.user.id)
-      .maybeSingle();
+    const [{ data: inbox, error: inboxError }, { data: sourceMessage, error: messageError }] = await Promise.all([
+      admin.from("inbox_aliases")
+        .select("alias, provider_state")
+        .eq("user_id", data.user.id)
+        .maybeSingle(),
+      admin.from("inbox_messages")
+        .select("id, application_id, sender, subject")
+        .eq("id", replyToMessageId)
+        .eq("user_id", data.user.id)
+        .maybeSingle(),
+    ]);
     const alias = extractEmailAddress(String(inbox?.alias ?? ""));
     if (inboxError || !alias || inbox?.provider_state !== "connected") {
       return Response.json({ error: "Activate your private application address before sending recruiter email." }, { status: 409, headers: NO_STORE });
     }
+    const recipient = extractEmailAddress(String(sourceMessage?.sender ?? ""));
+    if (messageError || !sourceMessage || !sourceMessage.application_id || !recipient) {
+      return Response.json({ error: "Replies are available only for recruiter messages linked to one of your applications." }, { status: 404, headers: NO_STORE });
+    }
+    const { data: packet, error: packetError } = await admin
+      .from("application_packets")
+      .select("job_snapshot")
+      .eq("id", sourceMessage.application_id)
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+    const job = packet?.job_snapshot as { id?: string; company_name?: string } | null;
+    if (packetError || !job?.id || !job.company_name) {
+      return Response.json({ error: "The linked application could not be verified." }, { status: 404, headers: NO_STORE });
+    }
+    const destination = await resolveEmployerDestinationForJob({ id: job.id, company_name: job.company_name }, admin);
+    if (!destination || !isVerifiedRecruiterRecipient(recipient, destination.email)) {
+      return Response.json({ error: "Replies can be sent only to the verified recruitment address for this application." }, { status: 403, headers: NO_STORE });
+    }
+    const subject = normaliseReplySubject(String(sourceMessage.subject ?? ""));
 
     const firstName = clean(String(data.user.user_metadata?.full_name ?? data.user.user_metadata?.name ?? ""), 100).split(/\s+/)[0];
     const greeting = firstName ? `Sent by ${firstName} through IR35Careers` : "Sent through IR35Careers";
@@ -69,9 +96,9 @@ export async function POST(request: Request): Promise<Response> {
       html,
       text: message,
       replyTo: alias,
-      headers: { "X-Entity-Ref-ID": crypto.randomUUID() },
+      headers: { "X-Entity-Ref-ID": requestKey },
       tags: [{ name: "email_type", value: "recruiter_compose" }],
-    });
+    }, { idempotencyKey: recruiterReplyIdempotencyKey(data.user.id, replyToMessageId, requestKey) });
     if (delivery.error) throw new Error(delivery.error.message);
     return Response.json({ sent: true, providerMessageId: delivery.data?.id ?? null }, { status: 201, headers: NO_STORE });
   } catch (error) {

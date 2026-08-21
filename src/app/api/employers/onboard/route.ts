@@ -8,6 +8,7 @@ import {
 } from "@/lib/employer-onboarding";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
+import { consumeRateLimitKey } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,18 +41,15 @@ function requestIp(request: Request): string {
     || "").trim().slice(0, 80);
 }
 
-async function rateLimitExceeded(input: { ipKey: string; emailKey: string }): Promise<boolean> {
-  const admin = getSupabaseAdmin();
-  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+async function onboardingRateLimit(input: { ipKey: string; emailKey: string }): Promise<{ allowed: boolean; retryAfter: number }> {
   const [ipResult, emailResult] = await Promise.all([
-    admin.from("moderation_logs").select("id", { count: "exact", head: true })
-      .eq("run_type", EMPLOYER_ONBOARDING_RUN_TYPE).contains("summary", { ip_key: input.ipKey }).gte("created_at", hourAgo),
-    admin.from("moderation_logs").select("id", { count: "exact", head: true })
-      .eq("run_type", EMPLOYER_ONBOARDING_RUN_TYPE).contains("summary", { email_key: input.emailKey }).gte("created_at", dayAgo),
+    consumeRateLimitKey("employer_onboarding_ip", input.ipKey, 8, 60 * 60_000),
+    consumeRateLimitKey("employer_onboarding_email", input.emailKey, 3, 24 * 60 * 60_000),
   ]);
-  if (ipResult.error || emailResult.error) throw new Error("Unable to check onboarding limits.");
-  return (ipResult.count ?? 0) >= 8 || (emailResult.count ?? 0) >= 3;
+  return {
+    allowed: ipResult.allowed && emailResult.allowed,
+    retryAfter: Math.max(ipResult.retryAfter, emailResult.retryAfter),
+  };
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -65,8 +63,9 @@ export async function POST(request: Request): Promise<Response> {
     const ip = requestIp(request);
     const ipKey = employerOnboardingRateKey("ip", ip || `${onboarding.recruitmentEmail}:no-ip`);
     const emailKey = employerOnboardingRateKey("email", onboarding.recruitmentEmail);
-    if (await rateLimitExceeded({ ipKey, emailKey })) {
-      return Response.json({ error: "Too many verification requests. Try again later or contact IR35Careers." }, { status: 429, headers: { ...NO_STORE, "Retry-After": "3600" } });
+    const rate = await onboardingRateLimit({ ipKey, emailKey });
+    if (!rate.allowed) {
+      return Response.json({ error: "Too many verification requests. Try again later or contact IR35Careers." }, { status: 429, headers: { ...NO_STORE, "Retry-After": String(Math.max(1, rate.retryAfter)) } });
     }
     const admin = getSupabaseAdmin();
     const attempt = await admin.from("moderation_logs").insert({
@@ -108,6 +107,13 @@ export async function POST(request: Request): Promise<Response> {
     const message = error instanceof Error ? error.message : "Unable to start employer onboarding.";
     if (error instanceof RequestBodyError) return Response.json({ error: message }, { status: error.status, headers: NO_STORE });
     const status = /configured|accepted for delivery|record employer verification/i.test(message) ? 503 : 400;
-    return Response.json({ error: message }, { status, headers: NO_STORE });
+    console.error("employer_onboarding_failed", {
+      type: error instanceof Error ? error.name : "UnknownError",
+    });
+    return Response.json({
+      error: status === 503
+        ? "Employer onboarding is temporarily unavailable."
+        : "The employer onboarding request could not be completed.",
+    }, { status, headers: NO_STORE });
   }
 }

@@ -241,7 +241,9 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ ...payload, application }, { status: submitResponse.status, headers: NO_STORE });
   } catch (error) {
     if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
-    console.error("auto_apply_next_failed", { reason: error instanceof Error ? error.message.slice(0, 300) : "unknown" });
+    console.error("auto_apply_next_failed", {
+      type: error instanceof Error ? error.name : "UnknownError",
+    });
     return Response.json({ error: "Auto Apply could not complete this contract. No application was marked as submitted." }, { status: 502, headers: NO_STORE });
   }
 }

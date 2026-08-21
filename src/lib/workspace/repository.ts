@@ -182,13 +182,16 @@ export async function saveCloudWorkspace(userId: string, state: WorkspaceState):
   if (profileResult.error) throw new Error(profileResult.error.message);
 
   if (state.applications.length > 0) {
-    const applicationRows = state.applications.map((application) => ({
+    // Provider receipts and post-submission states are server-owned. The
+    // browser persists only candidate-reviewed drafts.
+    const applicationRows = state.applications
+      .filter((application) => ["draft", "ready", "needs_review"].includes(application.status))
+      .map((application) => ({
       id: application.id,
       user_id: userId,
       job_id: application.job.id,
       job_snapshot: application.job,
       status: application.status,
-      mode: application.mode,
       match_score: application.matchScore,
       resume_version_label: application.resumeVersionLabel,
       source_cv_text: application.sourceCvText,
@@ -200,15 +203,18 @@ export async function saveCloudWorkspace(userId: string, state: WorkspaceState):
       truth_approved: application.truthApproved,
       materials_approved: application.materialsApproved,
       submission_approved: application.submissionApproved,
-      receipt: application.receipt,
       idempotency_key: application.id,
       created_at: application.createdAt,
       updated_at: application.updatedAt,
     }));
-    const applicationResult = await supabase.from("application_packets").upsert(applicationRows);
-    if (applicationResult.error) throw new Error(applicationResult.error.message);
+    if (applicationRows.length > 0) {
+      const applicationResult = await supabase.from("application_packets").upsert(applicationRows);
+      if (applicationResult.error) throw new Error(applicationResult.error.message);
+    }
 
-    const eventRows = state.applications.flatMap((application) => application.events.map((event) => ({
+    const eventRows = state.applications.flatMap((application) => application.events
+      .filter((event) => ["created", "prepared", "approved", "note"].includes(event.type))
+      .map((event) => ({
       id: event.id,
       user_id: userId,
       application_id: application.id,
@@ -218,7 +224,7 @@ export async function saveCloudWorkspace(userId: string, state: WorkspaceState):
       created_at: event.createdAt,
     })));
     if (eventRows.length > 0) {
-      const eventResult = await supabase.from("application_events").upsert(eventRows);
+      const eventResult = await supabase.from("application_events").upsert(eventRows, { onConflict: "id", ignoreDuplicates: true });
       if (eventResult.error) throw new Error(eventResult.error.message);
     }
   }

@@ -5,6 +5,7 @@ import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
+const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
 export async function POST(request: Request) {
   const rate = await consumePublicRateLimit(request, "application_dry_run", 30, 10 * 60_000);
@@ -12,14 +13,14 @@ export async function POST(request: Request) {
   try {
     const body = await readJsonBody<{ application?: ApplicationRecord; approval?: string }>(request, 600_000);
     if (body.approval !== "APPROVE_DRY_RUN" || !body.application) {
-      return NextResponse.json({ error: "Explicit dry-run approval is required." }, { status: 400 });
+      return NextResponse.json({ error: "Explicit dry-run approval is required." }, { status: 400, headers: NO_STORE });
     }
     const receipt = issueDryRunReceipt(body.application);
-    return NextResponse.json({ receipt }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ receipt }, { headers: NO_STORE });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Dry run failed." },
-      { status: error instanceof RequestBodyError ? error.status : 400, headers: { "Cache-Control": "no-store" } }
+      { status: error instanceof RequestBodyError ? error.status : 400, headers: NO_STORE }
     );
   }
 }

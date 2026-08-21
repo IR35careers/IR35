@@ -59,5 +59,7 @@ describe("admin host routing", () => {
     });
     const response = proxy(request);
     expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
+    expect(response.headers.get("pragma")).toBe("no-cache");
   });
 });
