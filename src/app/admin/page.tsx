@@ -22,11 +22,14 @@ import {
   LogOut,
   Mail,
   Menu,
+  Monitor,
   RefreshCw,
+  RotateCcw,
   Search,
   Send,
   ShieldAlert,
   ShieldCheck,
+  Smartphone,
   TrendingUp,
   UserRound,
   Users,
@@ -274,6 +277,7 @@ export default function AdminPage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
+  const campaignDraftHydrated = useRef(false);
   const [section, setSection] = useState<Section>("stats");
   const [data, setData] = useState<AdminData | null>(null);
   const [busy, setBusy] = useState(true);
@@ -294,6 +298,7 @@ export default function AdminPage() {
   const [previewingEmail, setPreviewingEmail] = useState(false);
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [sendingCampaign, setSendingCampaign] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -338,7 +343,24 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (section !== "campaigns" || !data?.emailTemplates?.length || emailDraft) return;
+    if (section !== "campaigns" || !data?.emailTemplates?.length || campaignDraftHydrated.current) return;
+    campaignDraftHydrated.current = true;
+    try {
+      const stored = window.localStorage.getItem("ir35careers-admin-email-draft");
+      if (stored) {
+        const saved = JSON.parse(stored) as { draft?: EmailCampaignDraft; campaignId?: string; audience?: CampaignAudience; customRecipient?: string };
+        if (saved.draft?.subject && saved.draft?.message && saved.campaignId) {
+          setEmailDraft(saved.draft);
+          setCampaignId(saved.campaignId);
+          if (["registered", "waitlist", "all", "custom"].includes(saved.audience ?? "")) setCampaignAudience(saved.audience as CampaignAudience);
+          setCustomRecipient(saved.customRecipient ?? "");
+          setDraftSavedAt(new Date().toISOString());
+          return;
+        }
+      }
+    } catch {
+      window.localStorage.removeItem("ir35careers-admin-email-draft");
+    }
     const first = data.emailTemplates[0];
     setEmailDraft({
       templateId: first.templateId,
@@ -351,7 +373,21 @@ export default function AdminPage() {
       ctaUrl: first.ctaUrl,
     });
     setCampaignId(crypto.randomUUID());
-  }, [data?.emailTemplates, emailDraft, section]);
+  }, [data?.emailTemplates, section]);
+
+  useEffect(() => {
+    if (section !== "campaigns" || !emailDraft || !campaignId || !campaignDraftHydrated.current) return;
+    const timeout = window.setTimeout(() => {
+      window.localStorage.setItem("ir35careers-admin-email-draft", JSON.stringify({
+        draft: emailDraft,
+        campaignId,
+        audience: campaignAudience,
+        customRecipient,
+      }));
+      setDraftSavedAt(new Date().toISOString());
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [campaignAudience, campaignId, customRecipient, emailDraft, section]);
 
   useEffect(() => {
     if (section !== "campaigns" || !emailDraft) return;
@@ -500,9 +536,6 @@ export default function AdminPage() {
 
   const sendEmailCampaign = async () => {
     if (!emailDraft || !campaignId) return;
-    const recipientCount = campaignAudience === "custom" ? 1 : data?.audienceCounts?.[campaignAudience] ?? 0;
-    const audienceLabel = campaignAudience === "registered" ? "registered contractors" : campaignAudience === "waitlist" ? "former waitlist contacts" : campaignAudience === "all" ? "all unique contacts" : customRecipient;
-    if (!window.confirm(`Send “${emailDraft.subject}” to ${recipientCount} ${audienceLabel}? Each recipient receives a private copy and this action is recorded.`)) return;
     setSendingCampaign(true);
     setError(null);
     setNotice(null);
@@ -698,6 +731,7 @@ export default function AdminPage() {
               previewing={previewingEmail}
               sendingTest={sendingTestEmail}
               sendingCampaign={sendingCampaign}
+              draftSavedAt={draftSavedAt}
               query={normalisedQuery}
               onChooseTemplate={chooseEmailTemplate}
               onDraftChange={setEmailDraft}
@@ -838,6 +872,7 @@ function EmailCampaignsPanel({
   previewing,
   sendingTest,
   sendingCampaign,
+  draftSavedAt,
   query,
   onChooseTemplate,
   onDraftChange,
@@ -854,6 +889,7 @@ function EmailCampaignsPanel({
   previewing: boolean;
   sendingTest: boolean;
   sendingCampaign: boolean;
+  draftSavedAt: string | null;
   query: string;
   onChooseTemplate: (template: EmailCampaignTemplate) => void;
   onDraftChange: (draft: EmailCampaignDraft) => void;
@@ -862,10 +898,25 @@ function EmailCampaignsPanel({
   onSendTest: () => void;
   onSendCampaign: () => void;
 }) {
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [reviewOpen, setReviewOpen] = useState(false);
   const templates = (data.emailTemplates ?? []).filter((template) => !query || [template.name, template.description, template.subject].some((value) => value.toLowerCase().includes(query)));
   const history = (data.campaignHistory ?? []).filter((entry) => !query || JSON.stringify(entry.summary).toLowerCase().includes(query));
   const counts = data.audienceCounts ?? { registered: 0, waitlist: 0, all: 0, custom: 1 };
   const recipientCount = audience === "custom" ? 1 : counts[audience];
+  const audienceLabel = audience === "registered" ? "Registered contractors" : audience === "waitlist" ? "Former waitlist" : audience === "all" ? "All unique contacts" : customRecipient || "Single address";
+  const qualityChecks = draft ? [
+    { label: "Clear subject", passed: draft.subject.length >= 20 && draft.subject.length <= 70 },
+    { label: "Useful preview text", passed: draft.preheader.length >= 30 && draft.preheader.length <= 140 },
+    { label: "Focused message", passed: draft.message.length >= 80 && draft.message.length <= 1200 },
+    { label: "Secure website link", passed: draft.ctaUrl.startsWith("https://www.ir35careers.com/") },
+    { label: "Audience selected", passed: recipientCount > 0 && (audience !== "custom" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customRecipient)) },
+  ] : [];
+  const passedChecks = qualityChecks.filter((check) => check.passed).length;
+  const readyToSend = Boolean(draft && data.deliveryConfigured && qualityChecks.every((check) => check.passed));
+  const liveCampaigns = history.filter((entry) => entry.summary?.action === "send");
+  const acceptedTotal = liveCampaigns.reduce((total, entry) => total + Number(entry.summary?.sent ?? 0), 0);
+  const failedTotal = liveCampaigns.reduce((total, entry) => total + Number(entry.summary?.failed ?? 0), 0);
   const fieldClass = "mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100";
   const update = <Key extends keyof EmailCampaignDraft,>(key: Key, value: EmailCampaignDraft[Key]) => {
     if (draft) onDraftChange({ ...draft, [key]: value });
@@ -888,7 +939,7 @@ function EmailCampaignsPanel({
       </Panel>
 
       <div className="grid items-start gap-5 2xl:grid-cols-[minmax(540px,0.9fr)_minmax(560px,1.1fr)]">
-        <Panel title="Design your email" description="Your edits are escaped, validated and rendered inside the approved IR35Careers layout.">
+        <Panel title="Design your email" description="Your edits are escaped, validated and rendered inside the approved IR35Careers layout." action={draftSavedAt ? <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500"><CheckCircle2 size={12} className="text-emerald-600" /> Draft saved</span> : null}>
           {draft ? <div className="space-y-5 p-5 sm:p-6">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
@@ -906,33 +957,43 @@ function EmailCampaignsPanel({
               <p className="mt-3 text-[11px] leading-5 text-slate-500">Send only service information that matches why each contact gave IR35Careers their email address.</p>
             </div>
 
-            <label className="block text-xs font-semibold text-slate-700">Subject<input value={draft.subject} maxLength={120} onChange={(event) => update("subject", event.target.value)} className={fieldClass} /></label>
-            <label className="block text-xs font-semibold text-slate-700">Inbox preview text<input value={draft.preheader} maxLength={180} onChange={(event) => update("preheader", event.target.value)} className={fieldClass} /></label>
+            <label className="block text-xs font-semibold text-slate-700"><span className="flex items-center justify-between"><span>Subject</span><span className="font-normal tabular-nums text-slate-400">{draft.subject.length}/120</span></span><input value={draft.subject} maxLength={120} onChange={(event) => update("subject", event.target.value)} className={fieldClass} /></label>
+            <label className="block text-xs font-semibold text-slate-700"><span className="flex items-center justify-between"><span>Inbox preview text</span><span className="font-normal tabular-nums text-slate-400">{draft.preheader.length}/180</span></span><input value={draft.preheader} maxLength={180} onChange={(event) => update("preheader", event.target.value)} className={fieldClass} /></label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-xs font-semibold text-slate-700">Section label<input value={draft.eyebrow} maxLength={60} onChange={(event) => update("eyebrow", event.target.value)} className={fieldClass} /></label>
               <label className="block text-xs font-semibold text-slate-700">Button label<input value={draft.ctaLabel} maxLength={50} onChange={(event) => update("ctaLabel", event.target.value)} className={fieldClass} /></label>
             </div>
             <label className="block text-xs font-semibold text-slate-700">Main heading<input value={draft.heading} maxLength={140} onChange={(event) => update("heading", event.target.value)} className={fieldClass} /></label>
-            <label className="block text-xs font-semibold text-slate-700">Message<textarea value={draft.message} maxLength={3000} rows={8} onChange={(event) => update("message", event.target.value)} className={`${fieldClass} resize-y leading-6`} /></label>
+            <label className="block text-xs font-semibold text-slate-700"><span className="flex items-center justify-between"><span>Message</span><span className="font-normal tabular-nums text-slate-400">{draft.message.length}/3000</span></span><textarea value={draft.message} maxLength={3000} rows={8} onChange={(event) => update("message", event.target.value)} className={`${fieldClass} resize-y leading-6`} /></label>
             <label className="block text-xs font-semibold text-slate-700">Button destination<input type="url" value={draft.ctaUrl} maxLength={300} onChange={(event) => update("ctaUrl", event.target.value)} className={fieldClass} /><span className="mt-1.5 block text-[11px] font-normal leading-5 text-slate-500">For safety, campaign buttons can link only to www.ir35careers.com.</span></label>
 
-            <div className="grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-4"><div><p className="text-xs font-semibold text-slate-900">Send readiness</p><p className="mt-1 text-[11px] text-slate-500">{passedChecks} of {qualityChecks.length} recommended checks passed</p></div><span className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold ${readyToSend ? "bg-emerald-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}>{qualityChecks.length ? Math.round((passedChecks / qualityChecks.length) * 100) : 0}%</span></div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">{qualityChecks.map((check) => <div key={check.label} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium ${check.passed ? "bg-emerald-50 text-emerald-700" : "bg-white text-slate-500 ring-1 ring-slate-200"}`}><CheckCircle2 size={13} className={check.passed ? "text-emerald-600" : "text-slate-300"} /> {check.label}</div>)}</div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-5"><button type="button" onClick={() => { const template = data.emailTemplates?.find((item) => item.templateId === draft.templateId); if (template) onChooseTemplate(template); }} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-slate-900"><RotateCcw size={13} /> Reset template</button><span className="text-[11px] text-slate-400">Changes save automatically</span></div>
+            <div className="grid gap-3 sm:grid-cols-2">
               <button type="button" onClick={onSendTest} disabled={sendingTest || sendingCampaign || !data.deliveryConfigured} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50">{sendingTest ? <Loader2 size={15} className="animate-spin" /> : <Inbox size={15} />} {sendingTest ? "Sending test" : "Send test to me"}</button>
-              <button type="button" onClick={onSendCampaign} disabled={sendingCampaign || sendingTest || !data.deliveryConfigured || (audience === "custom" && !customRecipient)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-50">{sendingCampaign ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} {sendingCampaign ? "Sending campaign" : `Review and send to ${recipientCount}`}</button>
+              <button type="button" onClick={() => setReviewOpen(true)} disabled={sendingCampaign || sendingTest || !readyToSend} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{sendingCampaign ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} {sendingCampaign ? "Sending campaign" : `Review and send to ${recipientCount}`}</button>
             </div>
             <p className="text-center text-[11px] leading-5 text-slate-500">From {data.sender || "the configured IR35Careers sender"}. A final confirmation appears before the campaign is sent.</p>
           </div> : <EmptyState title="Choose a template" detail="Select one of the professional templates to start designing your message." />}
         </Panel>
 
-        <Panel title="Live email preview" description="This is the same responsive HTML that recipients will receive." action={previewing ? <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500"><Loader2 size={12} className="animate-spin" /> Updating</span> : <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={12} /> Ready</span>}>
+        <Panel title="Live email preview" description="This is the same responsive HTML that recipients will receive." action={<div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1"><button type="button" onClick={() => setPreviewMode("desktop")} className={`flex h-7 w-7 items-center justify-center rounded-md transition ${previewMode === "desktop" ? "bg-white text-slate-950 shadow-sm" : "text-slate-400"}`} aria-label="Desktop email preview"><Monitor size={13} /></button><button type="button" onClick={() => setPreviewMode("mobile")} className={`flex h-7 w-7 items-center justify-center rounded-md transition ${previewMode === "mobile" ? "bg-white text-slate-950 shadow-sm" : "text-slate-400"}`} aria-label="Mobile email preview"><Smartphone size={13} /></button></div>}>
           <div className="border-b border-slate-100 bg-white px-5 py-4 sm:px-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700"><Mail size={17} /></span><div className="min-w-0"><p className="text-xs font-semibold text-slate-900">IR35Careers <span className="font-normal text-slate-500">&lt;hello@mail.ir35careers.com&gt;</span></p><p className="mt-1 truncate text-sm font-semibold text-slate-950">{draft?.subject || "Email subject"}</p><p className="mt-0.5 truncate text-xs text-slate-500">{draft?.preheader || "Inbox preview text"}</p></div></div></div>
-          <div className="bg-slate-100 p-2 sm:p-4"><iframe title="Campaign email preview" sandbox="" srcDoc={previewHtml} className="h-[820px] w-full rounded-xl border border-slate-200 bg-white shadow-sm" /></div>
+          <div className="relative flex min-h-[852px] justify-center overflow-hidden bg-slate-100 p-2 sm:p-4">{previewing && <span className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] text-slate-500 shadow-sm"><Loader2 size={12} className="animate-spin" /> Updating</span>}<iframe title="Campaign email preview" sandbox="" srcDoc={previewHtml} className={`h-[820px] rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ${previewMode === "mobile" ? "w-[390px] max-w-full" : "w-full"}`} /></div>
         </Panel>
       </div>
+
+      <div className="grid gap-4 sm:grid-cols-3"><article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Live campaigns</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{liveCampaigns.length}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Provider accepted</p><p className="mt-3 text-3xl font-semibold tabular-nums text-emerald-700">{acceptedTotal}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Failed</p><p className={`mt-3 text-3xl font-semibold tabular-nums ${failedTotal ? "text-rose-700" : "text-slate-950"}`}>{failedTotal}</p></article></div>
 
       <Panel title="Campaign history" description="Test sends and live campaigns are recorded in the private audit trail.">
         {history.length ? <div className="overflow-x-auto"><table className="w-full min-w-[780px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Email</th><th className="px-4 py-3.5">Audience</th><th className="px-4 py-3.5">Accepted</th><th className="px-4 py-3.5">Status</th><th className="px-6 py-3.5">Sent</th></tr></thead><tbody className="divide-y divide-slate-100">{history.map((entry) => { const summary = entry.summary ?? {}; const accepted = summary.sent ?? (summary.action === "test" ? 1 : 0); return <tr key={entry.id} className="hover:bg-slate-50/70"><td className="px-6 py-4"><p className="max-w-[340px] truncate text-sm font-semibold text-slate-900">{summary.subject || "Email campaign"}</p><p className="mt-1 text-xs capitalize text-slate-500">{summary.action === "test" ? "Administrator test" : "Live campaign"}</p></td><td className="px-4 py-4 text-xs capitalize text-slate-600">{summary.action === "test" ? "Administrator" : summary.audience?.replaceAll("_", " ") || "-"}</td><td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-800">{accepted} / {summary.recipient_count ?? accepted}</td><td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${summary.status === "accepted" ? "bg-emerald-50 text-emerald-700" : summary.status === "failed" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>{summary.status || "Recorded"}</span></td><td className="px-6 py-4 text-xs text-slate-500">{formatDate(entry.created_at, true)}</td></tr>; })}</tbody></table></div> : <EmptyState title={query ? "No matching campaigns" : "No email campaigns yet"} detail={query ? "Try a different subject or audience search." : "Send yourself a test email to begin the private campaign history."} />}
       </Panel>
+
+      {reviewOpen && draft && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="campaign-review-title"><div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl"><div className="border-b border-slate-100 px-6 py-5"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><Send size={18} /></span><h2 id="campaign-review-title" className="mt-4 text-xl font-semibold tracking-tight text-slate-950">Review before sending</h2><p className="mt-1 text-sm leading-6 text-slate-500">This sends one private copy to every unique recipient and records the provider result.</p></div><dl className="space-y-4 px-6 py-5 text-sm"><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">Subject</dt><dd className="font-semibold text-slate-900">{draft.subject}</dd></div><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">Audience</dt><dd className="font-semibold text-slate-900">{audienceLabel}</dd></div><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">Recipients</dt><dd className="font-semibold tabular-nums text-slate-900">{recipientCount}</dd></div><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">From</dt><dd className="break-all font-semibold text-slate-900">{data.sender}</dd></div></dl><div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 px-6 py-5 sm:flex-row sm:justify-end"><button type="button" onClick={() => setReviewOpen(false)} className="min-h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Keep editing</button><button type="button" onClick={() => { setReviewOpen(false); onSendCampaign(); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700"><Send size={15} /> Send campaign now</button></div></div></div>}
     </div>
   );
 }

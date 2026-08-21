@@ -12,6 +12,7 @@
  */
 
 import type { User } from "@supabase/supabase-js";
+import { createHash } from "node:crypto";
 import { adminAllowlist, adminSessionCookieName, cookieValue, verifyAdminSession } from "@/lib/admin-session";
 import {
   emailCampaignTemplates,
@@ -374,6 +375,11 @@ export async function POST(request: Request): Promise<Response> {
       const draft = validateCampaignDraft(body.draft ?? {});
       const recipients = await resolveCampaignAudience(supabase, audience, body.customEmail);
       if (!recipients.length) return Response.json({ error: "This audience has no deliverable recipients." }, { status: 400 });
+      const fingerprint = createHash("sha256").update(JSON.stringify({
+        audience,
+        recipients: recipients.map((recipient) => recipient.email).sort(),
+        draft,
+      })).digest("hex");
 
       const previous = await supabase
         .from("moderation_logs")
@@ -386,12 +392,26 @@ export async function POST(request: Request): Promise<Response> {
       if (previous.data) {
         return Response.json({ error: "This campaign has already been processed. Start a new draft before sending again." }, { status: 409 });
       }
+      const recentDuplicate = await supabase
+        .from("moderation_logs")
+        .select("id, summary, created_at")
+        .eq("run_type", "email_campaign")
+        .contains("summary", { fingerprint })
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recentDuplicate.error) throw recentDuplicate.error;
+      if (recentDuplicate.data && (recentDuplicate.data.summary?.status !== "failed" || Number(recentDuplicate.data.summary?.sent ?? 0) > 0)) {
+        return Response.json({ error: "An identical campaign was already processed for this audience in the last 24 hours." }, { status: 409 });
+      }
 
       const auditStart = await supabase.from("moderation_logs").insert({
         run_type: "email_campaign",
         summary: {
           action: "send",
           campaign_id: body.campaignId,
+          fingerprint,
           by: admin.email,
           template_id: draft.templateId,
           subject: draft.subject,
@@ -448,6 +468,7 @@ export async function POST(request: Request): Promise<Response> {
         summary: {
           action: "send",
           campaign_id: body.campaignId,
+          fingerprint,
           by: admin.email,
           template_id: draft.templateId,
           subject: draft.subject,
