@@ -41,6 +41,15 @@ export async function GET(request: Request): Promise<Response> {
     if (!submission || !packet) return Response.json({ error: "Application progress was not found." }, { status: 404, headers: NO_STORE });
     if (submission.status === "succeeded" && submission.receipt) return Response.json({ state: "submitted", receipt: submission.receipt }, { headers: NO_STORE });
     if (submission.status === "failed") return Response.json({ state: "failed", error: "The employer form could not be completed. Your approved materials are still saved." }, { status: 409, headers: NO_STORE });
+    if (submission.error_code === "needs_user") {
+      const stored = submission.receipt as { message?: string; action?: string } | null;
+      return Response.json({
+        state: "needs_user",
+        message: stored?.message || "The employer form needs an answer from you before it can continue.",
+        action: stored?.action,
+        questions: (packet.screening_answers as ApplicationQuestion[]) ?? [],
+      }, { status: 202, headers: NO_STORE });
+    }
     if (submission.error_code !== "needs_user" && isStaleSubmissionLock(submission.updated_at)) {
       const now = new Date().toISOString();
       const [{ error: updateError }, { error: eventError }] = await Promise.all([

@@ -276,7 +276,7 @@ export async function GET(request: Request): Promise<Response> {
         supabase.from("job_alerts").select("id", { count: "exact", head: true }),
         supabase.from("resume_versions").select("id", { count: "exact", head: true }),
         supabase.from("application_packets").select("status").limit(5000),
-        supabase.from("application_submissions").select("status").limit(5000),
+        supabase.from("application_submissions").select("status, error_code").limit(5000),
         supabase.from("inbox_messages").select("id", { count: "exact", head: true }),
         supabase.from("moderation_logs").select("summary, created_at").eq("run_type", "email_campaign").order("created_at", { ascending: false }).limit(500),
       ]);
@@ -301,7 +301,7 @@ export async function GET(request: Request): Promise<Response> {
         return stages;
       }, {});
       const submissionStages = (submissionsResult.data ?? []).reduce<Record<string, number>>((stages, submission) => {
-        const status = String(submission.status || "queued");
+        const status = submission.error_code === "needs_user" ? "needs_user" : String(submission.status || "queued");
         stages[status] = (stages[status] ?? 0) + 1;
         return stages;
       }, {});
