@@ -35,6 +35,15 @@ describe("admin host routing", () => {
     expect(response.headers.get("location")).toBe("https://admin.ir35careers.com/");
   });
 
+  it("keeps operational source health out of the public website", () => {
+    const request = new NextRequest("https://www.ir35careers.com/jobs/sources", {
+      headers: { host: "www.ir35careers.com" },
+    });
+    const response = proxy(request);
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("https://www.ir35careers.com/jobs");
+  });
+
   it("never serves contractor workspace routes from the admin domain", () => {
     const request = new NextRequest("https://admin.ir35careers.com/dashboard", {
       headers: { host: "admin.ir35careers.com" },

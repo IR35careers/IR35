@@ -197,7 +197,6 @@ test("public trust and platform surfaces are available", async ({ page }) => {
     ["/bug-bounty", "Report a security issue safely."],
     ["/billing-policy", "Billing, Cancellation and Refund Policy"],
     ["/delete-account", "Delete your account"],
-    ["/jobs/sources", "Contract feed health"],
   ] as const;
   for (const [url, heading] of pages) {
     await page.goto(url);
@@ -211,21 +210,16 @@ test("public trust and platform surfaces are available", async ({ page }) => {
   await expectNoSeriousA11yViolations(page);
 });
 
-test("public feed health exposes freshness without provider secrets", async ({ page, request }) => {
+test("operational feed health stays out of the public website", async ({ page, request }) => {
   const response = await request.get("/api/jobs/health");
-  expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  expect(payload.activeJobs).toBeGreaterThan(0);
-  expect(payload.sources.length).toBeGreaterThan(0);
-  expect(JSON.stringify(payload)).not.toMatch(/api[_-]?key|secret|companyErrors/i);
+  expect(response.status()).toBe(404);
 
   await page.goto("/jobs/sources");
-  await dismissPrivacyNotice(page);
-  await expect(page.getByRole("heading", { name: "Contract feed health" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Feed health summary" })).toBeVisible();
-  await expect(page.getByText("Ten-day expiry")).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
-  await expectNoSeriousA11yViolations(page);
+  await expect(page).toHaveURL(/\/jobs(?:\?|$)/);
+  await expect(page.getByRole("link", { name: "View feed health" })).toHaveCount(0);
+  await expect(page.getByText("Daily source refresh and duplicate reduction")).toHaveCount(0);
+  await expect(page.getByText("Explicit IR35 evidence labels")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Analyse a job URL" })).toHaveCount(0);
 });
 
 test("public platform assets and safety boundaries respond correctly", async ({ request }) => {

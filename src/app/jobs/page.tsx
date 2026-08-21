@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, MapPin, SlidersHorizontal, Bell, RefreshCw, ShieldCheck, Link2, WandSparkles, Activity } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Bell, RefreshCw } from "lucide-react";
 import { formatFreshness, formatPosted, formatRate, ir35EvidenceLabel, type JobListing } from "@/lib/job-types";
 import {
   isRateTypeFilter,
@@ -309,13 +309,6 @@ function JobsBoard() {
           </label>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-xs font-medium text-emerald-950">
-          <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} aria-hidden="true" /> Explicit IR35 evidence labels</span>
-          <span className="inline-flex items-center gap-1.5"><Link2 size={14} aria-hidden="true" /> Original source retained</span>
-          <span>Daily source refresh and duplicate reduction</span>
-          <Link href="/jobs/sources" className="ir35-focus ml-auto inline-flex items-center gap-1.5 rounded-md font-bold underline decoration-emerald-300 underline-offset-4 hover:text-brand-700"><Activity size={14} aria-hidden="true" /> View feed health</Link>
-        </div>
-
         {/* Header row */}
         <div className="mt-4 flex items-center justify-between gap-3">
           <div aria-live="polite">
@@ -325,9 +318,6 @@ function JobsBoard() {
             {!loading && data?.generated_at && <p className="mt-0.5 text-[11px] text-slate-600">Search refreshed {new Date(data.generated_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/analyse-job" className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-green-300 hover:text-green-700 md:inline-flex">
-              <WandSparkles size={13} /> Analyse a job URL
-            </Link>
             <Link href={alertHref} className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-green-300 hover:text-green-700 sm:inline-flex">
               <Bell size={13} /> Save as alert
             </Link>

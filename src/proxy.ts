@@ -21,6 +21,7 @@ export function proxy(request: NextRequest) {
   if (host && PUBLIC_HOSTS.has(host)) {
     if (pathname === "/admin") return NextResponse.redirect(`https://${ADMIN_HOST}/`);
     if (pathname === "/admin/login") return NextResponse.redirect(`https://${ADMIN_HOST}/login`);
+    if (pathname === "/jobs/sources") return NextResponse.redirect(new URL("/jobs", request.url), 308);
   }
   return NextResponse.next();
 }
