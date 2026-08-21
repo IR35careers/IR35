@@ -65,6 +65,8 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "Blockchain.com", type: "workable", slug: "blockchain" },
   { name: "Starling Bank", type: "workable", slug: "starling" },
   { name: "Focus Group", type: "workable", slug: "focus-group" },
+  { name: "OnBuy", type: "workable", slug: "onbuy" },
+  { name: "Safran Engineering Services UK", type: "workable", slug: "safrangroup" },
 ];
 
 const FETCHERS = {
