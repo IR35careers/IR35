@@ -17,6 +17,10 @@ function safeFileName(value: string): string {
   return value.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 80) || "candidate";
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export async function submitToVerifiedEmployerEmail(input: {
   applicationId: string;
   employerEmail: string;
@@ -30,6 +34,9 @@ export async function submitToVerifiedEmployerEmail(input: {
 }): Promise<SubmissionProviderReceipt> {
   const config = transactionalEmailConfig();
   if (!config) throw new Error("Employer email delivery is not configured.");
+  if (!isValidEmail(input.candidate.email)) {
+    throw new Error("Add a valid email address to your profile before submitting this application.");
+  }
   const safeName = escapeHtml(input.candidateName);
   const safeTitle = escapeHtml(input.job.title);
   const safeCompany = escapeHtml(input.job.company_name);
@@ -75,4 +82,3 @@ export async function submitToVerifiedEmployerEmail(input: {
     message: "Application delivered to the employer's verified recruitment address.",
   };
 }
-
