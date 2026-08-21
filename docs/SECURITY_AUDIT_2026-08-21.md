@@ -54,6 +54,8 @@ Completed on the audited revision:
 - Unit tests: 164 passed across 45 files.
 - Processing, tax, aggregator and fetcher tests: 194 passed, 0 failed.
 - Production Next.js build: passed; 68 static pages generated and all dynamic routes compiled.
+- Deployed production browser smoke tests: 6 passed, covering account boundaries, public trust pages, private feed-health routing, safety assets, reduced-motion navigation and canonical/private-page indexing rules.
+- Live HTTP checks: full CSP and HSTS present, framing denied, unauthenticated admin API returned 401, private-address job preview returned 400 and an oversized public request returned 413.
 - npm dependency audit: 0 low, moderate, high or critical known vulnerabilities.
 - Git patch validation: passed; no whitespace errors.
 - Repository and Git history secret-pattern scan: no OpenRouter, live Stripe, Google API, GitHub token, Supabase JWT or private-key patterns detected. The only tracked environment file is the placeholder `.env.local.example`.
