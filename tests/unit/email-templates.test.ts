@@ -37,16 +37,16 @@ describe("transactional email", () => {
 
   it("renders the one-time public-beta invitation without claiming an account already exists", () => {
     const email = renderBetaLaunchEmail({ logoSource: "cid:ir35careers-mark" });
-    expect(email.subject).toBe("IR35Careers public beta is open: Your early access is ready");
+    expect(email.subject).toBe("Your IR35Careers beta access is ready");
     expect(email.html).toContain("You joined the IR35Careers waitlist");
     expect(email.html).toContain('bgcolor="#effaf5"');
-    expect(email.html).toContain("Join the public beta");
-    expect(email.html).toContain("missing-keyword identification");
-    expect(email.html).toContain("Nothing is submitted without your review and approval");
+    expect(email.html).toContain("Create my free account");
+    expect(email.html).toContain("ATS friendly improvements");
+    expect(email.html).toContain("does not submit an application without your approval");
     expect(email.html).toContain("You have not been added to a marketing list");
     expect(email.html).not.toContain("Your account is ready");
-    expect(email.text).toContain("one-time access update");
-    expect(email.text).toContain("WHAT PUBLIC BETA MEANS");
+    expect(email.text).toContain("one time service email");
+    expect(email.text).toContain("YOU REMAIN IN CONTROL");
     expect(`${email.subject}${email.html}${email.text}`).not.toMatch(/[—→·]/);
   });
 
@@ -66,5 +66,13 @@ describe("transactional email", () => {
 
     vi.stubEnv("EMAIL_REPLY_TO", "not-an-email");
     expect(transactionalEmailConfig()).toBeNull();
+  });
+
+  it("uses the verified branded sender when no override is supplied", () => {
+    vi.stubEnv("ENABLE_WELCOME_EMAIL", "true");
+    vi.stubEnv("RESEND_API_KEY", "re_test-key");
+    vi.stubEnv("EMAIL_FROM", "");
+    vi.stubEnv("EMAIL_REPLY_TO", "");
+    expect(transactionalEmailConfig()?.from).toBe("IR35Careers <hello@mail.ir35careers.com>");
   });
 });
