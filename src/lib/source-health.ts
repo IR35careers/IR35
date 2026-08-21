@@ -2,6 +2,7 @@ import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 import { supabase } from "@/lib/supabase";
 
 export const SOURCE_STALE_DAYS = 10;
+export const SOURCE_FRESH_COVERAGE = 0.6;
 const SOURCE_QUERY_LIMIT = 10_000;
 const SOURCE_PAGE_SIZE = 1_000;
 
@@ -17,6 +18,8 @@ export interface SourceHealthItem {
   domain: string;
   label: string;
   activeJobs: number;
+  freshJobs: number;
+  freshPercent: number;
   lastObservedAt: string | null;
   freshness: SourceFreshness;
   ageDays: number | null;
@@ -25,6 +28,8 @@ export interface SourceHealthItem {
 export interface SourceHealthSummary {
   status: FeedHealthStatus;
   activeJobs: number;
+  freshJobs: number;
+  freshPercent: number;
   sourceCount: number;
   freshSources: number;
   latestObservedAt: string | null;
@@ -40,9 +45,11 @@ function sourceLabel(domain: string): string {
   const known: Record<string, string> = {
     "reed.co.uk": "Reed",
     "adzuna.co.uk": "Adzuna",
+    "adzuna.com": "Adzuna",
     "boards.greenhouse.io": "Greenhouse",
     "jobs.lever.co": "Lever",
     "jobs.ashbyhq.com": "Ashby",
+    "apply.workable.com": "Workable",
     "demo.ir35careers.local": "Labelled preview data",
   };
   return known[normalized] ?? normalized.split(".")[0].replace(/[-_]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -64,13 +71,16 @@ export function buildSourceHealthSummary(
 ): SourceHealthSummary {
   const now = options.now ?? new Date();
   const nowMs = now.getTime();
-  const grouped = new Map<string, { count: number; latestMs: number | null; latest: string | null }>();
+  const grouped = new Map<string, { count: number; freshCount: number; latestMs: number | null; latest: string | null }>();
 
   for (const row of rows) {
     const domain = row.source_domain?.trim().replace(/^www\./, "") || "source unavailable";
     const observedMs = row.last_seen_at ? new Date(row.last_seen_at).getTime() : NaN;
-    const current = grouped.get(domain) ?? { count: 0, latestMs: null, latest: null };
+    const current = grouped.get(domain) ?? { count: 0, freshCount: 0, latestMs: null, latest: null };
     current.count += 1;
+    if (Number.isFinite(observedMs) && observationAge(row.last_seen_at, nowMs).freshness === "fresh") {
+      current.freshCount += 1;
+    }
     if (Number.isFinite(observedMs) && (current.latestMs === null || observedMs > current.latestMs)) {
       current.latestMs = observedMs;
       current.latest = row.last_seen_at;
@@ -81,12 +91,19 @@ export function buildSourceHealthSummary(
   const sources = [...grouped.entries()]
     .map(([domain, value]): SourceHealthItem => {
       const age = observationAge(value.latest, nowMs);
+      const freshPercent = value.count > 0 ? Math.round((value.freshCount / value.count) * 100) : 0;
+      const freshness =
+        age.freshness === "fresh" && value.freshCount / value.count < SOURCE_FRESH_COVERAGE
+          ? "delayed"
+          : age.freshness;
       return {
         domain,
         label: sourceLabel(domain),
         activeJobs: value.count,
+        freshJobs: value.freshCount,
+        freshPercent,
         lastObservedAt: value.latest,
-        freshness: age.freshness,
+        freshness,
         ageDays: age.ageDays,
       };
     })
@@ -94,6 +111,8 @@ export function buildSourceHealthSummary(
 
   const knownSources = sources.filter((source) => source.freshness !== "unknown");
   const freshSources = sources.filter((source) => source.freshness === "fresh").length;
+  const freshJobs = sources.reduce((count, source) => count + source.freshJobs, 0);
+  const freshPercent = rows.length > 0 ? Math.round((freshJobs / rows.length) * 100) : 0;
   const latestObservedAt = sources.reduce<string | null>((latest, source) => {
     if (!source.lastObservedAt) return latest;
     if (!latest || new Date(source.lastObservedAt).getTime() > new Date(latest).getTime()) return source.lastObservedAt;
@@ -110,6 +129,8 @@ export function buildSourceHealthSummary(
   return {
     status,
     activeJobs: rows.length,
+    freshJobs,
+    freshPercent,
     sourceCount: sources.length,
     freshSources,
     latestObservedAt,

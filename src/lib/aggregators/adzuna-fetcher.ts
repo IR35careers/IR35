@@ -43,7 +43,7 @@ interface AdzunaResponse {
 
 export function mapAdzunaJob(job: AdzunaJob): RawATSJob {
   return {
-    sourceDomain: "adzuna.com",
+    sourceDomain: "adzuna.co.uk",
     sourceIdentifier: String(job.id),
     sourceType: "adzuna",
     title: job.title ?? "",
@@ -79,7 +79,7 @@ export async function fetchAdzuna(
       `https://api.adzuna.com/v1/api/jobs/gb/search/${page}` +
       `?app_id=${encodeURIComponent(opts.appId)}` +
       `&app_key=${encodeURIComponent(opts.appKey)}` +
-      `&results_per_page=50&contract=1&content-type=application/json`;
+      `&results_per_page=50&contract=1&sort_by=date&content-type=application/json`;
     const data = await client.getJson<AdzunaResponse>(url);
     const results = Array.isArray(data?.results) ? data.results : [];
     for (const job of results) {

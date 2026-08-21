@@ -156,7 +156,7 @@ function checkTrue(name: string, condition: boolean) {
     salary_is_predicted: "1",
   };
   const raw = mapAdzunaJob(fixture);
-  check("adzuna: dedup key", [raw.sourceDomain, raw.sourceIdentifier], ["adzuna.com", "987654321"]);
+  check("adzuna: dedup key", [raw.sourceDomain, raw.sourceIdentifier], ["adzuna.co.uk", "987654321"]);
   check("adzuna: contractHint set", raw.contractHint, true);
   check("adzuna: rawSalary deliberately empty (annualized/predicted)", raw.rawSalary, "");
   check("adzuna: posted passthrough", raw.postedAt, "2026-07-16T08:30:00Z");

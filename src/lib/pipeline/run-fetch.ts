@@ -36,11 +36,23 @@ export interface PipelineSummary {
   bySource: Record<string, number>;
   /** Operational notes: skipped sources, missing keys, time-budget cuts. */
   notes: string[];
+  /** Per-provider diagnostics so source failures are visible without log archaeology. */
+  sourceRuns: SourceRunSummary[];
   durationMs: number;
 }
 
-/** Stop starting new fetches once this much of the run has elapsed. */
-const FETCH_TIME_BUDGET_MS = 40000;
+export interface SourceRunSummary {
+  source: string;
+  status: "success" | "skipped" | "error";
+  fetched: number;
+  durationMs: number;
+  detailEnriched?: number;
+  message?: string;
+}
+
+/** Leave headroom inside Vercel's 60-second function limit for DB writes. */
+const FETCH_TIME_BUDGET_MS = 48000;
+const REED_ENRICHMENT_BUDGET_MS = 8000;
 
 const STALE_DAYS = 10;
 const UPSERT_CHUNK = 100;
@@ -59,62 +71,191 @@ export async function runFetchPipeline(
 ): Promise<PipelineSummary> {
   const started = Date.now();
   const supabase = getSupabaseAdmin();
-
-  // ── 1. Fetch: direct-employer ATS boards ───────────────────────────────
-  const results = await fetchAllCompanies(configs);
-  const companyErrors = results
-    .filter((r) => r.error)
-    .map((r) => ({ company: r.company.name, error: r.error as string }));
-  const rawJobs: RawATSJob[] = results.flatMap((r) => r.jobs);
   const notes: string[] = [];
+  const companyErrors: Array<{ company: string; error: string }> = [];
+  const sourceRuns: SourceRunSummary[] = [];
 
-  // ── 1b. Fetch: job-board aggregators (the real contract volume) ────────
-  // These use contract-only queries at the API level. Each is optional —
-  // missing keys or an exhausted time budget produce a note, not a failure.
-  const aggregatorClient = new HttpClient({ minDelayMs: 400 });
-  const timeLeft = () => started + FETCH_TIME_BUDGET_MS - Date.now();
-
+  // ── 1. Fetch every provider independently ──────────────────────────────
+  // A slow ATS or Reed detail request must never prevent Adzuna from being
+  // attempted. Each provider gets its own rate limiter and failure boundary.
   const reedKey = process.env.REED_API_KEY;
-  if (!reedKey) {
-    notes.push("Reed skipped: REED_API_KEY not set (free key: reed.co.uk/developers/jobseeker)");
-  } else if (timeLeft() < 8000) {
-    notes.push("Reed skipped: fetch time budget exhausted");
-  } else {
-    try {
-      const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 4 });
-      // Fetch full descriptions (search API only returns a snippet). Newest
-      // first, bounded so it never blows the serverless time budget.
-      const enrichDeadline = started + 46000; // dedicated enrichment slice
-      const enriched = await enrichReedDescriptions(aggregatorClient, reedKey, reedJobs, enrichDeadline);
-      notes.push(`Reed: full descriptions fetched for ${enriched}/${reedJobs.length} jobs`);
-      rawJobs.push(...reedJobs);
-    } catch (err) {
-      companyErrors.push({
-        company: "Reed",
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
-  }
-
   const adzunaId = process.env.ADZUNA_APP_ID;
   const adzunaKey = process.env.ADZUNA_APP_KEY;
-  if (!adzunaId || !adzunaKey) {
-    notes.push("Adzuna skipped: ADZUNA_APP_ID / ADZUNA_APP_KEY not set (free: developer.adzuna.com)");
-  } else if (timeLeft() < 8000) {
-    notes.push("Adzuna skipped: fetch time budget exhausted");
-  } else {
+
+  const directTask = (async () => {
+    const sourceStarted = Date.now();
     try {
-      const adzunaJobs = await fetchAdzuna(aggregatorClient, {
+      const client = new HttpClient({
+        minDelayMs: 250,
+        timeoutMs: 8000,
+        maxRetries: 1,
+        baseBackoffMs: 500,
+      });
+      const results = await fetchAllCompanies(configs, client);
+      return {
+        results,
+        jobs: results.flatMap((result) => result.jobs),
+        run: {
+          source: "Direct employer ATS",
+          status: "success" as const,
+          fetched: results.reduce((count, result) => count + result.jobs.length, 0),
+          durationMs: Date.now() - sourceStarted,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        results: [],
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Direct employer ATS",
+          status: "error" as const,
+          fetched: 0,
+          durationMs: Date.now() - sourceStarted,
+          message,
+        },
+      };
+    }
+  })();
+
+  const reedTask = (async () => {
+    const sourceStarted = Date.now();
+    if (!reedKey) {
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Reed",
+          status: "skipped" as const,
+          fetched: 0,
+          durationMs: 0,
+          message: "REED_API_KEY is not configured",
+        },
+      };
+    }
+    try {
+      const client = new HttpClient({
+        minDelayMs: 300,
+        timeoutMs: 8000,
+        maxRetries: 1,
+        baseBackoffMs: 500,
+      });
+      const jobs = await fetchReed(client, { apiKey: reedKey, pages: 5 });
+      return {
+        jobs,
+        run: {
+          source: "Reed",
+          status: "success" as const,
+          fetched: jobs.length,
+          durationMs: Date.now() - sourceStarted,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Reed",
+          status: "error" as const,
+          fetched: 0,
+          durationMs: Date.now() - sourceStarted,
+          message,
+        },
+      };
+    }
+  })();
+
+  const adzunaTask = (async () => {
+    const sourceStarted = Date.now();
+    if (!adzunaId || !adzunaKey) {
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Adzuna",
+          status: "skipped" as const,
+          fetched: 0,
+          durationMs: 0,
+          message: "ADZUNA_APP_ID or ADZUNA_APP_KEY is not configured",
+        },
+      };
+    }
+    try {
+      const client = new HttpClient({
+        minDelayMs: 300,
+        timeoutMs: 8000,
+        maxRetries: 1,
+        baseBackoffMs: 500,
+      });
+      const jobs = await fetchAdzuna(client, {
         appId: adzunaId,
         appKey: adzunaKey,
         pages: 5,
       });
-      rawJobs.push(...adzunaJobs);
-    } catch (err) {
-      companyErrors.push({
-        company: "Adzuna",
-        error: err instanceof Error ? err.message : String(err),
+      return {
+        jobs,
+        run: {
+          source: "Adzuna",
+          status: "success" as const,
+          fetched: jobs.length,
+          durationMs: Date.now() - sourceStarted,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Adzuna",
+          status: "error" as const,
+          fetched: 0,
+          durationMs: Date.now() - sourceStarted,
+          message,
+        },
+      };
+    }
+  })();
+
+  const [direct, reed, adzuna] = await Promise.all([directTask, reedTask, adzunaTask]);
+  const results = direct.results;
+  const rawJobs: RawATSJob[] = [...direct.jobs, ...reed.jobs, ...adzuna.jobs];
+  sourceRuns.push(direct.run, reed.run, adzuna.run);
+
+  for (const result of results) {
+    if (result.error) companyErrors.push({ company: result.company.name, error: result.error });
+  }
+  for (const run of sourceRuns) {
+    if (run.status === "skipped" && run.message) notes.push(`${run.source} skipped: ${run.message}`);
+    if (run.status === "error" && run.message) companyErrors.push({ company: run.source, error: run.message });
+  }
+
+  // Reed's search endpoint returns a snippet. Enrich only after every base
+  // provider has had its turn, and stop early to preserve DB-write headroom.
+  if (reedKey && reed.jobs.length > 0) {
+    const remainingMs = started + FETCH_TIME_BUDGET_MS - Date.now();
+    if (remainingMs > 1500) {
+      const enrichmentStarted = Date.now();
+      const enrichmentClient = new HttpClient({
+        minDelayMs: 150,
+        timeoutMs: 5000,
+        maxRetries: 0,
       });
+      const enrichDeadline = Math.min(
+        started + FETCH_TIME_BUDGET_MS,
+        enrichmentStarted + REED_ENRICHMENT_BUDGET_MS
+      );
+      const enriched = await enrichReedDescriptions(
+        enrichmentClient,
+        reedKey,
+        reed.jobs,
+        enrichDeadline
+      );
+      const reedRun = sourceRuns.find((run) => run.source === "Reed");
+      if (reedRun) {
+        reedRun.detailEnriched = enriched;
+        reedRun.durationMs += Date.now() - enrichmentStarted;
+      }
+      notes.push(`Reed: full descriptions fetched for ${enriched}/${reed.jobs.length} jobs`);
+    } else {
+      notes.push("Reed detail enrichment skipped: DB-write safety window reached");
     }
   }
 
@@ -222,6 +363,7 @@ export async function runFetchPipeline(
     companyErrors,
     bySource,
     notes,
+    sourceRuns,
     durationMs: Date.now() - started,
   };
 
