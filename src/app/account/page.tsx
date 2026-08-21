@@ -248,7 +248,7 @@ function AccountForm() {
         <span className="h-px flex-1 bg-slate-200" aria-hidden />
       </div>}
 
-      {mode !== "forgot" && <div className="mt-4"><GoogleIdentityButton next={next} mode={mode === "create" ? "create" : "sign-in"} onError={(message) => setError(/provider is not enabled|unsupported provider/i.test(message) ? "Google sign-in isn't switched on yet. Use email and password for now." : message)} /></div>}
+      {mode !== "forgot" && <div className="mt-4"><GoogleIdentityButton mode={mode === "create" ? "create" : "sign-in"} onError={(message) => setError(/provider is not enabled|unsupported provider/i.test(message) ? "Google sign-in isn't switched on yet. Use email and password for now." : message)} /></div>}
 
       <p className="mt-4 text-center text-xs leading-5 text-slate-600">
         We use your account to save contracts, searches and reviewed application packets. Submission happens only from IR35Careers when an employer connection is verified and you approve it. Read our <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">Privacy Notice</Link>.

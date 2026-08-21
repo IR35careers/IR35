@@ -56,17 +56,15 @@ function loadGoogleIdentity(): Promise<GoogleIdentityApi> {
 }
 
 export function GoogleIdentityButton({
-  next = "/dashboard",
   admin = false,
   mode = "sign-in",
   onError,
 }: {
-  next?: string;
   admin?: boolean;
   mode?: "sign-in" | "create";
   onError: (message: string) => void;
 }) {
-  const { signInWithGoogleIdToken, signInWithGoogle, signInWithGoogleAdmin } = useAuth();
+  const { signInWithGoogleIdToken } = useAuth();
   const hostRef = useRef<HTMLDivElement>(null);
   const onErrorRef = useRef(onError);
   const [loading, setLoading] = useState(true);
@@ -125,14 +123,9 @@ export function GoogleIdentityButton({
   }, [admin, clientId, mode, signInWithGoogleIdToken]);
 
   if (fallback) {
-    return <button type="button" onClick={async () => {
-      setLoading(true);
-      const result = admin ? await signInWithGoogleAdmin() : await signInWithGoogle(next);
-      if (result.error) onErrorRef.current(result.error);
-      setLoading(false);
-    }} disabled={loading} className={`flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border px-4 text-sm font-semibold transition disabled:opacity-60 ${admin ? "border-white/10 bg-white/[0.045] text-slate-200 hover:bg-white/[0.08]" : "border-slate-300 bg-white text-slate-900 hover:bg-slate-50"}`}>
-      {loading ? <Loader2 size={16} className="animate-spin" /> : <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-950">G</span>}
-      Continue with Google
+    return <button type="button" onClick={() => onErrorRef.current("Google sign-in is blocked in this browser. Allow Google sign-in for IR35Careers or use email and password.")} className={`flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border px-4 text-sm font-semibold transition ${admin ? "border-white/10 bg-white/[0.045] text-slate-300 hover:bg-white/[0.08]" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"}`}>
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-950">G</span>
+      Google sign-in unavailable
     </button>;
   }
 
