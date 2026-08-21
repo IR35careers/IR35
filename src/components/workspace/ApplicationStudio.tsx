@@ -380,6 +380,15 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
+  const handlePrimaryApplyAction = () => {
+    if (!application || submitted) return;
+    if (answersReviewed && approvalsComplete && submissionConnection === "connected") {
+      void submitApprovedApplication();
+      return;
+    }
+    document.getElementById("final-application-approval")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <WorkspacePage
       density="compact"
@@ -397,7 +406,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500"><span className="inline-flex items-center gap-1.5"><BriefcaseBusiness size={14} />{job.company_name}</span><span className="inline-flex items-center gap-1.5"><MapPin size={14} />{job.location} · {job.remote_type}</span></div>
             </div>
           </div>
-          <div className="flex items-center gap-2">{application && <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{application.matchScore}% match</span>}{application && <StatusPill status={application.status} />}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            {application && <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{application.matchScore}% match</span>}
+            {application && <StatusPill status={application.status} />}
+            {application && !submitted && <button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} Approve and apply now</button>}
+            {submitted && <span className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-3 text-sm font-bold text-emerald-800"><CheckCircle2 size={16} /> Submitted</span>}
+          </div>
         </div>
         <ol className="grid gap-2 border-t border-slate-200 bg-slate-50 p-3 sm:grid-cols-3" aria-label="Application progress">
           {WORKFLOW_STEPS.map((step, index) => <li key={step.label} aria-current={activeStep === index ? "step" : undefined} className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${activeStep === index ? "border-slate-950 bg-slate-950 text-white" : index < activeStep ? "border-emerald-200 bg-emerald-50 text-emerald-950" : "border-slate-200 bg-white text-slate-500"}`}><span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${index < activeStep ? "bg-emerald-600 text-white" : "border border-current"}`}>{index < activeStep ? <Check size={14} /> : index + 1}</span><span><strong className="block text-xs">{step.label}</strong><span className="block text-[10px] opacity-75">{step.helper}</span></span></li>)}
@@ -461,8 +475,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         </main>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:h-max">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Readiness</p><h2 className="mt-1 text-sm font-semibold text-slate-950">Application checklist</h2></div><strong className="text-2xl text-slate-950">{progress}%</strong></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} /></div><ul className="mt-5 space-y-3 text-sm">{[["CV supplied", cvReady], ["Role match complete", Boolean(application)], ["Answers confirmed", answersReviewed], ["Final approval complete", approvalsComplete]].map(([label, done]) => <li key={String(label)} className="flex items-center gap-2.5">{done ? <CheckCircle2 size={17} className="text-emerald-600" /> : <span className="h-[17px] w-[17px] rounded-full border border-slate-300" />}<span className={done ? "font-medium text-slate-800" : "text-slate-500"}>{label}</span></li>)}</ul></section>
           <section className={`rounded-3xl border p-5 ${submissionConnection === "connected" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}><p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionConnection === "connected" ? "text-emerald-700" : "text-slate-500"}`}>Application status</p><h2 className="mt-2 font-semibold text-slate-950">{submissionConnection === "loading" ? "Checking application access" : submissionConnection === "connected" ? "Ready to apply" : "Application access needs checking"}</h2><p className="mt-2 text-sm leading-6 text-slate-700">{submissionConnection === "connected" ? "Review the final materials, confirm the application and apply from this page." : "Your work is safe. Use Check again in the final approval section to refresh application access."}</p>{answersReviewed && approvalsComplete && !submitted ? <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || submissionConnection !== "connected"} className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{busy === "submit" || submissionConnection === "loading" ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} Approve and apply now</button> : <a href="#final-application-approval" className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800"><Send size={15} /> Complete final approval</a>}</section>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Readiness</p><h2 className="mt-1 text-sm font-semibold text-slate-950">Application checklist</h2></div><strong className="text-2xl text-slate-950">{progress}%</strong></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} /></div><ul className="mt-5 space-y-3 text-sm">{[["CV supplied", cvReady], ["Role match complete", Boolean(application)], ["Answers confirmed", answersReviewed], ["Final approval complete", approvalsComplete]].map(([label, done]) => <li key={String(label)} className="flex items-center gap-2.5">{done ? <CheckCircle2 size={17} className="text-emerald-600" /> : <span className="h-[17px] w-[17px] rounded-full border border-slate-300" />}<span className={done ? "font-medium text-slate-800" : "text-slate-500"}>{label}</span></li>)}</ul></section>
           <section className="rounded-3xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-2 text-brand-700"><LockKeyhole size={16} /><p className="text-[10px] font-bold uppercase tracking-[0.16em]">You stay in control</p></div><p className="mt-3 text-sm leading-6 text-slate-600">If an employer asks a new legal, identity or personal question, the application pauses and asks you. Submitted applications include a confirmation.</p></section>
         </aside>
       </div>

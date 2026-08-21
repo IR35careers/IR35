@@ -381,6 +381,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByRole("heading", { name: /Your evidence matches/ })).toBeVisible();
   await expect(page.getByText("Missing keywords, not assumed")).toBeVisible();
   await expect(page.getByRole("heading", { name: "CV tailored for this role" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
   const checkboxes = page.locator('input[type="checkbox"]:enabled');
   const checkboxCount = await checkboxes.count();
   expect(checkboxCount).toBeGreaterThanOrEqual(5);
@@ -388,7 +389,6 @@ test("application workspace presents a clean review flow and never claims an unc
     await checkboxes.nth(index).check();
   }
 
-  await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
   await page.getByRole("button", { name: "Save application" }).click();
   await expect(page.getByText("Reviewed packet saved. It has not been sent to the employer.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Application access needs checking" })).toBeVisible();
