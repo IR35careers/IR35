@@ -183,25 +183,15 @@ async function signUpWithPassword(email: string, password: string, next = "/dash
 
 async function signInWithGoogle(next = "/dashboard"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-  const { getSupabase } = await import("@/lib/supabase");
-  const { error } = await getSupabase().auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${window.location.origin}${resolvePostAuthPath(next)}` },
-  });
-  return { error: error ? error.message : null };
+  const destination = resolvePostAuthPath(next);
+  window.open(`/api/auth/google?next=${encodeURIComponent(destination)}`, "_self");
+  return { error: null };
 }
 
 async function signInWithGoogleAdmin(): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-  const { getSupabase } = await import("@/lib/supabase");
-  const { error } = await getSupabase().auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/`,
-      queryParams: { prompt: "select_account" },
-    },
-  });
-  return { error: error ? error.message : null };
+  window.open("/api/auth/google?next=%2F", "_self");
+  return { error: null };
 }
 
 async function signInWithGoogleIdToken(token: string): Promise<AuthResult> {
