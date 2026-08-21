@@ -4,10 +4,10 @@ import { Calculator, ShieldQuestion, TrendingUp, FileCheck2 } from "lucide-react
 import { PublicHeader } from "@/components/PublicHeader";
 
 export const metadata: Metadata = {
-  title: "Free Contractor Tools: IR35 Checker & Take-Home Calculator | IR35Careers",
+  title: "Free Contractor Tools: IR35 Checker & Take-Home Calculator",
   description:
     "Free tools for UK contractors: check a contract's IR35 status and estimate your take-home pay inside vs outside IR35 for 2026/27.",
-  alternates: { canonical: "https://ir35careers.com/tools" },
+  alternates: { canonical: "/tools" },
 };
 
 const LIVE = [

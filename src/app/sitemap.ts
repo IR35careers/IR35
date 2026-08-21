@@ -2,11 +2,12 @@ import type { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { allSeoSlugs } from "@/lib/seo-pages";
+import { SITE_ORIGIN } from "@/lib/seo";
 
 // Refresh the sitemap hourly.
 export const revalidate = 3600;
 
-const BASE = "https://ir35careers.com";
+const BASE = SITE_ORIGIN;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

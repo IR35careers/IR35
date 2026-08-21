@@ -1,5 +1,22 @@
 import type { NextConfig } from "next";
 
+const PRIVATE_ROUTES = [
+  "/account/:path*",
+  "/admin/:path*",
+  "/alerts/:path*",
+  "/analytics/:path*",
+  "/applications/:path*",
+  "/automation/:path*",
+  "/billing/:path*",
+  "/dashboard/:path*",
+  "/inbox/:path*",
+  "/network/:path*",
+  "/onboarding/:path*",
+  "/profile/:path*",
+  "/saved/:path*",
+  "/settings/:path*",
+] as const;
+
 const nextConfig: NextConfig = {
   // A second lockfile exists above this repository on the workstation. Keep
   // output tracing bounded to this project so builds do not scan the user's
@@ -22,6 +39,12 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      ...PRIVATE_ROUTES.map((source) => ({
+        source,
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+        ],
+      })),
       {
         source: "/:path*",
         headers: [

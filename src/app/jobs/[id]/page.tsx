@@ -31,12 +31,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const job = await getJob(id);
-  if (!job) return { title: "Contract not found | IR35Careers" };
+  if (!job) return { title: "Contract not found", robots: { index: false, follow: false } };
   const status =
     job.ir35_status === "outside" ? "Outside IR35" : job.ir35_status === "inside" ? "Inside IR35" : "";
+  const title = `${job.title} at ${job.company_name}${status ? ` (${status})` : ""}`;
+  const description = `${formatRate(job)} · ${job.location}. Review this UK contract role on IR35Careers.`;
+  const url = `/jobs/${job.id}`;
   return {
-    title: `${job.title} at ${job.company_name}${status ? ` (${status})` : ""} | IR35Careers`,
-    description: `${formatRate(job)} · ${job.location}. Apply for this UK contract role on IR35Careers.`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url },
   };
 }
 

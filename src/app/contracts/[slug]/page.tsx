@@ -5,6 +5,7 @@ import { MapPin, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { JOB_LIST_COLUMNS, formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 import { getSeoPage, relatedSeoPages, type SeoPage } from "@/lib/seo-pages";
+import { SITE_ORIGIN } from "@/lib/seo";
 
 // ISR: cached HTML for speed (Google cares), refreshed hourly.
 export const revalidate = 3600;
@@ -63,10 +64,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const page = getSeoPage(slug);
-  if (!page) return { title: "Not found | IR35Careers" };
-  const url = `https://ir35careers.com/contracts/${page.slug}`;
+  if (!page) return { title: "Not found", robots: { index: false, follow: false } };
+  const url = `${SITE_ORIGIN}/contracts/${page.slug}`;
   return {
-    title: `${page.metaTitle} | IR35Careers`,
+    title: page.metaTitle,
     description: page.metaDescription,
     alternates: { canonical: url },
     openGraph: { title: page.metaTitle, description: page.metaDescription, url },

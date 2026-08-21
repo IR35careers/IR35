@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ir35careers.com/sitemap.xml
+Sitemap: https://www.ir35careers.com/sitemap.xml

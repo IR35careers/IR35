@@ -4,10 +4,10 @@ import { BookOpen, Calculator, ShieldQuestion, ExternalLink } from "lucide-react
 import { PublicHeader } from "@/components/PublicHeader";
 
 export const metadata: Metadata = {
-  title: "IR35 Resources for UK Contractors | IR35Careers",
+  title: "IR35 Resources for UK Contractors",
   description:
     "Plain-English guides to IR35 for UK contractors: what inside vs outside means, how status is decided, and free tools to check status and estimate take-home.",
-  alternates: { canonical: "https://ir35careers.com/resources" },
+  alternates: { canonical: "/resources" },
 };
 
 const GUIDES = [

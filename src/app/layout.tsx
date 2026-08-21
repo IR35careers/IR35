@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
+import { SITE_ORIGIN } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,12 +31,7 @@ export const metadata: Metadata = {
   authors: [{ name: "IR35Careers" }],
   creator: "IR35Careers",
   publisher: "IR35Careers",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://ir35careers.com"
-  ),
-  alternates: {
-    canonical: "/",
-  },
+  metadataBase: new URL(SITE_ORIGIN),
   icons: {
     icon: [{ url: "/images/generated/brand/ir35careers-app-icon-256.png", sizes: "256x256", type: "image/png" }],
     apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
@@ -43,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_GB",
-    url: "/",
+    url: `${SITE_ORIGIN}/`,
     title: "IR35Careers | Find Better UK Contract Jobs",
     description:
       "Find UK contract roles with IR35 status, day rates and working arrangements up front.",

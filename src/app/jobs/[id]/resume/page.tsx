@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Tailor your CV to a contract | IR35Careers",
+  title: "Tailor your CV to a contract",
   description: "Score, review, improve and export your CV for a role without inventing experience.",
   robots: { index: false, follow: false },
 };
