@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
+import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -8,10 +10,10 @@ function clean(value: unknown, max: number): string {
 }
 
 export async function POST(request: Request) {
-  const length = Number(request.headers.get("content-length") ?? "0");
-  if (length > 25_000) return NextResponse.json({ error: "Request is too large." }, { status: 413 });
+  const rate = await consumePublicRateLimit(request, "contact", 5, 60 * 60_000);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const body = await readJsonBody<Record<string, unknown>>(request, 25_000);
     if (clean(body.website, 200)) return NextResponse.json({ accepted: true }, { status: 202 });
     const name = clean(body.name, 120);
     const email = clean(body.email, 254).toLowerCase();
@@ -30,7 +32,8 @@ export async function POST(request: Request) {
     const { error } = await getSupabaseAdmin().from("contact_requests").insert({ name, email, company, message });
     if (error) throw new Error(error.message);
     return NextResponse.json({ accepted: true, preview: false, message: "Thanks, your enquiry has been received." }, { status: 201, headers: { "Cache-Control": "no-store" } });
-  } catch {
+  } catch (error) {
+    if (error instanceof RequestBodyError) return NextResponse.json({ error: error.message }, { status: error.status, headers: { "Cache-Control": "no-store" } });
     return NextResponse.json({ error: "We could not save your enquiry. Please try again." }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
 }

@@ -31,6 +31,7 @@ export async function mapUnknownFields(fields: RunnerField[]): Promise<FieldMapp
       model: config.model,
       temperature: 0,
       max_tokens: 1_200,
+      provider: { zdr: true, data_collection: "deny" },
       messages: [
         {
           role: "system",

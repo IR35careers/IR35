@@ -2,10 +2,33 @@ import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
 import { getStripe, stripeManagementConfig } from "@/lib/billing/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+const MAX_PRIVATE_FILES = 10_000;
+
+async function listPrivateFiles(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  prefix: string,
+  depth = 0,
+  collected: string[] = [],
+): Promise<string[]> {
+  if (depth > 8) throw new Error("storage-depth-limit");
+  for (let offset = 0; ; offset += 1_000) {
+    const listed = await admin.storage.from("cvs").list(prefix, { limit: 1_000, offset });
+    if (listed.error) throw new Error("storage-list-failed");
+    for (const entry of listed.data) {
+      const path = `${prefix}/${entry.name}`;
+      if (entry.id) collected.push(path);
+      else await listPrivateFiles(admin, path, depth + 1, collected);
+      if (collected.length > MAX_PRIVATE_FILES) throw new Error("storage-file-limit");
+    }
+    if (listed.data.length < 1_000) break;
+  }
+  return collected;
+}
 
 async function authenticate(request: Request): Promise<{ user: User } | { response: NextResponse }> {
   const authorization = request.headers.get("authorization") ?? "";
@@ -74,14 +97,11 @@ export async function GET(request: Request) {
 export async function DELETE(request: Request) {
   const auth = await authenticate(request);
   if ("response" in auth) return auth.response;
-  const length = Number(request.headers.get("content-length") ?? "0");
-  if (length > 2_000) return NextResponse.json({ error: "Request is too large." }, { status: 413, headers: NO_STORE });
-
   let body: { email?: string; confirmation?: string };
   try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400, headers: NO_STORE });
+    body = await readJsonBody<typeof body>(request, 2_000);
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid request." }, { status: error instanceof RequestBodyError ? error.status : 400, headers: NO_STORE });
   }
 
   const accountEmail = (auth.user.email ?? "").trim().toLowerCase();
@@ -118,12 +138,11 @@ export async function DELETE(request: Request) {
     }
   }
 
-  const privateFiles: string[] = [];
-  for (let offset = 0; ; offset += 1_000) {
-    const listed = await admin.storage.from("cvs").list(auth.user.id, { limit: 1_000, offset });
-    if (listed.error) return NextResponse.json({ error: "Private CV files could not be removed. Nothing else was deleted." }, { status: 500, headers: NO_STORE });
-    privateFiles.push(...listed.data.map((file) => `${auth.user.id}/${file.name}`));
-    if (listed.data.length < 1_000) break;
+  let privateFiles: string[];
+  try {
+    privateFiles = await listPrivateFiles(admin, auth.user.id);
+  } catch {
+    return NextResponse.json({ error: "Private CV files could not be inventoried safely. Nothing else was deleted." }, { status: 500, headers: NO_STORE });
   }
   for (let start = 0; start < privateFiles.length; start += 100) {
     const removal = await admin.storage.from("cvs").remove(privateFiles.slice(start, start + 100));

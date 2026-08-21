@@ -8,6 +8,7 @@ import {
   type FreeATSType,
 } from "@/lib/ats/source-registry";
 import { saveEmployerDestination, validRecruitmentEmail } from "@/lib/employer-destinations";
+import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -93,8 +94,14 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const form = await request.formData();
-  const token = String(form.get("token") ?? "");
+  let token = "";
+  try {
+    const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+    if (!contentType.startsWith("application/x-www-form-urlencoded")) throw new RequestBodyError("Invalid confirmation request.", 415);
+    token = new URLSearchParams(await readTextBody(request, 4_096)).get("token") ?? "";
+  } catch (error) {
+    return new Response(page("Verification request unavailable", error instanceof RequestBodyError ? error.message : "The confirmation request could not be read."), { status: error instanceof RequestBodyError ? error.status : 400, headers: HEADERS });
+  }
   const pending = await pendingVerification(token);
   if (!pending || new Date(pending.expiresAt).getTime() < Date.now()) {
     return new Response(page("Verification link unavailable", "This link is invalid or has expired. Ask the IR35Careers administrator to send a new verification email."), { status: 400, headers: HEADERS });

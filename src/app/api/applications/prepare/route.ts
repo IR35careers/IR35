@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import { prepareApplication } from "@/lib/workspace/engine";
 import type { PrepareApplicationInput } from "@/lib/workspace/types";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
+import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const rate = await consumePublicRateLimit(request, "application_prepare", 30, 10 * 60_000);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
   try {
-    const length = Number(request.headers.get("content-length") ?? "0");
-    if (length > 500_000) return NextResponse.json({ error: "Request is too large." }, { status: 413 });
-    const body = (await request.json()) as PrepareApplicationInput;
+    const body = await readJsonBody<PrepareApplicationInput>(request, 500_000);
     const application = prepareApplication(body);
     return NextResponse.json({ application }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Application preparation failed." },
-      { status: 400, headers: { "Cache-Control": "no-store" } }
+      { status: error instanceof RequestBodyError ? error.status : 400, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
-

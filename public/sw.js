@@ -1,4 +1,4 @@
-const CACHE_NAME = "ir35careers-shell-v3";
+const CACHE_NAME = "ir35careers-shell-v4";
 const OFFLINE_URL = "/offline";
 const STATIC_URLS = [
   OFFLINE_URL,
@@ -29,7 +29,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (["style", "script", "font", "image"].includes(request.destination)) {
+  const isVersionedAsset = url.pathname.startsWith("/_next/static/");
+  const isPublicBrandAsset = url.pathname.startsWith("/images/");
+  if ((isVersionedAsset || isPublicBrandAsset) && ["style", "script", "font", "image"].includes(request.destination)) {
     event.respondWith(
       fetch(request)
         .then((response) => {

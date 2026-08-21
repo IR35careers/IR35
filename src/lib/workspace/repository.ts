@@ -223,11 +223,9 @@ export async function saveCloudWorkspace(userId: string, state: WorkspaceState):
     }
   }
 
-  const [aliasResult, rulesResult] = await Promise.all([
-    state.inbox.alias === "Not created" ? Promise.resolve({ error: null }) : supabase.from("inbox_aliases").upsert({ user_id: userId, alias: state.inbox.alias, forwarding_email: state.inbox.forwardingEmail, forwarding_enabled: state.inbox.forwardingEnabled, provider_state: state.inbox.providerState === "connected" ? "connected" : "not_connected", updated_at: new Date().toISOString() }),
-    supabase.from("automation_rules").upsert({ user_id: userId, enabled: state.automation.enabled, dry_run_only: true, minimum_match: state.automation.minimumMatch, minimum_day_rate: state.automation.minimumDayRate, ir35_statuses: state.automation.ir35, workplaces: state.automation.workplaces, daily_limit: state.automation.dailyLimit, prepare_cover_letter: state.automation.prepareCoverLetter, require_human_approval: true, excluded_companies: state.automation.excludedCompanies, updated_at: new Date().toISOString() }),
-  ]);
-  if (aliasResult.error) throw new Error(aliasResult.error.message);
+  // Private application identities are server-managed. The browser may read
+  // its own alias but must never choose or mutate provider/forwarding fields.
+  const rulesResult = await supabase.from("automation_rules").upsert({ user_id: userId, enabled: state.automation.enabled, dry_run_only: true, minimum_match: state.automation.minimumMatch, minimum_day_rate: state.automation.minimumDayRate, ir35_statuses: state.automation.ir35, workplaces: state.automation.workplaces, daily_limit: state.automation.dailyLimit, prepare_cover_letter: state.automation.prepareCoverLetter, require_human_approval: true, excluded_companies: state.automation.excludedCompanies, updated_at: new Date().toISOString() });
   if (rulesResult.error) throw new Error(rulesResult.error.message);
 
   if (state.messages.length > 0) {

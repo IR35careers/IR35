@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import mammoth from "mammoth";
 import JSZip from "jszip";
+import { readFormDataBody, RequestBodyError } from "@/lib/security/request-body";
+import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -16,8 +18,10 @@ function errorResponse(message: string, status = 400) {
 }
 
 export async function POST(request: Request) {
+  const rate = await consumePublicRateLimit(request, "resume_parse", 15, 10 * 60_000);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
   try {
-    const formData = await request.formData();
+    const formData = await readFormDataBody(request, MAX_BYTES + 128 * 1024);
     const file = formData.get("file");
     if (!(file instanceof File)) return errorResponse("Choose a PDF, DOCX or text CV.");
     if (file.size === 0) return errorResponse("That file is empty.");
@@ -80,6 +84,7 @@ export async function POST(request: Request) {
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (parseError) {
+    if (parseError instanceof RequestBodyError) return errorResponse(parseError.message, parseError.status);
     if (parseError instanceof Error && parseError.message === "unsafe-docx-path") {
       return errorResponse("That Word document contains an unsafe file path.");
     }

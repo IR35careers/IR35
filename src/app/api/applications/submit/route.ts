@@ -21,6 +21,7 @@ import {
 } from "@/lib/application-packet-snapshot";
 import type { ApplicationQuestion, ApplicationReceipt, ApplicationRecord, ContractorProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -172,7 +173,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!token) return Response.json({ error: "Your secure session is missing. Sign in again, then retry.", code: "SESSION_EXPIRED" }, { status: 401, headers: NO_STORE });
 
   try {
-    const body = (await request.json()) as { applicationId?: string; approval?: string; packet?: ApplicationRecord };
+    const body = await readJsonBody<{ applicationId?: string; approval?: string; packet?: ApplicationRecord }>(request, 750_000);
     if (!/^[0-9a-f-]{36}$/i.test(body.applicationId ?? "") || body.approval !== "SUBMIT_APPROVED_APPLICATION") {
       return Response.json({ error: "Explicit submission approval is required." }, { status: 400, headers: NO_STORE });
     }
@@ -362,6 +363,7 @@ export async function POST(request: Request): Promise<Response> {
       throw providerError;
     }
   } catch (error) {
+    if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
     return Response.json({ error: safeSubmissionError(error) }, { status: 502, headers: NO_STORE });
   }
 }

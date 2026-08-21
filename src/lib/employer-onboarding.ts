@@ -7,6 +7,7 @@ import {
   validateManagedJobSource,
   type FreeATSType,
 } from "@/lib/ats/source-registry";
+import { privacyHash } from "@/lib/security/privacy-hash";
 
 export const EMPLOYER_VERIFICATION_RUN_TYPE = "employer_destination_verification";
 export const EMPLOYER_ONBOARDING_RUN_TYPE = "employer_onboarding_attempt";
@@ -69,8 +70,7 @@ export function validateEmployerOnboardingInput(payload: EmployerOnboardingPaylo
 }
 
 export function employerOnboardingRateKey(kind: "ip" | "email", value: string): string {
-  const salt = process.env.ADMIN_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "ir35careers-onboarding";
-  return `${kind}:${createHash("sha256").update(`${salt}:${value.trim().toLowerCase()}`).digest("hex")}`;
+  return `${kind}:${privacyHash(`employer-onboarding:${kind}`, value)}`;
 }
 
 export async function requestEmployerDestinationVerification(input: {

@@ -1,11 +1,12 @@
 import chromiumBinary from "@sparticuz/chromium";
 import { chromium, type Browser, type Locator, type Page } from "playwright-core";
 import { createHash } from "node:crypto";
-import { detectAts, type AtsDefinition } from "@/lib/application-runner/ats";
+import { detectAts, nativeRunnerHostAllowed, type AtsDefinition } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer, valueForMapping } from "@/lib/application-runner/field-mapping";
 import { mapUnknownFields } from "@/lib/application-runner/openrouter-mapper";
 import { buildRunnerFacts, type FieldMapping, type RunnerFacts, type RunnerField } from "@/lib/application-runner/types";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
+import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
 import type { SubmissionProviderPayload, SubmissionProviderReceipt } from "@/lib/application-submission";
 
 const MAX_STEPS = 8;
@@ -39,15 +40,28 @@ function reviewReceipt(message: string, fields: RunnerField[], action?: string):
   };
 }
 
-async function publicRequestGuard(route: import("playwright-core").Route, approvedHosts: Set<string>): Promise<void> {
+async function publicRequestGuard(
+  route: import("playwright-core").Route,
+  approvedHosts: Set<string>,
+  sensitiveMode: () => boolean,
+): Promise<void> {
   const request = route.request();
   const url = request.url();
   if (/^(data|blob|about):/i.test(url)) return route.continue();
   try {
     const parsed = new URL(url);
-    if (!approvedHosts.has(parsed.hostname)) {
-      await validatePublicHttpsUrl(url);
-      approvedHosts.add(parsed.hostname);
+    const hostname = parsed.hostname.toLowerCase();
+    if (!approvedHosts.has(hostname)) {
+      if (nativeRunnerHostAllowed(hostname)) {
+        await validatePublicHttpsUrl(url);
+        approvedHosts.add(hostname);
+      } else if (!sensitiveMode() && request.method() === "GET" && ["script", "stylesheet", "image", "font"].includes(request.resourceType())) {
+        // Permit public static dependencies while the page is loading, but do
+        // not trust their hosts with candidate data after fields are filled.
+        await validatePublicHttpsUrl(url);
+      } else {
+        throw new Error("blocked");
+      }
     } else if (parsed.protocol !== "https:" || (parsed.port && parsed.port !== "443")) {
       throw new Error("blocked");
     }
@@ -171,11 +185,13 @@ async function snapshotFields(page: Page, step: number): Promise<Array<{ field: 
 async function loadResume(url: string | undefined): Promise<Buffer | null> {
   if (!url) return null;
   const approved = await validatePublicHttpsUrl(url);
-  const response = await fetch(approved, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
-  if (!response.ok) return null;
-  const declared = Number(response.headers.get("content-length") ?? "0");
-  if (declared > MAX_RESUME_BYTES) return null;
-  const bytes = Buffer.from(await response.arrayBuffer());
+  const configuredStorageHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.toLowerCase()
+    : "";
+  if (![configuredStorageHost, "ir35careers.com", "www.ir35careers.com"].filter(Boolean).includes(approved.hostname.toLowerCase())) return null;
+  const response = await getPinnedPublicHttps(approved.toString(), { maxBytes: MAX_RESUME_BYTES, timeoutMs: 20_000 });
+  if (response.status < 200 || response.status >= 300) return null;
+  const bytes = response.body;
   return bytes.length > 0 && bytes.length <= MAX_RESUME_BYTES ? bytes : null;
 }
 
@@ -289,6 +305,9 @@ export async function runNativeApplication(payload: SubmissionProviderPayload): 
   }, RUNNER_BUDGET_MS);
   try {
     const destination = await validatePublicHttpsUrl(payload.destination);
+    if (!nativeRunnerHostAllowed(destination.hostname)) {
+      return reviewReceipt("This employer portal is not yet on the approved automatic-submission list. Review the role before continuing.", [], "unsupported_portal");
+    }
     const ats = detectAts(destination.toString());
     const resume = await loadResume(payload.resume.url);
     const facts = buildRunnerFacts(payload.candidate, payload.screeningAnswers.map((answer, index) => ({
@@ -318,7 +337,8 @@ export async function runNativeApplication(payload: SubmissionProviderPayload): 
     context.setDefaultTimeout(12_000);
     context.setDefaultNavigationTimeout(25_000);
     const approvedHosts = new Set<string>([destination.hostname]);
-    await context.route("**/*", (route) => publicRequestGuard(route, approvedHosts));
+    let sensitive = false;
+    await context.route("**/*", (route) => publicRequestGuard(route, approvedHosts, () => sensitive));
     let page = await context.newPage();
     try {
       await page.goto(destination.toString(), { waitUntil: "domcontentloaded" });
@@ -338,6 +358,7 @@ export async function runNativeApplication(payload: SubmissionProviderPayload): 
       }
       const stop = await blocker(page);
       if (stop) return reviewReceipt(stop.message, [], stop.action);
+      sensitive = true;
       const needsUser = await fillStep(page, step, facts, resume, payload.coverLetter);
       if (needsUser.length) return reviewReceipt("The employer requires information that is not safely available in your saved profile.", needsUser, "/profile");
 

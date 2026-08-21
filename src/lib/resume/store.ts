@@ -39,6 +39,10 @@ function writeLocalVersions(versions: ResumeVersion[]): void {
   window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(versions.slice(0, LOCAL_LIMIT)));
 }
 
+export function clearLocalResumeVersions(): void {
+  if (typeof window !== "undefined") window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+}
+
 function fromRow(row: ResumeVersionRow): ResumeVersion {
   return {
     id: row.id,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectAts } from "@/lib/application-runner/ats";
+import { detectAts, nativeRunnerHostAllowed } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
 import { buildRunnerFacts, type RunnerField } from "@/lib/application-runner/types";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
@@ -26,6 +26,9 @@ describe("native application runner", () => {
     expect(detectAts("https://jobs.lever.co/company/role").kind).toBe("lever");
     expect(detectAts("https://jobs.ashbyhq.com/company/role").kind).toBe("ashby");
     expect(detectAts("https://careers.example.com/role").kind).toBe("generic");
+    expect(nativeRunnerHostAllowed("jobs.ashbyhq.com")).toBe(true);
+    expect(nativeRunnerHostAllowed("evilashbyhq.com")).toBe(false);
+    expect(nativeRunnerHostAllowed("greenhouse.io.attacker.example")).toBe(false);
   });
 
   it("maps normal identity and work-authorisation fields deterministically", () => {

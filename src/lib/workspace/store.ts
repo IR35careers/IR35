@@ -81,6 +81,17 @@ export function resetWorkspace(): void {
   persist(createSeedWorkspaceState());
 }
 
+export function clearWorkspaceForSignOut(): void {
+  if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = null;
+  cloudUserId = null;
+  cloudLoadUserId = null;
+  cloudLoadPromise = null;
+  memoryState = createSeedWorkspaceState();
+  if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
+  listeners.forEach((listener) => listener());
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

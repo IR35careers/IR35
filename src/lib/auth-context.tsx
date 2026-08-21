@@ -13,6 +13,8 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { resolvePostAuthPath } from "@/lib/auth-routing";
 import { isAdministratorEmail } from "@/lib/portal-access";
+import { clearWorkspaceForSignOut } from "@/lib/workspace/store";
+import { clearLocalResumeVersions } from "@/lib/resume/store";
 
 interface AuthResult {
   error: string | null;
@@ -83,6 +85,12 @@ function hasAuthCallback(): boolean {
   return query.has("code") || query.has("error") || hash.has("access_token") || hash.has("refresh_token") || hash.has("error");
 }
 
+function clearLocalPrivateState(): void {
+  clearWorkspaceForSignOut();
+  clearLocalResumeVersions();
+  window.localStorage.removeItem("ir35careers-admin-email-draft");
+}
+
 function installStorageListener() {
   if (storageSubscribed) return;
   storageSubscribed = true;
@@ -92,6 +100,7 @@ function installStorageListener() {
       publish({ ...state, loading: true });
       initialiseSession(true);
     } else {
+      clearLocalPrivateState();
       publish({ user: null, loading: false });
     }
   });
@@ -130,7 +139,8 @@ function initialiseSession(force = false) {
         requestWelcomeEmail(data.session);
       });
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event: string, session: Session | null) => {
+        (event: string, session: Session | null) => {
+          if (event === "SIGNED_OUT" || (state.user && session?.user && state.user.id !== session.user.id)) clearLocalPrivateState();
           publish({ user: session?.user ?? null, loading: false });
           requestWelcomeEmail(session);
         }
@@ -151,6 +161,7 @@ async function signInWithPassword(email: string, password: string): Promise<Auth
   const { getSupabase } = await import("@/lib/supabase");
   const { data, error } = await getSupabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
   if (!error) {
+    if (state.user && data.user && state.user.id !== data.user.id) clearLocalPrivateState();
     publish({ user: data.user, loading: false });
     initialiseSession(true);
   }
@@ -229,6 +240,7 @@ async function signOut(): Promise<void> {
     const { getSupabase } = await import("@/lib/supabase");
     await getSupabase().auth.signOut();
   }
+  clearLocalPrivateState();
   publish({ user: null, loading: false });
 }
 

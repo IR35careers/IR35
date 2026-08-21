@@ -2,6 +2,7 @@ import { billingConfig, getStripe } from "@/lib/billing/stripe";
 import { BILLING_POLICY_VERSION, type CheckoutConsent } from "@/lib/billing/constants";
 import { requestUser } from "@/lib/request-user";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,15 +15,11 @@ export async function POST(request: Request): Promise<Response> {
   const auth = await requestUser(request);
   if ("response" in auth) return auth.response;
 
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (contentLength > 2_000) return Response.json({ error: "Request is too large." }, { status: 413, headers: NO_STORE });
   let consent: Partial<CheckoutConsent>;
   try {
-    const rawBody = await request.text();
-    if (Buffer.byteLength(rawBody, "utf8") > 2_000) return Response.json({ error: "Request is too large." }, { status: 413, headers: NO_STORE });
-    consent = JSON.parse(rawBody) as Partial<CheckoutConsent>;
-  } catch {
-    return Response.json({ error: "Review and accept the billing terms before checkout." }, { status: 400, headers: NO_STORE });
+    consent = await readJsonBody<Partial<CheckoutConsent>>(request, 2_000);
+  } catch (error) {
+    return Response.json({ error: error instanceof RequestBodyError ? error.message : "Review and accept the billing terms before checkout." }, { status: error instanceof RequestBodyError ? error.status : 400, headers: NO_STORE });
   }
   if (consent.termsAccepted !== true || consent.immediateAccessRequested !== true || consent.billingPolicyVersion !== BILLING_POLICY_VERSION) {
     return Response.json({ error: "Review and accept the current billing terms before checkout." }, { status: 400, headers: NO_STORE });

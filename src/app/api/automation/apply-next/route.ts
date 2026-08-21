@@ -11,6 +11,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { evaluateAutomationJob, prepareApplication } from "@/lib/workspace/engine";
 import type { ApplicationPreferences, ApplicationRecord, AutomationRules, ContractorProfile, ResumeProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -91,7 +92,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!token) return Response.json({ error: "Sign in again before running Auto Apply." }, { status: 401, headers: NO_STORE });
 
   try {
-    const body = await request.json().catch(() => ({})) as { rules?: Partial<AutomationRules>; preferences?: Partial<ApplicationPreferences> };
+    const body = await readJsonBody<{ rules?: Partial<AutomationRules>; preferences?: Partial<ApplicationPreferences> }>(request, 150_000);
     const admin = getSupabaseAdmin();
     const { data: authData, error: authError } = await admin.auth.getUser(token);
     if (authError || !authData.user) return Response.json({ error: "Your session has expired. Sign in again." }, { status: 401, headers: NO_STORE });
@@ -239,6 +240,7 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ ...payload, application }, { status: submitResponse.status, headers: NO_STORE });
   } catch (error) {
+    if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
     console.error("auto_apply_next_failed", { reason: error instanceof Error ? error.message.slice(0, 300) : "unknown" });
     return Response.json({ error: "Auto Apply could not complete this contract. No application was marked as submitted." }, { status: 502, headers: NO_STORE });
   }

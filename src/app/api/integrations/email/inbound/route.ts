@@ -11,6 +11,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { sendApplicationNotification, type ApplicationNotificationKind } from "@/lib/email/application-notifications";
 import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
 import type { ApplicationRecord, ApplicationStatus, InboxClassification } from "@/lib/workspace/types";
+import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 
@@ -32,12 +33,15 @@ export async function POST(request: Request) {
   if (!config) {
     return NextResponse.json({ error: "Resend inbound mail is not configured." }, { status: 503, headers: RESPONSE_HEADERS });
   }
-  const length = Number(request.headers.get("content-length") ?? "0");
-  if (length > 300_000) {
-    return NextResponse.json({ error: "Payload is too large." }, { status: 413, headers: RESPONSE_HEADERS });
+  let rawBody: string;
+  try {
+    rawBody = await readTextBody(request, 300_000);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Invalid webhook payload." },
+      { status: error instanceof RequestBodyError ? error.status : 400, headers: RESPONSE_HEADERS },
+    );
   }
-
-  const rawBody = await request.text();
   const webhookHeaders = {
     id: request.headers.get("svix-id") ?? "",
     timestamp: request.headers.get("svix-timestamp") ?? "",

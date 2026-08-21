@@ -1,6 +1,8 @@
 import { extractEmailAddress } from "@/lib/email/resend";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
+import { consumeRateLimitKey, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +32,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!token) return Response.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
 
   try {
-    const body = await request.json() as { to?: unknown; subject?: unknown; message?: unknown };
+    const body = await readJsonBody<{ to?: unknown; subject?: unknown; message?: unknown }>(request, 50_000);
     const recipient = extractEmailAddress(clean(body.to, 254));
     const subject = clean(body.subject, 180).replace(/[\r\n]+/g, " ");
     const message = clean(body.message, 40_000);
@@ -44,6 +46,8 @@ export async function POST(request: Request): Promise<Response> {
     const admin = getSupabaseAdmin();
     const { data, error } = await admin.auth.getUser(token);
     if (error || !data.user) return Response.json({ error: "Your session is no longer valid." }, { status: 401, headers: NO_STORE });
+    const rate = await consumeRateLimitKey("recruiter_email", data.user.id, 20, 60 * 60_000);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
 
     const { data: inbox, error: inboxError } = await admin
       .from("inbox_aliases")
@@ -71,6 +75,7 @@ export async function POST(request: Request): Promise<Response> {
     if (delivery.error) throw new Error(delivery.error.message);
     return Response.json({ sent: true, providerMessageId: delivery.data?.id ?? null }, { status: 201, headers: NO_STORE });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "The message could not be sent." }, { status: 500, headers: NO_STORE });
+    if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
+    return Response.json({ error: "The message could not be sent. Please try again later." }, { status: 502, headers: NO_STORE });
   }
 }

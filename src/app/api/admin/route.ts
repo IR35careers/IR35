@@ -47,6 +47,7 @@ import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -489,7 +490,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const supabase = getSupabaseAdmin();
   try {
-    const body = (await request.json()) as {
+    const body = await readJsonBody<{
       action?: string;
       jobId?: string;
       confirmation?: string;
@@ -502,7 +503,7 @@ export async function POST(request: Request): Promise<Response> {
       enabled?: boolean;
       recruitmentEmail?: string;
       connectionId?: string;
-    };
+    }>(request, 2_000_000);
 
     if (body.action === "test_application_runner") {
       const testedAt = new Date().toISOString();
@@ -1104,7 +1105,7 @@ export async function POST(request: Request): Promise<Response> {
   } catch (err) {
     return Response.json(
       { error: err instanceof Error ? err.message : "Admin action failed" },
-      { status: 500 }
+      { status: err instanceof RequestBodyError ? err.status : 500 }
     );
   }
 }

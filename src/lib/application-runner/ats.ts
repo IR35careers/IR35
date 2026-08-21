@@ -26,13 +26,36 @@ const DEFINITIONS: Record<AtsKind, AtsDefinition> = {
   generic: { kind: "generic", label: "Employer application portal", ...COMMON },
 };
 
+const ATS_DOMAINS: Array<{ domain: string; kind: Exclude<AtsKind, "generic"> }> = [
+  { domain: "greenhouse.io", kind: "greenhouse" },
+  { domain: "greenhouse.com", kind: "greenhouse" },
+  { domain: "lever.co", kind: "lever" },
+  { domain: "lever.com", kind: "lever" },
+  { domain: "ashbyhq.com", kind: "ashby" },
+  { domain: "workable.com", kind: "workable" },
+  { domain: "smartrecruiters.com", kind: "smartrecruiters" },
+  { domain: "myworkdayjobs.com", kind: "workday" },
+  { domain: "workday.com", kind: "workday" },
+];
+
+function hostMatches(host: string, domain: string): boolean {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+
+export function nativeRunnerHostAllowed(value: string): boolean {
+  const host = (value.includes("://") ? new URL(value).hostname : value).toLowerCase().replace(/\.$/, "");
+  if (ATS_DOMAINS.some(({ domain }) => hostMatches(host, domain))) return true;
+  if (host === "ir35careers.com" || host === "www.ir35careers.com") return true;
+  const configured = (process.env.APPLICATION_RUNNER_ALLOWED_HOSTS ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase().replace(/\.$/, ""))
+    .filter(Boolean);
+  return configured.includes(host);
+}
+
 export function detectAts(value: string): AtsDefinition {
   const host = new URL(value).hostname.toLowerCase();
-  if (/(greenhouse\.io|greenhouse\.com)$/.test(host)) return DEFINITIONS.greenhouse;
-  if (/(lever\.co|lever\.com)$/.test(host)) return DEFINITIONS.lever;
-  if (/(ashbyhq\.com)$/.test(host)) return DEFINITIONS.ashby;
-  if (/(workable\.com)$/.test(host)) return DEFINITIONS.workable;
-  if (/(smartrecruiters\.com)$/.test(host)) return DEFINITIONS.smartrecruiters;
-  if (/(myworkdayjobs\.com|workday\.com)$/.test(host)) return DEFINITIONS.workday;
+  const match = ATS_DOMAINS.find(({ domain }) => hostMatches(host, domain));
+  if (match) return DEFINITIONS[match.kind];
   return DEFINITIONS.generic;
 }

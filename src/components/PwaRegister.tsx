@@ -7,9 +7,9 @@ export function PwaRegister() {
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
     let reloadStarted = false;
     const onControllerChange = () => {
-      if (reloadStarted || sessionStorage.getItem("ir35careers-worker-v3") === "active") return;
+      if (reloadStarted || sessionStorage.getItem("ir35careers-worker-v4") === "active") return;
       reloadStarted = true;
-      sessionStorage.setItem("ir35careers-worker-v3", "active");
+      sessionStorage.setItem("ir35careers-worker-v4", "active");
       window.location.reload();
     };
     const register = () => void navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" })

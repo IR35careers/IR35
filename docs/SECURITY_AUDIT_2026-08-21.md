@@ -1,0 +1,86 @@
+# IR35Careers security audit
+
+Audit date: 21 August 2026  
+Application: IR35Careers web application and supporting APIs  
+Scope: source code, API boundaries, authentication and authorisation, Supabase policies and storage, automated application runner, webhooks, file handling, browser storage, service worker, security headers, dependency inventory and repository history  
+Status: application changes complete and verified; database migration `016_security_hardening.sql` must still be applied to the production Supabase project
+
+## Executive summary
+
+This review found no evidence of a leaked production credential, cross-account data read, SQL injection, remote command execution or known vulnerable npm dependency. The existing application already had strong controls around live Supabase token verification, owner-scoped row-level security, service-only financial and submission ledgers, webhook verification and short-lived signed administrator sessions.
+
+The review did identify several meaningful weaknesses, particularly around server-side URL fetching and browser automation. These have been fixed in the application. The most important changes constrain the automated application runner to approved ATS hosts, prevent candidate data from being sent to arbitrary third-party hosts, pin validated DNS results during server-side HTTPS requests, enforce real streamed request-size limits, clear private browser data at sign-out, prevent spreadsheet formula execution and add throttling to expensive or abuse-prone endpoints.
+
+Security is an ongoing risk-management process. This audit does not claim that any internet-facing application can be made perfectly secure or permanently threat-free. The assessment is a source-assisted review and automated verification pass, not a substitute for an independent penetration test, continuous monitoring, credential rotation and provider-level controls.
+
+## Risk findings and remediation
+
+| Severity | Finding | Risk before remediation | Remediation | Status |
+| --- | --- | --- | --- | --- |
+| High | Automated application runner accepted arbitrary public destinations and third-party requests | A malicious destination could attempt to receive candidate profile data, tailored CV content or answers | Initial destinations now require a supported ATS or explicit server-side allowlist. After candidate fields are populated, requests are restricted to approved hosts. Spoofed suffixes such as `evilashbyhq.com` no longer match trusted ATS domains | Fixed in application |
+| High | Server URL validation was vulnerable to DNS rebinding between validation and fetch | A hostname could validate against a public IP and later resolve to a private or metadata address | All A and AAAA results are checked and the approved address is pinned into the HTTPS connection while preserving TLS SNI and the Host header. Redirects are revalidated and bounded | Fixed in application |
+| High | Users could write their own private recruiter inbox alias through browser database access | A user could alter a server-assigned mail identity or forwarding destination | Browser code no longer writes aliases. Migration 016 changes the table to owner-read-only and revokes authenticated insert, update and delete privileges | Code fixed; production migration pending |
+| Medium | Several endpoints trusted `Content-Length` without bounding streamed bytes | Requests without an accurate header could consume excessive memory or parser work | Shared bounded readers now enforce the actual streamed byte count for JSON, text and multipart bodies and return 413 for oversized requests | Fixed |
+| Medium | Public and expensive endpoints lacked consistent abuse throttling | Automated abuse could consume parsing, AI, email or database capacity | Privacy-hashed per-client and per-user rate limits were added to job preview, contact, resume parse/export, application preparation and recruiter email | Fixed |
+| Medium | The service worker could cache broad same-origin static or image responses under an old cache version | Private or user-specific responses with an image/static destination could persist on a shared browser | Cache scope is limited to versioned Next.js static files and `/images/`; the cache version was rotated | Fixed |
+| Medium | Sign-out retained CV and workspace data in local browser storage | A later user of the same browser profile could see private local data | Sign-out, cross-tab sign-out and account-identity changes now clear workspace, CV and administrator draft state | Fixed |
+| Medium | Account deletion enumerated only the first storage level | Nested CV objects could remain after account deletion | Deletion now recursively inventories the private user folder with depth and file-count safety limits before removal | Fixed |
+| Medium | CSV exports did not neutralise spreadsheet formulas | Opening an export could execute attacker-controlled spreadsheet formulas | Cells beginning with `=`, `+`, `-`, `@`, tabs or carriage returns are prefixed safely | Fixed |
+| Medium | Security headers supplied only a minimal CSP | The browser had less defence in depth against injected resources and data exfiltration | A full same-origin CSP, restricted Supabase connections, frame protections, HSTS, no-sniff, permissions restrictions, origin isolation and disabled DNS prefetching are now sent | Fixed |
+| Low | Privacy hashing could fall back to a static value | Identifiers in operational logs could be guessable across environments | HMAC hashing now requires a deployment secret in production | Fixed |
+| Low | Pipeline cron secret used ordinary string comparison | Comparison was not timing-safe | Secret comparison now uses a fixed-length cryptographic timing-safe comparison | Fixed |
+| Low | Provider error details could reach the recruiter email caller | Internal provider details could be disclosed | The endpoint now returns a generic failure and is rate-limited | Fixed |
+| Low | No standard vulnerability-disclosure discovery file | Researchers had no standard machine-readable contact path | A `.well-known/security.txt` file now points to the contact and security policy pages | Fixed |
+
+## Controls verified as already present
+
+- User API access validates the live Supabase access token on the server instead of trusting browser claims.
+- Administrator access uses a dedicated allowlist and a short-lived, HMAC-signed, `HttpOnly`, `Secure`, `SameSite=Strict` session cookie.
+- Supabase tables containing profiles, CV versions, applications and messages use owner-scoped row-level security.
+- Billing, application-submission and other sensitive ledgers are server-write-only.
+- Stripe and inbound email webhooks verify provider signatures before processing trusted events.
+- Application status is marked Applied only after a positive employer/ATS confirmation signal.
+- CAPTCHA, login and verification challenges are not bypassed; the application moves to Needs You.
+- CV parsing and export enforce supported formats and bounded file sizes.
+- The OpenRouter mapper receives only the candidate evidence needed for the task and requests zero-data-retention/no-collection provider handling. OpenRouter is not permitted to authorise or confirm a job submission.
+- No production secrets are exposed to client bundles through `NEXT_PUBLIC_*` variables.
+
+## Verification evidence
+
+Completed on the audited revision:
+
+- TypeScript: passed with no errors.
+- ESLint: passed with zero warnings.
+- Unit tests: 164 passed across 45 files.
+- Processing, tax, aggregator and fetcher tests: 194 passed, 0 failed.
+- Production Next.js build: passed; 68 static pages generated and all dynamic routes compiled.
+- npm dependency audit: 0 low, moderate, high or critical known vulnerabilities.
+- Git patch validation: passed; no whitespace errors.
+- Repository and Git history secret-pattern scan: no OpenRouter, live Stripe, Google API, GitHub token, Supabase JWT or private-key patterns detected. The only tracked environment file is the placeholder `.env.local.example`.
+- New regression tests cover streamed body limits, JSON media types, public/private IPv4 and IPv6 rejection, and spoofed ATS-domain rejection.
+
+## Production database action required
+
+Apply `supabase/migrations/016_security_hardening.sql` to the production Supabase project. Until it is applied, the new website code no longer writes inbox aliases from the browser, but a user with direct API knowledge may still exercise the old database write policy. The migration also activates storage MIME/size enforcement, an explicit owner check for object updates and the operational rate-limit index.
+
+The migration was not represented as applied because the available browser-control connection failed before the Supabase dashboard could be reached and no database credential is stored in the repository. This is an operational dependency, not a code failure.
+
+## Residual risks and recommendations
+
+1. Arrange an independent authenticated penetration test before a large public launch, then repeat after significant authentication, payment or automation changes.
+2. Apply migration 016 and verify it using one normal user and one separate test user. Confirm that cross-user reads/writes and client-side alias updates fail.
+3. Enable and review Vercel Firewall rules, attack traffic, rate-limit observations and deployment logs. Application-level rate limiting is defence in depth, not a replacement for edge protection.
+4. Review Supabase authentication logs, database logs, leaked-password protection, MFA options and custom SMTP/OAuth configuration.
+5. Rotate high-value provider secrets on a schedule and immediately after any suspected disclosure. Keep secrets only in Vercel/Supabase secret stores.
+6. Keep the native browser runner on a separate, tightly restricted execution boundary as scale increases. It intentionally does not bypass authentication, CAPTCHA or employer verification.
+7. Maintain the ATS allowlist. New providers should be added only after their host boundaries, submission confirmation and data flows are tested.
+8. Verify data-processing agreements and retention settings for Supabase, Vercel, Resend, OpenRouter, Stripe and any ATS integration used in production.
+9. Add centralised alerting for repeated 401/403/429 responses, webhook signature failures, admin-session failures, unusual account deletion volume and browser-runner egress blocks.
+10. Re-run `npm audit`, the complete test suite and the source/history secret scan in CI for every production release.
+
+## Reference standards
+
+- OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+- Next.js Content Security Policy guide: https://nextjs.org/docs/app/guides/content-security-policy
+- Supabase Row Level Security guide: https://supabase.com/docs/guides/database/postgres/row-level-security
+- Vercel Firewall documentation: https://vercel.com/docs/security/vercel-firewall

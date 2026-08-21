@@ -31,6 +31,15 @@ describe("application analytics", () => {
     expect(csv).not.toContain(workspace.messages[0].body);
   });
 
+  it("neutralises spreadsheet formulas in exported user-controlled fields", () => {
+    const workspace = createSeedWorkspaceState();
+    workspace.applications[0] = {
+      ...workspace.applications[0],
+      job: { ...workspace.applications[0].job, company_name: "=HYPERLINK(\"https://attacker.invalid\")" },
+    };
+    expect(analyticsCsv(workspace)).toContain("'=HYPERLINK");
+  });
+
   it("uses neutral zero values when no application has been prepared", () => {
     const workspace = createSeedWorkspaceState();
     workspace.applications = [];

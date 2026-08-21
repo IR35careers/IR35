@@ -7,6 +7,7 @@ import {
   validateEmployerOnboardingInput,
 } from "@/lib/employer-onboarding";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,15 +56,8 @@ async function rateLimitExceeded(input: { ipKey: string; emailKey: string }): Pr
 
 export async function POST(request: Request): Promise<Response> {
   if (!allowedOrigin(request)) return Response.json({ error: "This request must be started from IR35Careers." }, { status: 403, headers: NO_STORE });
-  const contentLength = Number(request.headers.get("content-length") || "0");
-  if (Number.isFinite(contentLength) && contentLength > 8_192) {
-    return Response.json({ error: "The request is too large." }, { status: 413, headers: NO_STORE });
-  }
-  let raw = "";
   try {
-    raw = await request.text();
-    if (raw.length > 8_192) return Response.json({ error: "The request is too large." }, { status: 413, headers: NO_STORE });
-    const payload = JSON.parse(raw) as Record<string, unknown>;
+    const payload = await readJsonBody<Record<string, unknown>>(request, 8_192);
     if (typeof payload.website === "string" && payload.website.trim()) {
       return Response.json({ ok: true, message: "Check the recruitment inbox to continue." }, { status: 202, headers: NO_STORE });
     }
@@ -111,9 +105,8 @@ export async function POST(request: Request): Promise<Response> {
       expiresAt: delivery.expiresAt,
     }, { status: 202, headers: NO_STORE });
   } catch (error) {
-    const message = error instanceof SyntaxError
-      ? "The request could not be read."
-      : error instanceof Error ? error.message : "Unable to start employer onboarding.";
+    const message = error instanceof Error ? error.message : "Unable to start employer onboarding.";
+    if (error instanceof RequestBodyError) return Response.json({ error: message }, { status: error.status, headers: NO_STORE });
     const status = /configured|accepted for delivery|record employer verification/i.test(message) ? 503 : 400;
     return Response.json({ error: message }, { status, headers: NO_STORE });
   }

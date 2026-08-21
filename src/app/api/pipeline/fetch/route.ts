@@ -11,24 +11,33 @@
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
 import { isSevenAmInLondon } from "@/lib/pipeline/schedule";
+import { timingSafeEqual } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Hobby-plan ceiling; keep the registry modest
+
+const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+
+function secureTokenEqual(presented: string, expected: string): boolean {
+  const left = Buffer.from(presented);
+  const right = Buffer.from(expected);
+  return left.length === right.length && timingSafeEqual(left, right);
+}
 
 export async function GET(request: Request): Promise<Response> {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
     return Response.json(
       { error: "CRON_SECRET is not configured on the server." },
-      { status: 500 }
+      { status: 500, headers: NO_STORE }
     );
   }
 
   const authHeader = request.headers.get("authorization") ?? "";
-  const authorized = authHeader === `Bearer ${secret}`;
+  const authorized = secureTokenEqual(authHeader, `Bearer ${secret}`);
 
   if (!authorized) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json({ error: "Unauthorized" }, { status: 401, headers: NO_STORE });
   }
 
   // Vercel schedules in UTC. Two protected invocations cover GMT and BST;
@@ -40,16 +49,16 @@ export async function GET(request: Request): Promise<Response> {
       ok: true,
       skipped: true,
       reason: "Outside the 07:00 Europe/London refresh window.",
-    });
+    }, { headers: NO_STORE });
   }
 
   try {
     const summary = await runFetchPipeline();
-    return Response.json({ ok: true, summary });
+    return Response.json({ ok: true, summary }, { headers: NO_STORE });
   } catch (err) {
     return Response.json(
       { ok: false, error: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
+      { status: 500, headers: NO_STORE }
     );
   }
 }
