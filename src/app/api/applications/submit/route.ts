@@ -13,6 +13,7 @@ import { submitToVerifiedEmployerEmail } from "@/lib/employer-email-submission";
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { isStaleSubmissionLock, submissionRetryAfterSeconds } from "@/lib/application-submission-state";
 import {
   approvedApplicationPacketRow,
   InvalidApplicationPacketError,
@@ -230,12 +231,17 @@ export async function POST(request: Request): Promise<Response> {
 
     const idempotencyKey = `submit:${packet.id}`;
     const { data: previous } = await admin.from("application_submissions")
-      .select("status, receipt, error_code, provider_submission_id")
+      .select("status, receipt, error_code, provider_submission_id, updated_at")
       .eq("user_id", userId).eq("idempotency_key", idempotencyKey).maybeSingle();
     if (previous?.status === "succeeded" && previous.receipt) return Response.json({ receipt: previous.receipt, duplicate: true }, { status: 200, headers: NO_STORE });
     const canResume = previous?.status === "processing" && previous.error_code === "needs_user" && Boolean(previous.provider_submission_id);
-    if (previous?.status === "processing" && !canResume && previous.error_code !== "needs_user") {
-      return Response.json({ state: "processing", message: "This application is already being completed." }, { status: 202, headers: NO_STORE });
+    const staleProcessing = previous?.status === "processing" && isStaleSubmissionLock(previous.updated_at);
+    if (previous?.status === "processing" && !canResume && previous.error_code !== "needs_user" && !staleProcessing) {
+      return Response.json({
+        state: "processing",
+        message: "This application is already being completed.",
+        retryAfterSeconds: submissionRetryAfterSeconds(previous.updated_at),
+      }, { status: 202, headers: NO_STORE });
     }
 
     const payloadHash = createHash("sha256").update(JSON.stringify({ applicationId: packet.id, updatedAt: packet.updated_at, destination })).digest("hex");
@@ -339,7 +345,12 @@ export async function POST(request: Request): Promise<Response> {
         const questions = await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, message: providerMessage, action: "/profile" });
         return Response.json({ state: "needs_user", message: providerMessage, questions, action: "/profile" }, { status: 202, headers: NO_STORE });
       }
-      await admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
+      console.error("application_runner_failed", {
+        applicationId: String(packet.id),
+        provider: employerDestination ? "verified_employer_email" : provider?.kind || "unavailable",
+        reason: providerMessage.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 300) || "unknown",
+      });
+      await admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", receipt: { state: "failed", message: safeSubmissionError(providerError) }, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
       throw providerError;
     }
   } catch (error) {

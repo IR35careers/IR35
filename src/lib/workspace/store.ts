@@ -9,6 +9,31 @@ const listeners = new Set<() => void>();
 let memoryState: WorkspaceState | null = null;
 let cloudUserId: string | null = null;
 let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let cloudLoadUserId: string | null = null;
+let cloudLoadPromise: Promise<WorkspaceState> | null = null;
+
+const CLOUD_LOAD_TIMEOUT_MS = 20_000;
+
+function loadCloudState(userId: string, email: string): Promise<WorkspaceState> {
+  if (cloudLoadPromise && cloudLoadUserId === userId) return cloudLoadPromise;
+  cloudLoadUserId = userId;
+  const request = import("@/lib/workspace/repository").then(({ loadCloudWorkspace }) => loadCloudWorkspace(userId, email));
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  const current = Promise.race([
+    request,
+    new Promise<WorkspaceState>((_resolve, reject) => {
+      timeout = setTimeout(() => reject(new Error("Your workspace took too long to load. Check your connection and try again.")), CLOUD_LOAD_TIMEOUT_MS);
+    }),
+  ]).finally(() => {
+    if (timeout) clearTimeout(timeout);
+    if (cloudLoadPromise === current) {
+      cloudLoadPromise = null;
+      cloudLoadUserId = null;
+    }
+  });
+  cloudLoadPromise = current;
+  return current;
+}
 
 function readState(): WorkspaceState {
   if (memoryState) return memoryState;
@@ -79,8 +104,7 @@ export function useWorkspaceCloudSync(userId: string | null, email: string): { l
     let active = true;
     setLoading(true);
     setError(null);
-    void import("@/lib/workspace/repository")
-      .then(({ loadCloudWorkspace }) => loadCloudWorkspace(userId, email))
+    void loadCloudState(userId, email)
       .then((state) => {
         if (!active) return;
         cloudUserId = userId;

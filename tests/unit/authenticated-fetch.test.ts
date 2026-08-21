@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   fetchWithFreshSession,
   getFreshAccessToken,
+  promiseWithTimeout,
   sessionNeedsRefresh,
   type SessionAuthClient,
 } from "@/lib/authenticated-fetch";
@@ -62,5 +63,10 @@ describe("authenticated requests", () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
     expect(new Headers(fetcher.mock.calls[0][1]?.headers).get("authorization")).toBe("Bearer current");
     expect(new Headers(fetcher.mock.calls[1][1]?.headers).get("authorization")).toBe("Bearer fresh");
+  });
+
+  it("ends a stalled authentication operation with a useful error", async () => {
+    await expect(promiseWithTimeout(new Promise<string>(() => undefined), 5, "Session check timed out."))
+      .rejects.toThrow("Session check timed out.");
   });
 });

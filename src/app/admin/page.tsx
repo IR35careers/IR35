@@ -1161,6 +1161,8 @@ function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
   ];
   const applicationStages = Object.entries(analytics.applicationStages).sort((a, b) => b[1] - a[1]);
   const stageMax = Math.max(...applicationStages.map(([, count]) => count), 1);
+  const submissionStages = Object.entries(analytics.submissionStages).sort((a, b) => b[1] - a[1]);
+  const submissionStageMax = Math.max(...submissionStages.map(([, count]) => count), 1);
   const campaignTotal = analytics.campaignAccepted + analytics.campaignFailed;
   const deliveryRate = campaignTotal > 0 ? Math.round((analytics.campaignAccepted / campaignTotal) * 100) : 100;
   const cards = [
@@ -1213,6 +1215,13 @@ function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
           {applicationStages.length ? <div className="space-y-4 p-5 sm:p-6">{applicationStages.map(([status, count]) => <div key={status}><div className="mb-2 flex items-center justify-between text-xs"><span className="font-semibold capitalize text-slate-700">{status.replaceAll("_", " ")}</span><span className="font-semibold tabular-nums text-slate-950">{formatNumber(count)}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-slate-800" style={{ width: `${(count / stageMax) * 100}%` }} /></div></div>)}</div> : <EmptyState title="No application activity yet" detail="Application stages will appear as contractors prepare and submit packets." />}
         </Panel>
       </div>
+
+      <Panel title="Submission runner health" description="Real employer submission attempts by current processing state">
+        {submissionStages.length ? <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-6">{submissionStages.map(([status, count]) => {
+          const tone = status === "succeeded" ? "bg-emerald-600" : status === "processing" || status === "queued" ? "bg-amber-500" : "bg-rose-500";
+          return <div key={status} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold capitalize text-slate-700">{status.replaceAll("_", " ")}</p><p className="text-xl font-semibold tabular-nums text-slate-950">{formatNumber(count)}</p></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-white"><div className={`h-full rounded-full ${tone}`} style={{ width: `${(count / submissionStageMax) * 100}%` }} /></div><p className="mt-3 text-[11px] leading-5 text-slate-500">{status === "succeeded" ? "Employer confirmation and receipt saved" : status === "processing" || status === "queued" ? "Runner active or awaiting bounded recovery" : "Not submitted; contractor materials remain saved"}</p></div>;
+        })}</div> : <EmptyState title="No submission attempts yet" detail="Runner activity will appear after a contractor approves an application." />}
+      </Panel>
 
       <Panel title="Communication delivery" description="Accepted and failed recipients across administrator campaigns">
         <div className="grid gap-4 p-5 sm:grid-cols-4 sm:p-6">

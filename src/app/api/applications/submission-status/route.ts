@@ -2,6 +2,7 @@ import { checkSubmissionWithProvider, providerReviewQuestions } from "@/lib/appl
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { isStaleSubmissionLock, submissionRetryAfterSeconds } from "@/lib/application-submission-state";
 import type { ApplicationQuestion, ApplicationReceipt } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 
@@ -33,7 +34,7 @@ export async function GET(request: Request): Promise<Response> {
     if (authError || !authData.user) return Response.json({ error: "Your session is no longer valid." }, { status: 401, headers: NO_STORE });
     const userId = authData.user.id;
     const [{ data: submission, error: submissionError }, { data: packet, error: packetError }] = await Promise.all([
-      admin.from("application_submissions").select("status, provider_submission_id, receipt, error_code").eq("application_id", applicationId).eq("user_id", userId).maybeSingle(),
+      admin.from("application_submissions").select("status, provider_name, provider_submission_id, receipt, error_code, updated_at").eq("application_id", applicationId).eq("user_id", userId).maybeSingle(),
       admin.from("application_packets").select("job_snapshot, screening_answers").eq("id", applicationId).eq("user_id", userId).maybeSingle(),
     ]);
     if (submissionError || packetError) throw new Error(submissionError?.message || packetError?.message);
@@ -42,7 +43,21 @@ export async function GET(request: Request): Promise<Response> {
     if (submission.status === "failed") return Response.json({ state: "failed", error: "The employer form could not be completed. Your approved materials are still saved." }, { status: 409, headers: NO_STORE });
     if (!submission.provider_submission_id) {
       const stored = submission.receipt as { message?: string; action?: string } | null;
-      return Response.json({ state: submission.error_code === "needs_user" ? "needs_user" : "processing", message: stored?.message || "Application is being prepared.", action: stored?.action }, { status: 202, headers: NO_STORE });
+      if (submission.error_code !== "needs_user" && isStaleSubmissionLock(submission.updated_at)) {
+        const now = new Date().toISOString();
+        const [{ error: updateError }, { error: eventError }] = await Promise.all([
+          admin.from("application_submissions").update({ status: "failed", error_code: "stale_processing", receipt: { state: "failed", message: "The previous runner stopped before employer confirmation." }, updated_at: now }).eq("application_id", applicationId).eq("user_id", userId),
+          admin.from("application_events").upsert({ user_id: userId, application_id: applicationId, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", idempotency_key: `submit:${applicationId}:stale:${String(submission.updated_at)}` }, { onConflict: "user_id,idempotency_key" }),
+        ]);
+        if (updateError || eventError) throw new Error(updateError?.message || eventError?.message);
+        return Response.json({ state: "failed", error: "The previous application attempt stopped before employer confirmation. Your approved materials are safe. Select Apply again to retry." }, { status: 409, headers: NO_STORE });
+      }
+      return Response.json({
+        state: submission.error_code === "needs_user" ? "needs_user" : "processing",
+        message: stored?.message || "Application is being prepared.",
+        action: stored?.action,
+        retryAfterSeconds: submission.error_code === "needs_user" ? undefined : submissionRetryAfterSeconds(submission.updated_at),
+      }, { status: 202, headers: NO_STORE });
     }
 
     const providerReceipt = await checkSubmissionWithProvider(String(submission.provider_submission_id));

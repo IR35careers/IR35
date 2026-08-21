@@ -16,6 +16,21 @@ export interface SessionAuthClient {
 }
 
 const REFRESH_WINDOW_SECONDS = 90;
+const AUTH_OPERATION_TIMEOUT_MS = 12_000;
+
+export async function promiseWithTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 
 export function sessionNeedsRefresh(session: Pick<Session, "access_token" | "expires_at"> | null, nowSeconds = Math.floor(Date.now() / 1000)): boolean {
   if (!session?.access_token) return true;
@@ -24,14 +39,22 @@ export function sessionNeedsRefresh(session: Pick<Session, "access_token" | "exp
 }
 
 async function refreshedAccessToken(client: SessionAuthClient): Promise<string> {
-  const refreshed = await client.auth.refreshSession();
+  const refreshed = await promiseWithTimeout(
+    client.auth.refreshSession(),
+    AUTH_OPERATION_TIMEOUT_MS,
+    "Your secure session could not be refreshed. Sign in again, then retry the application.",
+  );
   const token = refreshed.data.session?.access_token;
   if (refreshed.error || !token) throw new Error("Your secure session has expired. Sign in again, then retry the application.");
   return token;
 }
 
 export async function getFreshAccessToken(client: SessionAuthClient = getSupabase() as SessionAuthClient): Promise<string> {
-  const current = await client.auth.getSession();
+  const current = await promiseWithTimeout(
+    client.auth.getSession(),
+    AUTH_OPERATION_TIMEOUT_MS,
+    "Your secure session could not be checked. Sign in again, then retry the application.",
+  );
   if (current.error) return refreshedAccessToken(client);
   if (sessionNeedsRefresh(current.data.session)) return refreshedAccessToken(client);
   return current.data.session?.access_token as string;

@@ -96,7 +96,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     let active = true;
-    void fetchWithFreshSession(`/api/integrations/status?jobId=${encodeURIComponent(job.id)}`, { cache: "no-store" }).then(async (response) => {
+    void fetchWithFreshSession(`/api/integrations/status?jobId=${encodeURIComponent(job.id)}`, { cache: "no-store", signal: AbortSignal.timeout(15_000) }).then(async (response) => {
       if (!response.ok) throw new Error("Status unavailable");
       const payload = (await response.json()) as { integrations?: Array<{ id: string; state: string }> };
       if (!active) return;
@@ -342,9 +342,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ applicationId: ready.id, approval: "SUBMIT_APPROVED_APPLICATION", packet: ready }),
-        signal: AbortSignal.timeout(180_000),
+        signal: AbortSignal.timeout(120_000),
       });
-      let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string };
+      let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user" | "failed"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string; retryAfterSeconds?: number };
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
           const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
@@ -369,7 +369,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           if (!statusResponse.ok && statusResponse.status !== 202) throw new Error(payload.error ?? "Application progress could not be refreshed.");
         }
         if (!payload.receipt) {
-          setNotice(payload.message || "Your application is still being completed. Its status will update in Applications.");
+          const retryDetail = payload.retryAfterSeconds && payload.retryAfterSeconds > 30
+            ? ` If it does not finish, retry in about ${Math.ceil(payload.retryAfterSeconds / 60)} minute${Math.ceil(payload.retryAfterSeconds / 60) === 1 ? "" : "s"}.`
+            : "";
+          setNotice(`${payload.message || "Your application is still being completed. Its status will update in Applications."}${retryDetail}`);
           return;
         }
       }
@@ -388,7 +391,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setNotice("Application submitted. The verified employer receipt is saved below.");
     } catch (caught) {
       const message = caught instanceof DOMException && caught.name === "TimeoutError"
-        ? "Employer confirmation took too long. The role was not marked Applied. Refresh Applications to check the latest status before retrying."
+        ? "Employer confirmation was not received within two minutes. The role was not marked Applied. Refresh Applications to check the latest status before retrying."
         : caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.";
       if (/complete your application profile|profile before applying/i.test(message)) setProfilePrompt(true);
       setError(message);
