@@ -389,6 +389,7 @@ export default function AdminPage() {
   const [reviewingConnectionId, setReviewingConnectionId] = useState<string | null>(null);
   const [testingRunner, setTestingRunner] = useState(false);
   const [runnerTestResult, setRunnerTestResult] = useState<RunnerTestResult | null>(null);
+  const [recoveringSubmissions, setRecoveringSubmissions] = useState(false);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -679,6 +680,31 @@ export default function AdminPage() {
       setError(caught instanceof Error ? caught.message : "The application runner test failed");
     } finally {
       setTestingRunner(false);
+    }
+  };
+
+  const recoverStaleSubmissions = async () => {
+    setRecoveringSubmissions(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "recover_stale_submissions" }),
+      });
+      const json = await response.json() as { recovered?: number; error?: string };
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "Stale application attempts could not be recovered");
+      setNotice(`${json.recovered ?? 0} stale application attempt${json.recovered === 1 ? "" : "s"} recovered. Contractors can retry safely.`);
+      await load("analytics");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Stale application attempts could not be recovered");
+    } finally {
+      setRecoveringSubmissions(false);
     }
   };
 
@@ -992,7 +1018,7 @@ export default function AdminPage() {
           ) : section === "stats" && data ? (
             <Overview data={data} query={normalisedQuery} onNavigate={navigate} />
           ) : section === "analytics" && data?.analytics ? (
-            <AnalyticsPanel analytics={data.analytics} />
+            <AnalyticsPanel analytics={data.analytics} recovering={recoveringSubmissions} onRecover={() => void recoverStaleSubmissions()} />
           ) : section === "jobs" && data ? (
             <JobsPanel jobs={jobs} total={(data.jobs ?? []).length} query={normalisedQuery} expiringId={expiringId} onExpire={expireJob} />
           ) : section === "sources" && data ? (
@@ -1147,7 +1173,7 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   );
 }
 
-function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
+function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: AnalyticsData; recovering: boolean; onRecover: () => void }) {
   const cvRate = analytics.profiles > 0 ? Math.round((analytics.cvsUploaded / analytics.profiles) * 100) : 0;
   const activeRate = analytics.totalUsers > 0 ? Math.round((analytics.activeUsers7d / analytics.totalUsers) * 100) : 0;
   const submissionRate = analytics.applicationPackets > 0 ? Math.round((analytics.submissions / analytics.applicationPackets) * 100) : 0;
@@ -1216,7 +1242,7 @@ function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
         </Panel>
       </div>
 
-      <Panel title="Submission runner health" description="Real employer submission attempts by current processing state">
+      <Panel title="Submission runner health" description="Real employer submission attempts by current processing state" action={<button type="button" onClick={onRecover} disabled={recovering} className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-slate-950 px-3 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-60">{recovering ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />} {recovering ? "Recovering" : "Recover stale attempts"}</button>}>
         {submissionStages.length ? <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-6">{submissionStages.map(([status, count]) => {
           const tone = status === "succeeded" ? "bg-emerald-600" : status === "processing" || status === "queued" ? "bg-amber-500" : "bg-rose-500";
           return <div key={status} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold capitalize text-slate-700">{status.replaceAll("_", " ")}</p><p className="text-xl font-semibold tabular-nums text-slate-950">{formatNumber(count)}</p></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-white"><div className={`h-full rounded-full ${tone}`} style={{ width: `${(count / submissionStageMax) * 100}%` }} /></div><p className="mt-3 text-[11px] leading-5 text-slate-500">{status === "succeeded" ? "Employer confirmation and receipt saved" : status === "processing" || status === "queued" ? "Runner active or awaiting bounded recovery" : "Not submitted; contractor materials remain saved"}</p></div>;

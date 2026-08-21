@@ -46,6 +46,7 @@ import { getIntegrationStatuses } from "@/lib/integration-status";
 import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { SUBMISSION_LOCK_MAX_AGE_MS } from "@/lib/application-submission-state";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
 export const runtime = "nodejs";
@@ -584,6 +585,34 @@ export async function POST(request: Request): Promise<Response> {
         });
         return Response.json({ ok: false, state: "failed", message, testedAt, checks });
       }
+    }
+
+    if (body.action === "recover_stale_submissions") {
+      const cutoff = new Date(Date.now() - SUBMISSION_LOCK_MAX_AGE_MS).toISOString();
+      const staleResult = await supabase
+        .from("application_submissions")
+        .select("id, user_id, application_id, updated_at")
+        .eq("status", "processing")
+        .is("provider_submission_id", null)
+        .or("error_code.is.null,error_code.neq.needs_user")
+        .lt("updated_at", cutoff)
+        .limit(500);
+      if (staleResult.error) throw staleResult.error;
+      const stale = staleResult.data ?? [];
+      for (const submission of stale) {
+        const now = new Date().toISOString();
+        const [{ error: updateError }, { error: eventError }] = await Promise.all([
+          supabase.from("application_submissions").update({ status: "failed", error_code: "stale_processing", receipt: { state: "failed", message: "The previous runner stopped before employer confirmation." }, updated_at: now }).eq("id", submission.id),
+          supabase.from("application_events").upsert({ user_id: submission.user_id, application_id: submission.application_id, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", idempotency_key: `submit:${submission.application_id}:stale:${String(submission.updated_at)}`, metadata: { recoveredBy: admin.email } }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true }),
+        ]);
+        if (updateError || eventError) throw updateError || eventError;
+      }
+      const audit = await supabase.from("moderation_logs").insert({
+        run_type: "application_recovery",
+        summary: { action: "recover_stale_submissions", recovered: stale.length, by: admin.email, cutoff },
+      });
+      if (audit.error) throw audit.error;
+      return Response.json({ recovered: stale.length });
     }
 
     if ((body.action === "approve_employer_connection" || body.action === "reject_employer_connection") && body.connectionId) {
