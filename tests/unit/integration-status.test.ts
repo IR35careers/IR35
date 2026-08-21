@@ -15,10 +15,10 @@ describe("integration status", () => {
     expect(getIntegrationStatuses().find((item) => item.id === "inbound_email")?.state).toBe("connected");
   });
 
-  it("keeps live submission gated until every server-side value exists", () => {
+  it("uses the owned runner without requiring an external gateway key", () => {
     vi.stubEnv("ENABLE_APPLICATION_SUBMISSION", "true");
     vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_URL", "https://provider.example.test/submit");
-    expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("provider_gate");
+    expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("connected");
 
     vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_API_KEY", "test-secret");
     expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("connected");

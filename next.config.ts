@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   // output tracing bounded to this project so builds do not scan the user's
   // wider home directory.
   outputFileTracingRoot: process.cwd(),
+  outputFileTracingIncludes: {
+    "/api/applications/submit": ["./node_modules/@sparticuz/chromium/bin/**/*"],
+  },
   devIndicators: false,
   allowedDevOrigins: ["127.0.0.1"],
   agentRules: false,

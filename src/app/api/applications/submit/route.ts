@@ -17,7 +17,7 @@ import type { ApplicationQuestion, ApplicationReceipt, ContractorProfile } from 
 import type { JobDetail } from "@/lib/job-types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
@@ -41,6 +41,21 @@ function mergeQuestions(current: ApplicationQuestion[], incoming: ApplicationQue
     };
   }
   return merged;
+}
+
+function providerReviewAction(receipt: SubmissionProviderReceipt | undefined): string | undefined {
+  if (!receipt?.review || typeof receipt.review !== "object") return undefined;
+  const action = (receipt.review as Record<string, unknown>).action;
+  return typeof action === "string" && action.trim() ? action.trim().slice(0, 80) : undefined;
+}
+
+function safeSubmissionError(error: unknown): string {
+  const fallback = "The application was not submitted. Your approved packet is unchanged.";
+  if (!(error instanceof Error)) return fallback;
+  const message = error.message.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
+  return /^(The employer application page is unavailable or closed\.|The employer form could not be completed\.|This contract has no valid secure application destination\.)$/.test(message)
+    ? message
+    : fallback;
 }
 
 function knownProviderAnswers(questions: ApplicationQuestion[], candidate: ContractorProfile, packet: DbRow): ApplicationQuestion[] {
@@ -190,7 +205,7 @@ export async function POST(request: Request): Promise<Response> {
     try {
       let resumeUrl: string | undefined;
       let resumeBuffer: Buffer | undefined;
-      if (employerDestination || provider?.kind === "tsenta") {
+      if (employerDestination || provider?.kind === "tsenta" || provider?.kind === "native") {
         resumeBuffer = await buildResumePdf({
           format: "pdf",
           resumeText,
@@ -199,7 +214,7 @@ export async function POST(request: Request): Promise<Response> {
           companyName: job.company_name,
           versionLabel: String(packet.resume_version_label || "Application CV"),
         });
-        if (provider?.kind === "tsenta" && !canResume) {
+        if ((provider?.kind === "tsenta" || provider?.kind === "native") && !canResume) {
           const storagePath = `${userId}/applications/${packet.id}.pdf`;
           const { error: uploadError } = await admin.storage.from("cvs").upload(storagePath, resumeBuffer, { contentType: "application/pdf", upsert: true });
           if (uploadError) throw new Error("Your approved CV could not be prepared for the employer form.");
@@ -241,8 +256,9 @@ export async function POST(request: Request): Promise<Response> {
       }
 
       if (providerReceipt.state === "needs_user") {
-        const questions = await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, providerReceipt, message: providerReceipt.message });
-        return Response.json({ state: "needs_user", message: providerReceipt.message, questions }, { status: 202, headers: NO_STORE });
+        const action = providerReviewAction(providerReceipt);
+        const questions = await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, providerReceipt, message: providerReceipt.message, action });
+        return Response.json({ state: "needs_user", message: providerReceipt.message, questions, action }, { status: 202, headers: NO_STORE });
       }
       if (providerReceipt.state === "processing") {
         await admin.from("application_submissions").update({ status: "processing", provider_submission_id: providerReceipt.providerSubmissionId, error_code: null, receipt: { state: "processing", message: providerReceipt.message }, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
@@ -276,7 +292,7 @@ export async function POST(request: Request): Promise<Response> {
       await admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
       throw providerError;
     }
-  } catch {
-    return Response.json({ error: "The application was not submitted. Your approved packet is unchanged." }, { status: 502, headers: NO_STORE });
+  } catch (error) {
+    return Response.json({ error: safeSubmissionError(error) }, { status: 502, headers: NO_STORE });
   }
 }

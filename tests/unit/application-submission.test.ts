@@ -9,14 +9,23 @@ afterEach(() => {
 });
 
 describe("application submission provider", () => {
-  it("requires an explicit flag, HTTPS endpoint and server key", () => {
+  it("uses the owned runner when an optional gateway is invalid", () => {
     vi.stubEnv("ENABLE_APPLICATION_SUBMISSION", "true");
     vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_URL", "http://provider.example.test/submit");
     vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_API_KEY", "secret");
-    expect(submissionProviderConfig()).toBeNull();
+    expect(submissionProviderConfig()).toEqual({ kind: "native", name: "IR35Careers application runner" });
 
     vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_URL", "https://provider.example.test/submit");
     expect(submissionProviderConfig()).toMatchObject({ endpoint: "https://provider.example.test/submit", name: "Authorised submission provider" });
+  });
+
+  it("uses the IR35Careers runner when OpenRouter is the only configured service", () => {
+    vi.stubEnv("ENABLE_APPLICATION_SUBMISSION", "true");
+    vi.stubEnv("OPENROUTER_API_KEY", "sk-or-test");
+    vi.stubEnv("TSENTA_API_KEY", "");
+    vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_API_KEY", "");
+    vi.stubEnv("APPLICATION_SUBMISSION_PROVIDER_URL", "");
+    expect(submissionProviderConfig()).toEqual({ kind: "native", name: "IR35Careers application runner" });
   });
 
   it("sends one idempotent approved packet and requires a provider receipt", async () => {

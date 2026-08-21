@@ -3,7 +3,8 @@ import type { JobDetail } from "@/lib/job-types";
 
 export type SubmissionProviderConfig =
   | { kind: "tsenta"; endpoint: string; apiKey: string; name: string }
-  | { kind: "gateway"; endpoint: string; apiKey: string; name: string };
+  | { kind: "gateway"; endpoint: string; apiKey: string; name: string }
+  | { kind: "native"; name: string };
 
 export interface SubmissionProviderPayload {
   applicationId: string;
@@ -56,14 +57,20 @@ export function submissionProviderConfig(): SubmissionProviderConfig | null {
 
   const apiKey = process.env.APPLICATION_SUBMISSION_PROVIDER_API_KEY?.trim();
   const rawEndpoint = process.env.APPLICATION_SUBMISSION_PROVIDER_URL?.trim();
-  if (!apiKey || !rawEndpoint) return null;
-  try {
-    const endpoint = new URL(rawEndpoint);
-    if (endpoint.protocol !== "https:") return null;
-    return { kind: "gateway", endpoint: endpoint.toString(), apiKey, name: process.env.APPLICATION_SUBMISSION_PROVIDER_NAME?.trim() || "Authorised submission provider" };
-  } catch {
-    return null;
+  if (apiKey && rawEndpoint) {
+    try {
+      const endpoint = new URL(rawEndpoint);
+      if (endpoint.protocol === "https:") {
+        return { kind: "gateway", endpoint: endpoint.toString(), apiKey, name: process.env.APPLICATION_SUBMISSION_PROVIDER_NAME?.trim() || "Authorised submission provider" };
+      }
+    } catch {
+      // Fall through to the IR35Careers-owned browser runner.
+    }
   }
+  // The owned runner is the default delivery engine. OpenRouter improves
+  // unfamiliar field-label mapping, but ordinary employer forms must not be
+  // disabled merely because an AI key is absent or temporarily unavailable.
+  return { kind: "native", name: "IR35Careers application runner" };
 }
 
 function clean(value: string | undefined): string {
@@ -259,9 +266,10 @@ async function submitWithGateway(config: Extract<SubmissionProviderConfig, { kin
 export async function submitWithProvider(payload: SubmissionProviderPayload, idempotencyKey: string): Promise<SubmissionProviderReceipt> {
   const config = submissionProviderConfig();
   if (!config) throw new Error("One-click applications are not configured.");
-  return config.kind === "tsenta"
-    ? submitWithTsenta(config, payload, idempotencyKey)
-    : submitWithGateway(config, payload, idempotencyKey);
+  if (config.kind === "tsenta") return submitWithTsenta(config, payload, idempotencyKey);
+  if (config.kind === "gateway") return submitWithGateway(config, payload, idempotencyKey);
+  const { runNativeApplication } = await import("@/lib/application-runner/run");
+  return runNativeApplication(payload);
 }
 
 export async function checkSubmissionWithProvider(providerSubmissionId: string): Promise<SubmissionProviderReceipt> {

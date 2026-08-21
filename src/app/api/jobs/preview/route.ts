@@ -1,36 +1,11 @@
 import { createHash } from "node:crypto";
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 import { NextResponse } from "next/server";
 import { parseExternalJobHtml } from "@/lib/job-preview";
+import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 
 export const runtime = "nodejs";
 const MAX_BYTES = 1_000_000;
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
-
-function isPrivateAddress(address: string): boolean {
-  const normalized = address.toLowerCase().replace(/^::ffff:/, "");
-  if (isIP(normalized) === 4) {
-    const [a, b] = normalized.split(".").map(Number);
-    return a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b <= 127) ||
-      (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) || a >= 224;
-  }
-  return normalized === "::" || normalized === "::1" || /^f[cd]/.test(normalized) || /^fe[89ab]/.test(normalized);
-}
-
-async function validatePublicUrl(value: string): Promise<URL> {
-  if (value.length > 2_048) throw new Error("The URL is too long.");
-  const url = new URL(value);
-  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) {
-    throw new Error("Use a public HTTPS job URL without embedded credentials.");
-  }
-  const hostname = url.hostname.toLowerCase();
-  if (hostname === "localhost" || hostname.endsWith(".local") || hostname.endsWith(".internal")) throw new Error("Private network addresses are not supported.");
-  const addresses = isIP(hostname) ? [{ address: hostname }] : await lookup(hostname, { all: true, verbatim: true });
-  if (!addresses.length || addresses.some((entry) => isPrivateAddress(entry.address))) throw new Error("The URL does not resolve to a public website.");
-  return url;
-}
 
 async function readLimitedHtml(response: Response): Promise<string> {
   const declared = Number(response.headers.get("content-length") ?? "0");
@@ -72,7 +47,7 @@ async function fetchPublicHtml(initial: URL): Promise<{ html: string; finalUrl: 
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
       if (!location || redirect === 3) throw new Error("The source redirected too many times.");
-      current = await validatePublicUrl(new URL(location, current).toString());
+      current = await validatePublicHttpsUrl(new URL(location, current).toString());
       continue;
     }
     if (!response.ok) throw new Error(`The source returned HTTP ${response.status}.`);
@@ -94,7 +69,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { url?: unknown };
     if (typeof body.url !== "string" || !body.url.trim()) throw new Error("Enter a public job URL.");
-    const url = await validatePublicUrl(body.url.trim());
+    const url = await validatePublicHttpsUrl(body.url.trim());
     const source = await fetchPublicHtml(url);
     const job = parseExternalJobHtml(source.html, source.finalUrl, stableUuid(source.finalUrl));
     return NextResponse.json({ job }, { headers: NO_STORE });

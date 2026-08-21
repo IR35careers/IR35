@@ -82,10 +82,10 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
     },
     {
       id: "ats_submission",
-      name: "Live ATS submission",
+      name: "IR35Careers application runner",
       state: submissionConnected ? "connected" : "provider_gate",
-      scope: "Provider-specific application submission with final human approval.",
-      nextStep: submissionConnected ? "Approved packets can be submitted and tracked from the workspace." : "Add a server-side one-click application API key or an authorised submission gateway.",
+      scope: "Completes supported public employer forms after the contractor approves the final application.",
+      nextStep: submissionConnected ? "Approved applications can be completed and tracked from the workspace." : "Enable application submission after completing the release checks.",
     },
     {
       id: "billing",
