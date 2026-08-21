@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { User } from "@supabase/supabase-js";
 import { renderWelcomeEmail } from "@/lib/email/templates";
+import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
 import { requestUser } from "@/lib/request-user";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -30,15 +31,18 @@ function firstName(user: User): string {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const config = transactionalEmailConfig();
-  if (!config) return new Response(null, { status: 204, headers: NO_STORE });
-
   try {
     const auth = await requestUser(request);
     if ("response" in auth) return auth.response;
     if (!eligibleForWelcome(auth.user)) return new Response(null, { status: 204, headers: NO_STORE });
 
     const admin = getSupabaseAdmin();
+    // Create the member's private application address as soon as their account
+    // is confirmed. The submit route repeats this check so a temporary email
+    // setup failure can never prevent a later application.
+    await ensureInboxAlias(admin, auth.user.id, auth.user.email!, true);
+    const config = transactionalEmailConfig();
+    if (!config) return new Response(null, { status: 204, headers: NO_STORE });
     const metadata = auth.user.app_metadata ?? {};
     if (metadata.welcome_email_sent_at) return Response.json({ delivered: true }, { headers: NO_STORE });
     const attempts = Number(metadata.welcome_email_attempts ?? 0);

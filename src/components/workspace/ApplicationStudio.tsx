@@ -84,7 +84,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const selectedScore = selectedPreview ? scoreResumeForRole(selectedPreview, job, cvFilename || "Application CV").overall : application?.matchScore ?? 0;
   const checklist = [cvReady, Boolean(application), answersReviewed, approvalsComplete];
   const progress = Math.round((checklist.filter(Boolean).length / checklist.length) * 100);
-  const activeStep = !application ? 0 : answersReviewed && approvalsComplete ? 2 : 1;
+  const activeStep = !application ? 0 : answersReviewed ? 2 : 1;
   const showDemoTools = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
@@ -265,6 +265,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     updateApplication((current) => ({ ...current, matchScore: score.overall, matchedKeywords: score.matchedKeywords, missingKeywords: score.missingKeywords }));
   };
 
+  const persistReviewedPacket = async (source: ApplicationRecord): Promise<ApplicationRecord> => {
+    const now = new Date().toISOString();
+    const ready: ApplicationRecord = {
+      ...source,
+      status: "ready",
+      mode: "dry_run",
+      receipt: null,
+      updatedAt: now,
+      events: [...source.events, { id: newWorkspaceId(), applicationId: source.id, type: "approved", label: "Application approved and ready to submit", createdAt: now }],
+    };
+    setApplication(ready);
+    persistApplication(ready);
+    if (isSupabaseConfigured()) {
+      const { data } = await getSupabase().auth.getSession();
+      if (!data.session) throw new Error("Sign in again before saving this application.");
+      const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
+      await saveCloudWorkspace(data.session.user.id, {
+        ...workspace,
+        applications: [ready, ...workspace.applications.filter((item) => item.id !== ready.id && item.job.id !== ready.job.id)],
+      });
+    }
+    return ready;
+  };
+
   const saveReviewedPacket = async (): Promise<boolean> => {
     if (!application) return false;
     if (!answersReviewed || !approvalsComplete) {
@@ -274,26 +298,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     setBusy("save");
     setError(null);
     try {
-      const now = new Date().toISOString();
-      const ready: ApplicationRecord = {
-        ...application,
-        status: "ready",
-        mode: "dry_run",
-        receipt: null,
-        updatedAt: now,
-        events: [...application.events, { id: newWorkspaceId(), applicationId: application.id, type: "approved", label: "Application packet reviewed and saved", createdAt: now }],
-      };
-      setApplication(ready);
-      persistApplication(ready);
-      if (isSupabaseConfigured()) {
-        const { data } = await getSupabase().auth.getSession();
-        if (!data.session) throw new Error("Sign in again before saving this packet.");
-        const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
-        await saveCloudWorkspace(data.session.user.id, {
-          ...workspace,
-          applications: [ready, ...workspace.applications.filter((item) => item.id !== ready.id && item.job.id !== ready.job.id)],
-        });
-      }
+      await persistReviewedPacket(application);
       setNotice("Reviewed packet saved. It has not been sent to the employer.");
       return true;
     } catch (caught) {
@@ -306,11 +311,25 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
   const submitApprovedApplication = async () => {
     if (!application || submissionConnection !== "connected") return;
-    if (application.status !== "ready" && !(await saveReviewedPacket())) return;
+    if (!answersReviewed) {
+      setError("Review every required answer before applying.");
+      return;
+    }
     setBusy("submit");
     setError(null);
     setNotice(null);
     try {
+      const approved: ApplicationRecord = {
+        ...application,
+        truthApproved: true,
+        materialsApproved: true,
+        submissionApproved: true,
+        status: "needs_review",
+        updatedAt: new Date().toISOString(),
+      };
+      const ready = application.status === "ready" && approvalsComplete
+        ? application
+        : await persistReviewedPacket(approved);
       const token = await sessionToken();
       const response = await fetch("/api/applications/submit", {
         method: "POST",
@@ -320,7 +339,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string };
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
-          const needsUserApplication: ApplicationRecord = { ...application, status: "needs_review", questions: payload.questions ?? application.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
+          const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
           setApplication(needsUserApplication);
           persistApplication(needsUserApplication);
           setNotice(payload.message || "One answer needs your attention before this application can be sent.");
@@ -331,7 +350,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           const statusResponse = await fetch(`/api/applications/submission-status?applicationId=${encodeURIComponent(application.id)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
           payload = (await statusResponse.json()) as typeof payload;
           if (payload.state === "needs_user") {
-            const needsUserApplication: ApplicationRecord = { ...application, status: "needs_review", questions: payload.questions ?? application.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
+            const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
             setApplication(needsUserApplication);
             persistApplication(needsUserApplication);
             setNotice(payload.message || "One answer needs your attention before this application can be sent.");
@@ -347,12 +366,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       if (!response.ok || !payload.receipt) throw new Error(payload.error ?? "The application was not submitted.");
       const now = new Date().toISOString();
       const submittedApplication: ApplicationRecord = {
-        ...application,
+        ...ready,
         status: "applied",
         mode: "external_handoff",
         receipt: payload.receipt,
         updatedAt: now,
-        events: [...application.events, { id: newWorkspaceId(), applicationId: application.id, type: "status_changed", label: "Application submitted through the approved provider", createdAt: now }],
+        events: [...ready.events, { id: newWorkspaceId(), applicationId: ready.id, type: "status_changed", label: "Application submitted successfully", createdAt: now }],
       };
       setApplication(submittedApplication);
       persistApplication(submittedApplication);
@@ -434,8 +453,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
               <section className="rounded-3xl border border-slate-800 bg-slate-950 p-5 text-white shadow-floating sm:p-6">
                 <div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-emerald-300"><ShieldCheck size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">Step 3</p><h2 className="font-semibold">Ready to apply?</h2><p className="mt-1 text-sm leading-6 text-slate-300">Confirm the final application once, then IR35Careers handles the supported employer form in the background.</p></div></div>
-                <label className={`mt-5 flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm ${approvalsComplete ? "border-emerald-400/40 bg-emerald-400/10" : "border-white/15 bg-white/5"}`}><input type="checkbox" checked={approvalsComplete} onChange={(event) => updateApplication((current) => ({ ...current, truthApproved: event.target.checked, materialsApproved: event.target.checked, submissionApproved: event.target.checked, status: "needs_review" }))} className="h-5 w-5 accent-emerald-400" />I confirm the application is accurate, truthful and ready to submit.</label>
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row">{submissionConnection === "connected" && !submitted ? <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !answersReviewed || !approvalsComplete} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:opacity-40">{busy === "submit" ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} Apply now</button> : submitted ? <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200"><CheckCircle2 size={17} /> Application submitted</span> : <button type="button" onClick={() => void saveReviewedPacket()} disabled={busy !== null || !answersReviewed || !approvalsComplete || submitted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-slate-950 hover:bg-slate-100 disabled:opacity-40">{busy === "save" ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save application</button>}{submissionConnection === "connected" && !submitted && <button type="button" onClick={() => void saveReviewedPacket()} disabled={busy !== null || !answersReviewed || !approvalsComplete} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-bold text-white hover:bg-white/15 disabled:opacity-40"><Save size={16} /> Save for later</button>}</div>
+                {submissionConnection !== "connected" && !submitted && <label className={`mt-5 flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm ${approvalsComplete ? "border-emerald-400/40 bg-emerald-400/10" : "border-white/15 bg-white/5"}`}><input type="checkbox" checked={approvalsComplete} onChange={(event) => updateApplication((current) => ({ ...current, truthApproved: event.target.checked, materialsApproved: event.target.checked, submissionApproved: event.target.checked, status: "needs_review" }))} className="h-5 w-5 accent-emerald-400" />I confirm the application is accurate, truthful and ready to submit.</label>}
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">{submissionConnection === "connected" && !submitted ? <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || !answersReviewed} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:opacity-40">{busy === "submit" ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} Approve and apply now</button> : submitted ? <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200"><CheckCircle2 size={17} /> Application submitted</span> : <button type="button" onClick={() => void saveReviewedPacket()} disabled={busy !== null || !answersReviewed || !approvalsComplete || submitted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-slate-950 hover:bg-slate-100 disabled:opacity-40">{busy === "save" ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save application</button>}</div>
               </section>
 
               {submitted && application.receipt && <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6" data-testid="application-receipt"><CheckCircle2 className="text-emerald-700" size={24} /><h2 className="mt-3 font-semibold text-emerald-950">Employer submission confirmed</h2><p className="mt-1 font-mono text-xs text-emerald-800">Receipt {application.receipt.receiptId}</p><p className="mt-3 text-sm leading-6 text-emerald-900">{application.receipt.message}</p></section>}
