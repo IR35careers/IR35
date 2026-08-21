@@ -399,6 +399,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await page.goto("/applications");
   await expect(page.getByRole("heading", { name: "Your contract pipeline" })).toBeVisible();
   await expect(page.getByText("Ready", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Review and apply" }).first()).toBeVisible();
 
   await page.goto("/inbox");
   await expect(page.getByRole("heading", { name: "Responses linked to the right role" })).toBeVisible();

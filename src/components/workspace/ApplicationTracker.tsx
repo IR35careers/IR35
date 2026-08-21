@@ -97,7 +97,7 @@ export function ApplicationTracker() {
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Live status</p><div className="mt-2"><StatusPill status={application.status} /></div><p className="mt-2 text-xs leading-5 text-slate-500">Updated automatically from the application system and recruiter inbox.</p></div>
                 <div className="flex flex-col gap-2">
-                  <Link href={`/applications/new/${application.job.id}`} className="ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:border-brand-300">Review packet <ChevronRight size={15} /></Link>
+                  <Link href={`/applications/new/${application.job.id}`} className={`ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white shadow-sm hover:bg-emerald-800" : "border border-slate-300 text-slate-700 hover:border-brand-300"}`}>{application.status === "ready" || application.status === "needs_review" ? "Review and apply" : "View application"} <ChevronRight size={15} /></Link>
                   <Link href={`/jobs/${application.job.id}`} className="ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-semibold text-brand-700 hover:bg-brand-50">Open role <ChevronRight size={15} /></Link>
                 </div>
               </div>
