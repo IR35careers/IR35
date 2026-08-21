@@ -188,7 +188,7 @@ test("an external job can be previewed and opened in local CV Studio", async ({ 
 
 test("public trust and platform surfaces are available", async ({ page }) => {
   const pages = [
-    ["/pricing", "Free while the provider-backed service is being verified."],
+    ["/pricing", "Free throughout the current public beta."],
     ["/platforms", "One contractor workspace, on every screen."],
     ["/mobile", "Your IR35 contract search, ready on any screen."],
     ["/messaging", "Responses linked to the right role."],
@@ -231,7 +231,7 @@ test("public feed health exposes freshness without provider secrets", async ({ p
 test("public platform assets and safety boundaries respond correctly", async ({ request }) => {
   const manifest = await request.get("/manifest.webmanifest");
   expect(manifest.ok()).toBeTruthy();
-  expect((await manifest.json()).name).toBe("IR35Careers");
+  expect((await manifest.json()).name).toBe("IR35Careers Public Beta");
 
   const securityPolicy = await request.get("/.well-known/security.txt");
   expect(securityPolicy.ok()).toBeTruthy();
@@ -382,11 +382,11 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
   await expect(page.getByText(/Data stays in this browser/)).toBeVisible();
   await page.getByRole("button", { name: "Load labelled sample CV" }).click();
-  await page.getByRole("button", { name: "Analyse role fit" }).click();
+  await page.getByRole("button", { name: "Prepare application" }).click();
 
   await expect(page.getByRole("heading", { name: /Your evidence matches/ })).toBeVisible();
-  await expect(page.getByText("Missing — never assumed")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Improve your CV for this role" })).toBeVisible();
+  await expect(page.getByText("Missing keywords, not assumed")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CV tailored for this role" })).toBeVisible();
   const checkboxes = page.locator('input[type="checkbox"]:enabled');
   const checkboxCount = await checkboxes.count();
   expect(checkboxCount).toBeGreaterThanOrEqual(5);

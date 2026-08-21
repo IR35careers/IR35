@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { submissionProviderConfig, submitWithProvider } from "@/lib/application-submission";
+import { providerReviewQuestions, resumeSubmissionWithProvider, submissionProviderConfig, submitWithProvider } from "@/lib/application-submission";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
@@ -66,5 +66,27 @@ describe("application submission provider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0].toString()).toBe("https://api.autojobs.me/v1/candidates");
     expect(fetchMock.mock.calls[1][0].toString()).toBe("https://api.autojobs.me/v1/applications");
+  });
+
+  it("turns unknown employer fields into owner-reviewed workspace questions", () => {
+    expect(providerReviewQuestions({ questions: [
+      { id: "security_clearance", label: "What security clearance do you hold?", required: true },
+      { key: "notice_period", question: "What is your notice period?", value: "Two weeks" },
+    ] })).toEqual([
+      expect.objectContaining({ id: "provider:security_clearance", label: "What security clearance do you hold?", answer: "", reviewed: false }),
+      expect.objectContaining({ id: "provider:notice_period", answer: "Two weeks", reviewed: true }),
+    ]);
+  });
+
+  it("resumes a paused employer form with the confirmed answers", async () => {
+    vi.stubEnv("ENABLE_APPLICATION_SUBMISSION", "true");
+    vi.stubEnv("TSENTA_API_KEY", "sk_live_test");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "app_test", status: "submitted", updated_at: "2026-08-21T10:00:00.000Z" }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const receipt = await resumeSubmissionWithProvider("app_test", [{ id: "provider:security_clearance", label: "Clearance", answer: "SC", required: true, source: "user", reviewed: true }]);
+    expect(receipt.state).toBe("submitted");
+    expect(fetchMock.mock.calls[0][0].toString()).toBe("https://api.autojobs.me/v1/applications/app_test/review");
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ action: "approve", answers: { security_clearance: "SC" } });
   });
 });

@@ -1,30 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BriefcaseBusiness, CalendarClock, ChevronRight, RotateCcw } from "lucide-react";
 import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage";
-import { canMoveStatus, newWorkspaceId } from "@/lib/workspace/engine";
+import { getSupabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { resetWorkspace, updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { ApplicationRecord, ApplicationStatus } from "@/lib/workspace/types";
 
-const STATUS_OPTIONS: ApplicationStatus[] = [
-  "draft",
-  "needs_review",
-  "ready",
-  "applied",
-  "viewed",
-  "replied",
-  "interview",
-  "offer",
-  "rejected",
-  "withdrawn",
-  "failed",
-  "skipped",
-];
-
 const PIPELINE: Array<{ id: ApplicationStatus; label: string }> = [
-  { id: "needs_review", label: "Needs review" },
+  { id: "needs_review", label: "Needs you" },
   { id: "ready", label: "Ready" },
   { id: "applied", label: "Applied" },
   { id: "replied", label: "Replied" },
@@ -34,26 +20,6 @@ const PIPELINE: Array<{ id: ApplicationStatus; label: string }> = [
 
 const CLOSED_STATUSES = new Set<ApplicationStatus>(["offer", "rejected", "withdrawn", "failed", "skipped"]);
 
-function updateStatus(application: ApplicationRecord, nextStatus: ApplicationStatus): ApplicationRecord {
-  if (!canMoveStatus(application.status, nextStatus)) return application;
-  const now = new Date().toISOString();
-  return {
-    ...application,
-    status: nextStatus,
-    updatedAt: now,
-    events: [
-      ...application.events,
-      {
-        id: newWorkspaceId(),
-        applicationId: application.id,
-        type: "status_changed",
-        label: `Status changed to ${nextStatus.replaceAll("_", " ")}`,
-        createdAt: now,
-      },
-    ],
-  };
-}
-
 export function ApplicationTracker() {
   const workspace = useWorkspaceState();
   const [filter, setFilter] = useState<"active" | "all" | "closed">("active");
@@ -62,12 +28,38 @@ export function ApplicationTracker() {
     [filter, workspace.applications]
   );
 
-  const move = (applicationId: string, nextStatus: ApplicationStatus) => {
-    updateWorkspace((current) => ({
-      ...current,
-      applications: current.applications.map((application) => application.id === applicationId ? updateStatus(application, nextStatus) : application),
-    }));
-  };
+  const refreshIds = useMemo(() => workspace.applications.filter((item) => item.status === "ready" || item.status === "needs_review").slice(0, 10).map((item) => item.id), [workspace.applications]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || refreshIds.length === 0) return;
+    let active = true;
+    const refresh = async () => {
+      const { data } = await getSupabase().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token || !active) return;
+      for (const applicationId of refreshIds) {
+        const response = await fetch(`/api/applications/submission-status?applicationId=${encodeURIComponent(applicationId)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+        if (!response.ok && response.status !== 202) continue;
+        const payload = (await response.json()) as { state?: "submitted" | "processing" | "needs_user"; receipt?: ApplicationRecord["receipt"]; questions?: ApplicationRecord["questions"] };
+        if (!active || (payload.state !== "submitted" && payload.state !== "needs_user")) continue;
+        updateWorkspace((current) => ({
+          ...current,
+          applications: current.applications.map((application) => application.id !== applicationId ? application : {
+            ...application,
+            status: payload.state === "submitted" ? "applied" : "needs_review",
+            receipt: payload.receipt ?? application.receipt,
+            mode: payload.state === "submitted" ? "external_handoff" : application.mode,
+            questions: payload.questions ?? application.questions,
+            submissionApproved: payload.state === "needs_user" ? false : application.submissionApproved,
+            updatedAt: new Date().toISOString(),
+          }),
+        }));
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 20_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [refreshIds]);
 
   return (
     <WorkspacePage
@@ -103,12 +95,7 @@ export function ApplicationTracker() {
                   <p className="truncate text-sm text-slate-600">{application.job.company_name} · {application.job.location}</p>
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500"><CalendarClock size={13} /> Updated {new Date(application.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </div>
-                <div>
-                  <label htmlFor={`status-${application.id}`} className="text-xs font-bold uppercase tracking-wide text-slate-500">Move status</label>
-                  <select id={`status-${application.id}`} value={application.status} onChange={(event) => move(application.id, event.target.value as ApplicationStatus)} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-800">
-                    {STATUS_OPTIONS.map((status) => <option key={status} value={status} disabled={!canMoveStatus(application.status, status)}>{status.replaceAll("_", " ")}</option>)}
-                  </select>
-                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Live status</p><div className="mt-2"><StatusPill status={application.status} /></div><p className="mt-2 text-xs leading-5 text-slate-500">Updated automatically from the application system and recruiter inbox.</p></div>
                 <div className="flex flex-col gap-2">
                   <Link href={`/applications/new/${application.job.id}`} className="ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:border-brand-300">Review packet <ChevronRight size={15} /></Link>
                   <Link href={`/jobs/${application.job.id}`} className="ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-semibold text-brand-700 hover:bg-brand-50">Open role <ChevronRight size={15} /></Link>

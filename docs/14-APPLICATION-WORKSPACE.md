@@ -14,13 +14,13 @@ The local preview is fully exercisable without credentials and is explicitly lab
 | --- | --- | --- |
 | Dashboard and top matches | Responsive dashboard with production-shaped jobs, transparent match factors and local preview support | Live personal matches require Supabase |
 | Job feed/detail | Inside, Outside and TBC contracts with rate, location, workplace, skills and status evidence | LinkedIn/Indeed scraping is prohibited; use authorised feeds only |
-| Resume optimisation | Four-part CV score, missing keywords, conservative suggestions, verified additions, side-by-side approval, history and PDF/DOCX export | Optional AI provider is off |
+| Resume optimisation | Four-part CV score, missing keywords, automatic evidence-grounded tailoring, side-by-side review, history and PDF/DOCX export | OpenRouter is optional; the local evidence engine remains available |
 | Cover letter | Editable deterministic draft using only job facts and CV-evidenced terms | No invented achievements or outcomes |
-| Application questions | Work authorisation, availability, working-pattern and IR35 confirmations; every required answer needs explicit review | Employer-specific schemas require an ATS adapter |
-| One-click preparation and direct apply | Prepare endpoint, exact-material review, three approvals, idempotent submission queue and provider receipt | Direct apply requires a verified employer/ATS provider connection; unsupported roles remain queued inside IR35Careers |
-| Tracker | Event-based statuses with validated forward transitions and an accessible select alternative to drag-and-drop | Migration 010 requires staging RLS verification |
+| Application questions | Reusable work-authorisation, availability, workplace, relocation, transport, accommodation, employer-history and clearance answers. Known facts are reused; unknown employer questions pause in Needs you | Employer-specific schemas come from the connected application service |
+| One-click preparation and direct apply | Automatic CV preparation, one final approval, idempotent submission, resumable employer questions and a confirmed receipt | Direct apply requires a verified employer destination or supported application provider |
+| Tracker | Event-based statuses refreshed from the application service and recruiter inbox | Migration 010 requires staging RLS verification |
 | Analytics | Account-owned application funnel, response/interview/offer rates, source and status mix, weekly activity, follow-up signals and role-only CSV export | Descriptive only; no hiring prediction or third-party tracking |
-| Private email/inbox | Alias activation, inbox UI, deterministic classification, application linking and signed idempotent inbound endpoint | Requires a verified inbound domain and provider credentials |
+| Private email/inbox | A private IR35Careers application address, deterministic classification, application linking, signed idempotent inbound processing and branded customer notifications | Requires a verified inbound domain and Resend credentials |
 | Auto-apply settings | Live-role preview, match, rate, IR35, workplace, company exclusion and daily-limit rules with a persisted decision log | Discovery prepares a queue; every external submission still requires explicit approval |
 | Profile | Personal details, work authorisation, availability, clearance, limited-company details, document and forwarding defaults | Cloud sync requires Supabase migration 010 |
 | Billing | Hosted Stripe Checkout, customer portal, explicit pre-checkout consent, signed webhook ledger, account-owned entitlement updates, sandbox-safe access and a public billing/cancellation policy | Disabled until migration 011, delivered plan benefits, approved pricing and provider acceptance tests pass |
@@ -38,7 +38,7 @@ The local preview is fully exercisable without credentials and is explicitly lab
 - `contact_requests` has no public RLS policy and is written only through the server secret client.
 - Published articles require reviewed `published` state. Testimonials require both recorded consent and approval.
 - Production workspace routes fail closed when Supabase is configured but the user or migration is unavailable.
-- The inbound mail boundary requires `ENABLE_INBOUND_MAIL=true`, a SHA-256 HMAC signature, a known private alias and a unique provider message ID.
+- The inbound mail boundary requires `ENABLE_INBOUND_MAIL=true`, a valid Svix signature from Resend, a known private alias and a unique provider message ID.
 - `application_submissions` is a server-written, owner-readable queue with payload hashes, provider receipts and per-application idempotency.
 
 ## Provider gates
@@ -52,8 +52,8 @@ The local preview is fully exercisable without credentials and is explicitly lab
 ### Ready for provider sandbox credentials
 
 - ATS submission gateway: set the three `APPLICATION_SUBMISSION_PROVIDER_*` values only after the provider accepts the JSON contract, honours idempotency, returns receipts and passes a sandbox employer flow. Unsupported roles remain queued in IR35Careers while disabled; the UI does not send users away or claim submission.
-- Inbound email: verify `INBOUND_EMAIL_DOMAIN`, connect the normalised signed webhook and set the provider/signing values. Personal-email forwarding remains off until outbound delivery is separately verified.
-- Generative AI: not required. Any future provider must pass structured-output, redaction, grounding, injection and cost controls.
+- Inbound email: verify `INBOUND_EMAIL_DOMAIN`, connect the signed webhook and set the provider values. Important application messages are delivered to the account email and retained in the private inbox.
+- Generative AI: add `OPENROUTER_API_KEY` only as a server-side Vercel value. Structured output, identifier redaction, evidence grounding, prompt-injection boundaries and rate controls remain enforced.
 
 ## Local verification path
 
@@ -61,7 +61,7 @@ The local preview is fully exercisable without credentials and is explicitly lab
 2. Choose **Prepare application**.
 3. Load the labelled sample CV and prepare the packet.
 4. Review the cover letter and each screening answer.
-5. Complete all three approvals and create the dry-run receipt.
+5. Confirm the final packet once and create the dry-run receipt.
 6. Confirm the handoff remains queued inside IR35Careers when no provider is configured, with no external navigation and no false submitted state.
 7. Open **Applications**, **Inbox**, **Automation**, **Network** and **Profile** from the workspace navigation.
 

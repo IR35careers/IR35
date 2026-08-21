@@ -140,7 +140,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setApplication(null);
       setAiResult(null);
       setSelectedSuggestionIds([]);
-      setNotice(`${payload.filename || file.name} is ready to analyse.`);
+      await prepare(payload.text, payload.filename || file.name);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "We could not read that CV.");
     } finally {
@@ -148,7 +148,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
-  const prepare = async () => {
+  const prepare = async (inputCv = cvText, inputFilename = cvFilename) => {
     setBusy("prepare");
     setError(null);
     setNotice(null);
@@ -161,15 +161,47 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         body: JSON.stringify({
           job,
           profile: workspace.profile ?? SAMPLE_CONTRACTOR_PROFILE,
-          cvText,
-          resumeVersionLabel: cvFilename || workspace.profile.defaultCvLabel || "Application CV",
+          cvText: inputCv,
+          resumeVersionLabel: inputFilename || workspace.profile.defaultCvLabel || "Application CV",
         }),
       });
       const payload = (await response.json()) as { application?: ApplicationRecord; error?: string };
       if (!response.ok || !payload.application) throw new Error(payload.error ?? "Could not analyse this CV.");
-      setApplication(payload.application);
-      persistApplication(payload.application);
-      setNotice("Baseline match ready. Your original CV has not been changed.");
+      let prepared = payload.application;
+      let tailoringNotice = "Your role match is ready. Review the application details before submitting.";
+      try {
+        const token = await sessionToken();
+        const tailoringResponse = await fetch("/api/applications/tailor", {
+          method: "POST",
+          headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ cvText: prepared.sourceCvText, job }),
+        });
+        const tailoringPayload = (await tailoringResponse.json()) as { result?: AiTailoringResult; error?: string };
+        if (!tailoringResponse.ok || !tailoringPayload.result) throw new Error(tailoringPayload.error ?? "Tailoring could not be completed.");
+        const result = tailoringPayload.result;
+        const tailoredCvText = applyAiTailoringSuggestions(prepared.sourceCvText, result.suggestions);
+        const score = scoreResumeForRole(tailoredCvText, job, prepared.resumeVersionLabel);
+        const candidateName = resolveCandidateName(workspace.profile.fullName, prepared.sourceCvText);
+        prepared = {
+          ...prepared,
+          tailoredCvText,
+          coverLetter: result.coverLetter && candidateName ? normaliseCoverLetterSignoff(result.coverLetter, candidateName) : prepared.coverLetter,
+          matchScore: score.overall,
+          matchedKeywords: score.matchedKeywords,
+          missingKeywords: score.missingKeywords,
+        };
+        setAiResult(result);
+        setSelectedSuggestionIds(result.suggestions.map((suggestion) => suggestion.id));
+        setUseAiCoverLetter(Boolean(result.coverLetter));
+        tailoringNotice = result.suggestions.length > 0
+          ? `${result.suggestions.length} evidence-based CV improvements were applied for this role. Review them before submitting.`
+          : "Your CV was checked against the role. No safe wording changes were needed.";
+      } catch {
+        tailoringNotice = "Your role match is ready. Enhanced tailoring was unavailable, so no unsupported changes were made.";
+      }
+      setApplication(prepared);
+      persistApplication(prepared);
+      setNotice(tailoringNotice);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not analyse this CV.");
     } finally {
@@ -285,9 +317,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ applicationId: application.id, approval: "SUBMIT_APPROVED_APPLICATION" }),
       });
-      let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user"; message?: string; error?: string };
+      let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string };
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
+          const needsUserApplication: ApplicationRecord = { ...application, status: "needs_review", questions: payload.questions ?? application.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
+          setApplication(needsUserApplication);
+          persistApplication(needsUserApplication);
           setNotice(payload.message || "One answer needs your attention before this application can be sent.");
           return;
         }
@@ -296,6 +331,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           const statusResponse = await fetch(`/api/applications/submission-status?applicationId=${encodeURIComponent(application.id)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
           payload = (await statusResponse.json()) as typeof payload;
           if (payload.state === "needs_user") {
+            const needsUserApplication: ApplicationRecord = { ...application, status: "needs_review", questions: payload.questions ?? application.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
+            setApplication(needsUserApplication);
+            persistApplication(needsUserApplication);
             setNotice(payload.message || "One answer needs your attention before this application can be sent.");
             return;
           }
@@ -361,7 +399,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               <label className="ir35-focus mt-5 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center hover:border-brand-400 hover:bg-brand-50/40"><input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" onChange={parseCvFile} className="sr-only" /><Upload size={22} className="text-brand-700" /><span className="mt-2 text-sm font-bold text-slate-900">{busy === "parse" ? "Reading your CV…" : "Choose CV file"}</span><span className="mt-1 text-xs text-slate-500">or paste the extracted text below</span></label>
               <div className="mt-4 flex items-center justify-between gap-3"><label htmlFor="application-cv" className="text-sm font-semibold text-slate-900">CV text</label>{showDemoTools && <button type="button" onClick={() => { setCvText(SAMPLE_CV_TEXT); setCvFilename("Platform Engineering CV v4"); }} className="text-xs font-semibold text-brand-700">Load labelled sample CV</button>}</div>
               <textarea id="application-cv" value={cvText} onChange={(event) => setCvText(event.target.value)} rows={12} maxLength={80_000} placeholder="Paste your CV here…" className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800" />
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-slate-500">{cvFilename || `${cvText.length.toLocaleString("en-GB")} characters`} · You can review the extracted text before continuing.</p><button type="button" onClick={prepare} disabled={!cvReady || busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40">{busy === "prepare" ? <Loader2 className="animate-spin" size={17} /> : <ArrowRight size={17} />} Analyse role fit</button></div>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-slate-500">{cvFilename || `${cvText.length.toLocaleString("en-GB")} characters`} · You can review the extracted text before continuing.</p><button type="button" onClick={() => void prepare()} disabled={!cvReady || busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40">{busy === "prepare" ? <Loader2 className="animate-spin" size={17} /> : <ArrowRight size={17} />} Prepare application</button></div>
             </section>
           ) : (
             <>
@@ -371,9 +409,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </section>
 
               <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
-                <div className="border-b border-slate-200 p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Sparkles size={19} /></span><div><h2 className="font-semibold text-slate-950">Improve your CV for this role</h2><p className="mt-1 text-sm leading-6 text-slate-600">Get evidence-based wording suggestions from your CV and the job description. Nothing changes until you approve it.</p></div></div></div>
+                <div className="border-b border-slate-200 p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Sparkles size={19} /></span><div><h2 className="font-semibold text-slate-950">CV tailored for this role</h2><p className="mt-1 text-sm leading-6 text-slate-600">Evidence-based improvements are applied during preparation. Review the comparison and adjust anything before submitting.</p></div></div></div>
                 <div className="p-5 sm:p-6">
-                  <button type="button" onClick={runAiTailoring} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-40">{busy === "ai" ? <Loader2 className="animate-spin" size={17} /> : <Sparkles size={17} />} Suggest improvements</button>
+                  <button type="button" onClick={runAiTailoring} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-40">{busy === "ai" ? <Loader2 className="animate-spin" size={17} /> : <Sparkles size={17} />} Refresh tailoring</button>
                   <p className="mt-3 text-xs leading-5 text-slate-500">Review every suggestion before applying it. <Link href="/ai-disclosure" target="_blank" className="font-semibold text-brand-700 underline">How tailoring works</Link></p>
 
                   {aiResult && <div className="mt-6 border-t border-slate-200 pt-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-wide text-violet-700">Compare before approving</p><h3 className="mt-1 text-lg font-semibold text-slate-950">{aiResult.suggestions.length} suggested edits</h3><p className="mt-1 text-sm text-slate-600">Selected preview: {application.matchScore}% → {selectedScore}%</p></div><label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={useAiCoverLetter} onChange={(event) => setUseAiCoverLetter(event.target.checked)} className="h-5 w-5 accent-violet-700" /> Use AI cover-letter draft</label></div>

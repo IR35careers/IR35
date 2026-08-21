@@ -53,6 +53,8 @@ describe("application workspace engine", () => {
     expect(application.coverLetter).toContain("AWS");
     expect(application.coverLetter).not.toContain("experience with AWS and Kubernetes");
     expect(application.status).toBe("needs_review");
+    expect(application.questions.length).toBeGreaterThan(8);
+    expect(application.questions.find((question) => question.id === "right-to-work")).toMatchObject({ answer: "Yes", reviewed: true });
   });
 
   it("uses the CV name when an old generic contractor label is stored", () => {

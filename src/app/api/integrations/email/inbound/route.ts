@@ -8,12 +8,21 @@ import {
   verifyResendWebhook,
 } from "@/lib/email/resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { sendApplicationNotification, type ApplicationNotificationKind } from "@/lib/email/application-notifications";
 import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
-import type { ApplicationRecord } from "@/lib/workspace/types";
+import type { ApplicationRecord, ApplicationStatus, InboxClassification } from "@/lib/workspace/types";
 
 export const runtime = "nodejs";
 
 const RESPONSE_HEADERS = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+
+function messageTransition(classification: InboxClassification, current: ApplicationStatus): { status: ApplicationStatus; label: string; notification: ApplicationNotificationKind } {
+  if (classification === "interview") return { status: "interview", label: "Interview message received", notification: "interview" };
+  if (classification === "rejection") return { status: "rejected", label: "Employer closed the application", notification: "rejection" };
+  if (classification === "action_required") return { status: "needs_review", label: "Recruiter needs more information", notification: "needs_attention" };
+  if (classification === "application_update") return { status: current === "applied" ? "viewed" : current, label: "Application update received", notification: "update" };
+  return { status: ["interview", "offer", "rejected", "withdrawn"].includes(current) ? current : "replied", label: "Recruiter message received", notification: "reply" };
+}
 
 export async function POST(request: Request) {
   if (process.env.ENABLE_INBOUND_MAIL !== "true") {
@@ -64,7 +73,7 @@ export async function POST(request: Request) {
     const admin = getSupabaseAdmin();
     const { data: aliasRows, error: aliasError } = await admin
       .from("inbox_aliases")
-      .select("user_id, alias")
+      .select("user_id, alias, forwarding_email, forwarding_enabled")
       .in("alias", eventRecipients)
       .limit(1);
     if (aliasError) throw new Error(aliasError.message);
@@ -80,9 +89,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Required received-email fields are missing." }, { status: 400, headers: RESPONSE_HEADERS });
     }
 
+    const { data: existingMessage, error: duplicateError } = await admin.from("inbox_messages")
+      .select("id")
+      .eq("user_id", alias.user_id)
+      .eq("provider_message_id", payload.providerMessageId)
+      .maybeSingle();
+    if (duplicateError) throw new Error(duplicateError.message);
+    if (existingMessage) return NextResponse.json({ accepted: true, duplicate: true }, { status: 200, headers: RESPONSE_HEADERS });
+
     const { data: packetRows, error: packetError } = await admin
       .from("application_packets")
-      .select("id, job_snapshot")
+      .select("id, job_snapshot, status")
       .eq("user_id", alias.user_id)
       .order("updated_at", { ascending: false })
       .limit(100);
@@ -106,16 +123,33 @@ export async function POST(request: Request) {
     if (messageError) throw new Error(messageError.message);
 
     if (applicationId) {
-      const nextStatus = classification === "interview" ? "interview" : "replied";
-      await admin.from("application_packets").update({ status: nextStatus, updated_at: new Date().toISOString() }).eq("id", applicationId).eq("user_id", alias.user_id);
+      const linkedPacket = (packetRows ?? []).find((row) => String(row.id) === applicationId);
+      const currentStatus = (linkedPacket?.status ?? "applied") as ApplicationStatus;
+      const transition = messageTransition(classification, currentStatus);
+      await admin.from("application_packets").update({ status: transition.status, updated_at: new Date().toISOString() }).eq("id", applicationId).eq("user_id", alias.user_id);
       await admin.from("application_events").upsert({
         user_id: alias.user_id,
         application_id: applicationId,
         event_type: "message_received",
-        label: classification === "interview" ? "Interview message received" : "Recruiter message received",
+        label: transition.label,
         metadata: { classification, providerMessageId: payload.providerMessageId, webhookId: webhookHeaders.id },
         idempotency_key: `mail:${payload.providerMessageId}`,
       }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true });
+
+      const job = linkedPacket?.job_snapshot as ApplicationRecord["job"] | undefined;
+      if (job && alias.forwarding_enabled && alias.forwarding_email) {
+        await sendApplicationNotification({
+          kind: transition.notification,
+          to: String(alias.forwarding_email),
+          jobTitle: job.title,
+          companyName: job.company_name,
+          applicationId,
+          originalSubject: payload.subject,
+          originalMessage: payload.text,
+          replyTo: payload.sender,
+          idempotencyKey: `mail:${payload.providerMessageId}`,
+        }).catch(() => null);
+      }
     }
 
     return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId) }, { status: 200, headers: RESPONSE_HEADERS });

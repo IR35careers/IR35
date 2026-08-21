@@ -39,6 +39,8 @@ interface TsentaErrorEnvelope {
   error?: { code?: string; message?: string } | string;
 }
 
+type ProviderQuestion = Record<string, unknown>;
+
 export function submissionProviderConfig(): SubmissionProviderConfig | null {
   if (process.env.ENABLE_APPLICATION_SUBMISSION?.toLowerCase() !== "true") return null;
 
@@ -66,6 +68,42 @@ export function submissionProviderConfig(): SubmissionProviderConfig | null {
 
 function clean(value: string | undefined): string {
   return (value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function questionList(review: unknown): unknown[] {
+  if (Array.isArray(review)) return review;
+  if (!review || typeof review !== "object") return [];
+  const record = review as Record<string, unknown>;
+  for (const key of ["questions", "fields", "required_fields", "items"]) {
+    if (Array.isArray(record[key])) return record[key] as unknown[];
+  }
+  return Object.keys(record).some((key) => ["id", "key", "name", "label", "question", "prompt"].includes(key)) ? [record] : [];
+}
+
+function questionText(record: ProviderQuestion, keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return clean(value).slice(0, 500);
+  }
+  return "";
+}
+
+/** Converts provider review payloads into the same owner-reviewed questions used by the workspace. */
+export function providerReviewQuestions(review: unknown): ApplicationQuestion[] {
+  return questionList(review).map((item, index) => {
+    const record: ProviderQuestion = item && typeof item === "object" ? item as ProviderQuestion : { question: String(item ?? "") };
+    const rawId = questionText(record, ["id", "question_id", "key", "name", "field"]);
+    const label = questionText(record, ["label", "question", "prompt", "title", "name"]) || `Employer question ${index + 1}`;
+    const answer = questionText(record, ["answer", "value", "default_value"]);
+    return {
+      id: `provider:${rawId || `question_${index + 1}`}`,
+      label,
+      answer,
+      required: record.required !== false,
+      source: "user" as const,
+      reviewed: Boolean(answer),
+    };
+  }).filter((question, index, questions) => question.label.length > 0 && questions.findIndex((item) => item.id === question.id) === index);
 }
 
 function requiredCandidateFields(candidate: ContractorProfile, resumeUrl?: string): string[] {
@@ -232,5 +270,30 @@ export async function checkSubmissionWithProvider(providerSubmissionId: string):
     throw new Error("Application status is not available from the configured service.");
   }
   const application = await tsentaRequest<TsentaApplication>(config, `applications/${encodeURIComponent(providerSubmissionId)}`);
+  return tsentaReceipt(application, providerSubmissionId);
+}
+
+export async function resumeSubmissionWithProvider(
+  providerSubmissionId: string,
+  questions: ApplicationQuestion[],
+): Promise<SubmissionProviderReceipt> {
+  const config = submissionProviderConfig();
+  if (!config || config.kind !== "tsenta") {
+    throw new Error("Application review is not available from the configured service.");
+  }
+  const answers = Object.fromEntries(
+    questions
+      .filter((question) => question.id.startsWith("provider:") && question.reviewed && question.answer.trim())
+      .map((question) => [question.id.slice("provider:".length), question.answer.trim()]),
+  );
+  if (Object.keys(answers).length === 0) throw new Error("Answer the employer question before continuing.");
+  let application = await tsentaRequest<TsentaApplication>(config, `applications/${encodeURIComponent(providerSubmissionId)}/review`, {
+    method: "POST",
+    body: JSON.stringify({ action: "approve", answers }),
+  });
+  for (let attempt = 0; attempt < 20 && (application.status === "queued" || application.status === "running"); attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    application = await tsentaRequest<TsentaApplication>(config, `applications/${encodeURIComponent(providerSubmissionId)}`);
+  }
   return tsentaReceipt(application, providerSubmissionId);
 }

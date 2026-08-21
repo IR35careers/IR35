@@ -77,46 +77,75 @@ export function buildScreeningQuestions(
   job: JobDetail,
   profile: ContractorProfile
 ): ApplicationQuestion[] {
+  const yesNo = (id: string, label: string, value: boolean | null | undefined): ApplicationQuestion => ({
+    id,
+    label,
+    answer: value === true ? "Yes" : value === false ? "No" : "",
+    required: true,
+    source: value === null || value === undefined ? "user" : "profile",
+    reviewed: value !== null && value !== undefined,
+  });
+  const rightToWorkAnswer = profile.rightToWork === "yes"
+    ? "Yes"
+    : profile.rightToWork === "needs_sponsorship"
+      ? "I require sponsorship"
+      : profile.rightToWork === "no"
+        ? "No"
+        : "";
+  const availability = cleanLine(profile.availability || profile.noticePeriod, 160);
+  const workingPattern = job.remote_type === "remote"
+    ? { answer: "Yes", reviewed: true, source: "job" as const }
+    : profile.canWorkInPerson === null || profile.canWorkInPerson === undefined
+      ? { answer: "", reviewed: false, source: "user" as const }
+      : { answer: profile.canWorkInPerson ? "Yes" : "No", reviewed: true, source: "profile" as const };
   return [
     {
       id: "right-to-work",
       label: "Do you have the right to work in the UK?",
-      answer:
-        profile.rightToWork === "yes"
-          ? "Yes"
-          : profile.rightToWork === "needs_sponsorship"
-            ? "I require sponsorship"
-            : profile.rightToWork === "no"
-              ? "No"
-              : "Prefer not to say",
+      answer: rightToWorkAnswer,
       required: true,
-      source: "profile",
-      reviewed: false,
+      source: rightToWorkAnswer ? "profile" : "user",
+      reviewed: Boolean(rightToWorkAnswer),
     },
     {
       id: "availability",
       label: "When are you available to start?",
-      answer: cleanLine(profile.availability || profile.noticePeriod, 160),
+      answer: availability,
       required: true,
-      source: "profile",
-      reviewed: false,
+      source: availability ? "profile" : "user",
+      reviewed: Boolean(availability),
     },
     {
       id: "location",
       label: `Can you meet the advertised ${job.remote_type} working pattern in ${cleanLine(job.location)}?`,
-      answer: "Please confirm before handoff",
+      answer: workingPattern.answer,
       required: true,
-      source: "user",
-      reviewed: false,
+      source: workingPattern.source,
+      reviewed: workingPattern.reviewed,
     },
     {
       id: "ir35",
-      label: "Have you reviewed the advertised IR35 status and working practices?",
-      answer: job.ir35_status === "unknown" ? "Status needs clarification" : "Please confirm before handoff",
+      label: "What IR35 status is advertised for this role?",
+      answer: job.ir35_status === "outside" ? "Outside IR35" : job.ir35_status === "inside" ? "Inside IR35" : "",
       required: true,
       source: "job",
-      reviewed: false,
+      reviewed: job.ir35_status !== "unknown",
     },
+    {
+      id: "sponsorship",
+      label: "Will you now or in the future require work sponsorship?",
+      answer: profile.rightToWork === "needs_sponsorship" ? "Yes" : profile.rightToWork === "yes" || profile.rightToWork === "no" ? "No" : "",
+      required: true,
+      source: profile.rightToWork === "prefer_not_to_say" ? "user" : "profile",
+      reviewed: profile.rightToWork !== "prefer_not_to_say",
+    },
+    yesNo("over-18", "Are you at least 18 years old?", profile.isOver18),
+    yesNo("relocation", "Are you willing to relocate if the role requires it?", profile.canRelocate),
+    yesNo("transport", "Do you have reliable transport when travel is required?", profile.hasTransportation),
+    yesNo("accommodation", "Do you need a workplace adjustment or accommodation?", profile.needsAccommodation),
+    yesNo("previous-employer", `Have you previously worked for ${cleanLine(job.company_name)}?`, profile.workedForCompanyBefore),
+    yesNo("government-clearance", "Do you currently hold government security clearance?", profile.hasGovernmentClearance),
+    yesNo("government-ties", "Do you have any current government employment or contractual ties to declare?", profile.hasGovernmentTies),
   ];
 }
 

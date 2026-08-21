@@ -68,6 +68,7 @@ export function WorkspacePage({
 }
 
 export function StatusPill({ status }: { status: string }) {
+  const label = status === "needs_review" ? "Needs you" : status.replaceAll("_", " ");
   const style =
     status === "offer" || status === "interview" || status === "ready"
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
@@ -78,5 +79,5 @@ export function StatusPill({ status }: { status: string }) {
           : status === "applied" || status === "viewed" || status === "replied"
             ? "border-blue-200 bg-blue-50 text-blue-700"
             : "border-slate-200 bg-slate-50 text-slate-600";
-  return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${style}`}>{status.replaceAll("_", " ")}</span>;
+  return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${style}`}>{label}</span>;
 }

@@ -57,9 +57,9 @@ export function RecruiterInbox() {
       const token = data.session?.access_token;
       if (!token) throw new Error("Sign in again to activate your inbox.");
       const response = await fetch("/api/integrations/email/alias", { method: "POST", headers: { authorization: `Bearer ${token}` } });
-      const payload = (await response.json()) as { alias?: string; forwardingEmail?: string; error?: string };
+      const payload = (await response.json()) as { alias?: string; forwardingEmail?: string; forwardingEnabled?: boolean; error?: string };
       if (!response.ok || !payload.alias) throw new Error(payload.error ?? "The inbox could not be activated.");
-      updateWorkspace((current) => ({ ...current, inbox: { ...current.inbox, alias: payload.alias as string, forwardingEmail: payload.forwardingEmail ?? current.inbox.forwardingEmail, forwardingEnabled: false, providerState: "connected" } }));
+      updateWorkspace((current) => ({ ...current, inbox: { ...current.inbox, alias: payload.alias as string, forwardingEmail: payload.forwardingEmail ?? current.inbox.forwardingEmail, forwardingEnabled: payload.forwardingEnabled ?? true, providerState: "connected" } }));
       setNotice("Your private recruiter address is ready.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The inbox could not be activated.");
@@ -93,7 +93,7 @@ export function RecruiterInbox() {
 
             <div className="mt-5 border-t border-slate-100 pt-5">
               {emailState === "connected" && !hasAlias && <button type="button" onClick={() => void activateInbox()} disabled={activating} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50">{activating ? <Loader2 className="animate-spin" size={16} /> : <MailCheck size={16} />} Activate private inbox</button>}
-              {(hasAlias || emailState === "preview") && <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium text-slate-800">Use this address on applications</p><p className="mt-1 text-xs leading-5 text-slate-500">Messages appear here. Personal-email forwarding stays off until outbound delivery is separately verified.</p></div><button type="button" onClick={() => void copyAlias()} className="ir35-focus inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:bg-brand-50">{notice === "Private address copied." ? <Check size={15} /> : <Copy size={15} />} Copy address</button></div>}
+              {(hasAlias || emailState === "preview") && <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium text-slate-800">Used automatically on supported applications</p><p className="mt-1 text-xs leading-5 text-slate-500">Recruiter messages appear here and important updates are also sent to your account email.</p></div><button type="button" onClick={() => void copyAlias()} className="ir35-focus inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:bg-brand-50">{notice === "Private address copied." ? <Check size={15} /> : <Copy size={15} />} Copy address</button></div>}
               {(emailState === "gated" || emailState === "error") && <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"><p className="font-semibold">Email setup is incomplete</p><p className="mt-1 leading-6">Connect a verified inbound domain, signed webhook and delivery provider before users can activate an address.</p></div>}
               {notice && <p className="mt-3 text-sm font-medium text-brand-800" role="status">{notice}</p>}
             </div>
