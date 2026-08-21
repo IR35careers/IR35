@@ -699,7 +699,12 @@ export default function AdminPage() {
         return;
       }
       if (!response.ok) throw new Error(json.error ?? "Stale application attempts could not be recovered");
-      setNotice(`${json.recovered ?? 0} stale application attempt${json.recovered === 1 ? "" : "s"} recovered. Contractors can retry safely.`);
+      const recovered = json.recovered ?? 0;
+      setNotice(
+        recovered > 0
+          ? `${recovered} stale application attempt${recovered === 1 ? "" : "s"} recovered. Contractors can retry safely.`
+          : "No stale application attempts were found.",
+      );
       await load("analytics");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Stale application attempts could not be recovered");

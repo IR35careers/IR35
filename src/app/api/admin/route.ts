@@ -593,7 +593,6 @@ export async function POST(request: Request): Promise<Response> {
         .from("application_submissions")
         .select("id, user_id, application_id, updated_at")
         .eq("status", "processing")
-        .is("provider_submission_id", null)
         .or("error_code.is.null,error_code.neq.needs_user")
         .lt("updated_at", cutoff)
         .limit(500);

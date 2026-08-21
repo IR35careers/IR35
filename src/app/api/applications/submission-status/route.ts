@@ -41,17 +41,17 @@ export async function GET(request: Request): Promise<Response> {
     if (!submission || !packet) return Response.json({ error: "Application progress was not found." }, { status: 404, headers: NO_STORE });
     if (submission.status === "succeeded" && submission.receipt) return Response.json({ state: "submitted", receipt: submission.receipt }, { headers: NO_STORE });
     if (submission.status === "failed") return Response.json({ state: "failed", error: "The employer form could not be completed. Your approved materials are still saved." }, { status: 409, headers: NO_STORE });
+    if (submission.error_code !== "needs_user" && isStaleSubmissionLock(submission.updated_at)) {
+      const now = new Date().toISOString();
+      const [{ error: updateError }, { error: eventError }] = await Promise.all([
+        admin.from("application_submissions").update({ status: "failed", error_code: "stale_processing", receipt: { state: "failed", message: "The previous runner stopped before employer confirmation." }, updated_at: now }).eq("application_id", applicationId).eq("user_id", userId),
+        admin.from("application_events").upsert({ user_id: userId, application_id: applicationId, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", idempotency_key: `submit:${applicationId}:stale:${String(submission.updated_at)}` }, { onConflict: "user_id,idempotency_key" }),
+      ]);
+      if (updateError || eventError) throw new Error(updateError?.message || eventError?.message);
+      return Response.json({ state: "failed", error: "The previous application attempt stopped before employer confirmation. Your approved materials are safe. Select Apply again to retry." }, { status: 409, headers: NO_STORE });
+    }
     if (!submission.provider_submission_id) {
       const stored = submission.receipt as { message?: string; action?: string } | null;
-      if (submission.error_code !== "needs_user" && isStaleSubmissionLock(submission.updated_at)) {
-        const now = new Date().toISOString();
-        const [{ error: updateError }, { error: eventError }] = await Promise.all([
-          admin.from("application_submissions").update({ status: "failed", error_code: "stale_processing", receipt: { state: "failed", message: "The previous runner stopped before employer confirmation." }, updated_at: now }).eq("application_id", applicationId).eq("user_id", userId),
-          admin.from("application_events").upsert({ user_id: userId, application_id: applicationId, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", idempotency_key: `submit:${applicationId}:stale:${String(submission.updated_at)}` }, { onConflict: "user_id,idempotency_key" }),
-        ]);
-        if (updateError || eventError) throw new Error(updateError?.message || eventError?.message);
-        return Response.json({ state: "failed", error: "The previous application attempt stopped before employer confirmation. Your approved materials are safe. Select Apply again to retry." }, { status: 409, headers: NO_STORE });
-      }
       return Response.json({
         state: submission.error_code === "needs_user" ? "needs_user" : "processing",
         message: stored?.message || "Application is being prepared.",
