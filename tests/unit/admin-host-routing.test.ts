@@ -18,4 +18,20 @@ describe("admin host routing", () => {
     const response = proxy(request);
     expect(response.headers.get("x-middleware-rewrite")).toBeNull();
   });
+
+  it("serves a clean login path on the dedicated admin host", () => {
+    const request = new NextRequest("https://admin.ir35careers.com/login", {
+      headers: { host: "admin.ir35careers.com" },
+    });
+    const response = proxy(request);
+    expect(response.headers.get("x-middleware-rewrite")).toBe("https://admin.ir35careers.com/admin/login");
+  });
+
+  it("moves the legacy public admin path to the dedicated host", () => {
+    const request = new NextRequest("https://www.ir35careers.com/admin", {
+      headers: { host: "www.ir35careers.com" },
+    });
+    const response = proxy(request);
+    expect(response.headers.get("location")).toBe("https://admin.ir35careers.com/");
+  });
 });

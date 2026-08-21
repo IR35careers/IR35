@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const ADMIN_HOST = "admin.ir35careers.com";
+const PUBLIC_HOSTS = new Set(["ir35careers.com", "www.ir35careers.com"]);
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host")?.split(":")[0].toLowerCase();
-  if (host === ADMIN_HOST && request.nextUrl.pathname === "/") {
-    return NextResponse.rewrite(new URL("/admin", request.url));
+  const pathname = request.nextUrl.pathname;
+
+  if (host === ADMIN_HOST) {
+    if (pathname === "/") return NextResponse.rewrite(new URL("/admin", request.url));
+    if (pathname === "/login") return NextResponse.rewrite(new URL("/admin/login", request.url));
+    if (pathname === "/admin") return NextResponse.redirect(new URL("/", request.url));
+    if (pathname === "/admin/login") return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (host && PUBLIC_HOSTS.has(host)) {
+    if (pathname === "/admin") return NextResponse.redirect(`https://${ADMIN_HOST}/`);
+    if (pathname === "/admin/login") return NextResponse.redirect(`https://${ADMIN_HOST}/login`);
   }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/"],
+  matcher: ["/", "/login", "/admin", "/admin/login"],
 };
