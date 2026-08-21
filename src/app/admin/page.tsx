@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowRight,
+  BarChart3,
   BriefcaseBusiness,
   CheckCircle2,
   ChevronRight,
@@ -40,7 +41,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
 import { supabase } from "@/lib/supabase";
 
-type Section = "stats" | "jobs" | "users" | "campaigns" | "waitlist" | "runs";
+type Section = "stats" | "analytics" | "jobs" | "users" | "campaigns" | "waitlist" | "runs";
 
 type JobRow = {
   id: string;
@@ -100,6 +101,26 @@ type CampaignHistoryRow = {
   } | null;
 };
 
+type AnalyticsData = {
+  totalUsers: number;
+  activeUsers7d: number;
+  newUsers30d: number;
+  profiles: number;
+  cvsUploaded: number;
+  savedJobs: number;
+  alerts: number;
+  resumeVersions: number;
+  applicationPackets: number;
+  submissions: number;
+  inboxMessages: number;
+  signupSeries: Array<{ date: string; label: string; count: number }>;
+  applicationStages: Record<string, number>;
+  submissionStages: Record<string, number>;
+  campaignsSent: number;
+  campaignAccepted: number;
+  campaignFailed: number;
+};
+
 type AdminData = {
   totalUsers?: number | null;
   profiles?: number;
@@ -122,6 +143,7 @@ type AdminData = {
   campaignHistory?: CampaignHistoryRow[];
   sender?: string | null;
   deliveryConfigured?: boolean;
+  analytics?: AnalyticsData;
 };
 
 const NAV_GROUPS: Array<{
@@ -132,6 +154,7 @@ const NAV_GROUPS: Array<{
     label: "Workspace",
     items: [
       { id: "stats", label: "Dashboard", icon: LayoutDashboard },
+      { id: "analytics", label: "Analytics", icon: BarChart3 },
       { id: "jobs", label: "Job inventory", icon: BriefcaseBusiness },
       { id: "users", label: "Contractors", icon: Users },
     ],
@@ -154,6 +177,11 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     eyebrow: "Operations centre",
     title: "Business dashboard",
     description: "Monitor contractor growth, job quality and the health of your ingestion pipeline.",
+  },
+  analytics: {
+    eyebrow: "Growth intelligence",
+    title: "Product analytics",
+    description: "Understand acquisition, activation, application progress and campaign delivery without exposing personal data.",
   },
   jobs: {
     eyebrow: "Content operations",
@@ -352,7 +380,7 @@ export default function AdminPage() {
         if (saved.draft?.subject && saved.draft?.message && saved.campaignId) {
           setEmailDraft(saved.draft);
           setCampaignId(saved.campaignId);
-          if (["registered", "waitlist", "all", "custom"].includes(saved.audience ?? "")) setCampaignAudience(saved.audience as CampaignAudience);
+          if (["registered", "registered_with_cv", "registered_without_cv", "inactive_30d", "waitlist", "all", "custom"].includes(saved.audience ?? "")) setCampaignAudience(saved.audience as CampaignAudience);
           setCustomRecipient(saved.customRecipient ?? "");
           setDraftSavedAt(new Date().toISOString());
           return;
@@ -592,11 +620,11 @@ export default function AdminPage() {
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin access required</h1>
           <p className="mt-3 text-sm leading-6 text-slate-400">Only approved IR35Careers administrator accounts can create a short-lived admin session.</p>
           {user ? (
-            <button type="button" onClick={() => void lockAndSignOut("/account?next=/admin")} className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+            <button type="button" onClick={() => void lockAndSignOut("/admin/login")} className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
               Try a different account <ArrowRight size={15} />
             </button>
           ) : (
-            <Link href="/account?next=/admin" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+            <Link href="/admin/login" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
               Continue to sign in <ArrowRight size={15} />
             </Link>
           )}
@@ -615,7 +643,7 @@ export default function AdminPage() {
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">Short-lived secure session</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Unlock administration</h1>
           <p className="mt-3 text-sm leading-6 text-slate-400">Your account will be verified on the server before a protected, HttpOnly admin session is opened for 20 minutes.</p>
-          <p className="mt-5 rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3 text-xs text-slate-400">Signed in as <span className="font-semibold text-slate-200">{user?.email}</span></p>
+          <p className="mt-5 rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3 text-xs text-slate-400"><span className="block font-semibold text-slate-200">admin.ir35careers</span><span className="mt-1 block truncate">{user?.email}</span></p>
           {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
           <button type="button" onClick={() => void unlockAdmin()} disabled={unlocking} className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
             {unlocking ? <Loader2 className="animate-spin" size={16} /> : <LockKeyhole size={16} />} {unlocking ? "Verifying account…" : "Unlock for 20 minutes"}
@@ -672,7 +700,7 @@ export default function AdminPage() {
       <div className="border-t border-white/[0.07] p-4">
         <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-slate-300"><UserRound size={16} /></span>
-          <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-white">Administrator</p><p className="truncate text-[11px] text-slate-500">{user?.email}</p></div>
+          <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-white">admin.ir35careers</p><p className="truncate text-[11px] text-slate-500">{user?.email}</p></div>
           <button type="button" onClick={() => void lockAndSignOut()} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="Lock admin and sign out"><LogOut size={15} /></button>
         </div>
       </div>
@@ -717,6 +745,8 @@ export default function AdminPage() {
             </div>
           ) : section === "stats" && data ? (
             <Overview data={data} query={normalisedQuery} onNavigate={navigate} />
+          ) : section === "analytics" && data?.analytics ? (
+            <AnalyticsPanel analytics={data.analytics} />
           ) : section === "jobs" && data ? (
             <JobsPanel jobs={jobs} total={(data.jobs ?? []).length} query={normalisedQuery} expiringId={expiringId} onExpire={expireJob} />
           ) : section === "users" && data ? (
@@ -839,6 +869,83 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   );
 }
 
+function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
+  const cvRate = analytics.profiles > 0 ? Math.round((analytics.cvsUploaded / analytics.profiles) * 100) : 0;
+  const activeRate = analytics.totalUsers > 0 ? Math.round((analytics.activeUsers7d / analytics.totalUsers) * 100) : 0;
+  const submissionRate = analytics.applicationPackets > 0 ? Math.round((analytics.submissions / analytics.applicationPackets) * 100) : 0;
+  const maxSignups = Math.max(...analytics.signupSeries.map((day) => day.count), 1);
+  const funnel = [
+    { label: "Accounts", value: analytics.totalUsers, tone: "bg-slate-950" },
+    { label: "Profiles", value: analytics.profiles, tone: "bg-emerald-700" },
+    { label: "CVs", value: analytics.cvsUploaded, tone: "bg-emerald-500" },
+    { label: "Applications", value: analytics.applicationPackets, tone: "bg-cyan-500" },
+    { label: "Submissions", value: analytics.submissions, tone: "bg-blue-500" },
+  ];
+  const applicationStages = Object.entries(analytics.applicationStages).sort((a, b) => b[1] - a[1]);
+  const stageMax = Math.max(...applicationStages.map(([, count]) => count), 1);
+  const campaignTotal = analytics.campaignAccepted + analytics.campaignFailed;
+  const deliveryRate = campaignTotal > 0 ? Math.round((analytics.campaignAccepted / campaignTotal) * 100) : 100;
+  const cards = [
+    { label: "Contractors", value: analytics.totalUsers, detail: `+${formatNumber(analytics.newUsers30d)} in the last 30 days`, icon: Users, tone: "bg-blue-50 text-blue-700" },
+    { label: "Active this week", value: analytics.activeUsers7d, detail: `${activeRate}% of all accounts`, icon: Activity, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "CV readiness", value: `${cvRate}%`, detail: `${formatNumber(analytics.cvsUploaded)} uploaded CVs`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700" },
+    { label: "Submission progress", value: `${submissionRate}%`, detail: `${formatNumber(analytics.submissions)} submission records`, icon: Send, tone: "bg-amber-50 text-amber-700" },
+  ];
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"><div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><TrendingUp size={16} className="text-slate-300" /></div><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{typeof card.value === "number" ? formatNumber(card.value) : card.value}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.85fr]">
+        <Panel title="New contractor accounts" description="Daily registrations over the last 14 days" action={<span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-500">Live</span>}>
+          <div className="p-5 sm:p-6">
+            <div className="flex h-64 items-end gap-1.5 sm:gap-2" aria-label="Fourteen-day signup chart">
+              {analytics.signupSeries.map((day) => <div key={day.date} className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[10px] font-semibold tabular-nums text-slate-500 opacity-0 transition group-hover:opacity-100">{day.count}</span><div className="w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition group-hover:from-emerald-700" style={{ height: `${Math.max((day.count / maxSignups) * 178, day.count ? 12 : 3)}px` }} title={`${day.label}: ${day.count} registrations`} /><span className="truncate text-[9px] text-slate-400 [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{day.label}</span></div>)}
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="Engagement signals" description="Actions that show contractor intent">
+          <dl className="divide-y divide-slate-100 px-5 sm:px-6">
+            {[
+              ["Saved jobs", analytics.savedJobs, "Roles contractors want to revisit"],
+              ["Active alerts", analytics.alerts, "Automated role discovery"],
+              ["CV versions", analytics.resumeVersions, "Prepared application documents"],
+              ["Recruiter messages", analytics.inboxMessages, "Responses received in workspace"],
+            ].map(([label, value, detail]) => <div key={String(label)} className="flex items-center justify-between gap-4 py-4"><div><dt className="text-sm font-semibold text-slate-900">{label}</dt><p className="mt-1 text-xs text-slate-500">{detail}</p></div><dd className="text-xl font-semibold tabular-nums text-slate-950">{formatNumber(Number(value))}</dd></div>)}
+          </dl>
+        </Panel>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <Panel title="Contractor activation funnel" description="From registration to a recorded employer submission">
+          <div className="space-y-4 p-5 sm:p-6">
+            {funnel.map((step, index) => {
+              const width = analytics.totalUsers > 0 ? Math.max((step.value / analytics.totalUsers) * 100, step.value ? 8 : 1) : 1;
+              const previous = index > 0 ? funnel[index - 1].value : step.value;
+              const conversion = previous > 0 ? Math.round((step.value / previous) * 100) : 0;
+              return <div key={step.label}><div className="mb-2 flex items-center justify-between gap-4 text-xs"><span className="font-semibold text-slate-700">{step.label}</span><span className="text-slate-500"><strong className="text-slate-950">{formatNumber(step.value)}</strong>{index > 0 ? ` · ${conversion}% from previous` : ""}</span></div><div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${step.tone}`} style={{ width: `${width}%` }} /></div></div>;
+            })}
+          </div>
+        </Panel>
+
+        <Panel title="Application stages" description="Current packet status distribution">
+          {applicationStages.length ? <div className="space-y-4 p-5 sm:p-6">{applicationStages.map(([status, count]) => <div key={status}><div className="mb-2 flex items-center justify-between text-xs"><span className="font-semibold capitalize text-slate-700">{status.replaceAll("_", " ")}</span><span className="font-semibold tabular-nums text-slate-950">{formatNumber(count)}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-slate-800" style={{ width: `${(count / stageMax) * 100}%` }} /></div></div>)}</div> : <EmptyState title="No application activity yet" detail="Application stages will appear as contractors prepare and submit packets." />}
+        </Panel>
+      </div>
+
+      <Panel title="Communication delivery" description="Accepted and failed recipients across administrator campaigns">
+        <div className="grid gap-4 p-5 sm:grid-cols-4 sm:p-6">
+          <div className="rounded-2xl bg-slate-950 p-5 text-white sm:col-span-2"><p className="text-xs font-semibold text-slate-400">Provider acceptance rate</p><p className="mt-3 text-4xl font-semibold tracking-[-0.05em]">{deliveryRate}%</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-emerald-400" style={{ width: `${deliveryRate}%` }} /></div></div>
+          {[ ["Campaigns sent", analytics.campaignsSent], ["Recipients accepted", analytics.campaignAccepted] ].map(([label, value]) => <div key={String(label)} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-3 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(Number(value))}</p><p className="mt-2 text-[11px] text-slate-500">{label === "Campaigns sent" ? `${formatNumber(analytics.campaignFailed)} failed recipients` : "Recorded by the delivery provider"}</p></div>)}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
 function JobsPanel({ jobs, total, query, expiringId, onExpire }: { jobs: JobRow[]; total: number; query: string; expiringId: string | null; onExpire: (job: JobRow) => void }) {
   return (
     <div className="mt-7">
@@ -902,9 +1009,21 @@ function EmailCampaignsPanel({
   const [reviewOpen, setReviewOpen] = useState(false);
   const templates = (data.emailTemplates ?? []).filter((template) => !query || [template.name, template.description, template.subject].some((value) => value.toLowerCase().includes(query)));
   const history = (data.campaignHistory ?? []).filter((entry) => !query || JSON.stringify(entry.summary).toLowerCase().includes(query));
-  const counts = data.audienceCounts ?? { registered: 0, waitlist: 0, all: 0, custom: 1 };
+  const counts = data.audienceCounts ?? { registered: 0, registered_with_cv: 0, registered_without_cv: 0, inactive_30d: 0, waitlist: 0, all: 0, custom: 1 };
   const recipientCount = audience === "custom" ? 1 : counts[audience];
-  const audienceLabel = audience === "registered" ? "Registered contractors" : audience === "waitlist" ? "Former waitlist" : audience === "all" ? "All unique contacts" : customRecipient || "Single address";
+  const audienceLabel = audience === "registered"
+    ? "Registered contractors"
+    : audience === "registered_with_cv"
+      ? "Contractors with a CV"
+      : audience === "registered_without_cv"
+        ? "Contractors without a CV"
+        : audience === "inactive_30d"
+          ? "Inactive for 30 days"
+          : audience === "waitlist"
+            ? "Former waitlist"
+            : audience === "all"
+              ? "All unique contacts"
+              : customRecipient || "Single address";
   const qualityChecks = draft ? [
     { label: "Clear subject", passed: draft.subject.length >= 20 && draft.subject.length <= 70 },
     { label: "Useful preview text", passed: draft.preheader.length >= 30 && draft.preheader.length <= 140 },
@@ -946,6 +1065,9 @@ function EmailCampaignsPanel({
                 <label className="text-xs font-semibold text-slate-700">Audience
                   <select value={audience} onChange={(event) => onAudienceChange(event.target.value as CampaignAudience)} className={fieldClass}>
                     <option value="registered">Registered contractors ({counts.registered})</option>
+                    <option value="registered_with_cv">Contractors with a CV ({counts.registered_with_cv})</option>
+                    <option value="registered_without_cv">Contractors without a CV ({counts.registered_without_cv})</option>
+                    <option value="inactive_30d">Inactive for 30 days ({counts.inactive_30d})</option>
                     <option value="waitlist">Former waitlist ({counts.waitlist})</option>
                     <option value="all">All unique contacts ({counts.all})</option>
                     <option value="custom">Single address</option>

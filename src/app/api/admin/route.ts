@@ -1,5 +1,5 @@
 /**
- * Admin API: GET /api/admin?section=stats|users|waitlist|campaigns|jobs|runs
+ * Admin API: GET /api/admin?section=stats|analytics|users|waitlist|campaigns|jobs|runs
  *            POST /api/admin  { action: "expire_job", jobId }
  *                              { action: "send_beta_launch", confirmation }
  *                              { action: "preview_email_campaign", draft }
@@ -32,7 +32,15 @@ export const dynamic = "force-dynamic";
 const LAUNCH_CONFIRMATION = "SEND_BETA_ACCESS_2026_08_21";
 const CAMPAIGN_CONFIRMATION = "SEND_EMAIL_CAMPAIGN";
 
-type CampaignRecipient = { email: string; name?: string | null };
+type CampaignRecipient = {
+  email: string;
+  name?: string | null;
+  userId?: string;
+  createdAt?: string;
+  lastSignInAt?: string | null;
+};
+
+type CampaignAudienceSets = Record<Exclude<CampaignAudience, "custom">, CampaignRecipient[]>;
 
 function validCampaignEmail(value: unknown): value is string {
   return typeof value === "string"
@@ -51,6 +59,36 @@ function uniqueRecipients(recipients: CampaignRecipient[]): CampaignRecipient[] 
   });
 }
 
+async function loadCampaignAudienceSets(client: ReturnType<typeof getSupabaseAdmin>): Promise<CampaignAudienceSets> {
+  const users = await listAllUsers(client);
+  const registered = users.flatMap((user) => user.email ? [{
+    email: user.email,
+    name: String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim() || null,
+    userId: user.id,
+    createdAt: user.created_at,
+    lastSignInAt: user.last_sign_in_at,
+  }] : []);
+  const userIds = users.map((user) => user.id);
+  const [profilesResult, waitlistResult] = await Promise.all([
+    client.from("profiles").select("id, cv_path").in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]),
+    client.from("waitlist").select("email").order("created_at", { ascending: true }),
+  ]);
+  if (profilesResult.error) throw profilesResult.error;
+  if (waitlistResult.error) throw waitlistResult.error;
+  const cvUserIds = new Set((profilesResult.data ?? []).filter((profile) => profile.cv_path).map((profile) => profile.id));
+  const waitlist = (waitlistResult.data ?? []).flatMap((row) => validCampaignEmail(row.email) ? [{ email: row.email }] : []);
+  const inactiveThreshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const cleanRegistered = uniqueRecipients(registered);
+  return {
+    registered: cleanRegistered,
+    registered_with_cv: cleanRegistered.filter((recipient) => recipient.userId && cvUserIds.has(recipient.userId)),
+    registered_without_cv: cleanRegistered.filter((recipient) => !recipient.userId || !cvUserIds.has(recipient.userId)),
+    inactive_30d: cleanRegistered.filter((recipient) => new Date(recipient.lastSignInAt || recipient.createdAt || 0).getTime() < inactiveThreshold),
+    waitlist: uniqueRecipients(waitlist),
+    all: uniqueRecipients([...cleanRegistered, ...waitlist]),
+  };
+}
+
 async function resolveCampaignAudience(
   client: ReturnType<typeof getSupabaseAdmin>,
   audience: CampaignAudience,
@@ -60,17 +98,8 @@ async function resolveCampaignAudience(
     if (!validCampaignEmail(customEmail)) throw new Error("Enter a valid recipient email address.");
     return [{ email: customEmail.trim().toLowerCase() }];
   }
-
-  const registered = (await listAllUsers(client)).flatMap((user) => user.email ? [{
-    email: user.email,
-    name: String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim() || null,
-  }] : []);
-  if (audience === "registered") return uniqueRecipients(registered);
-
-  const waitlistResult = await client.from("waitlist").select("email").order("created_at", { ascending: true });
-  if (waitlistResult.error) throw waitlistResult.error;
-  const waitlist = (waitlistResult.data ?? []).flatMap((row) => validCampaignEmail(row.email) ? [{ email: row.email }] : []);
-  return uniqueRecipients(audience === "waitlist" ? waitlist : [...registered, ...waitlist]);
+  const sets = await loadCampaignAudienceSets(client);
+  return sets[audience];
 }
 
 function campaignAudienceReason(audience: CampaignAudience): string {
@@ -205,6 +234,83 @@ export async function GET(request: Request): Promise<Response> {
       });
     }
 
+    if (section === "analytics") {
+      const users = await listAllUsers(supabase);
+      const [
+        profilesResult,
+        cvsResult,
+        savedJobsResult,
+        alertsResult,
+        resumeVersionsResult,
+        packetsResult,
+        submissionsResult,
+        messagesResult,
+        campaignsResult,
+      ] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).not("cv_path", "is", null),
+        supabase.from("saved_jobs").select("id", { count: "exact", head: true }),
+        supabase.from("job_alerts").select("id", { count: "exact", head: true }),
+        supabase.from("resume_versions").select("id", { count: "exact", head: true }),
+        supabase.from("application_packets").select("status").limit(5000),
+        supabase.from("application_submissions").select("status").limit(5000),
+        supabase.from("inbox_messages").select("id", { count: "exact", head: true }),
+        supabase.from("moderation_logs").select("summary, created_at").eq("run_type", "email_campaign").order("created_at", { ascending: false }).limit(500),
+      ]);
+
+      const now = Date.now();
+      const signupCounts = new Map<string, number>();
+      const signupSeries = Array.from({ length: 14 }, (_, index) => {
+        const date = new Date(now - (13 - index) * 24 * 60 * 60 * 1000);
+        const key = date.toISOString().slice(0, 10);
+        signupCounts.set(key, 0);
+        return { date: key, label: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(date), count: 0 };
+      });
+      for (const user of users) {
+        const key = user.created_at?.slice(0, 10);
+        if (key && signupCounts.has(key)) signupCounts.set(key, (signupCounts.get(key) ?? 0) + 1);
+      }
+      for (const day of signupSeries) day.count = signupCounts.get(day.date) ?? 0;
+
+      const applicationStages = (packetsResult.data ?? []).reduce<Record<string, number>>((stages, packet) => {
+        const status = String(packet.status || "draft");
+        stages[status] = (stages[status] ?? 0) + 1;
+        return stages;
+      }, {});
+      const submissionStages = (submissionsResult.data ?? []).reduce<Record<string, number>>((stages, submission) => {
+        const status = String(submission.status || "queued");
+        stages[status] = (stages[status] ?? 0) + 1;
+        return stages;
+      }, {});
+      const campaignSends = (campaignsResult.data ?? []).filter((row) => row.summary?.action === "send");
+      const campaignAccepted = campaignSends.reduce((total, row) => total + Number(row.summary?.sent ?? 0), 0);
+      const campaignFailed = campaignSends.reduce((total, row) => total + Number(row.summary?.failed ?? 0), 0);
+      const activeThreshold = now - 7 * 24 * 60 * 60 * 1000;
+      const newUserThreshold = now - 30 * 24 * 60 * 60 * 1000;
+
+      return Response.json({
+        analytics: {
+          totalUsers: users.length,
+          activeUsers7d: users.filter((user) => new Date(user.last_sign_in_at || 0).getTime() >= activeThreshold).length,
+          newUsers30d: users.filter((user) => new Date(user.created_at || 0).getTime() >= newUserThreshold).length,
+          profiles: profilesResult.count ?? 0,
+          cvsUploaded: cvsResult.count ?? 0,
+          savedJobs: savedJobsResult.count ?? 0,
+          alerts: alertsResult.count ?? 0,
+          resumeVersions: resumeVersionsResult.count ?? 0,
+          applicationPackets: packetsResult.data?.length ?? 0,
+          submissions: submissionsResult.data?.length ?? 0,
+          inboxMessages: messagesResult.count ?? 0,
+          signupSeries,
+          applicationStages,
+          submissionStages,
+          campaignsSent: campaignSends.length,
+          campaignAccepted,
+          campaignFailed,
+        },
+      });
+    }
+
     if (section === "users") {
       const usersRes = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });
       const ids = (usersRes.data?.users ?? []).map((u) => u.id);
@@ -234,9 +340,8 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (section === "campaigns") {
-      const [registered, waitlist, historyResult] = await Promise.all([
-        resolveCampaignAudience(supabase, "registered"),
-        resolveCampaignAudience(supabase, "waitlist"),
+      const [audiences, historyResult] = await Promise.all([
+        loadCampaignAudienceSets(supabase),
         supabase
           .from("moderation_logs")
           .select("id, summary, created_at")
@@ -245,14 +350,16 @@ export async function GET(request: Request): Promise<Response> {
           .limit(20),
       ]);
       if (historyResult.error) throw historyResult.error;
-      const combined = uniqueRecipients([...registered, ...waitlist]);
       const emailConfig = transactionalEmailConfig();
       return Response.json({
         emailTemplates: emailCampaignTemplates,
         audienceCounts: {
-          registered: registered.length,
-          waitlist: waitlist.length,
-          all: combined.length,
+          registered: audiences.registered.length,
+          registered_with_cv: audiences.registered_with_cv.length,
+          registered_without_cv: audiences.registered_without_cv.length,
+          inactive_30d: audiences.inactive_30d.length,
+          waitlist: audiences.waitlist.length,
+          all: audiences.all.length,
           custom: 1,
         },
         campaignHistory: historyResult.data ?? [],
@@ -367,7 +474,7 @@ export async function POST(request: Request): Promise<Response> {
       if (!body.campaignId || !/^[0-9a-f-]{36}$/i.test(body.campaignId)) {
         return Response.json({ error: "A valid campaign identifier is required." }, { status: 400 });
       }
-      const audience: CampaignAudience = ["registered", "waitlist", "all", "custom"].includes(body.audience ?? "")
+      const audience: CampaignAudience = ["registered", "registered_with_cv", "registered_without_cv", "inactive_30d", "waitlist", "all", "custom"].includes(body.audience ?? "")
         ? body.audience as CampaignAudience
         : "registered";
       const emailConfig = transactionalEmailConfig();

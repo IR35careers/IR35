@@ -14,7 +14,14 @@ const BRAND = {
 const DEFAULT_SITE_URL = "https://www.ir35careers.com";
 const DEFAULT_LOGO_URL = `${DEFAULT_SITE_URL}/images/generated/brand/ir35careers-mark-256.png`;
 
-export type CampaignAudience = "registered" | "waitlist" | "all" | "custom";
+export type CampaignAudience =
+  | "registered"
+  | "registered_with_cv"
+  | "registered_without_cv"
+  | "inactive_30d"
+  | "waitlist"
+  | "all"
+  | "custom";
 
 export interface EmailCampaignDraft {
   templateId: string;
