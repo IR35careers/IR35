@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  mergeManagedSourceDefaults,
   normaliseManagedSources,
   removeManagedSource,
   setManagedSourceEnabled,
@@ -49,5 +50,20 @@ describe("free ATS source registry", () => {
     expect(removeManagedSource([existing], existing.id)).toEqual([]);
     expect(() => removeManagedSource([{ ...existing, builtIn: true }], existing.id)).toThrow(/switched off/i);
   });
-});
 
+  it("adds newly shipped starter boards without re-enabling an existing paused board", () => {
+    const stored = [{ ...existing, builtIn: true, enabled: false }];
+    const newStarter: ManagedJobSource = {
+      ...existing,
+      id: "greenhouse:new-starter",
+      name: "New Starter",
+      slug: "new-starter",
+      builtIn: true,
+      enabled: true,
+    };
+    const merged = mergeManagedSourceDefaults(stored, [{ ...existing, builtIn: true }, newStarter]);
+    expect(merged).toHaveLength(2);
+    expect(merged.find((source) => source.id === existing.id)?.enabled).toBe(false);
+    expect(merged.find((source) => source.id === newStarter.id)).toMatchObject({ builtIn: true, enabled: true });
+  });
+});

@@ -46,6 +46,12 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "GoCardless", type: "greenhouse", slug: "gocardless" },
   { name: "Trustpilot", type: "greenhouse", slug: "trustpilot" },
   { name: "Form3", type: "greenhouse", slug: "form3" },
+  { name: "TwinStream", type: "greenhouse", slug: "twinstream" },
+  { name: "Adaptive Financial Consulting", type: "greenhouse", slug: "adaptivefinancialconsulting" },
+  { name: "PlayStation Global", type: "greenhouse", slug: "sonyinteractiveentertainmentglobal" },
+  { name: "Liquid Personnel", type: "greenhouse", slug: "liquidpersonnel" },
+  { name: "Capco", type: "greenhouse", slug: "capco" },
+  { name: "WongDoody", type: "greenhouse", slug: "wongdoody" },
 
   // Lever (verified working)
   { name: "Octopus Energy", type: "lever", slug: "octoenergy" },
@@ -58,6 +64,7 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   // Workable (verified working)
   { name: "Blockchain.com", type: "workable", slug: "blockchain" },
   { name: "Starling Bank", type: "workable", slug: "starling" },
+  { name: "Focus Group", type: "workable", slug: "focus-group" },
 ];
 
 const FETCHERS = {

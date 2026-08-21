@@ -65,6 +65,18 @@ function defaultSources(now = new Date().toISOString()): ManagedJobSource[] {
   });
 }
 
+export function mergeManagedSourceDefaults(
+  stored: ManagedJobSource[],
+  defaults: ManagedJobSource[] = defaultSources()
+): ManagedJobSource[] {
+  const defaultIds = new Set(defaults.map((source) => source.id));
+  const merged = stored.map((source) => defaultIds.has(source.id) ? { ...source, builtIn: true } : source);
+  for (const source of defaults) {
+    if (!merged.some((item) => item.id === source.id)) merged.push(source);
+  }
+  return normaliseManagedSources(merged);
+}
+
 function parseStoredSource(value: unknown): ManagedJobSource | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
@@ -152,7 +164,7 @@ export async function loadManagedJobSources(
     .maybeSingle();
   if (result.error) throw new Error(`Unable to load the free source registry: ${result.error.message}`);
   const stored = normaliseManagedSources(result.data?.summary?.sources);
-  return stored.length ? stored : defaultSources();
+  return mergeManagedSourceDefaults(stored);
 }
 
 export async function saveManagedJobSources(
