@@ -1,5 +1,0 @@
-Contact: https://www.ir35careers.com/contact
-Canonical: https://www.ir35careers.com/.well-known/security.txt
-Policy: https://www.ir35careers.com/security
-Preferred-Languages: en
-Expires: 2027-08-21T00:00:00.000Z

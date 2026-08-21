@@ -22,7 +22,7 @@ Security is an ongoing risk-management process. This audit does not claim that a
 | High | Users could write their own private recruiter inbox alias through browser database access | A user could alter a server-assigned mail identity or forwarding destination | Browser code no longer writes aliases. Migration 016 changes the table to owner-read-only and revokes authenticated insert, update and delete privileges | Code fixed; production migration pending |
 | Medium | Several endpoints trusted `Content-Length` without bounding streamed bytes | Requests without an accurate header could consume excessive memory or parser work | Shared bounded readers now enforce the actual streamed byte count for JSON, text and multipart bodies and return 413 for oversized requests | Fixed |
 | Medium | Public and expensive endpoints lacked consistent abuse throttling | Automated abuse could consume parsing, AI, email or database capacity | Privacy-hashed per-client and per-user rate limits were added to job preview, contact, resume parse/export, application preparation and recruiter email | Fixed |
-| Medium | The service worker could cache broad same-origin static or image responses under an old cache version | Private or user-specific responses with an image/static destination could persist on a shared browser | Cache scope is limited to versioned Next.js static files and `/images/`; the cache version was rotated | Fixed |
+| Medium | The service worker could cache broad same-origin static or image responses under an old cache version | Private or user-specific responses with an image/static destination could persist on a shared browser | Cache scope is limited to versioned Next.js static files and `/images/`; the cache version was rotated, and activation no longer forces a disruptive page reload | Fixed |
 | Medium | Sign-out retained CV and workspace data in local browser storage | A later user of the same browser profile could see private local data | Sign-out, cross-tab sign-out and account-identity changes now clear workspace, CV and administrator draft state | Fixed |
 | Medium | Account deletion enumerated only the first storage level | Nested CV objects could remain after account deletion | Deletion now recursively inventories the private user folder with depth and file-count safety limits before removal | Fixed |
 | Medium | CSV exports did not neutralise spreadsheet formulas | Opening an export could execute attacker-controlled spreadsheet formulas | Cells beginning with `=`, `+`, `-`, `@`, tabs or carriage returns are prefixed safely | Fixed |
@@ -30,7 +30,6 @@ Security is an ongoing risk-management process. This audit does not claim that a
 | Low | Privacy hashing could fall back to a static value | Identifiers in operational logs could be guessable across environments | HMAC hashing now requires a deployment secret in production | Fixed |
 | Low | Pipeline cron secret used ordinary string comparison | Comparison was not timing-safe | Secret comparison now uses a fixed-length cryptographic timing-safe comparison | Fixed |
 | Low | Provider error details could reach the recruiter email caller | Internal provider details could be disclosed | The endpoint now returns a generic failure and is rate-limited | Fixed |
-| Low | No standard vulnerability-disclosure discovery file | Researchers had no standard machine-readable contact path | A `.well-known/security.txt` file now points to the contact and security policy pages | Fixed |
 
 ## Controls verified as already present
 
@@ -42,6 +41,7 @@ Security is an ongoing risk-management process. This audit does not claim that a
 - Application status is marked Applied only after a positive employer/ATS confirmation signal.
 - CAPTCHA, login and verification challenges are not bypassed; the application moves to Needs You.
 - CV parsing and export enforce supported formats and bounded file sizes.
+- A standard `.well-known/security.txt` route publishes the responsible-disclosure policy.
 - The OpenRouter mapper receives only the candidate evidence needed for the task and requests zero-data-retention/no-collection provider handling. OpenRouter is not permitted to authorise or confirm a job submission.
 - No production secrets are exposed to client bundles through `NEXT_PUBLIC_*` variables.
 
