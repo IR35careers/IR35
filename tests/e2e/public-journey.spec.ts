@@ -388,9 +388,10 @@ test("application workspace presents a clean review flow and never claims an unc
     await checkboxes.nth(index).check();
   }
 
+  await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
   await page.getByRole("button", { name: "Save application" }).click();
   await expect(page.getByText("Reviewed packet saved. It has not been sent to the employer.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Your work is saved" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Application access needs checking" })).toBeVisible();
   await expect(page.getByText(/OpenRouter|browser-automation gateway|authorised Ashby/i)).toHaveCount(0);
   await expect(page.getByText("Employer submission confirmed")).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
