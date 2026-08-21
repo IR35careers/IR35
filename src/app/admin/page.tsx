@@ -221,13 +221,13 @@ async function adminFetch(path: string, init?: RequestInit) {
 }
 
 function formatNumber(value: number | null | undefined) {
-  return typeof value === "number" ? new Intl.NumberFormat("en-GB").format(value) : "—";
+  return typeof value === "number" ? new Intl.NumberFormat("en-GB").format(value) : "Not available";
 }
 
 function formatDate(value?: string | null, includeTime = false) {
-  if (!value) return "—";
+  if (!value) return "Not available";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "Not available";
   return new Intl.DateTimeFormat("en-GB", includeTime
     ? { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
     : { day: "2-digit", month: "short", year: "numeric" }
@@ -251,7 +251,7 @@ function formatRate(job: JobRow) {
   const suffix = job.rate_type === "day" ? "/day" : job.rate_type === "hour" ? "/hr" : job.rate_type ? `/${job.rate_type}` : "";
   const formatter = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
   if (job.rate_min && job.rate_max && job.rate_min !== job.rate_max) {
-    return `${formatter.format(job.rate_min)}–${formatter.format(job.rate_max)}${suffix}`;
+    return `${formatter.format(job.rate_min)} - ${formatter.format(job.rate_max)}${suffix}`;
   }
   return `${formatter.format(job.rate_max ?? job.rate_min ?? 0)}${suffix}`;
 }

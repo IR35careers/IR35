@@ -29,9 +29,8 @@ export async function POST(request: Request) {
 
     const { error } = await getSupabaseAdmin().from("contact_requests").insert({ name, email, company, message });
     if (error) throw new Error(error.message);
-    return NextResponse.json({ accepted: true, preview: false, message: "Thanks—your enquiry has been received." }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ accepted: true, preview: false, message: "Thanks, your enquiry has been received." }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "We could not save your enquiry. Please try again." }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
 }
-

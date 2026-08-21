@@ -28,7 +28,7 @@ export default function MobilePage() {
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-700">Installable contractor workspace</p>
               <h1 className="mt-3 text-4xl font-bold tracking-[-0.05em] sm:text-5xl lg:text-6xl">Your IR35 contract search, ready on any screen.</h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">Install IR35Careers from a supported browser for a standalone app window. It uses the same account and review-first workflows as the web—without pretending to be a native store app.</p>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">Install IR35Careers from a supported browser for a standalone app window. It uses the same account and review-first workflows as the website without pretending to be a native store app.</p>
               <div className="mt-7 flex flex-wrap gap-3"><Link href="/jobs" className={buttonClassName({ size: "lg" })}>Browse contracts</Link><Link href="/dashboard" className={buttonClassName({ variant: "secondary", size: "lg" })}>Open workspace</Link></div>
             </div>
             <aside className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/15 sm:p-8">

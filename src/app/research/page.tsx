@@ -6,7 +6,7 @@ import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 export const metadata: Metadata = { title: "Contractor research" };
 
 const ARTICLES = [
-  { title: "Inside or Outside IR35: what the advertised label does—and does not—prove", category: "IR35 evidence", summary: "How to separate an advert claim from the client’s status determination and actual working practices.", reviewed: "19 August 2026" },
+  { title: "Inside or Outside IR35: what the advertised label does and does not prove", category: "IR35 evidence", summary: "How to separate an advert claim from the client’s status determination and actual working practices.", reviewed: "19 August 2026" },
   { title: "A contractor’s application evidence checklist", category: "Applications", summary: "The facts to confirm before a CV, cover letter or screening answer leaves your workspace.", reviewed: "19 August 2026" },
   { title: "Day rates, umbrella deductions and take-home comparisons", category: "Rates", summary: "A practical way to compare opportunities without treating an estimate as tax advice.", reviewed: "19 August 2026" },
 ];
