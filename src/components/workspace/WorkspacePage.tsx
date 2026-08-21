@@ -8,6 +8,7 @@ import { AppNav } from "@/components/AppNav";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspaceCloudSync } from "@/lib/workspace/store";
+import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 
 export function WorkspacePage({
   title,
@@ -27,13 +28,14 @@ export function WorkspacePage({
   const configured = isSupabaseConfigured();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const cloud = useWorkspaceCloudSync(configured ? user?.id ?? null : null, user?.email ?? "");
+  const administratorRedirect = useContractorPortalBoundary(user?.email, authLoading);
+  const cloud = useWorkspaceCloudSync(configured && !administratorRedirect ? user?.id ?? null : null, user?.email ?? "");
 
   useEffect(() => {
-    if (configured && !authLoading && !user) router.replace(`/account?next=${encodeURIComponent(window.location.pathname)}`);
-  }, [authLoading, configured, router, user]);
+    if (configured && !administratorRedirect && !authLoading && !user) router.replace(`/account?next=${encodeURIComponent(window.location.pathname)}`);
+  }, [administratorRedirect, authLoading, configured, router, user]);
 
-  if (configured && (authLoading || !user || cloud.loading)) {
+  if (configured && (administratorRedirect || authLoading || !user || cloud.loading)) {
     return <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500" aria-busy="true"><Loader2 className="animate-spin" size={22} /><span className="sr-only">Loading your private workspace</span></main>;
   }
 

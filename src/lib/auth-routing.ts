@@ -20,7 +20,6 @@ const RESUMABLE_DESTINATIONS = [
   "/research",
   "/billing",
   "/settings",
-  "/admin",
 ] as const;
 
 function isResumablePath(pathname: string): boolean {

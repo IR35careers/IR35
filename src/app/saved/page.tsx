@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { formatRate, formatPosted, type JobListing } from "@/lib/job-types";
 import { AppNav } from "@/components/AppNav";
+import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 
 type Row = { status: string; job: JobListing };
 
@@ -21,13 +22,14 @@ export default function SavedJobsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(true);
   const [filter, setFilter] = useState<"all" | "saved" | "applied">("all");
+  const administratorRedirect = useContractorPortalBoundary(user?.email, loading);
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/account?next=/saved");
-  }, [user, loading, router]);
+    if (!administratorRedirect && !loading && !user) router.replace("/account?next=/saved");
+  }, [administratorRedirect, user, loading, router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || administratorRedirect) return;
     supabase
       .from("saved_jobs")
       .select("status, jobs(id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at)")
@@ -37,9 +39,9 @@ export default function SavedJobsPage() {
         setRows((data ?? []).filter((r) => r.jobs).map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing })));
         setBusy(false);
       });
-  }, [user]);
+  }, [administratorRedirect, user]);
 
-  if (loading || !user) {
+  if (administratorRedirect || loading || !user) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />

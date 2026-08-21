@@ -12,6 +12,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { resolvePostAuthPath } from "@/lib/auth-routing";
+import { isAdministratorEmail } from "@/lib/portal-access";
 
 interface AuthResult {
   error: string | null;
@@ -26,6 +27,7 @@ interface AuthContextValue {
   signUpWithPassword: (email: string, password: string, next?: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   signInWithGoogle: (next?: string) => Promise<AuthResult>;
+  signInWithGoogleAdmin: () => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
@@ -95,7 +97,7 @@ function installStorageListener() {
 }
 
 function requestWelcomeEmail(session: Session | null) {
-  if (!session?.user?.id || !session.access_token || welcomeRequestedFor.has(session.user.id)) return;
+  if (!session?.user?.id || !session.access_token || isAdministratorEmail(session.user.email) || welcomeRequestedFor.has(session.user.id)) return;
   welcomeRequestedFor.add(session.user.id);
   void fetch("/api/email/welcome", {
     method: "POST",
@@ -188,6 +190,19 @@ async function signInWithGoogle(next = "/dashboard"): Promise<AuthResult> {
   return { error: error ? error.message : null };
 }
 
+async function signInWithGoogleAdmin(): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { error } = await getSupabase().auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/`,
+      queryParams: { prompt: "select_account" },
+    },
+  });
+  return { error: error ? error.message : null };
+}
+
 async function requestPasswordReset(email: string): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
@@ -222,6 +237,7 @@ export function useAuth(): AuthContextValue {
     signUpWithPassword,
     requestPasswordReset,
     signInWithGoogle,
+    signInWithGoogleAdmin,
     updatePassword,
     signOut,
   };

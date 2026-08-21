@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { validateEmail } from "@/lib/utils";
 import { Brand } from "@/components/ui/brand";
 import { resolvePostAuthPath } from "@/lib/auth-routing";
+import { authenticatedDestination } from "@/lib/portal-access";
 
 function AccountForm() {
   const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle } = useAuth();
@@ -29,7 +30,11 @@ function AccountForm() {
 
   // Already signed in → leave this page.
   useEffect(() => {
-    if (!loading && user) router.replace(next);
+    if (!loading && user) {
+      const destination = authenticatedDestination(user.email, next);
+      if (destination.startsWith("https://")) window.location.replace(destination);
+      else router.replace(destination);
+    }
   }, [user, loading, next, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +75,9 @@ function AccountForm() {
         return;
       }
 
-      router.replace(next);
+      const destination = authenticatedDestination(email, next);
+      if (destination.startsWith("https://")) window.location.replace(destination);
+      else router.replace(destination);
       return;
     }
 

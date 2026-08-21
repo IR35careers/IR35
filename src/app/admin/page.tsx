@@ -38,6 +38,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { isAdministratorEmail } from "@/lib/portal-access";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
 import { supabase } from "@/lib/supabase";
 
@@ -355,9 +356,13 @@ export default function AdminPage() {
     if (!loading && user && sessionReady) load(section);
     if (!loading && !user) {
       setBusy(false);
+      router.replace("/login");
+    }
+    if (!loading && user && !isAdministratorEmail(user.email)) {
+      setBusy(false);
       setForbidden(true);
     }
-  }, [user, loading, section, load, sessionReady]);
+  }, [user, loading, section, load, router, sessionReady]);
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -608,6 +613,14 @@ export default function AdminPage() {
     );
   }
 
+  if (!user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#0b0f17] text-slate-400">
+        <div className="flex items-center gap-3 text-sm"><Loader2 className="animate-spin text-emerald-400" size={20} /> Opening administrator sign in…</div>
+      </main>
+    );
+  }
+
   if (forbidden) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0f17] px-5 py-12 text-white">
@@ -620,15 +633,15 @@ export default function AdminPage() {
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin access required</h1>
           <p className="mt-3 text-sm leading-6 text-slate-400">Only approved IR35Careers administrator accounts can create a short-lived admin session.</p>
           {user ? (
-            <button type="button" onClick={() => void lockAndSignOut("/admin/login")} className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+            <button type="button" onClick={() => void lockAndSignOut("/login")} className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
               Try a different account <ArrowRight size={15} />
             </button>
           ) : (
-            <Link href="/admin/login" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+            <Link href="/login" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
               Continue to sign in <ArrowRight size={15} />
             </Link>
           )}
-          <Link href="/" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
+          <Link href="https://www.ir35careers.com" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
         </div>
       </main>
     );
@@ -648,7 +661,7 @@ export default function AdminPage() {
           <button type="button" onClick={() => void unlockAdmin()} disabled={unlocking} className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
             {unlocking ? <Loader2 className="animate-spin" size={16} /> : <LockKeyhole size={16} />} {unlocking ? "Verifying account…" : "Unlock for 20 minutes"}
           </button>
-          <Link href="/" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
+          <Link href="https://www.ir35careers.com" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
         </div>
       </main>
     );
@@ -721,7 +734,7 @@ export default function AdminPage() {
             <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block">/</kbd>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/" target="_blank" className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950 sm:inline-flex">View website <ExternalLink size={14} /></Link>
+            <Link href="https://www.ir35careers.com" target="_blank" className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950 sm:inline-flex">View website <ExternalLink size={14} /></Link>
             <button type="button" onClick={() => load(section)} disabled={busy} className="flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-70" aria-label="Refresh admin data"><RefreshCw size={14} className={busy ? "animate-spin" : ""} /><span className="hidden sm:inline">Refresh</span></button>
           </div>
         </header>

@@ -13,6 +13,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowLeft, FileText, Loader2, UploadCloud, CheckCircle2, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AppNav } from "@/components/AppNav";
+import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 import {
   PROFILE_SKILL_OPTIONS,
   deleteCv,
@@ -29,6 +30,7 @@ export default function OnboardingPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const administratorRedirect = useContractorPortalBoundary(user?.email, loading);
 
   const [fullName, setFullName] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -48,12 +50,12 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/account?next=/onboarding");
-  }, [user, loading, router]);
+    if (!administratorRedirect && !loading && !user) router.replace("/account?next=/onboarding");
+  }, [administratorRedirect, user, loading, router]);
 
   // Prefill from an existing profile (returning users editing their setup).
   useEffect(() => {
-    if (!user) return;
+    if (!user || administratorRedirect) return;
     getProfile(user.id).then((profile) => {
       if (!profile) return;
       setFullName(profile.full_name ?? "");
@@ -68,7 +70,7 @@ export default function OnboardingPage() {
       setPhone(profile.phone ?? "");
       setLinkedin(profile.linkedin_url ?? "");
     });
-  }, [user]);
+  }, [administratorRedirect, user]);
 
   const toggleSkill = (skill: string) => {
     setSkills((prev) =>
@@ -152,7 +154,7 @@ export default function OnboardingPage() {
     router.replace("/dashboard");
   };
 
-  if (loading || !user) {
+  if (administratorRedirect || loading || !user) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />

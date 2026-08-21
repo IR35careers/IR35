@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { AppNav } from "@/components/AppNav";
 import { getProfile, profileStrength, firstName, type Profile } from "@/lib/profile";
+import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 
 function StrengthRing({ pct }: { pct: number }) {
   const r = 34;
@@ -44,6 +45,7 @@ function StrengthRing({ pct }: { pct: number }) {
 export default function SettingsPage() {
   const { user, loading, updatePassword, signOut } = useAuth();
   const router = useRouter();
+  const administratorRedirect = useContractorPortalBoundary(user?.email, loading);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -57,16 +59,16 @@ export default function SettingsPage() {
   const [deleteEmail, setDeleteEmail] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/account?next=/settings");
-  }, [user, loading, router]);
+    if (!administratorRedirect && !loading && !user) router.replace("/account?next=/settings");
+  }, [administratorRedirect, user, loading, router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || administratorRedirect) return;
     getProfile(user.id).then((p) => {
       setProfile(p);
       setReady(true);
     });
-  }, [user]);
+  }, [administratorRedirect, user]);
 
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +137,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading || !user || !ready) {
+  if (administratorRedirect || loading || !user || !ready) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />

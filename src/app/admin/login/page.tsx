@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, KeyRound, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { isAdministratorEmail } from "@/lib/portal-access";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { user, loading, signInWithPassword, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, signInWithPassword, signInWithGoogleAdmin, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -17,26 +18,37 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) router.replace("/admin");
-  }, [loading, router, user]);
+    if (loading || !user) return;
+    if (isAdministratorEmail(user.email)) {
+      router.replace("/");
+      return;
+    }
+    setError("This Google account is not approved for IR35Careers administration.");
+    void signOut();
+  }, [loading, router, signOut, user]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
+    if (!isAdministratorEmail(email)) {
+      setError("Use the approved IR35Careers administrator account.");
+      setSubmitting(false);
+      return;
+    }
     const result = await signInWithPassword(email, password);
     if (result.error) {
       setError(result.error);
       setSubmitting(false);
       return;
     }
-    router.replace("/admin");
+    router.replace("/");
   };
 
   const google = async () => {
     setGoogleSubmitting(true);
     setError(null);
-    const result = await signInWithGoogle("/admin");
+    const result = await signInWithGoogleAdmin();
     if (result.error) {
       setError(result.error);
       setGoogleSubmitting(false);

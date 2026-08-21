@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Brand } from "@/components/ui/brand";
 import { buttonClassName } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
+import { ADMIN_PORTAL_ORIGIN, isAdministratorEmail } from "@/lib/portal-access";
 
 const NAV_ITEMS = [
   { href: "/jobs", label: "Find contracts" },
@@ -21,12 +22,14 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const preview = !isSupabaseConfigured();
+  const administrator = isAdministratorEmail(user?.email);
+  const workspaceHref = administrator ? `${ADMIN_PORTAL_ORIGIN}/` : "/dashboard";
 
   // Keep the server-rendered menu control inert until its click handler is
   // attached, so a fast tap during hydration is never silently lost.
   useEffect(() => setHydrated(true), []);
 
-  if (hideForWorkspaceMembers && (user || preview)) return null;
+  if (hideForWorkspaceMembers && ((user && !administrator) || preview)) return null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
@@ -57,10 +60,10 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
         <div className="flex items-center gap-2">
           {!loading && user && (
             <Link
-              href="/dashboard"
+              href={workspaceHref}
               className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
             >
-              <LayoutDashboard size={15} aria-hidden="true" /> Dashboard
+              <LayoutDashboard size={15} aria-hidden="true" /> {administrator ? "Admin portal" : "Dashboard"}
             </Link>
           )}
           {!user && preview && (
@@ -118,11 +121,11 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
             ))}
             {user || preview ? (
               <Link
-                href="/dashboard"
+                href={workspaceHref}
                 onClick={() => setOpen(false)}
                 className={buttonClassName({ variant: "primary", className: "mt-2 w-full" })}
               >
-                <LayoutDashboard size={16} aria-hidden="true" /> {user ? "Open dashboard" : "Open preview workspace"}
+                <LayoutDashboard size={16} aria-hidden="true" /> {administrator ? "Open admin portal" : user ? "Open dashboard" : "Open preview workspace"}
               </Link>
             ) : (
               <div className="mt-2 grid grid-cols-2 gap-2">

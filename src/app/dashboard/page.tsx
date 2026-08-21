@@ -32,6 +32,7 @@ import { useWorkspaceState } from "@/lib/workspace/store";
 import { AppNav } from "@/components/AppNav";
 import { ApplicationJourney } from "@/components/workspace/ApplicationJourney";
 import { WelcomeModal } from "@/components/WelcomeModal";
+import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 import {
   fetchMatches,
   firstName,
@@ -98,6 +99,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const workspace = useWorkspaceState();
   const preview = !isSupabaseConfigured();
+  const administratorRedirect = useContractorPortalBoundary(user?.email, loading);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [checked, setChecked] = useState(false);
@@ -108,8 +110,8 @@ export default function DashboardPage() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    if (!preview && !loading && !user) router.replace("/account?next=/dashboard");
-  }, [user, loading, router, preview]);
+    if (!preview && !administratorRedirect && !loading && !user) router.replace("/account?next=/dashboard");
+  }, [administratorRedirect, user, loading, router, preview]);
 
   useEffect(() => {
     if (preview) {
@@ -117,12 +119,12 @@ export default function DashboardPage() {
       setChecked(true);
       return;
     }
-    if (!user) return;
+    if (!user || administratorRedirect) return;
     getProfile(user.id).then((p) => {
       setProfile(p ?? starterProfile(user.id, user.email, typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : undefined));
       setChecked(true);
     });
-  }, [user, preview]);
+  }, [administratorRedirect, user, preview]);
 
   useEffect(() => {
     if (!profile || profile.skills.length === 0) return;
@@ -140,7 +142,7 @@ export default function DashboardPage() {
       setTracked(uniqueTrackedJobs(workspace.applications.map((application) => ({ status: application.status, job: application.job }))));
       return;
     }
-    if (!user) return;
+    if (!user || administratorRedirect) return;
     fetch("/api/jobs/search?per_page=1")
       .then((r) => (r.ok ? r.json() : null))
       .then((j: { total?: number } | null) => j?.total && setLiveTotal(j.total))
@@ -154,9 +156,9 @@ export default function DashboardPage() {
       .then(({ data }: { data: Array<{ status: string; jobs: unknown }> | null }) => {
         setTracked(uniqueTrackedJobs((data ?? []).filter((r) => r.jobs).map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing }))));
       });
-  }, [user, preview, workspace.applications]);
+  }, [administratorRedirect, user, preview, workspace.applications]);
 
-  if ((!preview && (loading || !user)) || !checked || (checked && !profile)) {
+  if (administratorRedirect || (!preview && (loading || !user)) || !checked || (checked && !profile)) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />
