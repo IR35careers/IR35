@@ -15,6 +15,7 @@ const PRIVATE_ROUTES = [
   "/profile/:path*",
   "/saved/:path*",
   "/settings/:path*",
+  "/testing/:path*",
 ] as const;
 
 const nextConfig: NextConfig = {
@@ -23,7 +24,14 @@ const nextConfig: NextConfig = {
   // wider home directory.
   outputFileTracingRoot: process.cwd(),
   outputFileTracingIncludes: {
-    "/api/applications/submit": ["./node_modules/@sparticuz/chromium/bin/**/*"],
+    "/api/applications/submit": [
+      "./node_modules/@sparticuz/chromium/bin/**/*",
+      "./node_modules/playwright-core/browsers.json",
+    ],
+    "/api/admin": [
+      "./node_modules/@sparticuz/chromium/bin/**/*",
+      "./node_modules/playwright-core/browsers.json",
+    ],
   },
   devIndicators: false,
   allowedDevOrigins: ["127.0.0.1"],

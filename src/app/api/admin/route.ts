@@ -1,5 +1,5 @@
 /**
- * Admin API: GET /api/admin?section=stats|analytics|users|waitlist|campaigns|jobs|runs
+ * Admin API: GET /api/admin?section=stats|analytics|users|waitlist|campaigns|jobs|runs|system
  *            POST /api/admin  { action: "expire_job", jobId }
  *                              { action: "send_beta_launch", confirmation }
  *                              { action: "preview_email_campaign", draft }
@@ -42,11 +42,15 @@ import {
   validRecruitmentEmail,
 } from "@/lib/employer-destinations";
 import { requestEmployerDestinationVerification } from "@/lib/employer-onboarding";
+import { getIntegrationStatuses } from "@/lib/integration-status";
+import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
+import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const LAUNCH_CONFIRMATION = "SEND_BETA_ACCESS_2026_08_21";
 const CAMPAIGN_CONFIRMATION = "SEND_EMAIL_CAMPAIGN";
@@ -463,6 +467,13 @@ export async function GET(request: Request): Promise<Response> {
       return Response.json({ runs: data ?? [] });
     }
 
+    if (section === "system") {
+      return Response.json({
+        integrations: getIntegrationStatuses(),
+        systemGeneratedAt: new Date().toISOString(),
+      });
+    }
+
     return Response.json({ error: "Unknown section" }, { status: 400 });
   } catch (err) {
     return Response.json(
@@ -492,6 +503,88 @@ export async function POST(request: Request): Promise<Response> {
       recruitmentEmail?: string;
       connectionId?: string;
     };
+
+    if (body.action === "test_application_runner") {
+      const testedAt = new Date().toISOString();
+      const token = createApplicationRunnerTestToken();
+      const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.ir35careers.com");
+      if (siteUrl.hostname === "admin.ir35careers.com") siteUrl.hostname = "www.ir35careers.com";
+      siteUrl.pathname = "/";
+      siteUrl.search = "";
+      siteUrl.hash = "";
+      const destination = new URL(`/testing/application-form?token=${encodeURIComponent(token)}`, siteUrl);
+      const resumeUrl = new URL(`/api/testing/application-runner-resume?token=${encodeURIComponent(token)}`, siteUrl);
+      try {
+        const { runNativeApplication } = await import("@/lib/application-runner/run");
+        const receipt = await runNativeApplication({
+          applicationId: "00000000-0000-4000-8000-000000000001",
+          destination: destination.toString(),
+          job: {
+            ...DEMO_JOBS[0],
+            title: "Platform Engineer controlled runner test",
+            company_name: "IR35Careers Test Portal",
+            apply_url: destination.toString(),
+            source_domain: siteUrl.hostname,
+          },
+          candidate: {
+            ...SAMPLE_CONTRACTOR_PROFILE,
+            fullName: "Alex Morgan",
+            email: "runner-test@mail.ir35careers.com",
+            phone: "+44 7700 900000",
+            forwardingEmail: "runner-test@ir35careers.com",
+          },
+          resume: {
+            label: "Alex Morgan CV",
+            text: "Alex Morgan, Platform Engineer. AWS, Terraform, Kubernetes and CI/CD delivery experience.",
+            url: resumeUrl.toString(),
+          },
+          coverLetter: "I am applying for this controlled Platform Engineer test. My approved evidence covers AWS, Terraform, Kubernetes and CI/CD delivery. Kind regards, Alex Morgan",
+          screeningAnswers: [
+            { label: "Are you authorised to work in the UK?", answer: "Yes", source: "user" },
+            { label: "Do you need visa sponsorship?", answer: "No", source: "user" },
+            { label: "I agree to the privacy notice", answer: "Yes", source: "user" },
+          ],
+        });
+        const checks = [
+          { label: "Portal reached", passed: true, detail: "The protected production form was opened." },
+          { label: "CV uploaded", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "The approved PDF reached the application form." : "Review the runner response for the unresolved field." },
+          { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Profile and screening answers completed both form steps." : receipt.message },
+          { label: "Confirmation captured", passed: receipt.state === "submitted", detail: receipt.state === "submitted" ? "The portal returned a positive application receipt." : receipt.message },
+        ];
+        await supabase.from("moderation_logs").insert({
+          run_type: "application_runner_test",
+          summary: {
+            action: "controlled_production_test",
+            by: admin.email,
+            state: receipt.state,
+            receipt_id: receipt.providerSubmissionId || null,
+            tested_at: testedAt,
+            checks,
+          },
+        });
+        return Response.json({
+          ok: receipt.state === "submitted",
+          state: receipt.state,
+          message: receipt.message,
+          receiptId: receipt.providerSubmissionId || undefined,
+          testedAt,
+          checks,
+        }, { status: receipt.state === "submitted" ? 201 : 200 });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "The controlled application test failed.";
+        const checks = [
+          { label: "Portal reached", passed: false, detail: "The runner stopped before a confirmed submission." },
+          { label: "CV uploaded", passed: false, detail: "No successful upload receipt was captured." },
+          { label: "Fields completed", passed: false, detail: "The full form workflow did not complete." },
+          { label: "Confirmation captured", passed: false, detail: message },
+        ];
+        await supabase.from("moderation_logs").insert({
+          run_type: "application_runner_test",
+          summary: { action: "controlled_production_test", by: admin.email, state: "failed", tested_at: testedAt, message: message.slice(0, 500), checks },
+        });
+        return Response.json({ ok: false, state: "failed", message, testedAt, checks });
+      }
+    }
 
     if ((body.action === "approve_employer_connection" || body.action === "reject_employer_connection") && body.connectionId) {
       const pendingResult = await supabase

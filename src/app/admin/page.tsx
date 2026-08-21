@@ -38,15 +38,18 @@ import {
   Trash2,
   UserRound,
   Users,
+  Workflow,
   X,
   Zap,
 } from "lucide-react";
+import { SystemMapPanel, type RunnerTestResult } from "@/components/admin/SystemMapPanel";
 import { useAuth } from "@/lib/auth-context";
 import { isAdministratorEmail } from "@/lib/portal-access";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
+import type { IntegrationStatus } from "@/lib/integration-status";
 import { supabase } from "@/lib/supabase";
 
-type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "campaigns" | "waitlist" | "runs";
+type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "campaigns" | "waitlist" | "runs" | "system";
 
 type JobRow = {
   id: string;
@@ -175,6 +178,8 @@ type AdminData = {
   jobSources?: JobSourceRow[];
   sourceProviders?: JobSourceRow["type"][];
   pendingEmployerConnections?: PendingEmployerConnection[];
+  integrations?: IntegrationStatus[];
+  systemGeneratedAt?: string;
 };
 
 const NAV_GROUPS: Array<{
@@ -200,7 +205,10 @@ const NAV_GROUPS: Array<{
   },
   {
     label: "System",
-    items: [{ id: "runs", label: "Pipeline runs", icon: Activity }],
+    items: [
+      { id: "system", label: "System map", icon: Workflow },
+      { id: "runs", label: "Pipeline runs", icon: Activity },
+    ],
   },
 ];
 
@@ -244,6 +252,11 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     eyebrow: "System health",
     title: "Pipeline runs",
     description: "Inspect recent ingestion and moderation activity across the platform.",
+  },
+  system: {
+    eyebrow: "System intelligence",
+    title: "Platform connection map",
+    description: "Inspect the complete user journey, live integrations, failure points and recovery actions from one view.",
   },
 };
 
@@ -374,6 +387,8 @@ export default function AdminPage() {
   const [recruitmentEmail, setRecruitmentEmail] = useState("");
   const [sendingDestinationVerification, setSendingDestinationVerification] = useState(false);
   const [reviewingConnectionId, setReviewingConnectionId] = useState<string | null>(null);
+  const [testingRunner, setTestingRunner] = useState(false);
+  const [runnerTestResult, setRunnerTestResult] = useState<RunnerTestResult | null>(null);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -639,6 +654,31 @@ export default function AdminPage() {
       setError(caught instanceof Error ? caught.message : "The job refresh did not complete");
     } finally {
       setRunningPipeline(false);
+    }
+  };
+
+  const runApplicationRunnerTest = async () => {
+    setTestingRunner(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "test_application_runner" }),
+      });
+      const json = await response.json() as RunnerTestResult & { error?: string };
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "The application runner test could not start");
+      setRunnerTestResult(json);
+      setNotice(json.state === "submitted" ? "The controlled production application completed successfully." : "The controlled test found an application runner issue. Review the failed check below.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The application runner test failed");
+    } finally {
+      setTestingRunner(false);
     }
   };
 
@@ -1010,6 +1050,8 @@ export default function AdminPage() {
             <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} sending={sendingLaunch} onSend={sendBetaLaunch} />
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
+          ) : section === "system" && data ? (
+            <SystemMapPanel integrations={data.integrations ?? []} query={normalisedQuery} testing={testingRunner} testResult={runnerTestResult} onRunTest={() => void runApplicationRunnerTest()} />
           ) : null}
         </main>
       </div>

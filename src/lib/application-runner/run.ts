@@ -220,9 +220,12 @@ async function fillStep(page: Page, step: number, facts: RunnerFacts, resume: Bu
   for (const mapping of aiMappings) mappings.set(mapping.fieldId, mapping);
 
   const needsUser: RunnerField[] = [];
+  const requiredRadioGroups = new Map<string, { field: RunnerField; locator: Locator }>();
   for (const control of controls) {
     const { field } = control;
     if (field.type === "radio") {
+      const groupKey = field.name || field.label || field.id;
+      if (field.required && !requiredRadioGroups.has(groupKey)) requiredRadioGroups.set(groupKey, control);
       const groupChecked = await control.locator.evaluate((node) => {
         const input = node as HTMLInputElement;
         if (!input.name) return input.checked;
@@ -243,7 +246,17 @@ async function fillStep(page: Page, step: number, facts: RunnerFacts, resume: Bu
     const filled = carriesApplicationMaterial || Boolean(directAnswer) || canUseMapping
       ? await fillField({ ...control, value, resume, coverLetter }).catch(() => false)
       : false;
-    if (!filled && field.required) needsUser.push(field);
+    // A radio group is complete when any option is selected. Do not mark an
+    // earlier option unresolved before a later matching option is processed.
+    if (!filled && field.required && field.type !== "radio") needsUser.push(field);
+  }
+  for (const control of requiredRadioGroups.values()) {
+    const groupChecked = await control.locator.evaluate((node) => {
+      const input = node as HTMLInputElement;
+      if (!input.name) return input.checked;
+      return Array.from(document.getElementsByName(input.name)).some((item) => item instanceof HTMLInputElement && item.checked);
+    }).catch(() => false);
+    if (!groupChecked) needsUser.push(control.field);
   }
   return needsUser.filter((field, index, all) => all.findIndex((item) => item.label === field.label && item.name === field.name) === index);
 }
