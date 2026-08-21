@@ -168,7 +168,7 @@ async function storeNeedsUser(input: {
 export async function POST(request: Request): Promise<Response> {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  if (!token) return Response.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
+  if (!token) return Response.json({ error: "Your secure session is missing. Sign in again, then retry.", code: "SESSION_EXPIRED" }, { status: 401, headers: NO_STORE });
 
   try {
     const body = (await request.json()) as { applicationId?: string; approval?: string; packet?: ApplicationRecord };
@@ -178,7 +178,10 @@ export async function POST(request: Request): Promise<Response> {
 
     const admin = getSupabaseAdmin();
     const { data: authData, error: authError } = await admin.auth.getUser(token);
-    if (authError || !authData.user) return Response.json({ error: "Your session is no longer valid." }, { status: 401, headers: NO_STORE });
+    if (authError || !authData.user) {
+      console.warn("application_submit_auth_failed", { reason: authError?.message || "user_missing" });
+      return Response.json({ error: "Your secure session expired before the application started. Sign in again, then retry.", code: "SESSION_EXPIRED" }, { status: 401, headers: NO_STORE });
+    }
     const userId = authData.user.id;
     if (body.packet) {
       try {

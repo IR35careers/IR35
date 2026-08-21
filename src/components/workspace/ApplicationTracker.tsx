@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { ArrowRight, BriefcaseBusiness, CalendarClock, ChevronRight, Download, Inbox, Plus, RotateCcw, Search, Upload, X } from "lucide-react";
 import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage";
-import { getSupabase } from "@/lib/supabase";
+import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
 import { resetWorkspace, updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
@@ -132,15 +132,17 @@ export function ApplicationTracker() {
     if (!isSupabaseConfigured() || refreshIds.length === 0) return;
     let active = true;
     const refresh = async () => {
-      const { data } = await getSupabase().auth.getSession();
-      const token = data.session?.access_token;
-      if (!token || !active) return;
-      for (const applicationId of refreshIds) {
-        const response = await fetch(`/api/applications/submission-status?applicationId=${encodeURIComponent(applicationId)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
-        if (!response.ok && response.status !== 202) continue;
-        const payload = (await response.json()) as { state?: "submitted" | "processing" | "needs_user"; receipt?: ApplicationRecord["receipt"]; questions?: ApplicationRecord["questions"] };
-        if (!active || (payload.state !== "submitted" && payload.state !== "needs_user")) continue;
-        updateWorkspace((current) => ({ ...current, applications: current.applications.map((application) => application.id !== applicationId ? application : { ...application, status: payload.state === "submitted" ? "applied" : "needs_review", receipt: payload.receipt ?? application.receipt, mode: payload.state === "submitted" ? "external_handoff" : application.mode, questions: payload.questions ?? application.questions, submissionApproved: payload.state === "needs_user" ? false : application.submissionApproved, updatedAt: new Date().toISOString() }) }));
+      try {
+        if (!active) return;
+        for (const applicationId of refreshIds) {
+          const response = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(applicationId)}`, { cache: "no-store" });
+          if (!response.ok && response.status !== 202) continue;
+          const payload = (await response.json()) as { state?: "submitted" | "processing" | "needs_user"; receipt?: ApplicationRecord["receipt"]; questions?: ApplicationRecord["questions"] };
+          if (!active || (payload.state !== "submitted" && payload.state !== "needs_user")) continue;
+          updateWorkspace((current) => ({ ...current, applications: current.applications.map((application) => application.id !== applicationId ? application : { ...application, status: payload.state === "submitted" ? "applied" : "needs_review", receipt: payload.receipt ?? application.receipt, mode: payload.state === "submitted" ? "external_handoff" : application.mode, questions: payload.questions ?? application.questions, submissionApproved: payload.state === "needs_user" ? false : application.submissionApproved, updatedAt: new Date().toISOString() }) }));
+        }
+      } catch (error) {
+        if (active) setNotice(error instanceof Error ? error.message : "Application status could not be refreshed.");
       }
     };
     void refresh();

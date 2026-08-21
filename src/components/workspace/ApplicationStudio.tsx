@@ -25,6 +25,7 @@ import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage"
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
 import { roleTypeWarning } from "@/lib/ats/submission-route";
+import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import type { JobDetail } from "@/lib/job-types";
 import { scoreResumeForRole } from "@/lib/resume/analysis";
@@ -71,6 +72,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [busy, setBusy] = useState<BusyState>(null);
   const [submissionConnection, setSubmissionConnection] = useState<ConnectionState>(isSupabaseConfigured() ? "loading" : "gated");
   const [submissionStatusRefresh, setSubmissionStatusRefresh] = useState(0);
+  const [submitElapsedSeconds, setSubmitElapsedSeconds] = useState(0);
   const [useAiCoverLetter, setUseAiCoverLetter] = useState(false);
   const [aiResult, setAiResult] = useState<AiTailoringResult | null>(null);
   const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<string[]>([]);
@@ -94,10 +96,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     let active = true;
-    void getSupabase().auth.getSession().then(async ({ data }) => {
-      const token = data.session?.access_token;
-      if (!token) throw new Error("No session");
-      const response = await fetch(`/api/integrations/status?jobId=${encodeURIComponent(job.id)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+    void fetchWithFreshSession(`/api/integrations/status?jobId=${encodeURIComponent(job.id)}`, { cache: "no-store" }).then(async (response) => {
       if (!response.ok) throw new Error("Status unavailable");
       const payload = (await response.json()) as { integrations?: Array<{ id: string; state: string }> };
       if (!active) return;
@@ -109,6 +108,16 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     return () => { active = false; };
   }, [job.id, submissionStatusRefresh]);
 
+  useEffect(() => {
+    if (busy !== "submit") {
+      setSubmitElapsedSeconds(0);
+      return;
+    }
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => setSubmitElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1_000);
+    return () => window.clearInterval(timer);
+  }, [busy]);
+
   const updateApplication = (updater: (current: ApplicationRecord) => ApplicationRecord) => {
     if (!application || submitted) return;
     const next: ApplicationRecord = {
@@ -118,12 +127,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     };
     setApplication(next);
     persistApplication(next);
-  };
-
-  const sessionToken = async (): Promise<string> => {
-    const { data } = await getSupabase().auth.getSession();
-    if (!data.session?.access_token) throw new Error("Sign in again to use this secure feature.");
-    return data.session.access_token;
   };
 
   const parseCvFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -176,10 +179,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         : { ...payload.application, coverLetter: preferredResume?.coverLetter ?? "" };
       let tailoringNotice = "Your role match is ready. Review the application details before submitting.";
       if (applicationPreferences.resumeOptimisation !== "off") try {
-        const token = await sessionToken();
-        const tailoringResponse = await fetch("/api/applications/tailor", {
+        const tailoringResponse = await fetchWithFreshSession("/api/applications/tailor", {
           method: "POST",
-          headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cvText: prepared.sourceCvText, job }),
         });
         const tailoringPayload = (await tailoringResponse.json()) as { result?: AiTailoringResult; error?: string };
@@ -225,10 +227,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     setError(null);
     setNotice(null);
     try {
-      const token = await sessionToken();
-      const response = await fetch("/api/applications/tailor", {
+      const response = await fetchWithFreshSession("/api/applications/tailor", {
         method: "POST",
-        headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cvText: application.sourceCvText, job }),
       });
       const payload = (await response.json()) as { result?: AiTailoringResult; error?: string };
@@ -336,12 +337,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       const ready = application.status === "ready" && approvalsComplete
         ? application
         : await persistReviewedPacket(application, false);
-      const token = await sessionToken();
-      setNotice("Starting the employer application. Keep this page open while the form is completed.");
-      const response = await fetch("/api/applications/submit", {
+      setNotice("Submitting to the employer portal. This usually takes 30 to 90 seconds. Keep this page open until confirmation appears.");
+      const response = await fetchWithFreshSession("/api/applications/submit", {
         method: "POST",
-        headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ applicationId: ready.id, approval: "SUBMIT_APPROVED_APPLICATION", packet: ready }),
+        signal: AbortSignal.timeout(180_000),
       });
       let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string };
       if (response.status === 202 && payload.state) {
@@ -355,7 +356,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         }
         for (let attempt = 0; attempt < 8 && !payload.receipt; attempt += 1) {
           await new Promise((resolve) => setTimeout(resolve, 2_000));
-          const statusResponse = await fetch(`/api/applications/submission-status?applicationId=${encodeURIComponent(application.id)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+          const statusResponse = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(application.id)}`, { cache: "no-store" });
           payload = (await statusResponse.json()) as typeof payload;
           if (payload.state === "needs_user") {
             const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
@@ -386,7 +387,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       persistApplication(submittedApplication);
       setNotice("Application submitted. The verified employer receipt is saved below.");
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.";
+      const message = caught instanceof DOMException && caught.name === "TimeoutError"
+        ? "Employer confirmation took too long. The role was not marked Applied. Refresh Applications to check the latest status before retrying."
+        : caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.";
       if (/complete your application profile|profile before applying/i.test(message)) setProfilePrompt(true);
       setError(message);
     } finally {
@@ -423,7 +426,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           <div className="flex flex-wrap items-center gap-2">
             {application && <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{application.matchScore}% match</span>}
             {application && <StatusPill status={application.status} />}
-            {application && !submitted && <button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} Approve and apply now</button>}
+            {application && !submitted && <button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} {busy === "submit" ? `Applying ${submitElapsedSeconds}s` : "Approve and apply now"}</button>}
             {submitted && <span className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-3 text-sm font-bold text-emerald-800"><CheckCircle2 size={16} /> Submitted</span>}
           </div>
         </div>
@@ -434,6 +437,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
       {engagementWarning && <div className="mt-4 flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><AlertTriangle className="mt-0.5 shrink-0" size={19} /><p><strong>Check the engagement type.</strong> {engagementWarning}</p></div>}
       {(error || notice) && <p role={error ? "alert" : "status"} className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${error ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>{error ?? notice}</p>}
+      {busy === "submit" && <div className="mt-3 flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950" role="status"><Loader2 className="mt-0.5 shrink-0 animate-spin" size={17} /><div><p className="font-semibold">Application runner active · {submitElapsedSeconds}s</p><p className="mt-1 leading-6 text-sky-900">Your approved CV and answers are being completed on the employer form. IR35Careers will show Applied only after the employer returns a confirmation.</p></div></div>}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <main className="min-w-0 space-y-5">
