@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { loadManagedJobSources } from "@/lib/ats/source-registry";
+import {
+  loadManagedJobSources,
+  saveManagedJobSources,
+  upsertManagedSource,
+  validateManagedJobSource,
+  type FreeATSType,
+} from "@/lib/ats/source-registry";
 import { saveEmployerDestination, validRecruitmentEmail } from "@/lib/employer-destinations";
 
 export const runtime = "nodejs";
@@ -20,6 +26,8 @@ type PendingVerification = {
   email: string;
   expiresAt: string;
   requestedBy: string;
+  requestKind: string;
+  pendingSource: { name: string; type: FreeATSType; slug: string } | null;
 };
 
 function clean(value: unknown, max = 160): string {
@@ -49,8 +57,29 @@ async function pendingVerification(token: string): Promise<PendingVerification |
   const email = clean(summary.email, 254).toLowerCase();
   const expiresAt = clean(summary.expires_at, 40);
   const requestedBy = clean(summary.requested_by, 254);
+  const requestKind = clean(summary.request_kind, 40);
   if (!sourceId || !sourceName || !validRecruitmentEmail(email) || !Number.isFinite(new Date(expiresAt).getTime())) return null;
-  return { logId: result.data.id, sourceId, sourceName, email, expiresAt, requestedBy };
+  const logId = result.data.id;
+  const consumedChecks = await Promise.all(["verified", "employer_confirmed", "rejected"].map((action) => admin
+    .from("moderation_logs")
+    .select("id")
+    .eq("run_type", "employer_destination_verification")
+    .contains("summary", { action, request_log_id: logId })
+    .limit(1)
+    .maybeSingle()));
+  if (consumedChecks.some((check) => check.error || check.data)) return null;
+  let pendingSource: PendingVerification["pendingSource"] = null;
+  try {
+    const source = validateManagedJobSource({
+      name: summary.source_name,
+      type: summary.source_type,
+      slug: summary.source_slug,
+    });
+    pendingSource = source;
+  } catch {
+    // Older administrator-issued tokens refer to an existing registry entry.
+  }
+  return { logId, sourceId, sourceName, email, expiresAt, requestedBy, requestKind, pendingSource };
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -71,11 +100,37 @@ export async function POST(request: Request): Promise<Response> {
     return new Response(page("Verification link unavailable", "This link is invalid or has expired. Ask the IR35Careers administrator to send a new verification email."), { status: 400, headers: HEADERS });
   }
   const admin = getSupabaseAdmin();
-  const sources = await loadManagedJobSources(admin);
+  let sources = await loadManagedJobSources(admin);
+  if (!sources.some((source) => source.id === pending.sourceId) && pending.pendingSource) {
+    sources = await saveManagedJobSources(
+      upsertManagedSource(sources, pending.pendingSource),
+      pending.email,
+      admin
+    );
+  }
   if (!sources.some((source) => source.id === pending.sourceId)) {
     return new Response(page("Job source unavailable", "The associated public job source no longer exists in IR35Careers."), { status: 409, headers: HEADERS });
   }
   const now = new Date().toISOString();
+  if (pending.requestKind === "employer_self_service") {
+    const confirmation = await admin.from("moderation_logs").insert({
+      run_type: "employer_destination_verification",
+      summary: {
+        action: "employer_confirmed",
+        source_id: pending.sourceId,
+        source_name: pending.sourceName,
+        email: pending.email,
+        request_log_id: pending.logId,
+        confirmed_at: now,
+        requested_by: pending.requestedBy,
+        request_kind: pending.requestKind,
+      },
+    });
+    if (confirmation.error) {
+      return new Response(page("Confirmation could not be recorded", "Your public board is safe, but the recruitment confirmation could not be recorded. Contact IR35Careers and do not submit the form again."), { status: 503, headers: HEADERS });
+    }
+    return new Response(page("Recruitment address confirmed", `${pending.sourceName} has joined the review queue. Its public contract roles can be indexed after the source refresh. Direct candidate delivery activates only after IR35Careers completes an authority and destination review.`), { headers: HEADERS });
+  }
   await saveEmployerDestination({
     sourceId: pending.sourceId,
     email: pending.email,
@@ -93,8 +148,8 @@ export async function POST(request: Request): Promise<Response> {
       request_log_id: pending.logId,
       verified_at: now,
       requested_by: pending.requestedBy,
+      request_kind: pending.requestKind,
     },
   });
   return new Response(page("Application delivery connected", `${pending.sourceName} can now receive candidate-approved applications from IR35Careers. You can close this page.`), { headers: HEADERS });
 }
-

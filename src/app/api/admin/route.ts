@@ -12,7 +12,7 @@
  */
 
 import type { User } from "@supabase/supabase-js";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import { adminAllowlist, adminSessionCookieName, cookieValue, verifyAdminSession } from "@/lib/admin-session";
 import {
   emailCampaignTemplates,
@@ -38,8 +38,10 @@ import {
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
 import {
   loadEmployerDestinations,
+  saveEmployerDestination,
   validRecruitmentEmail,
 } from "@/lib/employer-destinations";
+import { requestEmployerDestinationVerification } from "@/lib/employer-onboarding";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -386,7 +388,7 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (section === "sources") {
-      const [sources, destinations, lastRunResult] = await Promise.all([
+      const [sources, destinations, lastRunResult, employerVerificationResult] = await Promise.all([
         loadManagedJobSources(supabase),
         loadEmployerDestinations(supabase),
         supabase
@@ -396,8 +398,37 @@ export async function GET(request: Request): Promise<Response> {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("moderation_logs")
+          .select("id, summary, created_at")
+          .eq("run_type", "employer_destination_verification")
+          .order("created_at", { ascending: false })
+          .limit(250),
       ]);
-      if (lastRunResult.error) throw lastRunResult.error;
+      if (lastRunResult.error || employerVerificationResult.error) throw lastRunResult.error || employerVerificationResult.error;
+      const verificationLogs = employerVerificationResult.data ?? [];
+      const resolvedRequestIds = new Set(verificationLogs.flatMap((row) => {
+        const summary = row.summary as Record<string, unknown> | null;
+        const action = String(summary?.action ?? "");
+        const requestId = String(summary?.request_log_id ?? "");
+        return requestId && (action === "verified" || action === "rejected") ? [requestId] : [];
+      }));
+      const pendingEmployerConnections = verificationLogs.flatMap((row) => {
+        const summary = row.summary as Record<string, unknown> | null;
+        const requestId = String(summary?.request_log_id ?? "");
+        if (summary?.action !== "employer_confirmed" || !requestId || resolvedRequestIds.has(requestId)) return [];
+        const email = String(summary.email ?? "").trim().toLowerCase();
+        const sourceId = String(summary.source_id ?? "").trim();
+        if (!validRecruitmentEmail(email) || !sources.some((source) => source.id === sourceId)) return [];
+        return [{
+          id: row.id,
+          requestLogId: requestId,
+          sourceId,
+          sourceName: String(summary.source_name ?? "Employer").slice(0, 100),
+          email,
+          confirmedAt: String(summary.confirmed_at ?? row.created_at),
+        }];
+      });
       return Response.json({
         jobSources: sources.map((source) => {
           const destination = destinations.find((item) => item.sourceId === source.id && item.enabled);
@@ -410,6 +441,7 @@ export async function GET(request: Request): Promise<Response> {
         }),
         sourceProviders: FREE_ATS_TYPES,
         lastPipelineRun: lastRunResult.data ?? null,
+        pendingEmployerConnections,
       });
     }
 
@@ -458,7 +490,95 @@ export async function POST(request: Request): Promise<Response> {
       sourceId?: string;
       enabled?: boolean;
       recruitmentEmail?: string;
+      connectionId?: string;
     };
+
+    if ((body.action === "approve_employer_connection" || body.action === "reject_employer_connection") && body.connectionId) {
+      const pendingResult = await supabase
+        .from("moderation_logs")
+        .select("id, summary, created_at")
+        .eq("id", body.connectionId)
+        .eq("run_type", "employer_destination_verification")
+        .maybeSingle();
+      if (pendingResult.error) throw pendingResult.error;
+      const pendingSummary = pendingResult.data?.summary as Record<string, unknown> | undefined;
+      const requestLogId = String(pendingSummary?.request_log_id ?? "").trim();
+      const sourceId = String(pendingSummary?.source_id ?? "").trim();
+      const sourceName = String(pendingSummary?.source_name ?? "Employer").trim().slice(0, 100);
+      const email = String(pendingSummary?.email ?? "").trim().toLowerCase();
+      if (pendingSummary?.action !== "employer_confirmed" || !requestLogId || !sourceId || !validRecruitmentEmail(email)) {
+        return Response.json({ error: "The employer connection request is unavailable." }, { status: 404 });
+      }
+      const resolvedResult = await supabase
+        .from("moderation_logs")
+        .select("id, summary")
+        .eq("run_type", "employer_destination_verification")
+        .contains("summary", { request_log_id: requestLogId })
+        .limit(20);
+      if (resolvedResult.error) throw resolvedResult.error;
+      const alreadyResolved = (resolvedResult.data ?? []).some((row) => {
+        const action = String((row.summary as Record<string, unknown> | null)?.action ?? "");
+        return action === "verified" || action === "rejected";
+      });
+      if (alreadyResolved) return Response.json({ error: "This employer connection has already been reviewed." }, { status: 409 });
+      const sources = await loadManagedJobSources(supabase);
+      if (!sources.some((source) => source.id === sourceId)) {
+        return Response.json({ error: "The associated public job source is unavailable." }, { status: 409 });
+      }
+      const now = new Date().toISOString();
+      const approved = body.action === "approve_employer_connection";
+      if (approved) {
+        await saveEmployerDestination({
+          sourceId,
+          email,
+          enabled: true,
+          verifiedAt: now,
+          updatedAt: now,
+        }, admin.email, supabase);
+      }
+      const reviewAudit = await supabase.from("moderation_logs").insert({
+        run_type: "employer_destination_verification",
+        summary: {
+          action: approved ? "verified" : "rejected",
+          source_id: sourceId,
+          source_name: sourceName,
+          email,
+          request_log_id: requestLogId,
+          confirmation_log_id: pendingResult.data?.id,
+          reviewed_at: now,
+          reviewed_by: admin.email,
+          request_kind: "employer_self_service",
+        },
+      });
+      if (reviewAudit.error) {
+        if (approved) {
+          await saveEmployerDestination({
+            sourceId,
+            email,
+            enabled: false,
+            verifiedAt: now,
+            updatedAt: new Date().toISOString(),
+          }, admin.email, supabase);
+        }
+        throw reviewAudit.error;
+      }
+      const emailConfig = transactionalEmailConfig();
+      if (emailConfig) {
+        const safeSource = sourceName.replace(/[&<>"']/g, "");
+        await getTransactionalResend(emailConfig).emails.send({
+          from: emailConfig.from,
+          to: [email],
+          subject: approved ? `${sourceName} is connected to IR35Careers` : `${sourceName} connection update`,
+          html: `<!doctype html><html><body style="margin:0;background:#f1f5f9;font-family:Arial,sans-serif;color:#0f172a"><table role="presentation" width="100%"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" style="max-width:620px;background:#fff;border:1px solid #dbe4ec;border-radius:18px;overflow:hidden"><tr><td style="background:#052e2b;padding:24px 28px;color:#fff;font-size:18px;font-weight:700">IR35Careers</td></tr><tr><td style="padding:30px 28px"><h1 style="margin:0;font-size:24px">${approved ? "Connection approved" : "Connection not approved"}</h1><p style="margin:16px 0;color:#475569;font-size:14px;line-height:22px">${approved ? `${safeSource} can now receive candidate-approved applications through the verified recruitment address.` : `We could not approve direct application delivery for ${safeSource}. Its public job board may still be reviewed for listing coverage. Contact IR35Careers if the organisation or recruitment address needs correction.`}</p></td></tr></table></td></tr></table></body></html>`,
+          text: approved
+            ? `${sourceName} can now receive candidate-approved applications through the verified recruitment address on IR35Careers.`
+            : `We could not approve direct application delivery for ${sourceName}. Contact IR35Careers if the organisation or recruitment address needs correction.`,
+          ...(emailConfig.replyTo ? { replyTo: emailConfig.replyTo } : {}),
+          tags: [{ name: "email_type", value: "employer_connection_review" }],
+        });
+      }
+      return Response.json({ ok: true, approved, sourceName, email });
+    }
 
     if (body.action === "request_employer_destination_verification" && body.sourceId) {
       if (!validRecruitmentEmail(body.recruitmentEmail)) {
@@ -467,41 +587,14 @@ export async function POST(request: Request): Promise<Response> {
       const sources = await loadManagedJobSources(supabase);
       const source = sources.find((item) => item.id === body.sourceId);
       if (!source) return Response.json({ error: "Job source was not found." }, { status: 404 });
-      const emailConfig = transactionalEmailConfig();
-      if (!emailConfig) return Response.json({ error: "Transactional email delivery is not configured." }, { status: 503 });
-      const token = randomBytes(32).toString("hex");
-      const tokenHash = createHash("sha256").update(token).digest("hex");
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.ir35careers.com").replace(/\/$/, "");
-      const verifyUrl = `${siteUrl}/api/employer-destinations/verify?token=${encodeURIComponent(token)}`;
-      const html = `<!doctype html><html><body style="margin:0;background:#f1f5f9;font-family:Arial,sans-serif;color:#0f172a"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#fff;border:1px solid #dbe4ec;border-radius:18px;overflow:hidden"><tr><td style="background:#052e2b;padding:24px 28px;color:#fff"><div style="font-size:18px;font-weight:700">IR35Careers</div><div style="margin-top:6px;color:#a7f3d0;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Employer application connection</div></td></tr><tr><td style="padding:30px 28px"><h1 style="margin:0;font-size:24px;line-height:32px">Confirm your recruitment address</h1><p style="margin:16px 0;color:#475569;font-size:14px;line-height:22px">IR35Careers is connecting <strong>${source.name.replace(/[&<>"']/g, "")}</strong> so candidates can submit approved applications directly without leaving IR35Careers.</p><p style="margin:16px 0;color:#475569;font-size:14px;line-height:22px">By confirming, you agree that this address may receive applications for jobs published on your verified ${source.type} career board.</p><a href="${verifyUrl}" style="display:inline-block;margin-top:8px;padding:13px 20px;border-radius:10px;background:#059669;color:#fff;text-decoration:none;font-size:14px;font-weight:700">Confirm recruitment address</a><p style="margin:22px 0 0;color:#64748b;font-size:12px;line-height:19px">This link expires in 24 hours. If you did not request this connection, do not confirm it.</p></td></tr></table></td></tr></table></body></html>`;
-      const delivery = await getTransactionalResend(emailConfig).emails.send({
-        from: emailConfig.from,
-        to: [body.recruitmentEmail.trim().toLowerCase()],
-        subject: `Confirm ${source.name} application delivery`,
-        html,
-        text: `Confirm your IR35Careers recruitment address for ${source.name}: ${verifyUrl}\n\nBy confirming, this address may receive candidate applications for jobs on the connected ${source.type} board. This link expires in 24 hours.`,
-        ...(emailConfig.replyTo ? { replyTo: emailConfig.replyTo } : {}),
-        tags: [{ name: "email_type", value: "employer_verification" }],
+      const verification = await requestEmployerDestinationVerification({
+        source,
+        recruitmentEmail: body.recruitmentEmail,
+        requestedBy: admin.email,
+        requestKind: "admin",
+        client: supabase,
       });
-      if (delivery.error || !delivery.data?.id) {
-        return Response.json({ error: delivery.error?.message || "The verification email was not accepted for delivery." }, { status: 503 });
-      }
-      const audit = await supabase.from("moderation_logs").insert({
-        run_type: "employer_destination_verification",
-        summary: {
-          action: "requested",
-          source_id: source.id,
-          source_name: source.name,
-          email: body.recruitmentEmail.trim().toLowerCase(),
-          token_hash: tokenHash,
-          expires_at: expiresAt,
-          provider_id: delivery.data.id,
-          requested_by: admin.email,
-        },
-      });
-      if (audit.error) throw audit.error;
-      return Response.json({ ok: true, email: body.recruitmentEmail.trim().toLowerCase(), expiresAt }, { status: 201 });
+      return Response.json({ ok: true, email: verification.email, expiresAt: verification.expiresAt }, { status: 201 });
     }
 
     if (body.action === "upsert_job_source") {

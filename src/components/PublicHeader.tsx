@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/jobs", label: "Find contracts" },
   { href: "/resources", label: "IR35 guides" },
   { href: "/tools", label: "Tools" },
+  { href: "/employers", label: "For employers" },
 ] as const;
 
 export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorkspaceMembers?: boolean }) {

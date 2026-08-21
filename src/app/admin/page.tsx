@@ -96,6 +96,15 @@ type JobSourceRow = {
   directApplyVerifiedAt?: string | null;
 };
 
+type PendingEmployerConnection = {
+  id: string;
+  requestLogId: string;
+  sourceId: string;
+  sourceName: string;
+  email: string;
+  confirmedAt: string;
+};
+
 type WaitlistRow = {
   id: string;
   email: string;
@@ -165,6 +174,7 @@ type AdminData = {
   analytics?: AnalyticsData;
   jobSources?: JobSourceRow[];
   sourceProviders?: JobSourceRow["type"][];
+  pendingEmployerConnections?: PendingEmployerConnection[];
 };
 
 const NAV_GROUPS: Array<{
@@ -363,6 +373,7 @@ export default function AdminPage() {
   const [destinationSourceId, setDestinationSourceId] = useState("");
   const [recruitmentEmail, setRecruitmentEmail] = useState("");
   const [sendingDestinationVerification, setSendingDestinationVerification] = useState(false);
+  const [reviewingConnectionId, setReviewingConnectionId] = useState<string | null>(null);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -656,6 +667,31 @@ export default function AdminPage() {
     }
   };
 
+  const reviewEmployerConnection = async (connection: PendingEmployerConnection, approve: boolean) => {
+    if (!window.confirm(`${approve ? "Approve" : "Reject"} direct application delivery for ${connection.sourceName} at ${connection.email}?`)) return;
+    setReviewingConnectionId(connection.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: approve ? "approve_employer_connection" : "reject_employer_connection",
+          connectionId: connection.id,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to review this employer connection");
+      setNotice(`${connection.sourceName} application delivery was ${approve ? "approved" : "rejected"}.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to review this employer connection");
+    } finally {
+      setReviewingConnectionId(null);
+    }
+  };
+
   const sendBetaLaunch = async () => {
     if (!window.confirm("Correct the approved addresses, remove registered duplicates and invalid rows, then send the beta invitation to every remaining recipient?")) return;
     setSendingLaunch(true);
@@ -935,6 +971,8 @@ export default function AdminPage() {
               destinationSourceId={destinationSourceId}
               recruitmentEmail={recruitmentEmail}
               sendingDestinationVerification={sendingDestinationVerification}
+              pendingConnections={data.pendingEmployerConnections ?? []}
+              reviewingConnectionId={reviewingConnectionId}
               onNameChange={setSourceName}
               onTypeChange={setSourceType}
               onSlugChange={setSourceSlug}
@@ -945,6 +983,7 @@ export default function AdminPage() {
               onDestinationSourceChange={setDestinationSourceId}
               onRecruitmentEmailChange={setRecruitmentEmail}
               onRequestDestinationVerification={() => void requestDestinationVerification()}
+              onReviewConnection={(connection, approve) => void reviewEmployerConnection(connection, approve)}
             />
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
@@ -1158,6 +1197,8 @@ function JobSourcesPanel({
   destinationSourceId,
   recruitmentEmail,
   sendingDestinationVerification,
+  pendingConnections,
+  reviewingConnectionId,
   onNameChange,
   onTypeChange,
   onSlugChange,
@@ -1168,6 +1209,7 @@ function JobSourcesPanel({
   onDestinationSourceChange,
   onRecruitmentEmailChange,
   onRequestDestinationVerification,
+  onReviewConnection,
 }: {
   sources: JobSourceRow[];
   total: number;
@@ -1183,6 +1225,8 @@ function JobSourcesPanel({
   destinationSourceId: string;
   recruitmentEmail: string;
   sendingDestinationVerification: boolean;
+  pendingConnections: PendingEmployerConnection[];
+  reviewingConnectionId: string | null;
   onNameChange: (value: string) => void;
   onTypeChange: (value: JobSourceRow["type"]) => void;
   onSlugChange: (value: string) => void;
@@ -1193,6 +1237,7 @@ function JobSourcesPanel({
   onDestinationSourceChange: (value: string) => void;
   onRecruitmentEmailChange: (value: string) => void;
   onRequestDestinationVerification: () => void;
+  onReviewConnection: (connection: PendingEmployerConnection, approve: boolean) => void;
 }) {
   const enabled = sources.filter((source) => source.enabled).length;
   const custom = sources.filter((source) => !source.builtIn).length;
@@ -1211,7 +1256,7 @@ function JobSourcesPanel({
     <div className="mt-7 space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Configured sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{total}</p><p className="mt-2 text-xs text-slate-500">{enabled} currently enabled</p></article>
-        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Added by admin</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{custom}</p><p className="mt-2 text-xs text-slate-500">Verified public boards</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Custom sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{custom}</p><p className="mt-2 text-xs text-slate-500">Admin or employer verified boards</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last fetch</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{formatNumber(fetched)}</p><p className="mt-2 text-xs text-slate-500">{lastRun ? formatDate(lastRun.created_at, true) : "No run recorded"}</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last database update</p><p className="mt-3 text-3xl font-semibold tabular-nums text-emerald-700">{formatNumber(upserted)}</p><p className="mt-2 text-xs text-slate-500">Fresh or updated listings</p></article>
       </div>
@@ -1231,6 +1276,10 @@ function JobSourcesPanel({
           {sources.length ? <div className="divide-y divide-slate-100">{sources.map((source) => <div key={source.id} className="flex flex-col gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:flex-row sm:items-center sm:px-6"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${source.enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"}`}><CloudDownload size={17} /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold text-slate-900">{source.name}</p><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{source.type}</span>{source.builtIn && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Starter</span>}</div><p className="mt-1 truncate text-xs text-slate-500">{examples[source.type].replace("company-name", source.slug)}</p></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => onToggle(source)} disabled={actionId === source.id} className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition ${source.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{actionId === source.id ? <Loader2 size={13} className="animate-spin" /> : <Power size={13} />} {source.enabled ? "Enabled" : "Paused"}</button>{!source.builtIn && <button type="button" onClick={() => onRemove(source)} disabled={actionId === source.id} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50" aria-label={`Remove ${source.name}`}><Trash2 size={14} /></button>}</div></div>)}</div> : <EmptyState title={query ? "No matching sources" : "No sources configured"} detail={query ? "Try an employer, provider or board identifier." : "Add a public ATS board to start free job discovery."} />}
         </Panel>
       </div>
+
+      <Panel title="Employer connection review" description="Public boards and recruitment inboxes are confirmed first. Approve direct delivery only after the organisation and destination are credible.">
+        {pendingConnections.length ? <div className="divide-y divide-slate-100">{pendingConnections.map((connection) => <div key={connection.id} className="flex flex-col gap-4 px-5 py-4 sm:px-6 lg:flex-row lg:items-center"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><ShieldCheck size={17} /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-slate-950">{connection.sourceName}</p><span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">Review needed</span></div><p className="mt-1 truncate text-xs text-slate-600">{connection.email}</p><p className="mt-1 text-[11px] text-slate-400">Recruitment inbox confirmed {formatDate(connection.confirmedAt, true)}</p></div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => onReviewConnection(connection, false)} disabled={reviewingConnectionId === connection.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"><X size={13} /> Reject</button><button type="button" onClick={() => onReviewConnection(connection, true)} disabled={reviewingConnectionId === connection.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{reviewingConnectionId === connection.id ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />} Approve delivery</button></div></div>)}</div> : <div className="px-5 py-6 text-sm text-slate-500 sm:px-6">No employer-confirmed connections are waiting for review.</div>}
+      </Panel>
 
       <Panel title="Connect free direct application delivery" description="The employer confirms its recruitment address before any candidate information can be sent.">
         <div className="grid gap-5 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
