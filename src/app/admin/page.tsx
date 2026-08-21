@@ -69,11 +69,21 @@ type RunRow = {
   created_at: string;
 };
 
+type WaitlistRow = {
+  id: string;
+  email: string;
+  created_at: string;
+  launch_notified_at?: string | null;
+  launch_email_id?: string | null;
+  launch_email_attempts?: number | null;
+  launch_last_error?: string | null;
+};
+
 type AdminData = {
   totalUsers?: number | null;
   profiles?: number;
   cvsUploaded?: number;
-  waitlist?: Array<{ email: string; created_at: string }> | number;
+  waitlist?: WaitlistRow[] | number;
   liveJobs?: number;
   expiredJobs?: number;
   ir35Breakdown?: { outside?: number; inside?: number; tbc?: number };
@@ -244,6 +254,7 @@ export default function AdminPage() {
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expiringId, setExpiringId] = useState<string | null>(null);
+  const [sendingLaunch, setSendingLaunch] = useState(false);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -344,6 +355,35 @@ export default function AdminPage() {
       setError(caught instanceof Error ? caught.message : "Unable to expire this job");
     } finally {
       setExpiringId(null);
+    }
+  };
+
+  const sendBetaLaunch = async () => {
+    if (!window.confirm("Correct the approved addresses, remove registered duplicates and invalid rows, then send the beta invitation to every remaining recipient?")) return;
+    setSendingLaunch(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "send_beta_launch",
+          confirmation: "SEND_BETA_ACCESS_2026_08_21",
+        }),
+      });
+      const json = await response.json();
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "Unable to send the beta invitation");
+      setNotice(`${json.sent ?? 0} beta invitation emails were accepted by the delivery provider. ${json.failed ?? 0} failed.`);
+      await load("waitlist");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the beta invitation");
+    } finally {
+      setSendingLaunch(false);
     }
   };
 
@@ -505,7 +545,7 @@ export default function AdminPage() {
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
           ) : section === "waitlist" && data ? (
-            <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} />
+            <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} sending={sendingLaunch} onSend={sendBetaLaunch} />
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
           ) : null}
@@ -627,13 +667,27 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
   );
 }
 
-function LaunchAudiencePanel({ entries, total, query }: { entries: Array<{ email: string; created_at: string }>; total: number; query: string }) {
+function LaunchAudiencePanel({
+  entries,
+  total,
+  query,
+  sending,
+  onSend,
+}: {
+  entries: WaitlistRow[];
+  total: number;
+  query: string;
+  sending: boolean;
+  onSend: () => void;
+}) {
+  const notified = entries.filter((entry) => entry.launch_notified_at).length;
+  const pending = entries.filter((entry) => !entry.launch_notified_at).length;
   return (
     <div className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
       <Panel title="Former waitlist recipients" description={`${formatNumber(total)} permission-based sign-ups · newest first`}>
-        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div><span className="hidden text-xs font-medium text-slate-400 sm:block">{timeAgo(entry.created_at)}</span></div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No beta recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
+        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div>{entry.launch_notified_at ? <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Sent</span> : entry.launch_last_error ? <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">Failed</span> : <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Pending</span>}</div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No beta recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
       </Panel>
-      <Panel title="Beta invitation" description="Prepared, but deliberately not sent."><div className="p-6"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Mail size={19} /></span><p className="mt-5 text-sm font-semibold text-slate-950">IR35Careers public beta is open — your early access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">A branded one-time beta invitation is ready for review. Delivery remains disabled until the final preview and recipient audit are explicitly approved.</p><span className="mt-5 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800">Approval required</span></div></Panel>
+      <Panel title="Beta invitation" description={pending ? `${pending} recipients are ready` : `${notified} invitations recorded`}><div className="p-6"><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${pending ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{pending ? <Mail size={19} /> : <CheckCircle2 size={19} />}</span><p className="mt-5 text-sm font-semibold text-slate-950">Your IR35Careers beta access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">{pending ? "The approved branded invitation is ready. Sending automatically removes registered duplicates and invalid placeholder addresses, then records every provider delivery ID." : "The cleaned audience has been processed. Each accepted invitation has its provider delivery ID stored in the private ledger."}</p>{pending ? <button type="button" onClick={onSend} disabled={sending} className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">{sending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {sending ? "Sending invitations" : "Clean audience and send"}</button> : <span className="mt-5 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">Delivery recorded</span>}</div></Panel>
     </div>
   );
 }
