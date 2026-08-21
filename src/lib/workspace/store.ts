@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { createSeedWorkspaceState } from "@/lib/workspace/seed";
 import type { WorkspaceState } from "@/lib/workspace/types";
 
@@ -37,7 +38,7 @@ function loadCloudState(userId: string, email: string): Promise<WorkspaceState> 
 
 function readState(): WorkspaceState {
   if (memoryState) return memoryState;
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && !isSupabaseConfigured()) {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -59,7 +60,8 @@ function persist(state: WorkspaceState): void {
   memoryState = state;
   if (typeof window !== "undefined") {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (isSupabaseConfigured()) window.localStorage.removeItem(STORAGE_KEY);
+      else window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // The in-memory session remains usable when storage is unavailable.
     }

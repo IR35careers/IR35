@@ -78,6 +78,22 @@ export function adminAllowlist(): string[] {
     .filter(Boolean);
 }
 
+export function isAdminRequestHost(request: Request): boolean {
+  try {
+    const hostHeader = request.headers.get("host")?.trim().toLowerCase();
+    const hostname = (hostHeader
+      ? hostHeader.startsWith("[")
+        ? hostHeader.slice(1, hostHeader.indexOf("]"))
+        : hostHeader.split(":", 1)[0]
+      : new URL(request.url).hostname
+    ).toLowerCase();
+    return hostname === "admin.ir35careers.com"
+      || (process.env.NODE_ENV !== "production" && (hostname === "localhost" || hostname === "127.0.0.1"));
+  } catch {
+    return false;
+  }
+}
+
 export function cookieValue(request: Request, name: string): string | null {
   const cookie = request.headers.get("cookie") ?? "";
   for (const item of cookie.split(";")) {

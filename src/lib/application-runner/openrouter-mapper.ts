@@ -1,5 +1,6 @@
 import { FACT_KEYS, type FactKey, type FieldMapping, type RunnerField } from "@/lib/application-runner/types";
 import { openRouterTailoringConfig } from "@/lib/ai/openrouter-tailoring";
+import { readJsonResponse } from "@/lib/security/response-body";
 
 interface MappingResponse {
   mappings?: Array<{ field_id?: unknown; fact_key?: unknown }>;
@@ -46,7 +47,7 @@ export async function mapUnknownFields(fields: RunnerField[]): Promise<FieldMapp
     cache: "no-store",
     signal: AbortSignal.timeout(25_000),
   });
-  const payload = (await response.json().catch(() => null)) as MappingResponse | null;
+  const payload = await readJsonResponse<MappingResponse>(response, 500_000).catch(() => null);
   if (!response.ok || !payload) return [];
   const content = payload.choices?.[0]?.message?.content ?? "";
   let parsed: { mappings?: Array<{ field_id?: unknown; fact_key?: unknown }> };

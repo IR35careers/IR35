@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { after } from "next/server";
 import {
   providerReviewQuestions,
   resumeSubmissionWithProvider,
@@ -256,35 +257,38 @@ export async function POST(request: Request): Promise<Response> {
       payload_hash: payloadHash,
       status: "processing",
       error_code: null,
+      receipt: { state: "processing", message: "The approved application is queued for the employer portal." },
+      submitted_at: null,
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,idempotency_key" });
     if (queueError) throw new Error(queueError.message);
     console.info("application_submit_stage", { applicationId: String(packet.id), stage: "runner_queued", provider: employerDestination ? "verified_employer_email" : provider?.kind || "unavailable" });
 
-    try {
-      let resumeUrl: string | undefined;
-      let resumeBuffer: Buffer | undefined;
-      if (employerDestination || provider?.kind === "tsenta" || provider?.kind === "native") {
-        resumeBuffer = await buildResumePdf({
-          format: "pdf",
-          resumeText,
-          candidateName,
-          jobTitle: job.title,
-          companyName: job.company_name,
-          versionLabel: String(packet.resume_version_label || "Application CV"),
-        });
-        if ((provider?.kind === "tsenta" || provider?.kind === "native") && !canResume) {
-          const storagePath = `${userId}/applications/${packet.id}.pdf`;
-          const { error: uploadError } = await admin.storage.from("cvs").upload(storagePath, resumeBuffer, { contentType: "application/pdf", upsert: true });
-          if (uploadError) throw new Error("Your approved CV could not be prepared for the employer form.");
-          const { data: signedResume, error: signedError } = await admin.storage.from("cvs").createSignedUrl(storagePath, 60 * 60);
-          if (signedError || !signedResume?.signedUrl) throw new Error("Your approved CV could not be prepared for the employer form.");
-          resumeUrl = signedResume.signedUrl;
+    after(async () => {
+      try {
+        let resumeUrl: string | undefined;
+        let resumeBuffer: Buffer | undefined;
+        if (employerDestination || provider?.kind === "tsenta" || provider?.kind === "native") {
+          resumeBuffer = await buildResumePdf({
+            format: "pdf",
+            resumeText,
+            candidateName,
+            jobTitle: job.title,
+            companyName: job.company_name,
+            versionLabel: String(packet.resume_version_label || "Application CV"),
+          });
+          if ((provider?.kind === "tsenta" || provider?.kind === "native") && !canResume) {
+            const storagePath = `${userId}/applications/${packet.id}.pdf`;
+            const { error: uploadError } = await admin.storage.from("cvs").upload(storagePath, resumeBuffer, { contentType: "application/pdf", upsert: true });
+            if (uploadError) throw new Error("Your approved CV could not be prepared for the employer form.");
+            const { data: signedResume, error: signedError } = await admin.storage.from("cvs").createSignedUrl(storagePath, 60 * 60);
+            if (signedError || !signedResume?.signedUrl) throw new Error("Your approved CV could not be prepared for the employer form.");
+            resumeUrl = signedResume.signedUrl;
+          }
         }
-      }
 
-      const screeningAnswers = ((packet.screening_answers as ApplicationQuestion[]) ?? []);
-      let providerReceipt = canResume
+        const screeningAnswers = ((packet.screening_answers as ApplicationQuestion[]) ?? []);
+        let providerReceipt = canResume
         ? await resumeSubmissionWithProvider(String(previous?.provider_submission_id), screeningAnswers)
         : employerDestination
           ? await submitToVerifiedEmployerEmail({
@@ -308,28 +312,28 @@ export async function POST(request: Request): Promise<Response> {
             screeningAnswers: screeningAnswers.map(({ label, answer, source }) => ({ label, answer, source })),
           }, idempotencyKey);
 
-      // Only the remote managed provider exposes a resumable review endpoint.
-      // The owned browser runner already consumes all confirmed profile facts
-      // during its pass and returns any genuinely unresolved fields to the user.
-      for (let attempt = 0; provider?.kind === "tsenta" && attempt < 4 && providerReceipt.state === "needs_user"; attempt += 1) {
-        const knownAnswers = knownProviderAnswers(providerReviewQuestions(providerReceipt.review), submissionCandidate, packet as DbRow);
-        if (knownAnswers.length === 0 || knownAnswers.some((question) => question.required && !question.reviewed)) break;
-        providerReceipt = await resumeSubmissionWithProvider(providerReceipt.providerSubmissionId, knownAnswers);
-      }
+        // Only the remote managed provider exposes a resumable review endpoint.
+        // The owned browser runner already consumes all confirmed profile facts
+        // during its pass and returns any genuinely unresolved fields to the user.
+        for (let attempt = 0; provider?.kind === "tsenta" && attempt < 4 && providerReceipt.state === "needs_user"; attempt += 1) {
+          const knownAnswers = knownProviderAnswers(providerReviewQuestions(providerReceipt.review), submissionCandidate, packet as DbRow);
+          if (knownAnswers.length === 0 || knownAnswers.some((question) => question.required && !question.reviewed)) break;
+          providerReceipt = await resumeSubmissionWithProvider(providerReceipt.providerSubmissionId, knownAnswers);
+        }
 
-      console.info("application_submit_stage", { applicationId: String(packet.id), stage: "runner_finished", result: providerReceipt.state });
+        console.info("application_submit_stage", { applicationId: String(packet.id), stage: "runner_finished", result: providerReceipt.state });
 
-      if (providerReceipt.state === "needs_user") {
-        const action = providerReviewAction(providerReceipt);
-        const questions = await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, providerReceipt, message: providerReceipt.message, action });
-        return Response.json({ state: "needs_user", message: providerReceipt.message, questions, action }, { status: 202, headers: NO_STORE });
-      }
-      if (providerReceipt.state === "processing") {
-        await admin.from("application_submissions").update({ status: "processing", provider_submission_id: providerReceipt.providerSubmissionId, error_code: null, receipt: { state: "processing", message: providerReceipt.message }, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
-        return Response.json({ state: "processing", message: providerReceipt.message }, { status: 202, headers: NO_STORE });
-      }
+        if (providerReceipt.state === "needs_user") {
+          const action = providerReviewAction(providerReceipt);
+          await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, providerReceipt, message: providerReceipt.message, action });
+          return;
+        }
+        if (providerReceipt.state === "processing") {
+          await admin.from("application_submissions").update({ status: "processing", provider_submission_id: providerReceipt.providerSubmissionId, error_code: null, receipt: { state: "processing", message: providerReceipt.message }, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
+          return;
+        }
 
-      const receipt: ApplicationReceipt = {
+        const receipt: ApplicationReceipt = {
         receiptId: providerReceipt.providerSubmissionId,
         mode: "external_handoff",
         createdAt: providerReceipt.submittedAt,
@@ -338,30 +342,40 @@ export async function POST(request: Request): Promise<Response> {
         skippedFields: [],
         message: providerReceipt.message,
       };
-      const now = new Date().toISOString();
-      const [{ error: submissionError }, { error: updateError }, { error: eventError }] = await Promise.all([
+        const now = new Date().toISOString();
+        const [{ error: submissionError }, { error: updateError }, { error: eventError }] = await Promise.all([
         admin.from("application_submissions").update({ status: "succeeded", provider_submission_id: providerReceipt.providerSubmissionId, receipt, error_code: null, submitted_at: providerReceipt.submittedAt, updated_at: now }).eq("user_id", userId).eq("idempotency_key", idempotencyKey),
         admin.from("application_packets").update({ status: "applied", mode: "external_handoff", receipt, updated_at: now }).eq("id", packet.id).eq("user_id", userId),
         admin.from("application_events").upsert({ user_id: userId, application_id: packet.id, event_type: "status_changed", label: "Application submitted successfully", metadata: { providerSubmissionId: providerReceipt.providerSubmissionId }, idempotency_key: `${idempotencyKey}:event` }, { onConflict: "user_id,idempotency_key" }),
       ]);
-      if (submissionError || updateError || eventError) throw new Error(submissionError?.message || updateError?.message || eventError?.message);
-      await sendApplicationNotification({ kind: "submitted", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submitted` }).catch(() => null);
-      return Response.json({ receipt }, { status: 201, headers: NO_STORE });
-    } catch (providerError) {
-      const providerMessage = providerError instanceof Error ? providerError.message : "";
-      if (providerMessage.startsWith("Complete your Application Profile")) {
-        const questions = await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, message: providerMessage, action: "/profile" });
-        return Response.json({ state: "needs_user", message: providerMessage, questions, action: "/profile" }, { status: 202, headers: NO_STORE });
+        if (submissionError || updateError || eventError) throw new Error(submissionError?.message || updateError?.message || eventError?.message);
+        await sendApplicationNotification({ kind: "submitted", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submitted` }).catch(() => null);
+        return;
+      } catch (providerError) {
+        const providerMessage = providerError instanceof Error ? providerError.message : "";
+        if (providerMessage.startsWith("Complete your Application Profile")) {
+          await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, message: providerMessage, action: "/profile" });
+          return;
+        }
+        console.error("application_runner_failed", {
+          applicationId: String(packet.id),
+          provider: employerDestination ? "verified_employer_email" : provider?.kind || "unavailable",
+          reason: providerMessage.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 300) || "unknown",
+        });
+        const failedAt = new Date().toISOString();
+        await Promise.all([
+          admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", receipt: { state: "failed", message: safeSubmissionError(providerError) }, updated_at: failedAt }).eq("user_id", userId).eq("idempotency_key", idempotencyKey),
+          admin.from("application_events").upsert({ user_id: userId, application_id: packet.id, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", metadata: { reason: "provider_error" }, idempotency_key: `${idempotencyKey}:failed:${payloadHash}` }, { onConflict: "user_id,idempotency_key" }),
+        ]);
+        await sendApplicationNotification({ kind: "submission_issue", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submission-issue` }).catch(() => null);
+        return;
       }
-      console.error("application_runner_failed", {
-        applicationId: String(packet.id),
-        provider: employerDestination ? "verified_employer_email" : provider?.kind || "unavailable",
-        reason: providerMessage.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 300) || "unknown",
-      });
-      await admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", receipt: { state: "failed", message: safeSubmissionError(providerError) }, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
-      await sendApplicationNotification({ kind: "submission_issue", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submission-issue` }).catch(() => null);
-      throw providerError;
-    }
+    });
+    return Response.json({
+      state: "processing",
+      message: "Your approved application is being completed securely in the background.",
+      retryAfterSeconds: 10,
+    }, { status: 202, headers: NO_STORE });
   } catch (error) {
     if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
     return Response.json({ error: safeSubmissionError(error) }, { status: 502, headers: NO_STORE });

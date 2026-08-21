@@ -2,6 +2,7 @@ import { analyseResumeForRole, scoreResumeForRole } from "@/lib/resume/analysis"
 import type { JobDetail } from "@/lib/job-types";
 import type { AiTailoringResult, AiTailoringSuggestion } from "@/lib/ai/tailoring-types";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
+import { readJsonResponse } from "@/lib/security/response-body";
 
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MAX_CV_CHARACTERS = 80_000;
@@ -178,7 +179,7 @@ export async function tailorResumeWithOpenRouter(input: {
     cache: "no-store",
     signal: AbortSignal.timeout(Math.max(5_000, Math.min(input.timeoutMs ?? 55_000, 55_000))),
   });
-  const payload = (await response.json().catch(() => null)) as OpenRouterResponse | null;
+  const payload = await readJsonResponse<OpenRouterResponse>(response, 1_500_000);
   if (!response.ok) throw new Error(payload?.error?.message || `OpenRouter returned ${response.status}.`);
   const content = responseText(payload?.choices?.[0]);
   if (!content) throw new Error("OpenRouter returned an empty response.");

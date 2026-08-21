@@ -441,7 +441,7 @@ export default function AdminPage() {
     if (section !== "campaigns" || !data?.emailTemplates?.length || campaignDraftHydrated.current) return;
     campaignDraftHydrated.current = true;
     try {
-      const stored = window.localStorage.getItem("ir35careers-admin-email-draft");
+      const stored = window.sessionStorage.getItem("ir35careers-admin-email-draft");
       if (stored) {
         const saved = JSON.parse(stored) as { draft?: EmailCampaignDraft; campaignId?: string; audience?: CampaignAudience; customRecipient?: string };
         if (saved.draft?.subject && saved.draft?.message && saved.campaignId) {
@@ -454,7 +454,7 @@ export default function AdminPage() {
         }
       }
     } catch {
-      window.localStorage.removeItem("ir35careers-admin-email-draft");
+      window.sessionStorage.removeItem("ir35careers-admin-email-draft");
     }
     const first = data.emailTemplates[0];
     setEmailDraft({
@@ -473,7 +473,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (section !== "campaigns" || !emailDraft || !campaignId || !campaignDraftHydrated.current) return;
     const timeout = window.setTimeout(() => {
-      window.localStorage.setItem("ir35careers-admin-email-draft", JSON.stringify({
+      window.sessionStorage.setItem("ir35careers-admin-email-draft", JSON.stringify({
         draft: emailDraft,
         campaignId,
         audience: campaignAudience,

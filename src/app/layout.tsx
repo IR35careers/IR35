@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
@@ -74,11 +75,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await headers();
   return (
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>

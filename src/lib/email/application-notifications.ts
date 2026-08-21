@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
 
 export type ApplicationNotificationKind =
@@ -44,6 +45,10 @@ function escapeHtml(value: string): string {
 function validEmail(value: string): boolean {
   const address = value.match(/<([^<>]+)>/)?.[1] ?? value;
   return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(address.trim());
+}
+
+function providerIdempotencyKey(value: string): string {
+  return `ir35-application-${createHash("sha256").update(value).digest("hex")}`;
 }
 
 function presentation(input: ApplicationNotificationInput): {
@@ -155,7 +160,7 @@ export async function sendApplicationNotification(input: ApplicationNotification
       { name: "email_type", value: `application_${input.kind}` },
       { name: "application_ref", value: input.applicationId.slice(0, 36) },
     ],
-  });
+  }, { idempotencyKey: providerIdempotencyKey(input.idempotencyKey) });
   if (delivery.error) throw new Error(delivery.error.message);
   return delivery.data?.id ?? null;
 }

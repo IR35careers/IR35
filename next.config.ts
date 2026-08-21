@@ -59,26 +59,6 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: [
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "base-uri 'self'",
-              "object-src 'none'",
-              "frame-ancestors 'none'",
-              "form-action 'self'",
-              "script-src 'self' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-              "media-src 'self' blob:",
-              "worker-src 'self' blob:",
-              "frame-src 'self'",
-              "manifest-src 'self'",
-              "upgrade-insecure-requests",
-            ].join("; "),
-          },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
           { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
           { key: "Origin-Agent-Cluster", value: "?1" },

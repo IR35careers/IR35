@@ -89,6 +89,7 @@ function clearLocalPrivateState(): void {
   clearWorkspaceForSignOut();
   clearLocalResumeVersions();
   window.localStorage.removeItem("ir35careers-admin-email-draft");
+  window.sessionStorage.removeItem("ir35careers-admin-email-draft");
 }
 
 function installStorageListener() {

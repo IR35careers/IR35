@@ -1,5 +1,6 @@
 import type { ApplicationQuestion, ContractorProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
+import { readJsonResponse } from "@/lib/security/response-body";
 
 export type SubmissionProviderConfig =
   | { kind: "tsenta"; endpoint: string; apiKey: string; name: string }
@@ -190,7 +191,7 @@ async function tsentaRequest<T>(config: Extract<SubmissionProviderConfig, { kind
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   });
-  const body = (await response.json().catch(() => null)) as (T & TsentaErrorEnvelope) | null;
+  const body = await readJsonResponse<T & TsentaErrorEnvelope>(response, 1_000_000).catch(() => null);
   if (!response.ok || !body) {
     const providerMessage = typeof body?.error === "string" ? body.error : body?.error?.message;
     throw new Error(providerMessage || "The employer application could not be completed.");
@@ -255,7 +256,7 @@ async function submitWithGateway(config: Extract<SubmissionProviderConfig, { kin
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   });
-  const body = (await response.json().catch(() => null)) as { submission_id?: string; receipt_id?: string; submitted_at?: string; message?: string; error?: string } | null;
+  const body = await readJsonResponse<{ submission_id?: string; receipt_id?: string; submitted_at?: string; message?: string; error?: string }>(response, 1_000_000).catch(() => null);
   if (!response.ok) throw new Error(body?.error || `Submission provider returned ${response.status}.`);
   const providerSubmissionId = body?.submission_id || body?.receipt_id;
   if (!providerSubmissionId) throw new Error("Submission provider did not return a receipt identifier.");

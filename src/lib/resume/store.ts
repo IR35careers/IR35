@@ -88,7 +88,8 @@ export function createResumeVersionId(): string {
 }
 
 export async function loadResumeVersions(jobId: string, userId: string | null): Promise<ResumeVersion[]> {
-  if (userId && isSupabaseConfigured()) {
+  if (isSupabaseConfigured()) {
+    if (!userId) return [];
     const { getSupabase } = await import("@/lib/supabase");
     const { data, error } = await getSupabase()
       .from("resume_versions")
@@ -107,7 +108,8 @@ export async function loadResumeVersions(jobId: string, userId: string | null): 
 }
 
 export async function saveResumeVersion(version: ResumeVersion, userId: string | null): Promise<ResumeVersion> {
-  if (userId && isSupabaseConfigured()) {
+  if (isSupabaseConfigured()) {
+    if (!userId) throw new Error("Sign in before saving a CV version.");
     const { getSupabase } = await import("@/lib/supabase");
     const { data, error } = await getSupabase()
       .from("resume_versions")
@@ -126,7 +128,8 @@ export async function saveResumeVersion(version: ResumeVersion, userId: string |
 }
 
 export async function deleteResumeVersion(id: string, userId: string | null): Promise<void> {
-  if (userId && isSupabaseConfigured()) {
+  if (isSupabaseConfigured()) {
+    if (!userId) throw new Error("Sign in before deleting a CV version.");
     const { getSupabase } = await import("@/lib/supabase");
     const { error } = await getSupabase().from("resume_versions").delete().eq("id", id).eq("user_id", userId);
     if (error) throw new Error(error.message);

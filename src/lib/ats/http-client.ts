@@ -9,6 +9,8 @@
  * - `fetchImpl` is injectable so tests can run without a network.
  */
 
+import { readJsonResponse } from "@/lib/security/response-body";
+
 export interface HttpClientOptions {
   minDelayMs?: number;
   timeoutMs?: number;
@@ -16,6 +18,7 @@ export interface HttpClientOptions {
   baseBackoffMs?: number;
   fetchImpl?: typeof fetch;
   userAgent?: string;
+  maxResponseBytes?: number;
 }
 
 export class HttpError extends Error {
@@ -34,6 +37,7 @@ export class HttpClient {
   private readonly baseBackoffMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly userAgent: string;
+  private readonly maxResponseBytes: number;
   private lastRequestAt = 0;
 
   constructor(opts: HttpClientOptions = {}) {
@@ -43,6 +47,7 @@ export class HttpClient {
     this.baseBackoffMs = opts.baseBackoffMs ?? 1500;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.userAgent = opts.userAgent ?? "IR35Careers-JobFetcher/1.0 (+https://ir35careers.com)";
+    this.maxResponseBytes = Math.max(1_024, Math.min(opts.maxResponseBytes ?? 10_000_000, 25_000_000));
   }
 
   private async throttle(): Promise<void> {
@@ -75,7 +80,9 @@ export class HttpClient {
         });
 
         if (res.ok) {
-          return (await res.json()) as T;
+          const parsed = await readJsonResponse<T>(res, this.maxResponseBytes);
+          if (parsed === null) throw new Error("The upstream service returned invalid JSON.");
+          return parsed;
         }
 
         // 4xx other than 429 will not improve on retry — fail fast.

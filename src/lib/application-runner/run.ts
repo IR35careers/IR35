@@ -86,14 +86,17 @@ async function actionLocator(page: Page, pattern: RegExp): Promise<Locator | nul
 async function hasApplicationForm(page: Page): Promise<boolean> {
   const controls = page.locator('input:not([type="hidden"]):not([type="search"]), select, textarea');
   const count = Math.min(await controls.count(), 30);
-  let meaningful = 0;
+  let applicationSignals = 0;
+  let hasResumeUpload = false;
   for (let index = 0; index < count; index += 1) {
     const item = controls.nth(index);
     if (!(await item.isVisible().catch(() => false))) continue;
-    const text = clean(`${await item.getAttribute("name") ?? ""} ${await item.getAttribute("autocomplete") ?? ""} ${await item.getAttribute("aria-label") ?? ""}`);
-    if (!/search|newsletter|subscribe/i.test(text)) meaningful += 1;
+    const text = clean(`${await item.getAttribute("name") ?? ""} ${await item.getAttribute("autocomplete") ?? ""} ${await item.getAttribute("aria-label") ?? ""} ${await item.getAttribute("placeholder") ?? ""}`);
+    const type = (await item.getAttribute("type") ?? "").toLowerCase();
+    if (type === "file" && /(resume|cv|curriculum)/i.test(text)) hasResumeUpload = true;
+    if (/(first.?name|last.?name|full.?name|email|phone|mobile|resume|curriculum|cover.?letter|sponsor|authori[sz]|postal|postcode|address)/i.test(text)) applicationSignals += 1;
   }
-  return meaningful >= 2;
+  return hasResumeUpload || applicationSignals >= 2;
 }
 
 async function clickAndFollow(page: Page, action: Locator, settleMs: number): Promise<Page> {
@@ -128,6 +131,9 @@ async function blocker(page: Page): Promise<{ message: string; action?: string }
   const verificationText = clean(await page.locator("body").innerText().catch(() => ""), 20_000);
   if (/(enter the verification code|two-factor authentication|2-step verification|check your email for a code)/i.test(verificationText)) {
     return { message: "The employer requires a verification code. Enter it before the application can continue.", action: "verification_code" };
+  }
+  if (/(sign in to (?:continue|apply)|log in to (?:continue|apply)|create an account to apply|register to apply)/i.test(verificationText)) {
+    return { message: "The job board requires your account sign-in before it will accept this application.", action: "employer_login" };
   }
   return null;
 }
@@ -340,13 +346,21 @@ export async function runNativeApplication(payload: SubmissionProviderPayload): 
     let sensitive = false;
     await context.route("**/*", (route) => publicRequestGuard(route, approvedHosts, () => sensitive));
     let page = await context.newPage();
+    let navigationStatus: number | null = null;
     try {
-      await page.goto(destination.toString(), { waitUntil: "domcontentloaded" });
+      const navigation = await page.goto(destination.toString(), { waitUntil: "domcontentloaded" });
+      navigationStatus = navigation?.status() ?? null;
     } catch (error) {
       console.warn("application_runner_navigation_failed", {
         host: destination.hostname,
         reason: error instanceof Error ? clean(error.message, 240) : "unknown",
       });
+      throw new Error("The employer application page is unavailable or closed.");
+    }
+    if (navigationStatus && [401, 403, 429].includes(navigationStatus)) {
+      return reviewReceipt("The job board requires a sign-in or browser verification before it will accept this application.", [], "employer_login");
+    }
+    if (navigationStatus && navigationStatus >= 400) {
       throw new Error("The employer application page is unavailable or closed.");
     }
     await validatePublicHttpsUrl(page.url());

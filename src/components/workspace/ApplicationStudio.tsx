@@ -84,6 +84,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const answersReviewed = Boolean(application?.questions.every((item) => !item.required || (item.reviewed && item.answer.trim().length > 0)));
   const approvalsComplete = Boolean(application?.truthApproved && application.materialsApproved && application.submissionApproved);
   const submitted = application?.status === "applied" && application.receipt?.mode === "external_handoff";
+  const latestSubmissionEvent = application ? [...application.events].reverse().find((event) => [
+    "Application submission started",
+    "Application submitted successfully",
+    "Application needs your answer",
+    "Application attempt stopped and is ready to retry",
+  ].includes(event.label)) : undefined;
+  const submissionInProgress = application?.status === "ready" && latestSubmissionEvent?.label === "Application submission started";
   const selectedSuggestions = aiResult?.suggestions.filter((item) => selectedSuggestionIds.includes(item.id)) ?? [];
   const selectedPreview = aiResult ? applyAiTailoringSuggestions(application?.sourceCvText ?? cvText, selectedSuggestions) : "";
   const selectedScore = selectedPreview ? scoreResumeForRole(selectedPreview, job, cvFilename || "Application CV").overall : application?.matchScore ?? 0;
@@ -101,6 +108,53 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     const timer = window.setInterval(() => setSubmitElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1_000);
     return () => window.clearInterval(timer);
   }, [busy]);
+
+  useEffect(() => {
+    if (!application || !submissionInProgress || !isSupabaseConfigured()) return;
+    let active = true;
+    const applicationId = application.id;
+    const refresh = async () => {
+      try {
+        const response = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(applicationId)}`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+        const payload = (await response.json().catch(() => ({}))) as { state?: "submitted" | "processing" | "needs_user" | "failed"; receipt?: ApplicationRecord["receipt"]; questions?: ApplicationRecord["questions"]; action?: string; message?: string; error?: string };
+        if (!active || payload.state === "processing") return;
+        if (payload.state === "submitted" && payload.receipt) {
+          const now = new Date().toISOString();
+          const next: ApplicationRecord = { ...application, status: "applied", mode: "external_handoff", receipt: payload.receipt, updatedAt: now, events: [...application.events, { id: newWorkspaceId(), applicationId, type: "status_changed", label: "Application submitted successfully", createdAt: now }] };
+          setApplication(next);
+          persistApplication(next);
+          setError(null);
+          setNotice("Application submitted. The verified employer receipt is saved below.");
+          return;
+        }
+        if (payload.state === "needs_user") {
+          const now = new Date().toISOString();
+          const next: ApplicationRecord = { ...application, status: "needs_review", questions: payload.questions ?? application.questions, submissionApproved: false, updatedAt: now, events: [...application.events, { id: newWorkspaceId(), applicationId, type: "status_changed", label: "Application needs your answer", createdAt: now }] };
+          setApplication(next);
+          persistApplication(next);
+          if (payload.action === "/profile") setProfilePrompt(true);
+          setError(null);
+          setNotice(payload.message || "The employer needs information from you before the application can continue.");
+          return;
+        }
+        if (payload.state === "failed") {
+          const now = new Date().toISOString();
+          const next: ApplicationRecord = { ...application, updatedAt: now, events: [...application.events, { id: newWorkspaceId(), applicationId, type: "status_changed", label: "Application attempt stopped and is ready to retry", createdAt: now }] };
+          setApplication(next);
+          persistApplication(next);
+          setNotice(null);
+          setError(payload.error || "The employer form could not be completed. Your approved materials are safe and ready to retry.");
+          return;
+        }
+        if (!response.ok && response.status !== 202) setError(payload.error || "Application progress could not be refreshed.");
+      } catch {
+        // A temporary status-check failure must not start another submission.
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 5_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [application, submissionInProgress]);
 
   const updateApplication = (updater: (current: ApplicationRecord) => ApplicationRecord) => {
     if (!application || submitted) return;
@@ -321,14 +375,14 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       const ready = application.status === "ready" && approvalsComplete
         ? application
         : await persistReviewedPacket(application, false);
-      setNotice("Submitting to the employer portal. This usually takes 30 to 90 seconds. Keep this page open until confirmation appears.");
+      setNotice("Starting the secure employer application. You can leave this page while it completes.");
       const response = await fetchWithFreshSession("/api/applications/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ applicationId: ready.id, approval: "SUBMIT_APPROVED_APPLICATION", packet: ready }),
         signal: AbortSignal.timeout(120_000),
       });
-      let payload = (await response.json().catch(() => ({ error: "The employer application service returned an unreadable response." }))) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user" | "failed"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string; retryAfterSeconds?: number };
+      const payload = (await response.json().catch(() => ({ error: "The employer application service returned an unreadable response." }))) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user" | "failed"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string; retryAfterSeconds?: number };
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
           const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
@@ -347,25 +401,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         };
         setApplication(submissionStarted);
         persistApplication(submissionStarted);
-        for (let attempt = 0; attempt < 8 && !payload.receipt; attempt += 1) {
-          await new Promise((resolve) => setTimeout(resolve, 2_000));
-          const statusResponse = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(ready.id)}`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
-          payload = (await statusResponse.json().catch(() => ({ error: "Application progress could not be read." }))) as typeof payload;
-          if (payload.state === "needs_user") {
-            const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
-            setApplication(needsUserApplication);
-            persistApplication(needsUserApplication);
-            if (payload.action === "/profile") setProfilePrompt(true);
-            setNotice(payload.message || "One answer needs your attention before this application can be sent.");
-            return;
-          }
-          if (!statusResponse.ok && statusResponse.status !== 202) throw new Error(payload.error ?? "Application progress could not be refreshed.");
-        }
         if (!payload.receipt) {
-          const retryDetail = payload.retryAfterSeconds && payload.retryAfterSeconds > 30
-            ? ` If it does not finish, retry in about ${Math.ceil(payload.retryAfterSeconds / 60)} minute${Math.ceil(payload.retryAfterSeconds / 60) === 1 ? "" : "s"}.`
-            : "";
-          setNotice(`${payload.message || "Your application is still being completed. Its status will update in Applications."}${retryDetail}`);
+          setNotice(payload.message || "Your application is being completed securely. Its status will update automatically in Applications.");
           return;
         }
       }
@@ -425,6 +462,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
   const handlePrimaryApplyAction = () => {
     if (!application || submitted) return;
+    if (submissionInProgress) {
+      setNotice("Your application is already being completed. This page will update when the employer responds.");
+      return;
+    }
     if (answersReviewed && approvalsComplete && submissionConnection === "connected") {
       void submitApprovedApplication();
       return;
@@ -452,7 +493,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           <div className="flex flex-wrap items-center gap-2">
             {application && <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">{application.matchScore}% match</span>}
             {application && <StatusPill status={application.status} />}
-            {application && !submitted && <button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} {busy === "submit" ? `Applying ${submitElapsedSeconds}s` : "Approve and apply now"}</button>}
+            {application && !submitted && <button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null || submissionInProgress} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} {submissionInProgress ? "Processing application" : busy === "submit" ? `Starting ${submitElapsedSeconds}s` : "Approve and apply now"}</button>}
             {submitted && <span className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-3 text-sm font-bold text-emerald-800"><CheckCircle2 size={16} /> Submitted</span>}
           </div>
         </div>
@@ -464,6 +505,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       {engagementWarning && <div className="mt-4 flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><AlertTriangle className="mt-0.5 shrink-0" size={19} /><p><strong>Check the engagement type.</strong> {engagementWarning}</p></div>}
       {(error || notice) && <p role={error ? "alert" : "status"} className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${error ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>{error ?? notice}</p>}
       {busy === "submit" && <div className="mt-3 flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950" role="status"><Loader2 className="mt-0.5 shrink-0 animate-spin" size={17} /><div><p className="font-semibold">Application runner active · {submitElapsedSeconds}s</p><p className="mt-1 leading-6 text-sky-900">Your approved CV and answers are being completed on the employer form. IR35Careers will show Applied only after the employer returns a confirmation.</p></div></div>}
+      {submissionInProgress && busy !== "submit" && <div className="mt-3 flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950" role="status"><Loader2 className="mt-0.5 shrink-0 animate-spin" size={17} /><div><p className="font-semibold">Application processing securely</p><p className="mt-1 leading-6 text-sky-900">You can leave this page. The status updates automatically when the employer confirms submission or asks for information.</p></div></div>}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <main className="min-w-0 space-y-5">
@@ -510,7 +552,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 <div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-emerald-300"><ShieldCheck size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">Step 3</p><h2 className="font-semibold">Ready to apply?</h2><p className="mt-1 text-sm leading-6 text-slate-300">Confirm the final application once, then IR35Careers handles the supported employer form in the background.</p></div></div>
                 {!submitted && <label className={`mt-5 flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm ${approvalsComplete ? "border-emerald-400/40 bg-emerald-400/10" : "border-white/15 bg-white/5"}`}><input type="checkbox" checked={approvalsComplete} onChange={(event) => updateApplication((current) => ({ ...current, truthApproved: event.target.checked, materialsApproved: event.target.checked, submissionApproved: event.target.checked, status: "needs_review" }))} className="h-5 w-5 accent-emerald-400" />I confirm the application is accurate, truthful and ready to submit.</label>}
                 {!submitted && <p className="mt-3 text-xs leading-5 text-slate-300">{!answersReviewed ? "Confirm every required answer before applying." : !approvalsComplete ? "Tick the final approval above to continue." : submissionConnection === "gated" ? "Sign in to submit this application." : "Ready. IR35Careers will submit the approved materials and wait for employer confirmation."}</p>}
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row">{submitted ? <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200"><CheckCircle2 size={17} /> Application submitted</span> : <><button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || submissionConnection !== "connected"} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50">{busy === "submit" ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} {busy === "submit" ? `Applying ${submitElapsedSeconds}s` : "Approve and apply now"}</button>{submissionConnection === "gated" && <button type="button" onClick={() => void saveReviewedPacket()} disabled={busy !== null || !answersReviewed || !approvalsComplete} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-950 hover:bg-slate-100 disabled:opacity-40">{busy === "save" ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save application</button>}</>}</div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">{submitted ? <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200"><CheckCircle2 size={17} /> Application submitted</span> : <><button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || submissionInProgress || submissionConnection !== "connected"} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50">{busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} {submissionInProgress ? "Processing application" : busy === "submit" ? `Starting ${submitElapsedSeconds}s` : "Approve and apply now"}</button>{submissionConnection === "gated" && <button type="button" onClick={() => void saveReviewedPacket()} disabled={busy !== null || !answersReviewed || !approvalsComplete} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-950 hover:bg-slate-100 disabled:opacity-40">{busy === "save" ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save application</button>}</>}</div>
               </section>
 
               {submitted && application.receipt && <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6" data-testid="application-receipt"><CheckCircle2 className="text-emerald-700" size={24} /><h2 className="mt-3 font-semibold text-emerald-950">Employer submission confirmed</h2><p className="mt-1 font-mono text-xs text-emerald-800">Receipt {application.receipt.receiptId}</p><p className="mt-3 text-sm leading-6 text-emerald-900">{application.receipt.message}</p></section>}
@@ -519,12 +561,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         </main>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:h-max">
-          <section className={`rounded-3xl border p-5 ${submissionConnection === "connected" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}><p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionConnection === "connected" ? "text-emerald-700" : "text-slate-500"}`}>Application status</p><h2 className="mt-2 font-semibold text-slate-950">{submissionConnection === "connected" ? "Ready to apply" : "Sign in to apply"}</h2><p className="mt-2 text-sm leading-6 text-slate-700">{submissionConnection === "connected" ? "Review the final materials, confirm the application and apply from this page." : "Your work is safe. Sign in before sending it to the employer."}</p>{answersReviewed && approvalsComplete && !submitted ? <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || submissionConnection !== "connected"} className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{busy === "submit" ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} {busy === "submit" ? `Applying ${submitElapsedSeconds}s` : "Approve and apply now"}</button> : <a href="#final-application-approval" className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800"><Send size={15} /> Complete final approval</a>}</section>
+          <section className={`rounded-3xl border p-5 ${submissionConnection === "connected" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}><p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${submissionConnection === "connected" ? "text-emerald-700" : "text-slate-500"}`}>Application status</p><h2 className="mt-2 font-semibold text-slate-950">{submissionInProgress ? "Processing application" : submissionConnection === "connected" ? "Ready to apply" : "Sign in to apply"}</h2><p className="mt-2 text-sm leading-6 text-slate-700">{submissionInProgress ? "IR35Careers is completing the approved employer form. You can leave this page." : submissionConnection === "connected" ? "Review the final materials, confirm the application and apply from this page." : "Your work is safe. Sign in before sending it to the employer."}</p>{answersReviewed && approvalsComplete && !submitted ? <button type="button" onClick={() => void submitApprovedApplication()} disabled={busy !== null || submissionInProgress || submissionConnection !== "connected"} className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />} {submissionInProgress ? "Processing application" : busy === "submit" ? `Starting ${submitElapsedSeconds}s` : "Approve and apply now"}</button> : <a href="#final-application-approval" className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800"><Send size={15} /> Complete final approval</a>}</section>
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Readiness</p><h2 className="mt-1 text-sm font-semibold text-slate-950">Application checklist</h2></div><strong className="text-2xl text-slate-950">{progress}%</strong></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} /></div><ul className="mt-5 space-y-3 text-sm">{[["CV supplied", cvReady], ["Role match complete", Boolean(application)], ["Answers confirmed", answersReviewed], ["Final approval complete", approvalsComplete]].map(([label, done]) => <li key={String(label)} className="flex items-center gap-2.5">{done ? <CheckCircle2 size={17} className="text-emerald-600" /> : <span className="h-[17px] w-[17px] rounded-full border border-slate-300" />}<span className={done ? "font-medium text-slate-800" : "text-slate-500"}>{label}</span></li>)}</ul></section>
           <section className="rounded-3xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-2 text-brand-700"><LockKeyhole size={16} /><p className="text-[10px] font-bold uppercase tracking-[0.16em]">You stay in control</p></div><p className="mt-3 text-sm leading-6 text-slate-600">If an employer asks a new legal, identity or personal question, the application pauses and asks you. Submitted applications include a confirmation.</p></section>
         </aside>
       </div>
-      {application && !submitted && <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex justify-center px-4" data-testid="persistent-apply-action"><div className="pointer-events-none flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-emerald-200 bg-white/95 p-3 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-4"><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-950">{job.title}</p><p className="text-xs text-slate-600">{answersReviewed && approvalsComplete ? submissionConnection === "connected" ? "Ready for your final instruction" : "Sign in to apply" : "Review and approve the packet to apply"}</p></div><button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null} className="ir35-focus pointer-events-auto inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} {busy === "submit" ? `Applying ${submitElapsedSeconds}s` : "Approve and apply now"}</button></div></div>}
+      {application && !submitted && <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex justify-center px-4" data-testid="persistent-apply-action"><div className="pointer-events-none flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-emerald-200 bg-white/95 p-3 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-4"><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-950">{job.title}</p><p className="text-xs text-slate-600">{submissionInProgress ? "Completing the employer form securely" : answersReviewed && approvalsComplete ? submissionConnection === "connected" ? "Ready for your final instruction" : "Sign in to apply" : "Review and approve the packet to apply"}</p></div><button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null || submissionInProgress} className="ir35-focus pointer-events-auto inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} {submissionInProgress ? "Processing application" : busy === "submit" ? `Starting ${submitElapsedSeconds}s` : "Approve and apply now"}</button></div></div>}
       {profilePrompt && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4"><section role="dialog" aria-modal="true" aria-labelledby="complete-profile-title" className="w-full max-w-lg rounded-3xl bg-white p-6 text-center shadow-2xl sm:p-8"><span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><AlertTriangle size={24} /></span><p className="mt-5 text-xs font-bold uppercase tracking-[0.15em] text-amber-700">Application paused</p><h2 id="complete-profile-title" className="mt-2 text-2xl font-semibold text-slate-950">Complete your profile</h2><p className="mt-3 text-sm leading-6 text-slate-600">This employer needs information that is not yet saved in your application profile. Add the missing details, then return here and apply again.</p><div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" onClick={() => setProfilePrompt(false)} className="ir35-focus min-h-11 rounded-xl border border-slate-300 px-5 text-sm font-semibold text-slate-700">Not now</button><Link href="/profile" className="ir35-focus inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800">Complete profile</Link></div></section></div>}
     </WorkspacePage>
   );

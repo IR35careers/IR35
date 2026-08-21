@@ -5,6 +5,7 @@ import {
   adminSessionCookieName,
   adminSessionCookieOptions,
   createAdminSession,
+  isAdminRequestHost,
 } from "@/lib/admin-session";
 import { requestUser } from "@/lib/request-user";
 
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isAdminRequestHost(request)) return Response.json({ error: "Not found." }, { status: 404, headers: NO_STORE });
   const auth = await requestUser(request);
   if ("response" in auth) return auth.response;
 
@@ -35,7 +37,8 @@ export async function POST(request: Request): Promise<Response> {
   }
 }
 
-export async function DELETE(): Promise<Response> {
+export async function DELETE(request: Request): Promise<Response> {
+  if (!isAdminRequestHost(request)) return Response.json({ error: "Not found." }, { status: 404, headers: NO_STORE });
   const response = NextResponse.json({ locked: true }, { headers: NO_STORE });
   response.cookies.set(adminSessionCookieName(), "", adminSessionCookieOptions(0));
   return response;

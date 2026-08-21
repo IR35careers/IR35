@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { HomeExperience } from "@/components/HomeExperience";
 import { buildHomeStructuredData, SITE_ORIGIN } from "@/lib/seo";
 
@@ -8,12 +9,14 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_ORIGIN}/` },
 };
 
-export default function Home() {
+export default async function Home() {
   const structuredData = buildHomeStructuredData();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <>
       <script
+        nonce={nonce}
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),

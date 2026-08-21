@@ -13,7 +13,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
-import { adminAllowlist, adminSessionCookieName, cookieValue, verifyAdminSession } from "@/lib/admin-session";
+import { adminAllowlist, adminSessionCookieName, cookieValue, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
 import {
   emailCampaignTemplates,
   renderCampaignEmail,
@@ -166,6 +166,7 @@ async function correctAuthEmail(
 }
 
 async function verifyAdmin(request: Request): Promise<{ id: string; email: string } | Response> {
+  if (!isAdminRequestHost(request)) return Response.json({ error: "Not found." }, { status: 404 });
   const allowlist = adminAllowlist();
   if (allowlist.length === 0) {
     return Response.json({ error: "Secure administration is not configured." }, { status: 503 });

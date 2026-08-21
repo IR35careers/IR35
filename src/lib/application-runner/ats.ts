@@ -38,6 +38,14 @@ const ATS_DOMAINS: Array<{ domain: string; kind: Exclude<AtsKind, "generic"> }> 
   { domain: "workday.com", kind: "workday" },
 ];
 
+// These are job-discovery handoff pages rather than employer ATS products.
+// The runner may open them and follow their public Apply action, but it still
+// sends candidate data only to hosts approved by the request guard.
+const JOB_BOARD_DOMAINS = [
+  "adzuna.co.uk",
+  "reed.co.uk",
+] as const;
+
 function hostMatches(host: string, domain: string): boolean {
   return host === domain || host.endsWith(`.${domain}`);
 }
@@ -45,6 +53,7 @@ function hostMatches(host: string, domain: string): boolean {
 export function nativeRunnerHostAllowed(value: string): boolean {
   const host = (value.includes("://") ? new URL(value).hostname : value).toLowerCase().replace(/\.$/, "");
   if (ATS_DOMAINS.some(({ domain }) => hostMatches(host, domain))) return true;
+  if (JOB_BOARD_DOMAINS.some((domain) => hostMatches(host, domain))) return true;
   if (host === "ir35careers.com" || host === "www.ir35careers.com") return true;
   const configured = (process.env.APPLICATION_RUNNER_ALLOWED_HOSTS ?? "")
     .split(",")

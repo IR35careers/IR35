@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { ApplicationQuestion, ContractorProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 import type { SubmissionProviderReceipt } from "@/lib/application-submission";
@@ -19,6 +20,10 @@ function safeFileName(value: string): string {
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function providerIdempotencyKey(value: string): string {
+  return `ir35-employer-application-${createHash("sha256").update(value).digest("hex")}`;
 }
 
 export async function submitToVerifiedEmployerEmail(input: {
@@ -73,7 +78,7 @@ export async function submitToVerifiedEmployerEmail(input: {
     attachments: [{ filename: `${safeFileName(input.candidateName)}-CV.pdf`, content: input.resumePdf }],
     headers: { "X-Entity-Ref-ID": input.idempotencyKey },
     tags: [{ name: "email_type", value: "employer_application" }],
-  });
+  }, { idempotencyKey: providerIdempotencyKey(input.idempotencyKey) });
   if (delivery.error || !delivery.data?.id) throw new Error(delivery.error?.message || "The employer application email was not accepted for delivery.");
   return {
     state: "submitted",
