@@ -22,13 +22,14 @@ import {
   Sparkles,
   CheckCircle2,
   Circle,
+  CloudOff,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { formatRate, type JobListing } from "@/lib/job-types";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
-import { useWorkspaceState } from "@/lib/workspace/store";
+import { useWorkspaceCloudSync, useWorkspaceState } from "@/lib/workspace/store";
 import { AppNav } from "@/components/AppNav";
 import { ApplicationJourney } from "@/components/workspace/ApplicationJourney";
 import { WelcomeModal } from "@/components/WelcomeModal";
@@ -100,6 +101,7 @@ export default function DashboardPage() {
   const workspace = useWorkspaceState();
   const preview = !isSupabaseConfigured();
   const administratorRedirect = useContractorPortalBoundary(user?.email, loading);
+  const cloud = useWorkspaceCloudSync(!preview && !administratorRedirect ? user?.id ?? null : null, user?.email ?? "");
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [checked, setChecked] = useState(false);
@@ -158,12 +160,16 @@ export default function DashboardPage() {
       });
   }, [administratorRedirect, user, preview, workspace.applications]);
 
-  if (administratorRedirect || (!preview && (loading || !user)) || !checked || (checked && !profile)) {
+  if (administratorRedirect || (!preview && (loading || !user || cloud.loading)) || !checked || (checked && !profile)) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
         <Loader2 className="animate-spin" size={22} />
       </main>
     );
+  }
+
+  if (!preview && cloud.error) {
+    return <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">Your workspace could not be loaded</h1><p className="mt-2 text-sm leading-6">{cloud.error}</p><button type="button" onClick={() => window.location.reload()} className="ir35-focus mt-5 min-h-11 rounded-xl bg-rose-800 px-4 text-sm font-bold text-white">Try again</button></div></main></div>;
   }
 
   const name = firstName(profile, user?.email ?? undefined);

@@ -101,6 +101,9 @@ export interface ContractorProfile {
   applicationPreferences?: ApplicationPreferences;
   networkContacts?: NetworkContact[];
   referralRequests?: ReferralRequest[];
+  experience?: {
+    dashboardTourCompletedAt?: string;
+  };
 }
 
 export type NetworkContactStage = "identified" | "warm" | "asked" | "referred" | "closed";

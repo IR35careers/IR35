@@ -189,7 +189,7 @@ export default function SettingsPage() {
     { label: "Apply settings", icon: SlidersHorizontal, href: "/profile#apply-settings" },
     { label: "What IR35Careers remembers", icon: Brain, href: "#memory" },
     { label: "Profile and documents", icon: FileText, href: "/profile" },
-    { label: "Job board connections", icon: Globe2, href: "/connections" },
+    { label: "Connections", icon: Globe2, href: "/settings/connections" },
     { label: "Plans and billing", icon: CreditCard, href: "/billing" },
     { label: "Referrals", icon: Users, href: "/network" },
     { label: "Email integration", icon: Mail, href: "#email-integration" },
@@ -247,6 +247,9 @@ export default function SettingsPage() {
               </dl>
               <Link href="/onboarding" className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100">
                 Edit profile details
+              </Link>
+              <Link href="/dashboard?tour=1" className="ml-2 mt-4 inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300">
+                Replay product tour
               </Link>
             </section>
 

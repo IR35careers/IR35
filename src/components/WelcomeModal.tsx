@@ -12,6 +12,7 @@ import {
   Target,
   X,
 } from "lucide-react";
+import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 
 type TourMode = "closed" | "tour" | "returning";
 
@@ -64,29 +65,52 @@ function findVisibleTarget(name: string): HTMLElement | null {
 }
 
 export function WelcomeModal({ name, userId }: { name?: string; userId: string }) {
+  const workspace = useWorkspaceState();
   const [mode, setMode] = useState<TourMode>("closed");
   const [stepIndex, setStepIndex] = useState(0);
   const [highlight, setHighlight] = useState<HighlightRect | null>(null);
   const tourKey = useMemo(() => `ir35careers:dashboard-tour:v2:${userId}`, [userId]);
   const sessionKey = useMemo(() => `ir35careers:welcome-back:v1:${userId}`, [userId]);
+  const accountCompletedAt = workspace.profile.experience?.dashboardTourCompletedAt;
 
   const finishTour = useCallback(() => {
+    const completedAt = accountCompletedAt ?? new Date().toISOString();
     try {
       window.localStorage.setItem(tourKey, "complete");
       window.sessionStorage.setItem(sessionKey, "1");
     } catch {
       /* A blocked storage API should not trap the user in the tour. */
     }
+    if (!accountCompletedAt) {
+      updateWorkspace((current) => ({
+        ...current,
+        profile: {
+          ...current.profile,
+          experience: {
+            ...current.profile.experience,
+            dashboardTourCompletedAt: completedAt,
+          },
+        },
+      }));
+    }
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("tour")) {
+      url.searchParams.delete("tour");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    }
     setMode("closed");
     setHighlight(null);
-  }, [sessionKey, tourKey]);
+  }, [accountCompletedAt, sessionKey, tourKey]);
 
   useEffect(() => {
     try {
-      if (!window.localStorage.getItem(tourKey)) {
+      const forceTour = new URL(window.location.href).searchParams.get("tour") === "1";
+      const completed = Boolean(accountCompletedAt || window.localStorage.getItem(tourKey));
+      if (forceTour || !completed) {
         setMode("tour");
         return;
       }
+      if (accountCompletedAt) window.localStorage.setItem(tourKey, "complete");
       if (!window.sessionStorage.getItem(sessionKey)) {
         window.sessionStorage.setItem(sessionKey, "1");
         setMode("returning");
@@ -94,7 +118,7 @@ export function WelcomeModal({ name, userId }: { name?: string; userId: string }
     } catch {
       setMode("closed");
     }
-  }, [sessionKey, tourKey]);
+  }, [accountCompletedAt, sessionKey, tourKey]);
 
   useEffect(() => {
     if (mode !== "returning") return;
