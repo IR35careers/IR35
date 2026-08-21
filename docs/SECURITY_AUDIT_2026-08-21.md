@@ -32,6 +32,7 @@ Security is an ongoing risk-management process. This audit does not claim that a
 | Medium | CSV exports did not neutralise spreadsheet formulas | Opening an export could execute attacker-controlled spreadsheet formulas | Cells beginning with `=`, `+`, `-`, `@`, tabs or carriage returns are prefixed safely | Fixed |
 | Medium | Security headers supplied only a minimal CSP | The browser had less defence in depth against injected resources and data exfiltration | A full same-origin CSP, restricted Supabase connections, frame protections, HSTS, no-sniff, permissions restrictions, origin isolation and disabled DNS prefetching are now sent | Fixed |
 | Medium | Static CSP required permissive inline script handling | An injected inline script would have had less browser-level resistance | Each response now receives a cryptographically fresh nonce. Next.js scripts and structured data use that nonce, `strict-dynamic` is enabled and script attributes are denied | Fixed |
+| Medium | Browser connections were allowed to every Supabase tenant | If script execution were ever obtained, the broad connection rule could provide a convenient external data-exfiltration destination | The CSP now derives a connection allowlist from the one configured HTTPS Supabase origin and its matching secure WebSocket origin. Missing or insecure configuration fails closed to same-origin only | Fixed locally; deployment pending |
 | Medium | Upstream AI and submission services could return an unbounded response | A compromised or faulty provider could consume excess memory before JSON parsing | Provider responses are streamed through bounded readers before parsing. Oversized and malformed responses fail closed | Fixed |
 | Medium | Application submission held the browser request open for the full external portal run | Slow or blocked portals could leave the customer seeing an indefinite loading state and encourage duplicate clicks | The approved packet is durably queued first, the API returns 202 immediately, and the portal run continues in the server lifecycle while the UI polls the owner-scoped status endpoint | Fixed |
 | Medium | Provider emails relied on an informational duplicate header only | A retry could send the same employer application or customer notification more than once | Stable, hashed Resend idempotency keys are now supplied to the provider for both employer applications and customer notifications | Fixed |
@@ -65,17 +66,19 @@ Completed on the audited revision:
 
 - TypeScript: passed with no errors.
 - ESLint: passed with zero warnings.
-- Unit tests: 177 passed across 48 files.
+- Unit tests: 179 passed across 48 files.
 - Processing, tax, aggregator and fetcher tests: 194 passed, 0 failed.
 - Production Next.js build: passed; 68 static pages generated and all dynamic routes compiled.
 - Deployed production browser smoke tests: 6 passed, covering account boundaries, public trust pages, private feed-health routing, safety assets, reduced-motion navigation and canonical/private-page indexing rules.
 - Live HTTP checks: full CSP and HSTS present, framing denied, unauthenticated admin API returned 401, private-address job preview returned 400 and an oversized public request returned 413.
 - npm dependency audit: 0 low, moderate, high or critical known vulnerabilities.
+- npm registry integrity: signatures verified for 636 packages and provenance attestations verified for 146 packages.
 - Git patch validation: passed; no whitespace errors.
 - Repository and Git history secret-pattern scan: no OpenRouter, live Stripe, Google API, GitHub token, Supabase JWT or private-key patterns detected. The only tracked environment file is the placeholder `.env.local.example`.
-- The repeatable `security:source` gate passed across 367 tracked files and complete local Git history; all external workflow actions are pinned to full commit hashes.
+- The repeatable `security:source` gate passed across 368 tracked files and complete local Git history; all external workflow actions are pinned to full commit hashes.
 - A pinned CodeQL workflow is configured for pushes, pull requests, manual runs and a weekly schedule with the extended JavaScript/TypeScript security query suite. It becomes active after the security commits are pushed to GitHub.
 - New regression tests cover streamed body and upstream-response limits, JSON media types, public/private IPv4 and IPv6 rejection, spoofed ATS-domain rejection, administrator host/cache restrictions, server-owned application states, database function privileges and verified recruiter recipients.
+- CSP regression tests verify that only the configured HTTPS Supabase project and its matching secure WebSocket origin are permitted, with no wildcard tenant access and a same-origin-only fallback for insecure configuration.
 
 ## Application submission verification
 

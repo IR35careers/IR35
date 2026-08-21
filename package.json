@@ -16,6 +16,7 @@
     "email:audit-launch": "tsx scripts/audit-launch-audience.ts",
     "security:source": "node scripts/security-check.mjs",
     "security:audit": "npm audit --audit-level=low",
+    "security:signatures": "npm audit signatures",
     "test:e2e": "playwright test",
     "verify:release": "npm run typecheck && npm run lint && npm run test:unit && npm run test:legacy",
     "vercel-build": "npm run verify:release && next build"

@@ -3,6 +3,38 @@ import { NextRequest } from "next/server";
 import { proxy } from "../../src/proxy";
 
 describe("admin host routing", () => {
+  it("restricts browser connections to the configured Supabase project", () => {
+    const previous = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project-ref.supabase.co";
+    try {
+      const request = new NextRequest("https://www.ir35careers.com/", {
+        headers: { host: "www.ir35careers.com" },
+      });
+      const policy = proxy(request).headers.get("content-security-policy") ?? "";
+      expect(policy).toContain("connect-src 'self' https://project-ref.supabase.co wss://project-ref.supabase.co");
+      expect(policy).not.toContain("*.supabase.co");
+    } finally {
+      if (previous === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      else process.env.NEXT_PUBLIC_SUPABASE_URL = previous;
+    }
+  });
+
+  it("fails closed when the configured Supabase URL is not secure", () => {
+    const previous = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://project-ref.supabase.co";
+    try {
+      const request = new NextRequest("https://www.ir35careers.com/", {
+        headers: { host: "www.ir35careers.com" },
+      });
+      const policy = proxy(request).headers.get("content-security-policy") ?? "";
+      expect(policy).toContain("connect-src 'self'");
+      expect(policy).not.toContain("project-ref.supabase.co");
+    } finally {
+      if (previous === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      else process.env.NEXT_PUBLIC_SUPABASE_URL = previous;
+    }
+  });
+
   it("keeps the dedicated admin URL clean while serving the protected workspace", () => {
     const request = new NextRequest("https://admin.ir35careers.com/", {
       headers: { host: "admin.ir35careers.com" },

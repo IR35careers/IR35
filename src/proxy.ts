@@ -7,7 +7,21 @@ function requestNonce(): string {
   return btoa(crypto.randomUUID());
 }
 
+function configuredSupabaseConnectSources(): string[] {
+  const configured = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!configured) return [];
+
+  try {
+    const url = new URL(configured);
+    if (url.protocol !== "https:" || url.username || url.password) return [];
+    return [url.origin, `wss://${url.host}`];
+  } catch {
+    return [];
+  }
+}
+
 function contentSecurityPolicy(nonce: string): string {
+  const connectSources = ["'self'", ...configuredSupabaseConnectSources()].join(" ");
   return [
     "default-src 'self'",
     "base-uri 'self'",
@@ -21,7 +35,7 @@ function contentSecurityPolicy(nonce: string): string {
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    `connect-src ${connectSources}`,
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
     "frame-src 'self'",
