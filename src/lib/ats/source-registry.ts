@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { COMPANY_CONFIGS } from "./index";
 import type { ATSType, CompanyConfig } from "./types";
 
-export const FREE_ATS_TYPES = ["greenhouse", "lever", "ashby", "workable"] as const;
+export const FREE_ATS_TYPES = ["greenhouse", "lever", "ashby", "workable", "smartrecruiters"] as const;
 export type FreeATSType = (typeof FREE_ATS_TYPES)[number];
 
 export interface ManagedJobSource extends CompanyConfig {

@@ -7,6 +7,7 @@ describe("application destination detection", () => {
     expect(detectSubmissionRoute({ apply_url: "https://jobs.ashbyhq.com/example/role", source_domain: "ashbyhq.com" }).provider).toBe("ashby");
     expect(detectSubmissionRoute({ apply_url: "https://boards.greenhouse.io/example/jobs/1", source_domain: "greenhouse.io" }).provider).toBe("greenhouse");
     expect(detectSubmissionRoute({ apply_url: "https://jobs.lever.co/example/1", source_domain: "lever.co" }).provider).toBe("lever");
+    expect(detectSubmissionRoute({ apply_url: "https://jobs.smartrecruiters.com/example/1", source_domain: "smartrecruiters.com" }).provider).toBe("smartrecruiters");
   });
 
   it("warns about salaried and fixed-term listings", () => {

@@ -85,7 +85,7 @@ type RunRow = {
 type JobSourceRow = {
   id: string;
   name: string;
-  type: "greenhouse" | "lever" | "ashby" | "workable";
+  type: "greenhouse" | "lever" | "ashby" | "workable" | "smartrecruiters";
   slug: string;
   enabled: boolean;
   builtIn: boolean;
@@ -959,7 +959,7 @@ export default function AdminPage() {
             <JobSourcesPanel
               sources={jobSources}
               total={(data.jobSources ?? []).length}
-              providers={data.sourceProviders ?? ["greenhouse", "lever", "ashby", "workable"]}
+              providers={data.sourceProviders ?? ["greenhouse", "lever", "ashby", "workable", "smartrecruiters"]}
               lastRun={data.lastPipelineRun ?? null}
               query={normalisedQuery}
               name={sourceName}
@@ -1250,6 +1250,7 @@ function JobSourcesPanel({
     lever: "jobs.lever.co/company-name",
     ashby: "jobs.ashbyhq.com/company-name",
     workable: "apply.workable.com/company-name",
+    smartrecruiters: "jobs.smartrecruiters.com/company-name",
   };
 
   return (
@@ -1268,7 +1269,7 @@ function JobSourcesPanel({
             <label className="block text-xs font-semibold text-slate-700">Public ATS provider<select value={type} onChange={(event) => onTypeChange(event.target.value as JobSourceRow["type"])} className={fieldClass}>{providers.map((provider) => <option key={provider} value={provider}>{provider[0].toUpperCase() + provider.slice(1)}</option>)}</select></label>
             <label className="block text-xs font-semibold text-slate-700">Board identifier<input value={slug} maxLength={100} onChange={(event) => onSlugChange(event.target.value)} className={fieldClass} placeholder="company-name" /><span className="mt-1.5 block text-[11px] font-normal text-slate-500">From {examples[type]}</span></label>
             <button type="button" onClick={onSave} disabled={saving || name.trim().length < 2 || !slug.trim()} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} {saving ? "Checking public board" : "Verify and add source"}</button>
-            <p className="text-[11px] leading-5 text-slate-500">Only public Greenhouse, Lever, Ashby and Workable endpoints are supported. No account password is stored.</p>
+            <p className="text-[11px] leading-5 text-slate-500">Only supported public ATS endpoints are used. No account password is stored.</p>
           </div>
         </Panel>
 

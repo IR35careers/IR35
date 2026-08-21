@@ -12,6 +12,7 @@
  *   Lever:      jobs.lever.co/{slug}
  *   Ashby:      jobs.ashbyhq.com/{slug}
  *   Workable:   apply.workable.com/{slug}
+ *   SmartRecruiters: jobs.smartrecruiters.com/{slug}
  *
  * A wrong slug shows up as a clear per-company error in the pipeline
  * summary — cheap to add, cheap to fix.
@@ -33,6 +34,7 @@ import { fetchGreenhouse } from "./greenhouse-fetcher";
 import { fetchLever } from "./lever-fetcher";
 import { fetchAshby } from "./ashby-fetcher";
 import { fetchWorkable } from "./workable-fetcher";
+import { fetchSmartRecruiters } from "./smartrecruiters-fetcher";
 import type { CompanyConfig, FetchResult } from "./types";
 
 /**
@@ -70,6 +72,10 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "Safran Engineering Services UK", type: "workable", slug: "safrangroup" },
   { name: "Mindera", type: "workable", slug: "minderacraft" },
   { name: "Sword Group", type: "workable", slug: "sword-group" },
+
+  // SmartRecruiters official public Posting API
+  { name: "General Dynamics Mission Systems", type: "smartrecruiters", slug: "gdmsi" },
+  { name: "Telefonica Tech", type: "smartrecruiters", slug: "telefonicatech" },
 ];
 
 const FETCHERS = {
@@ -77,6 +83,7 @@ const FETCHERS = {
   lever: fetchLever,
   ashby: fetchAshby,
   workable: fetchWorkable,
+  smartrecruiters: fetchSmartRecruiters,
 } as const;
 
 export async function fetchCompany(client: HttpClient, company: CompanyConfig): Promise<FetchResult> {

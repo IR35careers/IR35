@@ -6,12 +6,12 @@ import { PublicHeader } from "@/components/PublicHeader";
 
 export const metadata: Metadata = {
   title: "Free Employer Job Feed and Direct Applications",
-  description: "Connect a public Greenhouse, Lever, Ashby or Workable careers board to IR35Careers at no charge and verify direct candidate application delivery.",
+  description: "Connect a supported public careers board to IR35Careers at no charge and verify direct candidate application delivery.",
   alternates: { canonical: "/employers" },
 };
 
 const STEPS = [
-  { icon: Database, title: "Add the public board", body: "Choose Greenhouse, Lever, Ashby or Workable and enter the identifier already used by your careers page." },
+  { icon: Database, title: "Add the public board", body: "Choose Greenhouse, Lever, Ashby, Workable or SmartRecruiters and enter the identifier already used by your careers page." },
   { icon: MailCheck, title: "Confirm the recruitment inbox", body: "A 24-hour confirmation link proves where candidate-approved applications may be delivered." },
   { icon: Zap, title: "Receive relevant applications", body: "Published contract roles join the daily feed. Supported applications arrive with the candidate's approved CV and answers." },
 ] as const;

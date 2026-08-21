@@ -12,6 +12,7 @@ export type ATSType =
   | "lever"
   | "ashby"
   | "workable"
+  | "smartrecruiters"
   | "personio"
   // Aggregator sources (agency-posted jobs via official public APIs):
   | "reed"

@@ -1,6 +1,6 @@
 import type { JobDetail } from "@/lib/job-types";
 
-export type AtsProvider = "ashby" | "greenhouse" | "lever" | "workday" | "other";
+export type AtsProvider = "ashby" | "greenhouse" | "lever" | "smartrecruiters" | "workday" | "other";
 
 export interface SubmissionRoute {
   provider: AtsProvider;
@@ -25,6 +25,9 @@ export function detectSubmissionRoute(job: Pick<JobDetail, "apply_url" | "source
   }
   if (destinationHost.includes("lever.co")) {
     return { provider: "lever", label: "Lever", destinationHost, needsInteractiveBrowser: true };
+  }
+  if (destinationHost.includes("smartrecruiters.com")) {
+    return { provider: "smartrecruiters", label: "SmartRecruiters", destinationHost, needsInteractiveBrowser: true };
   }
   if (destinationHost.includes("myworkdayjobs.com") || destinationHost.includes("workday.com")) {
     return { provider: "workday", label: "Workday", destinationHost, needsInteractiveBrowser: true };

@@ -15,6 +15,7 @@ import { mapGreenhouseJob } from "../src/lib/ats/greenhouse-fetcher";
 import { mapLeverJob } from "../src/lib/ats/lever-fetcher";
 import { mapAshbyJob } from "../src/lib/ats/ashby-fetcher";
 import { mapWorkableJob } from "../src/lib/ats/workable-fetcher";
+import { mapSmartRecruitersJob } from "../src/lib/ats/smartrecruiters-fetcher";
 import { HttpClient, HttpError } from "../src/lib/ats/http-client";
 import { processRawJob } from "../src/lib/processing/job-processor";
 import type { CompanyConfig } from "../src/lib/ats/types";
@@ -158,6 +159,36 @@ const company: CompanyConfig = { name: "Acme Ltd", type: "greenhouse", slug: "ac
     check("workable e2e: ir35", processed.ir35_status, "outside");
     check("workable e2e: location canonical", processed.location, "Leeds");
     check("workable e2e: onsite", processed.remote_type, "onsite");
+  }
+}
+
+// ── SmartRecruiters mapper ──────────────────────────────────────────────────
+{
+  const fixture = {
+    id: "744000144263389",
+    name: "Principal Safety Engineer (Contractor)",
+    releasedDate: "2026-08-19T09:04:38.701Z",
+    postingUrl: "https://jobs.smartrecruiters.com/acme/744000144263389-role",
+    applyUrl: "https://jobs.smartrecruiters.com/acme/744000144263389-role?oga=true",
+    location: { city: "Hastings", country: "gb", fullLocation: "Hastings, United Kingdom", hybrid: true },
+    typeOfEmployment: { id: "contract", label: "Contract (Ltd)" },
+    jobAd: { sections: {
+      jobDescription: { title: "Job Description", text: "<p>Six month engagement outside IR35.</p>" },
+      qualifications: { title: "Qualifications", text: "<p>Safety engineering and DOORS.</p>" },
+    } },
+  };
+  const smartCompany: CompanyConfig = { name: "Acme Ltd", type: "smartrecruiters", slug: "acme" };
+  const raw = mapSmartRecruitersJob(fixture, smartCompany);
+  check("smartrecruiters: dedup key", [raw.sourceDomain, raw.sourceIdentifier], ["jobs.smartrecruiters.com", fixture.id]);
+  checkTrue("smartrecruiters: sections surfaced", raw.description.includes("Six month engagement") && raw.description.includes("DOORS"));
+  checkTrue("smartrecruiters: structured contract hint", raw.contractHint === true);
+
+  const processed = processRawJob(raw);
+  checkTrue("smartrecruiters e2e: accepted", processed !== null);
+  if (processed) {
+    check("smartrecruiters e2e: ir35", processed.ir35_status, "outside");
+    check("smartrecruiters e2e: location", processed.location, "Hastings");
+    check("smartrecruiters e2e: hybrid", processed.remote_type, "hybrid");
   }
 }
 

@@ -9,6 +9,7 @@ const PROVIDERS = {
   lever: { label: "Lever", example: "jobs.lever.co/company-name" },
   ashby: { label: "Ashby", example: "jobs.ashbyhq.com/company-name" },
   workable: { label: "Workable", example: "apply.workable.com/company-name" },
+  smartrecruiters: { label: "SmartRecruiters", example: "jobs.smartrecruiters.com/company-name" },
 } as const;
 
 type Provider = keyof typeof PROVIDERS;
