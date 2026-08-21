@@ -101,6 +101,7 @@ function safeCoverLetter(value: unknown, sourceCv: string, job: JobDetail): stri
 export async function tailorResumeWithOpenRouter(input: {
   cvText: string;
   job: JobDetail;
+  timeoutMs?: number;
 }): Promise<AiTailoringResult> {
   const config = openRouterTailoringConfig();
   if (!config) throw new Error("AI tailoring is not configured.");
@@ -175,7 +176,7 @@ export async function tailorResumeWithOpenRouter(input: {
       ],
     }),
     cache: "no-store",
-    signal: AbortSignal.timeout(55_000),
+    signal: AbortSignal.timeout(Math.max(5_000, Math.min(input.timeoutMs ?? 55_000, 55_000))),
   });
   const payload = (await response.json().catch(() => null)) as OpenRouterResponse | null;
   if (!response.ok) throw new Error(payload?.error?.message || `OpenRouter returned ${response.status}.`);

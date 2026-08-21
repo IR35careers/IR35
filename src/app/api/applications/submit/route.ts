@@ -184,6 +184,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Your secure session expired before the application started. Sign in again, then retry.", code: "SESSION_EXPIRED" }, { status: 401, headers: NO_STORE });
     }
     const userId = authData.user.id;
+    console.info("application_submit_stage", { applicationId: body.applicationId, stage: "authenticated" });
     if (body.packet) {
       try {
         await saveApprovedPacket({ admin, userId, applicationId: body.applicationId as string, packet: body.packet });
@@ -257,6 +258,7 @@ export async function POST(request: Request): Promise<Response> {
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,idempotency_key" });
     if (queueError) throw new Error(queueError.message);
+    console.info("application_submit_stage", { applicationId: String(packet.id), stage: "runner_queued", provider: employerDestination ? "verified_employer_email" : provider?.kind || "unavailable" });
 
     try {
       let resumeUrl: string | undefined;
@@ -305,11 +307,16 @@ export async function POST(request: Request): Promise<Response> {
             screeningAnswers: screeningAnswers.map(({ label, answer, source }) => ({ label, answer, source })),
           }, idempotencyKey);
 
-      for (let attempt = 0; attempt < 4 && providerReceipt.state === "needs_user"; attempt += 1) {
+      // Only the remote managed provider exposes a resumable review endpoint.
+      // The owned browser runner already consumes all confirmed profile facts
+      // during its pass and returns any genuinely unresolved fields to the user.
+      for (let attempt = 0; provider?.kind === "tsenta" && attempt < 4 && providerReceipt.state === "needs_user"; attempt += 1) {
         const knownAnswers = knownProviderAnswers(providerReviewQuestions(providerReceipt.review), submissionCandidate, packet as DbRow);
         if (knownAnswers.length === 0 || knownAnswers.some((question) => question.required && !question.reviewed)) break;
         providerReceipt = await resumeSubmissionWithProvider(providerReceipt.providerSubmissionId, knownAnswers);
       }
+
+      console.info("application_submit_stage", { applicationId: String(packet.id), stage: "runner_finished", result: providerReceipt.state });
 
       if (providerReceipt.state === "needs_user") {
         const action = providerReviewAction(providerReceipt);

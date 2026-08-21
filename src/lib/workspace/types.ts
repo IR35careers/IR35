@@ -43,6 +43,18 @@ export interface ApplicationPreferences {
   reviewBeforeSubmit: boolean;
   generateCoverLetter: boolean;
   usePrivateApplicationEmail: boolean;
+  autoApplyEnabled?: boolean;
+  autoApplyConsentAt?: string;
+  autoApplyConsentVersion?: string;
+  autoApplyLanes?: AutoApplyLane[];
+}
+
+export interface AutoApplyLane {
+  id: string;
+  role: string;
+  keywords: string[];
+  location: string;
+  enabled: boolean;
 }
 
 export interface ContractorProfile {

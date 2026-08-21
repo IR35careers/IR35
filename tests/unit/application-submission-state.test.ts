@@ -11,11 +11,11 @@ describe("application submission processing locks", () => {
   it("keeps a recent runner attempt locked to prevent duplicate applications", () => {
     const updatedAt = new Date(now - 60_000).toISOString();
     expect(isStaleSubmissionLock(updatedAt, now)).toBe(false);
-    expect(submissionRetryAfterSeconds(updatedAt, now)).toBe(300);
+    expect(submissionRetryAfterSeconds(updatedAt, now)).toBe(90);
   });
 
   it("recovers an attempt that outlived the maximum runner duration", () => {
-    const updatedAt = new Date(now - 7 * 60_000).toISOString();
+    const updatedAt = new Date(now - 3 * 60_000).toISOString();
     expect(isStaleSubmissionLock(updatedAt, now)).toBe(true);
     expect(submissionRetryAfterSeconds(updatedAt, now)).toBe(1);
   });

@@ -328,7 +328,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         body: JSON.stringify({ applicationId: ready.id, approval: "SUBMIT_APPROVED_APPLICATION", packet: ready }),
         signal: AbortSignal.timeout(120_000),
       });
-      let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user" | "failed"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string; retryAfterSeconds?: number };
+      let payload = (await response.json().catch(() => ({ error: "The employer application service returned an unreadable response." }))) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user" | "failed"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string; retryAfterSeconds?: number };
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
           const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
@@ -349,8 +349,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         persistApplication(submissionStarted);
         for (let attempt = 0; attempt < 8 && !payload.receipt; attempt += 1) {
           await new Promise((resolve) => setTimeout(resolve, 2_000));
-          const statusResponse = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(application.id)}`, { cache: "no-store" });
-          payload = (await statusResponse.json()) as typeof payload;
+          const statusResponse = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(ready.id)}`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+          payload = (await statusResponse.json().catch(() => ({ error: "Application progress could not be read." }))) as typeof payload;
           if (payload.state === "needs_user") {
             const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
             setApplication(needsUserApplication);
@@ -383,9 +383,39 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       persistApplication(submittedApplication);
       setNotice("Application submitted. The verified employer receipt is saved below.");
     } catch (caught) {
-      const message = caught instanceof DOMException && caught.name === "TimeoutError"
-        ? "Employer confirmation was not received within two minutes. The role was not marked Applied. Refresh Applications to check the latest status before retrying."
+      let message = caught instanceof DOMException && caught.name === "TimeoutError"
+        ? "Employer confirmation was not received within two minutes. This role has not been marked Applied."
         : caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.";
+      if (caught instanceof DOMException && caught.name === "TimeoutError" && application) {
+        try {
+          const statusResponse = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(application.id)}`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+          const statusPayload = (await statusResponse.json().catch(() => ({}))) as { state?: "submitted" | "processing" | "needs_user" | "failed"; receipt?: ApplicationRecord["receipt"]; questions?: ApplicationRecord["questions"]; action?: string; message?: string; error?: string; retryAfterSeconds?: number };
+          if (statusPayload.receipt) {
+            const now = new Date().toISOString();
+            const submittedApplication: ApplicationRecord = { ...application, status: "applied", mode: "external_handoff", receipt: statusPayload.receipt, updatedAt: now, events: [...application.events, { id: newWorkspaceId(), applicationId: application.id, type: "status_changed", label: "Application submitted successfully", createdAt: now }] };
+            setApplication(submittedApplication);
+            persistApplication(submittedApplication);
+            setNotice("Application submitted. The verified employer receipt is saved below.");
+            return;
+          }
+          if (statusPayload.state === "needs_user") {
+            const needsUserApplication: ApplicationRecord = { ...application, status: "needs_review", questions: statusPayload.questions ?? application.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
+            setApplication(needsUserApplication);
+            persistApplication(needsUserApplication);
+            if (statusPayload.action === "/profile") setProfilePrompt(true);
+            setNotice(statusPayload.message || "One answer needs your attention before this application can be sent.");
+            return;
+          }
+          if (statusPayload.state === "processing") {
+            const retry = statusPayload.retryAfterSeconds ? ` Check again in about ${Math.max(1, Math.ceil(statusPayload.retryAfterSeconds / 60))} minute.` : "";
+            setNotice(`${statusPayload.message || "The employer portal is still processing the application."}${retry}`);
+            return;
+          }
+          message = statusPayload.error || message;
+        } catch {
+          message = `${message} Open Applications to check the saved result before retrying.`;
+        }
+      }
       if (/complete your application profile|profile before applying/i.test(message)) setProfilePrompt(true);
       setError(message);
     } finally {

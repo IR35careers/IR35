@@ -1,5 +1,5 @@
 import chromiumBinary from "@sparticuz/chromium";
-import { chromium, type Locator, type Page } from "playwright-core";
+import { chromium, type Browser, type Locator, type Page } from "playwright-core";
 import { createHash } from "node:crypto";
 import { detectAts, type AtsDefinition } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer, valueForMapping } from "@/lib/application-runner/field-mapping";
@@ -11,6 +11,7 @@ import type { SubmissionProviderPayload, SubmissionProviderReceipt } from "@/lib
 const MAX_STEPS = 8;
 const MAX_FIELDS = 120;
 const MAX_RESUME_BYTES = 8_000_000;
+const RUNNER_BUDGET_MS = 100_000;
 
 function clean(value: string, max = 500): string {
   return value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
@@ -279,20 +280,32 @@ async function waitForSubmissionConfirmation(page: Page, ats: AtsDefinition): Pr
 }
 
 export async function runNativeApplication(payload: SubmissionProviderPayload): Promise<SubmissionProviderReceipt> {
-  const destination = await validatePublicHttpsUrl(payload.destination);
-  const ats = detectAts(destination.toString());
-  const resume = await loadResume(payload.resume.url);
-  const facts = buildRunnerFacts(payload.candidate, payload.screeningAnswers.map((answer, index) => ({
-    id: `saved_${index}`,
-    label: answer.label,
-    answer: answer.answer,
-    source: answer.source,
-    required: true,
-    reviewed: Boolean(answer.answer.trim()),
-  })));
-  const executablePath = process.env.CHROME_EXECUTABLE_PATH?.trim() || await chromiumBinary.executablePath();
-  const browser = await chromium.launch({ executablePath, args: chromiumBinary.args, headless: true });
+  const startedAt = Date.now();
+  let browser: Browser | null = null;
+  let timedOut = false;
+  const budgetTimer = setTimeout(() => {
+    timedOut = true;
+    void browser?.close().catch(() => null);
+  }, RUNNER_BUDGET_MS);
   try {
+    const destination = await validatePublicHttpsUrl(payload.destination);
+    const ats = detectAts(destination.toString());
+    const resume = await loadResume(payload.resume.url);
+    const facts = buildRunnerFacts(payload.candidate, payload.screeningAnswers.map((answer, index) => ({
+      id: `saved_${index}`,
+      label: answer.label,
+      answer: answer.answer,
+      source: answer.source,
+      required: true,
+      reviewed: Boolean(answer.answer.trim()),
+    })));
+    const customExecutablePath = process.env.CHROME_EXECUTABLE_PATH?.trim();
+    const executablePath = customExecutablePath || await chromiumBinary.executablePath();
+    browser = await chromium.launch({
+      executablePath,
+      args: customExecutablePath ? ["--disable-dev-shm-usage", "--no-sandbox"] : chromiumBinary.args,
+      headless: true,
+    });
     const context = await browser.newContext({
       acceptDownloads: false,
       ignoreHTTPSErrors: false,
@@ -309,13 +322,20 @@ export async function runNativeApplication(payload: SubmissionProviderPayload): 
     let page = await context.newPage();
     try {
       await page.goto(destination.toString(), { waitUntil: "domcontentloaded" });
-    } catch {
+    } catch (error) {
+      console.warn("application_runner_navigation_failed", {
+        host: destination.hostname,
+        reason: error instanceof Error ? clean(error.message, 240) : "unknown",
+      });
       throw new Error("The employer application page is unavailable or closed.");
     }
     await validatePublicHttpsUrl(page.url());
     page = await openApplicationForm(page, ats);
 
     for (let step = 0; step < MAX_STEPS; step += 1) {
+      if (Date.now() - startedAt >= RUNNER_BUDGET_MS) {
+        return reviewReceipt("The employer portal did not finish within the safe application window. Your approved application is ready to retry.", [], "runner_timeout");
+      }
       const stop = await blocker(page);
       if (stop) return reviewReceipt(stop.message, [], stop.action);
       const needsUser = await fillStep(page, step, facts, resume, payload.coverLetter);
@@ -344,7 +364,13 @@ export async function runNativeApplication(payload: SubmissionProviderPayload): 
       }
     }
     return reviewReceipt("The employer application contains more steps than the automatic runner can safely complete.", [], "form_too_long");
+  } catch (error) {
+    if (timedOut) {
+      return reviewReceipt("The employer portal did not finish within the safe application window. Your approved application is ready to retry.", [], "runner_timeout");
+    }
+    throw error;
   } finally {
-    await browser.close().catch(() => null);
+    clearTimeout(budgetTimer);
+    await browser?.close().catch(() => null);
   }
 }
