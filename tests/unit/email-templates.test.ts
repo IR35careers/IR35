@@ -21,6 +21,7 @@ describe("transactional email", () => {
     expect(email.html).toContain("The IR35Careers Team");
     expect(email.text).toContain("Set up your contractor profile");
     expect(email.text).toContain("not legal or tax advice");
+    expect(`${email.subject}${email.html}${email.text}`).not.toMatch(/[—→·]/);
   });
 
   it("escapes untrusted profile names and falls back to the production site", () => {
@@ -36,7 +37,7 @@ describe("transactional email", () => {
 
   it("renders the one-time public-beta invitation without claiming an account already exists", () => {
     const email = renderBetaLaunchEmail({ logoSource: "cid:ir35careers-mark" });
-    expect(email.subject).toBe("IR35Careers public beta is open — your early access is ready");
+    expect(email.subject).toBe("IR35Careers public beta is open: Your early access is ready");
     expect(email.html).toContain("You joined the IR35Careers waitlist");
     expect(email.html).toContain('bgcolor="#effaf5"');
     expect(email.html).toContain("Join the public beta");
@@ -46,6 +47,7 @@ describe("transactional email", () => {
     expect(email.html).not.toContain("Your account is ready");
     expect(email.text).toContain("one-time access update");
     expect(email.text).toContain("WHAT PUBLIC BETA MEANS");
+    expect(`${email.subject}${email.html}${email.text}`).not.toMatch(/[—→·]/);
   });
 
   it("keeps delivery disabled unless the provider flag and credentials are valid", () => {

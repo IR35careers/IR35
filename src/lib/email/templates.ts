@@ -71,7 +71,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
   const greeting = firstName ? `Welcome, ${escapeHtml(firstName)}.` : "Welcome to IR35Careers.";
   const textGreeting = firstName ? `Welcome, ${firstName}.` : "Welcome to IR35Careers.";
 
-  const subject = "Welcome to IR35Careers Beta — your workspace is ready";
+  const subject = "Welcome to IR35Careers Beta: Your workspace is ready";
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -100,7 +100,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
         </td></tr>
         <tr><td style="padding:22px 30px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
-            <a href="${siteUrl}/onboarding" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Set up your contractor profile&nbsp;&nbsp;→</a>
+            <a href="${siteUrl}/onboarding" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Set up your contractor profile</a>
           </td></tr></table>
           <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">It takes around two minutes. Your CV remains private to your account.</p>
         </td></tr>
@@ -122,13 +122,13 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
         </td></tr>
         <tr><td style="border-top:1px solid ${BRAND.border};padding:26px 30px;background:#fbfdfc;">
           <p style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Thanks,<br>The IR35Careers Team</p>
-          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">IR35Careers public beta · Built for UK contractors.</p>
+          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">IR35Careers public beta. Built for UK contractors.</p>
           <p style="margin:0;color:#718094;font-family:Arial,sans-serif;font-size:11px;line-height:18px;">
-            <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a>&nbsp;&nbsp;·&nbsp;&nbsp;
-            <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a>&nbsp;&nbsp;·&nbsp;&nbsp;
+            <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a><br>
+            <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a><br>
             <a href="${siteUrl}/contact" style="color:${BRAND.green};text-decoration:underline;">Contact</a>
           </p>
-          <p style="margin:12px 0 0;color:#8995a3;font-family:Arial,sans-serif;font-size:10px;line-height:16px;">This service email was sent because you created and confirmed an IR35Careers account. <a href="${siteUrl}/privacy" style="color:#667789;text-decoration:underline;">Privacy Notice</a> · <a href="${siteUrl}/terms" style="color:#667789;text-decoration:underline;">Terms of Use</a></p>
+          <p style="margin:12px 0 0;color:#8995a3;font-family:Arial,sans-serif;font-size:10px;line-height:16px;">This service email was sent because you created and confirmed an IR35Careers account. <a href="${siteUrl}/privacy" style="color:#667789;text-decoration:underline;">Privacy Notice</a> and <a href="${siteUrl}/terms" style="color:#667789;text-decoration:underline;">Terms of Use</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -179,7 +179,7 @@ This service email was sent because you created and confirmed an IR35Careers acc
 export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailContent {
   const siteUrl = normaliseSiteUrl(input.siteUrl);
   const logoSource = escapeHtml(input.logoSource || DEFAULT_LOGO_URL);
-  const subject = "IR35Careers public beta is open — your early access is ready";
+  const subject = "IR35Careers public beta is open: Your early access is ready";
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -208,7 +208,7 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
         </td></tr>
         <tr><td style="padding:22px 30px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
-            <a href="${siteUrl}/account?mode=create" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Join the public beta&nbsp;&nbsp;→</a>
+            <a href="${siteUrl}/account?mode=create" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Join the public beta</a>
           </td></tr></table>
           <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">Already registered? <a href="${siteUrl}/account" style="color:${BRAND.green};text-decoration:underline;">Sign in to your workspace</a>.</p>
         </td></tr>
@@ -229,13 +229,13 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
         </td></tr>
         <tr><td style="border-top:1px solid ${BRAND.border};padding:26px 30px;background:#fbfdfc;">
           <p style="margin:0;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:14px;font-weight:700;line-height:21px;">Thanks,<br>The IR35Careers Team</p>
-          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">IR35Careers public beta · Built for UK contractors.</p>
+          <p style="margin:5px 0 18px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:12px;line-height:19px;">IR35Careers public beta. Built for UK contractors.</p>
           <p style="margin:0;color:#718094;font-family:Arial,sans-serif;font-size:11px;line-height:18px;">
-            <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a>&nbsp;&nbsp;·&nbsp;&nbsp;
-            <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a>&nbsp;&nbsp;·&nbsp;&nbsp;
+            <a href="${siteUrl}/jobs" style="color:${BRAND.green};text-decoration:underline;">Browse contracts</a><br>
+            <a href="${siteUrl}/resources" style="color:${BRAND.green};text-decoration:underline;">IR35 guides</a><br>
             <a href="${siteUrl}/contact" style="color:${BRAND.green};text-decoration:underline;">Contact</a>
           </p>
-          <p style="margin:12px 0 0;color:#8995a3;font-family:Arial,sans-serif;font-size:10px;line-height:16px;">This is the one-time access update you requested when you joined the IR35Careers waitlist. You have not been added to a marketing list. <a href="${siteUrl}/privacy" style="color:#667789;text-decoration:underline;">Privacy Notice</a> · <a href="${siteUrl}/terms" style="color:#667789;text-decoration:underline;">Terms of Use</a></p>
+          <p style="margin:12px 0 0;color:#8995a3;font-family:Arial,sans-serif;font-size:10px;line-height:16px;">This is the one-time access update you requested when you joined the IR35Careers waitlist. You have not been added to a marketing list. <a href="${siteUrl}/privacy" style="color:#667789;text-decoration:underline;">Privacy Notice</a> and <a href="${siteUrl}/terms" style="color:#667789;text-decoration:underline;">Terms of Use</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -243,7 +243,7 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
 </body>
 </html>`;
 
-  const text = `IR35Careers public beta is open — your early access is ready
+  const text = `IR35Careers public beta is open: Your early access is ready
 
 You joined the IR35Careers waitlist to hear when early access opened. You can now create a free account without an invitation code and help us improve the contractor workspace before the official launch.
 
