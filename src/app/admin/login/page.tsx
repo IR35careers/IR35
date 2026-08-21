@@ -7,14 +7,14 @@ import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, KeyRound, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { isAdministratorEmail } from "@/lib/portal-access";
+import { GoogleIdentityButton } from "@/components/GoogleIdentityButton";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { user, loading, signInWithPassword, signInWithGoogleAdmin, signOut } = useAuth();
+  const { user, loading, signInWithPassword, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,16 +43,6 @@ export default function AdminLoginPage() {
       return;
     }
     router.replace("/");
-  };
-
-  const google = async () => {
-    setGoogleSubmitting(true);
-    setError(null);
-    const result = await signInWithGoogleAdmin();
-    if (result.error) {
-      setError(result.error);
-      setGoogleSubmitting(false);
-    }
   };
 
   return (
@@ -98,11 +88,11 @@ export default function AdminLoginPage() {
                 <label className="block text-xs font-semibold text-slate-300">Administrator email<input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@ir35careers.com" className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-black/25 px-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/10" /></label>
                 <label className="block text-xs font-semibold text-slate-300">Password<input type="password" autoComplete="current-password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-black/25 px-4 text-sm text-white outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/10" /></label>
                 {error && <p role="alert" className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2.5 text-xs leading-5 text-rose-200">{error}</p>}
-                <button type="submit" disabled={submitting || googleSubmitting || loading} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-65">{submitting ? <Loader2 size={16} className="animate-spin" /> : <LockKeyhole size={16} />}{submitting ? "Verifying account" : "Continue securely"}<ArrowRight size={15} /></button>
+                <button type="submit" disabled={submitting || loading} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-65">{submitting ? <Loader2 size={16} className="animate-spin" /> : <LockKeyhole size={16} />}{submitting ? "Verifying account" : "Continue securely"}<ArrowRight size={15} /></button>
               </form>
             )}
 
-            {!user && <><div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-white/[0.08]" /><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">or</span><span className="h-px flex-1 bg-white/[0.08]" /></div><button type="button" onClick={() => void google()} disabled={submitting || googleSubmitting || loading} className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-65">{googleSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-950">G</span>}Continue with Google</button></>}
+            {!user && <><div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-white/[0.08]" /><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">or</span><span className="h-px flex-1 bg-white/[0.08]" /></div><GoogleIdentityButton admin onError={setError} /></>}
 
             <p className="mt-6 text-center text-[11px] leading-5 text-slate-600">Protected by an administrator allowlist, server verification and a short-lived HttpOnly session.</p>
           </section>

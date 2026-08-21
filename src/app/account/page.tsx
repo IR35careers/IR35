@@ -11,9 +11,10 @@ import { validateEmail } from "@/lib/utils";
 import { Brand } from "@/components/ui/brand";
 import { resolvePostAuthPath } from "@/lib/auth-routing";
 import { authenticatedDestination } from "@/lib/portal-access";
+import { GoogleIdentityButton } from "@/components/GoogleIdentityButton";
 
 function AccountForm() {
-  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = resolvePostAuthPath(searchParams.get("next"));
@@ -247,29 +248,7 @@ function AccountForm() {
         <span className="h-px flex-1 bg-slate-200" aria-hidden />
       </div>}
 
-      {mode !== "forgot" && <button
-        type="button"
-        onClick={async () => {
-          setError(null);
-          const res = await signInWithGoogle(next);
-          if (res.error) {
-            setError(
-              /provider is not enabled|unsupported provider/i.test(res.error)
-                ? "Google sign-in isn't switched on yet. Use email and password for now."
-                : res.error
-            );
-          }
-        }}
-        className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-medium text-slate-900 transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-          <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.94l3.66-2.84z" />
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-        </svg>
-        {mode === "sign-in" ? "Sign in" : "Continue"} with Google
-      </button>}
+      {mode !== "forgot" && <div className="mt-4"><GoogleIdentityButton next={next} mode={mode === "create" ? "create" : "sign-in"} onError={(message) => setError(/provider is not enabled|unsupported provider/i.test(message) ? "Google sign-in isn't switched on yet. Use email and password for now." : message)} /></div>}
 
       <p className="mt-4 text-center text-xs leading-5 text-slate-600">
         We use your account to save contracts, searches and reviewed application packets. Submission happens only from IR35Careers when an employer connection is verified and you approve it. Read our <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">Privacy Notice</Link>.

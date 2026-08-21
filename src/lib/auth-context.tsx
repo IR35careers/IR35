@@ -28,6 +28,7 @@ interface AuthContextValue {
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   signInWithGoogle: (next?: string) => Promise<AuthResult>;
   signInWithGoogleAdmin: () => Promise<AuthResult>;
+  signInWithGoogleIdToken: (token: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
@@ -203,6 +204,19 @@ async function signInWithGoogleAdmin(): Promise<AuthResult> {
   return { error: error ? error.message : null };
 }
 
+async function signInWithGoogleIdToken(token: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  if (!token.trim()) return { error: "Google did not return a secure identity token." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { data, error } = await getSupabase().auth.signInWithIdToken({ provider: "google", token });
+  if (!error) {
+    publish({ user: data.user, loading: false });
+    requestWelcomeEmail(data.session);
+    initialiseSession(true);
+  }
+  return { error: error ? error.message : null };
+}
+
 async function requestPasswordReset(email: string): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
@@ -238,6 +252,7 @@ export function useAuth(): AuthContextValue {
     requestPasswordReset,
     signInWithGoogle,
     signInWithGoogleAdmin,
+    signInWithGoogleIdToken,
     updatePassword,
     signOut,
   };
