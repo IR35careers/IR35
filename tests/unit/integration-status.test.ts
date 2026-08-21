@@ -32,6 +32,7 @@ describe("integration status", () => {
   });
 
   it("reports AI tailoring only when a server-side OpenRouter key exists", () => {
+    vi.stubEnv("OPENROUTER_API_KEY", "");
     expect(getIntegrationStatuses().find((item) => item.id === "ai_tailoring")?.state).toBe("provider_gate");
     vi.stubEnv("OPENROUTER_API_KEY", "server-only-test-key");
     expect(getIntegrationStatuses().find((item) => item.id === "ai_tailoring")?.state).toBe("connected");

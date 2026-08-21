@@ -23,12 +23,14 @@ import { fetchAdzuna } from "../aggregators/adzuna-fetcher";
 import { processRawJob } from "../processing/job-processor";
 import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplicator";
 import { getSupabaseAdmin } from "../supabase-admin";
+import { collapseConflictKeyDuplicates } from "./conflict-deduplicator";
 
 export interface PipelineSummary {
   companies: number;
   fetched: number;
   processed: number;
   skippedByGates: number;
+  exactDuplicatesCollapsed: number;
   fuzzyDuplicatesSkipped: number;
   upserted: number;
   expired: number;
@@ -65,6 +67,15 @@ interface ExistingJob extends DedupCandidate {
 
 function normCompany(name: string): string {
   return (name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function jobDetailScore(job: ProcessedJob): number {
+  return Math.min(job.description.length, 12_000)
+    + job.skills.length * 150
+    + (job.rate_min !== null ? 250 : 0)
+    + (job.rate_max !== null ? 250 : 0)
+    + (job.posted_at ? 100 : 0)
+    + (job.apply_url ? 100 : 0);
 }
 
 export async function runFetchPipeline(
@@ -277,6 +288,24 @@ export async function runFetchPipeline(
   }
   const skippedByGates = rawJobs.length - processed.length;
 
+  // Multiple search terms and overlapping source configurations can return
+  // the same source listing more than once. PostgreSQL rejects an upsert when
+  // a conflict key appears twice in one statement, so collapse exact source
+  // keys globally before fuzzy matching and chunking. Keep the richer result.
+  const exactDeduplication = collapseConflictKeyDuplicates(
+    processed,
+    (current, candidate) =>
+      jobDetailScore(candidate) > jobDetailScore(current) ? candidate : current
+  );
+  const processedForDedup = exactDeduplication.records;
+  if (exactDeduplication.collapsed > 0) {
+    notes.push(
+      `Collapsed ${exactDeduplication.collapsed} repeated source listing${
+        exactDeduplication.collapsed === 1 ? "" : "s"
+      } before the database update`
+    );
+  }
+
   // ── 3. Fuzzy dedup (Tier 2) ────────────────────────────────────────────
   const { data: existingData, error: existingError } = await supabase
     .from("jobs")
@@ -297,7 +326,7 @@ export async function runFetchPipeline(
   const acceptedByCompany = new Map<string, ProcessedJob[]>();
   let fuzzyDuplicatesSkipped = 0;
 
-  for (const job of processed) {
+  for (const job of processedForDedup) {
     const companyKey = normCompany(job.company_name);
     const sameCompanyExisting = existingByCompany.get(companyKey) ?? [];
 
@@ -371,6 +400,7 @@ export async function runFetchPipeline(
     fetched: rawJobs.length,
     processed: processed.length,
     skippedByGates,
+    exactDuplicatesCollapsed: exactDeduplication.collapsed,
     fuzzyDuplicatesSkipped,
     upserted,
     expired,
