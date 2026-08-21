@@ -1,33 +1,71 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { AtSign, Check, CheckCircle2, Copy, Inbox, Loader2, MailCheck, ShieldCheck } from "lucide-react";
-import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage";
+import { AtSign, Check, CheckCheck, CheckCircle2, ChevronDown, Copy, Inbox, Loader2, Mail, MailCheck, Reply, Search, Send, ShieldCheck, X } from "lucide-react";
+import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { getSupabase } from "@/lib/supabase";
+import { inboxViewCategory, inboxViewCategoryLabel, type InboxViewCategory } from "@/lib/workspace/mail";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
-import type { InboxClassification, InboxMessage } from "@/lib/workspace/types";
+import type { InboxMessage } from "@/lib/workspace/types";
 
-const FILTERS: Array<{ id: "all" | InboxClassification; label: string }> = [
+type FilterId = "all" | InboxViewCategory;
+type EmailState = "loading" | "preview" | "connected" | "gated" | "error";
+
+const FILTERS: Array<{ id: FilterId; label: string }> = [
   { id: "all", label: "All" },
-  { id: "interview", label: "Interviews" },
-  { id: "action_required", label: "Needs you" },
-  { id: "application_update", label: "Updates" },
-  { id: "rejection", label: "Rejections" },
+  { id: "verification", label: "Verification" },
+  { id: "interview", label: "Interview" },
+  { id: "assessment", label: "Assessment" },
+  { id: "reminder", label: "Reminder" },
+  { id: "offer", label: "Offer" },
+  { id: "applied", label: "Applied" },
+  { id: "rejection", label: "Rejection" },
+  { id: "needs_you", label: "Needs you" },
 ];
 
-type EmailState = "loading" | "preview" | "connected" | "gated" | "error";
+function categoryStyle(category: InboxViewCategory): string {
+  if (category === "offer" || category === "interview") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (category === "rejection") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (category === "needs_you" || category === "assessment" || category === "reminder") return "border-amber-200 bg-amber-50 text-amber-800";
+  if (category === "verification" || category === "applied") return "border-blue-200 bg-blue-50 text-blue-700";
+  return "border-slate-200 bg-slate-50 text-slate-600";
+}
+
+function CategoryPill({ message }: { message: InboxMessage }) {
+  const category = inboxViewCategory(message);
+  return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold ${categoryStyle(category)}`}>{inboxViewCategoryLabel(category)}</span>;
+}
 
 export function RecruiterInbox() {
   const workspace = useWorkspaceState();
-  const [filter, setFilter] = useState<"all" | InboxClassification>("all");
+  const [filter, setFilter] = useState<FilterId>("all");
+  const [query, setQuery] = useState("");
+  const [identityOpen, setIdentityOpen] = useState(false);
   const [emailState, setEmailState] = useState<EmailState>(isSupabaseConfigured() ? "loading" : "preview");
   const [activating, setActivating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const visible = useMemo(() => workspace.messages.filter((message) => filter === "all" || message.classification === filter), [filter, workspace.messages]);
-  const [selectedId, setSelectedId] = useState<string | null>(visible[0]?.id ?? null);
-  const selected = workspace.messages.find((message) => message.id === selectedId) ?? visible[0] ?? null;
-  const hasAlias = workspace.inbox.alias !== "Not created" && workspace.inbox.providerState === "connected";
+  const [selectedId, setSelectedId] = useState<string | null>(workspace.messages[0]?.id ?? null);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeTo, setComposeTo] = useState("");
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeMessage, setComposeMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const hasAlias = workspace.inbox.alias !== "Not created" && (workspace.inbox.providerState === "connected" || emailState === "preview");
+  const accountEmail = workspace.inbox.forwardingEmail || workspace.profile.forwardingEmail || workspace.profile.email;
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return workspace.messages.filter((message) => {
+      const category = inboxViewCategory(message);
+      const categoryMatches = filter === "all" || category === filter;
+      const searchMatches = !needle || `${message.from} ${message.subject} ${message.preview} ${message.body}`.toLowerCase().includes(needle);
+      return categoryMatches && searchMatches;
+    });
+  }, [filter, query, workspace.messages]);
+  const selected = visible.find((message) => message.id === selectedId) ?? visible[0] ?? null;
+  const unread = workspace.messages.filter((message) => !message.read).length;
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -47,6 +85,11 @@ export function RecruiterInbox() {
   const selectMessage = (message: InboxMessage) => {
     setSelectedId(message.id);
     if (!message.read) updateWorkspace((current) => ({ ...current, messages: current.messages.map((item) => item.id === message.id ? { ...item, read: true } : item) }));
+  };
+
+  const markAllRead = () => {
+    updateWorkspace((current) => ({ ...current, messages: current.messages.map((message) => ({ ...message, read: true })) }));
+    setNotice("All messages marked as read.");
   };
 
   const activateInbox = async () => {
@@ -73,66 +116,93 @@ export function RecruiterInbox() {
     setNotice("Private address copied.");
   };
 
-  return (
-    <WorkspacePage eyebrow="Recruiter inbox" title="Responses linked to the right role" description="Use one private address for applications. Recruiter replies are classified and attached to the correct contract so the next action stays clear.">
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card" aria-labelledby="inbox-connection-title">
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"}`}><AtSign size={20} aria-hidden="true" /></span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 id="inbox-connection-title" className="text-sm font-semibold text-slate-950">Private application address</h2>
-                  <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-800" : emailState === "preview" ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}>
-                    {emailState === "loading" ? "Checking" : emailState === "connected" && hasAlias ? "Active" : emailState === "preview" ? "Preview" : "Not connected"}
-                  </span>
-                </div>
-                {emailState === "loading" ? <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Loader2 className="animate-spin" size={14} /> Checking email connection…</p> : hasAlias || emailState === "preview" ? <p className="mt-2 break-all font-mono text-sm font-semibold text-brand-800">{workspace.inbox.alias}</p> : <p className="mt-2 text-sm leading-6 text-slate-600">No address has been issued. Recruiter email is not being received by IR35Careers.</p>}
-              </div>
-            </div>
+  const openComposer = (message?: InboxMessage) => {
+    setComposeTo(message?.from ?? "");
+    setComposeSubject(message ? `Re: ${message.subject.replace(/^Re:\s*/i, "")}` : "");
+    setComposeMessage("");
+    setComposeOpen(true);
+    setNotice(null);
+  };
 
-            <div className="mt-5 border-t border-slate-100 pt-5">
-              {emailState === "connected" && !hasAlias && <button type="button" onClick={() => void activateInbox()} disabled={activating} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50">{activating ? <Loader2 className="animate-spin" size={16} /> : <MailCheck size={16} />} Activate private inbox</button>}
-              {(hasAlias || emailState === "preview") && <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium text-slate-800">Used automatically on supported applications</p><p className="mt-1 text-xs leading-5 text-slate-500">Recruiter messages appear here and important updates are also sent to your account email.</p></div><button type="button" onClick={() => void copyAlias()} className="ir35-focus inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:bg-brand-50">{notice === "Private address copied." ? <Check size={15} /> : <Copy size={15} />} Copy address</button></div>}
-              {(emailState === "gated" || emailState === "error") && <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"><p className="font-semibold">Email setup is incomplete</p><p className="mt-1 leading-6">Connect a verified inbound domain, signed webhook and delivery provider before users can activate an address.</p></div>}
-              {notice && <p className="mt-3 text-sm font-medium text-brand-800" role="status">{notice}</p>}
+  const sendMessage = async () => {
+    setSending(true);
+    setNotice(null);
+    try {
+      const { data } = await getSupabase().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("Sign in again before sending a message.");
+      const response = await fetch("/api/integrations/email/send", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: composeTo, subject: composeSubject, message: composeMessage }),
+      });
+      const payload = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? "The message could not be sent.");
+      setComposeOpen(false);
+      setNotice("Message sent from your private IR35Careers address.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The message could not be sent.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <WorkspacePage eyebrow="Recruiter inbox" title="Your application messages" description="Keep confirmations, recruiter replies, assessments and interviews linked to the right application.">
+      <nav className="mb-5 flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1" aria-label="Application communication views">
+        <span aria-current="page" className="inline-flex min-h-10 items-center rounded-xl bg-slate-950 px-5 text-sm font-bold text-white">Inbox{unread > 0 && <span className="ml-2 rounded-full bg-white/15 px-2 py-0.5 text-[10px]">{unread}</span>}</span>
+        <Link href="/applications" className="ir35-focus inline-flex min-h-10 items-center rounded-xl px-5 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-950">Pipeline</Link>
+      </nav>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6" aria-labelledby="inbox-connection-title">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"}`}><AtSign size={20} aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2"><h2 id="inbox-connection-title" className="text-sm font-semibold text-slate-950">Application email identity</h2><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{emailState === "loading" ? "Checking" : hasAlias ? "Active" : "Not active"}</span></div>
+              <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">IR35Careers email</p>
+              <p className="mt-1 break-all font-mono text-sm font-semibold text-brand-800">{hasAlias ? workspace.inbox.alias : "Not created"}</p>
+              <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Your account email</p>
+              <p className="mt-1 break-all text-sm font-semibold text-slate-900">{accountEmail || "Not available"}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Important recruiter messages are forwarded to this email when forwarding is active.</p>
             </div>
           </div>
-          <aside className="border-t border-slate-200 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0 sm:p-6">
-            <ShieldCheck className="text-emerald-300" size={21} aria-hidden="true" />
-            <h2 className="mt-4 font-semibold">What this inbox does</h2>
-            <ul className="mt-3 space-y-3 text-sm leading-6 text-slate-300">
-              <li>Links replies to the originating application.</li>
-              <li>Surfaces interviews and actions that need you.</li>
-              <li>Keeps sender, subject and message history private to your account.</li>
-            </ul>
-          </aside>
+          <div className="flex flex-wrap gap-2">
+            {emailState === "connected" && !hasAlias && <button type="button" onClick={() => void activateInbox()} disabled={activating} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50">{activating ? <Loader2 className="animate-spin" size={16} /> : <MailCheck size={16} />} Activate inbox</button>}
+            {hasAlias && <button type="button" onClick={() => void copyAlias()} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">{notice === "Private address copied." ? <Check size={15} /> : <Copy size={15} />} Copy email</button>}
+            <button type="button" aria-expanded={identityOpen} onClick={() => setIdentityOpen((current) => !current)} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">How it works <ChevronDown size={15} className={identityOpen ? "rotate-180" : ""} /></button>
+          </div>
         </div>
+        {identityOpen && <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5 md:grid-cols-3"><div className="rounded-2xl bg-slate-50 p-4"><Mail className="text-brand-700" size={18} /><p className="mt-3 text-sm font-semibold text-slate-950">Use the private email</p><p className="mt-1 text-xs leading-5 text-slate-600">Supported applications use your unique IR35Careers address.</p></div><div className="rounded-2xl bg-slate-50 p-4"><ShieldCheck className="text-brand-700" size={18} /><p className="mt-3 text-sm font-semibold text-slate-950">Keep replies organised</p><p className="mt-1 text-xs leading-5 text-slate-600">Replies are classified and linked to the application that created them.</p></div><div className="rounded-2xl bg-slate-50 p-4"><Send className="text-brand-700" size={18} /><p className="mt-3 text-sm font-semibold text-slate-950">Forward important updates</p><p className="mt-1 text-xs leading-5 text-slate-600">Interview, action and outcome messages also reach {accountEmail || "your account email"}.</p></div></div>}
+        {(emailState === "gated" || emailState === "error") && <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">Application email is temporarily unavailable. Your existing messages and applications are safe.</p>}
+        {notice && <p className="mt-4 text-sm font-medium text-brand-800" role="status">{notice}</p>}
       </section>
 
-      <div className="mt-6 flex flex-wrap gap-2" aria-label="Inbox filters">{FILTERS.map((item) => <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`ir35-focus min-h-10 rounded-xl border px-4 text-sm font-semibold transition-colors ${filter === item.id ? "border-slate-950 bg-slate-950 text-white shadow-sm" : "border-slate-300 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"}`}>{item.label}</button>)}</div>
+      <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-card">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <label className="relative block min-w-0 flex-1"><span className="sr-only">Search messages</span><Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search messages, companies or roles" className="ir35-focus min-h-12 w-full rounded-xl border border-slate-300 bg-slate-50 pl-11 pr-4 text-sm" /></label>
+          <div className="flex flex-wrap gap-2"><button type="button" onClick={markAllRead} disabled={unread === 0} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-40"><CheckCheck size={16} /> Mark all read</button><button type="button" onClick={() => openComposer()} disabled={!hasAlias || emailState === "gated"} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40"><Send size={16} /> Compose</button></div>
+        </div>
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="Inbox filters">{FILTERS.map((item) => { const count = item.id === "all" ? workspace.messages.length : workspace.messages.filter((message) => inboxViewCategory(message) === item.id).length; return <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`ir35-focus inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold ${filter === item.id ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"}`}>{item.label}{count > 0 && <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${filter === item.id ? "bg-white/15" : "bg-slate-100"}`}>{count}</span>}</button>; })}</div>
+      </section>
 
-      <section className="mt-4 grid min-h-[520px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card lg:grid-cols-[360px_1fr]">
+      <section className="mt-4 grid min-h-[540px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card lg:grid-cols-[380px_1fr]">
         <div className="border-b border-slate-200 lg:border-b-0 lg:border-r">
-          {visible.length === 0 ? <div className="p-8 text-center"><Inbox className="mx-auto text-slate-400" /><p className="mt-3 text-sm text-slate-600">No messages in this view.</p></div> : visible.map((message) => (
+          {visible.length === 0 ? <div className="p-8 text-center"><Inbox className="mx-auto text-slate-400" /><p className="mt-3 text-sm font-semibold text-slate-700">No messages in this view</p><p className="mt-1 text-xs text-slate-500">Try another filter or clear the search.</p></div> : visible.map((message) => (
             <button key={message.id} type="button" onClick={() => selectMessage(message)} className={`ir35-focus block w-full border-b border-slate-100 p-4 text-left transition-colors ${selected?.id === message.id ? "bg-brand-50" : "hover:bg-slate-50"}`}>
               <div className="flex items-center justify-between gap-2"><span className={`truncate text-xs ${message.read ? "text-slate-500" : "font-bold text-slate-900"}`}>{message.from}</span>{!message.read && <span className="h-2 w-2 shrink-0 rounded-full bg-brand-600" aria-label="Unread" />}</div>
               <p className={`mt-1 truncate text-sm ${message.read ? "font-medium text-slate-700" : "font-bold text-slate-950"}`}>{message.subject}</p>
               <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{message.preview}</p>
-              <div className="mt-2"><StatusPill status={message.classification} /></div>
+              <div className="mt-2"><CategoryPill message={message} /></div>
             </button>
           ))}
         </div>
         <div className="min-w-0 p-5 sm:p-8">
-          {selected ? (
-            <article>
-              <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between"><div><StatusPill status={selected.classification} /><h2 className="mt-3 text-xl font-semibold text-slate-950">{selected.subject}</h2><p className="mt-1 text-sm text-slate-500">From {selected.from}</p></div><p className="text-xs text-slate-500">{new Date(selected.receivedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p></div>
-              <div className="mt-6 whitespace-pre-line text-sm leading-7 text-slate-700">{selected.body}</div>
-              {selected.applicationId && <div className="mt-8 rounded-2xl border border-brand-200 bg-brand-50 p-4"><p className="flex items-center gap-2 text-sm font-semibold text-brand-900"><MailCheck size={16} /> Linked to {workspace.applications.find((item) => item.id === selected.applicationId)?.job.title ?? "an application"}</p><p className="mt-1 text-xs text-brand-800">The message and next action stay attached to this contract.</p></div>}
-            </article>
-          ) : <div className="flex h-full items-center justify-center text-center"><div><CheckCircle2 className="mx-auto text-slate-300" size={32} /><p className="mt-3 text-sm text-slate-500">Choose a message to read it.</p></div></div>}
+          {selected ? <article><div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between"><div><CategoryPill message={selected} /><h2 className="mt-3 text-xl font-semibold text-slate-950">{selected.subject}</h2><p className="mt-1 break-all text-sm text-slate-500">From {selected.from}</p></div><div className="flex shrink-0 flex-col items-start gap-2 sm:items-end"><p className="text-xs text-slate-500">{new Date(selected.receivedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p><button type="button" onClick={() => openComposer(selected)} disabled={!hasAlias} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 disabled:opacity-40"><Reply size={14} /> Reply</button></div></div><div className="mt-6 whitespace-pre-line text-sm leading-7 text-slate-700">{selected.body}</div>{selected.applicationId && <div className="mt-8 rounded-2xl border border-brand-200 bg-brand-50 p-4"><p className="flex items-center gap-2 text-sm font-semibold text-brand-900"><MailCheck size={16} /> Linked to {workspace.applications.find((item) => item.id === selected.applicationId)?.job.title ?? "an application"}</p><Link href="/applications" className="ir35-focus mt-3 inline-flex min-h-10 items-center rounded-xl bg-white px-3 text-xs font-bold text-brand-800 shadow-sm">Open in pipeline</Link></div>}</article> : <div className="flex h-full items-center justify-center text-center"><div><CheckCircle2 className="mx-auto text-slate-300" size={32} /><p className="mt-3 text-sm text-slate-500">Choose a message to read it.</p></div></div>}
         </div>
       </section>
+
+      {composeOpen && <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/45 p-3 sm:items-center sm:p-6" role="presentation"><section role="dialog" aria-modal="true" aria-labelledby="compose-title" className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Private application email</p><h2 id="compose-title" className="mt-1 text-xl font-semibold text-slate-950">New recruiter message</h2><p className="mt-1 break-all text-xs text-slate-500">From {workspace.inbox.alias}</p></div><button type="button" onClick={() => setComposeOpen(false)} className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Close composer"><X size={18} /></button></div><div className="mt-5 grid gap-4"><label className="text-sm font-semibold text-slate-800">To<input value={composeTo} onChange={(event) => setComposeTo(event.target.value)} type="email" placeholder="recruiter@company.com" className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label><label className="text-sm font-semibold text-slate-800">Subject<input value={composeSubject} onChange={(event) => setComposeSubject(event.target.value)} maxLength={180} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label><label className="text-sm font-semibold text-slate-800">Message<textarea value={composeMessage} onChange={(event) => setComposeMessage(event.target.value)} rows={9} maxLength={40_000} className="ir35-focus mt-2 w-full resize-y rounded-xl border border-slate-300 p-3 font-normal leading-6" /></label></div><div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={() => setComposeOpen(false)} className="ir35-focus min-h-11 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700">Cancel</button><button type="button" onClick={() => void sendMessage()} disabled={sending || !composeTo.trim() || !composeSubject.trim() || !composeMessage.trim()} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{sending ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} Send message</button></div></section></div>}
     </WorkspacePage>
   );
 }

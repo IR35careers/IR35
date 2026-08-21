@@ -25,6 +25,16 @@ import {
 } from "@/lib/profile";
 
 const RATE_CHOICES = [0, 300, 400, 500, 600, 700, 800];
+const DISCOVERY_SOURCES = [
+  { id: "instagram", label: "Instagram" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "google", label: "Google Search" },
+  { id: "ai", label: "AI assistant" },
+  { id: "referral", label: "Friend or referral" },
+  { id: "university", label: "University or careers service" },
+  { id: "other", label: "Other" },
+] as const;
 
 export default function OnboardingPage() {
   const { user, loading } = useAuth();
@@ -45,6 +55,7 @@ export default function OnboardingPage() {
   const [yearsExp, setYearsExp] = useState("");
   const [phone, setPhone] = useState("");
   const [linkedin, setLinkedin] = useState("");
+  const [discoverySource, setDiscoverySource] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +67,7 @@ export default function OnboardingPage() {
   // Prefill from an existing profile (returning users editing their setup).
   useEffect(() => {
     if (!user || administratorRedirect) return;
+    setDiscoverySource(typeof user.user_metadata?.discovery_source === "string" ? user.user_metadata.discovery_source : "");
     getProfile(user.id).then((profile) => {
       if (!profile) return;
       setFullName(profile.full_name ?? "");
@@ -150,6 +162,15 @@ export default function OnboardingPage() {
     }
     if (cv_path && existingCvPath && existingCvPath !== cv_path) {
       await deleteCv(user.id, existingCvPath);
+    }
+    if (discoverySource) {
+      const { getSupabase } = await import("@/lib/supabase");
+      const { error: metadataError } = await getSupabase().auth.updateUser({ data: { discovery_source: discoverySource } });
+      if (metadataError) {
+        setError("Your profile was saved, but the discovery preference could not be saved. You can continue to the dashboard.");
+        setSaving(false);
+        return;
+      }
     }
     router.replace("/dashboard");
   };
@@ -415,6 +436,19 @@ export default function OnboardingPage() {
               <option value="hybrid">Hybrid</option>
               <option value="onsite">On-site</option>
             </select>
+          </div>
+        </section>
+
+        <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-5">
+          <p className="text-sm font-semibold text-slate-900">How did you hear about IR35Careers?</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">Optional. This helps us understand which contractor communities we should support.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {DISCOVERY_SOURCES.map((source) => (
+              <label key={source.id} className={`ir35-focus flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm font-medium ${discoverySource === source.id ? "border-brand-500 bg-brand-50 text-brand-900" : "border-slate-200 text-slate-700 hover:border-slate-300"}`}>
+                <input type="radio" name="discovery-source" value={source.id} checked={discoverySource === source.id} onChange={() => setDiscoverySource(source.id)} className="h-4 w-4 accent-brand-700" />
+                {source.label}
+              </label>
+            ))}
           </div>
         </section>
 

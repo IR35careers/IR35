@@ -63,8 +63,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const workspace = useWorkspaceState();
   const existing = workspace.applications.find((item) => item.job.id === job.id && item.id !== "app-demo-northstar");
   const initialApplication = useMemo(() => cleanExisting(existing, workspace.profile.fullName), [existing, workspace.profile.fullName]);
-  const [cvText, setCvText] = useState(initialApplication?.sourceCvText ?? "");
-  const [cvFilename, setCvFilename] = useState(initialApplication?.resumeVersionLabel ?? "");
+  const preferredResume = useMemo(() => workspace.profile.resumeProfiles?.find((item) => item.id === workspace.profile.activeResumeProfileId) ?? workspace.profile.resumeProfiles?.find((item) => item.isDefault) ?? workspace.profile.resumeProfiles?.[0], [workspace.profile.activeResumeProfileId, workspace.profile.resumeProfiles]);
+  const applicationPreferences = workspace.profile.applicationPreferences ?? { resumeOptimisation: "honest" as const, autoApproveSafeEdits: true, reviewBeforeSubmit: true, generateCoverLetter: true, usePrivateApplicationEmail: true };
+  const [cvText, setCvText] = useState(initialApplication?.sourceCvText ?? preferredResume?.resumeText ?? "");
+  const [cvFilename, setCvFilename] = useState(initialApplication?.resumeVersionLabel ?? preferredResume?.name ?? workspace.profile.defaultCvLabel ?? "");
   const [application, setApplication] = useState<ApplicationRecord | null>(initialApplication);
   const [busy, setBusy] = useState<BusyState>(null);
   const [submissionConnection, setSubmissionConnection] = useState<ConnectionState>(isSupabaseConfigured() ? "loading" : "gated");
@@ -74,6 +76,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [profilePrompt, setProfilePrompt] = useState(false);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
   const cvReady = cvText.trim().length >= 120;
@@ -168,9 +171,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       });
       const payload = (await response.json()) as { application?: ApplicationRecord; error?: string };
       if (!response.ok || !payload.application) throw new Error(payload.error ?? "Could not analyse this CV.");
-      let prepared = payload.application;
+      let prepared = applicationPreferences.generateCoverLetter
+        ? payload.application
+        : { ...payload.application, coverLetter: preferredResume?.coverLetter ?? "" };
       let tailoringNotice = "Your role match is ready. Review the application details before submitting.";
-      try {
+      if (applicationPreferences.resumeOptimisation !== "off") try {
         const token = await sessionToken();
         const tailoringResponse = await fetch("/api/applications/tailor", {
           method: "POST",
@@ -180,26 +185,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         const tailoringPayload = (await tailoringResponse.json()) as { result?: AiTailoringResult; error?: string };
         if (!tailoringResponse.ok || !tailoringPayload.result) throw new Error(tailoringPayload.error ?? "Tailoring could not be completed.");
         const result = tailoringPayload.result;
-        const tailoredCvText = applyAiTailoringSuggestions(prepared.sourceCvText, result.suggestions);
+        const tailoredCvText = applicationPreferences.autoApproveSafeEdits
+          ? applyAiTailoringSuggestions(prepared.sourceCvText, result.suggestions)
+          : prepared.sourceCvText;
         const score = scoreResumeForRole(tailoredCvText, job, prepared.resumeVersionLabel);
         const candidateName = resolveCandidateName(workspace.profile.fullName, prepared.sourceCvText);
         prepared = {
           ...prepared,
           tailoredCvText,
-          coverLetter: result.coverLetter && candidateName ? normaliseCoverLetterSignoff(result.coverLetter, candidateName) : prepared.coverLetter,
+          coverLetter: applicationPreferences.generateCoverLetter && result.coverLetter && candidateName ? normaliseCoverLetterSignoff(result.coverLetter, candidateName) : prepared.coverLetter,
           matchScore: score.overall,
           matchedKeywords: score.matchedKeywords,
           missingKeywords: score.missingKeywords,
         };
         setAiResult(result);
-        setSelectedSuggestionIds(result.suggestions.map((suggestion) => suggestion.id));
-        setUseAiCoverLetter(Boolean(result.coverLetter));
-        tailoringNotice = result.suggestions.length > 0
+        setSelectedSuggestionIds(applicationPreferences.autoApproveSafeEdits ? result.suggestions.map((suggestion) => suggestion.id) : []);
+        setUseAiCoverLetter(applicationPreferences.generateCoverLetter && Boolean(result.coverLetter));
+        tailoringNotice = result.suggestions.length > 0 && applicationPreferences.autoApproveSafeEdits
           ? `${result.suggestions.length} evidence-based CV improvements were applied for this role. Review them before submitting.`
+          : result.suggestions.length > 0
+            ? `${result.suggestions.length} evidence-based CV improvements are ready for your review.`
           : "Your CV was checked against the role. No safe wording changes were needed.";
       } catch {
         tailoringNotice = "Your role match is ready. Enhanced tailoring was unavailable, so no unsupported changes were made.";
-      }
+      } else tailoringNotice = "Resume optimisation is off for this profile. Your source CV remains unchanged.";
       setApplication(prepared);
       persistApplication(prepared);
       setNotice(tailoringNotice);
@@ -339,6 +348,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
           setApplication(needsUserApplication);
           persistApplication(needsUserApplication);
+          if (payload.action === "/profile") setProfilePrompt(true);
           setNotice(payload.message || "One answer needs your attention before this application can be sent.");
           return;
         }
@@ -350,6 +360,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
             const needsUserApplication: ApplicationRecord = { ...ready, status: "needs_review", questions: payload.questions ?? ready.questions, submissionApproved: false, updatedAt: new Date().toISOString() };
             setApplication(needsUserApplication);
             persistApplication(needsUserApplication);
+            if (payload.action === "/profile") setProfilePrompt(true);
             setNotice(payload.message || "One answer needs your attention before this application can be sent.");
             return;
           }
@@ -374,7 +385,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       persistApplication(submittedApplication);
       setNotice("Application submitted. The verified employer receipt is saved below.");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.");
+      const message = caught instanceof Error ? caught.message : "The application was not submitted. Your packet remains saved.";
+      if (/complete your application profile|profile before applying/i.test(message)) setProfilePrompt(true);
+      setError(message);
     } finally {
       setBusy(null);
     }
@@ -480,6 +493,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           <section className="rounded-3xl border border-slate-200 bg-white p-5"><div className="flex items-center gap-2 text-brand-700"><LockKeyhole size={16} /><p className="text-[10px] font-bold uppercase tracking-[0.16em]">You stay in control</p></div><p className="mt-3 text-sm leading-6 text-slate-600">If an employer asks a new legal, identity or personal question, the application pauses and asks you. Submitted applications include a confirmation.</p></section>
         </aside>
       </div>
+      {application && !submitted && <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex justify-center px-4" data-testid="persistent-apply-action"><div className="pointer-events-none flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-emerald-200 bg-white/95 p-3 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-4"><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-950">{job.title}</p><p className="text-xs text-slate-600">{answersReviewed && approvalsComplete ? submissionConnection === "connected" ? "Ready for your final instruction" : "Application access is being checked" : "Review and approve the packet to apply"}</p></div><button type="button" onClick={handlePrimaryApplyAction} disabled={busy !== null} className="ir35-focus pointer-events-auto inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{busy === "submit" ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />} Approve and apply now</button></div></div>}
+      {profilePrompt && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4"><section role="dialog" aria-modal="true" aria-labelledby="complete-profile-title" className="w-full max-w-lg rounded-3xl bg-white p-6 text-center shadow-2xl sm:p-8"><span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><AlertTriangle size={24} /></span><p className="mt-5 text-xs font-bold uppercase tracking-[0.15em] text-amber-700">Application paused</p><h2 id="complete-profile-title" className="mt-2 text-2xl font-semibold text-slate-950">Complete your profile</h2><p className="mt-3 text-sm leading-6 text-slate-600">This employer needs information that is not yet saved in your application profile. Add the missing details, then return here and apply again.</p><div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center"><button type="button" onClick={() => setProfilePrompt(false)} className="ir35-focus min-h-11 rounded-xl border border-slate-300 px-5 text-sm font-semibold text-slate-700">Not now</button><Link href="/profile" className="ir35-focus inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800">Complete profile</Link></div></section></div>}
     </WorkspacePage>
   );
 }

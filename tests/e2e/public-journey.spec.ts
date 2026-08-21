@@ -402,8 +402,9 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByRole("link", { name: "Review and apply" }).first()).toBeVisible();
 
   await page.goto("/inbox");
-  await expect(page.getByRole("heading", { name: "Responses linked to the right role" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your application messages" })).toBeVisible();
   await expect(page.getByText("alex.morgan@inbox.ir35careers.local")).toBeVisible();
+  await expect(page.getByText("alex.morgan@example.test", { exact: true }).first()).toBeVisible();
 
   await page.goto("/automation");
   await expect(page.getByRole("heading", { name: "Set the rules once. Review every packet." })).toBeVisible();

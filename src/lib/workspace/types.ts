@@ -21,6 +21,30 @@ export type InboxClassification =
   | "application_update"
   | "other";
 
+export interface ResumeProfile {
+  id: string;
+  name: string;
+  resumeText: string;
+  coverLetter: string;
+  isDefault: boolean;
+  format?: {
+    template: "Professional" | "Modern" | "Simple";
+    font: "Arial" | "Calibri" | "Georgia";
+    fontSize: number;
+    alignment: "left" | "justify";
+    compactSpacing: boolean;
+    hiddenSections: string[];
+  };
+}
+
+export interface ApplicationPreferences {
+  resumeOptimisation: "off" | "honest" | "strong";
+  autoApproveSafeEdits: boolean;
+  reviewBeforeSubmit: boolean;
+  generateCoverLetter: boolean;
+  usePrivateApplicationEmail: boolean;
+}
+
 export interface ContractorProfile {
   fullName: string;
   email: string;
@@ -53,6 +77,16 @@ export interface ContractorProfile {
   clearance: string;
   defaultCvLabel: string;
   forwardingEmail: string;
+  professionalSummary?: string;
+  targetRole?: string;
+  githubUrl?: string;
+  skills?: string[];
+  certifications?: string[];
+  experienceText?: string;
+  projectsText?: string;
+  resumeProfiles?: ResumeProfile[];
+  activeResumeProfileId?: string;
+  applicationPreferences?: ApplicationPreferences;
   networkContacts?: NetworkContact[];
   referralRequests?: ReferralRequest[];
 }

@@ -34,6 +34,20 @@ export const SAMPLE_CONTRACTOR_PROFILE: ContractorProfile = {
   clearance: "Eligible for BPSS; no active SC clearance claimed",
   defaultCvLabel: "Platform Engineering CV v4",
   forwardingEmail: "alex.morgan@example.test",
+  professionalSummary: "Senior platform and DevOps engineer delivering secure cloud services for UK organisations.",
+  targetRole: "Senior Platform Engineer",
+  githubUrl: "https://github.com/alex-morgan-example",
+  skills: ["AWS", "Terraform", "Kubernetes", "Docker", "CI/CD", "Python"],
+  certifications: ["AWS Certified Solutions Architect"],
+  experienceText: "Senior Platform Engineer at Example Consultancy, 2022 to present\nDevOps Engineer at Example Digital, 2019 to 2022",
+  projectsText: "Reusable Terraform modules and Kubernetes delivery controls for UK product teams.",
+  applicationPreferences: {
+    resumeOptimisation: "honest",
+    autoApproveSafeEdits: true,
+    reviewBeforeSubmit: true,
+    generateCoverLetter: true,
+    usePrivateApplicationEmail: true,
+  },
   networkContacts: [
     {
       id: "network-demo-sam",

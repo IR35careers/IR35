@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
+import { classifyInboundMessage, findLinkedApplication, inboxViewCategory } from "@/lib/workspace/mail";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 
 describe("inbound recruiter mail", () => {
@@ -16,5 +16,14 @@ describe("inbound recruiter mail", () => {
     ];
     expect(findLinkedApplication("Northstar Digital - Senior DevOps Engineer", "Thanks for applying", applications)).toBe("northstar");
     expect(findLinkedApplication("General update", "No role information", applications)).toBeNull();
+  });
+
+  it("derives detailed inbox categories without changing stored classifications", () => {
+    const message = (subject: string, body: string, classification: "interview" | "rejection" | "action_required" | "application_update" | "other" = "other") => ({ subject, body, preview: body, classification });
+    expect(inboxViewCategory(message("Verify your email", "Your security code is 123456"))).toBe("verification");
+    expect(inboxViewCategory(message("Technical assessment", "Complete the coding test by Friday"))).toBe("assessment");
+    expect(inboxViewCategory(message("Application received", "Thank you for applying"))).toBe("applied");
+    expect(inboxViewCategory(message("Offer letter", "We are pleased to offer you the contract"))).toBe("offer");
+    expect(inboxViewCategory(message("Working pattern", "Please confirm availability", "action_required"))).toBe("needs_you");
   });
 });
