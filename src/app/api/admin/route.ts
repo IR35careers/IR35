@@ -46,7 +46,6 @@ import { getIntegrationStatuses } from "@/lib/integration-status";
 import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { SUBMISSION_LOCK_MAX_AGE_MS } from "@/lib/application-submission-state";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
 export const runtime = "nodejs";
@@ -588,13 +587,11 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     if (body.action === "recover_stale_submissions") {
-      const cutoff = new Date(Date.now() - SUBMISSION_LOCK_MAX_AGE_MS).toISOString();
       const staleResult = await supabase
         .from("application_submissions")
         .select("id, user_id, application_id, updated_at")
         .eq("status", "processing")
         .or("error_code.is.null,error_code.neq.needs_user")
-        .lt("updated_at", cutoff)
         .limit(500);
       if (staleResult.error) throw staleResult.error;
       const stale = staleResult.data ?? [];
@@ -608,7 +605,7 @@ export async function POST(request: Request): Promise<Response> {
       }
       const audit = await supabase.from("moderation_logs").insert({
         run_type: "application_recovery",
-        summary: { action: "recover_stale_submissions", recovered: stale.length, by: admin.email, cutoff },
+        summary: { action: "recover_stale_submissions", recovered: stale.length, by: admin.email },
       });
       if (audit.error) throw audit.error;
       return Response.json({ recovered: stale.length });
