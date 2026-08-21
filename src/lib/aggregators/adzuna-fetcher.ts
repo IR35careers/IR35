@@ -64,6 +64,8 @@ export interface AdzunaFetchOptions {
   appKey: string;
   /** Number of 50-result pages to fetch (keep small: serverless time budget). */
   pages?: number;
+  /** High-value searches fetched in addition to the general contract pages. */
+  keywordQueries?: string[];
 }
 
 export async function fetchAdzuna(
@@ -74,12 +76,17 @@ export async function fetchAdzuna(
   const jobs: RawATSJob[] = [];
   const seen = new Set<string>();
 
-  for (let page = 1; page <= pages; page++) {
-    const url =
-      `https://api.adzuna.com/v1/api/jobs/gb/search/${page}` +
-      `?app_id=${encodeURIComponent(opts.appId)}` +
-      `&app_key=${encodeURIComponent(opts.appKey)}` +
-      `&results_per_page=50&contract=1&sort_by=date&content-type=application/json`;
+  const fetchPage = async (page: number, keywords?: string) => {
+    const params = new URLSearchParams({
+      app_id: opts.appId,
+      app_key: opts.appKey,
+      results_per_page: "50",
+      contract: "1",
+      sort_by: "date",
+      "content-type": "application/json",
+    });
+    if (keywords) params.set("what", keywords);
+    const url = `https://api.adzuna.com/v1/api/jobs/gb/search/${page}?${params.toString()}`;
     const data = await client.getJson<AdzunaResponse>(url);
     const results = Array.isArray(data?.results) ? data.results : [];
     for (const job of results) {
@@ -88,7 +95,14 @@ export async function fetchAdzuna(
       seen.add(id);
       jobs.push(mapAdzunaJob(job));
     }
-    if (results.length < 50) break; // no more pages available
+    return results.length;
+  };
+
+  for (let page = 1; page <= pages; page++) {
+    if ((await fetchPage(page)) < 50) break;
+  }
+  for (const keywords of opts.keywordQueries ?? []) {
+    await fetchPage(1, keywords);
   }
   return jobs;
 }

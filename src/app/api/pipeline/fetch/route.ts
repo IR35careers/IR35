@@ -10,6 +10,7 @@
  */
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
+import { isSevenAmInLondon } from "@/lib/pipeline/schedule";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Hobby-plan ceiling; keep the registry modest
@@ -28,6 +29,18 @@ export async function GET(request: Request): Promise<Response> {
 
   if (!authorized) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Vercel schedules in UTC. Two protected invocations cover GMT and BST;
+  // only the one falling in London's 07:00 hour performs the daily refresh.
+  // An explicitly authorised manual run is still allowed outside that hour.
+  const isVercelCron = (request.headers.get("user-agent") ?? "").includes("vercel-cron/1.0");
+  if (isVercelCron && !isSevenAmInLondon(new Date())) {
+    return Response.json({
+      ok: true,
+      skipped: true,
+      reason: "Outside the 07:00 Europe/London refresh window.",
+    });
   }
 
   try {

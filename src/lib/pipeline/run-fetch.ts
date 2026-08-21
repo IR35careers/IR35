@@ -139,7 +139,11 @@ export async function runFetchPipeline(
         maxRetries: 1,
         baseBackoffMs: 500,
       });
-      const jobs = await fetchReed(client, { apiKey: reedKey, pages: 5 });
+      const jobs = await fetchReed(client, {
+        apiKey: reedKey,
+        pages: 4,
+        keywordQueries: ["outside IR35", "inside IR35", "IR35 contract"],
+      });
       return {
         jobs,
         run: {
@@ -188,7 +192,8 @@ export async function runFetchPipeline(
       const jobs = await fetchAdzuna(client, {
         appId: adzunaId,
         appKey: adzunaKey,
-        pages: 5,
+        pages: 3,
+        keywordQueries: ["outside IR35", "inside IR35"],
       });
       return {
         jobs,

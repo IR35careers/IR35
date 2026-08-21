@@ -84,6 +84,8 @@ export interface ReedFetchOptions {
   apiKey: string;
   /** Number of 100-result pages to fetch (keep small: serverless time budget). */
   pages?: number;
+  /** High-value searches fetched in addition to the general contract pages. */
+  keywordQueries?: string[];
 }
 
 export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Promise<RawATSJob[]> {
@@ -92,9 +94,14 @@ export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Pro
   const jobs: RawATSJob[] = [];
   const seen = new Set<string>();
 
-  for (let page = 0; page < pages; page++) {
-    const skip = page * 100;
-    const url = `https://www.reed.co.uk/api/1.0/search?contract=true&resultsToTake=100&resultsToSkip=${skip}`;
+  const fetchPage = async (page: number, keywords?: string) => {
+    const params = new URLSearchParams({
+      contract: "true",
+      resultsToTake: "100",
+      resultsToSkip: String(page * 100),
+    });
+    if (keywords) params.set("keywords", keywords);
+    const url = `https://www.reed.co.uk/api/1.0/search?${params.toString()}`;
     const data = await client.getJson<ReedResponse>(url, { headers: { authorization: auth } });
     const results = Array.isArray(data?.results) ? data.results : [];
     for (const job of results) {
@@ -103,7 +110,14 @@ export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Pro
       seen.add(id);
       jobs.push(mapReedJob(job));
     }
-    if (results.length < 100) break; // no more pages available
+    return results.length;
+  };
+
+  for (let page = 0; page < pages; page++) {
+    if ((await fetchPage(page)) < 100) break;
+  }
+  for (const keywords of opts.keywordQueries ?? []) {
+    await fetchPage(0, keywords);
   }
   return jobs;
 }
