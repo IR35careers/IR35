@@ -275,7 +275,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     updateApplication((current) => ({ ...current, matchScore: score.overall, matchedKeywords: score.matchedKeywords, missingKeywords: score.missingKeywords }));
   };
 
-  const persistReviewedPacket = async (source: ApplicationRecord): Promise<ApplicationRecord> => {
+  const persistReviewedPacket = async (source: ApplicationRecord, syncWholeWorkspace = true): Promise<ApplicationRecord> => {
     const now = new Date().toISOString();
     const ready: ApplicationRecord = {
       ...source,
@@ -287,7 +287,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     };
     setApplication(ready);
     persistApplication(ready);
-    if (isSupabaseConfigured()) {
+    if (syncWholeWorkspace && isSupabaseConfigured()) {
       const { data } = await getSupabase().auth.getSession();
       if (!data.session) throw new Error("Sign in again before saving this application.");
       const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
@@ -335,12 +335,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     try {
       const ready = application.status === "ready" && approvalsComplete
         ? application
-        : await persistReviewedPacket(application);
+        : await persistReviewedPacket(application, false);
       const token = await sessionToken();
+      setNotice("Starting the employer application. Keep this page open while the form is completed.");
       const response = await fetch("/api/applications/submit", {
         method: "POST",
         headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ applicationId: application.id, approval: "SUBMIT_APPROVED_APPLICATION" }),
+        body: JSON.stringify({ applicationId: ready.id, approval: "SUBMIT_APPROVED_APPLICATION", packet: ready }),
       });
       let payload = (await response.json()) as { receipt?: ApplicationRecord["receipt"]; state?: "submitted" | "processing" | "needs_user"; message?: string; questions?: ApplicationRecord["questions"]; action?: string; error?: string };
       if (response.status === 202 && payload.state) {

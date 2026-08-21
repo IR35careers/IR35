@@ -13,7 +13,12 @@ import { submitToVerifiedEmployerEmail } from "@/lib/employer-email-submission";
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import type { ApplicationQuestion, ApplicationReceipt, ContractorProfile } from "@/lib/workspace/types";
+import {
+  approvedApplicationPacketRow,
+  InvalidApplicationPacketError,
+  normaliseApprovedApplicationPacket,
+} from "@/lib/application-packet-snapshot";
+import type { ApplicationQuestion, ApplicationReceipt, ApplicationRecord, ContractorProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 
 export const runtime = "nodejs";
@@ -23,6 +28,38 @@ const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosni
 
 type DbRow = Record<string, unknown>;
 type AdminClient = ReturnType<typeof getSupabaseAdmin>;
+
+async function saveApprovedPacket(input: {
+  admin: AdminClient;
+  userId: string;
+  applicationId: string;
+  packet: unknown;
+}): Promise<void> {
+  const snapshot = normaliseApprovedApplicationPacket(input.packet, input.applicationId);
+  const [{ data: existing, error: existingError }, { data: trustedJobRow, error: jobError }] = await Promise.all([
+    input.admin.from("application_packets").select("id, user_id").eq("id", input.applicationId).maybeSingle(),
+    input.admin.from("jobs").select("*").eq("id", snapshot.job.id).maybeSingle(),
+  ]);
+  if (existingError || jobError) throw new Error(existingError?.message || jobError?.message);
+  if (existing && existing.user_id !== input.userId) throw new InvalidApplicationPacketError();
+  if (!trustedJobRow) throw new InvalidApplicationPacketError("This contract is no longer available in the live job feed.");
+
+  const trustedJob = { ...snapshot.job, ...(trustedJobRow as JobDetail) };
+  const row = approvedApplicationPacketRow(snapshot, input.userId, trustedJob);
+  const result = existing
+    ? await input.admin.from("application_packets").update(row).eq("id", input.applicationId).eq("user_id", input.userId)
+    : await input.admin.from("application_packets").insert(row);
+  if (result.error) throw new Error(result.error.message);
+
+  const { error: eventError } = await input.admin.from("application_events").upsert({
+    user_id: input.userId,
+    application_id: input.applicationId,
+    event_type: "approved",
+    label: "Application approved and ready to submit",
+    idempotency_key: `submit:${input.applicationId}:approved`,
+  }, { onConflict: "user_id,idempotency_key" });
+  if (eventError) throw new Error(eventError.message);
+}
 
 function approved(row: DbRow): boolean {
   const questions = (row.screening_answers as ApplicationQuestion[]) ?? [];
@@ -134,7 +171,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!token) return Response.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
 
   try {
-    const body = (await request.json()) as { applicationId?: string; approval?: string };
+    const body = (await request.json()) as { applicationId?: string; approval?: string; packet?: ApplicationRecord };
     if (!/^[0-9a-f-]{36}$/i.test(body.applicationId ?? "") || body.approval !== "SUBMIT_APPROVED_APPLICATION") {
       return Response.json({ error: "Explicit submission approval is required." }, { status: 400, headers: NO_STORE });
     }
@@ -143,6 +180,16 @@ export async function POST(request: Request): Promise<Response> {
     const { data: authData, error: authError } = await admin.auth.getUser(token);
     if (authError || !authData.user) return Response.json({ error: "Your session is no longer valid." }, { status: 401, headers: NO_STORE });
     const userId = authData.user.id;
+    if (body.packet) {
+      try {
+        await saveApprovedPacket({ admin, userId, applicationId: body.applicationId as string, packet: body.packet });
+      } catch (error) {
+        if (error instanceof InvalidApplicationPacketError) {
+          return Response.json({ error: error.message }, { status: 409, headers: NO_STORE });
+        }
+        throw error;
+      }
+    }
     const [{ data: packet, error: packetError }, { data: profileRow, error: profileError }] = await Promise.all([
       admin.from("application_packets").select("*").eq("id", body.applicationId).eq("user_id", userId).maybeSingle(),
       admin.from("profiles").select("application_profile").eq("id", userId).maybeSingle(),
