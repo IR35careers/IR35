@@ -3,6 +3,7 @@ import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/tr
 export type ApplicationNotificationKind =
   | "submitted"
   | "needs_attention"
+  | "submission_issue"
   | "interview"
   | "rejection"
   | "update"
@@ -74,6 +75,16 @@ function presentation(input: ApplicationNotificationInput): {
         body: `The application for ${role} is paused because an employer question could not be answered safely from your saved profile. Review the highlighted question and the application will continue after you confirm it.`,
         accent: "#b45309",
         actionLabel: "Answer the question",
+        actionPath: `/applications/new/${encodeURIComponent(input.applicationId)}`,
+      };
+    case "submission_issue":
+      return {
+        subject: `Application needs review: ${role}`,
+        eyebrow: "Application update",
+        title: "Your application was not submitted",
+        body: `IR35Careers could not obtain an employer confirmation for ${role}. Your approved CV and answers are saved. Open the application to review the issue and try again.`,
+        accent: "#b45309",
+        actionLabel: "Review application",
         actionPath: `/applications/new/${encodeURIComponent(input.applicationId)}`,
       };
     case "interview":

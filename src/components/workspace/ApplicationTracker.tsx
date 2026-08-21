@@ -126,7 +126,7 @@ export function ApplicationTracker() {
   const messageCounts = useMemo(() => new Map(workspace.applications.map((application) => [application.id, workspace.messages.filter((message) => message.applicationId === application.id).length])), [workspace.applications, workspace.messages]);
   const board = useMemo(() => Object.fromEntries(BOARD_COLUMNS.map((column) => [column, workspace.applications.filter((application) => boardColumn(application, messageCounts.get(application.id) ?? 0) === column)])) as Record<BoardColumn, ApplicationRecord[]>, [messageCounts, workspace.applications]);
   const outcomeTotal = Math.max(1, board.Applied.length + board.Rejected.length);
-  const refreshIds = useMemo(() => workspace.applications.filter((item) => item.status === "ready" || item.status === "needs_review").slice(0, 10).map((item) => item.id), [workspace.applications]);
+  const refreshIds = useMemo(() => workspace.applications.filter((item) => item.status === "ready" && item.events.some((event) => event.label === "Application submission started")).slice(0, 10).map((item) => item.id), [workspace.applications]);
 
   useEffect(() => {
     if (!isSupabaseConfigured() || refreshIds.length === 0) return;

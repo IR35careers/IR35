@@ -351,6 +351,7 @@ export async function POST(request: Request): Promise<Response> {
         reason: providerMessage.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 300) || "unknown",
       });
       await admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", receipt: { state: "failed", message: safeSubmissionError(providerError) }, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("idempotency_key", idempotencyKey);
+      await sendApplicationNotification({ kind: "submission_issue", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submission-issue` }).catch(() => null);
       throw providerError;
     }
   } catch (error) {
