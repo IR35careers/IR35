@@ -82,7 +82,9 @@ export async function fetchCompany(client: HttpClient, company: CompanyConfig): 
 
 export async function fetchAllCompanies(
   configs: CompanyConfig[] = COMPANY_CONFIGS,
-  client: HttpClient = new HttpClient()
+  clientOrFactory: HttpClient | (() => HttpClient) = new HttpClient(),
+  concurrency = 1,
+  deadlineMs = Number.POSITIVE_INFINITY
 ): Promise<FetchResult[]> {
   // De-duplicate registry entries defensively (same type+slug listed twice).
   const seen = new Set<string>();
@@ -93,10 +95,24 @@ export async function fetchAllCompanies(
     return true;
   });
 
-  const results: FetchResult[] = [];
-  for (const company of unique) {
-    // Sequential on purpose: the shared client's rate limit keeps us polite.
-    results.push(await fetchCompany(client, company));
+  const results: FetchResult[] = new Array(unique.length);
+  const workerCount = typeof clientOrFactory === "function"
+    ? Math.max(1, Math.min(Math.floor(concurrency), unique.length || 1))
+    : 1;
+  let cursor = 0;
+  async function worker() {
+    while (cursor < unique.length) {
+      const index = cursor;
+      cursor += 1;
+      const company = unique[index];
+      if (Date.now() >= deadlineMs) {
+        results[index] = { company, jobs: [], error: "Skipped because the daily source time budget was reached" };
+        continue;
+      }
+      const client = typeof clientOrFactory === "function" ? clientOrFactory() : clientOrFactory;
+      results[index] = await fetchCompany(client, company);
+    }
   }
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
   return results;
 }

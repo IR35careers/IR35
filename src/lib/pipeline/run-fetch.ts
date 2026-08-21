@@ -14,8 +14,9 @@
  *   6. LOG      one moderation_logs row per run with the full summary
  */
 
-import { fetchAllCompanies, COMPANY_CONFIGS } from "../ats";
+import { fetchAllCompanies } from "../ats";
 import { HttpClient } from "../ats/http-client";
+import { loadEnabledCompanyConfigs } from "../ats/source-registry";
 import type { CompanyConfig, ProcessedJob, RawATSJob } from "../ats/types";
 import { fetchReed, enrichReedDescriptions } from "../aggregators/reed-fetcher";
 import { fetchAdzuna } from "../aggregators/adzuna-fetcher";
@@ -67,10 +68,11 @@ function normCompany(name: string): string {
 }
 
 export async function runFetchPipeline(
-  configs: CompanyConfig[] = COMPANY_CONFIGS
+  configuredSources?: CompanyConfig[]
 ): Promise<PipelineSummary> {
   const started = Date.now();
   const supabase = getSupabaseAdmin();
+  const configs = configuredSources ?? await loadEnabledCompanyConfigs(supabase);
   const notes: string[] = [];
   const companyErrors: Array<{ company: string; error: string }> = [];
   const sourceRuns: SourceRunSummary[] = [];
@@ -85,13 +87,16 @@ export async function runFetchPipeline(
   const directTask = (async () => {
     const sourceStarted = Date.now();
     try {
-      const client = new HttpClient({
-        minDelayMs: 250,
-        timeoutMs: 8000,
-        maxRetries: 1,
-        baseBackoffMs: 500,
-      });
-      const results = await fetchAllCompanies(configs, client);
+      const results = await fetchAllCompanies(
+        configs,
+        () => new HttpClient({
+          minDelayMs: 0,
+          timeoutMs: 4000,
+          maxRetries: 0,
+        }),
+        10,
+        started + 40_000
+      );
       return {
         results,
         jobs: results.flatMap((result) => result.jobs),

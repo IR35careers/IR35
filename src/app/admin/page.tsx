@@ -10,6 +10,7 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   ChevronRight,
+  CloudDownload,
   Database,
   ExternalLink,
   FileCheck2,
@@ -24,6 +25,8 @@ import {
   Mail,
   Menu,
   Monitor,
+  Plus,
+  Power,
   RefreshCw,
   RotateCcw,
   Search,
@@ -32,6 +35,7 @@ import {
   ShieldCheck,
   Smartphone,
   TrendingUp,
+  Trash2,
   UserRound,
   Users,
   X,
@@ -42,7 +46,7 @@ import { isAdministratorEmail } from "@/lib/portal-access";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
 import { supabase } from "@/lib/supabase";
 
-type Section = "stats" | "analytics" | "jobs" | "users" | "campaigns" | "waitlist" | "runs";
+type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "campaigns" | "waitlist" | "runs";
 
 type JobRow = {
   id: string;
@@ -76,6 +80,20 @@ type RunRow = {
   run_type: string;
   summary: Record<string, unknown> | null;
   created_at: string;
+};
+
+type JobSourceRow = {
+  id: string;
+  name: string;
+  type: "greenhouse" | "lever" | "ashby" | "workable";
+  slug: string;
+  enabled: boolean;
+  builtIn: boolean;
+  createdAt: string;
+  updatedAt: string;
+  directApplyConnected?: boolean;
+  directApplyEmail?: string | null;
+  directApplyVerifiedAt?: string | null;
 };
 
 type WaitlistRow = {
@@ -145,6 +163,8 @@ type AdminData = {
   sender?: string | null;
   deliveryConfigured?: boolean;
   analytics?: AnalyticsData;
+  jobSources?: JobSourceRow[];
+  sourceProviders?: JobSourceRow["type"][];
 };
 
 const NAV_GROUPS: Array<{
@@ -157,6 +177,7 @@ const NAV_GROUPS: Array<{
       { id: "stats", label: "Dashboard", icon: LayoutDashboard },
       { id: "analytics", label: "Analytics", icon: BarChart3 },
       { id: "jobs", label: "Job inventory", icon: BriefcaseBusiness },
+      { id: "sources", label: "Free job sources", icon: CloudDownload },
       { id: "users", label: "Contractors", icon: Users },
     ],
   },
@@ -188,6 +209,11 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     eyebrow: "Content operations",
     title: "Job inventory",
     description: "Review the latest roles, IR35 coverage and listings that need moderation.",
+  },
+  sources: {
+    eyebrow: "Free discovery network",
+    title: "Public ATS sources",
+    description: "Add and verify employer career boards that publish jobs through free public ATS endpoints.",
   },
   users: {
     eyebrow: "Audience",
@@ -328,6 +354,15 @@ export default function AdminPage() {
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [sendingCampaign, setSendingCampaign] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [sourceName, setSourceName] = useState("");
+  const [sourceType, setSourceType] = useState<JobSourceRow["type"]>("greenhouse");
+  const [sourceSlug, setSourceSlug] = useState("");
+  const [savingSource, setSavingSource] = useState(false);
+  const [sourceActionId, setSourceActionId] = useState<string | null>(null);
+  const [runningPipeline, setRunningPipeline] = useState(false);
+  const [destinationSourceId, setDestinationSourceId] = useState("");
+  const [recruitmentEmail, setRecruitmentEmail] = useState("");
+  const [sendingDestinationVerification, setSendingDestinationVerification] = useState(false);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -441,6 +476,11 @@ export default function AdminPage() {
     return () => window.clearTimeout(timeout);
   }, [emailDraft, section]);
 
+  useEffect(() => {
+    if (section !== "sources" || destinationSourceId || !data?.jobSources?.length) return;
+    setDestinationSourceId(data.jobSources[0].id);
+  }, [data?.jobSources, destinationSourceId, section]);
+
   const navigate = (next: Section) => {
     setSection(next);
     setQuery("");
@@ -498,6 +538,121 @@ export default function AdminPage() {
       setError(caught instanceof Error ? caught.message : "Unable to expire this job");
     } finally {
       setExpiringId(null);
+    }
+  };
+
+  const saveJobSource = async () => {
+    setSavingSource(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "upsert_job_source",
+          source: { name: sourceName, type: sourceType, slug: sourceSlug },
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to verify this public job board");
+      setSourceName("");
+      setSourceSlug("");
+      setNotice(`${json.source?.name ?? "The source"} was verified and added. ${formatNumber(json.publishedJobsFound)} published jobs were visible on its board.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to verify this public job board");
+    } finally {
+      setSavingSource(false);
+    }
+  };
+
+  const toggleJobSource = async (source: JobSourceRow) => {
+    setSourceActionId(source.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "toggle_job_source", sourceId: source.id, enabled: !source.enabled }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to update this source");
+      setNotice(`${source.name} is now ${source.enabled ? "paused" : "included in daily refreshes"}.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to update this source");
+    } finally {
+      setSourceActionId(null);
+    }
+  };
+
+  const removeJobSource = async (source: JobSourceRow) => {
+    if (!window.confirm(`Remove ${source.name} from future free job refreshes? Existing listings remain until they expire.`)) return;
+    setSourceActionId(source.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "remove_job_source", sourceId: source.id }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to remove this source");
+      setNotice(`${source.name} was removed from future refreshes.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to remove this source");
+    } finally {
+      setSourceActionId(null);
+    }
+  };
+
+  const runJobPipeline = async () => {
+    setRunningPipeline(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "run_job_pipeline" }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "The job refresh did not complete");
+      setNotice(`Refresh complete. ${formatNumber(json.summary?.upserted)} jobs were updated from ${formatNumber(json.summary?.fetched)} fetched listings.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The job refresh did not complete");
+    } finally {
+      setRunningPipeline(false);
+    }
+  };
+
+  const requestDestinationVerification = async () => {
+    setSendingDestinationVerification(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "request_employer_destination_verification",
+          sourceId: destinationSourceId,
+          recruitmentEmail,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to send employer verification");
+      setRecruitmentEmail("");
+      setNotice(`Verification sent to ${json.email}. Direct application delivery activates only after the employer confirms the link.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send employer verification");
+    } finally {
+      setSendingDestinationVerification(false);
     }
   };
 
@@ -600,6 +755,8 @@ export default function AdminPage() {
   const normalisedQuery = query.trim().toLowerCase();
   const jobs = (data?.jobs ?? []).filter((job) => !normalisedQuery || [job.title, job.company_name, job.location, job.source_domain, job.ir35_status]
     .some((value) => value?.toLowerCase().includes(normalisedQuery)));
+  const jobSources = (data?.jobSources ?? []).filter((source) => !normalisedQuery || [source.name, source.type, source.slug]
+    .some((value) => value.toLowerCase().includes(normalisedQuery)));
   const users = (data?.users ?? []).filter((account) => !normalisedQuery || [account.email, account.profile?.full_name, account.provider]
     .some((value) => value?.toLowerCase().includes(normalisedQuery)));
   const waitlist = (Array.isArray(data?.waitlist) ? data.waitlist : []).filter((entry) => !normalisedQuery || entry.email.toLowerCase().includes(normalisedQuery));
@@ -762,6 +919,33 @@ export default function AdminPage() {
             <AnalyticsPanel analytics={data.analytics} />
           ) : section === "jobs" && data ? (
             <JobsPanel jobs={jobs} total={(data.jobs ?? []).length} query={normalisedQuery} expiringId={expiringId} onExpire={expireJob} />
+          ) : section === "sources" && data ? (
+            <JobSourcesPanel
+              sources={jobSources}
+              total={(data.jobSources ?? []).length}
+              providers={data.sourceProviders ?? ["greenhouse", "lever", "ashby", "workable"]}
+              lastRun={data.lastPipelineRun ?? null}
+              query={normalisedQuery}
+              name={sourceName}
+              type={sourceType}
+              slug={sourceSlug}
+              saving={savingSource}
+              actionId={sourceActionId}
+              running={runningPipeline}
+              destinationSourceId={destinationSourceId}
+              recruitmentEmail={recruitmentEmail}
+              sendingDestinationVerification={sendingDestinationVerification}
+              onNameChange={setSourceName}
+              onTypeChange={setSourceType}
+              onSlugChange={setSourceSlug}
+              onSave={() => void saveJobSource()}
+              onToggle={(source) => void toggleJobSource(source)}
+              onRemove={(source) => void removeJobSource(source)}
+              onRun={() => void runJobPipeline()}
+              onDestinationSourceChange={setDestinationSourceId}
+              onRecruitmentEmailChange={setRecruitmentEmail}
+              onRequestDestinationVerification={() => void requestDestinationVerification()}
+            />
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
           ) : section === "campaigns" && data ? (
@@ -954,6 +1138,111 @@ function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
           <div className="rounded-2xl bg-slate-950 p-5 text-white sm:col-span-2"><p className="text-xs font-semibold text-slate-400">Provider acceptance rate</p><p className="mt-3 text-4xl font-semibold tracking-[-0.05em]">{deliveryRate}%</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-emerald-400" style={{ width: `${deliveryRate}%` }} /></div></div>
           {[ ["Campaigns sent", analytics.campaignsSent], ["Recipients accepted", analytics.campaignAccepted] ].map(([label, value]) => <div key={String(label)} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-3 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(Number(value))}</p><p className="mt-2 text-[11px] text-slate-500">{label === "Campaigns sent" ? `${formatNumber(analytics.campaignFailed)} failed recipients` : "Recorded by the delivery provider"}</p></div>)}
         </div>
+      </Panel>
+    </div>
+  );
+}
+
+function JobSourcesPanel({
+  sources,
+  total,
+  providers,
+  lastRun,
+  query,
+  name,
+  type,
+  slug,
+  saving,
+  actionId,
+  running,
+  destinationSourceId,
+  recruitmentEmail,
+  sendingDestinationVerification,
+  onNameChange,
+  onTypeChange,
+  onSlugChange,
+  onSave,
+  onToggle,
+  onRemove,
+  onRun,
+  onDestinationSourceChange,
+  onRecruitmentEmailChange,
+  onRequestDestinationVerification,
+}: {
+  sources: JobSourceRow[];
+  total: number;
+  providers: JobSourceRow["type"][];
+  lastRun: RunRow | null;
+  query: string;
+  name: string;
+  type: JobSourceRow["type"];
+  slug: string;
+  saving: boolean;
+  actionId: string | null;
+  running: boolean;
+  destinationSourceId: string;
+  recruitmentEmail: string;
+  sendingDestinationVerification: boolean;
+  onNameChange: (value: string) => void;
+  onTypeChange: (value: JobSourceRow["type"]) => void;
+  onSlugChange: (value: string) => void;
+  onSave: () => void;
+  onToggle: (source: JobSourceRow) => void;
+  onRemove: (source: JobSourceRow) => void;
+  onRun: () => void;
+  onDestinationSourceChange: (value: string) => void;
+  onRecruitmentEmailChange: (value: string) => void;
+  onRequestDestinationVerification: () => void;
+}) {
+  const enabled = sources.filter((source) => source.enabled).length;
+  const custom = sources.filter((source) => !source.builtIn).length;
+  const lastSummary = lastRun?.summary ?? {};
+  const fetched = typeof lastSummary.fetched === "number" ? lastSummary.fetched : 0;
+  const upserted = typeof lastSummary.upserted === "number" ? lastSummary.upserted : 0;
+  const fieldClass = "mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100";
+  const examples: Record<JobSourceRow["type"], string> = {
+    greenhouse: "boards.greenhouse.io/company-name",
+    lever: "jobs.lever.co/company-name",
+    ashby: "jobs.ashbyhq.com/company-name",
+    workable: "apply.workable.com/company-name",
+  };
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Configured sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{total}</p><p className="mt-2 text-xs text-slate-500">{enabled} currently enabled</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Added by admin</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{custom}</p><p className="mt-2 text-xs text-slate-500">Verified public boards</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last fetch</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{formatNumber(fetched)}</p><p className="mt-2 text-xs text-slate-500">{lastRun ? formatDate(lastRun.created_at, true) : "No run recorded"}</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last database update</p><p className="mt-3 text-3xl font-semibold tabular-nums text-emerald-700">{formatNumber(upserted)}</p><p className="mt-2 text-xs text-slate-500">Fresh or updated listings</p></article>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[390px_minmax(0,1fr)]">
+        <Panel title="Add a free public board" description="The board is checked before it is saved. Full website addresses are not accepted.">
+          <div className="space-y-4 p-5 sm:p-6">
+            <label className="block text-xs font-semibold text-slate-700">Employer or agency name<input value={name} maxLength={100} onChange={(event) => onNameChange(event.target.value)} className={fieldClass} placeholder="Example Recruitment" /></label>
+            <label className="block text-xs font-semibold text-slate-700">Public ATS provider<select value={type} onChange={(event) => onTypeChange(event.target.value as JobSourceRow["type"])} className={fieldClass}>{providers.map((provider) => <option key={provider} value={provider}>{provider[0].toUpperCase() + provider.slice(1)}</option>)}</select></label>
+            <label className="block text-xs font-semibold text-slate-700">Board identifier<input value={slug} maxLength={100} onChange={(event) => onSlugChange(event.target.value)} className={fieldClass} placeholder="company-name" /><span className="mt-1.5 block text-[11px] font-normal text-slate-500">From {examples[type]}</span></label>
+            <button type="button" onClick={onSave} disabled={saving || name.trim().length < 2 || !slug.trim()} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} {saving ? "Checking public board" : "Verify and add source"}</button>
+            <p className="text-[11px] leading-5 text-slate-500">Only public Greenhouse, Lever, Ashby and Workable endpoints are supported. No account password is stored.</p>
+          </div>
+        </Panel>
+
+        <Panel title="Daily source registry" description={`${formatNumber(total)} public boards configured. Enabled sources run during the 7 am UK refresh.`} action={<button type="button" onClick={onRun} disabled={running || enabled === 0} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-slate-950 px-3.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-50">{running ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} {running ? "Refreshing jobs" : "Run refresh now"}</button>}>
+          {sources.length ? <div className="divide-y divide-slate-100">{sources.map((source) => <div key={source.id} className="flex flex-col gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:flex-row sm:items-center sm:px-6"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${source.enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"}`}><CloudDownload size={17} /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold text-slate-900">{source.name}</p><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{source.type}</span>{source.builtIn && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Starter</span>}</div><p className="mt-1 truncate text-xs text-slate-500">{examples[source.type].replace("company-name", source.slug)}</p></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => onToggle(source)} disabled={actionId === source.id} className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition ${source.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{actionId === source.id ? <Loader2 size={13} className="animate-spin" /> : <Power size={13} />} {source.enabled ? "Enabled" : "Paused"}</button>{!source.builtIn && <button type="button" onClick={() => onRemove(source)} disabled={actionId === source.id} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50" aria-label={`Remove ${source.name}`}><Trash2 size={14} /></button>}</div></div>)}</div> : <EmptyState title={query ? "No matching sources" : "No sources configured"} detail={query ? "Try an employer, provider or board identifier." : "Add a public ATS board to start free job discovery."} />}
+        </Panel>
+      </div>
+
+      <Panel title="Connect free direct application delivery" description="The employer confirms its recruitment address before any candidate information can be sent.">
+        <div className="grid gap-5 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
+          <label className="block text-xs font-semibold text-slate-700">Public job source<select value={destinationSourceId} onChange={(event) => onDestinationSourceChange(event.target.value)} className={fieldClass}>{(sources.length ? sources : []).map((source) => <option key={source.id} value={source.id}>{source.name} · {source.type}</option>)}</select></label>
+          <label className="block text-xs font-semibold text-slate-700">Employer recruitment email<input type="email" value={recruitmentEmail} maxLength={254} onChange={(event) => onRecruitmentEmailChange(event.target.value)} className={fieldClass} placeholder="recruitment@company.co.uk" /></label>
+          <button type="button" onClick={onRequestDestinationVerification} disabled={sendingDestinationVerification || !destinationSourceId || !recruitmentEmail.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">{sendingDestinationVerification ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} {sendingDestinationVerification ? "Sending verification" : "Send verification"}</button>
+        </div>
+        <div className="border-t border-slate-100 px-5 py-4 sm:px-6"><div className="flex flex-wrap gap-2">{sources.filter((source) => source.directApplyConnected).map((source) => <span key={source.id} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800"><CheckCircle2 size={13} /> {source.name}: {source.directApplyEmail}</span>)}{!sources.some((source) => source.directApplyConnected) && <span className="text-xs text-slate-500">No employer recruitment destinations have been confirmed yet.</span>}</div></div>
+      </Panel>
+
+      <Panel title="How free source coverage works" description="Published jobs are read from public employer career-board endpoints.">
+        <div className="grid gap-px bg-slate-100 sm:grid-cols-3"><div className="bg-white p-5"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><CloudDownload size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-900">No listing fee</p><p className="mt-2 text-xs leading-5 text-slate-500">Reading published jobs from these public endpoints needs no ATS account key.</p></div><div className="bg-white p-5"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><ShieldCheck size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-900">Safe fixed endpoints</p><p className="mt-2 text-xs leading-5 text-slate-500">Only known ATS hosts and validated board identifiers can be saved.</p></div><div className="bg-white p-5"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-700"><Zap size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-900">IR35 processing</p><p className="mt-2 text-xs leading-5 text-slate-500">Listings still pass contract, UK, status, freshness and duplicate checks before publication.</p></div></div>
       </Panel>
     </div>
   );

@@ -93,7 +93,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     void getSupabase().auth.getSession().then(async ({ data }) => {
       const token = data.session?.access_token;
       if (!token) throw new Error("No session");
-      const response = await fetch("/api/integrations/status", { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+      const response = await fetch(`/api/integrations/status?jobId=${encodeURIComponent(job.id)}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
       if (!response.ok) throw new Error("Status unavailable");
       const payload = (await response.json()) as { integrations?: Array<{ id: string; state: string }> };
       if (!active) return;
@@ -103,7 +103,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setSubmissionConnection("gated");
     });
     return () => { active = false; };
-  }, []);
+  }, [job.id]);
 
   const updateApplication = (updater: (current: ApplicationRecord) => ApplicationRecord) => {
     if (!application || submitted) return;

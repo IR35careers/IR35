@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { submitWithProvider, submissionProviderConfig } from "@/lib/application-submission";
 import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import { buildResumePdf } from "@/lib/resume/export";
+import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
+import { submitToVerifiedEmployerEmail } from "@/lib/employer-email-submission";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { ApplicationQuestion, ApplicationReceipt, ContractorProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
@@ -22,8 +24,6 @@ export async function POST(request: Request): Promise<Response> {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   if (!token) return Response.json({ error: "Authentication required." }, { status: 401, headers: NO_STORE });
-  const provider = submissionProviderConfig();
-  if (!provider) return Response.json({ error: "One-click apply is not available for this role yet." }, { status: 503, headers: NO_STORE });
 
   try {
     const body = (await request.json()) as { applicationId?: string; approval?: string };
@@ -44,13 +44,22 @@ export async function POST(request: Request): Promise<Response> {
     if (!approved(packet as DbRow)) return Response.json({ error: "Review and approve every required field before submission." }, { status: 409, headers: NO_STORE });
 
     const job = packet.job_snapshot as JobDetail;
+    const employerDestination = await resolveEmployerDestinationForJob(job, admin);
+    const provider = employerDestination ? null : submissionProviderConfig();
+    if (!employerDestination && !provider) {
+      return Response.json({ error: "One-click apply is not available for this role yet." }, { status: 503, headers: NO_STORE });
+    }
     let destination: string;
-    try {
-      const parsed = new URL(job.apply_url);
-      if (parsed.protocol !== "https:") throw new Error("invalid");
-      destination = parsed.toString();
-    } catch {
-      return Response.json({ error: "This contract has no valid secure application destination." }, { status: 409, headers: NO_STORE });
+    if (employerDestination) {
+      destination = `email:${employerDestination.email}`;
+    } else {
+      try {
+        const parsed = new URL(job.apply_url);
+        if (parsed.protocol !== "https:") throw new Error("invalid");
+        destination = parsed.toString();
+      } catch {
+        return Response.json({ error: "This contract has no valid secure application destination." }, { status: 409, headers: NO_STORE });
+      }
     }
 
     const idempotencyKey = `submit:${packet.id}`;
@@ -62,7 +71,7 @@ export async function POST(request: Request): Promise<Response> {
     const { error: queueError } = await admin.from("application_submissions").upsert({
       user_id: userId,
       application_id: packet.id,
-      provider_name: provider.name,
+      provider_name: employerDestination ? "Verified employer email" : provider?.name,
       idempotency_key: idempotencyKey,
       payload_hash: payloadHash,
       status: "processing",
@@ -81,8 +90,9 @@ export async function POST(request: Request): Promise<Response> {
       const submissionCandidate = { ...candidate, fullName: candidateName };
       const coverLetter = normaliseCoverLetterSignoff(String(packet.cover_letter || ""), candidateName);
       let resumeUrl: string | undefined;
-      if (provider.kind === "tsenta") {
-        const resumeBuffer = await buildResumePdf({
+      let resumeBuffer: Buffer | undefined;
+      if (employerDestination || provider?.kind === "tsenta") {
+        resumeBuffer = await buildResumePdf({
           format: "pdf",
           resumeText,
           candidateName,
@@ -90,23 +100,38 @@ export async function POST(request: Request): Promise<Response> {
           companyName: job.company_name,
           versionLabel: String(packet.resume_version_label || "Application CV"),
         });
-        const storagePath = `${userId}/applications/${packet.id}.pdf`;
-        const { error: uploadError } = await admin.storage.from("cvs").upload(storagePath, resumeBuffer, { contentType: "application/pdf", upsert: true });
-        if (uploadError) throw new Error("Your approved CV could not be prepared for the employer form.");
-        const { data: signedResume, error: signedError } = await admin.storage.from("cvs").createSignedUrl(storagePath, 60 * 60);
-        if (signedError || !signedResume?.signedUrl) throw new Error("Your approved CV could not be prepared for the employer form.");
-        resumeUrl = signedResume.signedUrl;
+        if (provider?.kind === "tsenta") {
+          const storagePath = `${userId}/applications/${packet.id}.pdf`;
+          const { error: uploadError } = await admin.storage.from("cvs").upload(storagePath, resumeBuffer, { contentType: "application/pdf", upsert: true });
+          if (uploadError) throw new Error("Your approved CV could not be prepared for the employer form.");
+          const { data: signedResume, error: signedError } = await admin.storage.from("cvs").createSignedUrl(storagePath, 60 * 60);
+          if (signedError || !signedResume?.signedUrl) throw new Error("Your approved CV could not be prepared for the employer form.");
+          resumeUrl = signedResume.signedUrl;
+        }
       }
 
-      const providerReceipt = await submitWithProvider({
-        applicationId: String(packet.id),
-        destination,
-        job,
-        candidate: submissionCandidate,
-        resume: { label: String(packet.resume_version_label || "Application CV"), text: resumeText, url: resumeUrl },
-        coverLetter,
-        screeningAnswers: ((packet.screening_answers as ApplicationQuestion[]) ?? []).map(({ label, answer, source }) => ({ label, answer, source })),
-      }, idempotencyKey);
+      const screeningAnswers = ((packet.screening_answers as ApplicationQuestion[]) ?? []);
+      const providerReceipt = employerDestination
+        ? await submitToVerifiedEmployerEmail({
+          applicationId: String(packet.id),
+          employerEmail: employerDestination.email,
+          job,
+          candidate: submissionCandidate,
+          candidateName,
+          resumePdf: resumeBuffer as Buffer,
+          coverLetter,
+          screeningAnswers: screeningAnswers.map(({ label, answer }) => ({ label, answer })),
+          idempotencyKey,
+        })
+        : await submitWithProvider({
+          applicationId: String(packet.id),
+          destination,
+          job,
+          candidate: submissionCandidate,
+          resume: { label: String(packet.resume_version_label || "Application CV"), text: resumeText, url: resumeUrl },
+          coverLetter,
+          screeningAnswers: screeningAnswers.map(({ label, answer, source }) => ({ label, answer, source })),
+        }, idempotencyKey);
       if (providerReceipt.state !== "submitted") {
         await admin.from("application_submissions").update({
           status: "processing",
