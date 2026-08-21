@@ -1,4 +1,4 @@
-const CACHE_NAME = "ir35careers-shell-v2";
+const CACHE_NAME = "ir35careers-shell-v3";
 const OFFLINE_URL = "/offline";
 const STATIC_URLS = [
   OFFLINE_URL,
@@ -31,13 +31,15 @@ self.addEventListener("fetch", (event) => {
 
   if (["style", "script", "font", "image"].includes(request.destination)) {
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      }))
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
   }
 });
