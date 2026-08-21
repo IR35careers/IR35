@@ -14,7 +14,9 @@ import {
   FileCheck2,
   Gauge,
   Home,
+  Inbox,
   LayoutDashboard,
+  LayoutTemplate,
   Loader2,
   LockKeyhole,
   LogOut,
@@ -22,6 +24,7 @@ import {
   Menu,
   RefreshCw,
   Search,
+  Send,
   ShieldAlert,
   ShieldCheck,
   TrendingUp,
@@ -31,9 +34,10 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
 import { supabase } from "@/lib/supabase";
 
-type Section = "stats" | "jobs" | "users" | "waitlist" | "runs";
+type Section = "stats" | "jobs" | "users" | "campaigns" | "waitlist" | "runs";
 
 type JobRow = {
   id: string;
@@ -79,6 +83,20 @@ type WaitlistRow = {
   launch_last_error?: string | null;
 };
 
+type CampaignHistoryRow = {
+  id: string;
+  created_at: string;
+  summary: {
+    action?: string;
+    subject?: string;
+    audience?: CampaignAudience;
+    recipient_count?: number;
+    sent?: number;
+    failed?: number;
+    status?: string;
+  } | null;
+};
+
 type AdminData = {
   totalUsers?: number | null;
   profiles?: number;
@@ -96,6 +114,11 @@ type AdminData = {
   total?: number;
   jobs?: JobRow[];
   runs?: RunRow[];
+  emailTemplates?: EmailCampaignTemplate[];
+  audienceCounts?: Record<CampaignAudience, number>;
+  campaignHistory?: CampaignHistoryRow[];
+  sender?: string | null;
+  deliveryConfigured?: boolean;
 };
 
 const NAV_GROUPS: Array<{
@@ -112,7 +135,10 @@ const NAV_GROUPS: Array<{
   },
   {
     label: "Communications",
-    items: [{ id: "waitlist", label: "Beta audience", icon: Mail }],
+    items: [
+      { id: "campaigns", label: "Email campaigns", icon: Send },
+      { id: "waitlist", label: "Beta audience", icon: Mail },
+    ],
   },
   {
     label: "System",
@@ -140,6 +166,11 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     eyebrow: "One-time notice",
     title: "Beta audience",
     description: "Review the former waitlist retained only for the approved public-access announcement.",
+  },
+  campaigns: {
+    eyebrow: "Communications",
+    title: "Email campaigns",
+    description: "Create, preview, test and send professional branded service emails from one secure workspace.",
   },
   runs: {
     eyebrow: "System health",
@@ -255,6 +286,14 @@ export default function AdminPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expiringId, setExpiringId] = useState<string | null>(null);
   const [sendingLaunch, setSendingLaunch] = useState(false);
+  const [emailDraft, setEmailDraft] = useState<EmailCampaignDraft | null>(null);
+  const [campaignId, setCampaignId] = useState("");
+  const [campaignAudience, setCampaignAudience] = useState<CampaignAudience>("registered");
+  const [customRecipient, setCustomRecipient] = useState("");
+  const [emailPreview, setEmailPreview] = useState("");
+  const [previewingEmail, setPreviewingEmail] = useState(false);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
+  const [sendingCampaign, setSendingCampaign] = useState(false);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -297,6 +336,41 @@ export default function AdminPage() {
     window.addEventListener("keydown", focusSearch);
     return () => window.removeEventListener("keydown", focusSearch);
   }, []);
+
+  useEffect(() => {
+    if (section !== "campaigns" || !data?.emailTemplates?.length || emailDraft) return;
+    const first = data.emailTemplates[0];
+    setEmailDraft({
+      templateId: first.templateId,
+      subject: first.subject,
+      preheader: first.preheader,
+      eyebrow: first.eyebrow,
+      heading: first.heading,
+      message: first.message,
+      ctaLabel: first.ctaLabel,
+      ctaUrl: first.ctaUrl,
+    });
+    setCampaignId(crypto.randomUUID());
+  }, [data?.emailTemplates, emailDraft, section]);
+
+  useEffect(() => {
+    if (section !== "campaigns" || !emailDraft) return;
+    const timeout = window.setTimeout(async () => {
+      setPreviewingEmail(true);
+      try {
+        const response = await adminFetch("/api/admin", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "preview_email_campaign", draft: emailDraft }),
+        });
+        const json = await response.json();
+        if (response.ok) setEmailPreview(json.html ?? "");
+      } finally {
+        setPreviewingEmail(false);
+      }
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [emailDraft, section]);
 
   const navigate = (next: Section) => {
     setSection(next);
@@ -384,6 +458,76 @@ export default function AdminPage() {
       setError(caught instanceof Error ? caught.message : "Unable to send the beta invitation");
     } finally {
       setSendingLaunch(false);
+    }
+  };
+
+  const chooseEmailTemplate = (template: EmailCampaignTemplate) => {
+    setEmailDraft({
+      templateId: template.templateId,
+      subject: template.subject,
+      preheader: template.preheader,
+      eyebrow: template.eyebrow,
+      heading: template.heading,
+      message: template.message,
+      ctaLabel: template.ctaLabel,
+      ctaUrl: template.ctaUrl,
+    });
+    setCampaignId(crypto.randomUUID());
+    setNotice(null);
+  };
+
+  const sendCampaignTest = async () => {
+    if (!emailDraft) return;
+    setSendingTestEmail(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "send_email_campaign_test", draft: emailDraft }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to send the test email");
+      setNotice(`A test email was sent to ${json.recipient}.`);
+      await load("campaigns");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the test email");
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
+
+  const sendEmailCampaign = async () => {
+    if (!emailDraft || !campaignId) return;
+    const recipientCount = campaignAudience === "custom" ? 1 : data?.audienceCounts?.[campaignAudience] ?? 0;
+    const audienceLabel = campaignAudience === "registered" ? "registered contractors" : campaignAudience === "waitlist" ? "former waitlist contacts" : campaignAudience === "all" ? "all unique contacts" : customRecipient;
+    if (!window.confirm(`Send “${emailDraft.subject}” to ${recipientCount} ${audienceLabel}? Each recipient receives a private copy and this action is recorded.`)) return;
+    setSendingCampaign(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "send_email_campaign",
+          confirmation: "SEND_EMAIL_CAMPAIGN",
+          campaignId,
+          draft: emailDraft,
+          audience: campaignAudience,
+          customEmail: customRecipient,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to send the email campaign");
+      setNotice(`${json.sent ?? 0} emails were accepted by the delivery provider. ${json.failed ?? 0} failed.`);
+      setCampaignId(crypto.randomUUID());
+      await load("campaigns");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the email campaign");
+    } finally {
+      setSendingCampaign(false);
     }
   };
 
@@ -544,6 +688,24 @@ export default function AdminPage() {
             <JobsPanel jobs={jobs} total={(data.jobs ?? []).length} query={normalisedQuery} expiringId={expiringId} onExpire={expireJob} />
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
+          ) : section === "campaigns" && data ? (
+            <EmailCampaignsPanel
+              data={data}
+              draft={emailDraft}
+              audience={campaignAudience}
+              customRecipient={customRecipient}
+              previewHtml={emailPreview}
+              previewing={previewingEmail}
+              sendingTest={sendingTestEmail}
+              sendingCampaign={sendingCampaign}
+              query={normalisedQuery}
+              onChooseTemplate={chooseEmailTemplate}
+              onDraftChange={setEmailDraft}
+              onAudienceChange={setCampaignAudience}
+              onCustomRecipientChange={setCustomRecipient}
+              onSendTest={() => void sendCampaignTest()}
+              onSendCampaign={() => void sendEmailCampaign()}
+            />
           ) : section === "waitlist" && data ? (
             <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} sending={sendingLaunch} onSend={sendBetaLaunch} />
           ) : section === "runs" && data ? (
@@ -662,6 +824,114 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
       </Panel>
       <Panel title="Profile readiness" description="A quick adoption snapshot for the loaded accounts.">
         <div className="p-6"><div className="flex items-end justify-between"><span className="text-4xl font-semibold tracking-[-0.05em] text-slate-950">{users.length ? Math.round((withCv / users.length) * 100) : 0}%</span><FileCheck2 className="text-violet-600" size={22} /></div><p className="mt-2 text-sm font-medium text-slate-700">CV adoption</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-violet-500" style={{ width: `${users.length ? (withCv / users.length) * 100 : 0}%` }} /></div><dl className="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm"><div className="flex justify-between"><dt className="text-slate-500">Loaded accounts</dt><dd className="font-semibold tabular-nums">{users.length}</dd></div><div className="flex justify-between"><dt className="text-slate-500">CV uploaded</dt><dd className="font-semibold tabular-nums">{withCv}</dd></div><div className="flex justify-between"><dt className="text-slate-500">Needs CV</dt><dd className="font-semibold tabular-nums">{Math.max(users.length - withCv, 0)}</dd></div></dl></div>
+      </Panel>
+    </div>
+  );
+}
+
+function EmailCampaignsPanel({
+  data,
+  draft,
+  audience,
+  customRecipient,
+  previewHtml,
+  previewing,
+  sendingTest,
+  sendingCampaign,
+  query,
+  onChooseTemplate,
+  onDraftChange,
+  onAudienceChange,
+  onCustomRecipientChange,
+  onSendTest,
+  onSendCampaign,
+}: {
+  data: AdminData;
+  draft: EmailCampaignDraft | null;
+  audience: CampaignAudience;
+  customRecipient: string;
+  previewHtml: string;
+  previewing: boolean;
+  sendingTest: boolean;
+  sendingCampaign: boolean;
+  query: string;
+  onChooseTemplate: (template: EmailCampaignTemplate) => void;
+  onDraftChange: (draft: EmailCampaignDraft) => void;
+  onAudienceChange: (audience: CampaignAudience) => void;
+  onCustomRecipientChange: (value: string) => void;
+  onSendTest: () => void;
+  onSendCampaign: () => void;
+}) {
+  const templates = (data.emailTemplates ?? []).filter((template) => !query || [template.name, template.description, template.subject].some((value) => value.toLowerCase().includes(query)));
+  const history = (data.campaignHistory ?? []).filter((entry) => !query || JSON.stringify(entry.summary).toLowerCase().includes(query));
+  const counts = data.audienceCounts ?? { registered: 0, waitlist: 0, all: 0, custom: 1 };
+  const recipientCount = audience === "custom" ? 1 : counts[audience];
+  const fieldClass = "mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100";
+  const update = <Key extends keyof EmailCampaignDraft,>(key: Key, value: EmailCampaignDraft[Key]) => {
+    if (draft) onDraftChange({ ...draft, [key]: value });
+  };
+
+  return (
+    <div className="mt-7 space-y-5">
+      <Panel
+        title="Choose a professional template"
+        description="Start with a branded layout, then edit every important part before sending."
+        action={<span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${data.deliveryConfigured ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{data.deliveryConfigured ? "Email ready" : "Email not configured"}</span>}
+      >
+        <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4 sm:p-6">
+          {templates.map((template) => {
+            const selected = draft?.templateId === template.templateId;
+            return <button key={template.templateId} type="button" onClick={() => onChooseTemplate(template)} className={`rounded-2xl border p-4 text-left transition focus:outline-none focus:ring-4 focus:ring-emerald-100 ${selected ? "border-emerald-400 bg-emerald-50/70 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"}`}><span className={`flex h-9 w-9 items-center justify-center rounded-xl ${selected ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600"}`}><LayoutTemplate size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-950">{template.name}</p><p className="mt-1.5 text-xs leading-5 text-slate-500">{template.description}</p>{selected && <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Selected</span>}</button>;
+          })}
+          {!templates.length && <div className="sm:col-span-2 xl:col-span-4"><EmptyState title="No matching templates" detail="Clear the search to see all professional email templates." /></div>}
+        </div>
+      </Panel>
+
+      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(540px,0.9fr)_minmax(560px,1.1fr)]">
+        <Panel title="Design your email" description="Your edits are escaped, validated and rendered inside the approved IR35Careers layout.">
+          {draft ? <div className="space-y-5 p-5 sm:p-6">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
+                <label className="text-xs font-semibold text-slate-700">Audience
+                  <select value={audience} onChange={(event) => onAudienceChange(event.target.value as CampaignAudience)} className={fieldClass}>
+                    <option value="registered">Registered contractors ({counts.registered})</option>
+                    <option value="waitlist">Former waitlist ({counts.waitlist})</option>
+                    <option value="all">All unique contacts ({counts.all})</option>
+                    <option value="custom">Single address</option>
+                  </select>
+                </label>
+                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Recipients</p><p className="mt-1 text-2xl font-semibold tabular-nums text-slate-950">{recipientCount}</p></div>
+              </div>
+              {audience === "custom" && <label className="mt-4 block text-xs font-semibold text-slate-700">Recipient email<input type="email" value={customRecipient} onChange={(event) => onCustomRecipientChange(event.target.value)} className={fieldClass} placeholder="name@example.com" /></label>}
+              <p className="mt-3 text-[11px] leading-5 text-slate-500">Send only service information that matches why each contact gave IR35Careers their email address.</p>
+            </div>
+
+            <label className="block text-xs font-semibold text-slate-700">Subject<input value={draft.subject} maxLength={120} onChange={(event) => update("subject", event.target.value)} className={fieldClass} /></label>
+            <label className="block text-xs font-semibold text-slate-700">Inbox preview text<input value={draft.preheader} maxLength={180} onChange={(event) => update("preheader", event.target.value)} className={fieldClass} /></label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-xs font-semibold text-slate-700">Section label<input value={draft.eyebrow} maxLength={60} onChange={(event) => update("eyebrow", event.target.value)} className={fieldClass} /></label>
+              <label className="block text-xs font-semibold text-slate-700">Button label<input value={draft.ctaLabel} maxLength={50} onChange={(event) => update("ctaLabel", event.target.value)} className={fieldClass} /></label>
+            </div>
+            <label className="block text-xs font-semibold text-slate-700">Main heading<input value={draft.heading} maxLength={140} onChange={(event) => update("heading", event.target.value)} className={fieldClass} /></label>
+            <label className="block text-xs font-semibold text-slate-700">Message<textarea value={draft.message} maxLength={3000} rows={8} onChange={(event) => update("message", event.target.value)} className={`${fieldClass} resize-y leading-6`} /></label>
+            <label className="block text-xs font-semibold text-slate-700">Button destination<input type="url" value={draft.ctaUrl} maxLength={300} onChange={(event) => update("ctaUrl", event.target.value)} className={fieldClass} /><span className="mt-1.5 block text-[11px] font-normal leading-5 text-slate-500">For safety, campaign buttons can link only to www.ir35careers.com.</span></label>
+
+            <div className="grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2">
+              <button type="button" onClick={onSendTest} disabled={sendingTest || sendingCampaign || !data.deliveryConfigured} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50">{sendingTest ? <Loader2 size={15} className="animate-spin" /> : <Inbox size={15} />} {sendingTest ? "Sending test" : "Send test to me"}</button>
+              <button type="button" onClick={onSendCampaign} disabled={sendingCampaign || sendingTest || !data.deliveryConfigured || (audience === "custom" && !customRecipient)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-50">{sendingCampaign ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} {sendingCampaign ? "Sending campaign" : `Review and send to ${recipientCount}`}</button>
+            </div>
+            <p className="text-center text-[11px] leading-5 text-slate-500">From {data.sender || "the configured IR35Careers sender"}. A final confirmation appears before the campaign is sent.</p>
+          </div> : <EmptyState title="Choose a template" detail="Select one of the professional templates to start designing your message." />}
+        </Panel>
+
+        <Panel title="Live email preview" description="This is the same responsive HTML that recipients will receive." action={previewing ? <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500"><Loader2 size={12} className="animate-spin" /> Updating</span> : <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={12} /> Ready</span>}>
+          <div className="border-b border-slate-100 bg-white px-5 py-4 sm:px-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700"><Mail size={17} /></span><div className="min-w-0"><p className="text-xs font-semibold text-slate-900">IR35Careers <span className="font-normal text-slate-500">&lt;hello@mail.ir35careers.com&gt;</span></p><p className="mt-1 truncate text-sm font-semibold text-slate-950">{draft?.subject || "Email subject"}</p><p className="mt-0.5 truncate text-xs text-slate-500">{draft?.preheader || "Inbox preview text"}</p></div></div></div>
+          <div className="bg-slate-100 p-2 sm:p-4"><iframe title="Campaign email preview" sandbox="" srcDoc={previewHtml} className="h-[820px] w-full rounded-xl border border-slate-200 bg-white shadow-sm" /></div>
+        </Panel>
+      </div>
+
+      <Panel title="Campaign history" description="Test sends and live campaigns are recorded in the private audit trail.">
+        {history.length ? <div className="overflow-x-auto"><table className="w-full min-w-[780px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Email</th><th className="px-4 py-3.5">Audience</th><th className="px-4 py-3.5">Accepted</th><th className="px-4 py-3.5">Status</th><th className="px-6 py-3.5">Sent</th></tr></thead><tbody className="divide-y divide-slate-100">{history.map((entry) => { const summary = entry.summary ?? {}; const accepted = summary.sent ?? (summary.action === "test" ? 1 : 0); return <tr key={entry.id} className="hover:bg-slate-50/70"><td className="px-6 py-4"><p className="max-w-[340px] truncate text-sm font-semibold text-slate-900">{summary.subject || "Email campaign"}</p><p className="mt-1 text-xs capitalize text-slate-500">{summary.action === "test" ? "Administrator test" : "Live campaign"}</p></td><td className="px-4 py-4 text-xs capitalize text-slate-600">{summary.action === "test" ? "Administrator" : summary.audience?.replaceAll("_", " ") || "-"}</td><td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-800">{accepted} / {summary.recipient_count ?? accepted}</td><td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${summary.status === "accepted" ? "bg-emerald-50 text-emerald-700" : summary.status === "failed" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>{summary.status || "Recorded"}</span></td><td className="px-6 py-4 text-xs text-slate-500">{formatDate(entry.created_at, true)}</td></tr>; })}</tbody></table></div> : <EmptyState title={query ? "No matching campaigns" : "No email campaigns yet"} detail={query ? "Try a different subject or audience search." : "Send yourself a test email to begin the private campaign history."} />}
       </Panel>
     </div>
   );

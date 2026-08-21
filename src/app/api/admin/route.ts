@@ -1,7 +1,10 @@
 /**
- * Admin API: GET /api/admin?section=stats|users|waitlist|jobs|runs
+ * Admin API: GET /api/admin?section=stats|users|waitlist|campaigns|jobs|runs
  *            POST /api/admin  { action: "expire_job", jobId }
  *                              { action: "send_beta_launch", confirmation }
+ *                              { action: "preview_email_campaign", draft }
+ *                              { action: "send_email_campaign_test", draft }
+ *                              { action: "send_email_campaign", draft, audience, confirmation }
  *
  * Access requires two server-verified proofs: a live Supabase user token for
  * an allowlisted administrator and a short-lived, signed, HttpOnly admin
@@ -10,6 +13,13 @@
 
 import type { User } from "@supabase/supabase-js";
 import { adminAllowlist, adminSessionCookieName, cookieValue, verifyAdminSession } from "@/lib/admin-session";
+import {
+  emailCampaignTemplates,
+  renderCampaignEmail,
+  validateCampaignDraft,
+  type CampaignAudience,
+  type EmailCampaignDraft,
+} from "@/lib/email/campaigns";
 import { planLaunchAudience, type LaunchAudienceRow } from "@/lib/email/launch-audience";
 import { renderBetaLaunchEmail } from "@/lib/email/templates";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
@@ -19,6 +29,55 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const LAUNCH_CONFIRMATION = "SEND_BETA_ACCESS_2026_08_21";
+const CAMPAIGN_CONFIRMATION = "SEND_EMAIL_CAMPAIGN";
+
+type CampaignRecipient = { email: string; name?: string | null };
+
+function validCampaignEmail(value: unknown): value is string {
+  return typeof value === "string"
+    && /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(value.trim())
+    && !value.trim().toLowerCase().endsWith("@example.com");
+}
+
+function uniqueRecipients(recipients: CampaignRecipient[]): CampaignRecipient[] {
+  const seen = new Set<string>();
+  return recipients.filter((recipient) => {
+    const email = recipient.email.trim().toLowerCase();
+    if (!validCampaignEmail(email) || seen.has(email)) return false;
+    seen.add(email);
+    recipient.email = email;
+    return true;
+  });
+}
+
+async function resolveCampaignAudience(
+  client: ReturnType<typeof getSupabaseAdmin>,
+  audience: CampaignAudience,
+  customEmail?: string
+): Promise<CampaignRecipient[]> {
+  if (audience === "custom") {
+    if (!validCampaignEmail(customEmail)) throw new Error("Enter a valid recipient email address.");
+    return [{ email: customEmail.trim().toLowerCase() }];
+  }
+
+  const registered = (await listAllUsers(client)).flatMap((user) => user.email ? [{
+    email: user.email,
+    name: String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim() || null,
+  }] : []);
+  if (audience === "registered") return uniqueRecipients(registered);
+
+  const waitlistResult = await client.from("waitlist").select("email").order("created_at", { ascending: true });
+  if (waitlistResult.error) throw waitlistResult.error;
+  const waitlist = (waitlistResult.data ?? []).flatMap((row) => validCampaignEmail(row.email) ? [{ email: row.email }] : []);
+  return uniqueRecipients(audience === "waitlist" ? waitlist : [...registered, ...waitlist]);
+}
+
+function campaignAudienceReason(audience: CampaignAudience): string {
+  if (audience === "waitlist") return "you joined the IR35Careers waitlist";
+  if (audience === "all") return "you registered for or requested access to IR35Careers";
+  if (audience === "custom") return "IR35Careers sent this message directly to this address";
+  return "you have an IR35Careers account";
+}
 
 async function listAllUsers(client: ReturnType<typeof getSupabaseAdmin>): Promise<User[]> {
   const users: User[] = [];
@@ -173,6 +232,34 @@ export async function GET(request: Request): Promise<Response> {
       return Response.json({ waitlist: data ?? [] });
     }
 
+    if (section === "campaigns") {
+      const [registered, waitlist, historyResult] = await Promise.all([
+        resolveCampaignAudience(supabase, "registered"),
+        resolveCampaignAudience(supabase, "waitlist"),
+        supabase
+          .from("moderation_logs")
+          .select("id, summary, created_at")
+          .eq("run_type", "email_campaign")
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ]);
+      if (historyResult.error) throw historyResult.error;
+      const combined = uniqueRecipients([...registered, ...waitlist]);
+      const emailConfig = transactionalEmailConfig();
+      return Response.json({
+        emailTemplates: emailCampaignTemplates,
+        audienceCounts: {
+          registered: registered.length,
+          waitlist: waitlist.length,
+          all: combined.length,
+          custom: 1,
+        },
+        campaignHistory: historyResult.data ?? [],
+        sender: emailConfig?.from ?? null,
+        deliveryConfigured: Boolean(emailConfig),
+      });
+    }
+
     if (section === "jobs") {
       const { data } = await supabase
         .from("jobs")
@@ -206,7 +293,15 @@ export async function POST(request: Request): Promise<Response> {
 
   const supabase = getSupabaseAdmin();
   try {
-    const body = (await request.json()) as { action?: string; jobId?: string; confirmation?: string };
+    const body = (await request.json()) as {
+      action?: string;
+      jobId?: string;
+      confirmation?: string;
+      draft?: Partial<EmailCampaignDraft>;
+      audience?: CampaignAudience;
+      customEmail?: string;
+      campaignId?: string;
+    };
 
     if (body.action === "expire_job" && body.jobId) {
       const { error } = await supabase
@@ -219,6 +314,154 @@ export async function POST(request: Request): Promise<Response> {
         summary: { action: "expire_job", jobId: body.jobId, by: admin.email },
       });
       return Response.json({ ok: true });
+    }
+
+    if (body.action === "preview_email_campaign") {
+      const content = renderCampaignEmail(body.draft ?? {}, {
+        recipientName: "Anvesh",
+        audienceReason: "this is a secure administrator preview",
+      });
+      return Response.json(content);
+    }
+
+    if (body.action === "send_email_campaign_test") {
+      const emailConfig = transactionalEmailConfig();
+      if (!emailConfig) return Response.json({ error: "Transactional email delivery is not configured." }, { status: 503 });
+      const draft = validateCampaignDraft(body.draft ?? {});
+      const content = renderCampaignEmail(draft, {
+        recipientName: admin.email.split("@")[0],
+        audienceReason: "you requested this administrator test email",
+      });
+      const delivery = await getTransactionalResend(emailConfig).emails.send({
+        from: emailConfig.from,
+        to: [admin.email],
+        subject: `[TEST] ${content.subject}`,
+        html: content.html,
+        text: content.text,
+        ...(emailConfig.replyTo ? { replyTo: emailConfig.replyTo } : {}),
+        tags: [{ name: "email_type", value: "campaign_test" }],
+      });
+      if (delivery.error || !delivery.data?.id) {
+        return Response.json({ error: delivery.error?.message || "Test email delivery failed." }, { status: 503 });
+      }
+      await supabase.from("moderation_logs").insert({
+        run_type: "email_campaign",
+        summary: {
+          action: "test",
+          by: admin.email,
+          template_id: draft.templateId,
+          subject: draft.subject,
+          recipient_count: 1,
+          status: "accepted",
+          provider_id: delivery.data.id,
+        },
+      });
+      return Response.json({ ok: true, sent: 1, recipient: admin.email }, { status: 201 });
+    }
+
+    if (body.action === "send_email_campaign") {
+      if (body.confirmation !== CAMPAIGN_CONFIRMATION) {
+        return Response.json({ error: "Explicit campaign confirmation is required." }, { status: 400 });
+      }
+      if (!body.campaignId || !/^[0-9a-f-]{36}$/i.test(body.campaignId)) {
+        return Response.json({ error: "A valid campaign identifier is required." }, { status: 400 });
+      }
+      const audience: CampaignAudience = ["registered", "waitlist", "all", "custom"].includes(body.audience ?? "")
+        ? body.audience as CampaignAudience
+        : "registered";
+      const emailConfig = transactionalEmailConfig();
+      if (!emailConfig) return Response.json({ error: "Transactional email delivery is not configured." }, { status: 503 });
+      const draft = validateCampaignDraft(body.draft ?? {});
+      const recipients = await resolveCampaignAudience(supabase, audience, body.customEmail);
+      if (!recipients.length) return Response.json({ error: "This audience has no deliverable recipients." }, { status: 400 });
+
+      const previous = await supabase
+        .from("moderation_logs")
+        .select("id, summary")
+        .eq("run_type", "email_campaign")
+        .contains("summary", { campaign_id: body.campaignId })
+        .limit(1)
+        .maybeSingle();
+      if (previous.error) throw previous.error;
+      if (previous.data) {
+        return Response.json({ error: "This campaign has already been processed. Start a new draft before sending again." }, { status: 409 });
+      }
+
+      const auditStart = await supabase.from("moderation_logs").insert({
+        run_type: "email_campaign",
+        summary: {
+          action: "send",
+          campaign_id: body.campaignId,
+          by: admin.email,
+          template_id: draft.templateId,
+          subject: draft.subject,
+          audience,
+          recipient_count: recipients.length,
+          status: "processing",
+        },
+      }).select("id").single();
+      if (auditStart.error) throw auditStart.error;
+
+      let sent = 0;
+      let failed = 0;
+      const providerIds: string[] = [];
+      const providerErrors: string[] = [];
+      for (let offset = 0; offset < recipients.length; offset += 100) {
+        const chunk = recipients.slice(offset, offset + 100);
+        const delivery = await getTransactionalResend(emailConfig).batch.send(
+          chunk.map((recipient) => {
+            const content = renderCampaignEmail(draft, {
+              recipientName: recipient.name,
+              audienceReason: campaignAudienceReason(audience),
+            });
+            return {
+              from: emailConfig.from,
+              to: [recipient.email],
+              subject: content.subject,
+              html: content.html,
+              text: content.text,
+              ...(emailConfig.replyTo ? { replyTo: emailConfig.replyTo } : {}),
+              tags: [
+                { name: "email_type", value: "admin_campaign" },
+                { name: "template", value: draft.templateId.replace(/[^a-z0-9_-]/gi, "_").slice(0, 50) || "custom" },
+              ],
+            };
+          }),
+          {
+            idempotencyKey: `ir35careers-campaign-${body.campaignId}-${Math.floor(offset / 100)}`,
+            batchValidation: "permissive",
+          }
+        );
+        if (delivery.error || !delivery.data) {
+          failed += chunk.length;
+          providerErrors.push((delivery.error?.message || "Provider batch failed").slice(0, 200));
+          continue;
+        }
+        sent += delivery.data.data.length;
+        failed += delivery.data.errors.length;
+        providerIds.push(...delivery.data.data.map((item) => item.id));
+        providerErrors.push(...delivery.data.errors.map((item) => item.message.slice(0, 200)));
+      }
+
+      const status = failed === 0 ? "accepted" : sent > 0 ? "partial" : "failed";
+      const auditUpdate = await supabase.from("moderation_logs").update({
+        summary: {
+          action: "send",
+          campaign_id: body.campaignId,
+          by: admin.email,
+          template_id: draft.templateId,
+          subject: draft.subject,
+          audience,
+          recipient_count: recipients.length,
+          sent,
+          failed,
+          status,
+          provider_ids: providerIds,
+          provider_errors: providerErrors.slice(0, 20),
+        },
+      }).eq("id", auditStart.data.id);
+      if (auditUpdate.error) throw auditUpdate.error;
+      return Response.json({ ok: failed === 0, sent, failed, audience, campaignId: body.campaignId }, { status: failed ? 207 : 201 });
     }
 
     if (body.action === "send_beta_launch") {
