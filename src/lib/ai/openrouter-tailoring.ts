@@ -4,6 +4,7 @@ import type { AiTailoringResult, AiTailoringSuggestion } from "@/lib/ai/tailorin
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import { readJsonResponse } from "@/lib/security/response-body";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MAX_CV_CHARACTERS = 80_000;
@@ -117,7 +118,7 @@ export function validateTailoringSuggestions(raw: unknown, sourceCv: string, job
     if (!candidate || typeof candidate !== "object") continue;
     const item = candidate as Record<string, unknown>;
     const original = cleanText(item.original, 4_000);
-    const replacement = cleanText(item.replacement, 5_000);
+    const replacement = normaliseResumeText(cleanText(item.replacement, 5_000));
     const evidenceQuote = cleanText(item.evidence_quote, 4_000);
     if (!original || !replacement || original === replacement) continue;
     if (!sourceCv.includes(original) || !evidenceQuote || !sourceCv.includes(evidenceQuote)) continue;

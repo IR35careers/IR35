@@ -3,6 +3,7 @@ import {
   resumeContainsTerm,
 } from "@/lib/resume/analysis";
 import { resolveCandidateName } from "@/lib/candidate-name";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type {
   ApplicationEvent,
   ApplicationQuestion,
@@ -365,7 +366,7 @@ export function buildScreeningQuestions(
 export function prepareApplication(
   input: PrepareApplicationInput,
 ): ApplicationRecord {
-  const cvText = input.cvText.trim();
+  const cvText = normaliseResumeText(input.cvText);
   if (cvText.length < 120)
     throw new Error(
       "Add at least 120 characters of CV evidence before preparing an application.",

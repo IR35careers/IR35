@@ -12,6 +12,7 @@ import {
   resolveCandidateName,
 } from "@/lib/candidate-name";
 import { buildResumePdf } from "@/lib/resume/export";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
 import { submitToVerifiedEmployerEmail } from "@/lib/employer-email-submission";
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
@@ -457,8 +458,8 @@ export async function POST(request: Request): Promise<Response> {
     const job = packet.job_snapshot as JobDetail;
     const candidate = (profileRow?.application_profile ??
       {}) as ContractorProfile;
-    const resumeText = String(
-      packet.tailored_cv_text || packet.source_cv_text || "",
+    const resumeText = normaliseResumeText(
+      String(packet.tailored_cv_text || packet.source_cv_text || ""),
     );
     const readiness = evaluateProfileReadiness(candidate, resumeText);
     if (!readiness.complete) {

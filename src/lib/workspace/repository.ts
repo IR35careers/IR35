@@ -13,6 +13,7 @@ import type {
   InboxSettings,
   WorkspaceState,
 } from "@/lib/workspace/types";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type { JobDetail } from "@/lib/job-types";
 
 type DbRow = Record<string, unknown>;
@@ -157,8 +158,8 @@ function mapApplication(
     matchScore: Number(row.match_score ?? 0),
     matchedKeywords: (row.matched_keywords as string[]) ?? [],
     missingKeywords: (row.missing_keywords as string[]) ?? [],
-    sourceCvText: String(row.source_cv_text ?? ""),
-    tailoredCvText: String(row.tailored_cv_text ?? ""),
+    sourceCvText: normaliseResumeText(String(row.source_cv_text ?? "")),
+    tailoredCvText: normaliseResumeText(String(row.tailored_cv_text ?? "")),
     resumeVersionLabel: String(row.resume_version_label ?? "Application CV"),
     coverLetter: String(row.cover_letter ?? ""),
     questions: (row.screening_answers as ApplicationRecord["questions"]) ?? [],
@@ -398,8 +399,8 @@ export async function saveCloudWorkspace(
         status: application.status,
         match_score: application.matchScore,
         resume_version_label: application.resumeVersionLabel,
-        source_cv_text: application.sourceCvText,
-        tailored_cv_text: application.tailoredCvText,
+        source_cv_text: normaliseResumeText(application.sourceCvText),
+        tailored_cv_text: normaliseResumeText(application.tailoredCvText),
         cover_letter: application.coverLetter,
         screening_answers: application.questions,
         matched_keywords: application.matchedKeywords,

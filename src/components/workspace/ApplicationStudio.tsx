@@ -41,6 +41,7 @@ import {
 } from "@/lib/candidate-name";
 import type { JobDetail } from "@/lib/job-types";
 import { scoreResumeForRole } from "@/lib/resume/analysis";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { getSupabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
@@ -87,9 +88,14 @@ function cleanExisting(
   const coverLetter = candidateName
     ? normaliseCoverLetterSignoff(application.coverLetter, candidateName)
     : application.coverLetter;
-  if (application.receipt?.mode === "external_handoff")
-    return { ...application, coverLetter };
-  return { ...application, coverLetter, receipt: null };
+  const cleaned = {
+    ...application,
+    sourceCvText: normaliseResumeText(application.sourceCvText),
+    tailoredCvText: normaliseResumeText(application.tailoredCvText),
+    coverLetter,
+  };
+  if (application.receipt?.mode === "external_handoff") return cleaned;
+  return { ...cleaned, receipt: null };
 }
 
 export function ApplicationStudio({ job }: { job: JobDetail }) {
@@ -694,13 +700,15 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
   const recalculateEditedCv = () => {
     if (!application) return;
+    const tailoredCvText = normaliseResumeText(application.tailoredCvText);
     const score = scoreResumeForRole(
-      application.tailoredCvText,
+      tailoredCvText,
       job,
       application.resumeVersionLabel,
     );
     updateApplication((current) => ({
       ...current,
+      tailoredCvText,
       matchScore: score.overall,
       matchedKeywords: score.matchedKeywords,
       missingKeywords: score.missingKeywords,

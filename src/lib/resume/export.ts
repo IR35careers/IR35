@@ -14,11 +14,12 @@ import {
 import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
 import { resolveCandidateName } from "@/lib/candidate-name";
 import type { ResumeExportRequest } from "@/lib/resume/types";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 
 const SECTION_HEADING = /^(profile|professional profile|summary|professional summary|skills|technical skills|core skills|experience|professional experience|employment|career history|education|qualifications|certifications?|projects?|verified role skills)$/i;
 
 function normaliseExportText(value: string): string {
-  return value.replace(/\r\n?/g, "\n").replace(/\n{4,}/g, "\n\n\n").trim();
+  return normaliseResumeText(value).replace(/\n{4,}/g, "\n\n\n");
 }
 
 function isHeading(line: string): boolean {
