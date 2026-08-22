@@ -25,6 +25,7 @@ import {
 import { planLaunchAudience, type LaunchAudienceRow } from "@/lib/email/launch-audience";
 import { renderBetaLaunchEmail } from "@/lib/email/templates";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
+import { sendFeedbackEmail } from "@/lib/email/feedback-notifications";
 import { fetchCompany } from "@/lib/ats";
 import { HttpClient } from "@/lib/ats/http-client";
 import {
@@ -49,7 +50,7 @@ import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
-import { enrichFeedback, feedbackSummary, type FeedbackStatus } from "@/lib/admin-feedback";
+import { enrichFeedback, feedbackSummary, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +58,21 @@ export const maxDuration = 300;
 
 const LAUNCH_CONFIRMATION = "SEND_BETA_ACCESS_2026_08_21";
 const CAMPAIGN_CONFIRMATION = "SEND_EMAIL_CAMPAIGN";
+const FEEDBACK_BUCKET = "feedback-attachments";
+
+async function feedbackSignedUrl(path: string | null | undefined): Promise<string | null> {
+  if (!path) return null;
+  const signed = await getSupabaseAdmin().storage.from(FEEDBACK_BUCKET).createSignedUrl(path, 60 * 60);
+  return signed.data?.signedUrl ?? null;
+}
+
+async function presentAdminFeedback(record: FeedbackRecord): Promise<FeedbackRecord> {
+  const messages = await Promise.all((record.messages ?? []).map(async (message) => ({
+    ...message,
+    attachment_url: await feedbackSignedUrl(message.attachment_path),
+  })));
+  return { ...record, attachment_url: await feedbackSignedUrl(record.attachment_path), messages };
+}
 
 type CampaignRecipient = {
   email: string;
@@ -408,14 +424,15 @@ export async function GET(request: Request): Promise<Response> {
     if (section === "feedback") {
       const feedbackResult = await supabase
         .from("contact_requests")
-        .select("id, name, email, company, message, status, created_at")
-        .order("created_at", { ascending: false })
+        .select("id, user_id, name, email, company, subject, message, status, category, page_url, browser_context, attachment_path, resolution_summary, acknowledged_at, resolved_at, created_at, updated_at, messages:feedback_messages(id, feedback_id, author_type, author_user_id, author_email, message, attachment_path, created_at, read_by_user_at)")
+        .order("updated_at", { ascending: false })
+        .order("created_at", { referencedTable: "feedback_messages", ascending: true })
         .limit(500);
       if (feedbackResult.error) throw feedbackResult.error;
-      const feedback = (feedbackResult.data ?? []).map((row) => enrichFeedback({
-        ...row,
+      const feedback = await Promise.all((feedbackResult.data ?? []).map((row) => presentAdminFeedback(enrichFeedback({
+        ...row as unknown as FeedbackRecord,
         status: row.status as FeedbackStatus,
-      }));
+      }))));
       return Response.json({ feedback, feedbackSummary: feedbackSummary(feedback) });
     }
 
@@ -570,6 +587,8 @@ export async function POST(request: Request): Promise<Response> {
       connectionId?: string;
       feedbackId?: string;
       feedbackStatus?: FeedbackStatus;
+      feedbackReply?: string;
+      feedbackResolve?: boolean;
     }>(request, 2_000_000);
 
     if (body.action === "update_feedback_status") {
@@ -581,11 +600,15 @@ export async function POST(request: Request): Promise<Response> {
       if (!body.feedbackStatus || !allowedStatuses.includes(body.feedbackStatus)) {
         return Response.json({ error: "Choose a valid feedback status." }, { status: 400 });
       }
+      const current = await supabase.from("contact_requests").select("id, name, email, subject, message, status").eq("id", feedbackId).maybeSingle();
+      if (current.error) throw current.error;
+      if (!current.data) return Response.json({ error: "Feedback was not found." }, { status: 404 });
+      const statusUpdatedAt = new Date().toISOString();
       const update = await supabase
         .from("contact_requests")
-        .update({ status: body.feedbackStatus })
+        .update({ status: body.feedbackStatus, updated_at: statusUpdatedAt, resolved_at: body.feedbackStatus === "resolved" ? statusUpdatedAt : null })
         .eq("id", feedbackId)
-        .select("id, name, email, company, message, status, created_at")
+        .select("id, user_id, name, email, company, subject, message, status, category, page_url, browser_context, attachment_path, resolution_summary, acknowledged_at, resolved_at, created_at, updated_at, messages:feedback_messages(id, feedback_id, author_type, author_user_id, author_email, message, attachment_path, created_at, read_by_user_at)")
         .maybeSingle();
       if (update.error) throw update.error;
       if (!update.data) return Response.json({ error: "Feedback was not found." }, { status: 404 });
@@ -599,7 +622,53 @@ export async function POST(request: Request): Promise<Response> {
         },
       });
       if (audit.error) throw audit.error;
-      const feedback = enrichFeedback({ ...update.data, status: update.data.status as FeedbackStatus });
+      if (body.feedbackStatus === "resolved") {
+        const systemMessage = "IR35Careers support marked this issue as resolved. Reply to the ticket if you still need help.";
+        await supabase.from("feedback_messages").insert({ feedback_id: feedbackId, author_type: "system", author_email: admin.email, message: systemMessage });
+        await sendFeedbackEmail({ kind: "resolved", ticketId: feedbackId, recipient: current.data.email, customerName: current.data.name, subject: current.data.subject || "Your IR35Careers feedback", message: systemMessage }).catch(() => null);
+      }
+      const refreshed = await supabase.from("contact_requests").select("id, user_id, name, email, company, subject, message, status, category, page_url, browser_context, attachment_path, resolution_summary, acknowledged_at, resolved_at, created_at, updated_at, messages:feedback_messages(id, feedback_id, author_type, author_user_id, author_email, message, attachment_path, created_at, read_by_user_at)").eq("id", feedbackId).single();
+      if (refreshed.error) throw refreshed.error;
+      const feedback = await presentAdminFeedback(enrichFeedback({ ...refreshed.data as unknown as FeedbackRecord, status: refreshed.data.status as FeedbackStatus }));
+      return Response.json({ ok: true, feedback });
+    }
+
+    if (body.action === "reply_feedback") {
+      const feedbackId = body.feedbackId?.trim() ?? "";
+      const reply = String(body.feedbackReply ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 5_000);
+      if (!/^[0-9a-f-]{36}$/i.test(feedbackId)) return Response.json({ error: "A valid feedback record is required." }, { status: 400 });
+      if (reply.length < 2) return Response.json({ error: "Write a reply before sending." }, { status: 400 });
+      const current = await supabase.from("contact_requests").select("id, name, email, subject, message, status").eq("id", feedbackId).maybeSingle();
+      if (current.error) throw current.error;
+      if (!current.data) return Response.json({ error: "Feedback was not found." }, { status: 404 });
+      const nextStatus: FeedbackStatus = body.feedbackResolve ? "resolved" : "in_progress";
+      const now = new Date().toISOString();
+      const inserted = await supabase.from("feedback_messages").insert({
+        feedback_id: feedbackId,
+        author_type: "admin",
+        author_email: admin.email,
+        message: reply,
+      });
+      if (inserted.error) throw inserted.error;
+      const updated = await supabase.from("contact_requests").update({
+        status: nextStatus,
+        updated_at: now,
+        resolved_at: body.feedbackResolve ? now : null,
+        resolution_summary: body.feedbackResolve ? reply : "",
+      }).eq("id", feedbackId);
+      if (updated.error) throw updated.error;
+      await supabase.from("moderation_logs").insert({ run_type: "feedback_reply", summary: { feedback_id: feedbackId, status: nextStatus, replied_by: admin.email } });
+      await sendFeedbackEmail({
+        kind: body.feedbackResolve ? "resolved" : "admin_reply",
+        ticketId: feedbackId,
+        recipient: current.data.email,
+        customerName: current.data.name,
+        subject: current.data.subject || "Your IR35Careers feedback",
+        message: reply,
+      }).catch(() => null);
+      const refreshed = await supabase.from("contact_requests").select("id, user_id, name, email, company, subject, message, status, category, page_url, browser_context, attachment_path, resolution_summary, acknowledged_at, resolved_at, created_at, updated_at, messages:feedback_messages(id, feedback_id, author_type, author_user_id, author_email, message, attachment_path, created_at, read_by_user_at)").eq("id", feedbackId).single();
+      if (refreshed.error) throw refreshed.error;
+      const feedback = await presentAdminFeedback(enrichFeedback({ ...refreshed.data as unknown as FeedbackRecord, status: refreshed.data.status as FeedbackStatus }));
       return Response.json({ ok: true, feedback });
     }
 

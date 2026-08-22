@@ -4,14 +4,38 @@ export type FeedbackPriority = "high" | "normal";
 
 export type FeedbackRecord = {
   id: string;
+  user_id?: string | null;
   name: string;
   email: string;
   company: string;
+  subject?: string;
   message: string;
   status: FeedbackStatus;
   created_at: string;
+  updated_at?: string;
+  page_url?: string;
+  browser_context?: string;
+  attachment_path?: string | null;
+  attachment_url?: string | null;
+  resolution_summary?: string;
+  acknowledged_at?: string | null;
+  resolved_at?: string | null;
+  messages?: FeedbackMessage[];
   category: FeedbackCategory;
-  priority: FeedbackPriority;
+  priority?: FeedbackPriority;
+};
+
+export type FeedbackMessage = {
+  id: string;
+  feedback_id: string;
+  author_type: "customer" | "admin" | "system";
+  author_user_id?: string | null;
+  author_email: string;
+  message: string;
+  attachment_path?: string | null;
+  attachment_url?: string | null;
+  created_at: string;
+  read_by_user_at?: string | null;
 };
 
 export function classifyFeedback(message: string): FeedbackCategory {
@@ -32,10 +56,10 @@ export function prioritiseFeedback(message: string, status: FeedbackStatus, crea
   return urgentLanguage || age >= 48 * 60 * 60 * 1000 ? "high" : "normal";
 }
 
-export function enrichFeedback<Row extends Omit<FeedbackRecord, "category" | "priority">>(row: Row, now = Date.now()): FeedbackRecord {
+export function enrichFeedback<Row extends Omit<FeedbackRecord, "priority">>(row: Row, now = Date.now()): FeedbackRecord {
   return {
     ...row,
-    category: classifyFeedback(row.message),
+    category: row.category || classifyFeedback(row.message),
     priority: prioritiseFeedback(row.message, row.status, row.created_at, now),
   };
 }

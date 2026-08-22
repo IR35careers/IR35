@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -472,6 +473,13 @@ export default function AdminPage() {
   }, [user, loading, section, load, router, sessionReady]);
 
   useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("section");
+    if (requested && ["stats", "analytics", "jobs", "sources", "users", "feedback", "campaigns", "waitlist", "runs", "system"].includes(requested)) {
+      setSection(requested as Section);
+    }
+  }, []);
+
+  useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
       if (event.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         event.preventDefault();
@@ -929,6 +937,31 @@ export default function AdminPage() {
     }
   };
 
+  const replyToFeedback = async (feedbackId: string, feedbackReply: string, feedbackResolve: boolean) => {
+    setUpdatingFeedbackId(feedbackId);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "reply_feedback", feedbackId, feedbackReply, feedbackResolve }),
+      });
+      const json = await response.json() as { error?: string; feedback?: FeedbackRecord };
+      if (!response.ok || !json.feedback) throw new Error(json.error ?? "Unable to send the support reply");
+      setData((current) => {
+        if (!current) return current;
+        const feedback = (current.feedback ?? []).map((record) => record.id === feedbackId ? json.feedback as FeedbackRecord : record);
+        return { ...current, feedback, feedbackSummary: summariseFeedback(feedback) };
+      });
+      setNotice(feedbackResolve ? "The resolution was sent to the customer." : "Your reply was sent to the customer.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the support reply");
+    } finally {
+      setUpdatingFeedbackId(null);
+    }
+  };
+
   const normalisedQuery = query.trim().toLowerCase();
   const jobs = (data?.jobs ?? []).filter((job) => !normalisedQuery || [job.title, job.company_name, job.location, job.source_domain, job.ir35_status]
     .some((value) => value?.toLowerCase().includes(normalisedQuery)));
@@ -1135,6 +1168,7 @@ export default function AdminPage() {
               query={normalisedQuery}
               updatingId={updatingFeedbackId}
               onStatusChange={(feedbackId, status) => void updateFeedbackStatus(feedbackId, status)}
+              onReply={(feedbackId, message, resolve) => void replyToFeedback(feedbackId, message, resolve)}
             />
           ) : section === "campaigns" && data ? (
             <EmailCampaignsPanel
@@ -1623,15 +1657,18 @@ function FeedbackPanel({
   query,
   updatingId,
   onStatusChange,
+  onReply,
 }: {
   feedback: FeedbackRecord[];
   summary: ReturnType<typeof summariseFeedback>;
   query: string;
   updatingId: string | null;
   onStatusChange: (feedbackId: string, status: FeedbackStatus) => void;
+  onReply: (feedbackId: string, message: string, resolve: boolean) => void;
 }) {
   const [statusFilter, setStatusFilter] = useState<"all" | FeedbackStatus>("all");
   const [selectedId, setSelectedId] = useState<string | null>(feedback[0]?.id ?? null);
+  const [replyText, setReplyText] = useState("");
   const visible = feedback.filter((record) => {
     const matchesStatus = statusFilter === "all" || record.status === statusFilter;
     const matchesQuery = !query || [record.name, record.email, record.company, record.message, record.category].some((value) => value.toLowerCase().includes(query));
@@ -1640,7 +1677,7 @@ function FeedbackPanel({
   const selected = visible.find((record) => record.id === selectedId) ?? visible[0] ?? null;
   const statusLabel = (status: FeedbackStatus) => status === "in_progress" ? "In progress" : status.charAt(0).toUpperCase() + status.slice(1);
   const categoryLabel = (category: FeedbackRecord["category"]) => ({ application: "Application", job_listing: "Job listing", account: "Account", billing: "Billing", accessibility: "Accessibility", general: "General" })[category];
-  const replySubject = selected ? encodeURIComponent(`Re: Your IR35Careers enquiry`) : "";
+  const replySubject = selected ? encodeURIComponent(`Re: ${selected.subject || "Your IR35Careers enquiry"}`) : "";
 
   return (
     <div className="mt-7 space-y-5">
@@ -1661,14 +1698,15 @@ function FeedbackPanel({
           <div className="border-b border-slate-100 lg:border-b-0 lg:border-r">
             {visible.length ? <div className="divide-y divide-slate-100">{visible.map((record) => {
               const isSelected = selected?.id === record.id;
-              return <button key={record.id} type="button" onClick={() => setSelectedId(record.id)} className={`block w-full p-5 text-left transition sm:px-6 ${isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{record.name}</p><p className="mt-1 truncate text-xs text-slate-500">{record.email}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${record.priority === "high" ? "bg-rose-50 text-rose-700" : record.status === "resolved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{record.priority === "high" ? "High priority" : statusLabel(record.status)}</span></div><p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{record.message}</p><div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-slate-400"><span>{categoryLabel(record.category)}</span><span>{timeAgo(record.created_at)}</span></div></button>;
+              return <button key={record.id} type="button" onClick={() => { setSelectedId(record.id); setReplyText(""); }} className={`block w-full p-5 text-left transition sm:px-6 ${isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{record.subject || "Customer feedback"}</p><p className="mt-1 truncate text-xs text-slate-500">{record.name} · {record.email}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${record.priority === "high" ? "bg-rose-50 text-rose-700" : record.status === "resolved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{record.priority === "high" ? "High priority" : statusLabel(record.status)}</span></div><p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{record.message}</p><div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-slate-400"><span>{categoryLabel(record.category)}{record.attachment_path ? " · Image" : ""}</span><span>{timeAgo(record.updated_at || record.created_at)}</span></div></button>;
             })}</div> : <EmptyState title={query || statusFilter !== "all" ? "No matching feedback" : "No customer feedback"} detail={query || statusFilter !== "all" ? "Clear the search or choose another status." : "New contact enquiries will appear here."} />}
           </div>
 
           {selected ? <div className="p-5 sm:p-6">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${selected.priority === "high" ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{selected.priority === "high" ? "High priority" : "Normal priority"}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">{categoryLabel(selected.category)}</span></div><h2 className="mt-4 text-xl font-semibold text-slate-950">{selected.name}</h2><p className="mt-1 text-sm text-slate-500">Received {formatDate(selected.created_at, true)}</p></div><a href={`mailto:${encodeURIComponent(selected.email)}?subject=${replySubject}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"><Mail size={14} /> Reply by email</a></div>
-            <dl className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2"><div><dt className="text-xs text-slate-500">Email</dt><dd className="mt-1 break-all font-semibold text-slate-900">{selected.email}</dd></div><div><dt className="text-xs text-slate-500">Company</dt><dd className="mt-1 font-semibold text-slate-900">{selected.company || "Not provided"}</dd></div><div><dt className="text-xs text-slate-500">Current status</dt><dd className="mt-1 font-semibold text-slate-900">{statusLabel(selected.status)}</dd></div><div><dt className="text-xs text-slate-500">Age</dt><dd className="mt-1 font-semibold text-slate-900">{timeAgo(selected.created_at)}</dd></div></dl>
-            <div className="mt-6"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Customer message</p><p className="mt-3 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-700">{selected.message}</p></div>
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${selected.priority === "high" ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{selected.priority === "high" ? "High priority" : "Normal priority"}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">{categoryLabel(selected.category)}</span></div><h2 className="mt-4 text-xl font-semibold text-slate-950">{selected.subject || "Customer feedback"}</h2><p className="mt-1 text-sm text-slate-500">{selected.name} · received {formatDate(selected.created_at, true)}</p></div><a href={`mailto:${encodeURIComponent(selected.email)}?subject=${replySubject}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><Mail size={14} /> Open email</a></div>
+            <dl className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2"><div><dt className="text-xs text-slate-500">Email</dt><dd className="mt-1 break-all font-semibold text-slate-900">{selected.email}</dd></div><div><dt className="text-xs text-slate-500">Ticket reference</dt><dd className="mt-1 font-mono text-xs font-semibold uppercase text-slate-900">{selected.id.slice(0, 8)}</dd></div><div><dt className="text-xs text-slate-500">Current status</dt><dd className="mt-1 font-semibold text-slate-900">{statusLabel(selected.status)}</dd></div><div><dt className="text-xs text-slate-500">Last updated</dt><dd className="mt-1 font-semibold text-slate-900">{timeAgo(selected.updated_at || selected.created_at)}</dd></div>{selected.page_url && <div className="sm:col-span-2"><dt className="text-xs text-slate-500">Reported page</dt><dd className="mt-1 break-all text-xs font-semibold text-slate-900"><a href={selected.page_url} target="_blank" rel="noreferrer" className="text-emerald-700 underline">{selected.page_url}</a></dd></div>}</dl>
+            <div className="mt-6"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Support conversation</p><div className="mt-3 space-y-3"><article className="mr-6 rounded-2xl rounded-tl-md bg-slate-100 p-4"><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{selected.message}</p>{selected.attachment_url && <a href={selected.attachment_url} target="_blank" rel="noreferrer" className="mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-white"><Image src={selected.attachment_url} alt="Customer screenshot" width={960} height={600} unoptimized className="max-h-72 w-full object-contain" /></a>}<p className="mt-2 text-[10px] text-slate-400">Customer, {formatDate(selected.created_at, true)}</p></article>{(selected.messages ?? []).map((message) => <article key={message.id} className={`rounded-2xl p-4 ${message.author_type === "admin" ? "ml-6 rounded-tr-md bg-emerald-50" : message.author_type === "system" ? "border border-slate-200 bg-white" : "mr-6 rounded-tl-md bg-slate-100"}`}><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{message.message}</p>{message.attachment_url && <a href={message.attachment_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-xs font-semibold text-emerald-700 underline">View attached image</a>}<p className="mt-2 text-[10px] text-slate-400">{message.author_type === "admin" ? "IR35Careers support" : message.author_type === "system" ? "System" : "Customer"}, {formatDate(message.created_at, true)}</p></article>)}</div></div>
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4"><label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Reply to customer<textarea value={replyText} onChange={(event) => setReplyText(event.target.value)} rows={5} maxLength={5000} placeholder="Explain what was checked, what changed and what the customer should do next." className="mt-3 w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm font-normal normal-case leading-6 tracking-normal text-slate-900 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" /></label><div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={() => { onReply(selected.id, replyText, false); setReplyText(""); }} disabled={updatingId === selected.id || replyText.trim().length < 2} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 disabled:opacity-50"><Send size={14} /> Send update</button><button type="button" onClick={() => { onReply(selected.id, replyText, true); setReplyText(""); }} disabled={updatingId === selected.id || replyText.trim().length < 2} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} /> Send and resolve</button></div></div>
             <div className="mt-6 border-t border-slate-100 pt-5"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Update follow-up status {updatingId === selected.id && <Loader2 size={13} className="animate-spin" />}</p><div className="mt-3 flex flex-wrap gap-2">{(["new", "in_progress", "resolved", "spam"] as FeedbackStatus[]).map((status) => <button key={status} type="button" onClick={() => onStatusChange(selected.id, status)} disabled={updatingId === selected.id || selected.status === status} className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-semibold disabled:cursor-not-allowed ${selected.status === status ? "bg-emerald-50 text-emerald-700" : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 disabled:opacity-50"}`}>{selected.status === status ? <CheckCircle2 size={13} /> : null}{statusLabel(status)}</button>)}</div></div>
           </div> : <EmptyState title="Choose an enquiry" detail="Select a customer message to review its details and update follow-up status." />}
         </div>

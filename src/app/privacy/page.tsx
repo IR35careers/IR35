@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           <li><strong>Application analytics:</strong> summaries calculated from your own application records, status events and linked responses. CSV analytics exports exclude CV text, screening answers and message bodies.</li>
           <li><strong>Search and alert information:</strong> queries, filters, saved contracts and alert preferences.</li>
           <li><strong>Networking and referral information:</strong> contact names, professional context, private notes, follow-up dates and referral drafts that you choose to store. IR35Careers does not contact those people for you.</li>
-          <li><strong>Communications:</strong> enquiries, feedback and recruiter messages routed through enabled workspace features.</li>
+          <li><strong>Communications and support:</strong> enquiries, feedback, support replies and recruiter messages routed through enabled workspace features. If you attach a screenshot to a support ticket, we store it privately with the page address and basic browser information needed to investigate the issue.</li>
           <li><strong>Billing information:</strong> plan state, the price and policy version you accepted, checkout consent time and Stripe customer/subscription references. Full card details remain with Stripe.</li>
           <li><strong>Technical and security information:</strong> device/browser information, IP-derived security signals, timestamps, error logs and essential storage identifiers.</li>
           <li><strong>Job listing information:</strong> role data obtained from employers, authorised feeds, job boards and public applicant-tracking-system endpoints. This normally concerns organisations and vacancies rather than site users.</li>

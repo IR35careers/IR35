@@ -79,3 +79,26 @@ test("incomplete application profiles show the exact next action", async ({ page
   );
   await expect(page.getByRole("button", { name: "Prepare application" })).toBeDisabled();
 });
+
+test("contractors can open the persistent feedback reporter and attach evidence", async ({ page }) => {
+  await page.goto("/profile");
+  await dismissPrivacyNotice(page);
+  const feedbackButton = page.getByRole("button", { name: "Send feedback" });
+  await expect(feedbackButton).toBeVisible();
+  await feedbackButton.click();
+  const dialog = page.getByRole("dialog", { name: "How can we help?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Report an issue" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "My feedback" })).toBeVisible();
+  await dialog.getByLabel("What is this about?").selectOption("application");
+  await dialog.getByLabel("Short title").fill("Application form is not loading");
+  await dialog.getByLabel("What happened?").fill("The application form remained blank after I selected review and apply.");
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "application-problem.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("89504e470d0a1a0a0000000d49484452", "hex"),
+  });
+  await expect(dialog.getByAltText("Feedback attachment preview")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Send feedback" })).toBeEnabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+});

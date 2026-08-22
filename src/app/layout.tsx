@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
+import { FeedbackBubble } from "@/components/FeedbackBubble";
 import { SITE_ORIGIN } from "@/lib/seo";
 
 const inter = Inter({
@@ -85,6 +86,7 @@ export default async function RootLayout({
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
+        <FeedbackBubble />
         <CookieNotice />
         <PwaRegister />
       </body>

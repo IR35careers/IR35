@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyFeedback, feedbackSummary, prioritiseFeedback, type FeedbackRecord } from "@/lib/admin-feedback";
+import { classifyFeedback, enrichFeedback, feedbackSummary, prioritiseFeedback, type FeedbackRecord } from "@/lib/admin-feedback";
 
 describe("admin feedback intelligence", () => {
   it("classifies common customer requests", () => {
@@ -24,5 +24,20 @@ describe("admin feedback intelligence", () => {
       { ...base, id: "3", status: "resolved", priority: "normal" },
     ];
     expect(feedbackSummary(records)).toEqual({ total: 3, new: 1, inProgress: 1, resolved: 1, highPriority: 1 });
+  });
+
+  it("keeps the customer selected category while calculating priority", () => {
+    const record = enrichFeedback({
+      id: "1",
+      name: "Alex",
+      email: "alex@example.org",
+      company: "",
+      message: "Please help with this page",
+      status: "new" as const,
+      created_at: "2026-08-22T09:00:00Z",
+      category: "accessibility" as const,
+    }, Date.parse("2026-08-22T10:00:00Z"));
+    expect(record.category).toBe("accessibility");
+    expect(record.priority).toBe("normal");
   });
 });
