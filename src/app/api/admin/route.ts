@@ -48,6 +48,7 @@ import { requestEmployerDestinationVerification } from "@/lib/employer-onboardin
 import { getIntegrationStatuses } from "@/lib/integration-status";
 import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
 import { providerReviewQuestions } from "@/lib/application-submission";
+import { SUBMISSION_LOCK_MAX_AGE_MS } from "@/lib/application-submission-state";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
@@ -835,14 +836,38 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     if (body.action === "recover_stale_submissions") {
-      const staleResult = await supabase
-        .from("application_submissions")
-        .select("id, user_id, application_id, updated_at")
-        .eq("status", "processing")
-        .or("error_code.is.null,error_code.neq.needs_user")
-        .limit(500);
-      if (staleResult.error) throw staleResult.error;
-      const stale = staleResult.data ?? [];
+      const staleBefore = new Date(
+        Date.now() - SUBMISSION_LOCK_MAX_AGE_MS,
+      ).toISOString();
+      const [staleResult, legacyFailureResult] = await Promise.all([
+        supabase
+          .from("application_submissions")
+          .select("id, user_id, application_id, updated_at")
+          .eq("status", "processing")
+          .or("error_code.is.null,error_code.neq.needs_user")
+          .lt("updated_at", staleBefore)
+          .limit(500),
+        supabase
+          .from("application_submissions")
+          .select("id, user_id, application_id, updated_at")
+          .eq("status", "failed")
+          .eq("provider_name", "IR35Careers application runner")
+          .in("error_code", [
+            "provider_error",
+            "temporary_runner_error",
+            "stale_processing",
+          ])
+          .limit(500),
+      ]);
+      if (staleResult.error || legacyFailureResult.error)
+        throw staleResult.error || legacyFailureResult.error;
+      const stale = Array.from(
+        new Map(
+          [...(staleResult.data ?? []), ...(legacyFailureResult.data ?? [])].map(
+            (submission) => [submission.id, submission],
+          ),
+        ).values(),
+      );
       for (const submission of stale) {
         const now = new Date().toISOString();
         const message =

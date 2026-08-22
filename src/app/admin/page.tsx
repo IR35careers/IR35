@@ -756,7 +756,7 @@ export default function AdminPage() {
       const recovered = json.recovered ?? 0;
       setNotice(
         recovered > 0
-          ? `${recovered} stale application attempt${recovered === 1 ? "" : "s"} recovered. Contractors can retry safely.`
+          ? `${recovered} interrupted application attempt${recovered === 1 ? "" : "s"} moved to secure continuation.`
           : "No stale application attempts were found.",
       );
       await load("analytics");
