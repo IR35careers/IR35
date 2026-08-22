@@ -324,7 +324,7 @@ async function storeNeedsUser(input: {
           user_id: input.userId,
           application_id: input.packet.id,
           event_type: "status_changed",
-          label: "Application needs your answer",
+          label: attention.title,
           metadata: {
             questionCount: incoming.length,
             action: input.action ?? null,
@@ -814,10 +814,24 @@ export async function POST(request: Request): Promise<Response> {
               "source_access_denied",
             ].includes(action ?? "");
           if (runnerIssue) {
+            if (action !== "source_access_denied") {
+              await storeNeedsUser({
+                admin,
+                userId,
+                packet: packet as DbRow,
+                job,
+                recipient: notificationEmail,
+                inboxAlias: inbox?.alias,
+                candidateName,
+                providerReceipt,
+                message: providerReceipt.message,
+                action,
+              });
+              return;
+            }
             const stoppedAt = new Date().toISOString();
-            const sourceUnavailable = action === "source_access_denied";
             const attention = buildApplicationAttention({
-              action: sourceUnavailable ? action : "retry",
+              action,
               message: providerReceipt.message,
             });
             const [
@@ -835,7 +849,7 @@ export async function POST(request: Request): Promise<Response> {
                   receipt: {
                     state: "failed",
                     message: providerReceipt.message,
-                    action: sourceUnavailable ? action : "retry",
+                    action,
                     attention,
                   },
                   updated_at: stoppedAt,
@@ -845,7 +859,7 @@ export async function POST(request: Request): Promise<Response> {
               admin
                 .from("application_packets")
                 .update({
-                  status: sourceUnavailable ? "failed" : "ready",
+                  status: "failed",
                   updated_at: stoppedAt,
                 })
                 .eq("id", packet.id)
@@ -855,10 +869,7 @@ export async function POST(request: Request): Promise<Response> {
                   user_id: userId,
                   application_id: packet.id,
                   event_type: "status_changed",
-                  label:
-                    sourceUnavailable
-                      ? "Employer application page is unavailable"
-                      : "Application stopped before confirmation and is ready to retry",
+                  label: "Employer application page is unavailable",
                   metadata: { reason: action, attention },
                   idempotency_key: `${idempotencyKey}:runner-issue:${payloadHash}`,
                 },
@@ -871,18 +882,6 @@ export async function POST(request: Request): Promise<Response> {
                   packetError?.message ||
                   eventError?.message,
               );
-            if (!sourceUnavailable)
-              await sendApplicationNotification({
-                kind: "submission_issue",
-                to: notificationEmail,
-                userId,
-                inboxAlias: inbox?.alias,
-                candidateName,
-                jobTitle: job.title,
-                companyName: job.company_name,
-                applicationId: String(packet.id),
-                idempotencyKey: `${idempotencyKey}:submission-issue:${payloadHash}`,
-              }).catch(() => null);
             return;
           }
           await storeNeedsUser({
@@ -1007,6 +1006,21 @@ export async function POST(request: Request): Promise<Response> {
             candidateName,
             message: providerMessage,
             action: "/profile",
+          });
+          return;
+        }
+        if (provider?.kind === "native") {
+          await storeNeedsUser({
+            admin,
+            userId,
+            packet: packet as DbRow,
+            job,
+            recipient: notificationEmail,
+            inboxAlias: inbox?.alias,
+            candidateName,
+            message:
+              "The employer portal did not finish in the background. Continue the same approved application on the employer page.",
+            action: "browser_continue",
           });
           return;
         }

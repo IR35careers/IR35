@@ -23,6 +23,17 @@ describe("application attention", () => {
     expect(buildApplicationAttention({ action: "employer_login" }).kind).toBe("employer_account");
     expect(buildApplicationAttention({ action: "verification_code" }).kind).toBe("email_verification");
   });
+
+  it("routes an unfinished background run to secure browser continuation", () => {
+    const attention = buildApplicationAttention({
+      action: "browser_continue",
+      message: "Continue the approved application on the employer page.",
+    });
+
+    expect(attention.kind).toBe("employer_form");
+    expect(attention.title).toBe("Continue on the employer page");
+    expect(attention.actionLabel).toBe("Continue securely");
+  });
 });
 
 describe("profile readiness", () => {

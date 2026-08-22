@@ -193,6 +193,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [profilePrompt, setProfilePrompt] = useState(false);
   const [assistantMissing, setAssistantMissing] = useState(false);
+  const [assistantNeedsDesktop, setAssistantNeedsDesktop] = useState(false);
   const submissionStatusFailures = useRef(0);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
@@ -445,16 +446,16 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           return;
         }
         if (!response.ok && response.status !== 202) {
-          stopLocalSubmission(
-            payload.error ||
-              "The previous application attempt could not be found. Your approved materials are safe. Select Apply again to retry.",
+          submissionStatusFailures.current += 1;
+          setNotice(
+            "The live status update is delayed. The application is still being checked and has not been marked as failed.",
           );
         }
       } catch {
         submissionStatusFailures.current += 1;
         if (active && submissionStatusFailures.current >= 3) {
-          stopLocalSubmission(
-            "IR35Careers could not confirm that the employer received this application. It has not been marked Applied. Your approved materials are safe. Select Apply again to retry.",
+          setNotice(
+            "The live status update is delayed. The application is still being checked and has not been marked as failed.",
           );
         }
       }
@@ -1124,13 +1125,20 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     setError(null);
     setNotice(null);
     setAssistantMissing(false);
+    setAssistantNeedsDesktop(false);
     try {
       const installed =
         assistantConfirmed || (await applicationAssistantInstalled());
       if (!installed) {
+        const needsDesktop = /Android|iPhone|iPad|iPod/i.test(
+          window.navigator.userAgent,
+        );
         setAssistantMissing(true);
+        setAssistantNeedsDesktop(needsDesktop);
         setError(
-          "Install the IR35Careers Application Assistant in desktop Chrome, then select Continue securely again.",
+          needsDesktop
+            ? "This employer requires a browser continuation. Open this application in desktop Chrome to finish the saved application securely."
+            : "Install the IR35Careers Application Assistant in desktop Chrome, then select Continue securely again.",
         );
         return;
       }
@@ -1373,28 +1381,45 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </div>
               {assistantMissing ? (
                 <div className="mt-3 rounded-xl border border-amber-300 bg-white p-3 text-sm text-slate-700">
-                  <p>
-                    The assistant is required only when an employer blocks the
-                    background runner with a login, CAPTCHA or declaration.
-                  </p>
-                  <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-5 text-slate-600">
-                    <li>Download and extract the ZIP on a desktop computer.</li>
-                    <li>
-                      Open <strong>chrome://extensions</strong>, enable Developer
-                      mode and choose Load unpacked.
-                    </li>
-                    <li>
-                      Select the extracted folder, return here and choose
-                      Continue securely.
-                    </li>
-                  </ol>
-                  <a
-                    href="/downloads/ir35careers-chrome-extension-v2.zip"
-                    download
-                    className="ir35-focus mt-2 inline-flex min-h-10 items-center rounded-lg border border-slate-300 px-3 font-semibold text-slate-900 hover:bg-slate-50"
-                  >
-                    Download Application Assistant
-                  </a>
+                  {assistantNeedsDesktop ? (
+                    <>
+                      <p className="font-semibold text-slate-900">
+                        Continue on desktop Chrome
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        Your approved CV and answers are saved. Open this same
+                        application on a desktop computer and choose Continue
+                        securely. Mobile browsers cannot control another
+                        employer&apos;s protected website.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        The assistant is required only when an employer blocks
+                        the background runner with a login, CAPTCHA or
+                        declaration.
+                      </p>
+                      <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-5 text-slate-600">
+                        <li>Download and extract the ZIP on a desktop computer.</li>
+                        <li>
+                          Open <strong>chrome://extensions</strong>, enable
+                          Developer mode and choose Load unpacked.
+                        </li>
+                        <li>
+                          Select the extracted folder, return here and choose
+                          Continue securely.
+                        </li>
+                      </ol>
+                      <a
+                        href="/downloads/ir35careers-chrome-extension-v2.zip"
+                        download
+                        className="ir35-focus mt-2 inline-flex min-h-10 items-center rounded-lg border border-slate-300 px-3 font-semibold text-slate-900 hover:bg-slate-50"
+                      >
+                        Download Application Assistant
+                      </a>
+                    </>
+                  )}
                 </div>
               ) : null}
             </div>

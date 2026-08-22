@@ -33,6 +33,20 @@ export type RunnerTestResult = {
   checks: Array<{ label: string; passed: boolean; detail: string }>;
 };
 
+export type ApplicationRunSummary = {
+  id: string;
+  applicationId: string;
+  jobTitle: string;
+  companyName: string;
+  sourceHost: string;
+  status: string;
+  errorCode: string | null;
+  action: string | null;
+  message: string | null;
+  confirmationReference: string | null;
+  updatedAt: string;
+};
+
 type MapNode = {
   id: string;
   label: string;
@@ -114,7 +128,7 @@ function buildLanes(integrations: IntegrationStatus[]): Lane[] {
   ];
 }
 
-export function SystemMapPanel({ integrations, query, testing, testResult, onRunTest }: { integrations: IntegrationStatus[]; query: string; testing: boolean; testResult: RunnerTestResult | null; onRunTest: () => void }) {
+export function SystemMapPanel({ integrations, applicationRuns, query, testing, testResult, onRunTest }: { integrations: IntegrationStatus[]; applicationRuns: ApplicationRunSummary[]; query: string; testing: boolean; testResult: RunnerTestResult | null; onRunTest: () => void }) {
   const lanes = useMemo(() => buildLanes(integrations), [integrations]);
   const allNodes = lanes.flatMap((lane) => lane.nodes);
   const [selectedId, setSelectedId] = useState("ats_submission");
@@ -122,6 +136,14 @@ export function SystemMapPanel({ integrations, query, testing, testResult, onRun
   const connected = allNodes.filter((node) => node.status === "connected" || node.status === "built_in" || node.status === "available").length;
   const attention = allNodes.length - connected;
   const term = query.trim().toLowerCase();
+  const visibleRuns = applicationRuns.filter((run) =>
+    !term ||
+    [run.jobTitle, run.companyName, run.sourceHost, run.status, run.errorCode, run.action, run.message]
+      .some((value) => value?.toLowerCase().includes(term)),
+  );
+  const confirmedRuns = applicationRuns.filter((run) => run.status === "succeeded").length;
+  const needsUserRuns = applicationRuns.filter((run) => run.errorCode === "needs_user").length;
+  const failedRuns = applicationRuns.filter((run) => run.status === "failed").length;
 
   return (
     <div className="mt-7 space-y-5">
@@ -143,6 +165,48 @@ export function SystemMapPanel({ integrations, query, testing, testResult, onRun
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{testResult.checks.map((check) => <div key={check.label} className="rounded-xl border border-black/5 bg-white/70 px-3 py-3"><p className="flex items-center gap-2 text-xs font-semibold text-slate-900">{check.passed ? <CheckCircle2 size={14} className="text-emerald-600" /> : <CircleAlert size={14} className="text-amber-600" />}{check.label}</p><p className="mt-1 text-[11px] leading-4 text-slate-500">{check.detail}</p></div>)}</div>
         </section>
       )}
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+          <div>
+            <h2 className="text-[15px] font-semibold text-slate-950">Recent real application runs</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Employer confirmations and exact continuation requirements from the latest customer applications.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wide">
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">{confirmedRuns} confirmed</span>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">{needsUserRuns} needs action</span>
+            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700">{failedRuns} unavailable</span>
+          </div>
+        </div>
+        {visibleRuns.length ? (
+          <div className="divide-y divide-slate-100">
+            {visibleRuns.slice(0, 12).map((run) => {
+              const confirmed = run.status === "succeeded";
+              const needsAction = run.errorCode === "needs_user";
+              const label = confirmed ? "Confirmed" : needsAction ? "Needs action" : run.status === "processing" ? "Processing" : "Unavailable";
+              const tone = confirmed ? "bg-emerald-50 text-emerald-700" : needsAction ? "bg-amber-50 text-amber-700" : run.status === "processing" ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700";
+              return (
+                <article key={run.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-6">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-slate-950">{run.jobTitle} at {run.companyName}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${tone}`}>{label}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{run.sourceHost || "Employer portal"} · {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(run.updatedAt))}</p>
+                    {run.message ? <p className="mt-2 text-xs leading-5 text-slate-700">{run.message}</p> : null}
+                  </div>
+                  <dl className="grid min-w-[190px] grid-cols-2 gap-2 text-xs sm:text-right">
+                    <div><dt className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Reason</dt><dd className="mt-1 text-slate-700">{run.errorCode || "None"}</dd></div>
+                    <div><dt className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Next step</dt><dd className="mt-1 text-slate-700">{run.action || (confirmed ? "Track replies" : "Checking")}</dd></div>
+                  </dl>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="px-5 py-8 text-center text-sm text-slate-500">No matching application runs yet.</div>
+        )}
+      </section>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

@@ -167,27 +167,35 @@ export async function GET(request: Request): Promise<Response> {
     ) {
       const now = new Date().toISOString();
       const staleMessage =
-        "The previous application attempt stopped before employer confirmation. Your approved materials are safe. Select Apply again to retry.";
+        "The employer portal did not finish in the background. Continue the same approved application on the employer page.";
       const attention = buildApplicationAttention({
-        action: "retry",
+        action: "browser_continue",
         message: staleMessage,
       });
-      const [{ error: updateError }, { error: eventError }] = await Promise.all(
-        [
+      const [
+        { error: updateError },
+        { error: packetUpdateError },
+        { error: eventError },
+      ] = await Promise.all([
           admin
             .from("application_submissions")
             .update({
-              status: "failed",
-              error_code: "stale_processing",
+              status: "processing",
+              error_code: "needs_user",
               receipt: {
-                state: "failed",
+                state: "needs_user",
                 message: staleMessage,
-                action: "retry",
+                action: "browser_continue",
                 attention,
               },
               updated_at: now,
             })
             .eq("application_id", applicationId)
+            .eq("user_id", userId),
+          admin
+            .from("application_packets")
+            .update({ status: "needs_review", updated_at: now })
+            .eq("id", applicationId)
             .eq("user_id", userId),
           admin
             .from("application_events")
@@ -196,24 +204,29 @@ export async function GET(request: Request): Promise<Response> {
                 user_id: userId,
                 application_id: applicationId,
                 event_type: "status_changed",
-                label: "Application attempt stopped and is ready to retry",
+                label: "Application needs secure browser continuation",
                 idempotency_key: `submit:${applicationId}:stale:${String(submission.updated_at)}`,
-                metadata: { reason: "stale_processing", attention },
+                metadata: { reason: "browser_continue", attention },
               },
               { onConflict: "user_id,idempotency_key" },
             ),
-        ],
-      );
-      if (updateError || eventError)
-        throw new Error(updateError?.message || eventError?.message);
+        ]);
+      if (updateError || packetUpdateError || eventError)
+        throw new Error(
+          updateError?.message ||
+            packetUpdateError?.message ||
+            eventError?.message,
+        );
       return Response.json(
         {
-          state: "failed",
-          error: staleMessage,
-          action: "retry",
+          state: "needs_user",
+          message: staleMessage,
+          action: "browser_continue",
+          questions:
+            (packet.screening_answers as ApplicationQuestion[]) ?? [],
           attention,
         },
-        { status: 409, headers: NO_STORE },
+        { status: 202, headers: NO_STORE },
       );
     }
     if (!submission.provider_submission_id) {

@@ -92,18 +92,26 @@ export function buildApplicationAttention(input: {
   }
   if (
     [
+      "browser_continue",
       "unsupported_form",
       "validation_failed",
       "form_too_long",
       "unsupported_portal",
+      "runner_timeout",
     ].includes(action)
   ) {
     return {
       kind: "employer_form",
-      title: "Review the employer form",
+      title:
+        action === "browser_continue" || action === "runner_timeout"
+          ? "Continue on the employer page"
+          : "Review the employer form",
       message,
       action: "#needs-attention",
-      actionLabel: "Review form",
+      actionLabel:
+        action === "browser_continue" || action === "runner_timeout"
+          ? "Continue securely"
+          : "Review form",
       questionIds,
     };
   }

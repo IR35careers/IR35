@@ -38,6 +38,7 @@ import {
   validateManagedJobSource,
 } from "@/lib/ats/source-registry";
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
+import { buildApplicationAttention } from "@/lib/application-attention";
 import {
   loadEmployerDestinations,
   saveEmployerDestination,
@@ -552,8 +553,45 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (section === "system") {
+      const submissionsResult = await supabase
+        .from("application_submissions")
+        .select("id, application_id, status, error_code, provider_name, provider_submission_id, receipt, updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(30);
+      if (submissionsResult.error) throw submissionsResult.error;
+      const applicationIds = (submissionsResult.data ?? []).map((row) => row.application_id);
+      const packetsResult = applicationIds.length
+        ? await supabase
+            .from("application_packets")
+            .select("id, job_snapshot")
+            .in("id", applicationIds)
+        : { data: [], error: null };
+      if (packetsResult.error) throw packetsResult.error;
+      const packetMap = new Map(
+        (packetsResult.data ?? []).map((row) => [String(row.id), row.job_snapshot as Record<string, unknown>]),
+      );
+      const applicationRuns = (submissionsResult.data ?? []).map((row) => {
+        const job = packetMap.get(String(row.application_id)) ?? {};
+        const receipt = row.receipt && typeof row.receipt === "object"
+          ? row.receipt as Record<string, unknown>
+          : {};
+        return {
+          id: String(row.id),
+          applicationId: String(row.application_id),
+          jobTitle: String(job.title || "Application"),
+          companyName: String(job.company_name || "Employer"),
+          sourceHost: String(job.source_domain || ""),
+          status: String(row.status || "processing"),
+          errorCode: row.error_code ? String(row.error_code) : null,
+          action: receipt.action ? String(receipt.action) : null,
+          message: receipt.message ? String(receipt.message).slice(0, 500) : null,
+          confirmationReference: row.provider_submission_id ? String(row.provider_submission_id) : null,
+          updatedAt: String(row.updated_at),
+        };
+      });
       return Response.json({
         integrations: getIntegrationStatuses(),
+        applicationRuns,
         systemGeneratedAt: new Date().toISOString(),
       });
     }
@@ -807,11 +845,57 @@ export async function POST(request: Request): Promise<Response> {
       const stale = staleResult.data ?? [];
       for (const submission of stale) {
         const now = new Date().toISOString();
-        const [{ error: updateError }, { error: eventError }] = await Promise.all([
-          supabase.from("application_submissions").update({ status: "failed", error_code: "stale_processing", receipt: { state: "failed", message: "The previous runner stopped before employer confirmation." }, updated_at: now }).eq("id", submission.id),
-          supabase.from("application_events").upsert({ user_id: submission.user_id, application_id: submission.application_id, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", idempotency_key: `submit:${submission.application_id}:stale:${String(submission.updated_at)}`, metadata: { recoveredBy: admin.email } }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true }),
+        const message =
+          "The employer portal did not finish in the background. Continue the same approved application on the employer page.";
+        const attention = buildApplicationAttention({
+          action: "browser_continue",
+          message,
+        });
+        const [
+          { error: updateError },
+          { error: packetError },
+          { error: eventError },
+        ] = await Promise.all([
+          supabase
+            .from("application_submissions")
+            .update({
+              status: "processing",
+              error_code: "needs_user",
+              receipt: {
+                state: "needs_user",
+                message,
+                action: "browser_continue",
+                attention,
+              },
+              updated_at: now,
+            })
+            .eq("id", submission.id),
+          supabase
+            .from("application_packets")
+            .update({ status: "needs_review", updated_at: now })
+            .eq("id", submission.application_id)
+            .eq("user_id", submission.user_id),
+          supabase.from("application_events").upsert(
+            {
+              user_id: submission.user_id,
+              application_id: submission.application_id,
+              event_type: "status_changed",
+              label: "Application needs secure browser continuation",
+              idempotency_key: `submit:${submission.application_id}:stale:${String(submission.updated_at)}`,
+              metadata: {
+                recoveredBy: admin.email,
+                reason: "browser_continue",
+                attention,
+              },
+            },
+            {
+              onConflict: "user_id,idempotency_key",
+              ignoreDuplicates: true,
+            },
+          ),
         ]);
-        if (updateError || eventError) throw updateError || eventError;
+        if (updateError || packetError || eventError)
+          throw updateError || packetError || eventError;
       }
       const audit = await supabase.from("moderation_logs").insert({
         run_type: "application_recovery",

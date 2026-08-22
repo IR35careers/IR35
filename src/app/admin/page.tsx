@@ -48,7 +48,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { SystemMapPanel, type RunnerTestResult } from "@/components/admin/SystemMapPanel";
+import { SystemMapPanel, type ApplicationRunSummary, type RunnerTestResult } from "@/components/admin/SystemMapPanel";
 import { useAuth } from "@/lib/auth-context";
 import { isAdministratorEmail } from "@/lib/portal-access";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
@@ -216,6 +216,7 @@ type AdminData = {
   sourceProviders?: JobSourceRow["type"][];
   pendingEmployerConnections?: PendingEmployerConnection[];
   integrations?: IntegrationStatus[];
+  applicationRuns?: ApplicationRunSummary[];
   systemGeneratedAt?: string;
   feedback?: FeedbackRecord[];
   feedbackSummary?: ReturnType<typeof summariseFeedback>;
@@ -1194,7 +1195,7 @@ export default function AdminPage() {
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
           ) : section === "system" && data ? (
-            <SystemMapPanel integrations={data.integrations ?? []} query={normalisedQuery} testing={testingRunner} testResult={runnerTestResult} onRunTest={() => void runApplicationRunnerTest()} />
+            <SystemMapPanel integrations={data.integrations ?? []} applicationRuns={data.applicationRuns ?? []} query={normalisedQuery} testing={testingRunner} testResult={runnerTestResult} onRunTest={() => void runApplicationRunnerTest()} />
           ) : null}
         </main>
       </div>
