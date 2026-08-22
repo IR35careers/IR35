@@ -13,12 +13,10 @@ export function ApplicationJourney({ profileReady, applications }: { profileRead
   const submitted = Boolean(current && FINISHED.has(current.status));
   const tracked = Boolean(current && ["viewed", "replied", "interview", "offer"].includes(current.status));
   const steps = [
-    { label: "Profile", done: profileReady },
-    { label: "Find", done: prepared },
-    { label: "Prepare", done: prepared },
-    { label: "Approve", done: approved },
-    { label: "Submit", done: submitted },
-    { label: "Track", done: tracked },
+    { label: "Complete profile", shortLabel: "Profile", done: profileReady },
+    { label: "Choose a role", shortLabel: "Find", done: prepared },
+    { label: "Prepare and apply", shortLabel: "Apply", done: submitted },
+    { label: "Follow updates", shortLabel: "Track", done: tracked },
   ];
   const activeIndex = Math.max(0, steps.findIndex((item) => !item.done));
   const next = !profileReady
@@ -43,15 +41,15 @@ export function ApplicationJourney({ profileReady, applications }: { profileRead
           {next.action} <ArrowRight size={15} aria-hidden="true" />
         </Link>
       </div>
-      <ol className="grid grid-cols-3 gap-px bg-slate-200 sm:grid-cols-6" aria-label="Application journey">
+      <ol className="grid grid-cols-2 gap-px bg-slate-200 sm:grid-cols-4" aria-label="Application journey">
         {steps.map((step, index) => {
           const active = index === activeIndex && !step.done;
           return (
-            <li key={step.label} aria-current={active ? "step" : undefined} className={`flex min-h-20 items-center gap-2 bg-white px-3 py-4 ${active ? "text-brand-900" : step.done ? "text-slate-800" : "text-slate-400"}`}>
+            <li key={step.label} aria-current={active ? "step" : undefined} className={`flex min-h-[68px] items-center gap-3 bg-white px-4 py-3 ${active ? "text-brand-900" : step.done ? "text-slate-800" : "text-slate-400"}`}>
               <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${step.done ? "bg-brand-600 text-white" : active ? "border-2 border-brand-600 bg-brand-50 text-brand-800" : "border border-slate-200 bg-slate-50"}`}>
                 {step.done ? <Check size={14} aria-hidden="true" /> : active ? index + 1 : <Circle size={11} aria-hidden="true" />}
               </span>
-              <span className="text-xs font-semibold">{step.label}</span>
+              <span><span className="block text-xs font-semibold sm:hidden">{step.shortLabel}</span><span className="hidden text-xs font-semibold sm:block">{step.label}</span></span>
             </li>
           );
         })}

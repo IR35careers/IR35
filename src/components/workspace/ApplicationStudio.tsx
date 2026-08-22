@@ -204,6 +204,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const showDemoTools = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
+    if (application || !initialApplication) return;
+    setApplication(initialApplication);
+    if (!cvText.trim() && initialApplication.sourceCvText.trim()) {
+      setCvText(initialApplication.sourceCvText);
+      setCvFilename(initialApplication.resumeVersionLabel);
+    }
+  }, [application, cvText, initialApplication]);
+
+  useEffect(() => {
+    if (application || cvText.trim() || !preferredResume?.resumeText.trim())
+      return;
+    setCvText(preferredResume.resumeText);
+    setCvFilename(
+      preferredResume.name || workspace.profile.defaultCvLabel || "Application CV",
+    );
+  }, [
+    application,
+    cvText,
+    preferredResume?.name,
+    preferredResume?.resumeText,
+    workspace.profile.defaultCvLabel,
+  ]);
+
+  useEffect(() => {
     if (busy !== "submit") {
       setSubmitElapsedSeconds(0);
       return;
@@ -997,31 +1021,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
-  const handlePrimaryApplyAction = () => {
-    if (!application || submitted) return;
-    if (!profileReadiness.complete) {
-      setProfilePrompt(true);
-      return;
-    }
-    if (submissionInProgress) {
-      setNotice(
-        "Your application is already being completed. This page will update when the employer responds.",
-      );
-      return;
-    }
-    if (
-      answersReviewed &&
-      approvalsComplete &&
-      submissionConnection === "connected"
-    ) {
-      void submitApprovedApplication();
-      return;
-    }
-    document
-      .getElementById("final-application-approval")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <WorkspacePage
       density="compact"
@@ -1072,27 +1071,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </span>
             )}
             {application && <StatusPill status={application.status} />}
-            {application && !submitted && (
-              <button
-                type="button"
-                onClick={handlePrimaryApplyAction}
-                disabled={busy !== null || submissionInProgress}
-                className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60"
-              >
-                {busy === "submit" || submissionInProgress ? (
-                  <Loader2 className="animate-spin" size={15} />
-                ) : (
-                  <Send size={15} />
-                )}{" "}
-                {submissionInProgress
-                  ? "Processing application"
-                  : busy === "submit"
-                    ? `Starting ${submitElapsedSeconds}s`
-                    : !profileReadiness.complete
-                      ? "Complete profile first"
-                      : "Approve and apply now"}
-              </button>
-            )}
             {submitted && (
               <span className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-3 text-sm font-bold text-emerald-800">
                 <CheckCircle2 size={16} /> Submitted
@@ -1365,11 +1343,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       Step 2 · Role match
                     </p>
                     <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
-                      Your evidence matches {application.matchScore}%
+                      {application.matchScore}% role match
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
-                      The baseline score is deterministic. It is a preparation
-                      aid, not an ATS or hiring prediction.
+                      We compared the role with the experience and skills in your CV.
                     </p>
                   </div>
                   <button
@@ -1384,7 +1361,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     <RotateCcw size={14} /> Change CV
                   </button>
                 </div>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <details className="mt-5 rounded-2xl border border-slate-200 bg-slate-50">
+                  <summary className="ir35-focus cursor-pointer px-4 py-3 text-sm font-semibold text-slate-700">View match details</summary>
+                  <div className="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2">
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">
                       Evidence found
@@ -1427,7 +1406,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       )}
                     </div>
                   </div>
-                </div>
+                  </div>
+                </details>
               </section>
 
               <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
@@ -1438,11 +1418,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     </span>
                     <div>
                       <h2 className="font-semibold text-slate-950">
-                        CV tailored for this role
+                        Improve your CV for this role
                       </h2>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
-                        Role evidence is checked immediately. Review the
-                        comparison and adjust anything before submitting.
+                        Review every suggested change before it is used.
                       </p>
                     </div>
                   </div>
@@ -1465,7 +1444,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                         : tailoringElapsedSeconds < 9
                           ? `Matching the role ${tailoringElapsedSeconds}s`
                           : `Finishing safely ${tailoringElapsedSeconds}s`
-                      : "Refresh tailoring"}
+                      : aiResult ? "Improve tailoring" : "Tailor my CV"}
                   </button>
                   {busy === "ai" && (
                     <div
@@ -1488,8 +1467,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     </div>
                   )}
                   <p className="mt-3 text-xs leading-5 text-slate-500">
-                    The refresh rebuilds the profile, skills and relevant
-                    experience wording from verified CV evidence.{" "}
+                    Suggestions only use experience already supported by your CV.{" "}
                     <Link
                       href="/ai-disclosure"
                       target="_blank"
@@ -1959,34 +1937,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   ? "Review the final materials, confirm the application and apply from this page."
                   : "Your work is safe. Sign in before sending it to the employer."}
             </p>
-            {answersReviewed && approvalsComplete && !submitted ? (
-              <button
-                type="button"
-                onClick={() => void submitApprovedApplication()}
-                disabled={
-                  busy !== null ||
-                  submissionInProgress ||
-                  submissionConnection !== "connected"
-                }
-                className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {busy === "submit" || submissionInProgress ? (
-                  <Loader2 className="animate-spin" size={15} />
-                ) : (
-                  <Send size={15} />
-                )}{" "}
-                {submissionInProgress
-                  ? "Processing application"
-                  : busy === "submit"
-                    ? `Starting ${submitElapsedSeconds}s`
-                    : "Approve and apply now"}
-              </button>
-            ) : (
+            {!submitted && (
               <a
                 href="#final-application-approval"
                 className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800"
               >
-                <Send size={15} /> Complete final approval
+                <Send size={15} /> Go to final check
               </a>
             )}
           </section>
@@ -2047,46 +2003,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           </section>
         </aside>
       </div>
-      {application && !submitted && (
-        <div
-          className="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex justify-center px-4"
-          data-testid="persistent-apply-action"
-        >
-          <div className="pointer-events-none flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-emerald-200 bg-white/95 p-3 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-4">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-slate-950">
-                {job.title}
-              </p>
-              <p className="text-xs text-slate-600">
-                {submissionInProgress
-                  ? "Completing the employer form securely"
-                  : answersReviewed && approvalsComplete
-                    ? submissionConnection === "connected"
-                      ? "Ready for your final instruction"
-                      : "Sign in to apply"
-                    : "Review and approve the packet to apply"}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handlePrimaryApplyAction}
-              disabled={busy !== null || submissionInProgress}
-              className="ir35-focus pointer-events-auto inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60"
-            >
-              {busy === "submit" || submissionInProgress ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <Send size={16} />
-              )}{" "}
-              {submissionInProgress
-                ? "Processing application"
-                : busy === "submit"
-                  ? `Starting ${submitElapsedSeconds}s`
-                  : "Approve and apply now"}
-            </button>
-          </div>
-        </div>
-      )}
       {profilePrompt && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4">
           <section

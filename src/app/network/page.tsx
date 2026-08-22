@@ -133,7 +133,7 @@ export default function NetworkPage() {
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.8fr)]">
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+        <section className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
           <div className="flex items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 text-lg font-bold"><UsersRound size={19} className="text-brand-700" /> Relationship map</h2><p className="mt-1 text-sm text-slate-600">Only add people you have a legitimate reason to contact.</p></div><button type="button" onClick={() => setShowContactForm((value) => !value)} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-3 text-sm font-bold text-white"><Plus size={15} /> Add</button></div>
           {showContactForm && <div className="mt-5 grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2">
             <input aria-label="Contact name" value={contactDraft.name} onChange={(event) => setContactDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Name (required)" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" />

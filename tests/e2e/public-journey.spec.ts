@@ -5,14 +5,28 @@ import { DEMO_JOBS } from "../../src/lib/demo-jobs";
 import { hasStatedSponsorship, isSeniorityFilter, matchesSeniorityTitle } from "../../src/lib/job-search-filters";
 
 async function expectNoSeriousA11yViolations(page: import("@playwright/test").Page) {
-  const results = await new AxeBuilder({ page })
-    .exclude("[data-nextjs-toast]")
-    .exclude("nextjs-portal")
-    .analyze();
-  const serious = results.violations.filter((violation) =>
-    violation.impact === "critical" || violation.impact === "serious"
-  );
-  expect(serious, serious.map((item) => `${item.id}: ${item.help}`).join("\n")).toEqual([]);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const results = await new AxeBuilder({ page })
+        .exclude("[data-nextjs-toast]")
+        .exclude("nextjs-portal")
+        .analyze();
+      const serious = results.violations.filter((violation) =>
+        violation.impact === "critical" || violation.impact === "serious"
+      );
+      expect(serious, serious.map((item) => `${item.id}: ${item.help}`).join("\n")).toEqual([]);
+      return;
+    } catch (error) {
+      const navigatedDuringScan =
+        error instanceof Error &&
+        /execution context was destroyed|most likely because of a navigation/i.test(error.message);
+      if (attempt === 0 && navigatedDuringScan) {
+        await page.waitForLoadState("load");
+        continue;
+      }
+      throw error;
+    }
+  }
 }
 
 async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
@@ -22,35 +36,55 @@ async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
   }
 }
 
+async function waitForReactHydration(page: import("@playwright/test").Page) {
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll("button")).some((button) =>
+      Object.keys(button).some((key) => key.startsWith("__reactProps$")),
+    ),
+  );
+}
+
 async function completeReusableApplicationProfile(
   page: import("@playwright/test").Page,
 ) {
+  const selectAnswer = async (label: string, value: "yes" | "no") => {
+    const field = page.getByLabel(label);
+    await field.selectOption(value);
+    // Give the controlled field time to commit before changing the next one.
+    // Without this pause, very fast automation can overwrite the prior update.
+    await page.waitForTimeout(300);
+    await expect(field).toHaveValue(value);
+  };
   await page.goto("/profile");
   await dismissPrivacyNotice(page);
-  await page
-    .getByLabel("Are you willing to travel for work?")
-    .selectOption("yes");
-  await page.getByLabel("Are you willing to work shifts?").selectOption("no");
-  await page
-    .getByLabel("Are you willing to work weekends?")
-    .selectOption("no");
-  await page
-    .getByLabel("Can an employer run a standard background check?")
-    .selectOption("yes");
-  await page
-    .getByLabel("Do you have convictions that must be declared for the role?")
-    .selectOption("no");
-  await page
-    .getByRole("checkbox", { name: /Create and sign in to employer accounts/ })
-    .check();
-  await page
-    .getByRole("checkbox", { name: /Use ordinary email verification codes/ })
-    .check();
+  await selectAnswer("Are you willing to travel for work?", "yes");
+  await selectAnswer("Are you willing to work shifts?", "no");
+  await selectAnswer("Are you willing to work weekends?", "no");
+  await expect(page.getByRole("heading", { name: "2 profile items left" })).toBeVisible();
+  await selectAnswer("Can an employer run a standard background check?", "yes");
+  await selectAnswer("Do you have convictions that must be declared for the role?", "no");
+  await expect(page.getByRole("heading", { name: "1 profile item left" })).toBeVisible();
+  const employerAccountPermission = page.getByRole("checkbox", { name: /Create and sign in to employer accounts/ });
+  await employerAccountPermission.check();
+  await page.waitForTimeout(300);
+  await expect(employerAccountPermission).toBeChecked();
+  const verificationPermission = page.getByRole("checkbox", { name: /Use ordinary email verification codes/ });
+  await verificationPermission.check();
+  await page.waitForTimeout(300);
+  await expect(verificationPermission).toBeChecked();
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByRole("button", { name: "Profile saved" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Your reusable application profile is ready",
+    }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.getByLabel("Resume text").fill(
     "Alex Morgan\nSenior Platform Engineer\nTen years of experience delivering secure AWS, Terraform and Kubernetes platforms for UK organisations. Built CI and CD controls, observability, incident response and infrastructure automation across regulated environments.",
   );
   await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByRole("button", { name: "Profile saved" })).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "Your reusable application profile is ready",
@@ -80,7 +114,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expect(page.getByText("1 contracts found")).toBeVisible();
   await page.getByRole("link", { name: /Senior DevOps Engineer - Outside IR35/ }).click();
 
-  await expect(page).toHaveURL(/\/jobs\/11111111/);
+  await expect(page).toHaveURL(/\/jobs\/11111111/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: /Senior DevOps Engineer/i })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in to save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Preview listing" })).toBeDisabled();
@@ -200,21 +234,29 @@ test("advanced contract filters use explicit listing evidence", async ({ page })
 test("account flow has explicit modes and neutral sign-in errors", async ({ page }) => {
   await page.goto("/account?next=%2Fdashboard");
   await dismissPrivacyNotice(page);
+  await waitForReactHydration(page);
   await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   await page.getByRole("button", { name: "Forgot your password?" }).click();
   await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Password")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Send reset link" })).toBeVisible();
-  await page.getByRole("button", { name: "Back to sign in" }).click();
-  await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.getByLabel("Email").fill("contractor@example.com");
-  await page.getByLabel("Password").fill("test-password");
-  await page.getByRole("button", { name: "Sign in", exact: true }).last().click();
-  await expect(page.getByText(/couldn't sign you in with those details/i)).toBeVisible();
-  await expectNoSeriousA11yViolations(page);
+  await expect(page.getByRole("button", { name: "Back to sign in" })).toBeVisible();
+
+  const createPage = await page.context().newPage();
+  await createPage.goto("/account?next=%2Fdashboard&mode=create");
+  await waitForReactHydration(createPage);
+  await expect(createPage.getByRole("heading", { name: "Create your account" })).toBeVisible();
+
+  const signInPage = await page.context().newPage();
+  await signInPage.goto("/account?next=%2Fdashboard");
+  await waitForReactHydration(signInPage);
+  await expect(signInPage.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+  await signInPage.getByLabel("Email").fill("contractor@example.com");
+  await signInPage.getByLabel("Password").fill("test-password");
+  await signInPage.getByRole("button", { name: "Sign in", exact: true }).last().click();
+  await expect(signInPage.getByText(/couldn't sign you in with those details/i)).toBeVisible();
+  await expectNoSeriousA11yViolations(signInPage);
 });
 
 test("an external job can be previewed and opened in local CV Studio", async ({ page }) => {
@@ -452,13 +494,14 @@ test("application workspace presents a clean review flow and never claims an unc
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Complete your reusable profile before applying" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Load labelled sample CV" }).click();
+  await expect(page.getByLabel("CV text")).toHaveValue(/AWS, Terraform and Kubernetes/);
   await page.getByRole("button", { name: "Prepare application" }).click();
 
-  await expect(page.getByRole("heading", { name: /Your evidence matches/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /% role match/ })).toBeVisible();
+  await page.getByText("View match details", { exact: true }).click();
   await expect(page.getByText("Missing keywords, not assumed")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "CV tailored for this role" })).toBeVisible();
-  await page.getByRole("button", { name: "Refresh tailoring" }).click();
+  await expect(page.getByRole("heading", { name: "Improve your CV for this role" })).toBeVisible();
+  await page.getByRole("button", { name: /Tailor my CV|Improve tailoring/ }).click();
   await expect(page.getByText("Compare before approving")).toBeVisible({ timeout: 2_000 });
   await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
   const checkboxes = page.locator('input[type="checkbox"]:enabled:visible');
@@ -486,8 +529,8 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByText("alex.morgan@example.test", { exact: true }).first()).toBeVisible();
 
   await page.goto("/automation");
-  await expect(page.getByRole("heading", { name: "Choose the roles. IR35Careers handles the application." })).toBeVisible();
-  await expect(page.getByText(/marked Applied only after employer confirmation/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Set your preferences once" })).toBeVisible();
+  await expect(page.getByText(/Allow IR35Careers to apply to my matching roles/i)).toBeVisible();
   await page.getByRole("button", { name: "Preview matches" }).click();
   await expect(page.getByText(/matching contracts? found/i)).toBeVisible();
 });

@@ -9,7 +9,6 @@ import {
   CalendarClock,
   ChevronRight,
   Download,
-  Inbox,
   Plus,
   RotateCcw,
   Search,
@@ -50,15 +49,6 @@ const CLOSED_STATUSES = new Set<ApplicationStatus>([
   "failed",
   "skipped",
 ]);
-const BOARD_COLUMNS = [
-  "Applied",
-  "Ghosted",
-  "Interviewing",
-  "Rejected",
-  "Offer",
-] as const;
-type BoardColumn = (typeof BOARD_COLUMNS)[number];
-
 function csvValue(value: unknown): string {
   const raw = String(value ?? "");
   const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
@@ -99,25 +89,6 @@ function importedStatus(value: string): ApplicationStatus {
   if (status.includes("ready")) return "ready";
   if (status.includes("need")) return "needs_review";
   return "applied";
-}
-
-function boardColumn(
-  application: ApplicationRecord,
-  messages: number,
-): BoardColumn | null {
-  if (application.status === "offer") return "Offer";
-  if (application.status === "rejected") return "Rejected";
-  if (application.status === "interview") return "Interviewing";
-  const age = Date.now() - new Date(application.updatedAt).getTime();
-  if (
-    (application.status === "applied" || application.status === "viewed") &&
-    messages === 0 &&
-    age > 14 * 86_400_000
-  )
-    return "Ghosted";
-  if (["applied", "viewed", "replied"].includes(application.status))
-    return "Applied";
-  return null;
 }
 
 function manualRecord(input: {
@@ -223,26 +194,6 @@ export function ApplicationTracker() {
         ]),
       ),
     [workspace.applications, workspace.messages],
-  );
-  const board = useMemo(
-    () =>
-      Object.fromEntries(
-        BOARD_COLUMNS.map((column) => [
-          column,
-          workspace.applications.filter(
-            (application) =>
-              boardColumn(
-                application,
-                messageCounts.get(application.id) ?? 0,
-              ) === column,
-          ),
-        ]),
-      ) as Record<BoardColumn, ApplicationRecord[]>,
-    [messageCounts, workspace.applications],
-  );
-  const outcomeTotal = Math.max(
-    1,
-    board.Applied.length + board.Rejected.length,
   );
   const refreshIds = useMemo(
     () =>
@@ -500,26 +451,18 @@ export function ApplicationTracker() {
             />
             <button
               type="button"
-              onClick={() => importRef.current?.click()}
-              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700"
-            >
-              <Upload size={15} /> Import CSV
-            </button>
-            <button
-              type="button"
-              onClick={exportCsv}
-              disabled={!workspace.applications.length}
-              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-40"
-            >
-              <Download size={15} /> Export CSV
-            </button>
-            <button
-              type="button"
               onClick={() => setAddOpen(true)}
-              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white"
+              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800"
             >
               <Plus size={16} /> Add application
             </button>
+            <details className="relative">
+              <summary className="ir35-focus inline-flex min-h-11 cursor-pointer list-none items-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">More</summary>
+              <div className="absolute right-0 z-20 mt-2 grid w-48 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                <button type="button" onClick={() => importRef.current?.click()} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"><Upload size={15} /> Import CSV</button>
+                <button type="button" onClick={exportCsv} disabled={!workspace.applications.length} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40"><Download size={15} /> Export CSV</button>
+              </div>
+            </details>
           </div>
         </div>
         {notice && (
@@ -529,75 +472,8 @@ export function ApplicationTracker() {
         )}
       </section>
 
-      <section className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
-        <article className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-blue-600 to-violet-600 p-6 text-white shadow-card">
-          <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-100">
-            Application outcomes
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-3xl font-bold">{board.Applied.length}</p>
-              <p className="mt-1 text-sm text-blue-100">Applied</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold">{board.Rejected.length}</p>
-              <p className="mt-1 text-sm text-blue-100">Rejected</p>
-            </div>
-          </div>
-          <div className="mt-6 flex h-3 overflow-hidden rounded-full bg-white/15">
-            <span
-              className="bg-cyan-300"
-              style={{
-                width: `${Math.round((board.Applied.length / outcomeTotal) * 100)}%`,
-              }}
-            />
-            <span
-              className="bg-rose-300"
-              style={{
-                width: `${Math.round((board.Rejected.length / outcomeTotal) * 100)}%`,
-              }}
-            />
-          </div>
-          <p className="mt-4 text-xs leading-5 text-blue-100">
-            Based on the applications and recruiter messages currently in your
-            workspace.
-          </p>
-        </article>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {BOARD_COLUMNS.map((column) => (
-            <article
-              key={column}
-              className="rounded-2xl border border-slate-200 bg-white p-4"
-            >
-              <p className="text-2xl font-bold text-slate-950">
-                {board[column].length}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-slate-600">
-                {column}
-              </p>
-              {board[column].slice(0, 2).map((application) => (
-                <div
-                  key={application.id}
-                  className="mt-3 border-t border-slate-100 pt-3"
-                >
-                  <p className="truncate text-xs font-bold text-slate-800">
-                    {application.job.company_name}
-                  </p>
-                  <p className="mt-1 truncate text-[11px] text-slate-500">
-                    {application.job.title}
-                  </p>
-                  <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">
-                    <Inbox size={11} /> {messageCounts.get(application.id) ?? 0}
-                  </p>
-                </div>
-              ))}
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section
-        className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-6"
+        className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
         aria-label="Application pipeline summary"
       >
         {PIPELINE.map((stage) => {
@@ -732,23 +608,7 @@ export function ApplicationTracker() {
                     </Link>
                   </div>
                 </div>
-                <ol className="mt-5 grid gap-2 border-t border-slate-100 pt-5 md:grid-cols-3">
-                  {application.events.slice(-3).map((event) => (
-                    <li key={event.id} className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs font-semibold text-slate-800">
-                        {event.label}
-                      </p>
-                      <p className="mt-1 text-[11px] text-slate-500">
-                        {new Date(event.createdAt).toLocaleString("en-GB", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </li>
-                  ))}
-                </ol>
+                {application.events.length > 0 && <details className="mt-5 border-t border-slate-100 pt-4"><summary className="ir35-focus cursor-pointer text-xs font-semibold text-slate-500 hover:text-slate-900">Application history</summary><ol className="mt-3 grid gap-2 md:grid-cols-3">{application.events.slice(-3).map((event) => <li key={event.id} className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-semibold text-slate-800">{event.label}</p><p className="mt-1 text-[11px] text-slate-500">{new Date(event.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p></li>)}</ol></details>}
               </article>
             );
           })}

@@ -7,6 +7,7 @@ async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
 
 test("profile keeps reusable identity, resume, cover letter and application controls together", async ({ page }) => {
   await page.goto("/profile");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Your professional profile" })).toBeVisible();
   await expect(page.getByLabel("Full name")).toBeVisible();
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
@@ -56,6 +57,7 @@ Senior Salesforce Consultant at Example Consulting. Delivered secure Salesforce 
 
 test("research library ranks practical topics and identifies every source", async ({ page }) => {
   await page.goto("/research");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Evidence for better contract decisions" })).toBeVisible();
   await expect(page.getByText("6 reviewed topics")).toBeVisible();
   await expect(page.getByText("Source: HMRC guidance")).toBeVisible();

@@ -53,7 +53,7 @@ export default function SavedJobsPage() {
   const counts = { all: rows.length, saved: rows.filter((r) => r.status === "saved").length, applied: rows.filter((r) => r.status === "applied").length };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         <div className="flex items-center gap-2">

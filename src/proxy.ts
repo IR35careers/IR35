@@ -22,13 +22,14 @@ function configuredSupabaseConnectSources(): string[] {
 
 function contentSecurityPolicy(nonce: string): string {
   const connectSources = ["'self'", ...configuredSupabaseConnectSources()].join(" ");
+  const developmentEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentEval}`,
     "script-src-attr 'none'",
     "style-src 'self'",
     `style-src-elem 'self' 'nonce-${nonce}'`,

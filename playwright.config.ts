@@ -20,10 +20,10 @@ export default defineConfig({
   },
   expect: { timeout: 15_000 },
   webServer: {
-    command: "npm run dev",
+    command: process.env.CI ? "npm run build && npm run start" : "npm run dev",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: process.env.CI ? 900_000 : 120_000,
   },
   projects: [
     {

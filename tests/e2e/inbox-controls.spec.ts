@@ -1,7 +1,13 @@
 import { expect, test } from "@playwright/test";
 
+async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
+  const button = page.getByRole("button", { name: "Understood", exact: true });
+  if (await button.waitFor({ state: "visible", timeout: 10_000 }).then(() => true).catch(() => false)) await button.click();
+}
+
 test("inbox connection state and message filters stay clear", async ({ page }) => {
   await page.goto("/inbox");
+  await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Your application messages" })).toBeVisible();
   await expect(page.getByText("Application email identity", { exact: true })).toBeVisible();
   await expect(page.getByText("IR35Careers email", { exact: true })).toBeVisible();

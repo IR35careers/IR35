@@ -13,7 +13,7 @@ export function JobsWorkspaceShell({ children }: { children: ReactNode }) {
   if (!memberView) return children;
 
   return (
-    <div className="lg:pl-[248px]">
+    <div>
       <AppNav />
       {children}
     </div>

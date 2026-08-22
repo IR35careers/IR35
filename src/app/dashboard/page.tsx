@@ -169,7 +169,7 @@ export default function DashboardPage() {
   }
 
   if (!preview && cloud.error) {
-    return <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">Your workspace could not be loaded</h1><p className="mt-2 text-sm leading-6">{cloud.error}</p><button type="button" onClick={() => window.location.reload()} className="ir35-focus mt-5 min-h-11 rounded-xl bg-rose-800 px-4 text-sm font-bold text-white">Try again</button></div></main></div>;
+    return <div className="min-h-screen bg-slate-50 text-slate-900"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">We could not open your dashboard</h1><p className="mt-2 text-sm leading-6">Please check your connection and try again. Your information remains protected.</p><button type="button" onClick={() => window.location.reload()} className="ir35-focus mt-5 min-h-11 rounded-xl bg-rose-800 px-4 text-sm font-bold text-white">Try again</button></div></main></div>;
   }
 
   const name = firstName(profile, user?.email ?? undefined);
@@ -198,7 +198,7 @@ export default function DashboardPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 lg:pl-[248px]">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <WelcomeModal name={name} userId={user?.id ?? PREVIEW_PROFILE.id} />
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
@@ -342,28 +342,11 @@ export default function DashboardPage() {
               <Link href="/profile#application-readiness" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Improve profile</Link>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <p className="text-sm font-semibold text-slate-800">Contractor tools</p>
-              <div className="mt-3 space-y-2">
-                <Link href="/analytics" className="block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">
-                  <span className="font-medium text-slate-800">Application analytics</span>
-                  <span className="block text-xs text-slate-500">Funnel, responses and follow-up signals</span>
-                </Link>
-                <Link href="/tools/take-home" className="block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">
-                  <span className="font-medium text-slate-800">Take-home calculator</span>
-                  <span className="block text-xs text-slate-500">Inside vs outside IR35, 2026/27</span>
-                </Link>
-                <Link href="/tools/ir35-status" className="block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">
-                  <span className="font-medium text-slate-800">IR35 status checker</span>
-                  <span className="block text-xs text-slate-500">Indicative inside/outside view</span>
-                </Link>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <p className="text-sm font-semibold text-slate-800">Your plan</p>
-              <p className="mt-0.5 text-xs text-slate-500">Free. Full access to the board, matches and tools.</p>
-            </section>
+            <Link href="/applications" className="group block rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-brand-300">
+              <p className="text-sm font-semibold text-slate-800">Application tracker</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">See applications, recruiter replies and interviews together.</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-brand-700">Open tracker <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" /></span>
+            </Link>
           </div>
         </div>
       </main>
