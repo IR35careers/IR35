@@ -5,7 +5,6 @@ import {
   resumeSubmissionWithProvider,
   submitWithProvider,
   submissionProviderConfig,
-  type SubmissionProviderReceipt,
 } from "@/lib/application-submission";
 import {
   normaliseCoverLetterSignoff,
@@ -20,7 +19,7 @@ import {
   ensureInboxAlias,
 } from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
-import { extractEmailVerificationCode } from "@/lib/email/verification-code";
+import { waitForEmailVerificationCode } from "@/lib/email/wait-for-verification-code";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   isStaleSubmissionLock,
@@ -33,7 +32,6 @@ import {
 } from "@/lib/application-packet-snapshot";
 import type {
   ApplicationQuestion,
-  ApplicationReceipt,
   ApplicationRecord,
   ContractorProfile,
 } from "@/lib/workspace/types";
@@ -49,6 +47,12 @@ import {
 } from "@/lib/application-portal-session";
 import { verifyApplicationResumeAuthorization } from "@/lib/application-internal-resume";
 import { applicationPortalPassword } from "@/lib/application-portal-account";
+import {
+  providerReviewAction,
+  storeNeedsUser,
+  storeSubmittedApplication,
+} from "@/lib/application-result-persistence";
+import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -60,45 +64,6 @@ const NO_STORE = {
 
 type DbRow = Record<string, unknown>;
 type AdminClient = ReturnType<typeof getSupabaseAdmin>;
-
-async function waitForEmailVerificationCode(input: {
-  admin: AdminClient;
-  userId: string;
-  applicationId: string;
-  alias?: string;
-  requestedAfter: string;
-}): Promise<string | null> {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const { data, error } = await input.admin
-      .from("inbox_messages")
-      .select("application_id, recipient, subject, body_text, received_at")
-      .eq("user_id", input.userId)
-      .gte("received_at", input.requestedAfter)
-      .order("received_at", { ascending: false })
-      .limit(20);
-    if (error) return null;
-    for (const row of data ?? []) {
-      if (
-        input.alias &&
-        String(row.recipient ?? "").toLowerCase() !== input.alias.toLowerCase()
-      )
-        continue;
-      if (
-        row.application_id &&
-        String(row.application_id) !== input.applicationId
-      )
-        continue;
-      const code = extractEmailVerificationCode(
-        String(row.subject ?? ""),
-        String(row.body_text ?? ""),
-      );
-      if (code) return code;
-    }
-    if (attempt < 11)
-      await new Promise((resolve) => setTimeout(resolve, 3_000));
-  }
-  return null;
-}
 
 async function saveApprovedPacket(input: {
   admin: AdminClient;
@@ -172,39 +137,6 @@ function approved(row: DbRow): boolean {
   );
 }
 
-function mergeQuestions(
-  current: ApplicationQuestion[],
-  incoming: ApplicationQuestion[],
-): ApplicationQuestion[] {
-  const merged = [...current];
-  for (const question of incoming) {
-    const index = merged.findIndex(
-      (item) =>
-        item.id === question.id ||
-        item.label.toLowerCase() === question.label.toLowerCase(),
-    );
-    if (index < 0) merged.push(question);
-    else
-      merged[index] = {
-        ...question,
-        answer: merged[index].answer.trim() || question.answer,
-        reviewed:
-          merged[index].reviewed && Boolean(merged[index].answer.trim()),
-      };
-  }
-  return merged;
-}
-
-function providerReviewAction(
-  receipt: SubmissionProviderReceipt | undefined,
-): string | undefined {
-  if (!receipt?.review || typeof receipt.review !== "object") return undefined;
-  const action = (receipt.review as Record<string, unknown>).action;
-  return typeof action === "string" && action.trim()
-    ? action.trim().slice(0, 80)
-    : undefined;
-}
-
 function safeSubmissionError(error: unknown): string {
   return applicationSubmissionFailure(error).message;
 }
@@ -262,108 +194,6 @@ function knownProviderAnswers(
       ? { ...question, answer, reviewed: true, source: "profile" }
       : question;
   });
-}
-
-async function storeNeedsUser(input: {
-  admin: AdminClient;
-  userId: string;
-  packet: DbRow;
-  job: JobDetail;
-  recipient: string;
-  inboxAlias?: string;
-  candidateName: string;
-  providerReceipt?: SubmissionProviderReceipt;
-  message: string;
-  action?: string;
-}): Promise<ApplicationQuestion[]> {
-  const current =
-    (input.packet.screening_answers as ApplicationQuestion[]) ?? [];
-  const incoming = providerReviewQuestions(input.providerReceipt?.review);
-  const questions = mergeQuestions(current, incoming);
-  const applicationMaterialsNeedApproval =
-    input.action === "/profile" ||
-    incoming.some((question) => question.required && !question.reviewed);
-  const attention = buildApplicationAttention({
-    action: input.action,
-    message: input.message,
-    questions: incoming.length ? incoming : questions,
-  });
-  const now = new Date().toISOString();
-  const idempotencyKey = `submit:${String(input.packet.id)}`;
-  const attentionKey = createHash("sha256")
-    .update(
-      JSON.stringify({
-        action: input.action ?? "",
-        message: input.message,
-        questions: incoming.map((question) => question.label),
-      }),
-    )
-    .digest("hex")
-    .slice(0, 18);
-  const [{ error: packetError }, { error: queueError }, { error: eventError }] =
-    await Promise.all([
-      input.admin
-        .from("application_packets")
-        .update({
-          status: "needs_review",
-          screening_answers: questions,
-          submission_approved: applicationMaterialsNeedApproval
-            ? false
-            : Boolean(input.packet.submission_approved),
-          updated_at: now,
-        })
-        .eq("id", input.packet.id)
-        .eq("user_id", input.userId),
-      input.admin
-        .from("application_submissions")
-        .update({
-          status: "processing",
-          provider_submission_id:
-            input.providerReceipt?.providerSubmissionId ?? null,
-          error_code: "needs_user",
-          receipt: {
-            state: "needs_user",
-            review: input.providerReceipt?.review ?? null,
-            message: input.message,
-            action: input.action ?? null,
-            attention,
-          },
-          updated_at: now,
-        })
-        .eq("user_id", input.userId)
-        .eq("idempotency_key", idempotencyKey),
-      input.admin.from("application_events").upsert(
-        {
-          user_id: input.userId,
-          application_id: input.packet.id,
-          event_type: "status_changed",
-          label: attention.title,
-          metadata: {
-            questionCount: incoming.length,
-            action: input.action ?? null,
-            attention,
-          },
-          idempotency_key: `${idempotencyKey}:needs-user:${attentionKey}`,
-        },
-        { onConflict: "user_id,idempotency_key" },
-      ),
-    ]);
-  if (packetError || queueError || eventError)
-    throw new Error(
-      packetError?.message || queueError?.message || eventError?.message,
-    );
-  await sendApplicationNotification({
-    kind: "needs_attention",
-    to: input.recipient,
-    userId: input.userId,
-    inboxAlias: input.inboxAlias,
-    candidateName: input.candidateName,
-    jobTitle: input.job.title,
-    companyName: input.job.company_name,
-    applicationId: String(input.packet.id),
-    idempotencyKey: `${idempotencyKey}:needs-user:${attentionKey}`,
-  }).catch(() => null);
-  return questions;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -634,15 +464,65 @@ export async function POST(request: Request): Promise<Response> {
         { onConflict: "user_id,idempotency_key" },
       );
     if (queueError) throw new Error(queueError.message);
+    const workerConfig = applicationWorkerConfig();
+    let persistentWorkerQueued = false;
+    if (provider?.kind === "native" && workerConfig.enabled) {
+      const callbackBase =
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() || request.url;
+      const callbackUrl = new URL(
+        "/api/applications/worker/callback",
+        callbackBase,
+      );
+      if (callbackUrl.protocol === "https:") {
+        const { error: workerQueueError } = await admin
+          .from("application_worker_tasks")
+          .upsert(
+            {
+              user_id: userId,
+              application_id: packet.id,
+              idempotency_key: idempotencyKey,
+              destination,
+              callback_url: callbackUrl.toString(),
+              status: "queued",
+              attempts: 0,
+              available_at: new Date().toISOString(),
+              lease_owner: null,
+              lease_expires_at: null,
+              last_error: null,
+              completed_at: null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,idempotency_key" },
+          );
+        if (!workerQueueError) persistentWorkerQueued = true;
+        else
+          console.warn("application_worker_queue_unavailable", {
+            applicationId: String(packet.id),
+            reason: workerQueueError.message.slice(0, 240),
+          });
+      }
+    }
     console.info("application_submit_stage", {
       applicationId: String(packet.id),
       stage: "runner_queued",
       provider: employerDestination
         ? "verified_employer_email"
-        : provider?.kind || "unavailable",
+        : persistentWorkerQueued
+          ? "persistent_worker"
+          : provider?.kind || "unavailable",
     });
 
     after(async () => {
+      if (persistentWorkerQueued) {
+        if (workerConfig.url) {
+          await fetch(`${workerConfig.url}/health`, {
+            headers: { accept: "application/json" },
+            cache: "no-store",
+            signal: AbortSignal.timeout(10_000),
+          }).catch(() => null);
+        }
+        return;
+      }
       try {
         let resumeUrl: string | undefined;
         let resumeBuffer: Buffer | undefined;
@@ -745,7 +625,7 @@ export async function POST(request: Request): Promise<Response> {
                                 admin,
                                 userId,
                                 applicationId: String(packet.id),
-                                alias: inbox?.alias,
+                                alias: submissionCandidate.email,
                                 requestedAfter,
                               })
                           : undefined,
@@ -881,81 +761,17 @@ export async function POST(request: Request): Promise<Response> {
           return;
         }
 
-        const receipt: ApplicationReceipt = {
-          receiptId: providerReceipt.providerSubmissionId,
-          mode: "external_handoff",
-          createdAt: providerReceipt.submittedAt,
-          destination: providerReceipt.destination || destination,
-          reviewedFields: [
-            "cv",
-            "cover_letter",
-            "screening_answers",
-            "destination",
-          ],
-          skippedFields: [],
-          message: providerReceipt.message,
-        };
-        const now = new Date().toISOString();
-        const [
-          { error: submissionError },
-          { error: updateError },
-          { error: eventError },
-        ] = await Promise.all([
-          admin
-            .from("application_submissions")
-            .update({
-              status: "succeeded",
-              provider_submission_id: providerReceipt.providerSubmissionId,
-              receipt,
-              error_code: null,
-              submitted_at: providerReceipt.submittedAt,
-              updated_at: now,
-            })
-            .eq("user_id", userId)
-            .eq("idempotency_key", idempotencyKey),
-          admin
-            .from("application_packets")
-            .update({
-              status: "applied",
-              mode: "external_handoff",
-              receipt,
-              updated_at: now,
-            })
-            .eq("id", packet.id)
-            .eq("user_id", userId),
-          admin
-            .from("application_events")
-            .upsert(
-              {
-                user_id: userId,
-                application_id: packet.id,
-                event_type: "status_changed",
-                label: "Application submitted successfully",
-                metadata: {
-                  providerSubmissionId: providerReceipt.providerSubmissionId,
-                },
-                idempotency_key: `${idempotencyKey}:event`,
-              },
-              { onConflict: "user_id,idempotency_key" },
-            ),
-        ]);
-        if (submissionError || updateError || eventError)
-          throw new Error(
-            submissionError?.message ||
-              updateError?.message ||
-              eventError?.message,
-          );
-        await sendApplicationNotification({
-          kind: "submitted",
-          to: notificationEmail,
+        await storeSubmittedApplication({
+          admin,
           userId,
+          packet: packet as DbRow,
+          job,
+          recipient: notificationEmail,
           inboxAlias: inbox?.alias,
           candidateName,
-          jobTitle: job.title,
-          companyName: job.company_name,
-          applicationId: String(packet.id),
-          idempotencyKey: `${idempotencyKey}:submitted`,
-        }).catch(() => null);
+          providerReceipt,
+          destination,
+        });
         return;
       } catch (providerError) {
         const providerMessage =

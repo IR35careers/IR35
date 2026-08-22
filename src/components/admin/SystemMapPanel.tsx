@@ -47,6 +47,16 @@ export type ApplicationRunSummary = {
   updatedAt: string;
 };
 
+export type ApplicationWorkerQueueSummary = {
+  queued: number;
+  running: number;
+  completed: number;
+  needsUser: number;
+  failed: number;
+  onlineWorkers: number;
+  oldestQueuedAt: string | null;
+};
+
 type MapNode = {
   id: string;
   label: string;
@@ -106,7 +116,8 @@ function buildLanes(integrations: IntegrationStatus[]): Lane[] {
     },
     {
       id: "apply", number: "03", label: "Apply", summary: "Complete the employer form and retain proof of the result.", nodes: [
-        externalNode(integrations, "ats_submission", "Application runner", { icon: ServerCog, description: "Runs a protected Chromium session, maps fields, uploads the approved CV and submits supported forms.", input: "Approved packet and public HTTPS application URL", output: "Employer confirmation or a precise Needs you task", connectsTo: ["Employer portal", "Application tracker"], failure: "Shows the exact unresolved step, such as a missing profile answer, employer question, security check, identity check or unsupported form control.", action: integration(integrations, "ats_submission")?.nextStep ?? "Enable the runner." }),
+        externalNode(integrations, "ats_submission", "Application orchestration", { icon: Workflow, description: "Validates the approved packet, queues one idempotent submission and records the final result.", input: "Approved packet and public HTTPS application URL", output: "Durable application task", connectsTo: ["Persistent portal worker", "Application tracker"], failure: "A packet is incomplete, the task cannot be queued or a duplicate request is detected.", action: integration(integrations, "ats_submission")?.nextStep ?? "Enable application orchestration." }),
+        externalNode(integrations, "persistent_worker", "Persistent portal worker", { icon: ServerCog, description: "Keeps a protected Chromium session alive across multi-step forms, employer account creation and email verification.", input: "Durable application task and approved candidate facts", output: "Employer confirmation or one precise user action", connectsTo: ["Employer portal", "Application tracker"], failure: "The worker is offline, a lease expires, the employer blocks automation or a security check needs the contractor.", action: integration(integrations, "persistent_worker")?.nextStep ?? "Deploy the persistent worker." }),
         built({ id: "employer_portal", label: "Employer portal", icon: Send, description: "The original employer or ATS application form.", input: "Candidate-approved application", output: "Submission confirmation", connectsTo: ["Application tracker", "Recruiter email"], failure: "The employer changes the form, closes the role or blocks automated browsers.", action: "Move only the unresolved step to Needs you. Never claim success without confirmation." }),
         built({ id: "tracker", label: "Application tracker", icon: Gauge, description: "Records Ready, Needs you, Applied, Interview and outcome states.", input: "Runner receipt and recruiter messages", output: "Current user-visible status", connectsTo: ["Contractor workspace", "Admin analytics"], failure: "No receipt, duplicate event or webhook not processed.", action: "Inspect the application receipt and audit event." }),
       ],
@@ -120,7 +131,7 @@ function buildLanes(integrations: IntegrationStatus[]): Lane[] {
     },
     {
       id: "operate", number: "05", label: "Operate", summary: "Secure, observe and administer the platform.", nodes: [
-        built({ id: "vercel", label: "Vercel runtime", icon: Cloud, description: "Hosts the website, protected APIs, schedules and browser runner.", input: "Git deployment and environment configuration", output: "Production services", connectsTo: ["Every public and admin workflow"], failure: "Deployment, duration, memory or environment configuration problem.", action: "Inspect deployment and function logs." }),
+        built({ id: "vercel", label: "Vercel runtime", icon: Cloud, description: "Hosts the website, protected APIs, schedules and application orchestration.", input: "Git deployment and environment configuration", output: "Production services", connectsTo: ["Every public and admin workflow"], failure: "Deployment, duration, memory or environment configuration problem.", action: "Inspect deployment and function logs." }),
         built({ id: "admin", label: "Admin control", icon: ShieldCheck, description: "Uses allowlisted identity plus a short-lived signed admin session.", input: "Verified administrator", output: "Audited operational actions", connectsTo: ["Sources", "Campaigns", "System map"], failure: "Wrong account, expired session or missing audit record.", action: "Unlock again with the authorised administrator account." }),
         built({ id: "observability", label: "Pipeline and audit logs", icon: Gauge, description: "Records source runs, campaigns, employer connections and runner tests.", input: "Operational events", output: "Traceable health evidence", connectsTo: ["Admin control"], failure: "A workflow exits before its audit event is saved.", action: "Treat the missing receipt as a failure and investigate the originating service." }),
       ],
@@ -128,7 +139,7 @@ function buildLanes(integrations: IntegrationStatus[]): Lane[] {
   ];
 }
 
-export function SystemMapPanel({ integrations, applicationRuns, query, testing, testResult, onRunTest }: { integrations: IntegrationStatus[]; applicationRuns: ApplicationRunSummary[]; query: string; testing: boolean; testResult: RunnerTestResult | null; onRunTest: () => void }) {
+export function SystemMapPanel({ integrations, applicationRuns, workerQueue, query, testing, testResult, onRunTest }: { integrations: IntegrationStatus[]; applicationRuns: ApplicationRunSummary[]; workerQueue?: ApplicationWorkerQueueSummary; query: string; testing: boolean; testResult: RunnerTestResult | null; onRunTest: () => void }) {
   const lanes = useMemo(() => buildLanes(integrations), [integrations]);
   const allNodes = lanes.flatMap((lane) => lane.nodes);
   const [selectedId, setSelectedId] = useState("ats_submission");
@@ -155,6 +166,33 @@ export function SystemMapPanel({ integrations, applicationRuns, query, testing, 
         </div>
         <div className="border-t border-white/10 bg-white/[0.04] px-5 py-3 text-xs leading-5 text-slate-300 sm:px-6">This controlled production test uses the real hosted runner, CV upload, multi-step form and confirmation detector. It does not contact an employer.</div>
       </section>
+
+      {workerQueue ? (
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-[15px] font-semibold text-slate-950">Persistent worker queue</h2>
+              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${workerQueue.onlineWorkers ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{workerQueue.onlineWorkers ? `${workerQueue.onlineWorkers} online` : "No worker heartbeat"}</span>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Durable employer form tasks remain here until confirmed, paused for one user action or exhausted after controlled retries.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-px bg-slate-100 sm:grid-cols-5">
+            {[
+              ["Waiting", workerQueue.queued, "text-blue-700"],
+              ["Running", workerQueue.running, "text-indigo-700"],
+              ["Confirmed", workerQueue.completed, "text-emerald-700"],
+              ["Needs action", workerQueue.needsUser, "text-amber-700"],
+              ["Failed", workerQueue.failed, "text-rose-700"],
+            ].map(([label, value, tone]) => (
+              <div key={String(label)} className="bg-white px-5 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+                <p className={`mt-1 text-2xl font-semibold ${tone}`}>{value}</p>
+              </div>
+            ))}
+          </div>
+          {workerQueue.oldestQueuedAt ? <p className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 sm:px-6">Oldest waiting task: {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(workerQueue.oldestQueuedAt))}</p> : null}
+        </section>
+      ) : null}
 
       {testResult && (
         <section className={`rounded-2xl border p-5 ${testResult.state === "submitted" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>

@@ -2,6 +2,7 @@ import { billingConfig, stripeManagementConfig } from "@/lib/billing/stripe";
 import { resendInboundConfig } from "@/lib/email/resend";
 import { openRouterTailoringConfig } from "@/lib/ai/openrouter-tailoring";
 import { submissionProviderConfig } from "@/lib/application-submission";
+import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 
 export type IntegrationState = "available" | "connected" | "provider_gate" | "not_configured";
 
@@ -23,7 +24,7 @@ function enabled(value: string | undefined): boolean {
  * Returns capability state only. Secret values, account identifiers and
  * provider errors are deliberately never exposed by this function.
  */
-export function getIntegrationStatuses(): IntegrationStatus[] {
+export function getIntegrationStatuses(options?: { includeOperations?: boolean }): IntegrationStatus[] {
   const databaseConnected = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
@@ -34,10 +35,11 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
   const inboundConnected = Boolean(enabled(process.env.ENABLE_INBOUND_MAIL) && resendInboundConfig());
   const aiTailoringConnected = Boolean(openRouterTailoringConfig());
   const submissionConnected = Boolean(submissionProviderConfig());
+  const persistentWorkerConnected = applicationWorkerConfig().enabled;
   const billingConnected = Boolean(billingConfig());
   const billingManagementConnected = Boolean(stripeManagementConfig());
 
-  return [
+  const statuses: IntegrationStatus[] = [
     {
       id: "supabase",
       name: "Account and contract database",
@@ -84,8 +86,8 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       id: "ats_submission",
       name: "IR35Careers application runner",
       state: submissionConnected ? "connected" : "provider_gate",
-      scope: "Completes supported public employer forms after the contractor approves the final application.",
-      nextStep: submissionConnected ? "Approved applications can be completed and tracked from the workspace." : "Enable application submission after completing the release checks.",
+      scope: "Queues approved applications and records confirmed employer submissions.",
+      nextStep: submissionConnected ? "Application orchestration is enabled." : "Enable application submission after completing the release checks.",
     },
     {
       id: "billing",
@@ -104,4 +106,14 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       nextStep: "Requires provider approval, explicit consent, revocation and a retention policy.",
     },
   ];
+  if (options?.includeOperations) {
+    statuses.push({
+      id: "persistent_worker",
+      name: "Persistent employer portal worker",
+      state: persistentWorkerConnected ? "connected" : "provider_gate",
+      scope: "Keeps employer browser sessions alive through multi-step forms, account creation and email verification.",
+      nextStep: persistentWorkerConnected ? "Approved applications can run outside the website request limit." : "Start the signed worker service and add its connection settings in Vercel.",
+    });
+  }
+  return statuses;
 }

@@ -46,6 +46,7 @@ import {
 } from "@/lib/employer-destinations";
 import { requestEmployerDestinationVerification } from "@/lib/employer-onboarding";
 import { getIntegrationStatuses } from "@/lib/integration-status";
+import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
 import { providerReviewQuestions } from "@/lib/application-submission";
 import { SUBMISSION_LOCK_MAX_AGE_MS } from "@/lib/application-submission-state";
@@ -554,11 +555,24 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (section === "system") {
-      const submissionsResult = await supabase
-        .from("application_submissions")
-        .select("id, application_id, status, error_code, provider_name, provider_submission_id, receipt, updated_at")
-        .order("updated_at", { ascending: false })
-        .limit(30);
+      const workerConfig = applicationWorkerConfig();
+      const [submissionsResult, workerTasksResult, workerHeartbeatsResult] = await Promise.all([
+        supabase
+          .from("application_submissions")
+          .select("id, application_id, status, error_code, provider_name, provider_submission_id, receipt, updated_at")
+          .order("updated_at", { ascending: false })
+          .limit(30),
+        supabase
+          .from("application_worker_tasks")
+          .select("status, created_at")
+          .order("created_at", { ascending: false })
+          .limit(500),
+        supabase
+          .from("application_worker_heartbeats")
+          .select("worker_id, last_seen_at")
+          .order("last_seen_at", { ascending: false })
+          .limit(20),
+      ]);
       if (submissionsResult.error) throw submissionsResult.error;
       const applicationIds = (submissionsResult.data ?? []).map((row) => row.application_id);
       const packetsResult = applicationIds.length
@@ -590,9 +604,51 @@ export async function GET(request: Request): Promise<Response> {
           updatedAt: String(row.updated_at),
         };
       });
+      const workerRows = workerTasksResult.error ? [] : workerTasksResult.data ?? [];
+      const heartbeatCutoff = Date.now() - 60_000;
+      const onlineWorkers = workerHeartbeatsResult.error
+        ? 0
+        : (workerHeartbeatsResult.data ?? []).filter(
+            (row) => new Date(String(row.last_seen_at)).getTime() >= heartbeatCutoff,
+          ).length;
+      let workerResponding = onlineWorkers > 0;
+      if (workerConfig.enabled && workerConfig.url) {
+        try {
+          const health = await fetch(`${workerConfig.url}/health`, {
+            headers: { accept: "application/json" },
+            cache: "no-store",
+            signal: AbortSignal.timeout(4_000),
+          });
+          workerResponding = workerResponding || health.ok;
+        } catch {
+          workerResponding = onlineWorkers > 0;
+        }
+      }
+      const integrations = getIntegrationStatuses({ includeOperations: true }).map((item) =>
+        item.id === "persistent_worker" && workerConfig.enabled && !workerResponding
+          ? {
+              ...item,
+              state: "provider_gate" as const,
+              nextStep: "The worker is configured but is not answering its health check. Restart the worker service and inspect its logs.",
+            }
+          : item,
+      );
+      const oldestQueuedAt = workerRows
+        .filter((row) => row.status === "queued")
+        .map((row) => String(row.created_at))
+        .sort()[0] ?? null;
       return Response.json({
-        integrations: getIntegrationStatuses(),
+        integrations,
         applicationRuns,
+        workerQueue: workerTasksResult.error ? undefined : {
+          queued: workerRows.filter((row) => row.status === "queued").length,
+          running: workerRows.filter((row) => row.status === "running").length,
+          completed: workerRows.filter((row) => row.status === "completed").length,
+          needsUser: workerRows.filter((row) => row.status === "needs_user").length,
+          failed: workerRows.filter((row) => row.status === "failed").length,
+          onlineWorkers,
+          oldestQueuedAt,
+        },
         systemGeneratedAt: new Date().toISOString(),
       });
     }

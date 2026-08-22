@@ -24,6 +24,18 @@ describe("integration status", () => {
     expect(getIntegrationStatuses().find((item) => item.id === "ats_submission")?.state).toBe("connected");
   });
 
+  it("reports the persistent worker only with a signed HTTPS connection", () => {
+    vi.stubEnv("APPLICATION_WORKER_ENABLED", "true");
+    vi.stubEnv("APPLICATION_WORKER_URL", "https://worker.ir35careers.com");
+    vi.stubEnv("APPLICATION_WORKER_SECRET", "worker-test-secret-that-is-long-enough-123");
+    expect(getIntegrationStatuses({ includeOperations: true }).find((item) => item.id === "persistent_worker")?.state).toBe("connected");
+    expect(getIntegrationStatuses().find((item) => item.id === "persistent_worker")).toBeUndefined();
+
+    vi.stubEnv("APPLICATION_WORKER_URL", "http://worker.ir35careers.com");
+    expect(getIntegrationStatuses({ includeOperations: true }).find((item) => item.id === "persistent_worker")?.state).toBe("provider_gate");
+    expect(JSON.stringify(getIntegrationStatuses())).not.toContain("worker-test-secret");
+  });
+
   it("recognises the managed one-click application key without exposing it", () => {
     vi.stubEnv("ENABLE_APPLICATION_SUBMISSION", "true");
     vi.stubEnv("TSENTA_API_KEY", "sk_live_do-not-expose");

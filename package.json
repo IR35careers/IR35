@@ -18,6 +18,8 @@
     "test:legacy": "tsx scripts/test-processing.ts && tsx scripts/test-tax.ts && tsx scripts/test-aggregators.ts && tsx scripts/test-fetchers.ts",
     "email:preview": "tsx scripts/render-email-preview.ts",
     "email:audit-launch": "tsx scripts/audit-launch-audience.ts",
+    "worker:install-browser": "playwright-core install chromium",
+    "worker:start": "node --env-file=services/application-worker/.env --import tsx services/application-worker/server.ts",
     "security:source": "node scripts/security-check.mjs",
     "security:audit": "npm audit --audit-level=low",
     "security:signatures": "npm audit signatures",

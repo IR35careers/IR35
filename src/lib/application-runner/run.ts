@@ -42,7 +42,12 @@ import type {
 const MAX_STEPS = 8;
 const MAX_FIELDS = 120;
 const MAX_RESUME_BYTES = 8_000_000;
-const RUNNER_BUDGET_MS = 100_000;
+
+function runnerBudgetMs(): number {
+  const configured = Number(process.env.APPLICATION_RUNNER_BUDGET_MS || 0);
+  if (!Number.isFinite(configured) || configured <= 0) return 100_000;
+  return Math.max(60_000, Math.min(Math.floor(configured), 10 * 60_000));
+}
 
 function clean(value: string, max = 500): string {
   return value
@@ -817,6 +822,7 @@ export async function runNativeApplication(
   runtime?: NativeSubmissionRuntime,
 ): Promise<SubmissionProviderReceipt> {
   const startedAt = Date.now();
+  const budgetMs = runnerBudgetMs();
   // A resumed employer session may already have a fresh code waiting in the
   // contractor inbox. Keep the lookup application-scoped, but include the
   // normal validity window used by employer one-time codes.
@@ -829,7 +835,7 @@ export async function runNativeApplication(
   const budgetTimer = setTimeout(() => {
     timedOut = true;
     void browser?.close().catch(() => null);
-  }, RUNNER_BUDGET_MS);
+  }, budgetMs);
   try {
     const destination = await validatePublicHttpsUrl(payload.destination);
     if (!nativeRunnerHostAllowed(destination.hostname)) {
@@ -953,7 +959,7 @@ export async function runNativeApplication(
 
     let portalAccessAttempts = 0;
     for (let step = 0; step < MAX_STEPS; step += 1) {
-      if (Date.now() - startedAt >= RUNNER_BUDGET_MS) {
+      if (Date.now() - startedAt >= budgetMs) {
         return reviewReceipt(
           "The employer portal did not finish within the safe application window. Your approved application is ready to retry.",
           [],
