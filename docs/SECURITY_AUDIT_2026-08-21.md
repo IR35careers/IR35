@@ -74,6 +74,8 @@ Completed on the audited revision:
 - Processing, tax, aggregator and fetcher tests: 194 passed, 0 failed.
 - Production Next.js build: passed; 68 static pages generated and all dynamic routes compiled.
 - Deployed production browser smoke tests: 6 passed, covering account boundaries, public trust pages, private feed-health routing, safety assets, reduced-motion navigation and canonical/private-page indexing rules.
+- GitHub Release quality run 32545215635 passed on audited revision `e48376a`: code quality and production build passed, dependency and repository security passed, and the responsive browser/accessibility job completed with 73 passed and 2 intentionally skipped journeys across phone, tablet and desktop Chrome.
+- GitHub CodeQL run 32545215633 passed the extended JavaScript/TypeScript security analysis on audited revision `e48376a`.
 - Live HTTP checks: full CSP and HSTS present, framing denied, CORS does not trust an unrelated origin, TRACE is rejected, accidental `.env`, `.git/config` and `package.json` paths return 404, public-host administration returns 404, unauthenticated dedicated-host administration returns 401, private routes are marked `noindex`, private-address job preview returns 400 and oversized requests return 413.
 - The production CSP permits only `https://kxcbgflleqnjzjbkevwd.supabase.co` and its matching `wss://` origin for Supabase connectivity; wildcard tenant access is absent.
 - Independent MDN HTTP Observatory scan 116152683 returned grade A+, score 125, with 10 of 10 tests passed and zero failed.
