@@ -710,6 +710,10 @@ export async function POST(request: Request): Promise<Response> {
                       portalPassword: submissionCandidate.portalAccountConsent
                         ? portalPassword(userId, destination)
                         : undefined,
+                      resolvePortalPassword: submissionCandidate.portalAccountConsent
+                        ? async (hostname) =>
+                            portalPassword(userId, `https://${hostname}/`)
+                        : undefined,
                       resolveEmailVerificationCode:
                         submissionCandidate.automaticEmailVerification
                           ? ({ requestedAfter }) =>

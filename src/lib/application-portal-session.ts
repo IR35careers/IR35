@@ -10,6 +10,84 @@ import type { NativePortalSession } from "@/lib/application-submission";
 const VERSION = "v1";
 const SESSION_TTL_MS = 24 * 60 * 60 * 1_000;
 const MAX_STATE_BYTES = 750_000;
+const STORAGE_BUCKET = "application-portal-sessions";
+
+function storagePath(userId: string, applicationId: string): string {
+  return `${userId}/${applicationId}.session`;
+}
+
+async function ensureStorageBucket(admin: SupabaseClient): Promise<void> {
+  const existing = await admin.storage.getBucket(STORAGE_BUCKET);
+  if (!existing.error && existing.data) return;
+  const created = await admin.storage.createBucket(STORAGE_BUCKET, {
+    public: false,
+    fileSizeLimit: 1_000_000,
+    allowedMimeTypes: ["application/octet-stream"],
+  });
+  if (
+    created.error &&
+    !/(already exists|duplicate)/i.test(created.error.message)
+  )
+    throw new Error(created.error.message);
+}
+
+async function loadStorageSession(input: {
+  admin: SupabaseClient;
+  userId: string;
+  applicationId: string;
+}): Promise<NativePortalSession | null> {
+  const downloaded = await input.admin.storage
+    .from(STORAGE_BUCKET)
+    .download(storagePath(input.userId, input.applicationId));
+  if (downloaded.error || !downloaded.data) return null;
+  try {
+    const envelope = JSON.parse(await downloaded.data.text()) as {
+      expiresAt?: string;
+      encryptedState?: string;
+    };
+    if (
+      !envelope.expiresAt ||
+      new Date(envelope.expiresAt).getTime() <= Date.now() ||
+      !envelope.encryptedState
+    ) {
+      await input.admin.storage
+        .from(STORAGE_BUCKET)
+        .remove([storagePath(input.userId, input.applicationId)]);
+      return null;
+    }
+    return openPortalSession(envelope.encryptedState);
+  } catch {
+    await input.admin.storage
+      .from(STORAGE_BUCKET)
+      .remove([storagePath(input.userId, input.applicationId)]);
+    return null;
+  }
+}
+
+async function saveStorageSession(input: {
+  admin: SupabaseClient;
+  userId: string;
+  applicationId: string;
+  session: NativePortalSession;
+}): Promise<void> {
+  await ensureStorageBucket(input.admin);
+  const envelope = JSON.stringify({
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
+    encryptedState: sealPortalSession(input.session),
+  });
+  const uploaded = await input.admin.storage
+    .from(STORAGE_BUCKET)
+    .upload(
+      storagePath(input.userId, input.applicationId),
+      Buffer.from(envelope, "utf8"),
+      {
+        contentType: "application/octet-stream",
+        cacheControl: "no-store",
+        upsert: true,
+      },
+    );
+  if (uploaded.error) throw new Error(uploaded.error.message);
+}
 
 function sessionSecret(): string {
   const secret =
@@ -86,8 +164,8 @@ export async function loadPortalSession(input: {
     .eq("user_id", input.userId)
     .eq("application_id", input.applicationId)
     .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) return null;
+  if (error) return loadStorageSession(input);
+  if (!data) return loadStorageSession(input);
   if (new Date(String(data.expires_at)).getTime() <= Date.now()) {
     await clearPortalSession(input);
     return null;
@@ -119,7 +197,14 @@ export async function savePortalSession(input: {
     },
     { onConflict: "application_id" },
   );
-  if (error) throw new Error(error.message);
+  if (error) {
+    await saveStorageSession(input);
+    return;
+  }
+  await input.admin.storage
+    .from(STORAGE_BUCKET)
+    .remove([storagePath(input.userId, input.applicationId)])
+    .catch(() => null);
 }
 
 export async function clearPortalSession(input: {
@@ -132,5 +217,13 @@ export async function clearPortalSession(input: {
     .delete()
     .eq("user_id", input.userId)
     .eq("application_id", input.applicationId);
-  if (error) throw new Error(error.message);
+  const storageResult = await input.admin.storage
+    .from(STORAGE_BUCKET)
+    .remove([storagePath(input.userId, input.applicationId)]);
+  if (
+    error &&
+    storageResult.error &&
+    !/(not found|does not exist)/i.test(storageResult.error.message)
+  )
+    throw new Error(error.message);
 }

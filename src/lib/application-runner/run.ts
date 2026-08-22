@@ -400,7 +400,11 @@ async function handlePortalAccess(
 
   const passwordInputs = page.locator('input[type="password"]:visible');
   if (await passwordInputs.count()) {
-    if (!payload.candidate.portalAccountConsent || !runtime?.portalPassword) {
+    const portalPassword =
+      (await runtime?.resolvePortalPassword?.(
+        new URL(page.url()).hostname.toLowerCase(),
+      )) ?? runtime?.portalPassword;
+    if (!payload.candidate.portalAccountConsent || !portalPassword) {
       return {
         handled: false,
         stop: {
@@ -428,7 +432,7 @@ async function handlePortalAccess(
     if (lastName) await lastName.fill(names.slice(1).join(" "));
     const passwordCount = Math.min(await passwordInputs.count(), 3);
     for (let index = 0; index < passwordCount; index += 1)
-      await passwordInputs.nth(index).fill(runtime.portalPassword);
+      await passwordInputs.nth(index).fill(portalPassword);
 
     const uncheckedLegal = page.locator(
       'input[type="checkbox"]:visible:not(:checked)',
@@ -460,7 +464,11 @@ async function handlePortalAccess(
       /^(create account|create an account|register|sign up)$/i,
     );
     const signIn = await actionLocator(page, /^(sign in|log in)$/i);
-    const accessAction = hasSavedSession
+    const accountAlreadyExists =
+      /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
+        bodyText,
+      );
+    const accessAction = hasSavedSession || accountAlreadyExists
       ? signIn ?? createAccount ??
         (await actionLocator(page, /^(continue|next)$/i))
       : createAccount ?? signIn ??

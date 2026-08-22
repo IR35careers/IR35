@@ -683,10 +683,38 @@ export async function POST(request: Request): Promise<Response> {
       siteUrl.hash = "";
       const destination = new URL(`/testing/application-form?token=${encodeURIComponent(token)}`, siteUrl);
       const resumeUrl = new URL(`/api/testing/application-runner-resume?token=${encodeURIComponent(token)}`, siteUrl);
+      const controlledApplicationId = "00000000-0000-4000-8000-000000000001";
       try {
         const { runNativeApplication } = await import("@/lib/application-runner/run");
+        const {
+          clearPortalSession,
+          loadPortalSession,
+          savePortalSession,
+        } = await import("@/lib/application-portal-session");
+        await savePortalSession({
+          admin: supabase,
+          userId: admin.id,
+          applicationId: controlledApplicationId,
+          destinationHost: siteUrl.hostname,
+          session: {
+            currentUrl: destination.toString(),
+            storageState: { cookies: [], origins: [] },
+          },
+        });
+        const recoveredSession = await loadPortalSession({
+          admin: supabase,
+          userId: admin.id,
+          applicationId: controlledApplicationId,
+        });
+        await clearPortalSession({
+          admin: supabase,
+          userId: admin.id,
+          applicationId: controlledApplicationId,
+        });
+        if (recoveredSession?.currentUrl !== destination.toString())
+          throw new Error("The encrypted employer session could not be recovered.");
         const receipt = await runNativeApplication({
-          applicationId: "00000000-0000-4000-8000-000000000001",
+          applicationId: controlledApplicationId,
           destination: destination.toString(),
           job: {
             ...DEMO_JOBS[0],
@@ -717,6 +745,7 @@ export async function POST(request: Request): Promise<Response> {
           ],
         }, {
           portalPassword: "Ir35!ControlledRunner7",
+          resolvePortalPassword: async () => "Ir35!ControlledRunner7",
           resolveEmailVerificationCode: async () => "482731",
         });
         const unresolved = providerReviewQuestions(receipt.review).map(
@@ -727,6 +756,7 @@ export async function POST(request: Request): Promise<Response> {
           : receipt.message;
         const checks = [
           { label: "Portal reached", passed: true, detail: "The protected production form was opened." },
+          { label: "Session recovery", passed: true, detail: "Encrypted employer progress was stored, recovered and removed successfully." },
           { label: "CV uploaded", passed: !unresolved.some((label) => /resume|cv|curriculum/i.test(label)), detail: unresolved.some((label) => /resume|cv|curriculum/i.test(label)) ? unresolvedDetail : "The approved PDF reached the application form." },
           { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Employer account, email verification, profile and screening answers completed successfully." : unresolvedDetail },
           { label: "Confirmation captured", passed: receipt.state === "submitted", detail: receipt.state === "submitted" ? "The portal returned a positive application receipt." : unresolvedDetail },
