@@ -46,6 +46,7 @@ import {
 import { requestEmployerDestinationVerification } from "@/lib/employer-onboarding";
 import { getIntegrationStatuses } from "@/lib/integration-status";
 import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
+import { providerReviewQuestions } from "@/lib/application-submission";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
@@ -713,11 +714,17 @@ export async function POST(request: Request): Promise<Response> {
             { label: "I agree to the privacy notice", answer: "Yes", source: "user" },
           ],
         });
+        const unresolved = providerReviewQuestions(receipt.review).map(
+          (question) => question.label,
+        );
+        const unresolvedDetail = unresolved.length
+          ? `Still required: ${unresolved.join(", ")}.`
+          : receipt.message;
         const checks = [
           { label: "Portal reached", passed: true, detail: "The protected production form was opened." },
-          { label: "CV uploaded", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "The approved PDF reached the application form." : "Review the runner response for the unresolved field." },
-          { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Profile and screening answers completed both form steps." : receipt.message },
-          { label: "Confirmation captured", passed: receipt.state === "submitted", detail: receipt.state === "submitted" ? "The portal returned a positive application receipt." : receipt.message },
+          { label: "CV uploaded", passed: !unresolved.some((label) => /resume|cv|curriculum/i.test(label)), detail: unresolved.some((label) => /resume|cv|curriculum/i.test(label)) ? unresolvedDetail : "The approved PDF reached the application form." },
+          { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Profile and screening answers completed both form steps." : unresolvedDetail },
+          { label: "Confirmation captured", passed: receipt.state === "submitted", detail: receipt.state === "submitted" ? "The portal returned a positive application receipt." : unresolvedDetail },
         ];
         await supabase.from("moderation_logs").insert({
           run_type: "application_runner_test",

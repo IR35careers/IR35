@@ -26,6 +26,7 @@ import {
 } from "@/lib/application-runner/types";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
+import { buildResumePdf } from "@/lib/resume/export";
 import type {
   NativeSubmissionRuntime,
   SubmissionProviderPayload,
@@ -552,6 +553,27 @@ async function loadResume(url: string | undefined): Promise<Buffer | null> {
   return bytes.length > 0 && bytes.length <= MAX_RESUME_BYTES ? bytes : null;
 }
 
+async function approvedResumePdf(
+  payload: SubmissionProviderPayload,
+): Promise<Buffer | null> {
+  const downloaded = await loadResume(payload.resume.url).catch(() => null);
+  if (downloaded) return downloaded;
+
+  const resumeText = payload.resume.text.trim();
+  if (!resumeText) return null;
+  const generated = await buildResumePdf({
+    format: "pdf",
+    resumeText,
+    candidateName: payload.candidate.fullName,
+    jobTitle: payload.job.title,
+    companyName: payload.job.company_name,
+    versionLabel: payload.resume.label || "Application CV",
+  });
+  return generated.length > 0 && generated.length <= MAX_RESUME_BYTES
+    ? generated
+    : null;
+}
+
 async function fillField(input: {
   locator: Locator;
   field: RunnerField;
@@ -748,7 +770,11 @@ export async function runNativeApplication(
       );
     }
     const ats = detectAts(destination.toString());
-    const resume = await loadResume(payload.resume.url);
+    // A short-lived storage link can expire or be temporarily unavailable
+    // before the hosted browser reaches the upload step. The approved CV text
+    // is already part of this packet, so generate the same truthful PDF in the
+    // runner instead of asking the candidate to upload it again.
+    const resume = await approvedResumePdf(payload);
     const facts = buildRunnerFacts(
       payload.candidate,
       payload.screeningAnswers.map((answer, index) => ({
