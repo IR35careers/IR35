@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   detectAts,
+  isApplicationFormEvidence,
+  isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
   nativeRunnerHostAllowed,
 } from "@/lib/application-runner/ats";
@@ -72,6 +74,28 @@ describe("native application runner", () => {
         isTopLevel: false,
       }),
     ).toBe(false);
+  });
+
+  it("does not mistake job search and alert controls for an application form", () => {
+    expect(isJobBoardUtilityControl("email_alert your.email@domain.com")).toBe(true);
+    expect(isJobBoardUtilityControl("q job, company, title")).toBe(true);
+    expect(isJobBoardUtilityControl("w city, county or postcode")).toBe(true);
+    expect(
+      isApplicationFormEvidence({
+        hasResumeUpload: false,
+        hasNameField: false,
+        hasContactField: true,
+        applicationSignals: 2,
+      }),
+    ).toBe(false);
+    expect(
+      isApplicationFormEvidence({
+        hasResumeUpload: false,
+        hasNameField: true,
+        hasContactField: true,
+        applicationSignals: 2,
+      }),
+    ).toBe(true);
   });
 
   it("uses only confirmed saved answers for employer-specific questions", () => {

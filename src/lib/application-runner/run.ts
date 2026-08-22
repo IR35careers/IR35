@@ -8,6 +8,8 @@ import {
 import { createHash } from "node:crypto";
 import {
   detectAts,
+  isApplicationFormEvidence,
+  isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
   nativeRunnerHostAllowed,
   type AtsDefinition,
@@ -161,6 +163,8 @@ async function hasApplicationForm(page: Page): Promise<boolean> {
   const count = Math.min(await controls.count(), 30);
   let applicationSignals = 0;
   let hasResumeUpload = false;
+  let hasNameField = false;
+  let hasContactField = false;
   for (let index = 0; index < count; index += 1) {
     const item = controls.nth(index);
     if (!(await item.isVisible().catch(() => false))) continue;
@@ -168,8 +172,12 @@ async function hasApplicationForm(page: Page): Promise<boolean> {
       `${(await item.getAttribute("name")) ?? ""} ${(await item.getAttribute("autocomplete")) ?? ""} ${(await item.getAttribute("aria-label")) ?? ""} ${(await item.getAttribute("placeholder")) ?? ""}`,
     );
     const type = ((await item.getAttribute("type")) ?? "").toLowerCase();
+    if (isJobBoardUtilityControl(text)) continue;
     if (type === "file" && /(resume|cv|curriculum)/i.test(text))
       hasResumeUpload = true;
+    if (/(first.?name|last.?name|full.?name|given.?name|family.?name)/i.test(text))
+      hasNameField = true;
+    if (/(email|phone|mobile)/i.test(text)) hasContactField = true;
     if (
       /(first.?name|last.?name|full.?name|email|phone|mobile|resume|curriculum|cover.?letter|sponsor|authori[sz]|postal|postcode|address)/i.test(
         text,
@@ -177,7 +185,12 @@ async function hasApplicationForm(page: Page): Promise<boolean> {
     )
       applicationSignals += 1;
   }
-  return hasResumeUpload || applicationSignals >= 2;
+  return isApplicationFormEvidence({
+    hasResumeUpload,
+    hasNameField,
+    hasContactField,
+    applicationSignals,
+  });
 }
 
 async function clickAndFollow(
@@ -210,11 +223,16 @@ async function openApplicationForm(
   ats: AtsDefinition,
 ): Promise<Page> {
   let page = initialPage;
-  for (
-    let attempt = 0;
-    attempt < 4 && !(await hasApplicationForm(page));
-    attempt += 1
-  ) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const dismiss = await actionLocator(
+      page,
+      /^(decline all|reject all|reject optional cookies|only necessary cookies|no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i,
+    );
+    if (dismiss) {
+      page = await clickAndFollow(page, dismiss, 300);
+      continue;
+    }
+    if (await hasApplicationForm(page)) break;
     const apply = await actionLocator(page, ats.applyPattern);
     if (!apply) break;
     page = await clickAndFollow(page, apply, 800);

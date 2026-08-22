@@ -86,6 +86,25 @@ export function isSafeApplicationHandoffNavigation(input: {
   }
 }
 
+export function isJobBoardUtilityControl(value: string): boolean {
+  return /(job.?alert|email.?alert|newsletter|notification|apply.?capture|job,? company|job title|city,? county|town,? city|keyword search|search jobs|search location|what|where)/i.test(
+    value,
+  );
+}
+
+export function isApplicationFormEvidence(input: {
+  hasResumeUpload: boolean;
+  hasNameField: boolean;
+  hasContactField: boolean;
+  applicationSignals: number;
+}): boolean {
+  return (
+    input.hasResumeUpload ||
+    (input.hasNameField && input.hasContactField) ||
+    input.applicationSignals >= 4
+  );
+}
+
 export function detectAts(value: string): AtsDefinition {
   const host = new URL(value).hostname.toLowerCase();
   const match = ATS_DOMAINS.find(({ domain }) => hostMatches(host, domain));

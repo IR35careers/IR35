@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 export function ApplicationRunnerTestForm() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
 
   if (step === 3) {
     return (
@@ -21,6 +21,26 @@ export function ApplicationRunnerTestForm() {
     event.preventDefault();
     setStep(3);
   };
+
+  if (step === 0) {
+    return (
+      <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
+        <header className="mb-7">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Controlled job listing</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Platform Engineer</h1>
+          <p className="mt-2 text-sm text-slate-600">This screen reproduces the search and job-alert fields used by public job boards.</p>
+        </header>
+        <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-semibold text-slate-900">Search jobs<input name="q" placeholder="job, company, title" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+            <label className="text-sm font-semibold text-slate-900">Location<input name="w" placeholder="city, county or postcode" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+          </div>
+          <label className="block text-sm font-semibold text-slate-900">Job alerts<input name="email_alert" type="email" placeholder="your.email@domain.com" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+          <button type="button" onClick={() => setStep(1)} className="min-h-11 rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white">Apply for this job</button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
