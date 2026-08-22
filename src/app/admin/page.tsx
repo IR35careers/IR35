@@ -1471,8 +1471,9 @@ function JobsPanel({ jobs, total, query, expiringId, onExpire }: { jobs: JobRow[
 
 function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; query: string }) {
   const [currentTime] = useState(Date.now);
-  const [selectedId, setSelectedId] = useState<string | null>(users[0]?.id ?? null);
-  const selected = users.find((account) => account.id === selectedId) ?? users[0] ?? null;
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const selected = users.find((account) => account.id === selectedId) ?? null;
   const withCv = users.filter((account) => account.profile?.cv_filename).length;
   const verified = users.filter((account) => account.email_confirmed_at).length;
   const active30d = users.filter((account) => account.last_sign_in_at && currentTime - new Date(account.last_sign_in_at).getTime() < 30 * 24 * 60 * 60 * 1000).length;
@@ -1485,6 +1486,27 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
   const restricted = Boolean(selected?.banned_until && new Date(selected.banned_until).getTime() > currentTime);
   const accountStatus = restricted ? "Restricted" : selected?.email_confirmed_at ? "Verified" : "Email pending";
   const activity = selected?.activity;
+
+  const openDetails = (accountId: string) => {
+    setSelectedId(accountId);
+    setDetailsOpen(true);
+  };
+
+  useEffect(() => {
+    if (!detailsOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDetailsOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [detailsOpen]);
 
   return (
     <div className="mt-7 space-y-5">
@@ -1504,7 +1526,7 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
         ))}
       </div>
 
-      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1.2fr)_minmax(380px,0.8fr)]">
+      <div>
         <Panel title="Contractor accounts" description="Select an account to inspect membership and product activity.">
           {users.length ? (
             <div className="overflow-x-auto">
@@ -1515,12 +1537,12 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
                     const isSelected = selected?.id === account.id;
                     return (
                       <tr key={account.id} className={isSelected ? "bg-emerald-50/60" : "hover:bg-slate-50/70"}>
-                        <td className="px-6 py-4"><button type="button" onClick={() => setSelectedId(account.id)} className="flex w-full items-center gap-3 text-left focus:outline-none"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-900 text-white"}`}>{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{account.profile?.full_name || "Name not added"}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{account.email || "No email"}</span></span></button></td>
+                        <td className="px-6 py-4"><button type="button" onClick={() => openDetails(account.id)} aria-haspopup="dialog" className="flex w-full items-center gap-3 text-left focus:outline-none"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-900 text-white"}`}>{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{account.profile?.full_name || "Name not added"}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{account.email || "No email"}</span></span></button></td>
                         <td className="px-4 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${account.banned_until && new Date(account.banned_until).getTime() > currentTime ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{account.banned_until && new Date(account.banned_until).getTime() > currentTime ? "Restricted" : account.email_confirmed_at ? "Verified" : "Pending"}</span></td>
                         <td className="px-4 py-4"><p className="text-xs font-medium text-slate-700">{timeAgo(account.last_sign_in_at)}</p><p className="mt-1 text-[11px] capitalize text-slate-400">{account.provider || "email"}</p></td>
                         <td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-700">{account.activity?.applications ?? 0}</td>
                         <td className="px-6 py-4"><p className="text-xs text-slate-700">{formatDate(account.created_at)}</p><p className="mt-1 text-[11px] text-slate-400">{timeAgo(account.created_at)}</p></td>
-                        <td className="px-4 py-4"><button type="button" onClick={() => setSelectedId(account.id)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:text-emerald-700">View <ChevronRight size={13} /></button></td>
+                        <td className="px-4 py-4"><button type="button" onClick={() => openDetails(account.id)} aria-haspopup="dialog" aria-label={`View ${account.profile?.full_name || account.email || "contractor"}`} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:text-emerald-700">View <ChevronRight size={13} /></button></td>
                       </tr>
                     );
                   })}
@@ -1529,10 +1551,21 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
             </div>
           ) : <EmptyState title={query ? "No matching contractors" : "No contractor accounts"} detail={query ? "Try searching by name, email or sign-in provider." : "New registrations will appear here."} />}
         </Panel>
+      </div>
 
-        {selected ? (
-          <Panel title="Contractor details" description="Private account information for administration only." className="2xl:sticky 2xl:top-28">
-            <div className="p-5 sm:p-6">
+      {selected && detailsOpen ? (
+        <div className="fixed inset-0 z-[80] flex justify-end" role="presentation">
+          <button type="button" className="absolute inset-0 cursor-default bg-slate-950/45 backdrop-blur-[2px]" onClick={() => setDetailsOpen(false)} aria-label="Close contractor details" />
+          <section role="dialog" aria-modal="true" aria-labelledby="contractor-details-title" className="relative flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-[-24px_0_60px_rgba(15,23,42,0.18)]">
+            <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Contractor account</p>
+                <h2 id="contractor-details-title" className="mt-1 text-xl font-semibold text-slate-950">Contractor details</h2>
+                <p className="mt-1 text-xs text-slate-500">Private account information for administration only.</p>
+              </div>
+              <button type="button" onClick={() => setDetailsOpen(false)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" aria-label="Close contractor details"><X size={18} /></button>
+            </header>
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6">
               <div className="flex items-start gap-4">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-base font-bold text-white">{(profile?.full_name || selected.email || "A").charAt(0).toUpperCase()}</span>
                 <div className="min-w-0 flex-1"><p className="truncate text-base font-semibold text-slate-950">{profile?.full_name || "Name not added"}</p><p className="mt-1 break-all text-xs text-slate-500">{selected.email || "No email"}</p></div>
@@ -1577,9 +1610,9 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
                 <div className="mt-3 flex flex-wrap gap-2">{profile?.skills?.length ? profile.skills.slice(0, 12).map((skill) => <span key={skill} className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">{skill}</span>) : <p className="text-xs text-slate-500">No skills added.</p>}</div>
               </div>
             </div>
-          </Panel>
+          </section>
+        </div>
         ) : null}
-      </div>
     </div>
   );
 }
