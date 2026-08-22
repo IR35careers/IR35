@@ -63,6 +63,16 @@ const WORKFLOW_STEPS = [
   { label: "Review & submit", helper: "Approve the exact packet" },
 ] as const;
 
+function needsApplicationMaterialApproval(
+  action: string | undefined,
+  questions: ApplicationRecord["questions"],
+): boolean {
+  return (
+    action === "/profile" ||
+    questions.some((question) => question.required && !question.reviewed)
+  );
+}
+
 function persistApplication(application: ApplicationRecord) {
   updateWorkspace((current) => ({
     ...current,
@@ -351,10 +361,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         }
         if (payload.state === "needs_user") {
           const now = new Date().toISOString();
+          const questions = payload.questions ?? application.questions;
           const next: ApplicationRecord = {
             ...application,
             status: "needs_review",
-            questions: payload.questions ?? application.questions,
+            questions,
             attention:
               payload.attention ??
               buildApplicationAttention({
@@ -362,7 +373,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 message: payload.message,
                 questions: payload.questions ?? application.questions,
               }),
-            submissionApproved: false,
+            submissionApproved: needsApplicationMaterialApproval(
+              payload.action,
+              questions,
+            )
+              ? false
+              : application.submissionApproved,
             updatedAt: now,
             events: [
               ...application.events,
@@ -844,10 +860,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       };
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
+          const questions = payload.questions ?? ready.questions;
           const needsUserApplication: ApplicationRecord = {
             ...ready,
             status: "needs_review",
-            questions: payload.questions ?? ready.questions,
+            questions,
             attention:
               payload.attention ??
               buildApplicationAttention({
@@ -855,7 +872,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 message: payload.message,
                 questions: payload.questions ?? ready.questions,
               }),
-            submissionApproved: false,
+            submissionApproved: needsApplicationMaterialApproval(
+              payload.action,
+              questions,
+            )
+              ? false
+              : ready.submissionApproved,
             updatedAt: new Date().toISOString(),
           };
           setApplication(needsUserApplication);
@@ -896,11 +918,18 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         }
       }
       if (!response.ok && payload.attention) {
+        const questions = payload.questions ?? ready.questions;
         const needsUserApplication: ApplicationRecord = {
           ...ready,
           status: "needs_review",
+          questions,
           attention: payload.attention,
-          submissionApproved: false,
+          submissionApproved: needsApplicationMaterialApproval(
+            payload.action,
+            questions,
+          )
+            ? false
+            : ready.submissionApproved,
           updatedAt: new Date().toISOString(),
         };
         setApplication(needsUserApplication);
@@ -992,10 +1021,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
             return;
           }
           if (statusPayload.state === "needs_user") {
+            const questions =
+              statusPayload.questions ?? application.questions;
             const needsUserApplication: ApplicationRecord = {
               ...application,
               status: "needs_review",
-              questions: statusPayload.questions ?? application.questions,
+              questions,
               attention:
                 statusPayload.attention ??
                 buildApplicationAttention({
@@ -1003,7 +1034,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   message: statusPayload.message,
                   questions: statusPayload.questions ?? application.questions,
                 }),
-              submissionApproved: false,
+              submissionApproved: needsApplicationMaterialApproval(
+                statusPayload.action,
+                questions,
+              )
+                ? false
+                : application.submissionApproved,
               updatedAt: new Date().toISOString(),
             };
             setApplication(needsUserApplication);
