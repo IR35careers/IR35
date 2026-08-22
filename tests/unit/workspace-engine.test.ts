@@ -53,8 +53,18 @@ describe("application workspace engine", () => {
     expect(application.coverLetter).toContain("AWS");
     expect(application.coverLetter).not.toContain("experience with AWS and Kubernetes");
     expect(application.status).toBe("needs_review");
-    expect(application.questions.length).toBeGreaterThan(8);
+    expect(application.questions.length).toBeGreaterThan(20);
     expect(application.questions.find((question) => question.id === "right-to-work")).toMatchObject({ answer: "Yes", reviewed: true });
+    expect(application.questions.find((question) => question.id === "notice-period")).toMatchObject({ answer: "two weeks", required: false, reviewed: true });
+    expect(application.questions.find((question) => question.id.includes("role-skill-1-aws"))).toMatchObject({ required: false, reviewed: true });
+    expect(application.questions.find((question) => question.id.includes("role-skill-2-kubernetes"))).toMatchObject({ answer: "", required: false, reviewed: false });
+  });
+
+  it("does not block an application because an optional reusable answer is blank", () => {
+    const application = prepareApplication({ job, profile: SAMPLE_CONTRACTOR_PROFILE, cvText: cv });
+    const approved = { ...application, truthApproved: true, materialsApproved: true, submissionApproved: true };
+    expect(approved.questions.some((question) => !question.required && !question.reviewed)).toBe(true);
+    expect(applicationIsReady(approved)).toBe(true);
   });
 
   it("uses the CV name when an old generic contractor label is stored", () => {

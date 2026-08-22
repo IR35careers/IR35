@@ -1,4 +1,4 @@
-import { analyseResumeForRole } from "@/lib/resume/analysis";
+import { analyseResumeForRole, resumeContainsTerm } from "@/lib/resume/analysis";
 import { resolveCandidateName } from "@/lib/candidate-name";
 import type {
   ApplicationEvent,
@@ -75,13 +75,14 @@ export function buildTruthPreservingCoverLetter(
 
 export function buildScreeningQuestions(
   job: JobDetail,
-  profile: ContractorProfile
+  profile: ContractorProfile,
+  cvText = "",
 ): ApplicationQuestion[] {
-  const yesNo = (id: string, label: string, value: boolean | null | undefined): ApplicationQuestion => ({
+  const yesNo = (id: string, label: string, value: boolean | null | undefined, required = false): ApplicationQuestion => ({
     id,
     label,
     answer: value === true ? "Yes" : value === false ? "No" : "",
-    required: true,
+    required,
     source: value === null || value === undefined ? "user" : "profile",
     reviewed: value !== null && value !== undefined,
   });
@@ -98,6 +99,23 @@ export function buildScreeningQuestions(
     : profile.canWorkInPerson === null || profile.canWorkInPerson === undefined
       ? { answer: "", reviewed: false, source: "user" as const }
       : { answer: profile.canWorkInPerson ? "Yes" : "No", reviewed: true, source: "profile" as const };
+  const textAnswer = (id: string, label: string, value: string | undefined, required = false, source: ApplicationQuestion["source"] = "profile"): ApplicationQuestion => {
+    const answer = cleanLine(value ?? "", 800);
+    return { id, label, answer, required, source: answer ? source : "user", reviewed: Boolean(answer) };
+  };
+  const cvLines = cvText.split(/\n+/).map((line) => cleanLine(line, 800)).filter((line) => line.length >= 20);
+  const roleEvidence = job.skills.slice(0, 6).map((skill, index): ApplicationQuestion => {
+    const answer = cvLines.find((line) => resumeContainsTerm(line, skill)) ?? "";
+    return {
+      id: `role-skill-${index + 1}-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+      label: `Briefly describe your experience with ${cleanLine(skill, 80)}.`,
+      answer,
+      required: false,
+      source: answer ? "job" : "user",
+      reviewed: Boolean(answer),
+    };
+  });
+  const limitedCompanyAnswer = profile.limitedCompanyName || profile.companyNumber ? "Yes" : "";
   return [
     {
       id: "right-to-work",
@@ -139,13 +157,25 @@ export function buildScreeningQuestions(
       source: profile.rightToWork === "prefer_not_to_say" ? "user" : "profile",
       reviewed: profile.rightToWork !== "prefer_not_to_say",
     },
-    yesNo("over-18", "Are you at least 18 years old?", profile.isOver18),
+    yesNo("over-18", "Are you at least 18 years old?", profile.isOver18, true),
+    textAnswer("notice-period", "What is your notice period?", profile.noticePeriod),
+    yesNo("immediate-start", "Can you start immediately?", profile.canStartImmediately),
     yesNo("relocation", "Are you willing to relocate if the role requires it?", profile.canRelocate),
     yesNo("transport", "Do you have reliable transport when travel is required?", profile.hasTransportation),
     yesNo("accommodation", "Do you need a workplace adjustment or accommodation?", profile.needsAccommodation),
     yesNo("previous-employer", `Have you previously worked for ${cleanLine(job.company_name)}?`, profile.workedForCompanyBefore),
     yesNo("government-clearance", "Do you currently hold government security clearance?", profile.hasGovernmentClearance),
+    textAnswer("clearance-details", "What security clearance do you currently hold?", profile.clearance),
     yesNo("government-ties", "Do you have any current government employment or contractual ties to declare?", profile.hasGovernmentTies),
+    { id: "limited-company", label: "Are you applying through a limited company?", answer: limitedCompanyAnswer, required: false, source: limitedCompanyAnswer ? "profile" : "user", reviewed: Boolean(limitedCompanyAnswer) },
+    textAnswer("limited-company-name", "What is your limited company name?", profile.limitedCompanyName),
+    textAnswer("company-number", "What is your Companies House registration number?", profile.companyNumber),
+    { id: "vat-registered", label: "Is your limited company VAT registered?", answer: profile.vatRegistered ? "Yes" : "No", required: false, source: "profile", reviewed: true },
+    textAnswer("education-institution", "Which institution awarded your highest relevant qualification?", profile.educationInstitution),
+    textAnswer("education-qualification", "What is your highest relevant qualification?", profile.educationQualification),
+    textAnswer("linkedin", "What is your LinkedIn profile URL?", profile.linkedInUrl),
+    textAnswer("portfolio", "What is your portfolio or professional website URL?", profile.portfolioUrl),
+    ...roleEvidence,
   ];
 }
 
@@ -180,7 +210,7 @@ export function prepareApplication(input: PrepareApplicationInput): ApplicationR
     tailoredCvText: cvText,
     resumeVersionLabel: input.resumeVersionLabel ?? "Application CV",
     coverLetter: buildTruthPreservingCoverLetter(input.job, input.profile, analysis.baseline.matchedKeywords, cvText),
-    questions: buildScreeningQuestions(input.job, input.profile),
+    questions: buildScreeningQuestions(input.job, input.profile, cvText),
     truthApproved: false,
     materialsApproved: false,
     submissionApproved: false,

@@ -319,7 +319,7 @@ function makeSuggestions(
   const focusTerms = baseline.matchedKeywords.slice(0, 5);
 
   if (focusTerms.length > 0) {
-    const evidenceLine = `Role-relevant CV evidence: ${focusTerms.join(", ")}.`;
+    const evidenceLine = `Experience includes ${focusTerms.join(", ")}, supported by the delivery examples in this CV.`;
     const original = summary?.content.trim() ?? "";
     const replacement = original ? `${original.replace(/\s+$/g, "")}\n${evidenceLine}` : `PROFILE\n${evidenceLine}`;
     if (!resumeContainsTerm(original, job.title) || focusTerms.some((term) => !resumeContainsTerm(original, term))) {

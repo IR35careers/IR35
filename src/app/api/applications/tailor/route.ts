@@ -5,7 +5,7 @@ import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumeRateLimitKey, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 function tailoringLimit(): number {
