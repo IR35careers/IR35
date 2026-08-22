@@ -23,7 +23,9 @@ import {
 } from "lucide-react";
 import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
+import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
+import type { TailoringMode } from "@/lib/ai/openrouter-tailoring";
 import { roleTypeWarning } from "@/lib/ats/submission-route";
 import { hasActiveSubmission, latestSubmissionLifecycleEvent } from "@/lib/application-submission-state";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
@@ -73,6 +75,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [busy, setBusy] = useState<BusyState>(null);
   const [submissionConnection] = useState<ConnectionState>(isSupabaseConfigured() ? "connected" : "gated");
   const [submitElapsedSeconds, setSubmitElapsedSeconds] = useState(0);
+  const [tailoringElapsedSeconds, setTailoringElapsedSeconds] = useState(0);
   const [useAiCoverLetter, setUseAiCoverLetter] = useState(false);
   const [aiResult, setAiResult] = useState<AiTailoringResult | null>(null);
   const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<string[]>([]);
@@ -102,6 +105,16 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
     const startedAt = Date.now();
     const timer = window.setInterval(() => setSubmitElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1_000);
+    return () => window.clearInterval(timer);
+  }, [busy]);
+
+  useEffect(() => {
+    if (busy !== "ai") {
+      setTailoringElapsedSeconds(0);
+      return;
+    }
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => setTailoringElapsedSeconds(Math.floor((Date.now() - startedAt) / 1_000)), 1_000);
     return () => window.clearInterval(timer);
   }, [busy]);
 
@@ -206,6 +219,36 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
+  const requestTailoring = async (sourceCvText: string): Promise<{ result: AiTailoringResult; mode: TailoringMode }> => {
+    const response = await fetchWithFreshSession("/api/applications/tailor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cvText: sourceCvText, job }),
+      signal: AbortSignal.timeout(22_000),
+    });
+    const payload = (await response.json()) as { result?: AiTailoringResult; mode?: TailoringMode; error?: string };
+    if (!response.ok || !payload.result) throw new Error(payload.error ?? "Tailoring could not be completed.");
+    return { result: payload.result, mode: payload.mode ?? "local" };
+  };
+
+  const mergeTailoringResult = (prepared: ApplicationRecord, result: AiTailoringResult): ApplicationRecord => {
+    const tailoredCvText = applicationPreferences.autoApproveSafeEdits
+      ? applyAiTailoringSuggestions(prepared.sourceCvText, result.suggestions)
+      : prepared.sourceCvText;
+    const score = scoreResumeForRole(tailoredCvText, job, prepared.resumeVersionLabel);
+    const candidateName = resolveCandidateName(workspace.profile.fullName, prepared.sourceCvText);
+    return {
+      ...prepared,
+      tailoredCvText,
+      coverLetter: applicationPreferences.generateCoverLetter && result.coverLetter && candidateName
+        ? normaliseCoverLetterSignoff(result.coverLetter, candidateName)
+        : prepared.coverLetter,
+      matchScore: score.overall,
+      matchedKeywords: score.matchedKeywords,
+      missingKeywords: score.missingKeywords,
+    };
+  };
+
   const prepare = async (inputCv = cvText, inputFilename = cvFilename) => {
     setBusy("prepare");
     setError(null);
@@ -229,38 +272,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         ? payload.application
         : { ...payload.application, coverLetter: preferredResume?.coverLetter ?? "" };
       let tailoringNotice = "Your role match is ready. Review the application details before submitting.";
-      if (applicationPreferences.resumeOptimisation !== "off") try {
-        const tailoringResponse = await fetchWithFreshSession("/api/applications/tailor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cvText: prepared.sourceCvText, job }),
-        });
-        const tailoringPayload = (await tailoringResponse.json()) as { result?: AiTailoringResult; error?: string };
-        if (!tailoringResponse.ok || !tailoringPayload.result) throw new Error(tailoringPayload.error ?? "Tailoring could not be completed.");
-        const result = tailoringPayload.result;
-        const tailoredCvText = applicationPreferences.autoApproveSafeEdits
-          ? applyAiTailoringSuggestions(prepared.sourceCvText, result.suggestions)
-          : prepared.sourceCvText;
-        const score = scoreResumeForRole(tailoredCvText, job, prepared.resumeVersionLabel);
-        const candidateName = resolveCandidateName(workspace.profile.fullName, prepared.sourceCvText);
-        prepared = {
-          ...prepared,
-          tailoredCvText,
-          coverLetter: applicationPreferences.generateCoverLetter && result.coverLetter && candidateName ? normaliseCoverLetterSignoff(result.coverLetter, candidateName) : prepared.coverLetter,
-          matchScore: score.overall,
-          matchedKeywords: score.matchedKeywords,
-          missingKeywords: score.missingKeywords,
-        };
-        setAiResult(result);
-        setSelectedSuggestionIds(applicationPreferences.autoApproveSafeEdits ? result.suggestions.map((suggestion) => suggestion.id) : []);
-        setUseAiCoverLetter(applicationPreferences.generateCoverLetter && Boolean(result.coverLetter));
-        tailoringNotice = result.suggestions.length > 0 && applicationPreferences.autoApproveSafeEdits
-          ? `${result.suggestions.length} evidence-based CV improvements were applied for this role. Review them before submitting.`
-          : result.suggestions.length > 0
-            ? `${result.suggestions.length} evidence-based CV improvements are ready for your review.`
-          : "Your CV was checked against the role. No safe wording changes were needed.";
-      } catch {
-        tailoringNotice = "Your role match is ready. Enhanced tailoring was unavailable, so no unsupported changes were made.";
+      if (applicationPreferences.resumeOptimisation !== "off") {
+        const immediateResult = buildLocalTailoringResult(prepared.sourceCvText, job);
+        prepared = mergeTailoringResult(prepared, immediateResult);
+        setAiResult(immediateResult);
+        setSelectedSuggestionIds(applicationPreferences.autoApproveSafeEdits ? immediateResult.suggestions.map((suggestion) => suggestion.id) : []);
+        setApplication(prepared);
+        persistApplication(prepared);
+        setNotice("Your role match is ready. Finishing the wording review now.");
+        setBusy("ai");
+        try {
+          const tailoringPayload = await requestTailoring(prepared.sourceCvText);
+          const result = tailoringPayload.result;
+          prepared = mergeTailoringResult(prepared, result);
+          setAiResult(result);
+          setSelectedSuggestionIds(applicationPreferences.autoApproveSafeEdits ? result.suggestions.map((suggestion) => suggestion.id) : []);
+          setUseAiCoverLetter(applicationPreferences.generateCoverLetter && Boolean(result.coverLetter));
+          tailoringNotice = result.suggestions.length > 0 && applicationPreferences.autoApproveSafeEdits
+            ? `${result.suggestions.length} evidence-based CV improvements were applied for this role. Review them before submitting.`
+            : result.suggestions.length > 0
+              ? `${result.suggestions.length} evidence-based CV improvements are ready for your review.`
+              : "Your CV was checked against the role. No safe wording changes were needed.";
+        } catch {
+          tailoringNotice = "Your role match is ready using verified evidence from your CV.";
+        }
       } else tailoringNotice = "Resume optimisation is off for this profile. Your source CV remains unchanged.";
       setApplication(prepared);
       persistApplication(prepared);
@@ -274,22 +309,21 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
   const runAiTailoring = async () => {
     if (!application) return;
+    const immediateResult = buildLocalTailoringResult(application.sourceCvText, job);
+    setAiResult(immediateResult);
+    setSelectedSuggestionIds([]);
     setBusy("ai");
     setError(null);
-    setNotice(null);
+    setNotice("Your role evidence is ready. Finishing the wording review now.");
     try {
-      const response = await fetchWithFreshSession("/api/applications/tailor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cvText: application.sourceCvText, job }),
-      });
-      const payload = (await response.json()) as { result?: AiTailoringResult; error?: string };
-      if (!response.ok || !payload.result) throw new Error(payload.error ?? "AI tailoring could not be completed.");
+      const payload = await requestTailoring(application.sourceCvText);
       setAiResult(payload.result);
       setSelectedSuggestionIds([]);
-      setNotice(`Found ${payload.result.suggestions.length} evidence-grounded edit${payload.result.suggestions.length === 1 ? "" : "s"}. Nothing has been applied.`);
+      setNotice(`Tailoring updated. Found ${payload.result.suggestions.length} evidence-based edit${payload.result.suggestions.length === 1 ? "" : "s"} for your review.`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "AI tailoring could not be completed. Your original CV is unchanged.");
+      const message = caught instanceof Error ? caught.message : "";
+      if (/session|sign in/i.test(message)) setError(message);
+      else setNotice("Tailoring updated using verified evidence from your CV. You can review it now.");
     } finally {
       setBusy(null);
     }
@@ -539,9 +573,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </section>
 
               <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
-                <div className="border-b border-slate-200 p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Sparkles size={19} /></span><div><h2 className="font-semibold text-slate-950">CV tailored for this role</h2><p className="mt-1 text-sm leading-6 text-slate-600">Evidence-based improvements are applied during preparation. Review the comparison and adjust anything before submitting.</p></div></div></div>
+                <div className="border-b border-slate-200 p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Sparkles size={19} /></span><div><h2 className="font-semibold text-slate-950">CV tailored for this role</h2><p className="mt-1 text-sm leading-6 text-slate-600">Role evidence is checked immediately. Review the comparison and adjust anything before submitting.</p></div></div></div>
                 <div className="p-5 sm:p-6">
-                  <button type="button" onClick={runAiTailoring} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-40">{busy === "ai" ? <Loader2 className="animate-spin" size={17} /> : <Sparkles size={17} />} Refresh tailoring</button>
+                  <button type="button" onClick={runAiTailoring} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 min-w-48 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 text-sm font-bold text-white hover:bg-violet-800 disabled:cursor-wait disabled:opacity-80">{busy === "ai" ? <Loader2 className="animate-spin" size={17} /> : <Sparkles size={17} />} {busy === "ai" ? tailoringElapsedSeconds < 3 ? "Checking CV evidence" : tailoringElapsedSeconds < 9 ? `Matching the role ${tailoringElapsedSeconds}s` : `Finishing safely ${tailoringElapsedSeconds}s` : "Refresh tailoring"}</button>
+                  {busy === "ai" && <div className="mt-3 max-w-md" role="status" aria-live="polite"><div className="h-1.5 overflow-hidden rounded-full bg-violet-100"><div className="h-full rounded-full bg-violet-600 transition-[width] duration-700" style={{ width: `${Math.min(92, 18 + tailoringElapsedSeconds * 6)}%` }} /></div><p className="mt-2 text-xs leading-5 text-violet-800">Your first evidence match is already available below. The wording review will finish automatically.</p></div>}
                   <p className="mt-3 text-xs leading-5 text-slate-500">Review every suggestion before applying it. <Link href="/ai-disclosure" target="_blank" className="font-semibold text-brand-700 underline">How tailoring works</Link></p>
 
                   {aiResult && <div className="mt-6 border-t border-slate-200 pt-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-wide text-violet-700">Compare before approving</p><h3 className="mt-1 text-lg font-semibold text-slate-950">{aiResult.suggestions.length} suggested edits</h3><p className="mt-1 text-sm text-slate-600">Selected preview: {application.matchScore}% → {selectedScore}%</p></div><label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={useAiCoverLetter} onChange={(event) => setUseAiCoverLetter(event.target.checked)} className="h-5 w-5 accent-violet-700" /> Use AI cover-letter draft</label></div>

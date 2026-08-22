@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import {
   redactDirectIdentifiers,
+  tailorResumeWithFastFallback,
   tailorResumeWithOpenRouter,
   validateTailoringSuggestions,
 } from "@/lib/ai/openrouter-tailoring";
@@ -53,5 +54,28 @@ describe("OpenRouter CV tailoring", () => {
     expect(JSON.stringify(requestBody)).not.toContain("alex@example.com");
     expect(result.suggestions).toHaveLength(1);
     expect(result.privacy.zeroDataRetentionRequested).toBe(true);
+  });
+
+  it("returns the owned evidence result when the enhanced provider fails", async () => {
+    vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("provider unavailable")));
+
+    const outcome = await tailorResumeWithFastFallback({ cvText: cv, job: DEMO_JOBS[0], timeoutMs: 5_000 });
+
+    expect(outcome.mode).toBe("local");
+    expect(outcome.result.model).toBe("ir35careers-evidence-engine");
+    expect(outcome.elapsedMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("uses the owned evidence result immediately when no provider is configured", async () => {
+    vi.stubEnv("OPENROUTER_API_KEY", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const outcome = await tailorResumeWithFastFallback({ cvText: cv, job: DEMO_JOBS[0] });
+
+    expect(outcome.mode).toBe("local");
+    expect(outcome.result.suggestions).toBeDefined();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

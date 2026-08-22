@@ -1,12 +1,11 @@
-import { openRouterTailoringConfig, tailorResumeWithOpenRouter } from "@/lib/ai/openrouter-tailoring";
-import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
+import { tailorResumeWithFastFallback } from "@/lib/ai/openrouter-tailoring";
 import type { JobDetail } from "@/lib/job-types";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumeRateLimitKey, rateLimitResponse } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 30;
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 function tailoringLimit(): number {
@@ -27,10 +26,10 @@ export async function POST(request: Request): Promise<Response> {
     if (!body.job?.id || !body.job.title || !body.job.company_name || typeof body.cvText !== "string") {
       return Response.json({ error: "A CV and complete role are required." }, { status: 400, headers: NO_STORE });
     }
-    const result = openRouterTailoringConfig()
-      ? await tailorResumeWithOpenRouter({ cvText: body.cvText, job: body.job })
-      : buildLocalTailoringResult(body.cvText, body.job);
-    return Response.json({ result }, { headers: NO_STORE });
+    const outcome = await tailorResumeWithFastFallback({ cvText: body.cvText, job: body.job });
+    return Response.json(outcome, {
+      headers: { ...NO_STORE, "Server-Timing": `tailoring;dur=${outcome.elapsedMs}` },
+    });
   } catch (error) {
     if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
     const message = error instanceof Error ? error.message : "AI tailoring failed.";

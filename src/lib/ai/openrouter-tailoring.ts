@@ -2,11 +2,13 @@ import { analyseResumeForRole, scoreResumeForRole } from "@/lib/resume/analysis"
 import type { JobDetail } from "@/lib/job-types";
 import type { AiTailoringResult, AiTailoringSuggestion } from "@/lib/ai/tailoring-types";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
+import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import { readJsonResponse } from "@/lib/security/response-body";
 
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MAX_CV_CHARACTERS = 80_000;
 const MAX_JOB_CHARACTERS = 40_000;
+const DEFAULT_INTERACTIVE_TIMEOUT_MS = 15_000;
 
 interface RawTailoringResponse {
   summary?: unknown;
@@ -28,6 +30,41 @@ export function openRouterTailoringConfig(): { apiKey: string; model: string } |
     apiKey,
     model: process.env.OPENROUTER_MODEL?.trim() || "openai/gpt-4.1-mini",
   };
+}
+
+function interactiveTimeoutMs(): number {
+  const configured = Number.parseInt(process.env.OPENROUTER_TAILORING_TIMEOUT_MS ?? "", 10);
+  return Number.isFinite(configured)
+    ? Math.max(5_000, Math.min(configured, 25_000))
+    : DEFAULT_INTERACTIVE_TIMEOUT_MS;
+}
+
+export type TailoringMode = "enhanced" | "local";
+
+/**
+ * Keeps an interactive tailoring request responsive. The owned evidence engine
+ * returns a useful result when the external model is slow, unavailable or
+ * rejects the structured request, so the candidate is never left waiting on a
+ * provider timeout.
+ */
+export async function tailorResumeWithFastFallback(input: {
+  cvText: string;
+  job: JobDetail;
+  timeoutMs?: number;
+}): Promise<{ result: AiTailoringResult; mode: TailoringMode; elapsedMs: number }> {
+  const startedAt = Date.now();
+  if (!openRouterTailoringConfig()) {
+    return { result: buildLocalTailoringResult(input.cvText, input.job), mode: "local", elapsedMs: Date.now() - startedAt };
+  }
+  try {
+    const result = await tailorResumeWithOpenRouter({
+      ...input,
+      timeoutMs: input.timeoutMs ?? interactiveTimeoutMs(),
+    });
+    return { result, mode: "enhanced", elapsedMs: Date.now() - startedAt };
+  } catch {
+    return { result: buildLocalTailoringResult(input.cvText, input.job), mode: "local", elapsedMs: Date.now() - startedAt };
+  }
 }
 
 export function redactDirectIdentifiers(value: string): string {
@@ -152,7 +189,7 @@ export async function tailorResumeWithOpenRouter(input: {
     body: JSON.stringify({
       model: config.model,
       temperature: 0.15,
-      max_tokens: 5_000,
+      max_tokens: 3_000,
       provider: { zdr: true, data_collection: "deny", require_parameters: true },
       response_format: {
         type: "json_schema",
