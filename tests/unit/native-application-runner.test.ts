@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { detectAts, nativeRunnerHostAllowed } from "@/lib/application-runner/ats";
+import {
+  detectAts,
+  isSafeApplicationHandoffNavigation,
+  nativeRunnerHostAllowed,
+} from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
 import { buildRunnerFacts, type RunnerField } from "@/lib/application-runner/types";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
@@ -40,6 +44,34 @@ describe("native application runner", () => {
     expect(deterministicMapping(field({ label: "Expected annual salary" }))).toMatchObject({ factKey: "target_annual_salary" });
     expect(deterministicMapping(field({ label: "Date of birth" }))).toMatchObject({ factKey: "needs_user" });
     expect(deterministicMapping(field({ label: "Current salary" }))).toMatchObject({ factKey: "needs_user" });
+  });
+
+  it("admits a safe employer handoff only before candidate data is entered", () => {
+    const handoff = {
+      url: "https://careers.employer.example/jobs/123/apply",
+      method: "GET",
+      resourceType: "document",
+      isNavigationRequest: true,
+      isTopLevel: true,
+      sensitive: false,
+    };
+    expect(isSafeApplicationHandoffNavigation(handoff)).toBe(true);
+    expect(
+      isSafeApplicationHandoffNavigation({ ...handoff, sensitive: true }),
+    ).toBe(false);
+    expect(
+      isSafeApplicationHandoffNavigation({
+        ...handoff,
+        url: "http://127.0.0.1/internal",
+      }),
+    ).toBe(false);
+    expect(
+      isSafeApplicationHandoffNavigation({
+        ...handoff,
+        resourceType: "iframe",
+        isTopLevel: false,
+      }),
+    ).toBe(false);
   });
 
   it("uses only confirmed saved answers for employer-specific questions", () => {

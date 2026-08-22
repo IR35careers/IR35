@@ -62,6 +62,30 @@ export function nativeRunnerHostAllowed(value: string): boolean {
   return configured.includes(host);
 }
 
+export function isSafeApplicationHandoffNavigation(input: {
+  url: string;
+  method: string;
+  resourceType: string;
+  isNavigationRequest: boolean;
+  isTopLevel: boolean;
+  sensitive: boolean;
+}): boolean {
+  if (
+    input.sensitive ||
+    input.method !== "GET" ||
+    input.resourceType !== "document" ||
+    !input.isNavigationRequest ||
+    !input.isTopLevel
+  )
+    return false;
+  try {
+    const parsed = new URL(input.url);
+    return parsed.protocol === "https:" && (!parsed.port || parsed.port === "443");
+  } catch {
+    return false;
+  }
+}
+
 export function detectAts(value: string): AtsDefinition {
   const host = new URL(value).hostname.toLowerCase();
   const match = ATS_DOMAINS.find(({ domain }) => hostMatches(host, domain));

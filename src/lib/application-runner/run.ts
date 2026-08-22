@@ -8,6 +8,7 @@ import {
 import { createHash } from "node:crypto";
 import {
   detectAts,
+  isSafeApplicationHandoffNavigation,
   nativeRunnerHostAllowed,
   type AtsDefinition,
 } from "@/lib/application-runner/ats";
@@ -85,6 +86,23 @@ async function publicRequestGuard(
     const hostname = parsed.hostname.toLowerCase();
     if (!approvedHosts.has(hostname)) {
       if (nativeRunnerHostAllowed(hostname)) {
+        await validatePublicHttpsUrl(url);
+        approvedHosts.add(hostname);
+      } else if (
+        isSafeApplicationHandoffNavigation({
+          url,
+          method: request.method(),
+          resourceType: request.resourceType(),
+          isNavigationRequest: request.isNavigationRequest(),
+          isTopLevel: !request.frame().parentFrame(),
+          sensitive: sensitiveMode(),
+        })
+      ) {
+        // Discovery partners such as Reed and Adzuna legitimately hand the
+        // candidate from their listing page to the employer's own ATS. Admit
+        // only a validated, public HTTPS top-level navigation, and only before
+        // any candidate data has been entered. Once filling starts, the guard
+        // returns to the strict approved-host policy below.
         await validatePublicHttpsUrl(url);
         approvedHosts.add(hostname);
       } else if (
@@ -769,7 +787,7 @@ export async function runNativeApplication(
         "unsupported_portal",
       );
     }
-    const ats = detectAts(destination.toString());
+    let ats = detectAts(destination.toString());
     // A short-lived storage link can expire or be temporarily unavailable
     // before the hosted browser reaches the upload step. The approved CV text
     // is already part of this packet, so generate the same truthful PDF in the
@@ -842,6 +860,9 @@ export async function runNativeApplication(
     }
     await validatePublicHttpsUrl(page.url());
     page = await openApplicationForm(page, ats);
+    const applicationDestination = await validatePublicHttpsUrl(page.url());
+    approvedHosts.add(applicationDestination.hostname.toLowerCase());
+    ats = detectAts(applicationDestination.toString());
 
     let portalAccessAttempts = 0;
     for (let step = 0; step < MAX_STEPS; step += 1) {

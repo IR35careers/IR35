@@ -755,6 +755,83 @@ export async function POST(request: Request): Promise<Response> {
 
         if (providerReceipt.state === "needs_user") {
           const action = providerReviewAction(providerReceipt);
+          const reviewQuestions = providerReviewQuestions(
+            providerReceipt.review,
+          );
+          const runnerIssue =
+            reviewQuestions.length === 0 &&
+            [
+              "unsupported_form",
+              "validation_failed",
+              "form_too_long",
+              "unsupported_portal",
+              "runner_timeout",
+            ].includes(action ?? "");
+          if (runnerIssue) {
+            const stoppedAt = new Date().toISOString();
+            const attention = buildApplicationAttention({
+              action: "retry",
+              message: providerReceipt.message,
+            });
+            const [
+              { error: submissionError },
+              { error: packetError },
+              { error: eventError },
+            ] = await Promise.all([
+              admin
+                .from("application_submissions")
+                .update({
+                  status: "failed",
+                  provider_submission_id:
+                    providerReceipt.providerSubmissionId || null,
+                  error_code: action,
+                  receipt: {
+                    state: "failed",
+                    message: providerReceipt.message,
+                    action: "retry",
+                    attention,
+                  },
+                  updated_at: stoppedAt,
+                })
+                .eq("user_id", userId)
+                .eq("idempotency_key", idempotencyKey),
+              admin
+                .from("application_packets")
+                .update({ status: "ready", updated_at: stoppedAt })
+                .eq("id", packet.id)
+                .eq("user_id", userId),
+              admin.from("application_events").upsert(
+                {
+                  user_id: userId,
+                  application_id: packet.id,
+                  event_type: "status_changed",
+                  label:
+                    "Application stopped before confirmation and is ready to retry",
+                  metadata: { reason: action, attention },
+                  idempotency_key: `${idempotencyKey}:runner-issue:${payloadHash}`,
+                },
+                { onConflict: "user_id,idempotency_key" },
+              ),
+            ]);
+            if (submissionError || packetError || eventError)
+              throw new Error(
+                submissionError?.message ||
+                  packetError?.message ||
+                  eventError?.message,
+              );
+            await sendApplicationNotification({
+              kind: "submission_issue",
+              to: notificationEmail,
+              userId,
+              inboxAlias: inbox?.alias,
+              candidateName,
+              jobTitle: job.title,
+              companyName: job.company_name,
+              applicationId: String(packet.id),
+              idempotencyKey: `${idempotencyKey}:submission-issue:${payloadHash}`,
+            }).catch(() => null);
+            return;
+          }
           await storeNeedsUser({
             admin,
             userId,
