@@ -14,8 +14,11 @@ test("inbox connection state and message filters stay clear", async ({ page }) =
   await page.getByPlaceholder("Search messages, companies or roles").fill("Northstar");
   await expect(page.getByText("No messages in this view")).toBeVisible();
 
-  await page.getByRole("button", { name: "Compose" }).click();
-  await expect(page.getByRole("heading", { name: "New recruiter message" })).toBeVisible();
-  await expect(page.getByText("From alex.morgan@inbox.ir35careers.local")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Compose" })).toHaveCount(0);
+  await page.getByPlaceholder("Search messages, companies or roles").fill("");
+  await page.getByRole("button", { name: /^All/ }).click();
+  await page.getByRole("button", { name: "Reply", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Reply to recruiter" })).toBeVisible();
+  await expect(page.getByText("To talent@northstar.example.test", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Close composer" }).click();
 });

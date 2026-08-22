@@ -3,7 +3,7 @@
 Audit date: 22 August 2026
 Application: IR35Careers web application and supporting APIs
 Scope: source code, API boundaries, authentication and authorisation, Supabase policies and storage, automated application runner, webhooks, file handling, browser storage, service worker, security headers, dependency inventory and repository history
-Status: application changes complete and verified; database migration `017_security_hardening.sql` must still be applied to production and the new repository security workflows must still be pushed to GitHub
+Status: application changes are deployed and the repository security workflows are active; database migration `017_security_hardening.sql` must still be applied to production
 
 ## Executive summary
 
@@ -37,7 +37,8 @@ Security is an ongoing risk-management process. This audit does not claim that a
 | Medium | Application submission held the browser request open for the full external portal run | Slow or blocked portals could leave the customer seeing an indefinite loading state and encourage duplicate clicks | The approved packet is durably queued first, the API returns 202 immediately, and the portal run continues in the server lifecycle while the UI polls the owner-scoped status endpoint | Fixed |
 | Medium | Provider emails relied on an informational duplicate header only | A retry could send the same employer application or customer notification more than once | Stable, hashed Resend idempotency keys are now supplied to the provider for both employer applications and customer notifications | Fixed |
 | Medium | Administrator APIs were reachable on public website hosts | Authentication was still enforced, but the public origin unnecessarily exposed the administrator API surface | Administrator APIs and session endpoints now reject non-admin hosts. The public domains return 404 before administrator authentication is evaluated | Fixed |
-| Medium | Release workflows used movable action tags and lacked a required security job | A compromised upstream tag, committed credential, vulnerable dependency or semantic code weakness could reach a future release without a dedicated gate | Official GitHub Actions are pinned to immutable verified commit hashes, checkout credentials are not persisted, CI scans tracked source and full Git history, `npm audit` fails on any known vulnerability, CodeQL is configured to run extended JavaScript/TypeScript security queries, and Dependabot proposes weekly npm and workflow updates | Fixed locally; GitHub push pending |
+| Medium | Release workflows used movable action tags and lacked a required security job | A compromised upstream tag, committed credential, vulnerable dependency or semantic code weakness could reach a future release without a dedicated gate | Official GitHub Actions are pinned to immutable verified commit hashes, checkout credentials are not persisted, CI scans tracked source and full Git history, `npm audit` fails on any known vulnerability, CodeQL is configured to run extended JavaScript/TypeScript security queries, and Dependabot proposes weekly npm and workflow updates | Fixed and active on GitHub |
+| Medium | Registry signature verification ran without a clean dependency installation in its dedicated CI job | The local integrity check passed, but a clean GitHub runner could not inspect the installed dependency tree and failed the release security job | The security job now pins the same npm release used by development, performs an exact lockfile installation with lifecycle scripts disabled, then verifies registry signatures and provenance attestations | Fixed and pushed |
 | Medium | Transitive dependency installation scripts were not explicitly reviewed | A future clean installation could execute lifecycle code from dependencies without a repository-level decision | The only two detected transitive install-script packages, `esbuild` and `unrs-resolver`, are explicitly denied. CI performs clean installations with strict enforcement, the npm version is pinned consistently, and npm reports no unreviewed scripts | Fixed and deployed |
 | Medium | The package manifest and lockfile had drifted | A clean CI runner could not reproduce the dependency installation, preventing release security gates from running reliably | The lockfile was regenerated with the pinned npm release and a strict clean installation was completed before the full release suite | Fixed and deployed |
 | Low | The PDF export dependency retained two deprecated transitive libraries | Deprecated cryptography and JPEG metadata packages would remain in the server dependency inventory even though no vulnerability was currently reported | PDFKit is upgraded to the maintained release that replaces both dependencies. Current compatible patch releases for the core web, database and email libraries are also pinned and re-audited | Fixed and deployed |
@@ -69,7 +70,7 @@ Completed on the audited revision:
 
 - TypeScript: passed with no errors.
 - ESLint: passed with zero warnings.
-- Unit tests: 179 passed across 48 files.
+- Unit tests: 182 passed across 48 files.
 - Processing, tax, aggregator and fetcher tests: 194 passed, 0 failed.
 - Production Next.js build: passed; 68 static pages generated and all dynamic routes compiled.
 - Deployed production browser smoke tests: 6 passed, covering account boundaries, public trust pages, private feed-health routing, safety assets, reduced-motion navigation and canonical/private-page indexing rules.
@@ -77,15 +78,15 @@ Completed on the audited revision:
 - The production CSP permits only `https://kxcbgflleqnjzjbkevwd.supabase.co` and its matching `wss://` origin for Supabase connectivity; wildcard tenant access is absent.
 - Independent MDN HTTP Observatory scan 116152683 returned grade A+, score 125, with 10 of 10 tests passed and zero failed.
 - Direct TLS handshakes reject TLS 1.0 and 1.1, accept TLS 1.2 with ECDHE/RSA/AES-GCM and TLS 1.3 with AES-GCM, and present a valid certificate for `www.ir35careers.com` through 14 October 2026.
-- Production deployment `dpl_FptuzJmTW3VtLeKQ8e3h8YF1ex22` is Ready and serves `www.ir35careers.com`, `ir35careers.com` and `admin.ir35careers.com`.
+- Production deployment `dpl_HRMyujn4GqbXfvUKgkaAft2upcbG` is Ready and serves `www.ir35careers.com`, `ir35careers.com` and `admin.ir35careers.com`.
 - Anonymous Next.js build telemetry is disabled in the Vercel production environment; the verified deployment emitted no telemetry notice.
 - npm dependency audit: 0 low, moderate, high or critical known vulnerabilities.
 - npm registry integrity: signatures verified for 632 packages and provenance attestations verified for 150 packages.
-- Reproducibility: `npm ci --strict-allow-scripts` completed from an empty dependency directory, npm reported no unreviewed scripts, the two deprecated PDF transitive dependencies were absent, and the full 179-unit/194-processing-test release build passed from that clean installation.
+- Reproducibility: `npm ci --strict-allow-scripts` completed from an empty dependency directory, npm reported no unreviewed scripts, the two deprecated PDF transitive dependencies were absent, and the full 182-unit/194-processing-test release build passed from that clean installation.
 - Git patch validation: passed; no whitespace errors.
 - Repository and Git history secret-pattern scan: no OpenRouter, live Stripe, Google API, GitHub token, Supabase JWT or private-key patterns detected. The only tracked environment file is the placeholder `.env.local.example`.
 - The repeatable `security:source` gate passed across 368 tracked files and complete local Git history; all external workflow actions are pinned to full commit hashes.
-- A pinned CodeQL workflow is configured for pushes, pull requests, manual runs and a weekly schedule with the extended JavaScript/TypeScript security query suite. It becomes active after the security commits are pushed to GitHub.
+- A pinned CodeQL workflow is active for pushes, pull requests, manual runs and a weekly schedule with the extended JavaScript/TypeScript security query suite.
 - New regression tests cover streamed body and upstream-response limits, JSON media types, public/private IPv4 and IPv6 rejection, spoofed ATS-domain rejection, administrator host/cache restrictions, server-owned application states, database function privileges and verified recruiter recipients.
 - CSP regression tests verify that only the configured HTTPS Supabase project and its matching secure WebSocket origin are permitted, with no wildcard tenant access and a same-origin-only fallback for insecure configuration.
 
@@ -96,6 +97,8 @@ The reported indefinite loading state was reproduced against the affected CRM De
 The product now treats HTTP 401, 403 and 429 responses, sign-in requirements, CAPTCHA and verification prompts as a Needs You result. It does not mark those applications Applied. A successful receipt and customer confirmation email are created only after the employer portal or a verified recruitment email destination confirms acceptance.
 
 Submission now starts as a background operation after the approved packet is durably recorded. The customer can leave the page while the workspace checks progress. Failure, Needs You and Applied outcomes all terminate the processing display and are recorded in the application timeline. The browser runner and Playwright versions are aligned with the deployed Chromium runtime.
+
+A later regression check found that an old browser-side "Application submission started" event could outlive a missing or unreachable server status record and leave the page showing Processing indefinitely. The current deployment treats only the latest lifecycle event as authoritative, clears a missing or failed server attempt immediately, stops after three consecutive status-check failures, states that no employer confirmation was received and safely restores the Apply action. It never converts this recovery into a false Applied result.
 
 ## Production database action required
 

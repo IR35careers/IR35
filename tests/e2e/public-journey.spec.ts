@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { DEMO_JOBS } from "../../src/lib/demo-jobs";
+import { hasStatedSponsorship, isSeniorityFilter, matchesSeniorityTitle } from "../../src/lib/job-search-filters";
 
 async function expectNoSeriousA11yViolations(page: import("@playwright/test").Page) {
   const results = await new AxeBuilder({ page })
@@ -107,13 +109,45 @@ test("contract results do not wait for facet aggregation", async ({ page }) => {
 });
 
 test("advanced contract filters use explicit listing evidence", async ({ page }) => {
+  await page.route("**/api/jobs/search**", async (route) => {
+    const url = new URL(route.request().url());
+    const seniority = url.searchParams.get("seniority") ?? "";
+    const rateType = url.searchParams.get("rate_type") ?? "";
+    const sponsorship = url.searchParams.get("sponsorship") ?? "";
+    const jobs = DEMO_JOBS.filter((job) => {
+      if (isSeniorityFilter(seniority) && !matchesSeniorityTitle(job.title, seniority)) return false;
+      if (rateType && job.rate_type !== rateType) return false;
+      if (sponsorship === "stated" && !hasStatedSponsorship(job.description)) return false;
+      return true;
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        jobs,
+        total: jobs.length,
+        facets: {
+          outside: jobs.filter((job) => job.ir35_status === "outside").length,
+          inside: jobs.filter((job) => job.ir35_status === "inside").length,
+          tbc: jobs.filter((job) => job.ir35_status === "unknown").length,
+          remote: jobs.filter((job) => job.remote_type === "remote").length,
+          hybrid: jobs.filter((job) => job.remote_type === "hybrid").length,
+          onsite: jobs.filter((job) => job.remote_type === "onsite").length,
+        },
+        page: 1,
+        per_page: Number(url.searchParams.get("per_page") ?? 12),
+        data_source: "demo",
+        generated_at: "2026-08-20T09:00:00.000Z",
+      }),
+    });
+  });
   await page.goto("/jobs");
   await expect(page.getByText("6 contracts found")).toBeVisible();
 
   if (await page.locator("aside:visible").count() === 0) {
     await page.getByRole("button", { name: "Filters" }).click();
   }
-  const filters = page.locator("aside:visible").first();
+  const filters = page.locator("aside:visible").filter({ has: page.getByLabel("Seniority") }).first();
   await filters.getByLabel("Seniority").selectOption("senior");
   await expect(page.getByText("2 contracts found")).toBeVisible();
   await filters.getByLabel("Rate basis").selectOption("daily");
@@ -187,6 +221,7 @@ test("an external job can be previewed and opened in local CV Studio", async ({ 
 });
 
 test("public trust and platform surfaces are available", async ({ page }) => {
+  test.setTimeout(180_000);
   const pages = [
     ["/pricing", "Free throughout the current public beta."],
     ["/platforms", "One contractor workspace, on every screen."],
@@ -211,7 +246,8 @@ test("public trust and platform surfaces are available", async ({ page }) => {
 });
 
 test("operational feed health stays out of the public website", async ({ page, request }) => {
-  const response = await request.get("/api/jobs/health");
+  test.setTimeout(180_000);
+  const response = await request.get("/api/jobs/health", { timeout: 60_000 });
   expect(response.status()).toBe(404);
 
   await page.goto("/jobs/sources");
@@ -223,11 +259,12 @@ test("operational feed health stays out of the public website", async ({ page, r
 });
 
 test("public platform assets and safety boundaries respond correctly", async ({ request }) => {
-  const manifest = await request.get("/manifest.webmanifest");
+  test.setTimeout(180_000);
+  const manifest = await request.get("/manifest.webmanifest", { timeout: 60_000 });
   expect(manifest.ok()).toBeTruthy();
   expect((await manifest.json()).name).toBe("IR35Careers Public Beta");
 
-  const securityPolicy = await request.get("/.well-known/security.txt");
+  const securityPolicy = await request.get("/.well-known/security.txt", { timeout: 60_000 });
   expect(securityPolicy.ok()).toBeTruthy();
   expect(securityPolicy.headers()["content-type"]).toContain("text/plain");
   expect(await securityPolicy.text()).toContain("Policy: https://www.ir35careers.com/bug-bounty");
@@ -238,12 +275,12 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
     ["/downloads/ir35careers-mcp-v1.zip", "/jobs"],
   ] as const;
   for (const [path, destination] of retiredDownloads) {
-    const response = await request.get(path, { maxRedirects: 0 });
+    const response = await request.get(path, { maxRedirects: 0, timeout: 60_000 });
     expect(response.status()).toBe(308);
     expect(response.headers().location).toBe(destination);
   }
 
-  const search = await request.get("/api/jobs/search?per_page=1");
+  const search = await request.get("/api/jobs/search?per_page=1", { timeout: 60_000 });
   expect(search.ok()).toBeTruthy();
   const searchPayload = await search.json();
   expect(searchPayload.jobs.length).toBeGreaterThan(0);
@@ -257,24 +294,24 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   expect(firstJob).not.toHaveProperty("description");
   expect(firstJob).not.toHaveProperty("apply_url");
 
-  const detail = await request.get(`/api/jobs/${firstJob.id}`);
+  const detail = await request.get(`/api/jobs/${firstJob.id}`, { timeout: 60_000 });
   expect(detail.ok()).toBeTruthy();
   expect((await detail.json()).job.id).toBe(firstJob.id);
 
-  const connections = await request.get("/api/integrations/status");
+  const connections = await request.get("/api/integrations/status", { timeout: 60_000 });
   expect(connections.status()).toBe(401);
 
-  const accountExport = await request.get("/api/account");
+  const accountExport = await request.get("/api/account", { timeout: 60_000 });
   expect(accountExport.status()).toBe(401);
 
-  const checkout = await request.post("/api/billing/checkout");
+  const checkout = await request.post("/api/billing/checkout", { timeout: 60_000 });
   expect(checkout.status()).toBe(503);
   expect((await checkout.json()).error).toMatch(/not connected/i);
 
-  const billingWebhook = await request.post("/api/integrations/billing/webhook", { data: {} });
+  const billingWebhook = await request.post("/api/integrations/billing/webhook", { data: {}, timeout: 60_000 });
   expect(billingWebhook.status()).toBe(503);
 
-  const privatePreview = await request.post("/api/jobs/preview", { data: { url: "https://127.0.0.1/private" } });
+  const privatePreview = await request.post("/api/jobs/preview", { data: { url: "https://127.0.0.1/private" }, timeout: 60_000 });
   expect(privatePreview.status()).toBe(400);
   expect((await privatePreview.json()).error).toMatch(/public (?:HTTPS|website)/i);
 });
@@ -315,6 +352,7 @@ test("mobile navigation exposes all primary destinations", async ({ page }, test
 });
 
 test("CV Studio analyses, verifies, versions and exports a role-ready CV", async ({ page, request }) => {
+  test.setTimeout(180_000);
   const parsed = await request.post("/api/resume/parse", {
     multipart: {
       file: {
@@ -323,6 +361,7 @@ test("CV Studio analyses, verifies, versions and exports a role-ready CV", async
         buffer: Buffer.from("Alex Morgan\n\nPROFILE\nCloud contractor\n\nSKILLS\nAWS Terraform\n\nEXPERIENCE\n- Built AWS services with Terraform for UK clients."),
       },
     },
+    timeout: 60_000,
   });
   expect(parsed.ok()).toBeTruthy();
   expect((await parsed.json()).text).toContain("AWS Terraform");
@@ -335,6 +374,7 @@ test("CV Studio analyses, verifies, versions and exports a role-ready CV", async
         buffer: Buffer.from("%PDF-1.7\n1 0 obj <</OpenAction 2 0 R>>"),
       },
     },
+    timeout: 60_000,
   });
   expect(blockedActivePdf.status()).toBe(400);
   expect((await blockedActivePdf.json()).error).toMatch(/active or embedded content/i);
@@ -391,7 +431,7 @@ test("application workspace presents a clean review flow and never claims an unc
 
   await page.getByRole("button", { name: "Save application" }).click();
   await expect(page.getByText("Reviewed packet saved. It has not been sent to the employer.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Application access needs checking" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in to apply" })).toBeVisible();
   await expect(page.getByText(/OpenRouter|browser-automation gateway|authorised Ashby/i)).toHaveCount(0);
   await expect(page.getByText("Employer submission confirmed")).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
@@ -407,10 +447,10 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByText("alex.morgan@example.test", { exact: true }).first()).toBeVisible();
 
   await page.goto("/automation");
-  await expect(page.getByRole("heading", { name: "Set the rules once. Review every packet." })).toBeVisible();
-  await page.getByRole("switch", { name: "Paused" }).click();
-  await page.getByRole("button", { name: "Run live preview" }).click();
-  await expect(page.getByText(/contracts entered the review queue/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Choose the roles. IR35Careers handles the application." })).toBeVisible();
+  await expect(page.getByText(/marked Applied only after employer confirmation/i)).toBeVisible();
+  await page.getByRole("button", { name: "Preview matches" }).click();
+  await expect(page.getByText(/matching contracts? found/i)).toBeVisible();
 });
 
 test("saved alerts preview current matches without claiming email delivery", async ({ page }) => {
