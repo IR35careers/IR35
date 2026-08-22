@@ -107,6 +107,12 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
+      - name: Use reproducible npm version
+        run: npm install --global npm@11.19.0
+
+      - name: Install exact dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
       - name: Scan tracked source and Git history
         run: npm run security:source
 
