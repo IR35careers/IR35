@@ -69,6 +69,8 @@ export function FeedbackBubble() {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"new" | "history" | "ticket">("new");
   const [tickets, setTickets] = useState<FeedbackRecord[]>([]);
@@ -83,6 +85,7 @@ export function FeedbackBubble() {
   const [category, setCategory] = useState<FeedbackCategory>("general");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [reply, setReply] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const visible = !loading && (Boolean(user) || !isSupabaseConfigured()) && !isAdministratorEmail(user?.email) && WORKSPACE_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   const selected = tickets.find((ticket) => ticket.id === selectedId) ?? null;
@@ -166,7 +169,19 @@ export function FeedbackBubble() {
   };
 
   const submitTicket = async () => {
+    const trimmedSubject = subject.trim();
+    const trimmedMessage = message.trim();
+    if (trimmedSubject.length < 5 || trimmedMessage.length < 20) {
+      setSubmitAttempted(true);
+      setError("Complete the highlighted fields so we can investigate the issue properly.");
+      const target = trimmedSubject.length < 5 ? subjectRef.current : messageRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => target?.focus(), 250);
+      return;
+    }
+
     setSubmitting(true);
+    setSubmitAttempted(false);
     setError(null);
     setSuccess(null);
     try {
@@ -186,6 +201,7 @@ export function FeedbackBubble() {
       setMessage("");
       setCategory("general");
       setAttachment(null);
+      setSubmitAttempted(false);
       setSuccess(json.message ?? "Thank you for your feedback. We will review it and keep you updated.");
       setView("ticket");
     } catch (caught) {
@@ -246,8 +262,8 @@ export function FeedbackBubble() {
             {error && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs leading-5 text-rose-800" role="alert">{error}</div>}
             {view === "new" && <div className="space-y-4">
               <label className="block text-xs font-semibold text-slate-700">What is this about?<select value={category} onChange={(event) => setCategory(event.target.value as FeedbackCategory)} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">{CATEGORY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-              <label className="block text-xs font-semibold text-slate-700">Short title<input value={subject} onChange={(event) => setSubject(event.target.value)} maxLength={140} placeholder="Example: CV preview is not loading" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100" /></label>
-              <label className="block text-xs font-semibold text-slate-700">What happened?<textarea value={message} onChange={(event) => setMessage(event.target.value)} maxLength={5000} rows={6} placeholder="Tell us what you were doing, what went wrong and what you expected to happen." className="mt-2 w-full resize-y rounded-xl border border-slate-300 px-3 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100" /></label>
+              <label className="block text-xs font-semibold text-slate-700">Short title<input ref={subjectRef} value={subject} onChange={(event) => setSubject(event.target.value)} maxLength={140} aria-invalid={submitAttempted && subject.trim().length < 5} aria-describedby={submitAttempted && subject.trim().length < 5 ? "feedback-subject-error" : undefined} placeholder="Example: CV preview is not loading" className={`mt-2 min-h-11 w-full rounded-xl border px-3 text-sm outline-none placeholder:text-slate-400 focus:ring-4 ${submitAttempted && subject.trim().length < 5 ? "border-rose-400 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-100" : "border-slate-300 focus:border-brand-500 focus:ring-brand-100"}`} />{submitAttempted && subject.trim().length < 5 && <span id="feedback-subject-error" className="mt-1.5 block text-[11px] font-medium text-rose-700">Add a clear title using at least 5 characters.</span>}</label>
+              <label className="block text-xs font-semibold text-slate-700">What happened?<textarea ref={messageRef} value={message} onChange={(event) => setMessage(event.target.value)} maxLength={5000} rows={6} aria-invalid={submitAttempted && message.trim().length < 20} aria-describedby={submitAttempted && message.trim().length < 20 ? "feedback-message-error" : undefined} placeholder="Tell us what you were doing, what went wrong and what you expected to happen." className={`mt-2 w-full resize-y rounded-xl border px-3 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:ring-4 ${submitAttempted && message.trim().length < 20 ? "border-rose-400 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-100" : "border-slate-300 focus:border-brand-500 focus:ring-brand-100"}`} />{submitAttempted && message.trim().length < 20 && <span id="feedback-message-error" className="mt-1.5 block text-[11px] font-medium text-rose-700">Describe what happened using at least 20 characters.</span>}</label>
               <div>
                 <p className="text-xs font-semibold text-slate-700">Add an image</p>
                 <div className="mt-2 grid grid-cols-2 gap-2"><button type="button" onClick={() => inputRef.current?.click()} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50"><ImagePlus size={15} /> Upload image</button><button type="button" onClick={() => void takeScreenshot()} disabled={capturing} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">{capturing ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />} {capturing ? "Capturing page" : "Capture page"}</button></div>
@@ -255,7 +271,7 @@ export function FeedbackBubble() {
                 {preview && <div className="relative mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50"><Image src={preview} alt="Feedback attachment preview" width={720} height={440} unoptimized className="max-h-44 w-full object-contain" /><button type="button" onClick={() => setAttachment(null)} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950/80 text-white" aria-label="Remove image"><X size={14} /></button><p className="truncate px-3 py-2 text-[11px] text-slate-500"><Paperclip size={11} className="mr-1 inline" />{attachment?.name}</p></div>}
                 <p className="mt-2 text-[11px] leading-4 text-slate-500">Capture saves the visible IR35Careers page only. This feedback panel is excluded. Uploaded images can be PNG, JPG or WebP up to 5 MB.</p>
               </div>
-              <button type="button" onClick={() => void submitTicket()} disabled={submitting || subject.trim().length < 5 || message.trim().length < 20} className="ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} {submitting ? "Sending securely" : "Send feedback"}</button>
+              <button type="button" onClick={() => void submitTicket()} disabled={submitting} className="ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-wait disabled:opacity-60">{submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} {submitting ? "Sending securely" : "Send feedback"}</button>
             </div>}
 
             {view === "history" && <div>{loadingTickets ? <div className="flex min-h-44 items-center justify-center text-slate-400"><Loader2 className="animate-spin" size={20} /></div> : tickets.length ? <div className="space-y-3">{tickets.map((ticket) => { const ticketUnread = (ticket.messages ?? []).some((item) => item.author_type === "admin" && !item.read_by_user_at); return <button key={ticket.id} type="button" onClick={() => void openTicket(ticket.id)} className="block w-full rounded-2xl border border-slate-200 p-4 text-left transition hover:border-brand-300 hover:bg-brand-50/30"><div className="flex items-start justify-between gap-3"><p className="font-semibold text-slate-950">{ticket.subject || "Customer feedback"}{ticketUnread && <span className="ml-2 inline-block h-2 w-2 rounded-full bg-blue-600" aria-label="Unread support reply" />}</p><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${ticket.status === "resolved" ? "bg-emerald-50 text-emerald-700" : ticket.status === "in_progress" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{statusLabel(ticket.status)}</span></div><p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{ticket.message}</p><p className="mt-3 text-[11px] text-slate-400">{formatDate(ticket.created_at)}</p></button>; })}</div> : <div className="py-12 text-center"><MessageCircle className="mx-auto text-slate-300" size={28} /><p className="mt-3 text-sm font-semibold text-slate-800">No feedback yet</p><p className="mt-1 text-xs text-slate-500">Your reports and support updates will appear here.</p></div>}</div>}

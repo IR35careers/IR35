@@ -105,6 +105,16 @@ test("contractors can open the persistent feedback reporter and attach evidence"
     buffer: Buffer.from("89504e470d0a1a0a0000000d49484452", "hex"),
   });
   await expect(dialog.getByAltText("Feedback attachment preview")).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Send feedback" })).toBeEnabled();
+  const sendButton = dialog.getByRole("button", { name: "Send feedback" });
+  await expect(sendButton).toBeEnabled();
+  await dialog.getByLabel("Short title").fill("");
+  await dialog.getByLabel("What happened?").fill("");
+  await sendButton.click();
+  await expect(dialog.getByText("Add a clear title using at least 5 characters.")).toBeVisible();
+  await expect(dialog.getByText("Describe what happened using at least 20 characters.")).toBeVisible();
+  await expect(dialog.getByLabel("Short title")).toBeFocused();
+  await dialog.getByLabel("Short title").fill("Application form is not loading");
+  await dialog.getByLabel("What happened?").fill("The application form remained blank after I selected review and apply.");
+  await expect(sendButton).toBeEnabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
 });

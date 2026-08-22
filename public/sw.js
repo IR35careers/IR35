@@ -1,4 +1,4 @@
-const CACHE_NAME = "ir35careers-shell-v4";
+const CACHE_NAME = "ir35careers-shell-v5";
 const OFFLINE_URL = "/offline";
 const STATIC_URLS = [
   OFFLINE_URL,
