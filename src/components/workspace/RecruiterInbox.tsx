@@ -6,6 +6,7 @@ import { AtSign, Check, CheckCheck, CheckCircle2, ChevronDown, Copy, Inbox, Load
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { getSupabase } from "@/lib/supabase";
+import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { inboxViewCategory, inboxViewCategoryLabel, type InboxViewCategory } from "@/lib/workspace/mail";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { InboxMessage } from "@/lib/workspace/types";
@@ -36,6 +37,10 @@ function categoryStyle(category: InboxViewCategory): string {
 function CategoryPill({ message }: { message: InboxMessage }) {
   const category = inboxViewCategory(message);
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold ${categoryStyle(category)}`}>{inboxViewCategoryLabel(category)}</span>;
+}
+
+function canReplyToMessage(message: InboxMessage): boolean {
+  return Boolean(message.applicationId && /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(message.from.trim()));
 }
 
 export function RecruiterInbox() {
@@ -80,6 +85,36 @@ export function RecruiterInbox() {
       if (active) setEmailState(email?.state === "connected" ? "connected" : "gated");
     }).catch(() => { if (active) setEmailState("error"); });
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let active = true;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const syncMessages = async () => {
+      if (document.visibilityState === "hidden") return;
+      try {
+        const response = await fetchWithFreshSession("/api/integrations/email/inbox-sync", {
+          method: "POST",
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+        const payload = await response.json() as { messages?: InboxMessage[] };
+        if (!active || !Array.isArray(payload.messages)) return;
+        updateWorkspace((current) => ({ ...current, messages: payload.messages as InboxMessage[] }));
+      } catch {
+        // The current inbox remains available if a background refresh fails.
+      }
+    };
+    void syncMessages();
+    timer = setInterval(() => void syncMessages(), 12_000);
+    const refreshWhenVisible = () => { if (document.visibilityState === "visible") void syncMessages(); };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      active = false;
+      if (timer) clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, []);
 
   const selectMessage = (message: InboxMessage) => {
@@ -188,7 +223,7 @@ export function RecruiterInbox() {
 
       <section className="mt-4 grid min-h-[540px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card lg:grid-cols-[380px_1fr]">
         <div className="border-b border-slate-200 lg:border-b-0 lg:border-r">
-          {visible.length === 0 ? <div className="p-8 text-center"><Inbox className="mx-auto text-slate-400" /><p className="mt-3 text-sm font-semibold text-slate-700">No messages in this view</p><p className="mt-1 text-xs text-slate-500">Try another filter or clear the search.</p></div> : visible.map((message) => (
+          {visible.length === 0 ? <div className="p-8 text-center"><Inbox className="mx-auto text-slate-400" /><p className="mt-3 text-sm font-semibold text-slate-700">{filter === "all" ? "No application messages yet" : `No ${FILTERS.find((item) => item.id === filter)?.label ?? "matching"} messages`}</p><p className="mt-1 text-xs text-slate-500">{workspace.messages.length > 0 ? "Your messages are available in another category." : "Application updates and recruiter replies will appear here automatically."}</p>{(filter !== "all" || query) && <button type="button" onClick={() => { setFilter("all"); setQuery(""); }} className="ir35-focus mt-4 min-h-10 rounded-xl border border-slate-300 px-4 text-xs font-bold text-slate-700 hover:bg-slate-50">View all messages</button>}</div> : visible.map((message) => (
             <button key={message.id} type="button" onClick={() => selectMessage(message)} className={`ir35-focus block w-full border-b border-slate-100 p-4 text-left transition-colors ${selected?.id === message.id ? "bg-brand-50" : "hover:bg-slate-50"}`}>
               <div className="flex items-center justify-between gap-2"><span className={`truncate text-xs ${message.read ? "text-slate-500" : "font-bold text-slate-900"}`}>{message.from}</span>{!message.read && <span className="h-2 w-2 shrink-0 rounded-full bg-brand-600" aria-label="Unread" />}</div>
               <p className={`mt-1 truncate text-sm ${message.read ? "font-medium text-slate-700" : "font-bold text-slate-950"}`}>{message.subject}</p>
@@ -198,7 +233,7 @@ export function RecruiterInbox() {
           ))}
         </div>
         <div className="min-w-0 p-5 sm:p-8">
-          {selected ? <article><div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between"><div><CategoryPill message={selected} /><h2 className="mt-3 text-xl font-semibold text-slate-950">{selected.subject}</h2><p className="mt-1 break-all text-sm text-slate-500">From {selected.from}</p></div><div className="flex shrink-0 flex-col items-start gap-2 sm:items-end"><p className="text-xs text-slate-500">{new Date(selected.receivedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p>{selected.applicationId && <button type="button" onClick={() => openComposer(selected)} disabled={!hasAlias} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 disabled:opacity-40"><Reply size={14} /> Reply</button>}</div></div><div className="mt-6 whitespace-pre-line text-sm leading-7 text-slate-700">{selected.body}</div>{selected.applicationId && <div className="mt-8 rounded-2xl border border-brand-200 bg-brand-50 p-4"><p className="flex items-center gap-2 text-sm font-semibold text-brand-900"><MailCheck size={16} /> Linked to {workspace.applications.find((item) => item.id === selected.applicationId)?.job.title ?? "an application"}</p><Link href="/applications" className="ir35-focus mt-3 inline-flex min-h-10 items-center rounded-xl bg-white px-3 text-xs font-bold text-brand-800 shadow-sm">Open in pipeline</Link></div>}</article> : <div className="flex h-full items-center justify-center text-center"><div><CheckCircle2 className="mx-auto text-slate-300" size={32} /><p className="mt-3 text-sm text-slate-500">Choose a message to read it.</p></div></div>}
+          {selected ? <article><div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between"><div><CategoryPill message={selected} /><h2 className="mt-3 text-xl font-semibold text-slate-950">{selected.subject}</h2><p className="mt-1 break-all text-sm text-slate-500">From {selected.from}</p></div><div className="flex shrink-0 flex-col items-start gap-2 sm:items-end"><p className="text-xs text-slate-500">{new Date(selected.receivedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p>{canReplyToMessage(selected) && <button type="button" onClick={() => openComposer(selected)} disabled={!hasAlias} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 disabled:opacity-40"><Reply size={14} /> Reply</button>}</div></div><div className="mt-6 whitespace-pre-line text-sm leading-7 text-slate-700">{selected.body}</div>{selected.applicationId && <div className="mt-8 rounded-2xl border border-brand-200 bg-brand-50 p-4"><p className="flex items-center gap-2 text-sm font-semibold text-brand-900"><MailCheck size={16} /> Linked to {workspace.applications.find((item) => item.id === selected.applicationId)?.job.title ?? "an application"}</p><Link href="/applications" className="ir35-focus mt-3 inline-flex min-h-10 items-center rounded-xl bg-white px-3 text-xs font-bold text-brand-800 shadow-sm">Open in pipeline</Link></div>}</article> : <div className="flex h-full items-center justify-center text-center"><div><CheckCircle2 className="mx-auto text-slate-300" size={32} /><p className="mt-3 text-sm text-slate-500">Choose a message to read it.</p></div></div>}
         </div>
       </section>
 

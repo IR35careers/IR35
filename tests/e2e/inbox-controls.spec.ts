@@ -12,7 +12,8 @@ test("inbox connection state and message filters stay clear", async ({ page }) =
   await page.getByRole("button", { name: "Rejection" }).click();
   await expect(page.getByRole("button", { name: "Rejection" })).toHaveAttribute("aria-pressed", "true");
   await page.getByPlaceholder("Search messages, companies or roles").fill("Northstar");
-  await expect(page.getByText("No messages in this view")).toBeVisible();
+  await expect(page.getByText("No Rejection messages")).toBeVisible();
+  await expect(page.getByRole("button", { name: "View all messages" })).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Compose" })).toHaveCount(0);
   await page.getByPlaceholder("Search messages, companies or roles").fill("");

@@ -122,6 +122,7 @@ async function storeNeedsUser(input: {
   packet: DbRow;
   job: JobDetail;
   recipient: string;
+  inboxAlias?: string;
   candidateName: string;
   providerReceipt?: SubmissionProviderReceipt;
   message: string;
@@ -159,6 +160,8 @@ async function storeNeedsUser(input: {
   await sendApplicationNotification({
     kind: "needs_attention",
     to: input.recipient,
+    userId: input.userId,
+    inboxAlias: input.inboxAlias,
     candidateName: input.candidateName,
     jobTitle: input.job.title,
     companyName: input.job.company_name,
@@ -325,7 +328,7 @@ export async function POST(request: Request): Promise<Response> {
 
         if (providerReceipt.state === "needs_user") {
           const action = providerReviewAction(providerReceipt);
-          await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, providerReceipt, message: providerReceipt.message, action });
+          await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, inboxAlias: inbox?.alias, candidateName, providerReceipt, message: providerReceipt.message, action });
           return;
         }
         if (providerReceipt.state === "processing") {
@@ -349,12 +352,12 @@ export async function POST(request: Request): Promise<Response> {
         admin.from("application_events").upsert({ user_id: userId, application_id: packet.id, event_type: "status_changed", label: "Application submitted successfully", metadata: { providerSubmissionId: providerReceipt.providerSubmissionId }, idempotency_key: `${idempotencyKey}:event` }, { onConflict: "user_id,idempotency_key" }),
       ]);
         if (submissionError || updateError || eventError) throw new Error(submissionError?.message || updateError?.message || eventError?.message);
-        await sendApplicationNotification({ kind: "submitted", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submitted` }).catch(() => null);
+        await sendApplicationNotification({ kind: "submitted", to: notificationEmail, userId, inboxAlias: inbox?.alias, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submitted` }).catch(() => null);
         return;
       } catch (providerError) {
         const providerMessage = providerError instanceof Error ? providerError.message : "";
         if (providerMessage.startsWith("Complete your Application Profile")) {
-          await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, candidateName, message: providerMessage, action: "/profile" });
+          await storeNeedsUser({ admin, userId, packet: packet as DbRow, job, recipient: notificationEmail, inboxAlias: inbox?.alias, candidateName, message: providerMessage, action: "/profile" });
           return;
         }
         console.error("application_runner_failed", {
@@ -367,7 +370,7 @@ export async function POST(request: Request): Promise<Response> {
           admin.from("application_submissions").update({ status: "failed", error_code: "provider_error", receipt: { state: "failed", message: safeSubmissionError(providerError) }, updated_at: failedAt }).eq("user_id", userId).eq("idempotency_key", idempotencyKey),
           admin.from("application_events").upsert({ user_id: userId, application_id: packet.id, event_type: "status_changed", label: "Application attempt stopped and is ready to retry", metadata: { reason: "provider_error" }, idempotency_key: `${idempotencyKey}:failed:${payloadHash}` }, { onConflict: "user_id,idempotency_key" }),
         ]);
-        await sendApplicationNotification({ kind: "submission_issue", to: notificationEmail, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submission-issue` }).catch(() => null);
+        await sendApplicationNotification({ kind: "submission_issue", to: notificationEmail, userId, inboxAlias: inbox?.alias, candidateName, jobTitle: job.title, companyName: job.company_name, applicationId: String(packet.id), idempotencyKey: `${idempotencyKey}:submission-issue` }).catch(() => null);
         return;
       }
     });

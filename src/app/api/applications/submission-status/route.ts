@@ -83,7 +83,7 @@ export async function GET(request: Request): Promise<Response> {
         admin.from("application_events").upsert({ user_id: userId, application_id: applicationId, event_type: "status_changed", label: "Application needs your answer", metadata: { providerSubmissionId: providerReceipt.providerSubmissionId }, idempotency_key: `submit:${applicationId}:needs-user:${providerReceipt.providerSubmissionId}` }, { onConflict: "user_id,idempotency_key" }),
       ]);
       if (updateSubmissionError || updatePacketError || eventError) throw new Error(updateSubmissionError?.message || updatePacketError?.message || eventError?.message);
-      if (firstNotice) await sendApplicationNotification({ kind: "needs_attention", to: notificationEmail, jobTitle: job.title, companyName: job.company_name, applicationId, idempotencyKey: `submit:${applicationId}:needs-user:${providerReceipt.providerSubmissionId}` }).catch(() => null);
+      if (firstNotice) await sendApplicationNotification({ kind: "needs_attention", to: notificationEmail, userId, inboxAlias: inbox?.alias, jobTitle: job.title, companyName: job.company_name, applicationId, idempotencyKey: `submit:${applicationId}:needs-user:${providerReceipt.providerSubmissionId}` }).catch(() => null);
       return Response.json({ state: "needs_user", message: providerReceipt.message, questions }, { status: 202, headers: NO_STORE });
     }
     if (providerReceipt.state === "processing") {
@@ -107,7 +107,7 @@ export async function GET(request: Request): Promise<Response> {
       admin.from("application_events").upsert({ user_id: userId, application_id: applicationId, event_type: "status_changed", label: "Application submitted successfully", metadata: { providerSubmissionId: providerReceipt.providerSubmissionId }, idempotency_key: `submit:${applicationId}:event` }, { onConflict: "user_id,idempotency_key" }),
     ]);
     if (updateSubmissionError || updatePacketError || eventError) throw new Error(updateSubmissionError?.message || updatePacketError?.message || eventError?.message);
-    await sendApplicationNotification({ kind: "submitted", to: notificationEmail, jobTitle: job.title, companyName: job.company_name, applicationId, idempotencyKey: `submit:${applicationId}:submitted` }).catch(() => null);
+    await sendApplicationNotification({ kind: "submitted", to: notificationEmail, userId, inboxAlias: inbox?.alias, jobTitle: job.title, companyName: job.company_name, applicationId, idempotencyKey: `submit:${applicationId}:submitted` }).catch(() => null);
     return Response.json({ state: "submitted", receipt }, { headers: NO_STORE });
   } catch {
     return Response.json({ error: "Application progress could not be refreshed." }, { status: 502, headers: NO_STORE });

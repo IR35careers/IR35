@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import type { InboxClassification } from "@/lib/workspace/types";
 
 export type ApplicationNotificationKind =
   | "submitted"
@@ -21,6 +23,23 @@ export interface ApplicationNotificationInput {
   originalMessage?: string;
   replyTo?: string;
   idempotencyKey: string;
+  userId?: string;
+  inboxAlias?: string;
+  occurredAt?: string;
+}
+
+export interface ApplicationInboxRecord {
+  user_id: string;
+  application_id: string;
+  provider_message_id: string;
+  sender: string;
+  recipient: string;
+  subject: string;
+  body_text: string;
+  preview: string;
+  classification: InboxClassification;
+  is_read: boolean;
+  received_at: string;
 }
 
 const SITE_URL = "https://www.ir35careers.com";
@@ -51,7 +70,7 @@ function providerIdempotencyKey(value: string): string {
   return `ir35-application-${createHash("sha256").update(value).digest("hex")}`;
 }
 
-function presentation(input: ApplicationNotificationInput): {
+export function applicationNotificationPresentation(input: ApplicationNotificationInput): {
   subject: string;
   eyebrow: string;
   title: string;
@@ -80,7 +99,7 @@ function presentation(input: ApplicationNotificationInput): {
         body: `The application for ${role} is paused because an employer question could not be answered safely from your saved profile. Review the highlighted question and the application will continue after you confirm it.`,
         accent: "#b45309",
         actionLabel: "Answer the question",
-        actionPath: `/applications/new/${encodeURIComponent(input.applicationId)}`,
+        actionPath: "/applications",
       };
     case "submission_issue":
       return {
@@ -90,7 +109,7 @@ function presentation(input: ApplicationNotificationInput): {
         body: `IR35Careers could not obtain an employer confirmation for ${role}. Your approved CV and answers are saved. Open the application to review the issue and try again.`,
         accent: "#b45309",
         actionLabel: "Review application",
-        actionPath: `/applications/new/${encodeURIComponent(input.applicationId)}`,
+        actionPath: "/applications",
       };
     case "interview":
       return {
@@ -137,10 +156,64 @@ function presentation(input: ApplicationNotificationInput): {
   }
 }
 
+function inboxClassification(kind: ApplicationNotificationKind): InboxClassification {
+  if (kind === "needs_attention" || kind === "submission_issue") return "action_required";
+  if (kind === "interview") return "interview";
+  if (kind === "rejection") return "rejection";
+  if (kind === "submitted" || kind === "update") return "application_update";
+  return "other";
+}
+
+export function buildApplicationInboxRecord(input: ApplicationNotificationInput): ApplicationInboxRecord | null {
+  if (!input.userId || !/^[0-9a-f-]{36}$/i.test(input.userId) || !/^[0-9a-f-]{36}$/i.test(input.applicationId)) return null;
+  const view = applicationNotificationPresentation(input);
+  const original = input.originalMessage?.trim();
+  const body = [view.body, original ? `Original message${input.originalSubject ? `: ${input.originalSubject}` : ""}\n\n${original}` : ""]
+    .filter(Boolean)
+    .join("\n\n")
+    .slice(0, 40_000);
+  return {
+    user_id: input.userId,
+    application_id: input.applicationId,
+    provider_message_id: `ir35-system-${createHash("sha256").update(input.idempotencyKey).digest("hex")}`,
+    sender: "IR35Careers",
+    recipient: input.inboxAlias?.trim() || input.to,
+    subject: view.subject.slice(0, 300),
+    body_text: body,
+    preview: body.replace(/\s+/g, " ").slice(0, 220),
+    classification: inboxClassification(input.kind),
+    is_read: false,
+    received_at: input.occurredAt || new Date().toISOString(),
+  };
+}
+
+export async function recordApplicationNotification(
+  input: ApplicationNotificationInput,
+  admin = getSupabaseAdmin(),
+): Promise<boolean> {
+  const record = buildApplicationInboxRecord(input);
+  if (!record) return false;
+  const { error } = await admin.from("inbox_messages").upsert(record, {
+    onConflict: "user_id,provider_message_id",
+    ignoreDuplicates: true,
+  });
+  if (error) throw new Error(error.message);
+  return true;
+}
+
 export async function sendApplicationNotification(input: ApplicationNotificationInput): Promise<string | null> {
+  if (input.userId) {
+    await recordApplicationNotification(input).catch((error: unknown) => {
+      console.error("application_notification_inbox_failed", {
+        kind: input.kind,
+        applicationId: input.applicationId,
+        reason: error instanceof Error ? error.message.slice(0, 180) : "unknown",
+      });
+    });
+  }
   const config = transactionalEmailConfig();
   if (!config || !validEmail(input.to)) return null;
-  const view = presentation(input);
+  const view = applicationNotificationPresentation(input);
   const firstName = input.candidateName?.trim().split(/\s+/)[0] ?? "";
   const greeting = firstName ? `Hello ${firstName},` : "Hello,";
   const messageBlock = input.originalMessage?.trim()

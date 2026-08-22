@@ -7,6 +7,7 @@ import {
   unresolvedRequiredQuestions,
 } from "@/lib/automation/auto-apply";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
+import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { evaluateAutomationJob, prepareApplication } from "@/lib/workspace/engine";
 import type { ApplicationPreferences, ApplicationRecord, AutomationRules, ContractorProfile, ResumeProfile } from "@/lib/workspace/types";
@@ -205,9 +206,12 @@ export async function POST(request: Request): Promise<Response> {
     if (missing.length > 0) {
       application = { ...application, status: "needs_review", submissionApproved: false, updatedAt: new Date().toISOString() };
       await saveNeedsUser(application, userId);
+      const inbox = await ensureInboxAlias(admin, userId, authData.user.email ?? profile.forwardingEmail ?? profile.email, true);
       await sendApplicationNotification({
         kind: "needs_attention",
-        to: authData.user.email ?? profile.forwardingEmail ?? profile.email,
+        to: inbox?.forwardingEmail || authData.user.email || profile.forwardingEmail || profile.email,
+        userId,
+        inboxAlias: inbox?.alias,
         candidateName: profile.fullName,
         jobTitle: application.job.title,
         companyName: application.job.company_name,
