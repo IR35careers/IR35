@@ -39,10 +39,10 @@ jobs:
           cache: npm
 
       - name: Use reproducible npm version
-        run: npm install --global npm@11.6.2
+        run: npm install --global npm@11.19.0
 
       - name: Install exact dependencies
-        run: npm ci
+        run: npm ci --strict-allow-scripts
 
       - name: Run release verification
         run: npm run verify:release
@@ -68,10 +68,10 @@ jobs:
           cache: npm
 
       - name: Use reproducible npm version
-        run: npm install --global npm@11.6.2
+        run: npm install --global npm@11.19.0
 
       - name: Install exact dependencies
-        run: npm ci
+        run: npm ci --strict-allow-scripts
 
       - name: Install Chrome for Playwright
         run: npx playwright install chrome
