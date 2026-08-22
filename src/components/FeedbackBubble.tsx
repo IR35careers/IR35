@@ -86,6 +86,7 @@ export function FeedbackBubble() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [reply, setReply] = useState("");
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [bubbleSuppressed, setBubbleSuppressed] = useState(false);
 
   const visible = !loading && (Boolean(user) || !isSupabaseConfigured()) && !isAdministratorEmail(user?.email) && WORKSPACE_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   const selected = tickets.find((ticket) => ticket.id === selectedId) ?? null;
@@ -93,6 +94,22 @@ export function FeedbackBubble() {
   const preview = useMemo(() => attachment ? URL.createObjectURL(attachment) : null, [attachment]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  useEffect(() => {
+    let restoreTimer: ReturnType<typeof setTimeout> | undefined;
+    const handleScroll = () => {
+      if (!window.matchMedia("(max-width: 639px)").matches) return;
+      setBubbleSuppressed(true);
+      if (restoreTimer) clearTimeout(restoreTimer);
+      restoreTimer = setTimeout(() => setBubbleSuppressed(false), 700);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (restoreTimer) clearTimeout(restoreTimer);
+    };
+  }, []);
 
   const loadTickets = async (focusId?: string | null) => {
     if (!user) return;
@@ -236,7 +253,7 @@ export function FeedbackBubble() {
 
   return (
     <>
-      <button type="button" data-feedback-capture-ui="true" onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }} className="ir35-focus fixed bottom-5 right-4 z-[60] inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-700 px-4 text-sm font-bold text-white shadow-[0_14px_35px_rgba(3,105,79,0.3)] transition hover:bg-brand-800 sm:bottom-6 sm:right-6" aria-label="Send feedback">
+      <button type="button" data-feedback-capture-ui="true" onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }} className={`ir35-focus fixed bottom-4 right-3 z-[60] inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-700 text-sm font-bold text-white shadow-[0_14px_35px_rgba(3,105,79,0.3)] transition duration-200 hover:bg-brand-800 sm:bottom-6 sm:right-6 sm:h-12 sm:w-auto sm:gap-2 sm:px-4 ${bubbleSuppressed && !open ? "pointer-events-none translate-y-3 opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100" : "opacity-100"}`} aria-label="Send feedback">
         <MessageCircle size={19} aria-hidden="true" />
         <span className="hidden sm:inline">Feedback</span>
         {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-brand-800">{unread > 9 ? "9+" : unread}</span>}
