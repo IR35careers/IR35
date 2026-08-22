@@ -27,7 +27,30 @@ export interface SubmissionProviderReceipt {
   providerSubmissionId: string;
   submittedAt: string;
   message: string;
+  destination?: string;
   review?: unknown;
+}
+
+export interface NativePortalStorageState {
+  cookies: Array<{
+    name: string;
+    value: string;
+    domain: string;
+    path: string;
+    expires: number;
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: "Strict" | "Lax" | "None";
+  }>;
+  origins: Array<{
+    origin: string;
+    localStorage: Array<{ name: string; value: string }>;
+  }>;
+}
+
+export interface NativePortalSession {
+  storageState: NativePortalStorageState;
+  currentUrl?: string;
 }
 
 export interface NativeSubmissionRuntime {
@@ -36,6 +59,9 @@ export interface NativeSubmissionRuntime {
     hostname: string;
     requestedAfter: string;
   }) => Promise<string | null>;
+  loadPortalSession?: () => Promise<NativePortalSession | null>;
+  savePortalSession?: (session: NativePortalSession) => Promise<void>;
+  clearPortalSession?: () => Promise<void>;
 }
 
 interface TsentaApplication {

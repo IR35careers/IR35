@@ -39,6 +39,11 @@ import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { applicationSubmissionFailure } from "@/lib/application-submission-failure";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  clearPortalSession,
+  loadPortalSession,
+  savePortalSession,
+} from "@/lib/application-portal-session";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -57,6 +62,7 @@ function portalPassword(
 ): string | undefined {
   const secret =
     process.env.APPLICATION_ACCOUNT_SECRET?.trim() ||
+    process.env.SUPABASE_SECRET_KEY?.trim() ||
     process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!secret) return undefined;
   const hostname = new URL(destination).hostname.toLowerCase();
@@ -715,6 +721,32 @@ export async function POST(request: Request): Promise<Response> {
                                 requestedAfter,
                               })
                           : undefined,
+                      loadPortalSession: submissionCandidate.portalAccountConsent
+                        ? () =>
+                            loadPortalSession({
+                              admin,
+                              userId,
+                              applicationId: String(packet.id),
+                            })
+                        : undefined,
+                      savePortalSession: submissionCandidate.portalAccountConsent
+                        ? (session) =>
+                            savePortalSession({
+                              admin,
+                              userId,
+                              applicationId: String(packet.id),
+                              destinationHost: new URL(destination).hostname,
+                              session,
+                            })
+                        : undefined,
+                      clearPortalSession: submissionCandidate.portalAccountConsent
+                        ? () =>
+                            clearPortalSession({
+                              admin,
+                              userId,
+                              applicationId: String(packet.id),
+                            })
+                        : undefined,
                     }
                   : undefined,
               );
@@ -876,7 +908,7 @@ export async function POST(request: Request): Promise<Response> {
           receiptId: providerReceipt.providerSubmissionId,
           mode: "external_handoff",
           createdAt: providerReceipt.submittedAt,
-          destination,
+          destination: providerReceipt.destination || destination,
           reviewedFields: [
             "cv",
             "cover_letter",

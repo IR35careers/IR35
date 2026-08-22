@@ -2,6 +2,7 @@ import chromiumBinary from "@sparticuz/chromium";
 import {
   chromium,
   type Browser,
+  type BrowserContext,
   type Locator,
   type Page,
 } from "playwright-core";
@@ -315,6 +316,7 @@ async function handlePortalAccess(
   payload: SubmissionProviderPayload,
   runtime: NativeSubmissionRuntime | undefined,
   requestedAfter: string,
+  hasSavedSession: boolean,
 ): Promise<{ handled: boolean; stop?: { message: string; action: string } }> {
   const captcha = page.locator(
     'iframe[src*="captcha" i], [id*="captcha" i], [class*="captcha" i], iframe[src*="recaptcha" i], iframe[src*="hcaptcha" i]',
@@ -453,10 +455,16 @@ async function handlePortalAccess(
         };
       }
     }
-    const accessAction = await actionLocator(
+    const createAccount = await actionLocator(
       page,
-      /^(sign in|log in|create account|register|continue|next)$/i,
+      /^(create account|create an account|register|sign up)$/i,
     );
+    const signIn = await actionLocator(page, /^(sign in|log in)$/i);
+    const accessAction = hasSavedSession
+      ? signIn ?? createAccount ??
+        (await actionLocator(page, /^(continue|next)$/i))
+      : createAccount ?? signIn ??
+        (await actionLocator(page, /^(continue|next)$/i));
     if (!accessAction)
       return {
         handled: false,
@@ -792,6 +800,9 @@ export async function runNativeApplication(
   const startedAt = Date.now();
   const requestedAfter = new Date(startedAt - 15_000).toISOString();
   let browser: Browser | null = null;
+  let context: BrowserContext | null = null;
+  let page: Page | null = null;
+  let sessionDisposition: "save" | "clear" = "save";
   let timedOut = false;
   const budgetTimer = setTimeout(() => {
     timedOut = true;
@@ -807,6 +818,17 @@ export async function runNativeApplication(
       );
     }
     let ats = detectAts(destination.toString());
+    const savedSession = payload.candidate.portalAccountConsent
+      ? await runtime?.loadPortalSession?.().catch(() => null)
+      : null;
+    let startUrl = destination;
+    if (savedSession?.currentUrl) {
+      try {
+        startUrl = await validatePublicHttpsUrl(savedSession.currentUrl);
+      } catch {
+        startUrl = destination;
+      }
+    }
     // A short-lived storage link can expire or be temporarily unavailable
     // before the hosted browser reaches the upload step. The approved CV text
     // is already part of this packet, so generate the same truthful PDF in the
@@ -833,7 +855,7 @@ export async function runNativeApplication(
         : chromiumBinary.args,
       headless: true,
     });
-    const context = await browser.newContext({
+    context = await browser.newContext({
       acceptDownloads: false,
       ignoreHTTPSErrors: false,
       javaScriptEnabled: true,
@@ -841,24 +863,28 @@ export async function runNativeApplication(
       timezoneId: "Europe/London",
       serviceWorkers: "block",
       viewport: { width: 1440, height: 1000 },
+      storageState: savedSession?.storageState,
     });
     context.setDefaultTimeout(12_000);
     context.setDefaultNavigationTimeout(25_000);
-    const approvedHosts = new Set<string>([destination.hostname]);
+    const approvedHosts = new Set<string>([
+      destination.hostname,
+      startUrl.hostname,
+    ]);
     let sensitive = false;
     await context.route("**/*", (route) =>
       publicRequestGuard(route, approvedHosts, () => sensitive),
     );
-    let page = await context.newPage();
+    page = await context.newPage();
     let navigationStatus: number | null = null;
     try {
-      const navigation = await page.goto(destination.toString(), {
+      const navigation = await page.goto(startUrl.toString(), {
         waitUntil: "domcontentloaded",
       });
       navigationStatus = navigation?.status() ?? null;
     } catch (error) {
       console.warn("application_runner_navigation_failed", {
-        host: destination.hostname,
+        host: startUrl.hostname,
         reason: error instanceof Error ? clean(error.message, 240) : "unknown",
       });
       throw new Error(
@@ -886,12 +912,19 @@ export async function runNativeApplication(
         .catch(() => ""),
       8_000,
     );
-    if (isSourceAccessDeniedPage(await page.title().catch(() => ""), handoffBody))
+    if (
+      isSourceAccessDeniedPage(
+        await page.title().catch(() => ""),
+        handoffBody,
+      )
+    ) {
+      sessionDisposition = "clear";
       return reviewReceipt(
         "The job board blocked access to the employer application page. This role cannot be submitted from its current source and will not be retried automatically.",
         [],
         "source_access_denied",
       );
+    }
     const applicationDestination = await validatePublicHttpsUrl(page.url());
     approvedHosts.add(applicationDestination.hostname.toLowerCase());
     ats = detectAts(applicationDestination.toString());
@@ -910,6 +943,7 @@ export async function runNativeApplication(
         payload,
         runtime,
         requestedAfter,
+        Boolean(savedSession),
       );
       if (portalAccess.stop)
         return reviewReceipt(
@@ -949,7 +983,8 @@ export async function runNativeApplication(
       const action = submit ?? next;
       if (!action) {
         const confirmed = await successMessage(page, ats);
-        if (confirmed)
+        if (confirmed) {
+          sessionDisposition = "clear";
           return {
             state: "submitted",
             providerSubmissionId: resultId(
@@ -958,7 +993,9 @@ export async function runNativeApplication(
             ),
             submittedAt: new Date().toISOString(),
             message: confirmed,
+            destination: page.url(),
           };
+        }
         return reviewReceipt(
           "IR35Careers could not identify the next employer-form action. Review this application before continuing.",
           [],
@@ -971,7 +1008,8 @@ export async function runNativeApplication(
       const confirmed = isSubmit
         ? await waitForSubmissionConfirmation(page, ats)
         : await successMessage(page, ats);
-      if (confirmed)
+      if (confirmed) {
+        sessionDisposition = "clear";
         return {
           state: "submitted",
           providerSubmissionId: resultId(
@@ -980,7 +1018,9 @@ export async function runNativeApplication(
           ),
           submittedAt: new Date().toISOString(),
           message: confirmed,
+          destination: page.url(),
         };
+      }
       if (isSubmit) {
         const validationFields = await snapshotFields(page, step + 1);
         const resolved = await Promise.all(
@@ -1018,6 +1058,22 @@ export async function runNativeApplication(
     throw error;
   } finally {
     clearTimeout(budgetTimer);
+    if (runtime && payload.candidate.portalAccountConsent) {
+      if (sessionDisposition === "clear") {
+        await runtime.clearPortalSession?.().catch(() => null);
+      } else if (context && page && !page.isClosed()) {
+        try {
+          const currentUrl = await validatePublicHttpsUrl(page.url());
+          await runtime.savePortalSession?.({
+            storageState: await context.storageState(),
+            currentUrl: currentUrl.toString(),
+          });
+        } catch {
+          // A failed session snapshot must not replace the useful application
+          // result or expose browser state outside the encrypted store.
+        }
+      }
+    }
     await browser?.close().catch(() => null);
   }
 }

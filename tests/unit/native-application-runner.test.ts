@@ -5,6 +5,7 @@ import {
   isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
+  isTrustedApplicationPortalSender,
   nativeRunnerHostAllowed,
 } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
@@ -102,6 +103,27 @@ describe("native application runner", () => {
   it("recognises a blocked job-board handoff as a source problem", () => {
     expect(isSourceAccessDeniedPage("Access Denied", "Reference 123")).toBe(true);
     expect(isSourceAccessDeniedPage("Apply", "Complete your application")).toBe(false);
+  });
+
+  it("trusts confirmation mail only from the ATS family used by the application", () => {
+    expect(
+      isTrustedApplicationPortalSender(
+        "Applications <updates@notifications.ashbyhq.com>",
+        "https://jobs.ashbyhq.com/example/role",
+      ),
+    ).toBe(true);
+    expect(
+      isTrustedApplicationPortalSender(
+        "Fake recruiter <updates@attacker.example>",
+        "https://jobs.ashbyhq.com/example/role",
+      ),
+    ).toBe(false);
+    expect(
+      isTrustedApplicationPortalSender(
+        "Recruiter <updates@employer.example>",
+        "https://careers.employer.example/role",
+      ),
+    ).toBe(false);
   });
 
   it("uses only confirmed saved answers for employer-specific questions", () => {

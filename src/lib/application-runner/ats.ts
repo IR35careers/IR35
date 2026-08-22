@@ -35,8 +35,18 @@ const ATS_DOMAINS: Array<{ domain: string; kind: Exclude<AtsKind, "generic"> }> 
   { domain: "workable.com", kind: "workable" },
   { domain: "smartrecruiters.com", kind: "smartrecruiters" },
   { domain: "myworkdayjobs.com", kind: "workday" },
+  { domain: "myworkday.com", kind: "workday" },
   { domain: "workday.com", kind: "workday" },
 ];
+
+const ATS_SENDER_DOMAINS: Record<Exclude<AtsKind, "generic">, string[]> = {
+  greenhouse: ["greenhouse.io", "greenhouse.com"],
+  lever: ["lever.co", "lever.com"],
+  ashby: ["ashbyhq.com"],
+  workable: ["workable.com", "workablemail.com"],
+  smartrecruiters: ["smartrecruiters.com"],
+  workday: ["workday.com", "myworkday.com", "myworkdayjobs.com"],
+};
 
 // These are job-discovery handoff pages rather than employer ATS products.
 // The runner may open them and follow their public Apply action, but it still
@@ -119,4 +129,32 @@ export function detectAts(value: string): AtsDefinition {
   const match = ATS_DOMAINS.find(({ domain }) => hostMatches(host, domain));
   if (match) return DEFINITIONS[match.kind];
   return DEFINITIONS.generic;
+}
+
+/**
+ * A message sent to a candidate's unique application alias is still treated
+ * as untrusted unless it comes from the same recognised ATS family used for
+ * the submitted packet. This permits real confirmation and status mail while
+ * preventing an arbitrary sender from changing an application state merely
+ * by mentioning a role title.
+ */
+export function isTrustedApplicationPortalSender(
+  sender: string,
+  applicationDestination: string,
+): boolean {
+  const senderMatch = sender
+    .toLowerCase()
+    .match(/@([a-z0-9.-]+)(?:>|\s|$)/i);
+  if (!senderMatch?.[1]) return false;
+  let ats: AtsDefinition;
+  try {
+    ats = detectAts(applicationDestination);
+  } catch {
+    return false;
+  }
+  if (ats.kind === "generic") return false;
+  const senderHost = senderMatch[1].replace(/\.$/, "");
+  return ATS_SENDER_DOMAINS[ats.kind].some((domain) =>
+    hostMatches(senderHost, domain),
+  );
 }

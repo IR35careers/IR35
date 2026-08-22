@@ -15,6 +15,12 @@ import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/m
 import type { ApplicationRecord, ApplicationStatus, InboxClassification } from "@/lib/workspace/types";
 import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumeRateLimitKey } from "@/lib/security/rate-limit";
+import { isTrustedApplicationPortalSender } from "@/lib/application-runner/ats";
+import {
+  clearPortalSession,
+  loadPortalSession,
+} from "@/lib/application-portal-session";
+import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
 
@@ -24,7 +30,11 @@ function messageTransition(classification: InboxClassification, current: Applica
   if (classification === "interview") return { status: "interview", label: "Interview message received", notification: "interview" };
   if (classification === "rejection") return { status: "rejected", label: "Employer closed the application", notification: "rejection" };
   if (classification === "action_required") return { status: "needs_review", label: "Recruiter needs more information", notification: "needs_attention" };
-  if (classification === "application_update") return { status: current === "applied" ? "viewed" : current, label: "Application update received", notification: "update" };
+  if (classification === "application_update") return {
+    status: current === "applied" ? "viewed" : ["ready", "preparing", "needs_review"].includes(current) ? "applied" : current,
+    label: "Application update received",
+    notification: "update",
+  };
   return { status: ["interview", "offer", "rejected", "withdrawn"].includes(current) ? current : "replied", label: "Recruiter message received", notification: "reply" };
 }
 
@@ -110,7 +120,7 @@ export async function POST(request: Request) {
 
     const { data: packetRows, error: packetError } = await admin
       .from("application_packets")
-      .select("id, job_snapshot, status")
+      .select("id, job_snapshot, status, receipt")
       .eq("user_id", alias.user_id)
       .order("updated_at", { ascending: false })
       .limit(100);
@@ -122,7 +132,23 @@ export async function POST(request: Request) {
     const verifiedDestination = linkedJob
       ? await resolveEmployerDestinationForJob(linkedJob, admin)
       : null;
-    const trustedSender = Boolean(verifiedDestination && isVerifiedRecruiterRecipient(payload.sender, verifiedDestination.email));
+    let receiptDestination = String(
+      (linkedPacket?.receipt as { destination?: unknown } | null)?.destination ?? "",
+    );
+    if (!receiptDestination && applicationId) {
+      const portalSession = await loadPortalSession({
+        admin,
+        userId: String(alias.user_id),
+        applicationId,
+      }).catch(() => null);
+      receiptDestination = portalSession?.currentUrl ?? "";
+    }
+    const trustedSender = Boolean(
+      (verifiedDestination &&
+        isVerifiedRecruiterRecipient(payload.sender, verifiedDestination.email)) ||
+        (receiptDestination &&
+          isTrustedApplicationPortalSender(payload.sender, receiptDestination)),
+    );
     const classification = trustedSender ? classifyInboundMessage(payload.subject, payload.text) : "other";
 
     const { error: messageError } = await admin.from("inbox_messages").upsert({
@@ -142,7 +168,39 @@ export async function POST(request: Request) {
     if (applicationId && trustedSender) {
       const currentStatus = (linkedPacket?.status ?? "applied") as ApplicationStatus;
       const transition = messageTransition(classification, currentStatus);
-      await admin.from("application_packets").update({ status: transition.status, updated_at: new Date().toISOString() }).eq("id", applicationId).eq("user_id", alias.user_id);
+      const now = new Date().toISOString();
+      const existingReceipt = linkedPacket?.receipt as ApplicationRecord["receipt"];
+      const emailReceipt =
+        transition.status === "applied" && !existingReceipt
+          ? {
+              receiptId: `mail-${createHash("sha256")
+                .update(payload.providerMessageId)
+                .digest("hex")
+                .slice(0, 18)}`,
+              mode: "external_handoff" as const,
+              createdAt: payload.receivedAt,
+              destination: receiptDestination,
+              reviewedFields: ["employer_email_confirmation"],
+              skippedFields: [],
+              message:
+                "The employer confirmed receipt of this application by email.",
+            }
+          : existingReceipt;
+      await admin
+        .from("application_packets")
+        .update({
+          status: transition.status,
+          ...(emailReceipt ? { receipt: emailReceipt } : {}),
+          updated_at: now,
+        })
+        .eq("id", applicationId)
+        .eq("user_id", alias.user_id);
+      if (transition.status === "applied")
+        await clearPortalSession({
+          admin,
+          userId: String(alias.user_id),
+          applicationId,
+        }).catch(() => null);
       await admin.from("application_events").upsert({
         user_id: alias.user_id,
         application_id: applicationId,

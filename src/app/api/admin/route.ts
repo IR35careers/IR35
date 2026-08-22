@@ -701,6 +701,8 @@ export async function POST(request: Request): Promise<Response> {
             email: "runner-test@mail.ir35careers.com",
             phone: "+44 7700 900000",
             forwardingEmail: "runner-test@ir35careers.com",
+            portalAccountConsent: true,
+            automaticEmailVerification: true,
           },
           resume: {
             label: "Alex Morgan CV",
@@ -713,6 +715,9 @@ export async function POST(request: Request): Promise<Response> {
             { label: "Do you need visa sponsorship?", answer: "No", source: "user" },
             { label: "I agree to the privacy notice", answer: "Yes", source: "user" },
           ],
+        }, {
+          portalPassword: "Ir35!ControlledRunner7",
+          resolveEmailVerificationCode: async () => "482731",
         });
         const unresolved = providerReviewQuestions(receipt.review).map(
           (question) => question.label,
@@ -723,7 +728,7 @@ export async function POST(request: Request): Promise<Response> {
         const checks = [
           { label: "Portal reached", passed: true, detail: "The protected production form was opened." },
           { label: "CV uploaded", passed: !unresolved.some((label) => /resume|cv|curriculum/i.test(label)), detail: unresolved.some((label) => /resume|cv|curriculum/i.test(label)) ? unresolvedDetail : "The approved PDF reached the application form." },
-          { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Profile and screening answers completed both form steps." : unresolvedDetail },
+          { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Employer account, email verification, profile and screening answers completed successfully." : unresolvedDetail },
           { label: "Confirmation captured", passed: receipt.state === "submitted", detail: receipt.state === "submitted" ? "The portal returned a positive application receipt." : unresolvedDetail },
         ];
         await supabase.from("moderation_logs").insert({

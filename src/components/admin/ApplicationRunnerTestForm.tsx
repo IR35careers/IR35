@@ -3,9 +3,9 @@
 import { useState, type FormEvent } from "react";
 
 export function ApplicationRunnerTestForm() {
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
 
-  if (step === 3) {
+  if (step === 5) {
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl items-center px-5 py-12">
         <section className="w-full rounded-3xl border border-emerald-200 bg-white p-8 shadow-card">
@@ -19,7 +19,7 @@ export function ApplicationRunnerTestForm() {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setStep(3);
+    setStep(5);
   };
 
   if (step === 0) {
@@ -42,16 +42,54 @@ export function ApplicationRunnerTestForm() {
     );
   }
 
+  if (step === 1) {
+    return (
+      <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
+        <header className="mb-7">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Controlled employer account</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Create your application account</h1>
+          <p className="mt-2 text-sm text-slate-600">Use the candidate application email to continue.</p>
+        </header>
+        <form onSubmit={(event) => { event.preventDefault(); setStep(2); }} className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
+          <label className="block text-sm font-semibold text-slate-900">Email address<input name="account_email" type="email" autoComplete="email" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+          <label className="block text-sm font-semibold text-slate-900">Create password<input name="password" type="password" autoComplete="new-password" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+          <label className="block text-sm font-semibold text-slate-900">Confirm password<input name="password_confirmation" type="password" autoComplete="new-password" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+          <button type="submit" className="min-h-11 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white">Create account</button>
+        </form>
+      </main>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
+        <header className="mb-7">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Controlled email verification</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Verify your email</h1>
+          <p className="mt-2 text-sm text-slate-600">Enter the verification code sent to your application email.</p>
+        </header>
+        <form onSubmit={(event) => {
+          event.preventDefault();
+          const code = String(new FormData(event.currentTarget).get("verification_code") ?? "");
+          if (code === "482731") setStep(3);
+        }} className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
+          <label className="block text-sm font-semibold text-slate-900">Verification code<input name="verification_code" inputMode="numeric" autoComplete="one-time-code" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
+          <button type="submit" className="min-h-11 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white">Verify</button>
+        </form>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
       <header className="mb-7">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Controlled test portal</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Platform Engineer test application</h1>
-        <p className="mt-2 text-sm text-slate-600">Step {step} of 2</p>
+        <p className="mt-2 text-sm text-slate-600">Step {step - 2} of 2</p>
       </header>
 
-      {step === 1 ? (
-        <form onSubmit={(event) => { event.preventDefault(); setStep(2); }} className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
+      {step === 3 ? (
+        <form onSubmit={(event) => { event.preventDefault(); setStep(4); }} className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="text-sm font-semibold text-slate-900">First name<input name="first_name" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
             <label className="text-sm font-semibold text-slate-900">Last name<input name="last_name" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
