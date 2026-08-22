@@ -50,7 +50,7 @@ export function WorkspacePage({
         {!configured && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
             <FlaskConical className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
-            <p><span className="font-semibold">Local preview.</span> Data stays in this browser. Email, payment and application submission providers are not connected.</p>
+            <p><span className="font-semibold">Preview mode.</span> Changes are kept in this browser only.</p>
           </div>
         )}
         <header className={`flex flex-col gap-4 border-b border-slate-200 lg:flex-row lg:items-end lg:justify-between ${density === "compact" ? "pb-5" : "pb-6"}`}>

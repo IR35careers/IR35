@@ -107,7 +107,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
         {isDemo && (
           <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
-            Preview listing - connect Supabase locally to open live contract details.
+            This preview listing is available only in the local workspace.
           </p>
         )}
 

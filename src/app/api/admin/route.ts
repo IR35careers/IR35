@@ -1,10 +1,11 @@
 /**
- * Admin API: GET /api/admin?section=stats|analytics|users|waitlist|campaigns|jobs|runs|system
+ * Admin API: GET /api/admin?section=stats|analytics|users|feedback|waitlist|campaigns|jobs|runs|system
  *            POST /api/admin  { action: "expire_job", jobId }
  *                              { action: "send_beta_launch", confirmation }
  *                              { action: "preview_email_campaign", draft }
  *                              { action: "send_email_campaign_test", draft }
  *                              { action: "send_email_campaign", draft, audience, confirmation }
+ *                              { action: "update_feedback_status", feedbackId, feedbackStatus }
  *
  * Access requires two server-verified proofs: a live Supabase user token for
  * an allowlisted administrator and a short-lived, signed, HttpOnly admin
@@ -48,6 +49,7 @@ import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
+import { enrichFeedback, feedbackSummary, type FeedbackStatus } from "@/lib/admin-feedback";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -337,22 +339,84 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (section === "users") {
-      const usersRes = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });
-      const ids = (usersRes.data?.users ?? []).map((u) => u.id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, skills, cv_filename, target_rate_min, preferred_ir35")
-        .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-      const users = (usersRes.data?.users ?? []).map((u) => ({
+      const authUsers = await listAllUsers(supabase);
+      const ids = authUsers.map((user) => user.id);
+      const safeIds = ids.length ? ids : ["00000000-0000-0000-0000-000000000000"];
+      const [profilesResult, packetsResult, savedJobsResult, resumeVersionsResult, alertsResult, messagesResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, full_name, phone, linkedin_url, job_title, years_experience, skills, cv_filename, target_rate_min, preferred_ir35, preferred_remote, application_profile, created_at, updated_at")
+          .in("id", safeIds),
+        supabase.from("application_packets").select("user_id, status, updated_at").in("user_id", safeIds),
+        supabase.from("saved_jobs").select("user_id, status, created_at").in("user_id", safeIds),
+        supabase.from("resume_versions").select("user_id, created_at").in("user_id", safeIds),
+        supabase.from("job_alerts").select("user_id, created_at").in("user_id", safeIds),
+        supabase.from("inbox_messages").select("user_id, is_read, received_at").in("user_id", safeIds),
+      ]);
+      for (const result of [profilesResult, packetsResult, savedJobsResult, resumeVersionsResult, alertsResult, messagesResult]) {
+        if (result.error) throw result.error;
+      }
+      const profileMap = new Map((profilesResult.data ?? []).map((profile) => [profile.id, profile]));
+      const activityMap = new Map<string, {
+        applications: number;
+        applied: number;
+        needsAttention: number;
+        savedJobs: number;
+        resumeVersions: number;
+        alerts: number;
+        inboxMessages: number;
+        unreadMessages: number;
+        latestApplicationAt: string | null;
+      }>();
+      const activityFor = (userId: string) => {
+        const existing = activityMap.get(userId);
+        if (existing) return existing;
+        const created = { applications: 0, applied: 0, needsAttention: 0, savedJobs: 0, resumeVersions: 0, alerts: 0, inboxMessages: 0, unreadMessages: 0, latestApplicationAt: null };
+        activityMap.set(userId, created);
+        return created;
+      };
+      for (const packet of packetsResult.data ?? []) {
+        const activity = activityFor(packet.user_id);
+        activity.applications += 1;
+        if (["applied", "viewed", "replied", "interview", "offer"].includes(String(packet.status))) activity.applied += 1;
+        if (packet.status === "needs_review") activity.needsAttention += 1;
+        if (!activity.latestApplicationAt || packet.updated_at > activity.latestApplicationAt) activity.latestApplicationAt = packet.updated_at;
+      }
+      for (const saved of savedJobsResult.data ?? []) activityFor(saved.user_id).savedJobs += 1;
+      for (const version of resumeVersionsResult.data ?? []) activityFor(version.user_id).resumeVersions += 1;
+      for (const alert of alertsResult.data ?? []) activityFor(alert.user_id).alerts += 1;
+      for (const message of messagesResult.data ?? []) {
+        const activity = activityFor(message.user_id);
+        activity.inboxMessages += 1;
+        if (!message.is_read) activity.unreadMessages += 1;
+      }
+      const users = authUsers.map((u) => ({
         id: u.id,
         email: u.email,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
+        email_confirmed_at: u.email_confirmed_at,
+        updated_at: u.updated_at,
+        banned_until: u.banned_until,
         provider: u.app_metadata?.provider ?? "email",
         profile: profileMap.get(u.id) ?? null,
+        activity: activityFor(u.id),
       }));
-      return Response.json({ users, total: (usersRes.data as { total?: number } | null)?.total ?? users.length });
+      return Response.json({ users, total: users.length });
+    }
+
+    if (section === "feedback") {
+      const feedbackResult = await supabase
+        .from("contact_requests")
+        .select("id, name, email, company, message, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (feedbackResult.error) throw feedbackResult.error;
+      const feedback = (feedbackResult.data ?? []).map((row) => enrichFeedback({
+        ...row,
+        status: row.status as FeedbackStatus,
+      }));
+      return Response.json({ feedback, feedbackSummary: feedbackSummary(feedback) });
     }
 
     if (section === "waitlist") {
@@ -504,7 +568,40 @@ export async function POST(request: Request): Promise<Response> {
       enabled?: boolean;
       recruitmentEmail?: string;
       connectionId?: string;
+      feedbackId?: string;
+      feedbackStatus?: FeedbackStatus;
     }>(request, 2_000_000);
+
+    if (body.action === "update_feedback_status") {
+      const feedbackId = body.feedbackId?.trim() ?? "";
+      const allowedStatuses: FeedbackStatus[] = ["new", "in_progress", "resolved", "spam"];
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(feedbackId)) {
+        return Response.json({ error: "A valid feedback record is required." }, { status: 400 });
+      }
+      if (!body.feedbackStatus || !allowedStatuses.includes(body.feedbackStatus)) {
+        return Response.json({ error: "Choose a valid feedback status." }, { status: 400 });
+      }
+      const update = await supabase
+        .from("contact_requests")
+        .update({ status: body.feedbackStatus })
+        .eq("id", feedbackId)
+        .select("id, name, email, company, message, status, created_at")
+        .maybeSingle();
+      if (update.error) throw update.error;
+      if (!update.data) return Response.json({ error: "Feedback was not found." }, { status: 404 });
+      const audit = await supabase.from("moderation_logs").insert({
+        run_type: "feedback_review",
+        summary: {
+          action: "status_changed",
+          feedback_id: feedbackId,
+          status: body.feedbackStatus,
+          reviewed_by: admin.email,
+        },
+      });
+      if (audit.error) throw audit.error;
+      const feedback = enrichFeedback({ ...update.data, status: update.data.status as FeedbackStatus });
+      return Response.json({ ok: true, feedback });
+    }
 
     if (body.action === "test_application_runner") {
       const testedAt = new Date().toISOString();

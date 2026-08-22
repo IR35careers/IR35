@@ -28,7 +28,7 @@ export function ApplicationJourney({ profileReady, applications }: { profileRead
       : !approved
         ? { title: `Review ${current?.job.title ?? "your application"}`, body: "Check your CV, missing keywords, cover letter and screening answers before approval.", href: `/applications/new/${current?.job.id}`, action: "Continue review" }
         : !submitted
-          ? { title: "Your approved packet is ready", body: "Apply from IR35Careers when the employer connection is verified. Otherwise the packet remains safely queued here.", href: `/applications/new/${current?.job.id}`, action: "Open approved packet" }
+          ? { title: "Your application is ready", body: "Open it to submit now. If the employer needs more information, we will tell you exactly what to complete.", href: `/applications/new/${current?.job.id}`, action: "Open application" }
           : { title: "Track the employer response", body: "Keep recruiter messages, interviews and next actions tied to the application.", href: "/applications", action: "Open applications" };
 
   return (

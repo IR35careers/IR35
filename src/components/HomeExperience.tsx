@@ -75,7 +75,7 @@ const FAQS = [
   ["Will CV Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
   ["Can I apply without leaving IR35Careers?", "Yes for supported public employer forms. Review the tailored application once and choose Apply now. If an employer asks for a sign-in, verification or a new personal answer, the application pauses and tells you what needs attention."],
   ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private CV files from Settings."],
-  ["Is there a paid plan?", "The current public beta is free. Paid pricing and checkout will appear only after provider-backed features, billing safeguards and the beta review are complete."],
+  ["Is there a paid plan?", "The current public beta is free. Any future paid plan will show its benefits, full price and renewal terms before you choose it."],
 ] as const;
 
 export function HomeExperience() {

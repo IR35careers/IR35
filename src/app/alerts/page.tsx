@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { AlertCircle, ArrowRight, Bell, BellRing, Check, Eye, Loader2, Plus, ShieldCheck, Trash2, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Bell, BellRing, Check, Eye, Loader2, Plus, Trash2, X } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { IR35Badge } from "@/components/ui/ir35-badge";
 import { JobCardSkeleton, StatePanel } from "@/components/ui/state-panel";
@@ -215,12 +215,12 @@ function AlertsInner() {
     <WorkspacePage
       eyebrow="Saved discovery"
       title="Job alerts"
-      description="Save focused searches and preview the latest matching contracts on demand. Delivery remains off until a verified email provider is connected."
+      description="Save focused searches and review the latest matching contracts whenever you return."
       actions={<button type="button" onClick={() => setShowForm((value) => !value)} className={buttonClassName({ className: "w-full sm:w-auto" })}>{showForm ? <X size={16} /> : <Plus size={16} />}{showForm ? "Close form" : "New alert"}</button>}
     >
       <section className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-card sm:p-6">
-        <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-300/10 text-emerald-300"><BellRing size={20} /></span><div><h2 className="font-semibold">Curated preview is ready</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-slate-300">Open any saved alert to see its latest live matches. No email is sent, and no application is prepared or submitted.</p></div></div>
-        <span className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 text-xs font-bold text-amber-200"><ShieldCheck size={15} /> Email not connected</span>
+        <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-300/10 text-emerald-300"><BellRing size={20} /></span><div><h2 className="font-semibold">Your saved searches</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-slate-300">Open any alert to see the newest contracts that match your preferences.</p></div></div>
+        <span className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-3 text-xs font-bold text-emerald-200"><Eye size={15} /> Review matches</span>
       </section>
 
       {(error || notice) && <p className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${error ? "border-rose-200 bg-rose-50 text-rose-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`} role={error ? "alert" : "status"}>{error ?? notice}</p>}

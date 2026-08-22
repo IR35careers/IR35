@@ -48,7 +48,7 @@ export default function MobilePage() {
             <article className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8"><h2 className="text-2xl font-bold">Install on Android or desktop</h2><ol className="mt-5 ml-5 list-decimal space-y-3 text-sm leading-6 text-slate-600"><li>Open IR35Careers in Chrome or another supporting browser.</li><li>Use the install button above when shown, or choose <strong>Install app</strong> from the browser menu.</li><li>Launch it from the new IR35Careers app icon.</li></ol></article>
           </section>
 
-          <section className="mt-10 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 shrink-0 text-amber-800" aria-hidden="true" /><div><h2 className="text-lg font-bold text-amber-950">What installation does not change</h2><p className="mt-2 text-sm leading-6 text-amber-900">Installing does not enable automatic ATS submission, background messaging or native push delivery. Those capabilities remain behind their documented provider, consent and approval gates. The installable app never claims that a dry run was sent.</p></div></div></section>
+          <section className="mt-10 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 shrink-0 text-amber-800" aria-hidden="true" /><div><h2 className="text-lg font-bold text-amber-950">What installation does not change</h2><p className="mt-2 text-sm leading-6 text-amber-900">Installing adds convenient access from your home screen. It does not change your account permissions, application approvals or protected employer steps.</p></div></div></section>
         </section>
       </main>
       <PublicFooter />

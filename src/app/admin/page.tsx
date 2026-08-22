@@ -8,8 +8,10 @@ import {
   ArrowRight,
   BarChart3,
   BriefcaseBusiness,
+  CalendarDays,
   CheckCircle2,
   ChevronRight,
+  Clock3,
   CloudDownload,
   Database,
   ExternalLink,
@@ -23,8 +25,11 @@ import {
   LockKeyhole,
   LogOut,
   Mail,
+  MapPin,
   Menu,
+  MessageSquareText,
   Monitor,
+  Phone,
   Plus,
   Power,
   RefreshCw,
@@ -47,9 +52,10 @@ import { useAuth } from "@/lib/auth-context";
 import { isAdministratorEmail } from "@/lib/portal-access";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
 import type { IntegrationStatus } from "@/lib/integration-status";
+import { feedbackSummary as summariseFeedback, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
 import { supabase } from "@/lib/supabase";
 
-type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "campaigns" | "waitlist" | "runs" | "system";
+type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "feedback" | "campaigns" | "waitlist" | "runs" | "system";
 
 type JobRow = {
   id: string;
@@ -71,12 +77,42 @@ type UserRow = {
   email?: string;
   created_at: string;
   last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+  updated_at?: string | null;
+  banned_until?: string | null;
   provider?: string;
   profile?: {
     full_name?: string | null;
+    phone?: string | null;
+    linkedin_url?: string | null;
+    job_title?: string | null;
+    years_experience?: number | null;
     skills?: string[] | null;
     cv_filename?: string | null;
+    target_rate_min?: number | null;
+    preferred_ir35?: string | null;
+    preferred_remote?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    application_profile?: {
+      location?: string;
+      availability?: string;
+      targetRole?: string;
+      phone?: string;
+      linkedInUrl?: string;
+    } | null;
   } | null;
+  activity?: {
+    applications: number;
+    applied: number;
+    needsAttention: number;
+    savedJobs: number;
+    resumeVersions: number;
+    alerts: number;
+    inboxMessages: number;
+    unreadMessages: number;
+    latestApplicationAt?: string | null;
+  };
 };
 
 type RunRow = {
@@ -180,6 +216,8 @@ type AdminData = {
   pendingEmployerConnections?: PendingEmployerConnection[];
   integrations?: IntegrationStatus[];
   systemGeneratedAt?: string;
+  feedback?: FeedbackRecord[];
+  feedbackSummary?: ReturnType<typeof summariseFeedback>;
 };
 
 const NAV_GROUPS: Array<{
@@ -199,6 +237,7 @@ const NAV_GROUPS: Array<{
   {
     label: "Communications",
     items: [
+      { id: "feedback", label: "Customer feedback", icon: MessageSquareText },
       { id: "campaigns", label: "Email campaigns", icon: Send },
       { id: "waitlist", label: "Beta audience", icon: Mail },
     ],
@@ -236,7 +275,12 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
   users: {
     eyebrow: "Audience",
     title: "Contractors",
-    description: "Understand registrations, profile readiness and CV adoption.",
+    description: "Review account history, profile readiness and product activity for each contractor.",
+  },
+  feedback: {
+    eyebrow: "Customer voice",
+    title: "Feedback and support",
+    description: "Prioritise customer enquiries, record follow-up progress and keep unresolved issues visible.",
   },
   waitlist: {
     eyebrow: "One-time notice",
@@ -390,6 +434,7 @@ export default function AdminPage() {
   const [testingRunner, setTestingRunner] = useState(false);
   const [runnerTestResult, setRunnerTestResult] = useState<RunnerTestResult | null>(null);
   const [recoveringSubmissions, setRecoveringSubmissions] = useState(false);
+  const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
@@ -859,6 +904,31 @@ export default function AdminPage() {
     }
   };
 
+  const updateFeedbackStatus = async (feedbackId: string, feedbackStatus: FeedbackStatus) => {
+    setUpdatingFeedbackId(feedbackId);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "update_feedback_status", feedbackId, feedbackStatus }),
+      });
+      const json = await response.json() as { error?: string; feedback?: FeedbackRecord };
+      if (!response.ok || !json.feedback) throw new Error(json.error ?? "Unable to update feedback");
+      setData((current) => {
+        if (!current) return current;
+        const feedback = (current.feedback ?? []).map((record) => record.id === feedbackId ? json.feedback as FeedbackRecord : record);
+        return { ...current, feedback, feedbackSummary: summariseFeedback(feedback) };
+      });
+      setNotice(`Feedback marked ${feedbackStatus.replaceAll("_", " ")}.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to update feedback");
+    } finally {
+      setUpdatingFeedbackId(null);
+    }
+  };
+
   const normalisedQuery = query.trim().toLowerCase();
   const jobs = (data?.jobs ?? []).filter((job) => !normalisedQuery || [job.title, job.company_name, job.location, job.source_domain, job.ir35_status]
     .some((value) => value?.toLowerCase().includes(normalisedQuery)));
@@ -1058,6 +1128,14 @@ export default function AdminPage() {
             />
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
+          ) : section === "feedback" && data ? (
+            <FeedbackPanel
+              feedback={data.feedback ?? []}
+              summary={data.feedbackSummary ?? summariseFeedback(data.feedback ?? [])}
+              query={normalisedQuery}
+              updatingId={updatingFeedbackId}
+              onStatusChange={(feedbackId, status) => void updateFeedbackStatus(feedbackId, status)}
+            />
           ) : section === "campaigns" && data ? (
             <EmailCampaignsPanel
               data={data}
@@ -1392,14 +1470,175 @@ function JobsPanel({ jobs, total, query, expiringId, onExpire }: { jobs: JobRow[
 }
 
 function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; query: string }) {
+  const [currentTime] = useState(Date.now);
+  const [selectedId, setSelectedId] = useState<string | null>(users[0]?.id ?? null);
+  const selected = users.find((account) => account.id === selectedId) ?? users[0] ?? null;
   const withCv = users.filter((account) => account.profile?.cv_filename).length;
+  const verified = users.filter((account) => account.email_confirmed_at).length;
+  const active30d = users.filter((account) => account.last_sign_in_at && currentTime - new Date(account.last_sign_in_at).getTime() < 30 * 24 * 60 * 60 * 1000).length;
+  const profile = selected?.profile;
+  const applicationProfile = profile?.application_profile;
+  const contactPhone = profile?.phone || applicationProfile?.phone;
+  const linkedIn = profile?.linkedin_url || applicationProfile?.linkedInUrl;
+  const profileFields = selected ? [profile?.full_name, profile?.job_title || applicationProfile?.targetRole, profile?.skills?.length, profile?.cv_filename, contactPhone, linkedIn] : [];
+  const profileCompletion = profileFields.length ? Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100) : 0;
+  const restricted = Boolean(selected?.banned_until && new Date(selected.banned_until).getTime() > currentTime);
+  const accountStatus = restricted ? "Restricted" : selected?.email_confirmed_at ? "Verified" : "Email pending";
+  const activity = selected?.activity;
+
   return (
-    <div className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
-      <Panel title="Contractor accounts" description={`${formatNumber(total)} registered accounts`}>
-        {users.length ? <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Contractor</th><th className="px-4 py-3.5">Sign-in</th><th className="px-4 py-3.5">Skills</th><th className="px-4 py-3.5">CV status</th><th className="px-6 py-3.5">Joined</th></tr></thead><tbody className="divide-y divide-slate-100">{users.map((account) => <tr key={account.id} className="hover:bg-slate-50/70"><td className="px-6 py-4"><div className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{account.profile?.full_name || "Name not added"}</p><p className="mt-0.5 truncate text-xs text-slate-500">{account.email || "No email"}</p></div></div></td><td className="px-4 py-4 text-xs capitalize text-slate-600">{account.provider || "email"}</td><td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-700">{account.profile?.skills?.length ?? 0}</td><td className="px-4 py-4">{account.profile?.cv_filename ? <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><CheckCircle2 size={14} /> Uploaded</span> : <span className="text-xs text-slate-400">Not uploaded</span>}</td><td className="px-6 py-4"><p className="text-xs text-slate-700">{formatDate(account.created_at)}</p><p className="mt-1 text-[11px] text-slate-400">{timeAgo(account.created_at)}</p></td></tr>)}</tbody></table></div> : <EmptyState title={query ? "No matching contractors" : "No contractor accounts"} detail={query ? "Try searching by name, email or sign-in provider." : "New registrations will appear here."} />}
-      </Panel>
-      <Panel title="Profile readiness" description="A quick adoption snapshot for the loaded accounts.">
-        <div className="p-6"><div className="flex items-end justify-between"><span className="text-4xl font-semibold tracking-[-0.05em] text-slate-950">{users.length ? Math.round((withCv / users.length) * 100) : 0}%</span><FileCheck2 className="text-violet-600" size={22} /></div><p className="mt-2 text-sm font-medium text-slate-700">CV adoption</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-violet-500" style={{ width: `${users.length ? (withCv / users.length) * 100 : 0}%` }} /></div><dl className="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm"><div className="flex justify-between"><dt className="text-slate-500">Loaded accounts</dt><dd className="font-semibold tabular-nums">{users.length}</dd></div><div className="flex justify-between"><dt className="text-slate-500">CV uploaded</dt><dd className="font-semibold tabular-nums">{withCv}</dd></div><div className="flex justify-between"><dt className="text-slate-500">Needs CV</dt><dd className="font-semibold tabular-nums">{Math.max(users.length - withCv, 0)}</dd></div></dl></div>
+    <div className="mt-7 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Registered", value: total, detail: `${users.length} loaded`, icon: Users, tone: "bg-blue-50 text-blue-700" },
+          { label: "Verified email", value: verified, detail: `${users.length ? Math.round((verified / users.length) * 100) : 0}% of loaded accounts`, icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
+          { label: "Active in 30 days", value: active30d, detail: "Based on last sign-in", icon: Activity, tone: "bg-violet-50 text-violet-700" },
+          { label: "CV uploaded", value: withCv, detail: `${users.length ? Math.round((withCv / users.length) * 100) : 0}% adoption`, icon: FileCheck2, tone: "bg-amber-50 text-amber-700" },
+        ].map((item) => (
+          <article key={item.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={18} /></span>
+            <p className="mt-4 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(item.value)}</p>
+            <p className="mt-1 text-sm font-medium text-slate-800">{item.label}</p>
+            <p className="mt-1 text-xs text-slate-500">{item.detail}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1.2fr)_minmax(380px,0.8fr)]">
+        <Panel title="Contractor accounts" description="Select an account to inspect membership and product activity.">
+          {users.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[820px] text-left">
+                <thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Contractor</th><th className="px-4 py-3.5">Account</th><th className="px-4 py-3.5">Last active</th><th className="px-4 py-3.5">Applications</th><th className="px-6 py-3.5">Joined</th><th className="px-4 py-3.5"><span className="sr-only">View</span></th></tr></thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((account) => {
+                    const isSelected = selected?.id === account.id;
+                    return (
+                      <tr key={account.id} className={isSelected ? "bg-emerald-50/60" : "hover:bg-slate-50/70"}>
+                        <td className="px-6 py-4"><button type="button" onClick={() => setSelectedId(account.id)} className="flex w-full items-center gap-3 text-left focus:outline-none"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-900 text-white"}`}>{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{account.profile?.full_name || "Name not added"}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{account.email || "No email"}</span></span></button></td>
+                        <td className="px-4 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${account.banned_until && new Date(account.banned_until).getTime() > currentTime ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{account.banned_until && new Date(account.banned_until).getTime() > currentTime ? "Restricted" : account.email_confirmed_at ? "Verified" : "Pending"}</span></td>
+                        <td className="px-4 py-4"><p className="text-xs font-medium text-slate-700">{timeAgo(account.last_sign_in_at)}</p><p className="mt-1 text-[11px] capitalize text-slate-400">{account.provider || "email"}</p></td>
+                        <td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-700">{account.activity?.applications ?? 0}</td>
+                        <td className="px-6 py-4"><p className="text-xs text-slate-700">{formatDate(account.created_at)}</p><p className="mt-1 text-[11px] text-slate-400">{timeAgo(account.created_at)}</p></td>
+                        <td className="px-4 py-4"><button type="button" onClick={() => setSelectedId(account.id)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:text-emerald-700">View <ChevronRight size={13} /></button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : <EmptyState title={query ? "No matching contractors" : "No contractor accounts"} detail={query ? "Try searching by name, email or sign-in provider." : "New registrations will appear here."} />}
+        </Panel>
+
+        {selected ? (
+          <Panel title="Contractor details" description="Private account information for administration only." className="2xl:sticky 2xl:top-28">
+            <div className="p-5 sm:p-6">
+              <div className="flex items-start gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-base font-bold text-white">{(profile?.full_name || selected.email || "A").charAt(0).toUpperCase()}</span>
+                <div className="min-w-0 flex-1"><p className="truncate text-base font-semibold text-slate-950">{profile?.full_name || "Name not added"}</p><p className="mt-1 break-all text-xs text-slate-500">{selected.email || "No email"}</p></div>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${restricted ? "bg-rose-50 text-rose-700" : selected.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{accountStatus}</span>
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+                <div className="flex items-center justify-between"><p className="text-xs font-semibold text-slate-700">Profile completeness</p><p className="text-xs font-bold text-slate-950">{profileCompletion}%</p></div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${profileCompletion}%` }} /></div>
+              </div>
+
+              <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><CalendarDays size={13} /> Joined</dt><dd className="mt-1 font-semibold text-slate-900">{formatDate(selected.created_at, true)}</dd></div>
+                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><Clock3 size={13} /> Last sign-in</dt><dd className="mt-1 font-semibold text-slate-900">{formatDate(selected.last_sign_in_at, true)}</dd></div>
+                <div><dt className="text-xs text-slate-500">Sign-in method</dt><dd className="mt-1 font-semibold capitalize text-slate-900">{selected.provider || "email"}</dd></div>
+                <div><dt className="text-xs text-slate-500">Email confirmed</dt><dd className="mt-1 font-semibold text-slate-900">{formatDate(selected.email_confirmed_at, true)}</dd></div>
+                <div><dt className="text-xs text-slate-500">Current role</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.job_title || applicationProfile?.targetRole || "Not added"}</dd></div>
+                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><MapPin size={13} /> Location</dt><dd className="mt-1 font-semibold text-slate-900">{applicationProfile?.location || "Not added"}</dd></div>
+                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><Phone size={13} /> Phone</dt><dd className="mt-1 font-semibold text-slate-900">{contactPhone || "Not added"}</dd></div>
+                <div><dt className="text-xs text-slate-500">Experience</dt><dd className="mt-1 font-semibold text-slate-900">{typeof profile?.years_experience === "number" ? `${profile.years_experience} years` : "Not added"}</dd></div>
+                <div><dt className="text-xs text-slate-500">IR35 preference</dt><dd className="mt-1 font-semibold capitalize text-slate-900">{profile?.preferred_ir35 || "Not added"}</dd></div>
+                <div><dt className="text-xs text-slate-500">Minimum rate</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.target_rate_min ? `£${formatNumber(profile.target_rate_min)} per day` : "Not added"}</dd></div>
+              </dl>
+
+              <div className="mt-6 border-t border-slate-100 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Product activity</p>
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {[
+                    ["Applications", activity?.applications ?? 0],
+                    ["Applied", activity?.applied ?? 0],
+                    ["Needs attention", activity?.needsAttention ?? 0],
+                    ["Saved jobs", activity?.savedJobs ?? 0],
+                    ["CV versions", activity?.resumeVersions ?? 0],
+                    ["Inbox", activity?.inboxMessages ?? 0],
+                  ].map(([label, value]) => <div key={String(label)} className="rounded-xl border border-slate-100 bg-slate-50 p-3"><p className="text-lg font-semibold tabular-nums text-slate-950">{value}</p><p className="mt-0.5 text-[11px] text-slate-500">{label}</p></div>)}
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-slate-100 pt-5">
+                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">CV and skills</p>{profile?.cv_filename ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> CV uploaded</span> : <span className="text-[11px] text-slate-400">No CV</span>}</div>
+                {profile?.cv_filename && <p className="mt-2 truncate text-xs font-medium text-slate-700">{profile.cv_filename}</p>}
+                <div className="mt-3 flex flex-wrap gap-2">{profile?.skills?.length ? profile.skills.slice(0, 12).map((skill) => <span key={skill} className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">{skill}</span>) : <p className="text-xs text-slate-500">No skills added.</p>}</div>
+              </div>
+            </div>
+          </Panel>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function FeedbackPanel({
+  feedback,
+  summary,
+  query,
+  updatingId,
+  onStatusChange,
+}: {
+  feedback: FeedbackRecord[];
+  summary: ReturnType<typeof summariseFeedback>;
+  query: string;
+  updatingId: string | null;
+  onStatusChange: (feedbackId: string, status: FeedbackStatus) => void;
+}) {
+  const [statusFilter, setStatusFilter] = useState<"all" | FeedbackStatus>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(feedback[0]?.id ?? null);
+  const visible = feedback.filter((record) => {
+    const matchesStatus = statusFilter === "all" || record.status === statusFilter;
+    const matchesQuery = !query || [record.name, record.email, record.company, record.message, record.category].some((value) => value.toLowerCase().includes(query));
+    return matchesStatus && matchesQuery;
+  });
+  const selected = visible.find((record) => record.id === selectedId) ?? visible[0] ?? null;
+  const statusLabel = (status: FeedbackStatus) => status === "in_progress" ? "In progress" : status.charAt(0).toUpperCase() + status.slice(1);
+  const categoryLabel = (category: FeedbackRecord["category"]) => ({ application: "Application", job_listing: "Job listing", account: "Account", billing: "Billing", accessibility: "Accessibility", general: "General" })[category];
+  const replySubject = selected ? encodeURIComponent(`Re: Your IR35Careers enquiry`) : "";
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "New", value: summary.new, detail: "Awaiting first review", tone: "bg-blue-50 text-blue-700" },
+          { label: "In progress", value: summary.inProgress, detail: "Follow-up underway", tone: "bg-amber-50 text-amber-700" },
+          { label: "High priority", value: summary.highPriority, detail: "Blocked or overdue", tone: "bg-rose-50 text-rose-700" },
+          { label: "Resolved", value: summary.resolved, detail: `${summary.total} total enquiries`, tone: "bg-emerald-50 text-emerald-700" },
+        ].map((item) => <article key={item.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}><MessageSquareText size={18} /></span><p className="mt-4 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(item.value)}</p><p className="mt-1 text-sm font-medium text-slate-800">{item.label}</p><p className="mt-1 text-xs text-slate-500">{item.detail}</p></article>)}
+      </div>
+
+      <Panel title="Customer feedback queue" description="Contact enquiries grouped by urgency and follow-up status.">
+        <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4 sm:px-6">
+          {(["all", "new", "in_progress", "resolved", "spam"] as const).map((status) => <button key={status} type="button" onClick={() => setStatusFilter(status)} className={`min-h-9 rounded-lg px-3 text-xs font-semibold transition ${statusFilter === status ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}>{status === "all" ? "All" : statusLabel(status)}</button>)}
+        </div>
+        <div className="grid min-h-[520px] lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)]">
+          <div className="border-b border-slate-100 lg:border-b-0 lg:border-r">
+            {visible.length ? <div className="divide-y divide-slate-100">{visible.map((record) => {
+              const isSelected = selected?.id === record.id;
+              return <button key={record.id} type="button" onClick={() => setSelectedId(record.id)} className={`block w-full p-5 text-left transition sm:px-6 ${isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{record.name}</p><p className="mt-1 truncate text-xs text-slate-500">{record.email}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${record.priority === "high" ? "bg-rose-50 text-rose-700" : record.status === "resolved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{record.priority === "high" ? "High priority" : statusLabel(record.status)}</span></div><p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{record.message}</p><div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-slate-400"><span>{categoryLabel(record.category)}</span><span>{timeAgo(record.created_at)}</span></div></button>;
+            })}</div> : <EmptyState title={query || statusFilter !== "all" ? "No matching feedback" : "No customer feedback"} detail={query || statusFilter !== "all" ? "Clear the search or choose another status." : "New contact enquiries will appear here."} />}
+          </div>
+
+          {selected ? <div className="p-5 sm:p-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${selected.priority === "high" ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{selected.priority === "high" ? "High priority" : "Normal priority"}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">{categoryLabel(selected.category)}</span></div><h2 className="mt-4 text-xl font-semibold text-slate-950">{selected.name}</h2><p className="mt-1 text-sm text-slate-500">Received {formatDate(selected.created_at, true)}</p></div><a href={`mailto:${encodeURIComponent(selected.email)}?subject=${replySubject}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"><Mail size={14} /> Reply by email</a></div>
+            <dl className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2"><div><dt className="text-xs text-slate-500">Email</dt><dd className="mt-1 break-all font-semibold text-slate-900">{selected.email}</dd></div><div><dt className="text-xs text-slate-500">Company</dt><dd className="mt-1 font-semibold text-slate-900">{selected.company || "Not provided"}</dd></div><div><dt className="text-xs text-slate-500">Current status</dt><dd className="mt-1 font-semibold text-slate-900">{statusLabel(selected.status)}</dd></div><div><dt className="text-xs text-slate-500">Age</dt><dd className="mt-1 font-semibold text-slate-900">{timeAgo(selected.created_at)}</dd></div></dl>
+            <div className="mt-6"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Customer message</p><p className="mt-3 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-700">{selected.message}</p></div>
+            <div className="mt-6 border-t border-slate-100 pt-5"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Update follow-up status {updatingId === selected.id && <Loader2 size={13} className="animate-spin" />}</p><div className="mt-3 flex flex-wrap gap-2">{(["new", "in_progress", "resolved", "spam"] as FeedbackStatus[]).map((status) => <button key={status} type="button" onClick={() => onStatusChange(selected.id, status)} disabled={updatingId === selected.id || selected.status === status} className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-semibold disabled:cursor-not-allowed ${selected.status === status ? "bg-emerald-50 text-emerald-700" : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 disabled:opacity-50"}`}>{selected.status === status ? <CheckCircle2 size={13} /> : null}{statusLabel(status)}</button>)}</div></div>
+          </div> : <EmptyState title="Choose an enquiry" detail="Select a customer message to review its details and update follow-up status." />}
+        </div>
       </Panel>
     </div>
   );

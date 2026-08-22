@@ -1,0 +1,51 @@
+export type FeedbackStatus = "new" | "in_progress" | "resolved" | "spam";
+export type FeedbackCategory = "application" | "job_listing" | "account" | "billing" | "accessibility" | "general";
+export type FeedbackPriority = "high" | "normal";
+
+export type FeedbackRecord = {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  message: string;
+  status: FeedbackStatus;
+  created_at: string;
+  category: FeedbackCategory;
+  priority: FeedbackPriority;
+};
+
+export function classifyFeedback(message: string): FeedbackCategory {
+  const value = message.toLowerCase();
+  if (/accessib|screen reader|keyboard|contrast|disabilit/.test(value)) return "accessibility";
+  if (/payment|billing|subscription|refund|charged|price|plan/.test(value)) return "billing";
+  if (/sign[ -]?in|log[ -]?in|account|profile|password|verification/.test(value)) return "account";
+  if (/apply|application|resume|\bcv\b|tailor|interview|recruiter/.test(value)) return "application";
+  if (/\bjob\b|listing|contract|role|expired|duplicate|search result/.test(value)) return "job_listing";
+  return "general";
+}
+
+export function prioritiseFeedback(message: string, status: FeedbackStatus, createdAt: string, now = Date.now()): FeedbackPriority {
+  if (status === "resolved" || status === "spam") return "normal";
+  const value = message.toLowerCase();
+  const age = now - new Date(createdAt).getTime();
+  const urgentLanguage = /cannot|can't|unable|blocked|urgent|security|privacy|charged|payment failed|data breach/.test(value);
+  return urgentLanguage || age >= 48 * 60 * 60 * 1000 ? "high" : "normal";
+}
+
+export function enrichFeedback<Row extends Omit<FeedbackRecord, "category" | "priority">>(row: Row, now = Date.now()): FeedbackRecord {
+  return {
+    ...row,
+    category: classifyFeedback(row.message),
+    priority: prioritiseFeedback(row.message, row.status, row.created_at, now),
+  };
+}
+
+export function feedbackSummary(records: FeedbackRecord[]) {
+  return {
+    total: records.length,
+    new: records.filter((record) => record.status === "new").length,
+    inProgress: records.filter((record) => record.status === "in_progress").length,
+    resolved: records.filter((record) => record.status === "resolved").length,
+    highPriority: records.filter((record) => record.priority === "high").length,
+  };
+}
