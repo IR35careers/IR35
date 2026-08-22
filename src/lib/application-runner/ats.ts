@@ -105,6 +105,15 @@ export function isApplicationFormEvidence(input: {
   );
 }
 
+export function isSourceAccessDeniedPage(
+  title: string,
+  body: string,
+): boolean {
+  return /(access denied|request (?:was )?blocked|forbidden|automated access (?:is )?not allowed|you do not have permission to access)/i.test(
+    `${title} ${body}`,
+  );
+}
+
 export function detectAts(value: string): AtsDefinition {
   const host = new URL(value).hostname.toLowerCase();
   const match = ATS_DOMAINS.find(({ domain }) => hostMatches(host, domain));

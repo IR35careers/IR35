@@ -268,15 +268,23 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       return;
     let active = true;
     const applicationId = application.id;
-    const stopLocalSubmission = (message: string) => {
+    const stopLocalSubmission = (
+      message: string,
+      action?: string,
+      attention?: ApplicationRecord["attention"],
+    ) => {
       const now = new Date().toISOString();
+      const sourceUnavailable = action === "source_access_denied";
       const next: ApplicationRecord = {
         ...application,
-        status: "ready",
+        status: sourceUnavailable ? "failed" : "ready",
+        attention: attention ?? application.attention,
         updatedAt: now,
         events:
           latestSubmissionLifecycleEvent(application.events)?.label ===
-          "Application attempt stopped and is ready to retry"
+          (sourceUnavailable
+            ? "Employer application page is unavailable"
+            : "Application attempt stopped and is ready to retry")
             ? application.events
             : [
                 ...application.events,
@@ -284,7 +292,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   id: newWorkspaceId(),
                   applicationId,
                   type: "status_changed",
-                  label: "Application attempt stopped and is ready to retry",
+                  label: sourceUnavailable
+                    ? "Employer application page is unavailable"
+                    : "Application attempt stopped and is ready to retry",
                   createdAt: now,
                 },
               ],
@@ -379,6 +389,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           stopLocalSubmission(
             payload.error ||
               "The employer form could not be completed. Your approved materials are safe and ready to retry.",
+            payload.action,
+            payload.attention,
           );
           return;
         }

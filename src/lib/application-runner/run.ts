@@ -11,6 +11,7 @@ import {
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
+  isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
   type AtsDefinition,
 } from "@/lib/application-runner/ats";
@@ -878,6 +879,19 @@ export async function runNativeApplication(
     }
     await validatePublicHttpsUrl(page.url());
     page = await openApplicationForm(page, ats);
+    const handoffBody = clean(
+      await page
+        .locator("body")
+        .innerText()
+        .catch(() => ""),
+      8_000,
+    );
+    if (isSourceAccessDeniedPage(await page.title().catch(() => ""), handoffBody))
+      return reviewReceipt(
+        "The job board blocked access to the employer application page. This role cannot be submitted from its current source and will not be retried automatically.",
+        [],
+        "source_access_denied",
+      );
     const applicationDestination = await validatePublicHttpsUrl(page.url());
     approvedHosts.add(applicationDestination.hostname.toLowerCase());
     ats = detectAts(applicationDestination.toString());

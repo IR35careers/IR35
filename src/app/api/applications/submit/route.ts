@@ -766,11 +766,13 @@ export async function POST(request: Request): Promise<Response> {
               "form_too_long",
               "unsupported_portal",
               "runner_timeout",
+              "source_access_denied",
             ].includes(action ?? "");
           if (runnerIssue) {
             const stoppedAt = new Date().toISOString();
+            const sourceUnavailable = action === "source_access_denied";
             const attention = buildApplicationAttention({
-              action: "retry",
+              action: sourceUnavailable ? action : "retry",
               message: providerReceipt.message,
             });
             const [
@@ -788,7 +790,7 @@ export async function POST(request: Request): Promise<Response> {
                   receipt: {
                     state: "failed",
                     message: providerReceipt.message,
-                    action: "retry",
+                    action: sourceUnavailable ? action : "retry",
                     attention,
                   },
                   updated_at: stoppedAt,
@@ -797,7 +799,10 @@ export async function POST(request: Request): Promise<Response> {
                 .eq("idempotency_key", idempotencyKey),
               admin
                 .from("application_packets")
-                .update({ status: "ready", updated_at: stoppedAt })
+                .update({
+                  status: sourceUnavailable ? "failed" : "ready",
+                  updated_at: stoppedAt,
+                })
                 .eq("id", packet.id)
                 .eq("user_id", userId),
               admin.from("application_events").upsert(
@@ -806,7 +811,9 @@ export async function POST(request: Request): Promise<Response> {
                   application_id: packet.id,
                   event_type: "status_changed",
                   label:
-                    "Application stopped before confirmation and is ready to retry",
+                    sourceUnavailable
+                      ? "Employer application page is unavailable"
+                      : "Application stopped before confirmation and is ready to retry",
                   metadata: { reason: action, attention },
                   idempotency_key: `${idempotencyKey}:runner-issue:${payloadHash}`,
                 },
@@ -819,17 +826,18 @@ export async function POST(request: Request): Promise<Response> {
                   packetError?.message ||
                   eventError?.message,
               );
-            await sendApplicationNotification({
-              kind: "submission_issue",
-              to: notificationEmail,
-              userId,
-              inboxAlias: inbox?.alias,
-              candidateName,
-              jobTitle: job.title,
-              companyName: job.company_name,
-              applicationId: String(packet.id),
-              idempotencyKey: `${idempotencyKey}:submission-issue:${payloadHash}`,
-            }).catch(() => null);
+            if (!sourceUnavailable)
+              await sendApplicationNotification({
+                kind: "submission_issue",
+                to: notificationEmail,
+                userId,
+                inboxAlias: inbox?.alias,
+                candidateName,
+                jobTitle: job.title,
+                companyName: job.company_name,
+                applicationId: String(packet.id),
+                idempotencyKey: `${idempotencyKey}:submission-issue:${payloadHash}`,
+              }).catch(() => null);
             return;
           }
           await storeNeedsUser({

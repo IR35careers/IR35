@@ -68,12 +68,19 @@ export function WorkspacePage({
 }
 
 export function StatusPill({ status }: { status: string }) {
-  const label = status === "needs_review" ? "Needs you" : status.replaceAll("_", " ");
+  const label =
+    status === "needs_review"
+      ? "Needs you"
+      : status === "failed"
+        ? "Not submitted"
+        : status.replaceAll("_", " ");
   const style =
     status === "offer" || status === "interview" || status === "ready"
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-      : status === "rejected" || status === "failed"
+      : status === "rejected"
         ? "border-rose-200 bg-rose-50 text-rose-700"
+        : status === "failed"
+          ? "border-slate-200 bg-slate-50 text-slate-700"
         : status === "needs_review" || status === "action_required"
           ? "border-amber-200 bg-amber-50 text-amber-800"
           : status === "applied" || status === "viewed" || status === "replied"

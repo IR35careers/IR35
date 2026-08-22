@@ -4,6 +4,7 @@ import {
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
+  isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
 } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
@@ -96,6 +97,11 @@ describe("native application runner", () => {
         applicationSignals: 2,
       }),
     ).toBe(true);
+  });
+
+  it("recognises a blocked job-board handoff as a source problem", () => {
+    expect(isSourceAccessDeniedPage("Access Denied", "Reference 123")).toBe(true);
+    expect(isSourceAccessDeniedPage("Apply", "Complete your application")).toBe(false);
   });
 
   it("uses only confirmed saved answers for employer-specific questions", () => {

@@ -70,6 +70,16 @@ export function buildApplicationAttention(input: {
       questionIds,
     };
   }
+  if (action === "source_access_denied") {
+    return {
+      kind: "employer_form",
+      title: "Employer application page unavailable",
+      message,
+      action: "#needs-attention",
+      actionLabel: "View details",
+      questionIds,
+    };
+  }
   if (
     [
       "unsupported_form",

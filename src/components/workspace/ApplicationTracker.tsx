@@ -220,9 +220,24 @@ export function ApplicationTracker() {
             receipt?: ApplicationRecord["receipt"];
             questions?: ApplicationRecord["questions"];
             attention?: ApplicationRecord["attention"];
+            action?: string;
             error?: string;
           };
           if (payload.state === "failed") {
+            if (payload.action === "source_access_denied" && active)
+              updateWorkspace((current) => ({
+                ...current,
+                applications: current.applications.map((application) =>
+                  application.id === applicationId
+                    ? {
+                        ...application,
+                        status: "failed",
+                        attention: payload.attention ?? application.attention,
+                        updatedAt: new Date().toISOString(),
+                      }
+                    : application,
+                ),
+              }));
             if (active)
               setNotice(
                 payload.error ||
