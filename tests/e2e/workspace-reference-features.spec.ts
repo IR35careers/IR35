@@ -85,11 +85,17 @@ test("contractors can open the persistent feedback reporter and attach evidence"
   await dismissPrivacyNotice(page);
   const feedbackButton = page.getByRole("button", { name: "Send feedback" });
   await expect(feedbackButton).toBeVisible();
+  await expect(feedbackButton).toHaveAttribute("data-feedback-capture-ui", "true");
   await feedbackButton.click();
   const dialog = page.getByRole("dialog", { name: "How can we help?" });
   await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("data-feedback-capture-ui", "true");
   await expect(dialog.getByRole("button", { name: "Report an issue" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "My feedback" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Capture page" }).click();
+  await expect(dialog.getByAltText("Feedback attachment preview")).toBeVisible({ timeout: 30_000 });
+  await expect(dialog.getByText(/ir35careers-page-\d+\.(webp|jpg)/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Remove image" }).click();
   await dialog.getByLabel("What is this about?").selectOption("application");
   await dialog.getByLabel("Short title").fill("Application form is not loading");
   await dialog.getByLabel("What happened?").fill("The application form remained blank after I selected review and apply.");

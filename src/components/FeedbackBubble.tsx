@@ -29,25 +29,40 @@ function statusLabel(status: FeedbackRecord["status"]): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-async function captureCurrentScreen(): Promise<File> {
-  if (!navigator.mediaDevices?.getDisplayMedia) throw new Error("Screen capture is not supported on this device. Upload an image instead.");
-  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-  try {
-    const video = document.createElement("video");
-    video.srcObject = stream;
-    video.muted = true;
-    await video.play();
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d")?.drawImage(video, 0, 0);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png", 0.92));
-    if (!blob) throw new Error("The screenshot could not be created.");
-    return new File([blob], `ir35careers-feedback-${Date.now()}.png`, { type: "image/png" });
-  } finally {
-    stream.getTracks().forEach((track) => track.stop());
+async function captureCurrentPage(): Promise<File> {
+  const { default: html2canvas } = await import("html2canvas");
+  await document.fonts?.ready;
+
+  const canvas = await html2canvas(document.documentElement, {
+    allowTaint: false,
+    backgroundColor: "#f8fafc",
+    height: window.innerHeight,
+    ignoreElements: (element) => element.hasAttribute("data-feedback-capture-ui"),
+    logging: false,
+    scale: Math.min(window.devicePixelRatio || 1, 1.5),
+    scrollX: -window.scrollX,
+    scrollY: -window.scrollY,
+    useCORS: true,
+    width: window.innerWidth,
+    windowHeight: window.innerHeight,
+    windowWidth: window.innerWidth,
+    x: window.scrollX,
+    y: window.scrollY,
+  });
+
+  const createBlob = (type: string, quality?: number) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
+  let blob = await createBlob("image/webp", 0.9);
+  let type = "image/webp";
+  let extension = "webp";
+
+  if (!blob || blob.size > 5 * 1024 * 1024) {
+    blob = await createBlob("image/jpeg", 0.88);
+    type = "image/jpeg";
+    extension = "jpg";
   }
+  if (!blob) throw new Error("The page screenshot could not be created. Upload an image instead.");
+
+  return new File([blob], `ir35careers-page-${Date.now()}.${extension}`, { type });
 }
 
 export function FeedbackBubble() {
@@ -141,13 +156,11 @@ export function FeedbackBubble() {
     setCapturing(true);
     setError(null);
     try {
-      setOpen(false);
-      await new Promise((resolve) => window.setTimeout(resolve, 200));
-      setAttachment(await captureCurrentScreen());
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())));
+      setAttachment(await captureCurrentPage());
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The screenshot could not be captured.");
     } finally {
-      setOpen(true);
       setCapturing(false);
     }
   };
@@ -207,13 +220,13 @@ export function FeedbackBubble() {
 
   return (
     <>
-      <button type="button" onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }} className="ir35-focus fixed bottom-5 right-4 z-[60] inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-700 px-4 text-sm font-bold text-white shadow-[0_14px_35px_rgba(3,105,79,0.3)] transition hover:bg-brand-800 sm:bottom-6 sm:right-6" aria-label="Send feedback">
+      <button type="button" data-feedback-capture-ui="true" onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }} className="ir35-focus fixed bottom-5 right-4 z-[60] inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-700 px-4 text-sm font-bold text-white shadow-[0_14px_35px_rgba(3,105,79,0.3)] transition hover:bg-brand-800 sm:bottom-6 sm:right-6" aria-label="Send feedback">
         <MessageCircle size={19} aria-hidden="true" />
         <span className="hidden sm:inline">Feedback</span>
         {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-brand-800">{unread > 9 ? "9+" : unread}</span>}
       </button>
 
-      {open && <div className="fixed inset-0 z-[70] flex items-end justify-end bg-slate-950/35 p-0 backdrop-blur-[2px] sm:p-5" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+      {open && <div data-feedback-capture-ui="true" className="fixed inset-0 z-[70] flex items-end justify-end bg-slate-950/35 p-0 backdrop-blur-[2px] sm:p-5" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
         <section className="flex max-h-[min(760px,94vh)] w-full flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:w-[430px] sm:rounded-3xl">
           <header className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-950 px-5 py-5 text-white">
             <div>
@@ -237,10 +250,10 @@ export function FeedbackBubble() {
               <label className="block text-xs font-semibold text-slate-700">What happened?<textarea value={message} onChange={(event) => setMessage(event.target.value)} maxLength={5000} rows={6} placeholder="Tell us what you were doing, what went wrong and what you expected to happen." className="mt-2 w-full resize-y rounded-xl border border-slate-300 px-3 py-3 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100" /></label>
               <div>
                 <p className="text-xs font-semibold text-slate-700">Add an image</p>
-                <div className="mt-2 grid grid-cols-2 gap-2"><button type="button" onClick={() => inputRef.current?.click()} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50"><ImagePlus size={15} /> Upload image</button><button type="button" onClick={() => void takeScreenshot()} disabled={capturing} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">{capturing ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />} Capture screen</button></div>
+                <div className="mt-2 grid grid-cols-2 gap-2"><button type="button" onClick={() => inputRef.current?.click()} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50"><ImagePlus size={15} /> Upload image</button><button type="button" onClick={() => void takeScreenshot()} disabled={capturing} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">{capturing ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />} {capturing ? "Capturing page" : "Capture page"}</button></div>
                 <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => chooseFile(event.target.files?.[0])} />
                 {preview && <div className="relative mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50"><Image src={preview} alt="Feedback attachment preview" width={720} height={440} unoptimized className="max-h-44 w-full object-contain" /><button type="button" onClick={() => setAttachment(null)} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950/80 text-white" aria-label="Remove image"><X size={14} /></button><p className="truncate px-3 py-2 text-[11px] text-slate-500"><Paperclip size={11} className="mr-1 inline" />{attachment?.name}</p></div>}
-                <p className="mt-2 text-[11px] leading-4 text-slate-500">PNG, JPG or WebP. Maximum 5 MB. Remove personal information that is not needed for the report.</p>
+                <p className="mt-2 text-[11px] leading-4 text-slate-500">Capture saves the visible IR35Careers page only. This feedback panel is excluded. Uploaded images can be PNG, JPG or WebP up to 5 MB.</p>
               </div>
               <button type="button" onClick={() => void submitTicket()} disabled={submitting || subject.trim().length < 5 || message.trim().length < 20} className="ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} {submitting ? "Sending securely" : "Send feedback"}</button>
             </div>}
