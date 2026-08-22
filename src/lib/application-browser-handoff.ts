@@ -3,7 +3,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const STORAGE_BUCKET = "application-browser-handoffs";
 const VERSION = 1;
-const HANDOFF_TTL_MS = 60 * 60 * 1_000;
+// A contractor may open a Needs action email on another device later in the
+// day. Keep one application-scoped handoff available long enough to resume
+// the same employer account, while retaining a strict expiry.
+const HANDOFF_TTL_MS = 24 * 60 * 60 * 1_000;
 const TOKEN_BYTES = 32;
 
 export interface ApplicationBrowserHandoff {

@@ -15,7 +15,10 @@ import { buildResumePdf } from "@/lib/resume/export";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
 import { submitToVerifiedEmployerEmail } from "@/lib/employer-email-submission";
-import { ensureInboxAlias } from "@/lib/email/inbox-alias";
+import {
+  applicationInboxAlias,
+  ensureInboxAlias,
+} from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -287,6 +290,16 @@ async function storeNeedsUser(input: {
   });
   const now = new Date().toISOString();
   const idempotencyKey = `submit:${String(input.packet.id)}`;
+  const attentionKey = createHash("sha256")
+    .update(
+      JSON.stringify({
+        action: input.action ?? "",
+        message: input.message,
+        questions: incoming.map((question) => question.label),
+      }),
+    )
+    .digest("hex")
+    .slice(0, 18);
   const [{ error: packetError }, { error: queueError }, { error: eventError }] =
     await Promise.all([
       input.admin
@@ -330,7 +343,7 @@ async function storeNeedsUser(input: {
             action: input.action ?? null,
             attention,
           },
-          idempotency_key: `${idempotencyKey}:needs-user:${input.providerReceipt?.providerSubmissionId ?? "profile"}`,
+          idempotency_key: `${idempotencyKey}:needs-user:${attentionKey}`,
         },
         { onConflict: "user_id,idempotency_key" },
       ),
@@ -348,7 +361,7 @@ async function storeNeedsUser(input: {
     jobTitle: input.job.title,
     companyName: input.job.company_name,
     applicationId: String(input.packet.id),
-    idempotencyKey: `${idempotencyKey}:needs-user:${input.providerReceipt?.providerSubmissionId ?? "profile"}`,
+    idempotencyKey: `${idempotencyKey}:needs-user:${attentionKey}`,
   }).catch(() => null);
   return questions;
 }
@@ -514,7 +527,9 @@ export async function POST(request: Request): Promise<Response> {
     const submissionCandidate: ContractorProfile = {
       ...candidate,
       fullName: candidateName,
-      email: inbox?.alias || candidate.email || accountEmail,
+      email: inbox?.alias
+        ? applicationInboxAlias(inbox.alias, String(packet.id))
+        : candidate.email || accountEmail,
     };
     const coverLetter = normaliseCoverLetterSignoff(
       String(packet.cover_letter || ""),
@@ -814,74 +829,24 @@ export async function POST(request: Request): Promise<Response> {
               "source_access_denied",
             ].includes(action ?? "");
           if (runnerIssue) {
-            if (action !== "source_access_denied") {
-              await storeNeedsUser({
-                admin,
-                userId,
-                packet: packet as DbRow,
-                job,
-                recipient: notificationEmail,
-                inboxAlias: inbox?.alias,
-                candidateName,
-                providerReceipt,
-                message: providerReceipt.message,
-                action,
-              });
-              return;
-            }
-            const stoppedAt = new Date().toISOString();
-            const attention = buildApplicationAttention({
-              action,
-              message: providerReceipt.message,
+            const continuationAction =
+              action === "source_access_denied" ? "browser_continue" : action;
+            const continuationMessage =
+              action === "source_access_denied"
+                ? "The discovery site blocked the cloud runner before the employer page opened. Continue the same approved application securely in desktop Chrome."
+                : providerReceipt.message;
+            await storeNeedsUser({
+              admin,
+              userId,
+              packet: packet as DbRow,
+              job,
+              recipient: notificationEmail,
+              inboxAlias: inbox?.alias,
+              candidateName,
+              providerReceipt,
+              message: continuationMessage,
+              action: continuationAction,
             });
-            const [
-              { error: submissionError },
-              { error: packetError },
-              { error: eventError },
-            ] = await Promise.all([
-              admin
-                .from("application_submissions")
-                .update({
-                  status: "failed",
-                  provider_submission_id:
-                    providerReceipt.providerSubmissionId || null,
-                  error_code: action,
-                  receipt: {
-                    state: "failed",
-                    message: providerReceipt.message,
-                    action,
-                    attention,
-                  },
-                  updated_at: stoppedAt,
-                })
-                .eq("user_id", userId)
-                .eq("idempotency_key", idempotencyKey),
-              admin
-                .from("application_packets")
-                .update({
-                  status: "failed",
-                  updated_at: stoppedAt,
-                })
-                .eq("id", packet.id)
-                .eq("user_id", userId),
-              admin.from("application_events").upsert(
-                {
-                  user_id: userId,
-                  application_id: packet.id,
-                  event_type: "status_changed",
-                  label: "Employer application page is unavailable",
-                  metadata: { reason: action, attention },
-                  idempotency_key: `${idempotencyKey}:runner-issue:${payloadHash}`,
-                },
-                { onConflict: "user_id,idempotency_key" },
-              ),
-            ]);
-            if (submissionError || packetError || eventError)
-              throw new Error(
-                submissionError?.message ||
-                  packetError?.message ||
-                  eventError?.message,
-              );
             return;
           }
           await storeNeedsUser({

@@ -10,6 +10,7 @@ export type ApplicationNotificationKind =
   | "interview"
   | "rejection"
   | "update"
+  | "message"
   | "reply";
 
 export interface ApplicationNotificationInput {
@@ -80,6 +81,7 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
   actionPath: string;
 } {
   const role = `${input.jobTitle} at ${input.companyName}`;
+  const applicationPath = `/applications/new/${encodeURIComponent(input.applicationId)}`;
   switch (input.kind) {
     case "submitted":
       return {
@@ -89,7 +91,7 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         body: `IR35Careers received confirmation that your application for ${role} reached the application system. You can follow every update from your application tracker.`,
         accent: "#087f5b",
         actionLabel: "View application",
-        actionPath: "/applications",
+        actionPath: applicationPath,
       };
     case "needs_attention":
       return {
@@ -99,7 +101,7 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         body: `The application for ${role} is paused because an employer question could not be answered safely from your saved profile. Review the highlighted question and the application will continue after you confirm it.`,
         accent: "#b45309",
         actionLabel: "Answer the question",
-        actionPath: "/applications",
+        actionPath: `${applicationPath}#needs-attention`,
       };
     case "submission_issue":
       return {
@@ -109,7 +111,7 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         body: `IR35Careers stopped before the employer confirmed your application for ${role}. It has not been marked as submitted. Your approved CV and answers are saved. Open the application and select Apply again.`,
         accent: "#b45309",
         actionLabel: "Open and retry",
-        actionPath: "/applications",
+        actionPath: `${applicationPath}#needs-attention`,
       };
     case "interview":
       return {
@@ -141,6 +143,16 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         body: `A new status message for ${role} arrived in your IR35Careers inbox and has been linked to the correct application.`,
         accent: "#1d4ed8",
         actionLabel: "Read the update",
+        actionPath: "/inbox",
+      };
+    case "message":
+      return {
+        subject: `Application message: ${role}`,
+        eyebrow: "Application inbox",
+        title: "A new application message has arrived",
+        body: `A message associated with ${role} arrived at your private IR35Careers application address. Review the original sender and message before taking action.`,
+        accent: "#1d4ed8",
+        actionLabel: "Read the message",
         actionPath: "/inbox",
       };
     default:

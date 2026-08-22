@@ -38,8 +38,24 @@ describe("application notifications", () => {
   });
 
   it("sends action links to the application tracker instead of an invalid job route", () => {
-    expect(applicationNotificationPresentation(base).actionPath).toBe("/applications");
-    expect(applicationNotificationPresentation({ ...base, kind: "submission_issue" }).actionPath).toBe("/applications");
+    expect(applicationNotificationPresentation(base).actionPath).toBe(
+      `/applications/new/${base.applicationId}#needs-attention`,
+    );
+    expect(
+      applicationNotificationPresentation({
+        ...base,
+        kind: "submission_issue",
+      }).actionPath,
+    ).toBe(`/applications/new/${base.applicationId}#needs-attention`);
+  });
+
+  it("presents an unverified linked email without calling it a recruiter reply", () => {
+    expect(
+      applicationNotificationPresentation({ ...base, kind: "message" }),
+    ).toMatchObject({
+      title: "A new application message has arrived",
+      actionPath: "/inbox",
+    });
   });
 
   it("treats an infrastructure retry as an update, not missing user information", () => {

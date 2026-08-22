@@ -23,6 +23,7 @@ import {
 import { createHash } from "node:crypto";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
+import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -90,17 +91,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ accepted: true, ignored: true, reason: "recipient_domain" }, { status: 200, headers: RESPONSE_HEADERS });
     }
 
+    const routedRecipients = eventRecipients.map((recipient) => ({
+      recipient,
+      ...parseApplicationInboxAlias(recipient),
+    }));
+    const baseRecipients = Array.from(
+      new Set(routedRecipients.map((recipient) => recipient.baseAlias)),
+    );
+
     const admin = getSupabaseAdmin();
     const { data: aliasRows, error: aliasError } = await admin
       .from("inbox_aliases")
       .select("user_id, alias, forwarding_email, forwarding_enabled")
-      .in("alias", eventRecipients)
-      .limit(1);
+      .in("alias", baseRecipients);
     if (aliasError) throw new Error(aliasError.message);
-    const alias = aliasRows?.[0];
+    const alias = aliasRows?.find((row) =>
+      routedRecipients.some(
+        (recipient) => recipient.baseAlias === String(row.alias).toLowerCase(),
+      ),
+    );
     if (!alias) {
       return NextResponse.json({ accepted: true, ignored: true, reason: "unknown_alias" }, { status: 200, headers: RESPONSE_HEADERS });
     }
+    const routedRecipient = routedRecipients.find(
+      (recipient) =>
+        recipient.baseAlias === String(alias.alias).toLowerCase(),
+    );
     const inboundRate = await consumeRateLimitKey("inbound_mail", String(alias.user_id), 200, 24 * 60 * 60_000);
     if (!inboundRate.allowed) {
       return NextResponse.json({ accepted: true, ignored: true, reason: "rate_limit" }, { status: 200, headers: RESPONSE_HEADERS });
@@ -109,7 +125,12 @@ export async function POST(request: Request) {
     const { data: email, error: emailError } = await resend.emails.receiving.get(event.data.email_id, { html_format: "cid" });
     if (emailError || !email) throw new Error(emailError?.message ?? "Received email content is unavailable.");
     const payload = normaliseResendEmail(event, email, config.domain);
-    if (!payload.providerMessageId || !payload.sender || !payload.recipients.includes(alias.alias)) {
+    const receivedForAlias = payload.recipients.find(
+      (recipient) =>
+        parseApplicationInboxAlias(recipient).baseAlias ===
+        String(alias.alias).toLowerCase(),
+    );
+    if (!payload.providerMessageId || !payload.sender || !receivedForAlias) {
       return NextResponse.json({ error: "Required received-email fields are missing." }, { status: 400, headers: RESPONSE_HEADERS });
     }
 
@@ -133,10 +154,21 @@ export async function POST(request: Request) {
       payload.subject,
       payload.text,
     );
-    let applicationId = findLinkedApplication(
+    const hintedApplicationId = routedRecipient?.applicationId;
+    const validHint = hintedApplicationId
+      ? (packetRows ?? []).some(
+          (row) => String(row.id) === hintedApplicationId,
+        )
+      : false;
+    let applicationId = validHint
+      ? String(hintedApplicationId)
+      : findLinkedApplication(
       payload.subject,
       payload.text,
       candidates,
+    );
+    let verificationApplicationMatched = Boolean(
+      validHint && verificationCode,
     );
     if (!applicationId && verificationCode) {
       const { data: pendingRows, error: pendingRowsError } = await admin
@@ -158,8 +190,10 @@ export async function POST(request: Request) {
           "verification_code"
         );
       });
-      if (verificationApplications.length === 1)
+      if (verificationApplications.length === 1) {
         applicationId = String(verificationApplications[0].application_id);
+        verificationApplicationMatched = true;
+      }
     }
     const linkedPacket = applicationId ? (packetRows ?? []).find((row) => String(row.id) === applicationId) : undefined;
     const linkedJob = linkedPacket?.job_snapshot as ApplicationRecord["job"] | undefined;
@@ -190,7 +224,7 @@ export async function POST(request: Request) {
       application_id: applicationId,
       provider_message_id: payload.providerMessageId,
       sender: payload.sender,
-      recipient: alias.alias,
+      recipient: receivedForAlias,
       subject: payload.subject,
       body_text: payload.text,
       preview: payload.text.replace(/\s+/g, " ").slice(0, 220),
@@ -200,7 +234,11 @@ export async function POST(request: Request) {
     if (messageError) throw new Error(messageError.message);
 
     let resumeQueued = false;
-    if (applicationId && trustedSender && verificationCode) {
+    if (
+      applicationId &&
+      verificationCode &&
+      (trustedSender || verificationApplicationMatched)
+    ) {
       const { data: pendingSubmission, error: pendingError } = await admin
         .from("application_submissions")
         .select("status, error_code, receipt")
@@ -255,9 +293,11 @@ export async function POST(request: Request) {
       }
     }
 
+    let forwardingKind: ApplicationNotificationKind = "message";
     if (applicationId && trustedSender) {
       const currentStatus = (linkedPacket?.status ?? "applied") as ApplicationStatus;
       const transition = messageTransition(classification, currentStatus);
+      forwardingKind = transition.notification;
       const now = new Date().toISOString();
       const existingReceipt = linkedPacket?.receipt as ApplicationRecord["receipt"];
       const emailReceipt =
@@ -300,20 +340,39 @@ export async function POST(request: Request) {
         idempotency_key: `mail:${payload.providerMessageId}`,
       }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true });
 
-      const job = linkedJob;
-      if (job && alias.forwarding_enabled && alias.forwarding_email) {
-        await sendApplicationNotification({
-          kind: transition.notification,
-          to: String(alias.forwarding_email),
-          jobTitle: job.title,
-          companyName: job.company_name,
-          applicationId,
-          originalSubject: payload.subject,
-          originalMessage: payload.text,
-          replyTo: payload.sender,
-          idempotencyKey: `mail:${payload.providerMessageId}`,
-        }).catch(() => null);
-      }
+    } else if (applicationId) {
+      await admin.from("application_events").upsert({
+        user_id: alias.user_id,
+        application_id: applicationId,
+        event_type: "message_received",
+        label: "Application email received",
+        metadata: {
+          classification: "other",
+          providerMessageId: payload.providerMessageId,
+          webhookId: webhookHeaders.id,
+          senderVerified: false,
+        },
+        idempotency_key: `mail:${payload.providerMessageId}`,
+      }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true });
+    }
+
+    if (
+      applicationId &&
+      linkedJob &&
+      alias.forwarding_enabled &&
+      alias.forwarding_email
+    ) {
+      await sendApplicationNotification({
+        kind: forwardingKind,
+        to: String(alias.forwarding_email),
+        jobTitle: linkedJob.title,
+        companyName: linkedJob.company_name,
+        applicationId,
+        originalSubject: payload.subject,
+        originalMessage: payload.text,
+        ...(trustedSender ? { replyTo: payload.sender } : {}),
+        idempotencyKey: `mail:${payload.providerMessageId}`,
+      }).catch(() => null);
     }
 
     return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId), trustedSender, resumeQueued }, { status: 200, headers: RESPONSE_HEADERS });

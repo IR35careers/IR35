@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   detectAts,
+  isEmployerAccountAccessPage,
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
@@ -29,6 +30,24 @@ function field(overrides: Partial<RunnerField>): RunnerField {
 }
 
 describe("native application runner", () => {
+  it("recognises email-first employer account screens before a password appears", () => {
+    expect(
+      isEmployerAccountAccessPage({
+        body: "Sign in to continue. Enter your email address and select Next.",
+        hasEmailInput: true,
+        hasPasswordInput: false,
+        hasApplicationForm: false,
+      }),
+    ).toBe(true);
+    expect(
+      isEmployerAccountAccessPage({
+        body: "Apply for this role",
+        hasEmailInput: true,
+        hasPasswordInput: false,
+        hasApplicationForm: true,
+      }),
+    ).toBe(false);
+  });
   it("detects common ATS destinations without relying on a third-party submission API", () => {
     expect(detectAts("https://boards.greenhouse.io/company/jobs/1").kind).toBe("greenhouse");
     expect(detectAts("https://jobs.lever.co/company/role").kind).toBe("lever");

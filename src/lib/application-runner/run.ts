@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import {
   detectAts,
   isApplicationFormEvidence,
+  isEmployerAccountAccessPage,
   isJobBoardUtilityControl,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
@@ -399,7 +400,19 @@ async function handlePortalAccess(
   }
 
   const passwordInputs = page.locator('input[type="password"]:visible');
-  if (await passwordInputs.count()) {
+  const passwordCount = Math.min(await passwordInputs.count(), 3);
+  const emailInput = await visibleInput(
+    page,
+    'input[type="email"], input[autocomplete="email"], input[name*="email" i], input[id*="email" i]',
+  );
+  const applicationFormVisible = await hasApplicationForm(page);
+  const accountAccessPage = isEmployerAccountAccessPage({
+    body: bodyText,
+    hasEmailInput: Boolean(emailInput),
+    hasPasswordInput: passwordCount > 0,
+    hasApplicationForm: applicationFormVisible,
+  });
+  if (accountAccessPage) {
     const portalPassword =
       (await runtime?.resolvePortalPassword?.(
         new URL(page.url()).hostname.toLowerCase(),
@@ -414,10 +427,6 @@ async function handlePortalAccess(
         },
       };
     }
-    const emailInput = await visibleInput(
-      page,
-      'input[type="email"], input[autocomplete="email"], input[name*="email" i]',
-    );
     if (emailInput) await emailInput.fill(payload.candidate.email);
     const names = payload.candidate.fullName.trim().split(/\s+/);
     const firstName = await visibleInput(
@@ -430,7 +439,6 @@ async function handlePortalAccess(
     );
     if (firstName) await firstName.fill(names[0] ?? "");
     if (lastName) await lastName.fill(names.slice(1).join(" "));
-    const passwordCount = Math.min(await passwordInputs.count(), 3);
     for (let index = 0; index < passwordCount; index += 1)
       await passwordInputs.nth(index).fill(portalPassword);
 
@@ -468,11 +476,14 @@ async function handlePortalAccess(
       /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
         bodyText,
       );
-    const accessAction = hasSavedSession || accountAlreadyExists
-      ? signIn ?? createAccount ??
-        (await actionLocator(page, /^(continue|next)$/i))
-      : createAccount ?? signIn ??
-        (await actionLocator(page, /^(continue|next)$/i));
+    const accessAction =
+      hasSavedSession || accountAlreadyExists
+        ? signIn ??
+          createAccount ??
+          (await actionLocator(page, /^(continue|next|continue with email)$/i))
+        : createAccount ??
+          signIn ??
+          (await actionLocator(page, /^(continue|next|continue with email)$/i));
     if (!accessAction)
       return {
         handled: false,
@@ -964,7 +975,7 @@ export async function runNativeApplication(
         );
       if (portalAccess.handled) {
         portalAccessAttempts += 1;
-        if (portalAccessAttempts > 2)
+        if (portalAccessAttempts > 6)
           return reviewReceipt(
             "The employer did not accept the automatic account sign-in. Open the employer page to sign in or reset the account, then retry.",
             [],

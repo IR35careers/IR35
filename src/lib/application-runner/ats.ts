@@ -124,6 +124,22 @@ export function isSourceAccessDeniedPage(
   );
 }
 
+export function isEmployerAccountAccessPage(input: {
+  body: string;
+  hasEmailInput: boolean;
+  hasPasswordInput: boolean;
+  hasApplicationForm: boolean;
+}): boolean {
+  if (input.hasPasswordInput) return true;
+  return Boolean(
+    input.hasEmailInput &&
+      !input.hasApplicationForm &&
+      /(sign in|log in|create (?:an )?account|register|sign up|continue with email|email address.{0,80}(?:continue|next))/i.test(
+        input.body,
+      ),
+  );
+}
+
 export function detectAts(value: string): AtsDefinition {
   const host = new URL(value).hostname.toLowerCase();
   const match = ATS_DOMAINS.find(({ domain }) => hostMatches(host, domain));

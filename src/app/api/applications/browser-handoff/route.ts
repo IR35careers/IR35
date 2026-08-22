@@ -8,7 +8,10 @@ import {
 import { applicationPortalPassword } from "@/lib/application-portal-account";
 import { buildRunnerFacts } from "@/lib/application-runner/types";
 import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
-import { ensureInboxAlias } from "@/lib/email/inbox-alias";
+import {
+  applicationInboxAlias,
+  ensureInboxAlias,
+} from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import { buildResumePdf } from "@/lib/resume/export";
@@ -262,7 +265,9 @@ async function packetResponse(request: Request, token: string): Promise<Response
   const candidate: ContractorProfile = {
     ...context.profile,
     fullName: candidateName,
-    email: inbox?.alias || context.profile.email || accountEmail,
+    email: inbox?.alias
+      ? applicationInboxAlias(inbox.alias, handoff.applicationId)
+      : context.profile.email || accountEmail,
   };
   const questions = (context.packet.screening_answers as ApplicationQuestion[]) ?? [];
   const resumePdf = await buildResumePdf({
