@@ -39,8 +39,8 @@ import type {
   SubmissionProviderReceipt,
 } from "@/lib/application-submission";
 
-const MAX_STEPS = 8;
-const MAX_FIELDS = 120;
+const MAX_STEPS = 24;
+const MAX_FIELDS = 180;
 const MAX_RESUME_BYTES = 8_000_000;
 
 function runnerBudgetMs(): number {
@@ -808,13 +808,43 @@ async function waitForSubmissionConfirmation(
   page: Page,
   ats: AtsDefinition,
 ): Promise<string> {
-  const deadline = Date.now() + 8_000;
+  // Several ATS products acknowledge a submission only after an asynchronous
+  // profile or attachment request completes. A short wait produced false
+  // failures even though the employer was still processing the final click.
+  const deadline = Date.now() + 20_000;
   while (Date.now() < deadline) {
     const confirmed = await successMessage(page, ats);
     if (confirmed) return confirmed;
     await page.waitForTimeout(500);
   }
   return "";
+}
+
+async function invalidRequiredFields(
+  page: Page,
+  step: number,
+): Promise<RunnerField[]> {
+  const fields = await snapshotFields(page, step);
+  const invalid = await Promise.all(
+    fields.map(async ({ field, locator }) => {
+      if (!field.required) return null;
+      const failed = await locator
+        .evaluate((node) => {
+          const element = node as
+            | HTMLInputElement
+            | HTMLSelectElement
+            | HTMLTextAreaElement;
+          return (
+            element.getAttribute("aria-invalid") === "true" ||
+            (typeof element.checkValidity === "function" &&
+              !element.checkValidity())
+          );
+        })
+        .catch(() => false);
+      return failed ? field : null;
+    }),
+  );
+  return invalid.filter((field): field is RunnerField => Boolean(field));
 }
 
 export async function runNativeApplication(
@@ -838,13 +868,11 @@ export async function runNativeApplication(
   }, budgetMs);
   try {
     const destination = await validatePublicHttpsUrl(payload.destination);
-    if (!nativeRunnerHostAllowed(destination.hostname)) {
-      return reviewReceipt(
-        "This employer portal is not yet on the approved automatic-submission list. Review the role before continuing.",
-        [],
-        "unsupported_portal",
-      );
-    }
+    // The packet reaches this function only after the signed-in contractor has
+    // approved a stored job snapshot. Accept its validated public HTTPS
+    // destination even when the employer uses a private or uncommon ATS
+    // hostname. The request guard still prevents local-network access and
+    // blocks new third-party hosts after candidate data begins to be entered.
     let ats = detectAts(destination.toString());
     const savedSession = payload.candidate.portalAccountConsent
       ? await runtime?.loadPortalSession?.().catch(() => null)
@@ -1050,19 +1078,7 @@ export async function runNativeApplication(
         };
       }
       if (isSubmit) {
-        const validationFields = await snapshotFields(page, step + 1);
-        const resolved = await Promise.all(
-          validationFields.map(async ({ field, locator }) =>
-            field.required &&
-            (await locator.getAttribute("aria-invalid").catch(() => null)) ===
-              "true"
-              ? field
-              : null,
-          ),
-        );
-        const fields = resolved.filter((field): field is RunnerField =>
-          Boolean(field),
-        );
+        const fields = await invalidRequiredFields(page, step + 1);
         return reviewReceipt(
           "The employer did not confirm submission. Review the highlighted fields before another attempt.",
           fields,

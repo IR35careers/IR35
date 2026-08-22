@@ -10,10 +10,10 @@ export interface AtsDefinition {
 }
 
 const COMMON = {
-  applyPattern: /^(apply|apply now|apply for this job|start application|continue application)$/i,
-  nextPattern: /^(next|continue|save and continue|continue application)$/i,
-  submitPattern: /^(submit|submit application|send application|apply now|complete application)$/i,
-  successPattern: /(application (?:has been )?(?:submitted|received)|thank you for applying|we(?:'|’)ve received your application|application complete)/i,
+  applyPattern: /^(apply|apply now|apply online|apply for this (?:job|position|role)|start application|continue application|begin application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|continue application|review|review application|review and submit)$/i,
+  submitPattern: /^(submit|submit (?:my|your)? ?application|send application|apply now|finish application|complete application|confirm and submit)$/i,
+  successPattern: /(application (?:has been )?(?:submitted|received|sent)|thank you for (?:your )?application|thank you for applying|we(?:['’]ve| have) received your application|application complete|successfully applied)/i,
 };
 
 const DEFINITIONS: Record<AtsKind, AtsDefinition> = {
