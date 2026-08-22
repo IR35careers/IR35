@@ -68,7 +68,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await page.goto("/");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: /Contract work, without the IR35 guesswork/i })).toBeVisible();
-  await expect(page.getByText(/Preview data - connect Supabase/i)).toBeVisible();
+  await expect(page.getByText(/Preview roles are shown in this local workspace/i)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -496,10 +496,11 @@ test("saved alerts preview current matches without claiming email delivery", asy
   await page.goto("/alerts");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Job alerts" })).toBeVisible();
-  await expect(page.getByText("Email not connected")).toBeVisible();
+  await expect(page.getByText("Open any alert to see the newest contracts that match your preferences.")).toBeVisible();
 
   await page.getByRole("button", { name: "Preview matches" }).first().click();
   await expect(page.getByText(/current matches/)).toBeVisible();
+  await expect(page.getByText("This preview does not send a notification.")).toBeVisible();
   await expect(page.getByRole("link", { name: /Senior DevOps Engineer/ })).toBeVisible();
 
   await page.getByRole("button", { name: "New alert" }).click();
@@ -579,10 +580,10 @@ test("application analytics explains outcomes and exports bounded role data", as
 test("billing remains transparent and disabled without a complete provider configuration", async ({ page }) => {
   await page.goto("/billing");
   await dismissPrivacyNotice(page);
-  await expect(page.getByRole("heading", { name: "Choose capacity, not hidden automation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Choose the plan that fits your search" })).toBeVisible();
   await expect(page.getByText("Contractor Free", { exact: true })).toBeVisible();
   await expect(page.getByText("Contractor Pro", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Checkout not connected" })).toBeDisabled();
-  await expect(page.getByText(/Sandbox events never unlock a production Pro plan/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Plans are not available yet" })).toBeDisabled();
+  await expect(page.getByText("Pricing and renewal terms are confirmed before payment.")).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 });
