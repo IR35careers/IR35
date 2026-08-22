@@ -4,7 +4,7 @@ export interface ProfileReadinessItem {
   id: string;
   label: string;
   section:
-    "contact" | "eligibility" | "preferences" | "history" | "automation" | "cv";
+    "contact" | "professional" | "eligibility" | "preferences" | "history" | "automation" | "cv";
   complete: boolean;
 }
 
@@ -30,6 +30,12 @@ export function evaluateProfileReadiness(
       complete: profile.phone.trim().length >= 7,
     },
     {
+      id: "email",
+      label: "Contact email",
+      section: "contact",
+      complete: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim()),
+    },
+    {
       id: "address",
       label: "Address",
       section: "contact",
@@ -39,6 +45,18 @@ export function evaluateProfileReadiness(
         profile.postcode?.trim() &&
         profile.country?.trim(),
       ),
+    },
+    {
+      id: "target-role",
+      label: "Current or target role",
+      section: "professional",
+      complete: Boolean(profile.targetRole?.trim()),
+    },
+    {
+      id: "skills",
+      label: "At least three confirmed skills",
+      section: "professional",
+      complete: (profile.skills?.filter((skill) => skill.trim()).length ?? 0) >= 3,
     },
     {
       id: "right-to-work",

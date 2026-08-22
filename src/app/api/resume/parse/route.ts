@@ -3,6 +3,7 @@ import mammoth from "mammoth";
 import JSZip from "jszip";
 import { readFormDataBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { extractResumeProfile } from "@/lib/resume/profile-extraction";
 
 export const runtime = "nodejs";
 
@@ -80,7 +81,13 @@ export async function POST(request: Request) {
     if (text.length > MAX_TEXT_CHARS) return errorResponse("This CV contains too much text to analyse safely.", 413);
 
     return NextResponse.json(
-      { text, filename: file.name, pageCount, warnings: warnings.slice(0, 5) },
+      {
+        text,
+        filename: file.name,
+        pageCount,
+        warnings: warnings.slice(0, 5),
+        extraction: extractResumeProfile(text),
+      },
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (parseError) {

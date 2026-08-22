@@ -78,7 +78,7 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
         <p className="mt-2 text-sm text-slate-500">
           Add skills to your profile to see how this contract matches you.
         </p>
-        <Link href="/onboarding" className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-400">
+        <Link href="/profile#application-readiness" className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-400">
           Complete profile
         </Link>
       </div>

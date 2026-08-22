@@ -252,7 +252,7 @@ export function WelcomeModal({ name, userId }: { name?: string; userId: string }
             </div>
           </div>
           {lastStep && (
-            <Link href="/onboarding" onClick={finishTour} className="ir35-focus mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-50 px-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">
+            <Link href="/profile#application-readiness" onClick={finishTour} className="ir35-focus mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-50 px-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">
               Set up my profile now
             </Link>
           )}

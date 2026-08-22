@@ -15,12 +15,34 @@ test("profile keeps reusable identity, resume, cover letter and application cont
   await expect(page.getByRole("heading", { name: "Employer portal automation" })).toBeVisible();
   await expect(page.getByLabel("Are you willing to travel for work?")).toBeVisible();
   await expect(page.getByLabel("Target annual salary")).toBeVisible();
+  await page.getByLabel("Add your own skill").fill("FinOps");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Remove FinOps" })).toBeVisible();
 
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Resume studio" })).toBeVisible();
   await expect(page.getByLabel("Template")).toBeVisible();
   await expect(page.getByLabel("Font")).toBeVisible();
   await expect(page.getByRole("button", { name: "Fit to one page" })).toBeVisible();
+  await page.locator('input[type="file"][accept=".pdf,.docx,.txt"]').setInputFiles({
+    name: "priya-shah.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from(`Priya Shah
+Senior Salesforce Consultant
+priya.shah@example.com | +44 7700 900123 | Bristol, UK
+
+PROFESSIONAL SUMMARY
+Salesforce consultant with eight years delivering CRM programmes for regulated organisations.
+
+SKILLS
+Salesforce, Agile and Jira
+
+EXPERIENCE
+Senior Salesforce Consultant at Example Consulting. Delivered secure Salesforce services and Agile change programmes.`),
+  });
+  await expect(page.getByText("Filled from your CV", { exact: true })).toBeVisible();
+  await expect(page.getByText("Suggested from your CV", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Business Analysis/ })).toBeVisible();
 
   await page.getByRole("button", { name: "Cover letter", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Cover letter" })).toBeVisible();

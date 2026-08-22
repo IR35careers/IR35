@@ -253,7 +253,7 @@ export default function DashboardPage() {
               {profile && profile.skills.length === 0 ? (
                 <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center">
                   <p className="text-sm text-slate-700">Add your skills to unlock matches.</p>
-                  <Link href={preview ? "/profile" : "/onboarding"} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Complete profile <ArrowRight size={14} /></Link>
+                  <Link href="/profile#application-readiness" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Complete profile <ArrowRight size={14} /></Link>
                 </div>
               ) : matchesLoading ? (
                 <div className="mt-8 flex justify-center text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
@@ -339,7 +339,7 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
-              <Link href={preview ? "/profile" : "/onboarding"} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Improve profile</Link>
+              <Link href="/profile#application-readiness" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Improve profile</Link>
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-6">

@@ -18,6 +18,7 @@ import {
   Trash2,
   Upload,
   UserRound,
+  X,
 } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
@@ -28,6 +29,7 @@ import type {
 } from "@/lib/workspace/types";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { extractSkills } from "@/lib/processing/skills-extractor";
+import type { ResumeProfileExtraction } from "@/lib/resume/profile-extraction";
 
 type ProfileTab = "details" | "resume" | "cover" | "settings";
 
@@ -146,6 +148,10 @@ export function ContractorProfile() {
   const [tab, setTab] = useState<ProfileTab>("details");
   const [saved, setSaved] = useState(false);
   const [documentNotice, setDocumentNotice] = useState<string | null>(null);
+  const [customSkill, setCustomSkill] = useState("");
+  const [cvDetectedSkills, setCvDetectedSkills] = useState<string[]>([]);
+  const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
+  const [cvDetectedFields, setCvDetectedFields] = useState<string[]>([]);
   const resumeProfiles = profile.resumeProfiles ?? [];
   const activeProfile =
     resumeProfiles.find((item) => item.id === profile.activeResumeProfileId) ??
@@ -192,6 +198,25 @@ export function ContractorProfile() {
   const completeness = readiness.percentage;
   const skills = profile.skills ?? [];
   const certifications = profile.certifications ?? [];
+  const addSkill = (value: string) => {
+    const skill = value.trim().replace(/\s+/g, " ");
+    if (!skill) return;
+    const exists = skills.some(
+      (item) => item.toLocaleLowerCase("en-GB") === skill.toLocaleLowerCase("en-GB"),
+    );
+    if (!exists) set("skills", [...skills, skill]);
+    setSuggestedSkills((current) =>
+      current.filter(
+        (item) => item.toLocaleLowerCase("en-GB") !== skill.toLocaleLowerCase("en-GB"),
+      ),
+    );
+    setCustomSkill("");
+  };
+  const removeSkill = (value: string) =>
+    set(
+      "skills",
+      skills.filter((skill) => skill !== value),
+    );
   const previewLines = useMemo(
     () => activeProfile?.resumeText.split(/\r?\n/) ?? [],
     [activeProfile?.resumeText],
@@ -278,22 +303,67 @@ export function ContractorProfile() {
       text?: string;
       filename?: string;
       error?: string;
+      extraction?: ResumeProfileExtraction;
     };
     if (!response.ok || !payload.text) {
       setDocumentNotice(payload.error ?? "The CV could not be read.");
       return;
     }
-    setActiveProfile((current) => ({
-      ...current,
-      name: payload.filename || current.name,
-      resumeText: payload.text as string,
-    }));
-    const detectedSkills = extractSkills("", payload.text);
-    if (detectedSkills.length > 0)
-      set("skills", [
-        ...new Set([...(profile.skills ?? []), ...detectedSkills]),
-      ]);
-    setDocumentNotice("CV replaced. Save your profile to keep this version.");
+    const extraction = payload.extraction;
+    const detectedSkills = extraction?.detectedSkills ?? extractSkills("", payload.text);
+    const prefill = extraction?.prefill ?? {};
+    setProfile((current) => {
+      const keepOrFill = (currentValue: string | undefined, nextValue: string | undefined) =>
+        currentValue?.trim() ? currentValue : nextValue ?? currentValue ?? "";
+      return {
+        ...current,
+        fullName: keepOrFill(current.fullName, prefill.fullName),
+        email: keepOrFill(current.email, prefill.email),
+        phone: keepOrFill(current.phone, prefill.phone),
+        location: keepOrFill(current.location, prefill.location),
+        addressLine1: keepOrFill(current.addressLine1, prefill.addressLine1),
+        city: keepOrFill(current.city, prefill.city),
+        postcode: keepOrFill(current.postcode, prefill.postcode),
+        country: keepOrFill(current.country, prefill.country),
+        linkedInUrl: keepOrFill(current.linkedInUrl, prefill.linkedInUrl),
+        portfolioUrl: keepOrFill(current.portfolioUrl, prefill.portfolioUrl),
+        githubUrl: keepOrFill(current.githubUrl, prefill.githubUrl),
+        professionalSummary: keepOrFill(current.professionalSummary, prefill.professionalSummary),
+        targetRole: keepOrFill(current.targetRole, prefill.targetRole),
+        yearsOfExperience: keepOrFill(current.yearsOfExperience, prefill.yearsOfExperience),
+        experienceText: keepOrFill(current.experienceText, prefill.experienceText),
+        projectsText: keepOrFill(current.projectsText, prefill.projectsText),
+        educationInstitution: keepOrFill(current.educationInstitution, prefill.educationInstitution),
+        educationQualification: keepOrFill(current.educationQualification, prefill.educationQualification),
+        certifications: [
+          ...new Set([...(current.certifications ?? []), ...(prefill.certifications ?? [])]),
+        ],
+        skills: [...new Set([...(current.skills ?? []), ...detectedSkills])],
+        resumeProfiles: (current.resumeProfiles ?? []).map((item) =>
+          item.id === activeProfile.id
+            ? {
+                ...item,
+                name: payload.filename || item.name,
+                resumeText: payload.text as string,
+              }
+            : item,
+        ),
+      };
+    });
+    setCvDetectedSkills(detectedSkills);
+    setSuggestedSkills(
+      (extraction?.suggestedSkills ?? []).filter(
+        (skill) =>
+          !skills.some(
+            (current) => current.toLocaleLowerCase("en-GB") === skill.toLocaleLowerCase("en-GB"),
+          ) && !detectedSkills.includes(skill),
+      ),
+    );
+    setCvDetectedFields(extraction?.detectedFieldLabels ?? []);
+    setTab("details");
+    setDocumentNotice(
+      `CV read. ${detectedSkills.length} skill${detectedSkills.length === 1 ? "" : "s"} and ${extraction?.detectedFieldLabels.length ?? 0} profile field${extraction?.detectedFieldLabels.length === 1 ? "" : "s"} found. Review the highlighted suggestions, complete anything missing, then save.`,
+    );
   };
 
   const downloadResume = async (format: "pdf" | "docx") => {
@@ -402,16 +472,21 @@ export function ContractorProfile() {
                         ? "settings"
                         : "details",
                   );
+                  const targetId =
+                    item.section === "cv"
+                      ? "profile-resume"
+                      : item.section === "automation"
+                        ? "portal-automation"
+                        : item.section === "professional" ||
+                            ["full-name", "phone", "email"].includes(item.id)
+                          ? "profile-professional-details"
+                          : item.section === "eligibility" || item.id === "availability"
+                            ? "work-authorisation"
+                            : "reusable-answers";
                   window.setTimeout(
                     () =>
                       document
-                        .getElementById(
-                          item.section === "cv"
-                            ? "profile-resume"
-                            : item.section === "automation"
-                              ? "portal-automation"
-                              : "reusable-answers",
-                        )
+                        .getElementById(targetId)
                         ?.scrollIntoView({
                           behavior: "smooth",
                           block: "start",
@@ -428,6 +503,11 @@ export function ContractorProfile() {
           </div>
         )}
       </section>
+      {documentNotice && (
+        <p role="status" className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold leading-6 text-brand-900">
+          {documentNotice}
+        </p>
+      )}
       <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-card sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 gap-3 overflow-x-auto pb-1">
@@ -516,7 +596,7 @@ export function ContractorProfile() {
       {tab === "details" && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-6">
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <section id="profile-professional-details" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
                   <UserRound size={20} />
@@ -530,6 +610,14 @@ export function ContractorProfile() {
                   </p>
                 </div>
               </div>
+              {cvDetectedFields.length > 0 && (
+                <div role="status" className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                  <p className="font-semibold">Filled from your CV</p>
+                  <p className="mt-1 leading-6">
+                    {cvDetectedFields.join(", ")}. Existing profile information was kept. Review these details before saving.
+                  </p>
+                </div>
+              )}
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <Field
                   label="Full name"
@@ -592,32 +680,68 @@ export function ContractorProfile() {
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
                 <h2 className="font-semibold">Skills</h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Separate skills with commas.
+                  Skills explicitly found in your CV are added. Related skills stay as suggestions until you confirm them.
                 </p>
-                <textarea
-                  value={skills.join(", ")}
-                  onChange={(event) =>
-                    set(
-                      "skills",
-                      event.target.value
-                        .split(",")
-                        .map((item) => item.trim())
-                        .filter(Boolean),
-                    )
-                  }
-                  rows={5}
-                  className="ir35-focus mt-4 w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm"
-                />
+                <form
+                  className="mt-4 flex gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    addSkill(customSkill);
+                  }}
+                >
+                  <label className="min-w-0 flex-1 text-xs font-semibold text-slate-700">
+                    Add your own skill
+                    <input
+                      value={customSkill}
+                      onChange={(event) => setCustomSkill(event.target.value)}
+                      placeholder="For example: FinOps"
+                      maxLength={80}
+                      className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm font-normal"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={!customSkill.trim()}
+                    className="ir35-focus mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white disabled:opacity-40"
+                  >
+                    <Plus size={15} /> Add
+                  </button>
+                </form>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {skills.map((skill) => (
-                    <span
+                    <button
+                      type="button"
                       key={skill}
-                      className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-800"
+                      onClick={() => removeSkill(skill)}
+                      aria-label={`Remove ${skill}`}
+                      className={`ir35-focus inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${cvDetectedSkills.includes(skill) ? "bg-emerald-100 text-emerald-900" : "bg-brand-50 text-brand-800"}`}
                     >
-                      {skill}
-                    </span>
+                      {skill} <X size={12} aria-hidden="true" />
+                    </button>
                   ))}
                 </div>
+                {suggestedSkills.length > 0 && (
+                  <div className="mt-5 border-t border-slate-200 pt-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
+                      Suggested from your CV
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Add only skills you can support with real experience.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {suggestedSkills.map((skill) => (
+                        <button
+                          type="button"
+                          key={skill}
+                          onClick={() => addSkill(skill)}
+                          className="ir35-focus inline-flex min-h-9 items-center gap-1.5 rounded-full border border-dashed border-brand-300 bg-white px-3 text-xs font-semibold text-brand-800 hover:bg-brand-50"
+                        >
+                          <Plus size={12} aria-hidden="true" /> {skill}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
                 <h2 className="font-semibold">Certifications</h2>
@@ -706,7 +830,7 @@ export function ContractorProfile() {
                 </label>
               </div>
             </section>
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <section id="work-authorisation" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <h2 className="font-semibold">Experience and projects</h2>
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 <label className="text-sm font-semibold text-slate-800">
@@ -1202,11 +1326,6 @@ export function ContractorProfile() {
                 className="ir35-focus mt-2 w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-3 font-mono text-xs leading-5"
               />
             </label>
-            {documentNotice && (
-              <p className="text-xs font-semibold text-brand-800" role="status">
-                {documentNotice}
-              </p>
-            )}
           </section>
           <article className="min-h-[760px] rounded-3xl bg-slate-200 p-4 shadow-inner sm:p-8">
             <div

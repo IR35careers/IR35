@@ -86,7 +86,7 @@ export const emailCampaignTemplates: EmailCampaignTemplate[] = [
     heading: "Your contractor workspace is ready when you are.",
     message: "Complete your profile to make IR35Careers more useful for your contract search. Add your skills, preferences and CV so you can compare your evidence with relevant roles.\n\nYou stay in control of every suggested edit and application step.",
     ctaLabel: "Complete my profile",
-    ctaUrl: `${DEFAULT_SITE_URL}/onboarding`,
+    ctaUrl: `${DEFAULT_SITE_URL}/profile#application-readiness`,
   },
 ];
 

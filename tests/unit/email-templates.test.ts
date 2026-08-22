@@ -16,7 +16,7 @@ describe("transactional email", () => {
     expect(email.html).toContain("Welcome, Anvesh.");
     expect(email.html).toContain('src="cid:ir35careers-mark"');
     expect(email.html).toContain('bgcolor="#effaf5"');
-    expect(email.html).toContain("https://www.ir35careers.com/onboarding");
+    expect(email.html).toContain("https://www.ir35careers.com/profile#application-readiness");
     expect(email.html).toContain("truth-preserving");
     expect(email.html).toContain("The IR35Careers Team");
     expect(email.text).toContain("Set up your contractor profile");
@@ -32,7 +32,7 @@ describe("transactional email", () => {
 
     expect(email.html).not.toContain("<img src=x");
     expect(email.html).toContain("&lt;img");
-    expect(email.html).toContain("https://www.ir35careers.com/onboarding");
+    expect(email.html).toContain("https://www.ir35careers.com/profile#application-readiness");
   });
 
   it("renders the one-time public-beta invitation without claiming an account already exists", () => {

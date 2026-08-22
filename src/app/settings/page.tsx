@@ -245,7 +245,7 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </dl>
-              <Link href="/onboarding" className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100">
+              <Link href="/profile#application-readiness" className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100">
                 Edit profile details
               </Link>
               <Link href="/dashboard?tour=1" className="ml-2 mt-4 inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300">
@@ -394,7 +394,7 @@ export default function SettingsPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/onboarding" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700">
+              <Link href="/profile#application-readiness" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700">
                 Improve profile
               </Link>
             </section>

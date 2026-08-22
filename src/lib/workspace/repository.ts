@@ -17,7 +17,7 @@ import type { JobDetail } from "@/lib/job-types";
 
 type DbRow = Record<string, unknown>;
 
-function blankCloudState(email: string): WorkspaceState {
+export function createBlankCloudWorkspaceState(email: string): WorkspaceState {
   const seed = createSeedWorkspaceState();
   return {
     ...seed,
@@ -54,8 +54,29 @@ function blankCloudState(email: string): WorkspaceState {
       automaticEmailVerification: false,
       educationInstitution: "",
       educationQualification: "",
+      linkedInUrl: "",
+      portfolioUrl: "",
+      rightToWork: "prefer_not_to_say",
+      availability: "",
+      noticePeriod: "",
       limitedCompanyName: "",
       companyNumber: "",
+      vatRegistered: false,
+      clearance: "",
+      defaultCvLabel: "",
+      professionalSummary: "",
+      targetRole: "",
+      githubUrl: "",
+      skills: [],
+      certifications: [],
+      experienceText: "",
+      projectsText: "",
+      resumeProfiles: [],
+      activeResumeProfileId: undefined,
+      profileSetupCompletedAt: undefined,
+      networkContacts: [],
+      referralRequests: [],
+      experience: undefined,
       forwardingEmail: email,
     },
     applications: [],
@@ -81,6 +102,28 @@ function asProfile(
 ): ContractorProfile {
   if (!value || typeof value !== "object") return fallback;
   return { ...fallback, ...(value as Partial<ContractorProfile>) };
+}
+
+function profileFromRow(row: DbRow | null, fallback: ContractorProfile): ContractorProfile {
+  const profile = asProfile(row?.application_profile, fallback);
+  if (!row) return profile;
+  const legacySkills = Array.isArray(row.skills)
+    ? row.skills.filter((item): item is string => typeof item === "string")
+    : [];
+  const legacyYears = Number(row.years_experience);
+  return {
+    ...profile,
+    fullName: profile.fullName.trim() || String(row.full_name ?? ""),
+    phone: profile.phone.trim() || String(row.phone ?? ""),
+    linkedInUrl: profile.linkedInUrl.trim() || String(row.linkedin_url ?? ""),
+    targetRole: profile.targetRole?.trim() || String(row.job_title ?? ""),
+    yearsOfExperience:
+      profile.yearsOfExperience?.trim() ||
+      (Number.isFinite(legacyYears) && legacyYears > 0 ? String(legacyYears) : ""),
+    skills: profile.skills?.length ? profile.skills : legacySkills,
+    defaultCvLabel:
+      profile.defaultCvLabel.trim() || String(row.cv_filename ?? ""),
+  };
 }
 
 function mapEvent(row: DbRow): ApplicationEvent {
@@ -167,7 +210,7 @@ export async function loadCloudWorkspace(
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("application_profile")
+      .select("application_profile, full_name, skills, phone, linkedin_url, job_title, years_experience, cv_filename")
       .eq("id", userId)
       .maybeSingle(),
     supabase
@@ -220,7 +263,7 @@ export async function loadCloudWorkspace(
   ].find((result) => result.error);
   if (failure?.error) throw new Error(failure.error.message);
 
-  const state = blankCloudState(email);
+  const state = createBlankCloudWorkspaceState(email);
   const events = ((eventsResult.data ?? []) as DbRow[]).map(mapEvent);
   const profileRow = profileResult.data as DbRow | null;
   const aliasRow = aliasResult.data as DbRow | null;
@@ -287,7 +330,7 @@ export async function loadCloudWorkspace(
 
   return {
     ...state,
-    profile: asProfile(profileRow?.application_profile, state.profile),
+    profile: profileFromRow(profileRow, state.profile),
     applications: ((applicationsResult.data ?? []) as DbRow[]).map((row) =>
       mapApplication(row, events),
     ),
@@ -304,11 +347,38 @@ export async function saveCloudWorkspace(
   state: WorkspaceState,
 ): Promise<void> {
   const supabase = getSupabase();
+  const activeResume =
+    state.profile.resumeProfiles?.find(
+      (item) => item.id === state.profile.activeResumeProfileId,
+    ) ??
+    state.profile.resumeProfiles?.find((item) => item.isDefault) ??
+    state.profile.resumeProfiles?.[0];
+  const targetRate = Number(
+    state.profile.targetDayRate?.replace(/[^\d.]/g, "") ?? "",
+  );
+  const yearsExperience = Number.parseInt(
+    state.profile.yearsOfExperience ?? "",
+    10,
+  );
   const profileResult = await supabase
     .from("profiles")
     .upsert({
       id: userId,
       application_profile: state.profile,
+      full_name: state.profile.fullName.trim(),
+      skills: state.profile.skills ?? [],
+      target_rate_min:
+        Number.isFinite(targetRate) && targetRate > 0 ? targetRate : null,
+      phone: state.profile.phone.trim() || null,
+      linkedin_url: state.profile.linkedInUrl.trim() || null,
+      job_title: state.profile.targetRole?.trim() || null,
+      years_experience:
+        Number.isFinite(yearsExperience) && yearsExperience > 0
+          ? yearsExperience
+          : null,
+      cv_filename: activeResume?.resumeText.trim()
+        ? activeResume.name
+        : null,
       updated_at: new Date().toISOString(),
     });
   if (profileResult.error) throw new Error(profileResult.error.message);

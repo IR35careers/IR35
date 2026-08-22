@@ -30,11 +30,17 @@ describe("CV parsing route", () => {
   it("extracts text from a generated PDF", async () => {
     const bytes = await buildResumePdf(exportRequest);
     const response = await parseFile("alex.pdf", "application/pdf", bytes);
-    const payload = (await response.json()) as { text: string; pageCount: number };
+    const payload = (await response.json()) as {
+      text: string;
+      pageCount: number;
+      extraction: { prefill: { fullName?: string }; detectedSkills: string[] };
+    };
     expect(response.status).toBe(200);
     expect(payload.text).toContain("Alex Morgan");
     expect(payload.text).toContain("Terraform");
     expect(payload.pageCount).toBe(1);
+    expect(payload.extraction.prefill.fullName).toBe("Alex Morgan");
+    expect(payload.extraction.detectedSkills).toEqual(expect.arrayContaining(["AWS", "Terraform"]));
   });
 
   it("extracts text from a generated DOCX", async () => {

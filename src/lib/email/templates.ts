@@ -100,7 +100,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
         </td></tr>
         <tr><td style="padding:22px 30px 30px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
-            <a href="${siteUrl}/onboarding" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Set up your contractor profile</a>
+            <a href="${siteUrl}/profile#application-readiness" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Set up your contractor profile</a>
           </td></tr></table>
           <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">It takes around two minutes. Your CV remains private to your account.</p>
         </td></tr>
@@ -141,7 +141,7 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
 Thanks for joining the IR35Careers public beta. You can find relevant roles, understand what each listing actually says and prepare evidence-led applications without inventing experience.
 
 GET STARTED
-Set up your contractor profile: ${siteUrl}/onboarding
+Set up your contractor profile: ${siteUrl}/profile#application-readiness
 
 1. Complete your contractor profile
 Add your skills, rate preferences, working pattern and private CV.

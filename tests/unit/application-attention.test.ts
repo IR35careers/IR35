@@ -32,4 +32,13 @@ describe("profile readiness", () => {
     expect(result.complete).toBe(false);
     expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["portal-consent", "cv"]));
   });
+
+  it("requires a role and at least three confirmed skills", () => {
+    const profile = createSeedWorkspaceState().profile;
+    const result = evaluateProfileReadiness(
+      { ...profile, targetRole: "", skills: ["AWS", "Terraform"] },
+      "A complete CV with enough truthful content to pass the minimum readiness length for an application profile and employer form.",
+    );
+    expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["target-role", "skills"]));
+  });
 });
