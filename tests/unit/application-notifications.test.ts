@@ -42,6 +42,18 @@ describe("application notifications", () => {
     expect(applicationNotificationPresentation({ ...base, kind: "submission_issue" }).actionPath).toBe("/applications");
   });
 
+  it("treats an infrastructure retry as an update, not missing user information", () => {
+    const record = buildApplicationInboxRecord({
+      ...base,
+      kind: "submission_issue",
+    });
+    expect(record).toMatchObject({
+      subject:
+        "Application ready to retry: Senior Data Scientist at Michael Page Technology",
+      classification: "application_update",
+    });
+  });
+
   it("does not create an inbox record without a trusted user id", () => {
     expect(buildApplicationInboxRecord({ ...base, userId: undefined })).toBeNull();
   });

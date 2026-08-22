@@ -30,6 +30,23 @@ function isPrivateAddress(address: string): boolean {
       : true;
 }
 
+function normalizedLookupAddresses(
+  value: unknown,
+): Array<{ address: string; family: 4 | 6 }> {
+  if (!Array.isArray(value) || value.length === 0) return [];
+  const addresses: Array<{ address: string; family: 4 | 6 }> = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") return [];
+    const record = item as { address?: unknown; family?: unknown };
+    if (typeof record.address !== "string") return [];
+    const address = record.address.trim().toLowerCase();
+    const family = isIP(address);
+    if ((family !== 4 && family !== 6) || record.family !== family) return [];
+    addresses.push({ address, family });
+  }
+  return addresses;
+}
+
 /** Resolve every address and approve a public HTTPS destination. */
 export async function resolvePublicHttpsUrl(value: string): Promise<ResolvedPublicHttpsUrl> {
   if (!value || value.length > 2_048) throw new Error("The application URL is invalid.");
@@ -41,13 +58,14 @@ export async function resolvePublicHttpsUrl(value: string): Promise<ResolvedPubl
   if (hostname === "localhost" || hostname.endsWith(".local") || hostname.endsWith(".internal")) {
     throw new Error("The URL does not resolve to a public website.");
   }
-  const addresses = isIP(hostname)
+  const lookupResult = isIP(hostname)
     ? [{ address: hostname, family: isIP(hostname) as 4 | 6 }]
     : await lookup(hostname, { all: true, verbatim: true });
+  const addresses = normalizedLookupAddresses(lookupResult);
   if (!addresses.length || addresses.some((entry) => isPrivateAddress(entry.address))) {
     throw new Error("The URL does not resolve to a public website.");
   }
-  return { url, addresses: addresses.map((entry) => ({ address: entry.address, family: entry.family as 4 | 6 })) };
+  return { url, addresses };
 }
 
 /** Resolve and approve a public HTTPS destination before server-side navigation. */

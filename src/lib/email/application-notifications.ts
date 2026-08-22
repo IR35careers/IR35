@@ -103,12 +103,12 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
       };
     case "submission_issue":
       return {
-        subject: `Application needs review: ${role}`,
+        subject: `Application ready to retry: ${role}`,
         eyebrow: "Application update",
-        title: "Your application was not submitted",
-        body: `IR35Careers could not obtain an employer confirmation for ${role}. Your approved CV and answers are saved. Open the application to review the issue and try again.`,
+        title: "Your application needs another attempt",
+        body: `IR35Careers stopped before the employer confirmed your application for ${role}. It has not been marked as submitted. Your approved CV and answers are saved. Open the application and select Apply again.`,
         accent: "#b45309",
-        actionLabel: "Review application",
+        actionLabel: "Open and retry",
         actionPath: "/applications",
       };
     case "interview":
@@ -157,10 +157,10 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
 }
 
 function inboxClassification(kind: ApplicationNotificationKind): InboxClassification {
-  if (kind === "needs_attention" || kind === "submission_issue") return "action_required";
+  if (kind === "needs_attention") return "action_required";
   if (kind === "interview") return "interview";
   if (kind === "rejection") return "rejection";
-  if (kind === "submitted" || kind === "update") return "application_update";
+  if (kind === "submitted" || kind === "submission_issue" || kind === "update") return "application_update";
   return "other";
 }
 

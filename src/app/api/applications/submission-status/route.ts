@@ -106,15 +106,32 @@ export async function GET(request: Request): Promise<Response> {
         { state: "submitted", receipt: submission.receipt },
         { headers: NO_STORE },
       );
-    if (submission.status === "failed")
+    if (submission.status === "failed") {
+      const stored = submission.receipt as {
+        message?: string;
+        action?: string;
+        attention?: unknown;
+      } | null;
+      const message =
+        stored?.message ||
+        "The application stopped before employer confirmation. Your approved materials are safe and ready to retry.";
+      const attention =
+        stored?.attention && typeof stored.attention === "object"
+          ? stored.attention
+          : buildApplicationAttention({
+              action: stored?.action || "retry",
+              message,
+            });
       return Response.json(
         {
           state: "failed",
-          error:
-            "The employer form could not be completed. Your approved materials are still saved.",
+          error: message,
+          action: stored?.action || "retry",
+          attention,
         },
         { status: 409, headers: NO_STORE },
       );
+    }
     if (submission.error_code === "needs_user") {
       const stored = submission.receipt as {
         message?: string;

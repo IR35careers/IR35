@@ -8,6 +8,7 @@ export type InboxViewCategory =
   | "reminder"
   | "offer"
   | "applied"
+  | "retry"
   | "needs_you"
   | "other";
 
@@ -38,6 +39,7 @@ export function inboxViewCategory(message: Pick<InboxMessage, "subject" | "body"
   if (/\b(assessment|coding test|technical test|take home task|take home exercise|online test|psychometric)\b/.test(text)) return "assessment";
   if (/\b(reminder|deadline|due by|complete by|expires? (?:today|tomorrow|soon))\b/.test(text)) return "reminder";
   if (/\b(application (?:has been )?(?:received|submitted)|thanks? for applying|thank you for applying|submission confirmation|we received your application)\b/.test(text)) return "applied";
+  if (/\b(application (?:needs (?:review|another attempt)|ready to retry)|select apply again|approved cv and answers are saved)\b/.test(text)) return "retry";
   if (message.classification === "action_required") return "needs_you";
   return "other";
 }

@@ -36,6 +36,7 @@ import type {
 import type { JobDetail } from "@/lib/job-types";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { buildApplicationAttention } from "@/lib/application-attention";
+import { applicationSubmissionFailure } from "@/lib/application-submission-failure";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 
 export const runtime = "nodejs";
@@ -210,19 +211,7 @@ function providerReviewAction(
 }
 
 function safeSubmissionError(error: unknown): string {
-  const fallback =
-    "The application was not submitted. Your approved packet is unchanged.";
-  if (!(error instanceof Error)) return fallback;
-  const message = error.message
-    .replace(/[\u0000-\u001f\u007f]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 300);
-  return /^(The employer application page is unavailable or closed\.|The employer form could not be completed\.|This contract has no valid secure application destination\.)$/.test(
-    message,
-  )
-    ? message
-    : fallback;
+  return applicationSubmissionFailure(error).message;
 }
 
 function knownProviderAnswers(
@@ -890,6 +879,11 @@ export async function POST(request: Request): Promise<Response> {
           });
           return;
         }
+        const failure = applicationSubmissionFailure(providerError);
+        const attention = buildApplicationAttention({
+          action: "retry",
+          message: failure.message,
+        });
         console.error("application_runner_failed", {
           applicationId: String(packet.id),
           provider: employerDestination
@@ -908,15 +902,25 @@ export async function POST(request: Request): Promise<Response> {
             .from("application_submissions")
             .update({
               status: "failed",
-              error_code: "provider_error",
+              error_code: failure.code,
               receipt: {
                 state: "failed",
-                message: safeSubmissionError(providerError),
+                message: failure.message,
+                action: "retry",
+                attention,
               },
               updated_at: failedAt,
             })
             .eq("user_id", userId)
             .eq("idempotency_key", idempotencyKey),
+          admin
+            .from("application_packets")
+            .update({
+              status: "ready",
+              updated_at: failedAt,
+            })
+            .eq("id", packet.id)
+            .eq("user_id", userId),
           admin
             .from("application_events")
             .upsert(
@@ -924,8 +928,8 @@ export async function POST(request: Request): Promise<Response> {
                 user_id: userId,
                 application_id: packet.id,
                 event_type: "status_changed",
-                label: "Application attempt stopped and is ready to retry",
-                metadata: { reason: "provider_error" },
+                label: "Application stopped before confirmation and is ready to retry",
+                metadata: { reason: failure.code, attention },
                 idempotency_key: `${idempotencyKey}:failed:${payloadHash}`,
               },
               { onConflict: "user_id,idempotency_key" },

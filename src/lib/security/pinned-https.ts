@@ -1,11 +1,30 @@
 import https from "node:https";
-import { isIP } from "node:net";
+import { isIP, type LookupFunction } from "node:net";
 import { resolvePublicHttpsUrl } from "@/lib/security/public-url";
 
 export interface PinnedHttpsResponse {
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: Buffer;
+}
+
+/**
+ * Keep the approved address pinned while supporting Node's dual-stack lookup
+ * contract. Node 20+ can request every address (`all: true`) even when a
+ * caller supplied a custom lookup function. Returning the legacy scalar
+ * shape in that case makes Node try to connect to an undefined address.
+ */
+export function createPinnedLookup(
+  address: string,
+  family: 4 | 6,
+): LookupFunction {
+  return (_hostname, lookupOptions, callback) => {
+    if (lookupOptions.all) {
+      callback(null, [{ address, family }]);
+      return;
+    }
+    callback(null, address, family);
+  };
 }
 
 export async function getPinnedPublicHttps(
@@ -23,9 +42,10 @@ export async function getPinnedPublicHttps(
           method: "GET",
           headers: options.headers,
           ...(isIP(tlsHost) ? {} : { servername: tlsHost }),
-          lookup: (_hostname, _lookupOptions, callback) => {
-            callback(null, approvedAddress.address, approvedAddress.family);
-          },
+          lookup: createPinnedLookup(
+            approvedAddress.address,
+            approvedAddress.family,
+          ),
         }, (response) => {
           const status = response.statusCode ?? 0;
           if (status >= 300 && status < 400) {

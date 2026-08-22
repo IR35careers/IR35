@@ -42,6 +42,7 @@ const FILTERS: Array<{ id: FilterId; label: string }> = [
   { id: "reminder", label: "Reminder" },
   { id: "offer", label: "Offer" },
   { id: "applied", label: "Applied" },
+  { id: "retry", label: "Retry" },
   { id: "rejection", label: "Rejection" },
   { id: "needs_you", label: "Needs you" },
 ];
@@ -53,6 +54,7 @@ function categoryStyle(category: InboxViewCategory): string {
     return "border-rose-200 bg-rose-50 text-rose-700";
   if (
     category === "needs_you" ||
+    category === "retry" ||
     category === "assessment" ||
     category === "reminder"
   )
