@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect, type ChangeEvent } from "react";
+import { useMemo, useState, useEffect, useRef, type ChangeEvent } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -25,6 +25,7 @@ import { WorkspacePage, StatusPill } from "@/components/workspace/WorkspacePage"
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
 import { roleTypeWarning } from "@/lib/ats/submission-route";
+import { hasActiveSubmission, latestSubmissionLifecycleEvent } from "@/lib/application-submission-state";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import type { JobDetail } from "@/lib/job-types";
@@ -78,19 +79,14 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [profilePrompt, setProfilePrompt] = useState(false);
+  const submissionStatusFailures = useRef(0);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
   const cvReady = cvText.trim().length >= 120;
   const answersReviewed = Boolean(application?.questions.every((item) => !item.required || (item.reviewed && item.answer.trim().length > 0)));
   const approvalsComplete = Boolean(application?.truthApproved && application.materialsApproved && application.submissionApproved);
   const submitted = application?.status === "applied" && application.receipt?.mode === "external_handoff";
-  const latestSubmissionEvent = application ? [...application.events].reverse().find((event) => [
-    "Application submission started",
-    "Application submitted successfully",
-    "Application needs your answer",
-    "Application attempt stopped and is ready to retry",
-  ].includes(event.label)) : undefined;
-  const submissionInProgress = application?.status === "ready" && latestSubmissionEvent?.label === "Application submission started";
+  const submissionInProgress = Boolean(application && hasActiveSubmission(application.status, application.events));
   const selectedSuggestions = aiResult?.suggestions.filter((item) => selectedSuggestionIds.includes(item.id)) ?? [];
   const selectedPreview = aiResult ? applyAiTailoringSuggestions(application?.sourceCvText ?? cvText, selectedSuggestions) : "";
   const selectedScore = selectedPreview ? scoreResumeForRole(selectedPreview, job, cvFilename || "Application CV").overall : application?.matchScore ?? 0;
@@ -113,11 +109,28 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     if (!application || !submissionInProgress || !isSupabaseConfigured()) return;
     let active = true;
     const applicationId = application.id;
+    const stopLocalSubmission = (message: string) => {
+      const now = new Date().toISOString();
+      const next: ApplicationRecord = {
+        ...application,
+        status: "ready",
+        updatedAt: now,
+        events: latestSubmissionLifecycleEvent(application.events)?.label === "Application attempt stopped and is ready to retry"
+          ? application.events
+          : [...application.events, { id: newWorkspaceId(), applicationId, type: "status_changed", label: "Application attempt stopped and is ready to retry", createdAt: now }],
+      };
+      setApplication(next);
+      persistApplication(next);
+      setNotice(null);
+      setError(message);
+    };
     const refresh = async () => {
       try {
         const response = await fetchWithFreshSession(`/api/applications/submission-status?applicationId=${encodeURIComponent(applicationId)}`, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
         const payload = (await response.json().catch(() => ({}))) as { state?: "submitted" | "processing" | "needs_user" | "failed"; receipt?: ApplicationRecord["receipt"]; questions?: ApplicationRecord["questions"]; action?: string; message?: string; error?: string };
-        if (!active || payload.state === "processing") return;
+        if (!active) return;
+        submissionStatusFailures.current = 0;
+        if (payload.state === "processing") return;
         if (payload.state === "submitted" && payload.receipt) {
           const now = new Date().toISOString();
           const next: ApplicationRecord = { ...application, status: "applied", mode: "external_handoff", receipt: payload.receipt, updatedAt: now, events: [...application.events, { id: newWorkspaceId(), applicationId, type: "status_changed", label: "Application submitted successfully", createdAt: now }] };
@@ -138,17 +151,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           return;
         }
         if (payload.state === "failed") {
-          const now = new Date().toISOString();
-          const next: ApplicationRecord = { ...application, updatedAt: now, events: [...application.events, { id: newWorkspaceId(), applicationId, type: "status_changed", label: "Application attempt stopped and is ready to retry", createdAt: now }] };
-          setApplication(next);
-          persistApplication(next);
-          setNotice(null);
-          setError(payload.error || "The employer form could not be completed. Your approved materials are safe and ready to retry.");
+          stopLocalSubmission(payload.error || "The employer form could not be completed. Your approved materials are safe and ready to retry.");
           return;
         }
-        if (!response.ok && response.status !== 202) setError(payload.error || "Application progress could not be refreshed.");
+        if (!response.ok && response.status !== 202) {
+          stopLocalSubmission(payload.error || "The previous application attempt could not be found. Your approved materials are safe. Select Apply again to retry.");
+        }
       } catch {
-        // A temporary status-check failure must not start another submission.
+        submissionStatusFailures.current += 1;
+        if (active && submissionStatusFailures.current >= 3) {
+          stopLocalSubmission("IR35Careers could not confirm that the employer received this application. It has not been marked Applied. Your approved materials are safe. Select Apply again to retry.");
+        }
       }
     };
     void refresh();
@@ -369,6 +382,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       return;
     }
     setBusy("submit");
+    submissionStatusFailures.current = 0;
     setError(null);
     setNotice(null);
     try {

@@ -3,6 +3,23 @@
 // user never sees an indefinite Processing state.
 export const SUBMISSION_LOCK_MAX_AGE_MS = 150 * 1000;
 
+export const SUBMISSION_LIFECYCLE_LABELS = [
+  "Application submission started",
+  "Application submitted successfully",
+  "Application needs your answer",
+  "Application attempt stopped and is ready to retry",
+] as const;
+
+type SubmissionLifecycleEvent = { label: string };
+
+export function latestSubmissionLifecycleEvent<T extends SubmissionLifecycleEvent>(events: T[]): T | undefined {
+  return [...events].reverse().find((event) => SUBMISSION_LIFECYCLE_LABELS.includes(event.label as typeof SUBMISSION_LIFECYCLE_LABELS[number]));
+}
+
+export function hasActiveSubmission(status: string, events: SubmissionLifecycleEvent[]): boolean {
+  return status === "ready" && latestSubmissionLifecycleEvent(events)?.label === "Application submission started";
+}
+
 export function submissionLockAgeMs(updatedAt: string | null | undefined, nowMs = Date.now()): number {
   const updatedMs = new Date(updatedAt ?? "").getTime();
   if (!Number.isFinite(updatedMs)) return Number.POSITIVE_INFINITY;

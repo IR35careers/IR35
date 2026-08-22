@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  hasActiveSubmission,
   isStaleSubmissionLock,
+  latestSubmissionLifecycleEvent,
   submissionLockAgeMs,
   submissionRetryAfterSeconds,
 } from "@/lib/application-submission-state";
@@ -23,5 +25,25 @@ describe("application submission processing locks", () => {
   it("treats missing or invalid timestamps as stale", () => {
     expect(submissionLockAgeMs(null, now)).toBe(Number.POSITIVE_INFINITY);
     expect(isStaleSubmissionLock("not-a-date", now)).toBe(true);
+  });
+});
+
+describe("application submission client state", () => {
+  it("treats only the latest lifecycle event as authoritative", () => {
+    const events = [
+      { label: "Application submission started" },
+      { label: "Application attempt stopped and is ready to retry" },
+    ];
+
+    expect(latestSubmissionLifecycleEvent(events)?.label).toBe("Application attempt stopped and is ready to retry");
+    expect(hasActiveSubmission("ready", events)).toBe(false);
+  });
+
+  it("keeps a newly started ready application in progress", () => {
+    expect(hasActiveSubmission("ready", [{ label: "Application submission started" }])).toBe(true);
+  });
+
+  it("does not keep a submitted application in progress", () => {
+    expect(hasActiveSubmission("applied", [{ label: "Application submission started" }])).toBe(false);
   });
 });
