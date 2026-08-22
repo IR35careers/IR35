@@ -36,12 +36,10 @@ import { WelcomeModal } from "@/components/WelcomeModal";
 import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 import {
   fetchMatches,
-  firstName,
   getProfile,
   profileStrength,
   PREVIEW_PROFILE,
   scoreJob,
-  timeGreeting,
   type Profile,
   type ScoredJob,
 } from "@/lib/profile";
@@ -172,7 +170,6 @@ export default function DashboardPage() {
     return <div className="min-h-screen bg-slate-50 text-slate-900"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">We could not open your dashboard</h1><p className="mt-2 text-sm leading-6">Please check your connection and try again. Your information remains protected.</p><button type="button" onClick={() => window.location.reload()} className="ir35-focus mt-5 min-h-11 rounded-xl bg-rose-800 px-4 text-sm font-bold text-white">Try again</button></div></main></div>;
   }
 
-  const name = firstName(profile, user?.email ?? undefined);
   const pct = profileStrength(profile);
   const outsideCount = matches.filter((m) => m.job.ir35_status === "outside").length;
   const dailyRates = matches.map((m) => m.job.rate_max ?? m.job.rate_min).filter((n): n is number => n !== null);
@@ -199,14 +196,14 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <WelcomeModal name={name} userId={user?.id ?? PREVIEW_PROFILE.id} />
+      <WelcomeModal userId={user?.id ?? PREVIEW_PROFILE.id} />
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
         {/* Greeting + search */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">
-              {timeGreeting()}, <span className="text-green-600">{name}</span>
+              Hello <span className="text-green-600">IR35</span>
             </h1>
             <p className="mt-1 text-sm text-slate-500">Here&apos;s your contract overview.</p>
           </div>

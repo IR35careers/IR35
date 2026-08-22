@@ -64,7 +64,7 @@ function findVisibleTarget(name: string): HTMLElement | null {
   }) ?? null;
 }
 
-export function WelcomeModal({ name, userId }: { name?: string; userId: string }) {
+export function WelcomeModal({ userId }: { userId: string }) {
   const workspace = useWorkspaceState();
   const [mode, setMode] = useState<TourMode>("closed");
   const [stepIndex, setStepIndex] = useState(0);
@@ -190,7 +190,7 @@ export function WelcomeModal({ name, userId }: { name?: string; userId: string }
         <div className="flex gap-3 pr-8">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><CheckCircle2 size={19} aria-hidden="true" /></span>
           <div>
-            <p className="font-semibold text-slate-950">Welcome back{name ? `, ${name}` : ""}.</p>
+            <p className="font-semibold text-slate-950">Welcome back to IR35Careers.</p>
             <p className="mt-1 text-sm leading-6 text-slate-600">Your dashboard, saved contracts and application progress are ready.</p>
           </div>
         </div>

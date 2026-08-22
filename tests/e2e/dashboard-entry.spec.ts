@@ -23,6 +23,6 @@ test("first dashboard visit has a skippable guided tour and later visits welcome
 
   const returningPage = await page.context().newPage();
   await returningPage.goto("/dashboard");
-  await expect(returningPage.getByText("Welcome back, Alex.")).toBeVisible();
+  await expect(returningPage.getByText("Welcome back to IR35Careers.")).toBeVisible();
   await expect(returningPage.getByText(/dashboard, saved contracts and application progress are ready/i)).toBeVisible();
 });
