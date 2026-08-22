@@ -22,6 +22,42 @@ async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
   }
 }
 
+async function completeReusableApplicationProfile(
+  page: import("@playwright/test").Page,
+) {
+  await page.goto("/profile");
+  await dismissPrivacyNotice(page);
+  await page
+    .getByLabel("Are you willing to travel for work?")
+    .selectOption("yes");
+  await page.getByLabel("Are you willing to work shifts?").selectOption("no");
+  await page
+    .getByLabel("Are you willing to work weekends?")
+    .selectOption("no");
+  await page
+    .getByLabel("Can an employer run a standard background check?")
+    .selectOption("yes");
+  await page
+    .getByLabel("Do you have convictions that must be declared for the role?")
+    .selectOption("no");
+  await page
+    .getByRole("checkbox", { name: /Create and sign in to employer accounts/ })
+    .check();
+  await page
+    .getByRole("checkbox", { name: /Use ordinary email verification codes/ })
+    .check();
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByLabel("Resume text").fill(
+    "Alex Morgan\nSenior Platform Engineer\nTen years of experience delivering secure AWS, Terraform and Kubernetes platforms for UK organisations. Built CI and CD controls, observability, incident response and infrastructure automation across regulated environments.",
+  );
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Your reusable application profile is ready",
+    }),
+  ).toBeVisible();
+}
+
 test("public search-to-detail journey is usable and truthful", async ({ page, request }) => {
   const response = await request.get("/api/jobs/search?q=DevOps&with_facets=1");
   expect(response.ok()).toBeTruthy();
@@ -411,10 +447,11 @@ test("CV Studio analyses, verifies, versions and exports a role-ready CV", async
 });
 
 test("application workspace presents a clean review flow and never claims an unconfirmed submission", async ({ page }) => {
+  await completeReusableApplicationProfile(page);
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
-  await expect(page.getByText(/Data stays in this browser/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Complete your reusable profile before applying" })).toHaveCount(0);
   await page.getByRole("button", { name: "Load labelled sample CV" }).click();
   await page.getByRole("button", { name: "Prepare application" }).click();
 
@@ -424,7 +461,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await page.getByRole("button", { name: "Refresh tailoring" }).click();
   await expect(page.getByText("Compare before approving")).toBeVisible({ timeout: 2_000 });
   await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
-  const checkboxes = page.locator('input[type="checkbox"]:enabled');
+  const checkboxes = page.locator('input[type="checkbox"]:enabled:visible');
   const checkboxCount = await checkboxes.count();
   expect(checkboxCount).toBeGreaterThanOrEqual(5);
   for (let index = 0; index < checkboxCount; index += 1) {

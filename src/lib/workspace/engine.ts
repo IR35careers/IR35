@@ -1,4 +1,7 @@
-import { analyseResumeForRole, resumeContainsTerm } from "@/lib/resume/analysis";
+import {
+  analyseResumeForRole,
+  resumeContainsTerm,
+} from "@/lib/resume/analysis";
 import { resolveCandidateName } from "@/lib/candidate-name";
 import type {
   ApplicationEvent,
@@ -18,15 +21,22 @@ const MAX_CV_CHARACTERS = 80_000;
 
 export function newWorkspaceId(): string {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = character === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+    /[xy]/g,
+    (character) => {
+      const random = Math.floor(Math.random() * 16);
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    },
+  );
 }
 
 function cleanLine(value: string, max = 240): string {
-  return value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  return value
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
 }
 
 function evidenceSentence(matched: string[]): string {
@@ -34,9 +44,10 @@ function evidenceSentence(matched: string[]): string {
     return "My CV contains transferable delivery experience relevant to the responsibilities described in this contract.";
   }
   const shown = matched.slice(0, 4);
-  const formatted = shown.length === 1
-    ? shown[0]
-    : `${shown.slice(0, -1).join(", ")} and ${shown.at(-1)}`;
+  const formatted =
+    shown.length === 1
+      ? shown[0]
+      : `${shown.slice(0, -1).join(", ")} and ${shown.at(-1)}`;
   return `My background includes evidenced experience with ${formatted}, as detailed in the attached CV.`;
 }
 
@@ -44,17 +55,22 @@ export function buildTruthPreservingCoverLetter(
   job: JobDetail,
   profile: ContractorProfile,
   matchedKeywords: string[],
-  cvText = ""
+  cvText = "",
 ): string {
   const name = resolveCandidateName(profile.fullName, cvText);
-  if (!name) throw new Error("Add your full name to your profile or place it at the top of your CV before continuing.");
+  if (!name)
+    throw new Error(
+      "Add your full name to your profile or place it at the top of your CV before continuing.",
+    );
   const title = cleanLine(job.title, 160);
   const company = cleanLine(job.company_name, 120);
   const availability = cleanLine(profile.availability, 120);
   const clearance = cleanLine(profile.clearance, 100);
 
   const optional = [
-    availability ? `I am currently available ${availability.toLowerCase()}.` : "",
+    availability
+      ? `I am currently available ${availability.toLowerCase()}.`
+      : "",
     clearance ? `My declared clearance status is: ${clearance}.` : "",
   ].filter(Boolean);
 
@@ -78,7 +94,12 @@ export function buildScreeningQuestions(
   profile: ContractorProfile,
   cvText = "",
 ): ApplicationQuestion[] {
-  const yesNo = (id: string, label: string, value: boolean | null | undefined, required = false): ApplicationQuestion => ({
+  const yesNo = (
+    id: string,
+    label: string,
+    value: boolean | null | undefined,
+    required = false,
+  ): ApplicationQuestion => ({
     id,
     label,
     answer: value === true ? "Yes" : value === false ? "No" : "",
@@ -86,36 +107,69 @@ export function buildScreeningQuestions(
     source: value === null || value === undefined ? "user" : "profile",
     reviewed: value !== null && value !== undefined,
   });
-  const rightToWorkAnswer = profile.rightToWork === "yes"
-    ? "Yes"
-    : profile.rightToWork === "needs_sponsorship"
-      ? "I require sponsorship"
-      : profile.rightToWork === "no"
-        ? "No"
-        : "";
-  const availability = cleanLine(profile.availability || profile.noticePeriod, 160);
-  const workingPattern = job.remote_type === "remote"
-    ? { answer: "Yes", reviewed: true, source: "job" as const }
-    : profile.canWorkInPerson === null || profile.canWorkInPerson === undefined
-      ? { answer: "", reviewed: false, source: "user" as const }
-      : { answer: profile.canWorkInPerson ? "Yes" : "No", reviewed: true, source: "profile" as const };
-  const textAnswer = (id: string, label: string, value: string | undefined, required = false, source: ApplicationQuestion["source"] = "profile"): ApplicationQuestion => {
+  const rightToWorkAnswer =
+    profile.rightToWork === "yes"
+      ? "Yes"
+      : profile.rightToWork === "needs_sponsorship"
+        ? "I require sponsorship"
+        : profile.rightToWork === "no"
+          ? "No"
+          : "";
+  const availability = cleanLine(
+    profile.availability || profile.noticePeriod,
+    160,
+  );
+  const workingPattern =
+    job.remote_type === "remote"
+      ? { answer: "Yes", reviewed: true, source: "job" as const }
+      : profile.canWorkInPerson === null ||
+          profile.canWorkInPerson === undefined
+        ? { answer: "", reviewed: false, source: "user" as const }
+        : {
+            answer: profile.canWorkInPerson ? "Yes" : "No",
+            reviewed: true,
+            source: "profile" as const,
+          };
+  const textAnswer = (
+    id: string,
+    label: string,
+    value: string | undefined,
+    required = false,
+    source: ApplicationQuestion["source"] = "profile",
+  ): ApplicationQuestion => {
     const answer = cleanLine(value ?? "", 800);
-    return { id, label, answer, required, source: answer ? source : "user", reviewed: Boolean(answer) };
-  };
-  const cvLines = cvText.split(/\n+/).map((line) => cleanLine(line, 800)).filter((line) => line.length >= 20);
-  const roleEvidence = job.skills.slice(0, 6).map((skill, index): ApplicationQuestion => {
-    const answer = cvLines.find((line) => resumeContainsTerm(line, skill)) ?? "";
     return {
-      id: `role-skill-${index + 1}-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
-      label: `Briefly describe your experience with ${cleanLine(skill, 80)}.`,
+      id,
+      label,
       answer,
-      required: false,
-      source: answer ? "job" : "user",
+      required,
+      source: answer ? source : "user",
       reviewed: Boolean(answer),
     };
-  });
-  const limitedCompanyAnswer = profile.limitedCompanyName || profile.companyNumber ? "Yes" : "";
+  };
+  const cvLines = cvText
+    .split(/\n+/)
+    .map((line) => cleanLine(line, 800))
+    .filter((line) => line.length >= 20);
+  const roleEvidence = job.skills
+    .slice(0, 6)
+    .map((skill, index): ApplicationQuestion => {
+      const answer =
+        cvLines.find((line) => resumeContainsTerm(line, skill)) ?? "";
+      return {
+        id: `role-skill-${index + 1}-${skill
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}`,
+        label: `Briefly describe your experience with ${cleanLine(skill, 80)}.`,
+        answer,
+        required: false,
+        source: answer ? "job" : "user",
+        reviewed: Boolean(answer),
+      };
+    });
+  const limitedCompanyAnswer =
+    profile.limitedCompanyName || profile.companyNumber ? "Yes" : "";
   return [
     {
       id: "right-to-work",
@@ -144,7 +198,12 @@ export function buildScreeningQuestions(
     {
       id: "ir35",
       label: "What IR35 status is advertised for this role?",
-      answer: job.ir35_status === "outside" ? "Outside IR35" : job.ir35_status === "inside" ? "Inside IR35" : "",
+      answer:
+        job.ir35_status === "outside"
+          ? "Outside IR35"
+          : job.ir35_status === "inside"
+            ? "Inside IR35"
+            : "",
       required: true,
       source: "job",
       reviewed: job.ir35_status !== "unknown",
@@ -152,43 +211,180 @@ export function buildScreeningQuestions(
     {
       id: "sponsorship",
       label: "Will you now or in the future require work sponsorship?",
-      answer: profile.rightToWork === "needs_sponsorship" ? "Yes" : profile.rightToWork === "yes" || profile.rightToWork === "no" ? "No" : "",
+      answer:
+        profile.rightToWork === "needs_sponsorship"
+          ? "Yes"
+          : profile.rightToWork === "yes" || profile.rightToWork === "no"
+            ? "No"
+            : "",
       required: true,
       source: profile.rightToWork === "prefer_not_to_say" ? "user" : "profile",
       reviewed: profile.rightToWork !== "prefer_not_to_say",
     },
     yesNo("over-18", "Are you at least 18 years old?", profile.isOver18, true),
-    textAnswer("notice-period", "What is your notice period?", profile.noticePeriod),
-    yesNo("immediate-start", "Can you start immediately?", profile.canStartImmediately),
-    yesNo("relocation", "Are you willing to relocate if the role requires it?", profile.canRelocate),
-    yesNo("transport", "Do you have reliable transport when travel is required?", profile.hasTransportation),
-    yesNo("accommodation", "Do you need a workplace adjustment or accommodation?", profile.needsAccommodation),
-    yesNo("previous-employer", `Have you previously worked for ${cleanLine(job.company_name)}?`, profile.workedForCompanyBefore),
-    yesNo("government-clearance", "Do you currently hold government security clearance?", profile.hasGovernmentClearance),
-    textAnswer("clearance-details", "What security clearance do you currently hold?", profile.clearance),
-    yesNo("government-ties", "Do you have any current government employment or contractual ties to declare?", profile.hasGovernmentTies),
-    { id: "limited-company", label: "Are you applying through a limited company?", answer: limitedCompanyAnswer, required: false, source: limitedCompanyAnswer ? "profile" : "user", reviewed: Boolean(limitedCompanyAnswer) },
-    textAnswer("limited-company-name", "What is your limited company name?", profile.limitedCompanyName),
-    textAnswer("company-number", "What is your Companies House registration number?", profile.companyNumber),
-    { id: "vat-registered", label: "Is your limited company VAT registered?", answer: profile.vatRegistered ? "Yes" : "No", required: false, source: "profile", reviewed: true },
-    textAnswer("education-institution", "Which institution awarded your highest relevant qualification?", profile.educationInstitution),
-    textAnswer("education-qualification", "What is your highest relevant qualification?", profile.educationQualification),
-    textAnswer("linkedin", "What is your LinkedIn profile URL?", profile.linkedInUrl),
-    textAnswer("portfolio", "What is your portfolio or professional website URL?", profile.portfolioUrl),
+    textAnswer(
+      "notice-period",
+      "What is your notice period?",
+      profile.noticePeriod,
+    ),
+    yesNo(
+      "immediate-start",
+      "Can you start immediately?",
+      profile.canStartImmediately,
+    ),
+    yesNo(
+      "relocation",
+      "Are you willing to relocate if the role requires it?",
+      profile.canRelocate,
+    ),
+    yesNo(
+      "transport",
+      "Do you have reliable transport when travel is required?",
+      profile.hasTransportation,
+    ),
+    yesNo(
+      "travel",
+      "Are you willing to travel when the role requires it?",
+      profile.willingToTravel,
+    ),
+    yesNo(
+      "shift-work",
+      "Are you willing to work shifts when required?",
+      profile.willingToWorkShifts,
+    ),
+    yesNo(
+      "weekend-work",
+      "Are you willing to work weekends when required?",
+      profile.willingToWorkWeekends,
+    ),
+    yesNo(
+      "accommodation",
+      "Do you need a workplace adjustment or accommodation?",
+      profile.needsAccommodation,
+    ),
+    yesNo(
+      "previous-employer",
+      `Have you previously worked for ${cleanLine(job.company_name)}?`,
+      profile.workedForCompanyBefore,
+    ),
+    yesNo(
+      "government-clearance",
+      "Do you currently hold government security clearance?",
+      profile.hasGovernmentClearance,
+    ),
+    textAnswer(
+      "clearance-details",
+      "What security clearance do you currently hold?",
+      profile.clearance,
+    ),
+    yesNo(
+      "government-ties",
+      "Do you have any current government employment or contractual ties to declare?",
+      profile.hasGovernmentTies,
+    ),
+    yesNo(
+      "background-check",
+      "Do you consent to a standard pre-employment background check?",
+      profile.backgroundCheckConsent,
+    ),
+    yesNo(
+      "criminal-convictions",
+      "Do you have convictions that must be declared for this role?",
+      profile.criminalConvictionsToDeclare,
+    ),
+    textAnswer(
+      "target-day-rate",
+      "What is your expected contract day rate?",
+      profile.targetDayRate,
+    ),
+    textAnswer(
+      "target-annual-salary",
+      "What is your expected annual salary?",
+      profile.targetAnnualSalary,
+    ),
+    textAnswer(
+      "years-experience",
+      "How many years of relevant experience do you have?",
+      profile.yearsOfExperience,
+    ),
+    textAnswer(
+      "referral-source",
+      "How did you hear about this opportunity?",
+      profile.referralSource,
+    ),
+    {
+      id: "limited-company",
+      label: "Are you applying through a limited company?",
+      answer: limitedCompanyAnswer,
+      required: false,
+      source: limitedCompanyAnswer ? "profile" : "user",
+      reviewed: Boolean(limitedCompanyAnswer),
+    },
+    textAnswer(
+      "limited-company-name",
+      "What is your limited company name?",
+      profile.limitedCompanyName,
+    ),
+    textAnswer(
+      "company-number",
+      "What is your Companies House registration number?",
+      profile.companyNumber,
+    ),
+    {
+      id: "vat-registered",
+      label: "Is your limited company VAT registered?",
+      answer: profile.vatRegistered ? "Yes" : "No",
+      required: false,
+      source: "profile",
+      reviewed: true,
+    },
+    textAnswer(
+      "education-institution",
+      "Which institution awarded your highest relevant qualification?",
+      profile.educationInstitution,
+    ),
+    textAnswer(
+      "education-qualification",
+      "What is your highest relevant qualification?",
+      profile.educationQualification,
+    ),
+    textAnswer(
+      "linkedin",
+      "What is your LinkedIn profile URL?",
+      profile.linkedInUrl,
+    ),
+    textAnswer(
+      "portfolio",
+      "What is your portfolio or professional website URL?",
+      profile.portfolioUrl,
+    ),
     ...roleEvidence,
   ];
 }
 
-export function prepareApplication(input: PrepareApplicationInput): ApplicationRecord {
+export function prepareApplication(
+  input: PrepareApplicationInput,
+): ApplicationRecord {
   const cvText = input.cvText.trim();
-  if (cvText.length < 120) throw new Error("Add at least 120 characters of CV evidence before preparing an application.");
-  if (cvText.length > MAX_CV_CHARACTERS) throw new Error("CV text is too large. Keep it below 80,000 characters.");
-  if (!input.job.id || !input.job.title || !input.job.company_name) throw new Error("The role is missing required details.");
+  if (cvText.length < 120)
+    throw new Error(
+      "Add at least 120 characters of CV evidence before preparing an application.",
+    );
+  if (cvText.length > MAX_CV_CHARACTERS)
+    throw new Error("CV text is too large. Keep it below 80,000 characters.");
+  if (!input.job.id || !input.job.title || !input.job.company_name)
+    throw new Error("The role is missing required details.");
   if (!resolveCandidateName(input.profile.fullName, cvText)) {
-    throw new Error("Add your full name to your profile or place it at the top of your CV before continuing.");
+    throw new Error(
+      "Add your full name to your profile or place it at the top of your CV before continuing.",
+    );
   }
 
-  const analysis = analyseResumeForRole(cvText, input.resumeVersionLabel ?? "Application CV", input.job);
+  const analysis = analyseResumeForRole(
+    cvText,
+    input.resumeVersionLabel ?? "Application CV",
+    input.job,
+  );
   const now = new Date().toISOString();
   const id = newWorkspaceId();
   const event: ApplicationEvent = {
@@ -209,7 +405,12 @@ export function prepareApplication(input: PrepareApplicationInput): ApplicationR
     sourceCvText: cvText,
     tailoredCvText: cvText,
     resumeVersionLabel: input.resumeVersionLabel ?? "Application CV",
-    coverLetter: buildTruthPreservingCoverLetter(input.job, input.profile, analysis.baseline.matchedKeywords, cvText),
+    coverLetter: buildTruthPreservingCoverLetter(
+      input.job,
+      input.profile,
+      analysis.baseline.matchedKeywords,
+      cvText,
+    ),
     questions: buildScreeningQuestions(input.job, input.profile, cvText),
     truthApproved: false,
     materialsApproved: false,
@@ -227,46 +428,83 @@ export function applicationIsReady(application: ApplicationRecord): boolean {
     application.truthApproved &&
     application.materialsApproved &&
     application.submissionApproved &&
-    application.questions.filter((question) => question.required).every((question) => question.reviewed && question.answer.trim().length > 0)
+    application.questions
+      .filter((question) => question.required)
+      .every(
+        (question) => question.reviewed && question.answer.trim().length > 0,
+      )
   );
 }
 
-export function issueDryRunReceipt(application: ApplicationRecord): ApplicationReceipt {
+export function issueDryRunReceipt(
+  application: ApplicationRecord,
+): ApplicationReceipt {
   if (!applicationIsReady(application)) {
-    throw new Error("Review every required answer and complete all three approval checks first.");
+    throw new Error(
+      "Review every required answer and complete all three approval checks first.",
+    );
   }
-  const reviewedFields = application.questions.filter((question) => question.reviewed).map((question) => question.label);
+  const reviewedFields = application.questions
+    .filter((question) => question.reviewed)
+    .map((question) => question.label);
   return {
     receiptId: `DRY-${Date.now().toString(36).toUpperCase()}`,
     mode: "dry_run",
     createdAt: new Date().toISOString(),
     destination: application.job.source_domain,
     reviewedFields,
-    skippedFields: application.questions.filter((question) => !question.reviewed).map((question) => question.label),
+    skippedFields: application.questions
+      .filter((question) => !question.reviewed)
+      .map((question) => question.label),
     reviewedSnapshot: {
       resumeVersionLabel: application.resumeVersionLabel,
       cvText: application.tailoredCvText,
       coverLetter: application.coverLetter,
-      answers: application.questions.map(({ id, label, answer, source }) => ({ id, label, answer, source })),
+      answers: application.questions.map(({ id, label, answer, source }) => ({
+        id,
+        label,
+        answer,
+        source,
+      })),
     },
     review: null,
-    message: "Preparation complete. No application or personal data was sent to the employer, and no email was sent.",
+    message:
+      "Preparation complete. No application or personal data was sent to the employer, and no email was sent.",
   };
 }
 
-const RECEIPT_REVIEW_ITEMS = new Set<ApplicationReceiptReviewItem>(["cv", "cover_letter", "screening_answers", "destination", "other"]);
+const RECEIPT_REVIEW_ITEMS = new Set<ApplicationReceiptReviewItem>([
+  "cv",
+  "cover_letter",
+  "screening_answers",
+  "destination",
+  "other",
+]);
 
 export function reviewApplicationReceipt(
   receipt: ApplicationReceipt,
-  input: Pick<ApplicationReceiptReview, "outcome" | "flaggedItems" | "notes">
+  input: Pick<ApplicationReceiptReview, "outcome" | "flaggedItems" | "notes">,
 ): ApplicationReceipt {
   if (input.outcome !== "accurate" && input.outcome !== "changes_needed") {
-    throw new Error("Choose whether the reviewed packet was accurate or needs changes.");
+    throw new Error(
+      "Choose whether the reviewed packet was accurate or needs changes.",
+    );
   }
-  const flaggedItems = [...new Set(input.flaggedItems)].filter((item) => RECEIPT_REVIEW_ITEMS.has(item));
-  const notes = input.notes.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 1_200);
-  if (input.outcome === "changes_needed" && flaggedItems.length === 0 && notes.length === 0) {
-    throw new Error("Flag at least one item or add a note describing what should change.");
+  const flaggedItems = [...new Set(input.flaggedItems)].filter((item) =>
+    RECEIPT_REVIEW_ITEMS.has(item),
+  );
+  const notes = input.notes
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
+    .trim()
+    .slice(0, 1_200);
+  if (
+    input.outcome === "changes_needed" &&
+    flaggedItems.length === 0 &&
+    notes.length === 0
+  ) {
+    throw new Error(
+      "Flag at least one item or add a note describing what should change.",
+    );
   }
   return {
     ...receipt,
@@ -279,10 +517,22 @@ export function reviewApplicationReceipt(
   };
 }
 
-export function canMoveStatus(from: ApplicationStatus, to: ApplicationStatus): boolean {
+export function canMoveStatus(
+  from: ApplicationStatus,
+  to: ApplicationStatus,
+): boolean {
   if (from === to) return true;
   if (to === "withdrawn" || to === "skipped") return true;
-  const order: ApplicationStatus[] = ["draft", "needs_review", "ready", "applied", "viewed", "replied", "interview", "offer"];
+  const order: ApplicationStatus[] = [
+    "draft",
+    "needs_review",
+    "ready",
+    "applied",
+    "viewed",
+    "replied",
+    "interview",
+    "offer",
+  ];
   const fromIndex = order.indexOf(from);
   const toIndex = order.indexOf(to);
   if (to === "rejected" || to === "failed") return fromIndex >= 2;
@@ -292,15 +542,21 @@ export function canMoveStatus(from: ApplicationStatus, to: ApplicationStatus): b
 export function evaluateAutomationJob(
   job: JobListing,
   score: number,
-  rules: AutomationRules
+  rules: AutomationRules,
 ): string | null {
   if (!rules.enabled) return "Automation is paused";
-  if (score < rules.minimumMatch) return `Match score is below ${rules.minimumMatch}%`;
+  if (score < rules.minimumMatch)
+    return `Match score is below ${rules.minimumMatch}%`;
   const rate = job.rate_max ?? job.rate_min ?? 0;
-  if (rate < rules.minimumDayRate) return `Rate is below £${rules.minimumDayRate}/day`;
-  if (!rules.ir35.includes(job.ir35_status)) return "IR35 status is outside your rule";
-  if (!rules.workplaces.includes(job.remote_type)) return "Working pattern is outside your rule";
-  const excluded = rules.excludedCompanies.some((company) => job.company_name.toLowerCase().includes(company.toLowerCase()));
+  if (rate < rules.minimumDayRate)
+    return `Rate is below £${rules.minimumDayRate}/day`;
+  if (!rules.ir35.includes(job.ir35_status))
+    return "IR35 status is outside your rule";
+  if (!rules.workplaces.includes(job.remote_type))
+    return "Working pattern is outside your rule";
+  const excluded = rules.excludedCompanies.some((company) =>
+    job.company_name.toLowerCase().includes(company.toLowerCase()),
+  );
   if (excluded) return "Company is excluded";
   return null;
 }

@@ -79,6 +79,18 @@ export interface ContractorProfile {
   workedForCompanyBefore?: boolean | null;
   hasGovernmentClearance?: boolean | null;
   hasGovernmentTies?: boolean | null;
+  willingToTravel?: boolean | null;
+  willingToWorkShifts?: boolean | null;
+  willingToWorkWeekends?: boolean | null;
+  backgroundCheckConsent?: boolean | null;
+  criminalConvictionsToDeclare?: boolean | null;
+  targetDayRate?: string;
+  targetAnnualSalary?: string;
+  yearsOfExperience?: string;
+  referralSource?: string;
+  portalAccountConsent?: boolean;
+  automaticEmailVerification?: boolean;
+  profileSetupCompletedAt?: string;
   educationInstitution?: string;
   educationQualification?: string;
   availability: string;
@@ -106,7 +118,8 @@ export interface ContractorProfile {
   };
 }
 
-export type NetworkContactStage = "identified" | "warm" | "asked" | "referred" | "closed";
+export type NetworkContactStage =
+  "identified" | "warm" | "asked" | "referred" | "closed";
 
 export interface NetworkContact {
   id: string;
@@ -122,7 +135,8 @@ export interface NetworkContact {
   updatedAt: string;
 }
 
-export type ReferralRequestStatus = "draft" | "reviewed" | "copied" | "responded";
+export type ReferralRequestStatus =
+  "draft" | "reviewed" | "copied" | "responded";
 
 export interface ReferralRequest {
   id: string;
@@ -157,13 +171,16 @@ export interface ApplicationReceipt {
     resumeVersionLabel: string;
     cvText: string;
     coverLetter: string;
-    answers: Array<Pick<ApplicationQuestion, "id" | "label" | "answer" | "source">>;
+    answers: Array<
+      Pick<ApplicationQuestion, "id" | "label" | "answer" | "source">
+    >;
   };
   review?: ApplicationReceiptReview | null;
   message: string;
 }
 
-export type ApplicationReceiptReviewItem = "cv" | "cover_letter" | "screening_answers" | "destination" | "other";
+export type ApplicationReceiptReviewItem =
+  "cv" | "cover_letter" | "screening_answers" | "destination" | "other";
 
 export interface ApplicationReceiptReview {
   outcome: "accurate" | "changes_needed";
@@ -175,9 +192,34 @@ export interface ApplicationReceiptReview {
 export interface ApplicationEvent {
   id: string;
   applicationId: string;
-  type: "created" | "prepared" | "approved" | "status_changed" | "message_received" | "note";
+  type:
+    | "created"
+    | "prepared"
+    | "approved"
+    | "status_changed"
+    | "message_received"
+    | "note";
   label: string;
   createdAt: string;
+  metadata?: Record<string, unknown>;
+}
+
+export type ApplicationAttentionKind =
+  | "profile_missing"
+  | "answer_questions"
+  | "email_verification"
+  | "employer_account"
+  | "security_check"
+  | "employer_form"
+  | "retry";
+
+export interface ApplicationAttention {
+  kind: ApplicationAttentionKind;
+  title: string;
+  message: string;
+  action: string;
+  actionLabel: string;
+  questionIds: string[];
 }
 
 export interface ApplicationRecord {
@@ -197,6 +239,7 @@ export interface ApplicationRecord {
   submissionApproved: boolean;
   mode: "dry_run" | "external_handoff";
   receipt: ApplicationReceipt | null;
+  attention?: ApplicationAttention | null;
   createdAt: string;
   updatedAt: string;
   events: ApplicationEvent[];
@@ -244,7 +287,8 @@ export interface InboxSettings {
 export interface Entitlement {
   plan: "preview" | "free" | "pro";
   preparationCredits: number;
-  billingState: "not_connected" | "sandbox" | "active" | "past_due" | "cancelled";
+  billingState:
+    "not_connected" | "sandbox" | "active" | "past_due" | "cancelled";
 }
 
 export interface WorkspaceState {

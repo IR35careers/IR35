@@ -169,7 +169,7 @@ async function signInWithPassword(email: string, password: string): Promise<Auth
   return { error: error ? error.message : null };
 }
 
-async function signUpWithPassword(email: string, password: string, next = "/dashboard"): Promise<AuthResult> {
+async function signUpWithPassword(email: string, password: string, next = "/profile#application-readiness"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
   const { data, error } = await getSupabase().auth.signUp({

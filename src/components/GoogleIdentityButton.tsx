@@ -19,9 +19,14 @@ export function GoogleIdentityButton({
   const startGoogleSignIn = async () => {
     setLoading(true);
     onError("");
-    const result = admin
-      ? await signInWithGoogleAdmin()
-      : await signInWithGoogle("/dashboard");
+    let result;
+    if (admin) {
+      result = await signInWithGoogleAdmin();
+    } else if (mode === "create") {
+      result = await signInWithGoogle("/profile#application-readiness");
+    } else {
+      result = await signInWithGoogle("/dashboard");
+    }
     if (result.error) {
       onError(result.error);
       setLoading(false);

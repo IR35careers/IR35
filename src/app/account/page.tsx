@@ -18,6 +18,7 @@ function AccountForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = resolvePostAuthPath(searchParams.get("next"));
+  const signupNext = searchParams.get("next") ? next : "/profile#application-readiness";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"sign-in" | "create" | "forgot">(
@@ -82,7 +83,7 @@ function AccountForm() {
       return;
     }
 
-    const signUp = await signUpWithPassword(email, password, next);
+    const signUp = await signUpWithPassword(email, password, signupNext);
     if (signUp.error) {
       setError(
         /already registered|already exists|user already/i.test(signUp.error)
@@ -97,7 +98,7 @@ function AccountForm() {
       setSubmitting(false);
       return;
     }
-    router.replace(next);
+    router.replace(signupNext);
   };
 
   if (!loading && user) return null;

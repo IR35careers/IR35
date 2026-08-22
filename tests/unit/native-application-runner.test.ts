@@ -37,7 +37,9 @@ describe("native application runner", () => {
   it("maps normal identity and work-authorisation fields deterministically", () => {
     expect(deterministicMapping(field({ label: "First name" }))).toMatchObject({ factKey: "first_name" });
     expect(deterministicMapping(field({ label: "Will you now or in future require visa sponsorship?" }))).toMatchObject({ factKey: "needs_sponsorship" });
+    expect(deterministicMapping(field({ label: "Expected annual salary" }))).toMatchObject({ factKey: "target_annual_salary" });
     expect(deterministicMapping(field({ label: "Date of birth" }))).toMatchObject({ factKey: "needs_user" });
+    expect(deterministicMapping(field({ label: "Current salary" }))).toMatchObject({ factKey: "needs_user" });
   });
 
   it("uses only confirmed saved answers for employer-specific questions", () => {

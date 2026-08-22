@@ -1,4 +1,7 @@
-import type { ApplicationQuestion, ContractorProfile } from "@/lib/workspace/types";
+import type {
+  ApplicationQuestion,
+  ContractorProfile,
+} from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 import { readJsonResponse } from "@/lib/security/response-body";
 
@@ -14,7 +17,9 @@ export interface SubmissionProviderPayload {
   candidate: ContractorProfile;
   resume: { label: string; text: string; url?: string };
   coverLetter: string;
-  screeningAnswers: Array<Pick<ApplicationQuestion, "label" | "answer" | "source">>;
+  screeningAnswers: Array<
+    Pick<ApplicationQuestion, "label" | "answer" | "source">
+  >;
 }
 
 export interface SubmissionProviderReceipt {
@@ -23,6 +28,14 @@ export interface SubmissionProviderReceipt {
   submittedAt: string;
   message: string;
   review?: unknown;
+}
+
+export interface NativeSubmissionRuntime {
+  portalPassword?: string;
+  resolveEmailVerificationCode?: (input: {
+    hostname: string;
+    requestedAfter: string;
+  }) => Promise<string | null>;
 }
 
 interface TsentaApplication {
@@ -44,7 +57,8 @@ interface TsentaErrorEnvelope {
 type ProviderQuestion = Record<string, unknown>;
 
 export function submissionProviderConfig(): SubmissionProviderConfig | null {
-  if (process.env.ENABLE_APPLICATION_SUBMISSION?.toLowerCase() !== "true") return null;
+  if (process.env.ENABLE_APPLICATION_SUBMISSION?.toLowerCase() !== "true")
+    return null;
 
   const tsentaKey = process.env.TSENTA_API_KEY?.trim();
   if (tsentaKey) {
@@ -62,7 +76,14 @@ export function submissionProviderConfig(): SubmissionProviderConfig | null {
     try {
       const endpoint = new URL(rawEndpoint);
       if (endpoint.protocol === "https:") {
-        return { kind: "gateway", endpoint: endpoint.toString(), apiKey, name: process.env.APPLICATION_SUBMISSION_PROVIDER_NAME?.trim() || "Authorised submission provider" };
+        return {
+          kind: "gateway",
+          endpoint: endpoint.toString(),
+          apiKey,
+          name:
+            process.env.APPLICATION_SUBMISSION_PROVIDER_NAME?.trim() ||
+            "Authorised submission provider",
+        };
       }
     } catch {
       // Fall through to the IR35Careers-owned browser runner.
@@ -75,7 +96,10 @@ export function submissionProviderConfig(): SubmissionProviderConfig | null {
 }
 
 function clean(value: string | undefined): string {
-  return (value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+  return (value ?? "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function questionList(review: unknown): unknown[] {
@@ -85,36 +109,68 @@ function questionList(review: unknown): unknown[] {
   for (const key of ["questions", "fields", "required_fields", "items"]) {
     if (Array.isArray(record[key])) return record[key] as unknown[];
   }
-  return Object.keys(record).some((key) => ["id", "key", "name", "label", "question", "prompt"].includes(key)) ? [record] : [];
+  return Object.keys(record).some((key) =>
+    ["id", "key", "name", "label", "question", "prompt"].includes(key),
+  )
+    ? [record]
+    : [];
 }
 
 function questionText(record: ProviderQuestion, keys: string[]): string {
   for (const key of keys) {
     const value = record[key];
-    if (typeof value === "string" && value.trim()) return clean(value).slice(0, 500);
+    if (typeof value === "string" && value.trim())
+      return clean(value).slice(0, 500);
   }
   return "";
 }
 
 /** Converts provider review payloads into the same owner-reviewed questions used by the workspace. */
-export function providerReviewQuestions(review: unknown): ApplicationQuestion[] {
-  return questionList(review).map((item, index) => {
-    const record: ProviderQuestion = item && typeof item === "object" ? item as ProviderQuestion : { question: String(item ?? "") };
-    const rawId = questionText(record, ["id", "question_id", "key", "name", "field"]);
-    const label = questionText(record, ["label", "question", "prompt", "title", "name"]) || `Employer question ${index + 1}`;
-    const answer = questionText(record, ["answer", "value", "default_value"]);
-    return {
-      id: `provider:${rawId || `question_${index + 1}`}`,
-      label,
-      answer,
-      required: record.required !== false,
-      source: "user" as const,
-      reviewed: Boolean(answer),
-    };
-  }).filter((question, index, questions) => question.label.length > 0 && questions.findIndex((item) => item.id === question.id) === index);
+export function providerReviewQuestions(
+  review: unknown,
+): ApplicationQuestion[] {
+  return questionList(review)
+    .map((item, index) => {
+      const record: ProviderQuestion =
+        item && typeof item === "object"
+          ? (item as ProviderQuestion)
+          : { question: String(item ?? "") };
+      const rawId = questionText(record, [
+        "id",
+        "question_id",
+        "key",
+        "name",
+        "field",
+      ]);
+      const label =
+        questionText(record, [
+          "label",
+          "question",
+          "prompt",
+          "title",
+          "name",
+        ]) || `Employer question ${index + 1}`;
+      const answer = questionText(record, ["answer", "value", "default_value"]);
+      return {
+        id: `provider:${rawId || `question_${index + 1}`}`,
+        label,
+        answer,
+        required: record.required !== false,
+        source: "user" as const,
+        reviewed: Boolean(answer),
+      };
+    })
+    .filter(
+      (question, index, questions) =>
+        question.label.length > 0 &&
+        questions.findIndex((item) => item.id === question.id) === index,
+    );
 }
 
-function requiredCandidateFields(candidate: ContractorProfile, resumeUrl?: string): string[] {
+function requiredCandidateFields(
+  candidate: ContractorProfile,
+  resumeUrl?: string,
+): string[] {
   const nameParts = clean(candidate.fullName).split(" ").filter(Boolean);
   const checks: Array<[string, unknown]> = [
     ["full name", nameParts.length >= 2 ? "complete" : ""],
@@ -137,7 +193,11 @@ function requiredCandidateFields(candidate: ContractorProfile, resumeUrl?: strin
     ["qualification", clean(candidate.educationQualification)],
     ["approved CV", resumeUrl],
   ];
-  return checks.filter(([, value]) => value === "" || value === null || value === undefined).map(([label]) => label);
+  return checks
+    .filter(
+      ([, value]) => value === "" || value === null || value === undefined,
+    )
+    .map(([label]) => label);
 }
 
 function splitName(fullName: string): { firstName: string; lastName: string } {
@@ -176,74 +236,156 @@ function tsentaProfile(candidate: ContractorProfile) {
       hasGovernmentClearance: candidate.hasGovernmentClearance,
       hasGovernmentTies: candidate.hasGovernmentTies,
     },
-    education: [{ university: clean(candidate.educationInstitution), degree: clean(candidate.educationQualification) }],
+    education: [
+      {
+        university: clean(candidate.educationInstitution),
+        degree: clean(candidate.educationQualification),
+      },
+    ],
   };
 }
 
-async function tsentaRequest<T>(config: Extract<SubmissionProviderConfig, { kind: "tsenta" }>, path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(new URL(path.replace(/^\//, ""), config.endpoint), {
-    ...init,
-    headers: {
-      authorization: `Bearer ${config.apiKey}`,
-      "content-type": "application/json",
-      ...(init?.headers ?? {}),
+async function tsentaRequest<T>(
+  config: Extract<SubmissionProviderConfig, { kind: "tsenta" }>,
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const response = await fetch(
+    new URL(path.replace(/^\//, ""), config.endpoint),
+    {
+      ...init,
+      headers: {
+        authorization: `Bearer ${config.apiKey}`,
+        "content-type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(30_000),
     },
-    cache: "no-store",
-    signal: AbortSignal.timeout(30_000),
-  });
-  const body = await readJsonResponse<T & TsentaErrorEnvelope>(response, 1_000_000).catch(() => null);
+  );
+  const body = await readJsonResponse<T & TsentaErrorEnvelope>(
+    response,
+    1_000_000,
+  ).catch(() => null);
   if (!response.ok || !body) {
-    const providerMessage = typeof body?.error === "string" ? body.error : body?.error?.message;
-    throw new Error(providerMessage || "The employer application could not be completed.");
+    const providerMessage =
+      typeof body?.error === "string" ? body.error : body?.error?.message;
+    throw new Error(
+      providerMessage || "The employer application could not be completed.",
+    );
   }
   return body;
 }
 
-function tsentaReceipt(application: TsentaApplication, applicationId: string): SubmissionProviderReceipt {
-  const updatedAt = application.updated_at && Number.isFinite(new Date(application.updated_at).getTime())
-    ? new Date(application.updated_at).toISOString()
-    : new Date().toISOString();
+function tsentaReceipt(
+  application: TsentaApplication,
+  applicationId: string,
+): SubmissionProviderReceipt {
+  const updatedAt =
+    application.updated_at &&
+    Number.isFinite(new Date(application.updated_at).getTime())
+      ? new Date(application.updated_at).toISOString()
+      : new Date().toISOString();
   if (application.status === "submitted") {
-    return { state: "submitted", providerSubmissionId: applicationId, submittedAt: updatedAt, message: "Application submitted and confirmed by the employer application system." };
+    return {
+      state: "submitted",
+      providerSubmissionId: applicationId,
+      submittedAt: updatedAt,
+      message:
+        "Application submitted and confirmed by the employer application system.",
+    };
   }
   if (application.status === "needs_review") {
-    return { state: "needs_user", providerSubmissionId: applicationId, submittedAt: updatedAt, review: application.review, message: "One or more employer questions need your answer before the application can be sent." };
+    return {
+      state: "needs_user",
+      providerSubmissionId: applicationId,
+      submittedAt: updatedAt,
+      review: application.review,
+      message:
+        "One or more employer questions need your answer before the application can be sent.",
+    };
   }
   if (application.status === "failed") {
-    const reason = application.failure_reason?.replace(/_/g, " ") || "the employer form could not be completed";
-    throw new Error(`Application stopped because ${reason}. Your approved materials are still saved.`);
+    const reason =
+      application.failure_reason?.replace(/_/g, " ") ||
+      "the employer form could not be completed";
+    throw new Error(
+      `Application stopped because ${reason}. Your approved materials are still saved.`,
+    );
   }
-  return { state: "processing", providerSubmissionId: applicationId, submittedAt: updatedAt, message: "Application is being completed in the background." };
+  return {
+    state: "processing",
+    providerSubmissionId: applicationId,
+    submittedAt: updatedAt,
+    message: "Application is being completed in the background.",
+  };
 }
 
-async function submitWithTsenta(config: Extract<SubmissionProviderConfig, { kind: "tsenta" }>, payload: SubmissionProviderPayload, idempotencyKey: string): Promise<SubmissionProviderReceipt> {
-  const missing = requiredCandidateFields(payload.candidate, payload.resume.url);
-  if (missing.length) throw new Error(`Complete your Application Profile before applying: ${missing.join(", ")}.`);
+async function submitWithTsenta(
+  config: Extract<SubmissionProviderConfig, { kind: "tsenta" }>,
+  payload: SubmissionProviderPayload,
+  idempotencyKey: string,
+): Promise<SubmissionProviderReceipt> {
+  const missing = requiredCandidateFields(
+    payload.candidate,
+    payload.resume.url,
+  );
+  if (missing.length)
+    throw new Error(
+      `Complete your Application Profile before applying: ${missing.join(", ")}.`,
+    );
 
   const candidate = await tsentaRequest<TsentaCandidate>(config, "candidates", {
     method: "POST",
     headers: { "idempotency-key": `${idempotencyKey}:candidate` },
-    body: JSON.stringify({ profile: tsentaProfile(payload.candidate), resume_url: payload.resume.url, email_mode: "candidate" }),
+    body: JSON.stringify({
+      profile: tsentaProfile(payload.candidate),
+      resume_url: payload.resume.url,
+      email_mode: "candidate",
+    }),
   });
-  if (!candidate.profile_id) throw new Error("Your application profile could not be prepared.");
+  if (!candidate.profile_id)
+    throw new Error("Your application profile could not be prepared.");
 
-  let application = await tsentaRequest<TsentaApplication>(config, "applications", {
-    method: "POST",
-    headers: { "idempotency-key": `${idempotencyKey}:application` },
-    body: JSON.stringify({ profile_id: candidate.profile_id, url: payload.destination }),
-  });
-  if (!application.id) throw new Error("The application service did not return a tracking reference.");
+  let application = await tsentaRequest<TsentaApplication>(
+    config,
+    "applications",
+    {
+      method: "POST",
+      headers: { "idempotency-key": `${idempotencyKey}:application` },
+      body: JSON.stringify({
+        profile_id: candidate.profile_id,
+        url: payload.destination,
+      }),
+    },
+  );
+  if (!application.id)
+    throw new Error(
+      "The application service did not return a tracking reference.",
+    );
   const applicationId = application.id;
 
-  for (let attempt = 0; attempt < 20 && (application.status === "queued" || application.status === "running"); attempt += 1) {
+  for (
+    let attempt = 0;
+    attempt < 20 &&
+    (application.status === "queued" || application.status === "running");
+    attempt += 1
+  ) {
     await new Promise((resolve) => setTimeout(resolve, 1_500));
-    application = await tsentaRequest<TsentaApplication>(config, `applications/${applicationId}`);
+    application = await tsentaRequest<TsentaApplication>(
+      config,
+      `applications/${applicationId}`,
+    );
   }
 
   return tsentaReceipt(application, applicationId);
 }
 
-async function submitWithGateway(config: Extract<SubmissionProviderConfig, { kind: "gateway" }>, payload: SubmissionProviderPayload, idempotencyKey: string): Promise<SubmissionProviderReceipt> {
+async function submitWithGateway(
+  config: Extract<SubmissionProviderConfig, { kind: "gateway" }>,
+  payload: SubmissionProviderPayload,
+  idempotencyKey: string,
+): Promise<SubmissionProviderReceipt> {
   const response = await fetch(config.endpoint, {
     method: "POST",
     headers: {
@@ -256,29 +398,60 @@ async function submitWithGateway(config: Extract<SubmissionProviderConfig, { kin
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   });
-  const body = await readJsonResponse<{ submission_id?: string; receipt_id?: string; submitted_at?: string; message?: string; error?: string }>(response, 1_000_000).catch(() => null);
-  if (!response.ok) throw new Error(body?.error || `Submission provider returned ${response.status}.`);
+  const body = await readJsonResponse<{
+    submission_id?: string;
+    receipt_id?: string;
+    submitted_at?: string;
+    message?: string;
+    error?: string;
+  }>(response, 1_000_000).catch(() => null);
+  if (!response.ok)
+    throw new Error(
+      body?.error || `Submission provider returned ${response.status}.`,
+    );
   const providerSubmissionId = body?.submission_id || body?.receipt_id;
-  if (!providerSubmissionId) throw new Error("Submission provider did not return a receipt identifier.");
-  const submittedAt = body?.submitted_at && Number.isFinite(new Date(body.submitted_at).getTime()) ? new Date(body.submitted_at).toISOString() : new Date().toISOString();
-  return { state: "submitted", providerSubmissionId, submittedAt, message: body?.message || "The employer application was submitted." };
+  if (!providerSubmissionId)
+    throw new Error("Submission provider did not return a receipt identifier.");
+  const submittedAt =
+    body?.submitted_at && Number.isFinite(new Date(body.submitted_at).getTime())
+      ? new Date(body.submitted_at).toISOString()
+      : new Date().toISOString();
+  return {
+    state: "submitted",
+    providerSubmissionId,
+    submittedAt,
+    message: body?.message || "The employer application was submitted.",
+  };
 }
 
-export async function submitWithProvider(payload: SubmissionProviderPayload, idempotencyKey: string): Promise<SubmissionProviderReceipt> {
+export async function submitWithProvider(
+  payload: SubmissionProviderPayload,
+  idempotencyKey: string,
+  nativeRuntime?: NativeSubmissionRuntime,
+): Promise<SubmissionProviderReceipt> {
   const config = submissionProviderConfig();
   if (!config) throw new Error("One-click applications are not configured.");
-  if (config.kind === "tsenta") return submitWithTsenta(config, payload, idempotencyKey);
-  if (config.kind === "gateway") return submitWithGateway(config, payload, idempotencyKey);
+  if (config.kind === "tsenta")
+    return submitWithTsenta(config, payload, idempotencyKey);
+  if (config.kind === "gateway")
+    return submitWithGateway(config, payload, idempotencyKey);
   const { runNativeApplication } = await import("@/lib/application-runner/run");
-  return runNativeApplication(payload);
+  return runNativeApplication(payload, nativeRuntime);
 }
 
-export async function checkSubmissionWithProvider(providerSubmissionId: string): Promise<SubmissionProviderReceipt> {
+export async function checkSubmissionWithProvider(
+  providerSubmissionId: string,
+): Promise<SubmissionProviderReceipt> {
   const config = submissionProviderConfig();
   if (!config || config.kind !== "tsenta") {
-    throw new Error("Application status is not available from the configured service.");
+    throw new Error(
+      "Application status is not available from the configured service.",
+    );
   }
-  const application = await tsentaRequest<TsentaApplication>(config, `applications/${encodeURIComponent(providerSubmissionId)}`);
+  const application = await tsentaRequest<TsentaApplication>(
+    config,
+    `applications/${encodeURIComponent(providerSubmissionId)}`,
+  );
   return tsentaReceipt(application, providerSubmissionId);
 }
 
@@ -288,21 +461,44 @@ export async function resumeSubmissionWithProvider(
 ): Promise<SubmissionProviderReceipt> {
   const config = submissionProviderConfig();
   if (!config || config.kind !== "tsenta") {
-    throw new Error("Application review is not available from the configured service.");
+    throw new Error(
+      "Application review is not available from the configured service.",
+    );
   }
   const answers = Object.fromEntries(
     questions
-      .filter((question) => question.id.startsWith("provider:") && question.reviewed && question.answer.trim())
-      .map((question) => [question.id.slice("provider:".length), question.answer.trim()]),
+      .filter(
+        (question) =>
+          question.id.startsWith("provider:") &&
+          question.reviewed &&
+          question.answer.trim(),
+      )
+      .map((question) => [
+        question.id.slice("provider:".length),
+        question.answer.trim(),
+      ]),
   );
-  if (Object.keys(answers).length === 0) throw new Error("Answer the employer question before continuing.");
-  let application = await tsentaRequest<TsentaApplication>(config, `applications/${encodeURIComponent(providerSubmissionId)}/review`, {
-    method: "POST",
-    body: JSON.stringify({ action: "approve", answers }),
-  });
-  for (let attempt = 0; attempt < 20 && (application.status === "queued" || application.status === "running"); attempt += 1) {
+  if (Object.keys(answers).length === 0)
+    throw new Error("Answer the employer question before continuing.");
+  let application = await tsentaRequest<TsentaApplication>(
+    config,
+    `applications/${encodeURIComponent(providerSubmissionId)}/review`,
+    {
+      method: "POST",
+      body: JSON.stringify({ action: "approve", answers }),
+    },
+  );
+  for (
+    let attempt = 0;
+    attempt < 20 &&
+    (application.status === "queued" || application.status === "running");
+    attempt += 1
+  ) {
     await new Promise((resolve) => setTimeout(resolve, 1_500));
-    application = await tsentaRequest<TsentaApplication>(config, `applications/${encodeURIComponent(providerSubmissionId)}`);
+    application = await tsentaRequest<TsentaApplication>(
+      config,
+      `applications/${encodeURIComponent(providerSubmissionId)}`,
+    );
   }
   return tsentaReceipt(application, providerSubmissionId);
 }

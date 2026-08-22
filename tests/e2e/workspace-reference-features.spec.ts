@@ -11,6 +11,10 @@ test("profile keeps reusable identity, resume, cover letter and application cont
   await expect(page.getByLabel("Full name")).toBeVisible();
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add profile" })).toBeVisible();
+  await expect(page.getByText("Application readiness", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Employer portal automation" })).toBeVisible();
+  await expect(page.getByLabel("Are you willing to travel for work?")).toBeVisible();
+  await expect(page.getByLabel("Target annual salary")).toBeVisible();
 
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Resume studio" })).toBeVisible();
@@ -39,13 +43,17 @@ test("research library ranks practical topics and identifies every source", asyn
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
 });
 
-test("prepared applications keep the final apply action visible while reviewing", async ({ page }) => {
+test("incomplete application profiles show the exact next action", async ({ page }) => {
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
-  await page.getByRole("button", { name: "Load labelled sample CV" }).click();
-  await page.getByRole("button", { name: "Prepare application" }).click();
-  await expect(page.getByTestId("persistent-apply-action")).toBeVisible();
-  await expect(page.getByTestId("persistent-apply-action").getByRole("button", { name: "Approve and apply now" })).toBeVisible();
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-  await expect(page.getByTestId("persistent-apply-action")).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Complete your reusable profile before applying",
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Complete profile" })).toHaveAttribute(
+    "href",
+    "/profile#application-readiness",
+  );
+  await expect(page.getByRole("button", { name: "Prepare application" })).toBeDisabled();
 });
