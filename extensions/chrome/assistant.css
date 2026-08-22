@@ -1,0 +1,41 @@
+#ir35careers-assistant {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  right: 18px;
+  bottom: 18px;
+  width: min(390px, calc(100vw - 36px));
+  color: #0f172a;
+  font-family: Arial, Helvetica, sans-serif;
+}
+#ir35careers-assistant * { box-sizing: border-box; }
+#ir35careers-assistant .ir35-card {
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, .24);
+}
+#ir35careers-assistant .ir35-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  background: #052e2b;
+}
+#ir35careers-assistant .ir35-brand { display: flex; align-items: center; gap: 10px; font: 700 14px/1.2 Arial, sans-serif; }
+#ir35careers-assistant .ir35-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: #052e2b; background: #6ee7b7; font: 800 16px/1 Arial, sans-serif; }
+#ir35careers-assistant .ir35-close { border: 0; color: #d1fae5; background: transparent; cursor: pointer; font: 700 22px/1 Arial, sans-serif; }
+#ir35careers-assistant .ir35-body { padding: 16px; }
+#ir35careers-assistant .ir35-title { margin: 0; color: #020617; font: 700 18px/1.35 Arial, sans-serif; }
+#ir35careers-assistant .ir35-copy { margin: 8px 0 0; color: #475569; font: 400 14px/1.55 Arial, sans-serif; }
+#ir35careers-assistant .ir35-list { margin: 12px 0 0; padding: 0; list-style: none; }
+#ir35careers-assistant .ir35-list li { margin-top: 7px; padding: 9px 11px; border-radius: 9px; color: #7c2d12; background: #fff7ed; font: 600 13px/1.4 Arial, sans-serif; }
+#ir35careers-assistant .ir35-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+#ir35careers-assistant .ir35-button { min-height: 42px; border: 0; border-radius: 11px; padding: 0 15px; color: #fff; background: #047857; cursor: pointer; font: 700 13px/1 Arial, sans-serif; }
+#ir35careers-assistant .ir35-button:hover { background: #065f46; }
+#ir35careers-assistant .ir35-button.secondary { border: 1px solid #cbd5e1; color: #334155; background: #fff; }
+#ir35careers-assistant .ir35-button:disabled { cursor: wait; opacity: .65; }
+.ir35careers-field-attention { outline: 3px solid #f59e0b !important; outline-offset: 3px !important; }

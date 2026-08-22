@@ -1,11 +1,24 @@
 {
   "manifest_version": 3,
-  "name": "IR35Careers Job Analyser",
-  "version": "1.0.0",
-  "description": "Send the current public job page to IR35Careers for IR35 evidence and role-specific CV review.",
-  "permissions": ["activeTab"],
+  "name": "IR35Careers Application Assistant",
+  "version": "2.0.0",
+  "description": "Continue an approved IR35Careers application on the real employer page, including account setup, CV upload, saved answers and confirmation capture.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAonuLvAhFzcZjwVlsnSLBHGJdp5Drzecn+GCOOPU7tJykxTXKgJy8Vgx1zivSagrcurnPBAp0aoUG03FnLsBKEjLvibBWkBwqeO3CzRLZSHnFwO132ZsclZgyoAUWmX9Kfs3KzVwwrvmU1j9SHCH4bm5sQ442Z6cq7iZVBwSdosn0+pEkcoHNl3YpqlBTO8BsIF66sB8ntYBjgYyciOFtqLwj0S3Agz7YwLQ1nZK8FTcFaovzgLOoNQaKt77v0XUCH1+ikubOcDN4gFQHstyxLiLuUHErvt5EhUIUKrzVkFhyYqwMTsfqssG/4c5k/nK4BWH945OHk2jAV/PqTFpUxQIDAQAB",
+  "permissions": ["activeTab", "storage", "tabs"],
+  "host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*"],
+      "js": ["content.js"],
+      "css": ["assistant.css"],
+      "run_at": "document_start"
+    }
+  ],
   "action": {
-    "default_title": "Analyse with IR35Careers",
+    "default_title": "IR35Careers Application Assistant",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
       { source: "/connections", destination: "/platforms", permanent: true },
       { source: "/downloads/ir35careers-cli.mjs", destination: "/jobs", permanent: true },
       { source: "/downloads/ir35careers-mcp-v1.zip", destination: "/jobs", permanent: true },
-      { source: "/downloads/ir35careers-chrome-extension-v1.zip", destination: "/analyse-job", permanent: true },
+      { source: "/downloads/ir35careers-chrome-extension-v1.zip", destination: "/downloads/ir35careers-chrome-extension-v2.zip", permanent: true },
     ];
   },
   async headers() {

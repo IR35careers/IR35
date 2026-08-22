@@ -60,6 +60,16 @@ export function buildApplicationAttention(input: {
       questionIds,
     };
   }
+  if (action === "employer_terms") {
+    return {
+      kind: "employer_account",
+      title: "Review the employer declaration",
+      message,
+      action: "#needs-attention",
+      actionLabel: "Continue securely",
+      questionIds,
+    };
+  }
   if (action === "captcha") {
     return {
       kind: "security_check",

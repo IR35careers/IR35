@@ -54,7 +54,14 @@ import {
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { ApplicationRecord } from "@/lib/workspace/types";
 
-type BusyState = "parse" | "prepare" | "ai" | "save" | "submit" | null;
+type BusyState =
+  | "parse"
+  | "prepare"
+  | "ai"
+  | "save"
+  | "submit"
+  | "handoff"
+  | null;
 type ConnectionState = "connected" | "gated";
 
 const WORKFLOW_STEPS = [
@@ -62,6 +69,32 @@ const WORKFLOW_STEPS = [
   { label: "Tailor", helper: "Compare every edit" },
   { label: "Review & submit", helper: "Approve the exact packet" },
 ] as const;
+
+const APPLICATION_ASSISTANT_EXTENSION_ID =
+  "cmfcgaflmkipmmjkcneoobgkdpfkfeoa";
+
+async function applicationAssistantInstalled(): Promise<boolean> {
+  return await new Promise((resolve) => {
+    let settled = false;
+    const finish = (result: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("message", onMessage);
+      resolve(result);
+    };
+    const onMessage = (event: MessageEvent) => {
+      if (
+        event.source === window &&
+        event.data?.type === "IR35CAREERS_EXTENSION_READY" &&
+        event.data?.extensionId === APPLICATION_ASSISTANT_EXTENSION_ID
+      )
+        finish(true);
+    };
+    window.addEventListener("message", onMessage);
+    window.postMessage({ type: "IR35CAREERS_EXTENSION_PING" }, window.location.origin);
+    window.setTimeout(() => finish(false), 800);
+  });
+}
 
 function needsApplicationMaterialApproval(
   action: string | undefined,
@@ -159,6 +192,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [profilePrompt, setProfilePrompt] = useState(false);
+  const [assistantMissing, setAssistantMissing] = useState(false);
   const submissionStatusFailures = useRef(0);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
@@ -832,6 +866,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         application.status === "ready" && approvalsComplete
           ? application
           : await persistReviewedPacket(application, false);
+      if (await applicationAssistantInstalled()) {
+        await continueInEmployerBrowser(ready, true);
+        return;
+      }
       setNotice(
         "Starting the secure employer application. You can leave this page while it completes.",
       );
@@ -1077,6 +1115,68 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
+  const continueInEmployerBrowser = async (
+    targetApplication: ApplicationRecord | null = application,
+    assistantConfirmed = false,
+  ) => {
+    if (!targetApplication) return;
+    setBusy("handoff");
+    setError(null);
+    setNotice(null);
+    setAssistantMissing(false);
+    try {
+      const installed =
+        assistantConfirmed || (await applicationAssistantInstalled());
+      if (!installed) {
+        setAssistantMissing(true);
+        setError(
+          "Install the IR35Careers Application Assistant in desktop Chrome, then select Continue securely again.",
+        );
+        return;
+      }
+      const response = await fetchWithFreshSession(
+        "/api/applications/browser-handoff",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create",
+            applicationId: targetApplication.id,
+          }),
+          signal: AbortSignal.timeout(20_000),
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        handoffUrl?: string;
+        error?: string;
+      };
+      if (!response.ok || !payload.handoffUrl)
+        throw new Error(
+          payload.error || "The secure employer continuation could not start.",
+        );
+      const employerTab = window.open(
+        payload.handoffUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      if (!employerTab) {
+        window.location.assign(payload.handoffUrl);
+        return;
+      }
+      setNotice(
+        "The prepared application is open on the employer page. IR35Careers will continue there and update this application after confirmation.",
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The secure employer continuation could not start.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <WorkspacePage
       density="compact"
@@ -1232,15 +1332,20 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {attention.kind === "security_check" ||
-                attention.kind === "employer_account" ? (
-                  <a
-                    href={job.apply_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                attention.kind === "employer_account" ||
+                attention.kind === "employer_form" ||
+                attention.kind === "retry" ? (
+                  <button
+                    type="button"
+                    onClick={() => void continueInEmployerBrowser()}
+                    disabled={busy !== null}
                     className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
                   >
-                    {attention.actionLabel} <ArrowRight size={15} />
-                  </a>
+                    {busy === "handoff" ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : null}
+                    Continue securely <ArrowRight size={15} />
+                  </button>
                 ) : attention.kind === "profile_missing" ? (
                   <Link
                     href="/profile#application-readiness"
@@ -1266,6 +1371,32 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   </button>
                 )}
               </div>
+              {assistantMissing ? (
+                <div className="mt-3 rounded-xl border border-amber-300 bg-white p-3 text-sm text-slate-700">
+                  <p>
+                    The assistant is required only when an employer blocks the
+                    background runner with a login, CAPTCHA or declaration.
+                  </p>
+                  <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-5 text-slate-600">
+                    <li>Download and extract the ZIP on a desktop computer.</li>
+                    <li>
+                      Open <strong>chrome://extensions</strong>, enable Developer
+                      mode and choose Load unpacked.
+                    </li>
+                    <li>
+                      Select the extracted folder, return here and choose
+                      Continue securely.
+                    </li>
+                  </ol>
+                  <a
+                    href="/downloads/ir35careers-chrome-extension-v2.zip"
+                    download
+                    className="ir35-focus mt-2 inline-flex min-h-10 items-center rounded-lg border border-slate-300 px-3 font-semibold text-slate-900 hover:bg-slate-50"
+                  >
+                    Download Application Assistant
+                  </a>
+                </div>
+              ) : null}
             </div>
           </div>
         </section>

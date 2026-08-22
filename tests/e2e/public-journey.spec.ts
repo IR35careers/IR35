@@ -348,7 +348,6 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
   expect(await securityPolicy.text()).toContain("Policy: https://www.ir35careers.com/bug-bounty");
 
   const retiredDownloads = [
-    ["/downloads/ir35careers-chrome-extension-v1.zip", "/analyse-job"],
     ["/downloads/ir35careers-cli.mjs", "/jobs"],
     ["/downloads/ir35careers-mcp-v1.zip", "/jobs"],
   ] as const;
@@ -357,6 +356,22 @@ test("public platform assets and safety boundaries respond correctly", async ({ 
     expect(response.status()).toBe(308);
     expect(response.headers().location).toBe(destination);
   }
+
+  const retiredExtension = await request.get(
+    "/downloads/ir35careers-chrome-extension-v1.zip",
+    { maxRedirects: 0, timeout: 60_000 },
+  );
+  expect(retiredExtension.status()).toBe(308);
+  expect(retiredExtension.headers().location).toBe(
+    "/downloads/ir35careers-chrome-extension-v2.zip",
+  );
+  const applicationAssistant = await request.get(
+    "/downloads/ir35careers-chrome-extension-v2.zip",
+    { timeout: 60_000 },
+  );
+  expect(applicationAssistant.ok()).toBeTruthy();
+  expect(applicationAssistant.headers()["content-type"]).toContain("zip");
+  expect((await applicationAssistant.body()).byteLength).toBeGreaterThan(10_000);
 
   const search = await request.get("/api/jobs/search?per_page=1", { timeout: 60_000 });
   expect(search.ok()).toBeTruthy();

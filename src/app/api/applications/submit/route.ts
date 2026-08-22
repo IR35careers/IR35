@@ -1,4 +1,4 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import { after } from "next/server";
 import {
   providerReviewQuestions,
@@ -45,6 +45,7 @@ import {
   savePortalSession,
 } from "@/lib/application-portal-session";
 import { verifyApplicationResumeAuthorization } from "@/lib/application-internal-resume";
+import { applicationPortalPassword } from "@/lib/application-portal-account";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -56,23 +57,6 @@ const NO_STORE = {
 
 type DbRow = Record<string, unknown>;
 type AdminClient = ReturnType<typeof getSupabaseAdmin>;
-
-function portalPassword(
-  userId: string,
-  destination: string,
-): string | undefined {
-  const secret =
-    process.env.APPLICATION_ACCOUNT_SECRET?.trim() ||
-    process.env.SUPABASE_SECRET_KEY?.trim() ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!secret) return undefined;
-  const hostname = new URL(destination).hostname.toLowerCase();
-  const token = createHmac("sha256", secret)
-    .update(`${userId}:${hostname}:portal-v1`)
-    .digest("base64url")
-    .slice(0, 18);
-  return `Ir35!${token}a7`;
-}
 
 async function waitForEmailVerificationCode(input: {
   admin: AdminClient;
@@ -733,11 +717,11 @@ export async function POST(request: Request): Promise<Response> {
                 provider?.kind === "native"
                   ? {
                       portalPassword: submissionCandidate.portalAccountConsent
-                        ? portalPassword(userId, destination)
+                        ? applicationPortalPassword(userId, destination)
                         : undefined,
                       resolvePortalPassword: submissionCandidate.portalAccountConsent
                         ? async (hostname) =>
-                            portalPassword(userId, `https://${hostname}/`)
+                            applicationPortalPassword(userId, `https://${hostname}/`)
                         : undefined,
                       resolveEmailVerificationCode:
                         submissionCandidate.automaticEmailVerification
