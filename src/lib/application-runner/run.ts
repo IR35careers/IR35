@@ -806,7 +806,10 @@ export async function runNativeApplication(
   runtime?: NativeSubmissionRuntime,
 ): Promise<SubmissionProviderReceipt> {
   const startedAt = Date.now();
-  const requestedAfter = new Date(startedAt - 15_000).toISOString();
+  // A resumed employer session may already have a fresh code waiting in the
+  // contractor inbox. Keep the lookup application-scoped, but include the
+  // normal validity window used by employer one-time codes.
+  const requestedAfter = new Date(startedAt - 10 * 60_000).toISOString();
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
   let page: Page | null = null;

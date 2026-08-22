@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import {
   getResend,
   extractEmailAddress,
@@ -21,8 +21,11 @@ import {
   loadPortalSession,
 } from "@/lib/application-portal-session";
 import { createHash } from "node:crypto";
+import { extractEmailVerificationCode } from "@/lib/email/verification-code";
+import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 const RESPONSE_HEADERS = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
@@ -126,7 +129,38 @@ export async function POST(request: Request) {
       .limit(100);
     if (packetError) throw new Error(packetError.message);
     const candidates = (packetRows ?? []).map((row) => ({ id: row.id, job: row.job_snapshot })) as Array<Pick<ApplicationRecord, "id" | "job">>;
-    const applicationId = findLinkedApplication(payload.subject, payload.text, candidates);
+    const verificationCode = extractEmailVerificationCode(
+      payload.subject,
+      payload.text,
+    );
+    let applicationId = findLinkedApplication(
+      payload.subject,
+      payload.text,
+      candidates,
+    );
+    if (!applicationId && verificationCode) {
+      const { data: pendingRows, error: pendingRowsError } = await admin
+        .from("application_submissions")
+        .select("application_id, receipt")
+        .eq("user_id", alias.user_id)
+        .eq("status", "processing")
+        .eq("error_code", "needs_user")
+        .order("updated_at", { ascending: false })
+        .limit(5);
+      if (pendingRowsError) throw new Error(pendingRowsError.message);
+      const verificationApplications = (pendingRows ?? []).filter((row) => {
+        const receipt = row.receipt as {
+          action?: unknown;
+          attention?: { action?: unknown };
+        } | null;
+        return (
+          String(receipt?.action ?? receipt?.attention?.action ?? "") ===
+          "verification_code"
+        );
+      });
+      if (verificationApplications.length === 1)
+        applicationId = String(verificationApplications[0].application_id);
+    }
     const linkedPacket = applicationId ? (packetRows ?? []).find((row) => String(row.id) === applicationId) : undefined;
     const linkedJob = linkedPacket?.job_snapshot as ApplicationRecord["job"] | undefined;
     const verifiedDestination = linkedJob
@@ -164,6 +198,62 @@ export async function POST(request: Request) {
       received_at: payload.receivedAt,
     }, { onConflict: "user_id,provider_message_id", ignoreDuplicates: true });
     if (messageError) throw new Error(messageError.message);
+
+    let resumeQueued = false;
+    if (applicationId && trustedSender && verificationCode) {
+      const { data: pendingSubmission, error: pendingError } = await admin
+        .from("application_submissions")
+        .select("status, error_code, receipt")
+        .eq("user_id", alias.user_id)
+        .eq("application_id", applicationId)
+        .maybeSingle();
+      if (pendingError) throw new Error(pendingError.message);
+      const pendingReceipt = pendingSubmission?.receipt as {
+        action?: unknown;
+        attention?: { action?: unknown };
+      } | null;
+      const pendingAction = String(
+        pendingReceipt?.action ?? pendingReceipt?.attention?.action ?? "",
+      );
+      if (
+        pendingSubmission?.status === "processing" &&
+        pendingSubmission.error_code === "needs_user" &&
+        pendingAction === "verification_code"
+      ) {
+        const resumeAuthorization = createApplicationResumeAuthorization({
+          applicationId,
+          userId: String(alias.user_id),
+        });
+        if (resumeAuthorization) {
+          const resumeUrl = new URL(
+            "/api/applications/submit",
+            request.url,
+          ).toString();
+          resumeQueued = true;
+          after(async () => {
+            const response = await fetch(resumeUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-ir35-resume-timestamp": resumeAuthorization.timestamp,
+                "x-ir35-resume-signature": resumeAuthorization.signature,
+              },
+              body: JSON.stringify({
+                applicationId,
+                internalUserId: String(alias.user_id),
+                approval: "SUBMIT_APPROVED_APPLICATION",
+              }),
+              signal: AbortSignal.timeout(20_000),
+            }).catch(() => null);
+            if (!response?.ok)
+              console.warn("application_verification_resume_failed", {
+                applicationId,
+                status: response?.status ?? 0,
+              });
+          });
+        }
+      }
+    }
 
     if (applicationId && trustedSender) {
       const currentStatus = (linkedPacket?.status ?? "applied") as ApplicationStatus;
@@ -226,7 +316,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId), trustedSender }, { status: 200, headers: RESPONSE_HEADERS });
+    return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId), trustedSender, resumeQueued }, { status: 200, headers: RESPONSE_HEADERS });
   } catch {
     return NextResponse.json({ error: "Inbound message could not be processed." }, { status: 500, headers: RESPONSE_HEADERS });
   }

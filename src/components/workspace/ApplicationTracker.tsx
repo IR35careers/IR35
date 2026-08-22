@@ -49,6 +49,16 @@ const CLOSED_STATUSES = new Set<ApplicationStatus>([
   "failed",
   "skipped",
 ]);
+
+function applicationEventDetail(
+  event: ApplicationRecord["events"][number],
+): string {
+  const attention = event.metadata?.attention;
+  if (!attention || typeof attention !== "object") return "";
+  const message = (attention as { message?: unknown }).message;
+  return typeof message === "string" ? message.trim() : "";
+}
+
 function csvValue(value: unknown): string {
   const raw = String(value ?? "");
   const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
@@ -623,7 +633,44 @@ export function ApplicationTracker() {
                     </Link>
                   </div>
                 </div>
-                {application.events.length > 0 && <details className="mt-5 border-t border-slate-100 pt-4"><summary className="ir35-focus cursor-pointer text-xs font-semibold text-slate-500 hover:text-slate-900">Application history</summary><ol className="mt-3 grid gap-2 md:grid-cols-3">{application.events.slice(-3).map((event) => <li key={event.id} className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-semibold text-slate-800">{event.label}</p><p className="mt-1 text-[11px] text-slate-500">{new Date(event.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p></li>)}</ol></details>}
+                {application.events.length > 0 && (
+                  <details className="mt-5 border-t border-slate-100 pt-4">
+                    <summary className="ir35-focus cursor-pointer text-xs font-semibold text-slate-500 hover:text-slate-900">
+                      Application history
+                    </summary>
+                    <ol className="mt-3 grid gap-2 md:grid-cols-3">
+                      {application.events.slice(-3).map((event) => {
+                        const detail = applicationEventDetail(event);
+                        return (
+                          <li
+                            key={event.id}
+                            className="rounded-xl bg-slate-50 p-3"
+                          >
+                            <p className="text-xs font-semibold text-slate-800">
+                              {event.label}
+                            </p>
+                            {detail && (
+                              <p className="mt-1 text-xs leading-5 text-slate-600">
+                                {detail}
+                              </p>
+                            )}
+                            <p className="mt-1 text-[11px] text-slate-500">
+                              {new Date(event.createdAt).toLocaleString(
+                                "en-GB",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </p>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </details>
+                )}
               </article>
             );
           })}

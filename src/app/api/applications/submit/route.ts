@@ -44,6 +44,7 @@ import {
   loadPortalSession,
   savePortalSession,
 } from "@/lib/application-portal-session";
+import { verifyApplicationResumeAuthorization } from "@/lib/application-internal-resume";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -292,6 +293,9 @@ async function storeNeedsUser(input: {
     (input.packet.screening_answers as ApplicationQuestion[]) ?? [];
   const incoming = providerReviewQuestions(input.providerReceipt?.review);
   const questions = mergeQuestions(current, incoming);
+  const applicationMaterialsNeedApproval =
+    input.action === "/profile" ||
+    incoming.some((question) => question.required && !question.reviewed);
   const attention = buildApplicationAttention({
     action: input.action,
     message: input.message,
@@ -306,7 +310,9 @@ async function storeNeedsUser(input: {
         .update({
           status: "needs_review",
           screening_answers: questions,
-          submission_approved: false,
+          submission_approved: applicationMaterialsNeedApproval
+            ? false
+            : Boolean(input.packet.submission_approved),
           updated_at: now,
         })
         .eq("id", input.packet.id)
@@ -368,20 +374,13 @@ export async function POST(request: Request): Promise<Response> {
   const token = authorization.startsWith("Bearer ")
     ? authorization.slice(7)
     : "";
-  if (!token)
-    return Response.json(
-      {
-        error: "Your secure session is missing. Sign in again, then retry.",
-        code: "SESSION_EXPIRED",
-      },
-      { status: 401, headers: NO_STORE },
-    );
 
   try {
     const body = await readJsonBody<{
       applicationId?: string;
       approval?: string;
       packet?: ApplicationRecord;
+      internalUserId?: string;
     }>(request, 750_000);
     if (
       !/^[0-9a-f-]{36}$/i.test(body.applicationId ?? "") ||
@@ -394,9 +393,35 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const admin = getSupabaseAdmin();
-    const { data: authData, error: authError } =
-      await admin.auth.getUser(token);
-    if (authError || !authData.user) {
+    const internalUserId = /^[0-9a-f-]{36}$/i.test(body.internalUserId ?? "")
+      ? String(body.internalUserId)
+      : "";
+    const internalAuthorized = Boolean(
+      internalUserId &&
+        verifyApplicationResumeAuthorization({
+          applicationId: String(body.applicationId),
+          userId: internalUserId,
+          timestamp:
+            request.headers.get("x-ir35-resume-timestamp")?.trim() ?? "",
+          suppliedSignature:
+            request.headers.get("x-ir35-resume-signature")?.trim() ?? "",
+        }),
+    );
+    if (!token && !internalAuthorized)
+      return Response.json(
+        {
+          error: "Your secure session is missing. Sign in again, then retry.",
+          code: "SESSION_EXPIRED",
+        },
+        { status: 401, headers: NO_STORE },
+      );
+
+    const authResult = internalAuthorized
+      ? await admin.auth.admin.getUserById(internalUserId)
+      : await admin.auth.getUser(token);
+    const authUser = authResult.data.user;
+    const authError = authResult.error;
+    if (authError || !authUser) {
       console.warn("application_submit_auth_failed", {
         reason: authError?.message || "user_missing",
       });
@@ -409,7 +434,7 @@ export async function POST(request: Request): Promise<Response> {
         { status: 401, headers: NO_STORE },
       );
     }
-    const userId = authData.user.id;
+    const userId = authUser.id;
     console.info("application_submit_stage", {
       applicationId: body.applicationId,
       stage: "authenticated",
@@ -499,7 +524,7 @@ export async function POST(request: Request): Promise<Response> {
       );
 
     const accountEmail =
-      authData.user.email || candidate.email || candidate.forwardingEmail || "";
+      authUser.email || candidate.email || candidate.forwardingEmail || "";
     const inbox = await ensureInboxAlias(admin, userId, accountEmail, true);
     const notificationEmail = inbox?.forwardingEmail || accountEmail;
     const submissionCandidate: ContractorProfile = {

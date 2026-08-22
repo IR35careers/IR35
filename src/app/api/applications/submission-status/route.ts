@@ -89,7 +89,7 @@ export async function GET(request: Request): Promise<Response> {
         .maybeSingle(),
       admin
         .from("application_packets")
-        .select("job_snapshot, screening_answers")
+        .select("job_snapshot, screening_answers, submission_approved")
         .eq("id", applicationId)
         .eq("user_id", userId)
         .maybeSingle(),
@@ -166,6 +166,12 @@ export async function GET(request: Request): Promise<Response> {
       isStaleSubmissionLock(submission.updated_at)
     ) {
       const now = new Date().toISOString();
+      const staleMessage =
+        "The previous application attempt stopped before employer confirmation. Your approved materials are safe. Select Apply again to retry.";
+      const attention = buildApplicationAttention({
+        action: "retry",
+        message: staleMessage,
+      });
       const [{ error: updateError }, { error: eventError }] = await Promise.all(
         [
           admin
@@ -175,8 +181,9 @@ export async function GET(request: Request): Promise<Response> {
               error_code: "stale_processing",
               receipt: {
                 state: "failed",
-                message:
-                  "The previous runner stopped before employer confirmation.",
+                message: staleMessage,
+                action: "retry",
+                attention,
               },
               updated_at: now,
             })
@@ -191,6 +198,7 @@ export async function GET(request: Request): Promise<Response> {
                 event_type: "status_changed",
                 label: "Application attempt stopped and is ready to retry",
                 idempotency_key: `submit:${applicationId}:stale:${String(submission.updated_at)}`,
+                metadata: { reason: "stale_processing", attention },
               },
               { onConflict: "user_id,idempotency_key" },
             ),
@@ -201,8 +209,9 @@ export async function GET(request: Request): Promise<Response> {
       return Response.json(
         {
           state: "failed",
-          error:
-            "The previous application attempt stopped before employer confirmation. Your approved materials are safe. Select Apply again to retry.",
+          error: staleMessage,
+          action: "retry",
+          attention,
         },
         { status: 409, headers: NO_STORE },
       );
@@ -242,9 +251,12 @@ export async function GET(request: Request): Promise<Response> {
     const notificationEmail =
       inbox?.forwardingEmail || authData.user.email || "";
     if (providerReceipt.state === "needs_user") {
+      const incomingQuestions = providerReviewQuestions(
+        providerReceipt.review,
+      );
       const questions = mergeQuestions(
         (packet.screening_answers as ApplicationQuestion[]) ?? [],
-        providerReviewQuestions(providerReceipt.review),
+        incomingQuestions,
       );
       const providerAction =
         providerReceipt.review &&
@@ -254,6 +266,11 @@ export async function GET(request: Request): Promise<Response> {
               (providerReceipt.review as { action?: unknown }).action ?? "",
             )
           : undefined;
+      const applicationMaterialsNeedApproval =
+        providerAction === "/profile" ||
+        incomingQuestions.some(
+          (question) => question.required && !question.reviewed,
+        );
       const attention = buildApplicationAttention({
         action: providerAction,
         message: providerReceipt.message,
@@ -287,7 +304,9 @@ export async function GET(request: Request): Promise<Response> {
           .update({
             status: "needs_review",
             screening_answers: questions,
-            submission_approved: false,
+            submission_approved: applicationMaterialsNeedApproval
+              ? false
+              : Boolean(packet.submission_approved),
             updated_at: now,
           })
           .eq("id", applicationId)
