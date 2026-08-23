@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect, useRef, type ChangeEvent } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  type ChangeEvent,
+} from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -49,6 +56,7 @@ import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { applicationProfileHref } from "@/lib/application-profile-return";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
+import { needsApplicationMaterialApproval } from "@/lib/application-material-approval";
 import {
   SAMPLE_CONTRACTOR_PROFILE,
   SAMPLE_CV_TEXT,
@@ -97,16 +105,6 @@ async function applicationAssistantInstalled(): Promise<boolean> {
     window.postMessage({ type: "IR35CAREERS_EXTENSION_PING" }, window.location.origin);
     window.setTimeout(() => finish(false), 800);
   });
-}
-
-function needsApplicationMaterialApproval(
-  action: string | undefined,
-  questions: ApplicationRecord["questions"],
-): boolean {
-  return (
-    action === "/profile" ||
-    questions.some((question) => question.required && !question.reviewed)
-  );
 }
 
 function persistApplication(application: ApplicationRecord) {
@@ -200,6 +198,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [employerConsentConfirmed, setEmployerConsentConfirmed] =
     useState(false);
   const submissionStatusFailures = useRef(0);
+  const profileResumeAttempted = useRef(false);
   const profileCompletionHref = applicationProfileHref(job.id);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
@@ -423,10 +422,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 message: payload.message,
                 questions: payload.questions ?? application.questions,
               }),
-            submissionApproved: needsApplicationMaterialApproval(
-              payload.action,
-              questions,
-            )
+            submissionApproved: needsApplicationMaterialApproval(questions)
               ? false
               : application.submissionApproved,
             updatedAt: now,
@@ -930,10 +926,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 message: payload.message,
                 questions: payload.questions ?? ready.questions,
               }),
-            submissionApproved: needsApplicationMaterialApproval(
-              payload.action,
-              questions,
-            )
+            submissionApproved: needsApplicationMaterialApproval(questions)
               ? false
               : ready.submissionApproved,
             updatedAt: new Date().toISOString(),
@@ -982,10 +975,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           status: "needs_review",
           questions,
           attention: payload.attention,
-          submissionApproved: needsApplicationMaterialApproval(
-            payload.action,
-            questions,
-          )
+          submissionApproved: needsApplicationMaterialApproval(questions)
             ? false
             : ready.submissionApproved,
           updatedAt: new Date().toISOString(),
@@ -1092,10 +1082,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   message: statusPayload.message,
                   questions: statusPayload.questions ?? application.questions,
                 }),
-              submissionApproved: needsApplicationMaterialApproval(
-                statusPayload.action,
-                questions,
-              )
+              submissionApproved: needsApplicationMaterialApproval(questions)
                 ? false
                 : application.submissionApproved,
               updatedAt: new Date().toISOString(),
@@ -1253,6 +1240,63 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setBusy(null);
     }
   };
+
+  const resumeApprovedApplicationAfterProfile = useEffectEvent(() => {
+    if (!application) return;
+    if (
+      !application.submissionApproved &&
+      application.truthApproved &&
+      application.materialsApproved
+    ) {
+      updateApplication((current) => ({
+        ...current,
+        submissionApproved: true,
+        updatedAt: new Date().toISOString(),
+      }));
+      return;
+    }
+    if (!approvalsComplete) return;
+
+    profileResumeAttempted.current = true;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete("resume");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+    );
+    setNotice(
+      "Profile saved. IR35Careers is resuming the same approved application now.",
+    );
+    void submitApprovedApplication();
+  });
+
+  useEffect(() => {
+    if (profileResumeAttempted.current || typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("resume") !== "profile")
+      return;
+    if (
+      !application ||
+      application.status !== "needs_review" ||
+      !application.attention?.action.startsWith("/profile") ||
+      !profileReadiness.complete ||
+      !answersReviewed ||
+      busy !== null ||
+      submissionInProgress ||
+      submissionConnection !== "connected"
+    )
+      return;
+
+    resumeApprovedApplicationAfterProfile();
+  }, [
+    answersReviewed,
+    application,
+    approvalsComplete,
+    busy,
+    profileReadiness.complete,
+    submissionConnection,
+    submissionInProgress,
+  ]);
 
   return (
     <WorkspacePage

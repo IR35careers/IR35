@@ -8,13 +8,15 @@ describe("application profile continuation", () => {
   it("returns to the exact saved application after profile completion", () => {
     const href = applicationProfileHref("role 123");
     expect(href).toBe(
-      "/profile?returnTo=%2Fapplications%2Fnew%2Frole%2520123%23needs-attention#application-readiness",
+      "/profile?returnTo=%2Fapplications%2Fnew%2Frole%2520123%3Fresume%3Dprofile%23needs-attention#application-readiness",
     );
     expect(
       safeApplicationReturnPath(
-        "/applications/new/role%20123#needs-attention",
+        "/applications/new/role%20123?resume=profile#needs-attention",
       ),
-    ).toBe("/applications/new/role%20123#needs-attention");
+    ).toBe(
+      "/applications/new/role%20123?resume=profile#needs-attention",
+    );
   });
 
   it("rejects external and unrelated return destinations", () => {
@@ -24,5 +26,10 @@ describe("application profile continuation", () => {
       .toBeUndefined();
     expect(safeApplicationReturnPath("/profile"))
       .toBeUndefined();
+    expect(
+      safeApplicationReturnPath(
+        "/applications/new/1?resume=anything#needs-attention",
+      ),
+    ).toBeUndefined();
   });
 });
