@@ -8,6 +8,18 @@ export interface ProfileReadinessItem {
   complete: boolean;
 }
 
+export interface ProfileReadinessResult {
+  items: ProfileReadinessItem[];
+  missing: ProfileReadinessItem[];
+  complete: boolean;
+  percentage: number;
+}
+
+export interface ProfileReadinessBlocker {
+  action: "/profile" | "employer_terms";
+  message: string;
+}
+
 function answered(value: unknown): boolean {
   return value !== "" && value !== null && value !== undefined;
 }
@@ -15,7 +27,7 @@ function answered(value: unknown): boolean {
 export function evaluateProfileReadiness(
   profile: ContractorProfile,
   resumeText = "",
-) {
+): ProfileReadinessResult {
   const items: ProfileReadinessItem[] = [
     {
       id: "full-name",
@@ -134,5 +146,27 @@ export function evaluateProfileReadiness(
     percentage: Math.round(
       ((items.length - missing.length) / items.length) * 100,
     ),
+  };
+}
+
+export function profileReadinessBlocker(
+  readiness: ProfileReadinessResult,
+): ProfileReadinessBlocker | null {
+  if (readiness.complete) return null;
+  const missingConsent = readiness.missing.some(
+    (item) => item.id === "portal-consent",
+  );
+  const missingProfile = readiness.missing.filter(
+    (item) => item.id !== "portal-consent",
+  );
+  if (missingConsent && missingProfile.length === 0)
+    return {
+      action: "employer_terms",
+      message:
+        "Allow employer account creation, required account terms and ordinary email verification before this application starts.",
+    };
+  return {
+    action: "/profile",
+    message: `Complete your Application Profile: ${readiness.missing.map((item) => item.label).join(", ")}.`,
   };
 }

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildApplicationAttention } from "@/lib/application-attention";
-import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  evaluateProfileReadiness,
+  profileReadinessBlocker,
+} from "@/lib/workspace/profile-readiness";
 import { createSeedWorkspaceState } from "@/lib/workspace/seed";
 
 describe("application attention", () => {
@@ -80,5 +83,27 @@ describe("profile readiness", () => {
       "A complete CV with enough truthful content to pass the minimum readiness length for an application profile and employer form.",
     );
     expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["target-role", "skills"]));
+  });
+
+  it("routes automation permission directly instead of failing a worker task", () => {
+    const profile = createSeedWorkspaceState().profile;
+    const readiness = evaluateProfileReadiness(
+      {
+        ...profile,
+        portalAccountConsent: false,
+        employerTermsConsent: false,
+        automaticEmailVerification: false,
+      },
+      profile.resumeProfiles?.[0]?.resumeText || "",
+    );
+    const consentOnly = {
+      ...readiness,
+      missing: readiness.missing.filter((item) => item.id === "portal-consent"),
+      complete: false,
+    };
+
+    expect(profileReadinessBlocker(consentOnly)).toMatchObject({
+      action: "employer_terms",
+    });
   });
 });

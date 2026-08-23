@@ -35,6 +35,7 @@ export interface ApplicationWorkerAssignment {
   portalPassword?: string;
   portalSession?: NativePortalSession | null;
   preflightError?: string;
+  preflightAction?: string;
 }
 
 export interface ApplicationWorkerClaimRequest {

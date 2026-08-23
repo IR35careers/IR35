@@ -16,7 +16,10 @@ import { recoverPendingVerificationEmails } from "@/lib/email/recover-pending-ve
 import type { JobDetail } from "@/lib/job-types";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  evaluateProfileReadiness,
+  profileReadinessBlocker,
+} from "@/lib/workspace/profile-readiness";
 import type {
   ApplicationQuestion,
   ContractorProfile,
@@ -69,8 +72,12 @@ function approved(packet: DbRow): boolean {
   );
 }
 
-function preflight(task: ApplicationWorkerTaskRow, message: string): ApplicationWorkerAssignment {
-  return { task, preflightError: message };
+function preflight(
+  task: ApplicationWorkerTaskRow,
+  message: string,
+  action?: string,
+): ApplicationWorkerAssignment {
+  return { task, preflightError: message, preflightAction: action };
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -162,16 +169,19 @@ export async function POST(request: Request): Promise<Response> {
       String(packet.tailored_cv_text || packet.source_cv_text || ""),
     );
     const readiness = evaluateProfileReadiness(candidate, resumeText);
-    if (!readiness.complete)
+    if (!readiness.complete) {
+      const blocker = profileReadinessBlocker(readiness);
       return Response.json(
         {
           assignment: preflight(
             task,
-            `Complete your Application Profile: ${readiness.missing.map((item) => item.label).join(", ")}.`,
+            blocker?.message || "Complete your Application Profile.",
+            blocker?.action,
           ),
         },
         { headers: HEADERS },
       );
+    }
     const candidateName = resolveCandidateName(
       candidate.fullName || "",
       resumeText,

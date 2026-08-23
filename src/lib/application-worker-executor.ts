@@ -137,6 +137,23 @@ export async function executeApplicationWorkerAssignment(input: {
   budgetMs?: number;
 }): Promise<ApplicationWorkerCallback> {
   const task = input.assignment.task;
+  if (input.assignment.preflightError) {
+    const completedAt = new Date().toISOString();
+    return {
+      taskId: task.id,
+      userId: task.user_id,
+      applicationId: task.application_id,
+      idempotencyKey: task.idempotency_key,
+      completedAt,
+      receipt: {
+        state: "needs_user",
+        providerSubmissionId: `preflight:${task.id}`,
+        submittedAt: completedAt,
+        message: input.assignment.preflightError,
+        review: { action: input.assignment.preflightAction || "/profile" },
+      },
+    };
+  }
   try {
     const result = await buildAndRun(
       input.assignment,

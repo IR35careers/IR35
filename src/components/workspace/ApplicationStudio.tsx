@@ -1403,7 +1403,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 {attention.message}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {attention.action === "#employer-terms-consent" ? (
+                {attention.action === "#employer-terms-consent" ||
+                attention.message.includes(
+                  "Employer account, terms and email verification permission",
+                ) ? (
                   <div
                     id="employer-terms-consent"
                     className="w-full rounded-xl border border-amber-300 bg-white p-4"

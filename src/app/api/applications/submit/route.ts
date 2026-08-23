@@ -39,7 +39,10 @@ import type { JobDetail } from "@/lib/job-types";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { applicationSubmissionFailure } from "@/lib/application-submission-failure";
-import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  evaluateProfileReadiness,
+  profileReadinessBlocker,
+} from "@/lib/workspace/profile-readiness";
 import {
   clearPortalSession,
   loadPortalSession,
@@ -322,15 +325,17 @@ export async function POST(request: Request): Promise<Response> {
     );
     const readiness = evaluateProfileReadiness(candidate, resumeText);
     if (!readiness.complete) {
-      const message = `Complete your application profile first: ${readiness.missing.map((item) => item.label).join(", ")}.`;
+      const blocker = profileReadinessBlocker(readiness);
+      const message = blocker?.message || "Complete your Application Profile.";
+      const action = blocker?.action || "/profile";
       const attention = buildApplicationAttention({
-        action: "/profile",
+        action,
         message,
       });
       return Response.json(
         {
           error: message,
-          action: "/profile",
+          action,
           attention,
           missingProfileItems: readiness.missing,
         },
