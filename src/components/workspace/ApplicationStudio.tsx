@@ -221,6 +221,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     application.materialsApproved &&
     application.submissionApproved,
   );
+  const employerAutomationEnabled = Boolean(
+    workspace.profile.portalAccountConsent &&
+      workspace.profile.employerTermsConsent &&
+      workspace.profile.automaticEmailVerification,
+  );
   const submitted =
     application?.status === "applied" &&
     application.receipt?.mode === "external_handoff";
@@ -2190,6 +2195,25 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                           : "Ready. IR35Careers will submit the approved materials and wait for employer confirmation."}
                   </p>
                 )}
+                {!submitted && !employerAutomationEnabled && (
+                  <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm leading-6 text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={employerConsentConfirmed}
+                      onChange={(event) =>
+                        setEmployerConsentConfirmed(event.target.checked)
+                      }
+                      className="mt-1 h-5 w-5 shrink-0 accent-emerald-400"
+                    />
+                    <span>
+                      Allow IR35Careers to create and sign in to employer
+                      accounts, accept only required account terms, and use
+                      ordinary email verification codes for applications I
+                      approve. Marketing choices are never selected and
+                      security checks are never bypassed.
+                    </span>
+                  </label>
+                )}
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                   {submitted ? (
                     <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200">
@@ -2199,11 +2223,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     <>
                       <button
                         type="button"
-                        onClick={() => void submitApprovedApplication()}
+                        onClick={() =>
+                          void (employerAutomationEnabled
+                            ? submitApprovedApplication()
+                            : allowEmployerAutomationAndRetry())
+                        }
                         disabled={
                           busy !== null ||
                           submissionInProgress ||
-                          submissionConnection !== "connected"
+                          submissionConnection !== "connected" ||
+                          (!employerAutomationEnabled &&
+                            !employerConsentConfirmed)
                         }
                         className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -2214,9 +2244,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                         )}{" "}
                         {submissionInProgress
                           ? "Processing application"
+                          : busy === "consent"
+                            ? "Saving permission"
                           : busy === "submit"
                             ? `Starting ${submitElapsedSeconds}s`
-                            : "Approve and apply now"}
+                            : employerAutomationEnabled
+                              ? "Approve and apply now"
+                              : "Allow and apply now"}
                       </button>
                       {submissionConnection === "gated" && (
                         <button

@@ -26,10 +26,7 @@ export async function POST(request: Request): Promise<Response> {
       applicationId?: string;
       consent?: string;
     }>(request, 5_000);
-    if (
-      !/^[0-9a-f-]{36}$/i.test(body.applicationId ?? "") ||
-      body.consent !== "ALLOW_EMPLOYER_ACCOUNT_AUTOMATION"
-    )
+    if (body.consent !== "ALLOW_EMPLOYER_ACCOUNT_AUTOMATION")
       return Response.json(
         { error: "Confirm the employer account permission before continuing." },
         { status: 400, headers: NO_STORE },
@@ -43,29 +40,12 @@ export async function POST(request: Request): Promise<Response> {
         { status: 401, headers: NO_STORE },
       );
     const userId = authData.user.id;
-    const [
-      { data: packet, error: packetError },
-      { data: profileRow, error: profileError },
-    ] = await Promise.all([
-      admin
-        .from("application_packets")
-        .select("id")
-        .eq("id", body.applicationId)
-        .eq("user_id", userId)
-        .maybeSingle(),
-      admin
-        .from("profiles")
-        .select("application_profile")
-        .eq("id", userId)
-        .maybeSingle(),
-    ]);
-    if (packetError || profileError)
-      throw new Error(packetError?.message || profileError?.message);
-    if (!packet)
-      return Response.json(
-        { error: "This application could not be found in your account." },
-        { status: 404, headers: NO_STORE },
-      );
+    const { data: profileRow, error: profileError } = await admin
+      .from("profiles")
+      .select("application_profile")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profileError) throw new Error(profileError.message);
 
     const acceptedAt = new Date().toISOString();
     const profile = enableEmployerAutomation(
