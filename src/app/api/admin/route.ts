@@ -1176,13 +1176,23 @@ export async function POST(request: Request): Promise<Response> {
       let requeued = 0;
       for (const submission of stale) {
         const now = new Date().toISOString();
-        const packetResult = await supabase
-          .from("application_packets")
-          .select("job_snapshot, truth_approved, materials_approved, submission_approved")
-          .eq("id", submission.application_id)
-          .eq("user_id", submission.user_id)
-          .maybeSingle();
-        if (packetResult.error) throw packetResult.error;
+        const [packetResult, existingTaskResult] = await Promise.all([
+          supabase
+            .from("application_packets")
+            .select("job_snapshot, truth_approved, materials_approved, submission_approved")
+            .eq("id", submission.application_id)
+            .eq("user_id", submission.user_id)
+            .maybeSingle(),
+          supabase
+            .from("application_worker_tasks")
+            .select("destination")
+            .eq("user_id", submission.user_id)
+            .eq("application_id", submission.application_id)
+            .eq("idempotency_key", submission.idempotency_key)
+            .maybeSingle(),
+        ]);
+        if (packetResult.error || existingTaskResult.error)
+          throw packetResult.error || existingTaskResult.error;
         const packet = packetResult.data as
           | {
               job_snapshot?: Record<string, unknown>;
@@ -1191,7 +1201,11 @@ export async function POST(request: Request): Promise<Response> {
               submission_approved?: boolean;
             }
           | null;
-        const destination = String(packet?.job_snapshot?.apply_url ?? "").trim();
+        const destination = String(
+          existingTaskResult.data?.destination ||
+            packet?.job_snapshot?.apply_url ||
+            "",
+        ).trim();
         const idempotencyKey = String(
           submission.idempotency_key || `application:${submission.application_id}`,
         ).trim();
