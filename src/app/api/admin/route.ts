@@ -604,6 +604,9 @@ export async function GET(request: Request): Promise<Response> {
           errorCode: row.error_code ? String(row.error_code) : null,
           action: receipt.action ? String(receipt.action) : null,
           message: receipt.message ? String(receipt.message).slice(0, 500) : null,
+          destination: receipt.destination
+            ? String(receipt.destination).slice(0, 2_000)
+            : null,
           confirmationReference: row.provider_submission_id ? String(row.provider_submission_id) : null,
           updatedAt: String(row.updated_at),
         };
