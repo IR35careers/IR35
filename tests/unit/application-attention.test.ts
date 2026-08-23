@@ -24,11 +24,11 @@ describe("application attention", () => {
     expect(buildApplicationAttention({ action: "verification_code" }).kind).toBe("email_verification");
   });
 
-  it("sends employer terms permission to the profile setting", () => {
+  it("offers employer terms permission directly in the application", () => {
     const attention = buildApplicationAttention({ action: "employer_terms" });
     expect(attention.kind).toBe("employer_account");
-    expect(attention.action).toBe("/profile#portal-automation");
-    expect(attention.actionLabel).toBe("Update permission");
+    expect(attention.action).toBe("#employer-terms-consent");
+    expect(attention.actionLabel).toBe("Allow and retry");
   });
 
   it("routes an unfinished background run to secure browser continuation", () => {

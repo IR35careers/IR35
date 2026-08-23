@@ -77,6 +77,9 @@ export async function POST(request: Request): Promise<Response> {
     const callback = await executeApplicationWorkerAssignment({
       assignment,
       appOrigin,
+      // Leave enough time for the signed callback while allowing account
+      // creation, email verification and a multi-step employer form to finish.
+      budgetMs: 240_000,
     });
     await postApplicationWorkerCallback({
       task: assignment.task,

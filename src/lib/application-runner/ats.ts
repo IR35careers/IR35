@@ -140,6 +140,12 @@ export function isEmployerTermsCheckbox(label: string): boolean {
   );
 }
 
+export function isVerificationResendControl(label: string): boolean {
+  return /^(?:resend|send|request|email)(?: the)?(?: verification)?(?: a| another| new)? code(?: again)?$/i.test(
+    label.replace(/\s+/g, " ").trim(),
+  );
+}
+
 export function isEmployerAccountAccessPage(input: {
   body: string;
   hasEmailInput: boolean;

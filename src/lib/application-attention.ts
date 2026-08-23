@@ -76,8 +76,8 @@ export function buildApplicationAttention(input: {
       kind: "employer_account",
       title: "Allow required employer account terms",
       message,
-      action: "/profile#portal-automation",
-      actionLabel: "Update permission",
+      action: "#employer-terms-consent",
+      actionLabel: "Allow and retry",
       questionIds,
     };
   }

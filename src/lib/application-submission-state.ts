@@ -1,7 +1,7 @@
-// The browser runner has a 100 second execution budget. Keep a short safety
-// margin for database and email work, then release an abandoned lock so the
-// user never sees an indefinite Processing state.
-export const SUBMISSION_LOCK_MAX_AGE_MS = 150 * 1000;
+// The cloud browser runner can spend up to four minutes creating an employer
+// account, waiting for ordinary email verification and completing the form.
+// Keep a callback safety margin before treating the attempt as abandoned.
+export const SUBMISSION_LOCK_MAX_AGE_MS = 330 * 1000;
 
 export const SUBMISSION_LIFECYCLE_LABELS = [
   "Application submission started",

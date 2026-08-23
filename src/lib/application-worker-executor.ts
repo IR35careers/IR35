@@ -84,6 +84,7 @@ async function remoteVerificationCode(input: {
 async function buildAndRun(
   assignment: ApplicationWorkerAssignment,
   appOrigin: string,
+  budgetMs?: number,
 ): Promise<{
   receipt: Awaited<ReturnType<typeof runNativeApplication>>;
   portalSession?: NativePortalSession;
@@ -97,6 +98,7 @@ async function buildAndRun(
   const task = assignment.task;
   const candidate = assignment.payload.candidate;
   const receipt = await runNativeApplication(assignment.payload, {
+    budgetMs,
     portalPassword: assignment.portalPassword,
     resolvePortalPassword: assignment.portalPassword
       ? async () => assignment.portalPassword
@@ -132,10 +134,15 @@ async function buildAndRun(
 export async function executeApplicationWorkerAssignment(input: {
   assignment: ApplicationWorkerAssignment;
   appOrigin: string;
+  budgetMs?: number;
 }): Promise<ApplicationWorkerCallback> {
   const task = input.assignment.task;
   try {
-    const result = await buildAndRun(input.assignment, input.appOrigin);
+    const result = await buildAndRun(
+      input.assignment,
+      input.appOrigin,
+      input.budgetMs,
+    );
     return {
       taskId: task.id,
       userId: task.user_id,

@@ -91,6 +91,8 @@ export interface ContractorProfile {
   portalAccountConsent?: boolean;
   employerTermsConsent?: boolean;
   automaticEmailVerification?: boolean;
+  employerAutomationConsentAt?: string;
+  employerAutomationConsentVersion?: string;
   profileSetupCompletedAt?: string;
   educationInstitution?: string;
   educationQualification?: string;

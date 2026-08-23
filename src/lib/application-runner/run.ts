@@ -14,6 +14,7 @@ import {
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
   isEmployerTermsCheckbox,
+  isVerificationResendControl,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
@@ -45,8 +46,10 @@ const MAX_STEPS = 24;
 const MAX_FIELDS = 180;
 const MAX_RESUME_BYTES = 8_000_000;
 
-function runnerBudgetMs(): number {
-  const configured = Number(process.env.APPLICATION_RUNNER_BUDGET_MS || 0);
+function runnerBudgetMs(override?: number): number {
+  const configured = Number(
+    override ?? process.env.APPLICATION_RUNNER_BUDGET_MS ?? 0,
+  );
   if (!Number.isFinite(configured) || configured <= 0) return 100_000;
   return Math.max(60_000, Math.min(Math.floor(configured), 10 * 60_000));
 }
@@ -376,6 +379,23 @@ async function handlePortalAccess(
           action: "verification_code",
         },
       };
+    }
+    const resendControls = page.locator(
+      'button:visible, a:visible, input[type="button"]:visible',
+    );
+    const resendCount = Math.min(await resendControls.count(), 40);
+    for (let index = 0; index < resendCount; index += 1) {
+      const control = resendControls.nth(index);
+      const label = clean(
+        (await control.innerText().catch(() => "")) ||
+          (await control.getAttribute("value").catch(() => "")) ||
+          "",
+        120,
+      );
+      if (!isVerificationResendControl(label)) continue;
+      if (await control.isEnabled().catch(() => false))
+        await clickAndFollow(page, control, 600).catch(() => undefined);
+      break;
     }
     const code = await runtime.resolveEmailVerificationCode({
       hostname: new URL(page.url()).hostname,
@@ -875,7 +895,7 @@ export async function runNativeApplication(
   runtime?: NativeSubmissionRuntime,
 ): Promise<SubmissionProviderReceipt> {
   const startedAt = Date.now();
-  const budgetMs = runnerBudgetMs();
+  const budgetMs = runnerBudgetMs(runtime?.budgetMs);
   // A resumed employer session may already have a fresh code waiting in the
   // contractor inbox. Keep the lookup application-scoped, but include the
   // normal validity window used by employer one-time codes.

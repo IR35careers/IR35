@@ -54,6 +54,7 @@ export interface NativePortalSession {
 }
 
 export interface NativeSubmissionRuntime {
+  budgetMs?: number;
   portalPassword?: string;
   resolvePortalPassword?: (hostname: string) => Promise<string | undefined>;
   resolveEmailVerificationCode?: (input: {

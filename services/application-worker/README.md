@@ -29,7 +29,7 @@ at least one instance running and restart it automatically.
 IR35CAREERS_APP_URL=https://www.ir35careers.com
 APPLICATION_WORKER_SECRET=use-the-same-random-32-plus-character-value-as-vercel
 APPLICATION_WORKER_CONCURRENCY=2
-APPLICATION_WORKER_POLL_MS=2500
+APPLICATION_WORKER_POLL_MS=30000
 APPLICATION_RUNNER_BUDGET_MS=300000
 APPLICATION_WORKER_VERSION=production
 OPENROUTER_API_KEY=optional

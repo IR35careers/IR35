@@ -47,6 +47,7 @@ import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { buildApplicationAttention } from "@/lib/application-attention";
+import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import {
   SAMPLE_CONTRACTOR_PROFILE,
   SAMPLE_CV_TEXT,
@@ -60,6 +61,7 @@ type BusyState =
   | "ai"
   | "save"
   | "submit"
+  | "consent"
   | "handoff"
   | null;
 type ConnectionState = "connected" | "gated";
@@ -194,6 +196,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [profilePrompt, setProfilePrompt] = useState(false);
   const [assistantMissing, setAssistantMissing] = useState(false);
   const [assistantNeedsDesktop, setAssistantNeedsDesktop] = useState(false);
+  const [employerConsentConfirmed, setEmployerConsentConfirmed] =
+    useState(false);
   const submissionStatusFailures = useRef(0);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
@@ -1116,6 +1120,56 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
+  const allowEmployerAutomationAndRetry = async () => {
+    if (!application || !employerConsentConfirmed) return;
+    setBusy("consent");
+    setError(null);
+    setNotice(null);
+    let shouldRetry = false;
+    try {
+      const response = await fetchWithFreshSession(
+        "/api/applications/automation-consent",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            applicationId: application.id,
+            consent: "ALLOW_EMPLOYER_ACCOUNT_AUTOMATION",
+          }),
+          signal: AbortSignal.timeout(20_000),
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        acceptedAt?: string;
+        error?: string;
+      };
+      if (!response.ok || !payload.ok)
+        throw new Error(
+          payload.error || "Application permissions could not be saved.",
+        );
+      const acceptedAt = payload.acceptedAt || new Date().toISOString();
+      updateWorkspace((current) => ({
+        ...current,
+        profile: enableEmployerAutomation(current.profile, acceptedAt),
+      }));
+      setEmployerConsentConfirmed(false);
+      setNotice(
+        "Permission saved. IR35Careers is retrying the same approved application now.",
+      );
+      shouldRetry = true;
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Application permissions could not be saved.",
+      );
+    } finally {
+      setBusy(null);
+    }
+    if (shouldRetry) await submitApprovedApplication();
+  };
+
   const continueInEmployerBrowser = async (
     targetApplication: ApplicationRecord | null = application,
     assistantConfirmed = false,
@@ -1339,7 +1393,53 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 {attention.message}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {attention.action.startsWith("/profile") ? (
+                {attention.action === "#employer-terms-consent" ? (
+                  <div
+                    id="employer-terms-consent"
+                    className="w-full rounded-xl border border-amber-300 bg-white p-4"
+                  >
+                    <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={employerConsentConfirmed}
+                        onChange={(event) =>
+                          setEmployerConsentConfirmed(event.target.checked)
+                        }
+                        className="mt-1 h-5 w-5 shrink-0 accent-amber-700"
+                      />
+                      <span>
+                        I authorise IR35Careers to create and sign in to
+                        employer accounts, accept only required account terms,
+                        and use ordinary email verification codes for
+                        applications I approve. Marketing choices are never
+                        selected and security checks are never bypassed.
+                      </span>
+                    </label>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void allowEmployerAutomationAndRetry()
+                        }
+                        disabled={
+                          !employerConsentConfirmed || busy !== null
+                        }
+                        className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
+                      >
+                        {busy === "consent" ? (
+                          <Loader2 size={15} className="animate-spin" />
+                        ) : null}
+                        Allow and retry
+                      </button>
+                      <Link
+                        href="/profile#portal-automation"
+                        className="ir35-focus inline-flex min-h-10 items-center rounded-xl border border-amber-400 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-100"
+                      >
+                        Review permissions
+                      </Link>
+                    </div>
+                  </div>
+                ) : attention.action.startsWith("/profile") ? (
                   <Link
                     href={attention.action}
                     className="ir35-focus inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"

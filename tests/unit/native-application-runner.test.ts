@@ -6,6 +6,7 @@ import {
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
   isEmployerTermsCheckbox,
+  isVerificationResendControl,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   isTrustedApplicationPortalSender,
@@ -144,6 +145,13 @@ describe("native application runner", () => {
     expect(isEmployerTermsCheckbox("I confirm the candidate declaration")).toBe(true);
     expect(isEmployerTermsCheckbox("Send me marketing offers and job alerts")).toBe(false);
     expect(isEmployerTermsCheckbox("Join the talent community newsletter")).toBe(false);
+  });
+
+  it("recognises ordinary verification resend controls", () => {
+    expect(isVerificationResendControl("Resend code")).toBe(true);
+    expect(isVerificationResendControl("Send another code")).toBe(true);
+    expect(isVerificationResendControl("Email verification code")).toBe(true);
+    expect(isVerificationResendControl("Submit application")).toBe(false);
   });
 
   it("trusts confirmation mail only from the ATS family used by the application", () => {

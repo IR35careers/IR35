@@ -16,7 +16,7 @@ import type {
 const PORT = Math.max(1, Math.min(Number(process.env.PORT || 8787), 65_535));
 const POLL_MS = Math.max(
   1_000,
-  Math.min(Number(process.env.APPLICATION_WORKER_POLL_MS || 2_500), 30_000),
+  Math.min(Number(process.env.APPLICATION_WORKER_POLL_MS || 30_000), 60_000),
 );
 const CONCURRENCY = Math.max(
   1,
@@ -142,7 +142,7 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 
 const timer = setInterval(() => void pump(), POLL_MS);
-const heartbeatTimer = setInterval(() => void heartbeat(), 15_000);
+const heartbeatTimer = setInterval(() => void heartbeat(), 30_000);
 void heartbeat();
 void pump();
 
