@@ -26,6 +26,7 @@ import {
   shouldAutomaticallyRetryWorkerAttention,
 } from "@/lib/application-worker-retry";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
+import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -90,9 +91,16 @@ export async function POST(request: Request): Promise<Response> {
         { status: 404, headers: HEADERS },
       );
     if (taskResult.data.status === "completed")
+      return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
+
+    const callbackDestination = resolveApplicationTaskDestination({
+      taskDestination: taskResult.data.destination,
+      receiptDestination: callback.receipt?.destination,
+    });
+    if (!callbackDestination)
       return Response.json(
-        { ok: true, duplicate: true },
-        { headers: HEADERS },
+        { error: "The employer application destination is invalid." },
+        { status: 400, headers: HEADERS },
       );
 
     if (callback.clearPortalSession) {
@@ -106,7 +114,7 @@ export async function POST(request: Request): Promise<Response> {
         admin,
         userId: callback.userId,
         applicationId: callback.applicationId,
-        destinationHost: new URL(String(taskResult.data.destination)).hostname,
+        destinationHost: new URL(callbackDestination).hostname,
         session: callback.portalSession,
       });
     }
@@ -119,8 +127,7 @@ export async function POST(request: Request): Promise<Response> {
       String(packet.tailored_cv_text || packet.source_cv_text || ""),
     );
     const candidateName =
-      resolveCandidateName(profile.fullName || "", resumeText) ||
-      "Contractor";
+      resolveCandidateName(profile.fullName || "", resumeText) || "Contractor";
     const accountEmail =
       authResult.data.user?.email ||
       profile.forwardingEmail ||
@@ -164,7 +171,10 @@ export async function POST(request: Request): Promise<Response> {
           updated_at: callback.completedAt,
         })
         .eq("id", callback.taskId);
-      return Response.json({ ok: true, state: "needs_user" }, { headers: HEADERS });
+      return Response.json(
+        { ok: true, state: "needs_user" },
+        { headers: HEADERS },
+      );
     }
 
     const receipt = callback.receipt;
@@ -173,6 +183,7 @@ export async function POST(request: Request): Promise<Response> {
         { error: "The worker result is missing." },
         { status: 400, headers: HEADERS },
       );
+    const resolvedDestination = callbackDestination;
     if (receipt.state === "needs_user") {
       const action = callbackAction(providerReviewAction(receipt));
       if (action === "listing_unavailable") {
@@ -292,6 +303,7 @@ export async function POST(request: Request): Promise<Response> {
           admin
             .from("application_worker_tasks")
             .update({
+              destination: resolvedDestination,
               status: "queued",
               available_at: availableAt,
               last_error: null,
@@ -344,6 +356,7 @@ export async function POST(request: Request): Promise<Response> {
       await admin
         .from("application_worker_tasks")
         .update({
+          destination: resolvedDestination,
           status: "needs_user",
           last_error: null,
           lease_owner: null,
@@ -352,7 +365,10 @@ export async function POST(request: Request): Promise<Response> {
           updated_at: callback.completedAt,
         })
         .eq("id", callback.taskId);
-      return Response.json({ ok: true, state: "needs_user" }, { headers: HEADERS });
+      return Response.json(
+        { ok: true, state: "needs_user" },
+        { headers: HEADERS },
+      );
     }
     if (receipt.state === "processing") {
       await Promise.all([
@@ -374,6 +390,7 @@ export async function POST(request: Request): Promise<Response> {
         admin
           .from("application_worker_tasks")
           .update({
+            destination: resolvedDestination,
             status: "queued",
             available_at: new Date(Date.now() + 20_000).toISOString(),
             lease_owner: null,
@@ -382,7 +399,10 @@ export async function POST(request: Request): Promise<Response> {
           })
           .eq("id", callback.taskId),
       ]);
-      return Response.json({ ok: true, state: "processing" }, { headers: HEADERS });
+      return Response.json(
+        { ok: true, state: "processing" },
+        { headers: HEADERS },
+      );
     }
 
     await storeSubmittedApplication({
@@ -394,11 +414,12 @@ export async function POST(request: Request): Promise<Response> {
       inboxAlias: inbox?.alias,
       candidateName,
       providerReceipt: receipt,
-      destination: String(taskResult.data.destination),
+      destination: resolvedDestination,
     });
     await admin
       .from("application_worker_tasks")
       .update({
+        destination: resolvedDestination,
         status: "completed",
         last_error: null,
         lease_owner: null,
@@ -407,7 +428,10 @@ export async function POST(request: Request): Promise<Response> {
         updated_at: callback.completedAt,
       })
       .eq("id", callback.taskId);
-    return Response.json({ ok: true, state: "submitted" }, { headers: HEADERS });
+    return Response.json(
+      { ok: true, state: "submitted" },
+      { headers: HEADERS },
+    );
   } catch (error) {
     if (error instanceof ApplicationWorkerRequestError)
       return Response.json(

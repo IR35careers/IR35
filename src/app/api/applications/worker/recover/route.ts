@@ -3,6 +3,7 @@ import {
   readSignedApplicationWorkerJson,
 } from "@/lib/application-worker-request";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -26,14 +27,14 @@ function validRequest(value: unknown): value is RecoveryRequest {
   const input = value as Record<string, unknown>;
   return Boolean(
     (input.mode === "preview" || input.mode === "requeue") &&
-      (input.applicationId === undefined ||
-        (typeof input.applicationId === "string" &&
-          /^[0-9a-f-]{36}$/i.test(input.applicationId))) &&
-      (input.mode !== "requeue" || typeof input.applicationId === "string") &&
-      typeof input.destinationHost === "string" &&
-      /^[a-z0-9.-]{3,253}$/i.test(input.destinationHost) &&
-      typeof input.workerVersion === "string" &&
-      /^[a-z0-9._-]{3,80}$/i.test(input.workerVersion)
+    (input.applicationId === undefined ||
+      (typeof input.applicationId === "string" &&
+        /^[0-9a-f-]{36}$/i.test(input.applicationId))) &&
+    (input.mode !== "requeue" || typeof input.applicationId === "string") &&
+    typeof input.destinationHost === "string" &&
+    /^[a-z0-9.-]{3,253}$/i.test(input.destinationHost) &&
+    typeof input.workerVersion === "string" &&
+    /^[a-z0-9._-]{3,80}$/i.test(input.workerVersion),
   );
 }
 
@@ -70,7 +71,9 @@ export async function POST(request: Request): Promise<Response> {
       const receipt = row.receipt as Record<string, unknown> | null;
       return RECOVERABLE_ACTIONS.has(String(receipt?.action ?? ""));
     });
-    const applicationIds = [...new Set(inspectedSubmissions.map((row) => row.application_id))];
+    const applicationIds = [
+      ...new Set(inspectedSubmissions.map((row) => row.application_id)),
+    ];
 
     const tasksResult = applicationIds.length
       ? await supabase
@@ -88,12 +91,19 @@ export async function POST(request: Request): Promise<Response> {
       .map((submission) => ({
         submission,
         task: tasksByApplication.get(submission.application_id),
+        destination: resolveApplicationTaskDestination({
+          taskDestination: tasksByApplication.get(submission.application_id)
+            ?.destination,
+          receiptDestination: (
+            submission.receipt as Record<string, unknown> | null
+          )?.destination,
+        }),
       }))
       .filter(
         (entry) =>
           entry.task &&
           entry.task.status === "needs_user" &&
-          hostname(String(entry.task.destination ?? "")) ===
+          hostname(String(entry.destination ?? "")) ===
             parsed.destinationHost.toLowerCase(),
       );
 
@@ -101,7 +111,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         {
           ok: true,
-          candidates: candidates.map(({ submission, task }) => ({
+          candidates: candidates.map(({ submission, task, destination }) => ({
             applicationId: submission.application_id,
             action: String(
               (submission.receipt as Record<string, unknown> | null)?.action ??
@@ -110,20 +120,25 @@ export async function POST(request: Request): Promise<Response> {
             submissionStatus: submission.status,
             errorCode: submission.error_code,
             taskStatus: task?.status ?? "missing",
-            destination: task?.destination ?? "",
+            destination: destination ?? "",
           })),
           diagnostics: {
             submissionsInspected: inspectedSubmissions.length,
             recoverableSubmissions: submissions.length,
             tasksInspected: tasksResult.data?.length ?? 0,
             recent: inspectedSubmissions.slice(0, 20).map((submission) => {
-              const receipt = submission.receipt as Record<string, unknown> | null;
+              const receipt = submission.receipt as Record<
+                string,
+                unknown
+              > | null;
               const task = tasksByApplication.get(submission.application_id);
               return {
                 applicationId: submission.application_id,
                 action: String(receipt?.action ?? ""),
                 receiptState: String(receipt?.state ?? ""),
-                receiptDestinationHost: hostname(String(receipt?.destination ?? "")),
+                receiptDestinationHost: hostname(
+                  String(receipt?.destination ?? ""),
+                ),
                 submissionStatus: submission.status,
                 errorCode: submission.error_code,
                 taskStatus: task?.status ?? "missing",
@@ -139,7 +154,7 @@ export async function POST(request: Request): Promise<Response> {
     const selected = candidates.find(
       ({ submission }) => submission.application_id === parsed.applicationId,
     );
-    if (!selected?.task)
+    if (!selected?.task || !selected.destination)
       return Response.json(
         { error: "No matching stopped application was found." },
         { status: 404, headers: HEADERS },
@@ -154,14 +169,12 @@ export async function POST(request: Request): Promise<Response> {
       .eq("user_id", selected.submission.user_id)
       .maybeSingle();
     if (packetResult.error) throw packetResult.error;
-    const packet = packetResult.data as
-      | {
-          screening_answers?: Array<Record<string, unknown>>;
-          truth_approved?: boolean;
-          materials_approved?: boolean;
-          submission_approved?: boolean;
-        }
-      | null;
+    const packet = packetResult.data as {
+      screening_answers?: Array<Record<string, unknown>>;
+      truth_approved?: boolean;
+      materials_approved?: boolean;
+      submission_approved?: boolean;
+    } | null;
     const questionsReady = (packet?.screening_answers ?? []).every(
       (question) =>
         !question.required ||
@@ -184,6 +197,7 @@ export async function POST(request: Request): Promise<Response> {
         supabase
           .from("application_worker_tasks")
           .update({
+            destination: selected.destination,
             status: "queued",
             attempts: 0,
             available_at: now,
@@ -208,7 +222,11 @@ export async function POST(request: Request): Promise<Response> {
           .eq("id", selected.submission.id),
         supabase
           .from("application_packets")
-          .update({ status: "ready", submission_approved: true, updated_at: now })
+          .update({
+            status: "ready",
+            submission_approved: true,
+            updated_at: now,
+          })
           .eq("id", selected.submission.application_id)
           .eq("user_id", selected.submission.user_id),
         supabase.from("application_events").upsert(
