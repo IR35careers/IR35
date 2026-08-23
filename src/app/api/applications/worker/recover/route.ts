@@ -59,10 +59,8 @@ export async function POST(request: Request): Promise<Response> {
     const submissionsResult = await supabase
       .from("application_submissions")
       .select(
-        "id, user_id, application_id, idempotency_key, receipt, updated_at",
+        "id, user_id, application_id, idempotency_key, status, error_code, receipt, updated_at",
       )
-      .eq("status", "processing")
-      .eq("error_code", "needs_user")
       .order("updated_at", { ascending: false })
       .limit(100);
     if (submissionsResult.error) throw submissionsResult.error;
@@ -96,6 +94,7 @@ export async function POST(request: Request): Promise<Response> {
       .filter(
         (entry) =>
           entry.task &&
+          entry.task.status === "needs_user" &&
           hostname(String(entry.task.destination ?? "")) ===
             parsed.destinationHost.toLowerCase(),
       );
@@ -110,6 +109,8 @@ export async function POST(request: Request): Promise<Response> {
               (submission.receipt as Record<string, unknown> | null)?.action ??
                 "",
             ),
+            submissionStatus: submission.status,
+            errorCode: submission.error_code,
             taskStatus: task?.status ?? "missing",
             destination: task?.destination ?? "",
           })),
