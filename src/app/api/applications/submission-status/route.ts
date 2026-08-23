@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import {
   checkSubmissionWithProvider,
   providerReviewQuestions,
@@ -20,8 +21,10 @@ import {
   findResendVerificationEmail,
   storeRecoveredVerificationEmail,
 } from "@/lib/email/resend-verification-sync";
+import { kickApplicationWorker } from "@/lib/application-worker-kick";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 const NO_STORE = {
   "Cache-Control": "no-store",
@@ -234,6 +237,20 @@ export async function GET(request: Request): Promise<Response> {
             ]);
             const failure = results.find((result) => result.error)?.error;
             if (failure) throw failure;
+            after(() =>
+              kickApplicationWorker({
+                applicationId,
+                reason: "verification_received",
+              }).catch((error) =>
+                console.warn("verification_received_worker_kick_failed", {
+                  applicationId,
+                  reason:
+                    error instanceof Error
+                      ? error.message.slice(0, 240)
+                      : "unknown",
+                }),
+              ),
+            );
             return Response.json(
               {
                 state: "processing",

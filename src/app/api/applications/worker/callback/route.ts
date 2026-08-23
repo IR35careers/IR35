@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import {
   ApplicationWorkerRequestError,
@@ -23,9 +24,10 @@ import {
   applicationWorkerRetryDelayMs,
   shouldAutomaticallyRetryWorkerAttention,
 } from "@/lib/application-worker-retry";
+import { kickApplicationWorker } from "@/lib/application-worker-kick";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const HEADERS = {
   "Cache-Control": "no-store",
@@ -300,6 +302,23 @@ export async function POST(request: Request): Promise<Response> {
         ]);
         const failure = results.find((result) => result.error)?.error;
         if (failure) throw failure;
+        after(async () => {
+          await new Promise((resolve) =>
+            setTimeout(resolve, applicationWorkerRetryDelayMs(workerAttempts)),
+          );
+          await kickApplicationWorker({
+            applicationId: callback.applicationId,
+            reason: "verification_retry",
+          }).catch((error) =>
+            console.warn("verification_worker_kick_failed", {
+              applicationId: callback.applicationId,
+              reason:
+                error instanceof Error
+                  ? error.message.slice(0, 240)
+                  : "unknown",
+            }),
+          );
+        });
         return Response.json(
           { ok: true, state: "processing", availableAt },
           { headers: HEADERS },

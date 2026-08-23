@@ -2,6 +2,13 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 const MAX_CLOCK_SKEW_MS = 5 * 60_000;
 
+export function applicationWorkerAppOrigin(value?: string): string {
+  const url = new URL(value || "https://www.ir35careers.com");
+  if (url.protocol !== "https:")
+    throw new Error("IR35Careers worker origin must use HTTPS.");
+  return url.origin;
+}
+
 function workerSecret(): string {
   const secret = process.env.APPLICATION_WORKER_SECRET?.trim();
   if (!secret || secret.length < 32)

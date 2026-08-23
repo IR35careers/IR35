@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  applicationWorkerAppOrigin,
   applicationWorkerConfig,
   signApplicationWorkerBody,
   verifyApplicationWorkerBody,
@@ -69,5 +70,13 @@ describe("application worker authentication", () => {
     expect(applicationWorkerConfig()).toEqual({ enabled: false });
     delete process.env.APPLICATION_WORKER_URL;
     expect(applicationWorkerConfig()).toEqual({ enabled: true });
+  });
+
+  it("pins cloud worker calls to a secure origin", () => {
+    expect(applicationWorkerAppOrigin()).toBe("https://www.ir35careers.com");
+    expect(applicationWorkerAppOrigin("https://www.ir35careers.com/path"))
+      .toBe("https://www.ir35careers.com");
+    expect(() => applicationWorkerAppOrigin("http://localhost:3000"))
+      .toThrow("must use HTTPS");
   });
 });

@@ -53,6 +53,7 @@ import {
   storeSubmittedApplication,
 } from "@/lib/application-result-persistence";
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
+import { kickApplicationWorker } from "@/lib/application-worker-kick";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -512,6 +513,18 @@ export async function POST(request: Request): Promise<Response> {
 
     after(async () => {
       if (persistentWorkerQueued) {
+        await kickApplicationWorker({
+          applicationId: String(packet.id),
+          reason: "application_approved",
+        }).catch((error) =>
+          console.warn("cloud_application_worker_kick_failed", {
+            applicationId: String(packet.id),
+            reason:
+              error instanceof Error
+                ? error.message.slice(0, 240)
+                : "unknown",
+          }),
+        );
         if (workerConfig.url) {
           await fetch(`${workerConfig.url}/health`, {
             headers: { accept: "application/json" },
