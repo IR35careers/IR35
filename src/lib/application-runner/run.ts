@@ -603,6 +603,7 @@ async function handlePortalAccess(
   page: Page,
   payload: SubmissionProviderPayload,
   runtime: NativeSubmissionRuntime | undefined,
+  ats: AtsDefinition,
   requestedAfter: string,
   accountState?: "created" | "verified" | "recovered",
   accountAccessAttempts = 0,
@@ -919,14 +920,15 @@ async function handlePortalAccess(
       accountAlreadyExists,
       accountState,
     });
+    const portalContinuation = await actionLocator(page, ats.nextPattern);
     const accessAction = resetPassword ??
       (useSignIn
         ? signIn ??
           createAccount ??
-          (await actionLocator(page, /^(continue|next|continue with email)$/i))
+          portalContinuation
         : createAccount ??
           signIn ??
-          (await actionLocator(page, /^(continue|next|continue with email)$/i)));
+          portalContinuation);
     if (!accessAction)
       return {
         handled: false,
@@ -1499,6 +1501,7 @@ export async function runNativeApplication(
         page,
         payload,
         runtime,
+        ats,
         requestedAfter,
         portalAccountState,
         portalAccessAttempts,
@@ -1522,6 +1525,7 @@ export async function runNativeApplication(
           [],
           portalAccess.stop.action,
           currentDestination(page, startUrl.toString()),
+          await pageDiagnostic(page),
         );
       if (portalAccess.handled) {
         portalAccessAttempts += 1;

@@ -66,6 +66,7 @@ describe("native application runner", () => {
     );
     expect(totaljobs.kind).toBe("totaljobs");
     expect(totaljobs.nextPattern.test("Continue with email")).toBe(true);
+    expect(totaljobs.nextPattern.test("Continue application")).toBe(true);
     expect(detectAts("https://careers.example.com/role").kind).toBe("generic");
     expect(nativeRunnerHostAllowed("jobs.ashbyhq.com")).toBe(true);
     expect(nativeRunnerHostAllowed("www.adzuna.co.uk")).toBe(true);
