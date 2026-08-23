@@ -17,6 +17,7 @@ import {
   isTrustedApplicationPortalSender,
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
+  preferredResumeUploadFormat,
   shouldTreatSingleFileAsResume,
   shouldSkipConsumedResumeInput,
 } from "@/lib/application-runner/ats";
@@ -141,6 +142,12 @@ describe("native application runner", () => {
         resumeAlreadyUploaded: true,
       }),
     ).toBe(false);
+  });
+
+  it("uses the document format accepted by each employer scorer", () => {
+    expect(preferredResumeUploadFormat("totaljobs")).toBe("docx");
+    expect(preferredResumeUploadFormat("greenhouse")).toBe("pdf");
+    expect(preferredResumeUploadFormat("generic")).toBe("pdf");
   });
 
   it("maps normal identity and work-authorisation fields deterministically", () => {

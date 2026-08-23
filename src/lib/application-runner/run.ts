@@ -24,6 +24,7 @@ import {
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
+  preferredResumeUploadFormat,
   shouldTreatSingleFileAsResume,
   shouldSkipConsumedResumeInput,
   type AtsDefinition,
@@ -52,7 +53,7 @@ import {
 } from "@/lib/application-runner/runtime-config";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
-import { buildResumePdf } from "@/lib/resume/export";
+import { buildResumeDocx, buildResumePdf } from "@/lib/resume/export";
 import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
 import type {
   NativeSubmissionRuntime,
@@ -63,6 +64,12 @@ import type {
 const MAX_STEPS = 24;
 const MAX_FIELDS = 180;
 const MAX_RESUME_BYTES = 8_000_000;
+
+type ApprovedResumeUpload = {
+  buffer: Buffer;
+  name: string;
+  mimeType: string;
+};
 
 function runnerBudgetMs(override?: number): number {
   const configured = Number(
@@ -310,13 +317,13 @@ async function publicRequestGuard(
 async function uploadApprovedResumeForKnownPortal(input: {
   page: Page;
   ats: AtsDefinition;
-  resume: Buffer | null;
+  resume: ApprovedResumeUpload | null;
 }): Promise<boolean> {
   if (input.ats.kind !== "totaljobs" || !input.resume) return false;
   const payload = {
-    name: "IR35Careers-Application-CV.pdf",
-    mimeType: "application/pdf",
-    buffer: input.resume,
+    name: input.resume.name,
+    mimeType: input.resume.mimeType,
+    buffer: input.resume.buffer,
   };
   const fileInputs = input.page.locator('input[type="file"]');
   if (await fileInputs.count()) {
@@ -1200,32 +1207,74 @@ async function loadResume(url: string | undefined): Promise<Buffer | null> {
   return bytes.length > 0 && bytes.length <= MAX_RESUME_BYTES ? bytes : null;
 }
 
-async function approvedResumePdf(
-  payload: SubmissionProviderPayload,
-): Promise<Buffer | null> {
-  const downloaded = await loadResume(payload.resume.url).catch(() => null);
-  if (downloaded) return downloaded;
+function uploadFromDownloadedResume(buffer: Buffer): ApprovedResumeUpload {
+  const isPdf = buffer.subarray(0, 5).toString("ascii") === "%PDF-";
+  const isDocx = buffer[0] === 0x50 && buffer[1] === 0x4b;
+  if (isDocx)
+    return {
+      buffer,
+      name: "IR35Careers-Application-CV.docx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    };
+  return {
+    buffer,
+    name: isPdf
+      ? "IR35Careers-Application-CV.pdf"
+      : "IR35Careers-Application-CV.txt",
+    mimeType: isPdf ? "application/pdf" : "text/plain",
+  };
+}
 
+async function approvedResumeUpload(
+  payload: SubmissionProviderPayload,
+  atsKind: AtsDefinition["kind"],
+): Promise<ApprovedResumeUpload | null> {
   const resumeText = payload.resume.text.trim();
-  if (!resumeText) return null;
-  const generated = await buildResumePdf({
-    format: "pdf",
+  // Totaljobs' scorer rejected the generated PDF in the live application.
+  // Prefer a fresh DOCX from the same approved text even when a PDF download
+  // URL is available. Other portals retain the exact downloaded attachment.
+  if (atsKind !== "totaljobs") {
+    const downloaded = await loadResume(payload.resume.url).catch(() => null);
+    if (downloaded) return uploadFromDownloadedResume(downloaded);
+  }
+  if (!resumeText) {
+    const downloaded = await loadResume(payload.resume.url).catch(() => null);
+    return downloaded ? uploadFromDownloadedResume(downloaded) : null;
+  }
+  const format = preferredResumeUploadFormat(atsKind);
+  const request = {
+    format,
     resumeText,
     candidateName: payload.candidate.fullName,
     jobTitle: payload.job.title,
     companyName: payload.job.company_name,
     versionLabel: payload.resume.label || "Application CV",
-  });
-  return generated.length > 0 && generated.length <= MAX_RESUME_BYTES
-    ? generated
-    : null;
+  } as const;
+  const generated =
+    format === "docx"
+      ? await buildResumeDocx(request)
+      : await buildResumePdf(request);
+  if (generated.length <= 0 || generated.length > MAX_RESUME_BYTES) return null;
+  return format === "docx"
+    ? {
+        buffer: generated,
+        name: "IR35Careers-Application-CV.docx",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      }
+    : {
+        buffer: generated,
+        name: "IR35Careers-Application-CV.pdf",
+        mimeType: "application/pdf",
+      };
 }
 
 async function fillField(input: {
   locator: Locator;
   field: RunnerField;
   value: string;
-  resume: Buffer | null;
+  resume: ApprovedResumeUpload | null;
   coverLetter: string;
   atsKind: AtsDefinition["kind"];
 }): Promise<boolean> {
@@ -1237,9 +1286,9 @@ async function fillField(input: {
     )
       return false;
     await locator.setInputFiles({
-      name: "IR35Careers-Application-CV.pdf",
-      mimeType: "application/pdf",
-      buffer: input.resume,
+      name: input.resume.name,
+      mimeType: input.resume.mimeType,
+      buffer: input.resume.buffer,
     });
     return true;
   }
@@ -1308,7 +1357,7 @@ async function fillStep(
   step: number,
   ats: AtsDefinition,
   facts: RunnerFacts,
-  resume: Buffer | null,
+  resume: ApprovedResumeUpload | null,
   coverLetter: string,
   employerTermsConsent: boolean,
 ): Promise<RunnerField[]> {
@@ -1532,9 +1581,9 @@ export async function runNativeApplication(
     }
     // A short-lived storage link can expire or be temporarily unavailable
     // before the hosted browser reaches the upload step. The approved CV text
-    // is already part of this packet, so generate the same truthful PDF in the
-    // runner instead of asking the candidate to upload it again.
-    const resume = await approvedResumePdf(payload);
+    // is already part of this packet, so generate the same truthful document
+    // in the runner instead of asking the candidate to upload it again.
+    const resume = await approvedResumeUpload(payload, ats.kind);
     const facts = buildRunnerFacts(
       payload.candidate,
       payload.screeningAnswers.map((answer, index) => ({

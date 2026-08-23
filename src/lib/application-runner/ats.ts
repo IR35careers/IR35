@@ -17,6 +17,13 @@ export function shouldSkipConsumedResumeInput(input: {
   return input.fieldType === "file" && input.resumeAlreadyUploaded;
 }
 
+export function preferredResumeUploadFormat(atsKind: AtsKind): "pdf" | "docx" {
+  // Totaljobs runs every upload through its document-scoring service before
+  // enabling Send application. Its scorer rejects otherwise valid PDFKit
+  // output with HTTP 422. Use the standards-based DOCX upload path instead.
+  return atsKind === "totaljobs" ? "docx" : "pdf";
+}
+
 export interface AtsDefinition {
   kind: AtsKind;
   label: string;
