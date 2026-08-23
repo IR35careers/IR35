@@ -473,6 +473,8 @@ export async function POST(request: Request): Promise<Response> {
         "/api/applications/worker/callback",
         callbackBase,
       );
+      if (callbackUrl.hostname === "ir35careers.com")
+        callbackUrl.hostname = "www.ir35careers.com";
       if (callbackUrl.protocol === "https:") {
         const { error: workerQueueError } = await admin
           .from("application_worker_tasks")

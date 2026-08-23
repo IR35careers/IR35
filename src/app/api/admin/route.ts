@@ -947,6 +947,8 @@ export async function POST(request: Request): Promise<Response> {
         process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
           "https://www.ir35careers.com",
       );
+      if (callbackUrl.hostname === "ir35careers.com")
+        callbackUrl.hostname = "www.ir35careers.com";
       let requeued = 0;
       for (const submission of stale) {
         const now = new Date().toISOString();
