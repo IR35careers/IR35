@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   AlertCircle,
+  ArrowRight,
   Building2,
   Check,
   Download,
@@ -21,6 +23,8 @@ import {
   X,
 } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
+import { useAuth } from "@/lib/auth-context";
+import { saveCloudWorkspace } from "@/lib/workspace/repository";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type {
   ApplicationPreferences,
@@ -131,7 +135,8 @@ function startingProfiles(
   ];
 }
 
-export function ContractorProfile() {
+export function ContractorProfile({ returnTo }: { returnTo?: string }) {
+  const { user } = useAuth();
   const workspace = useWorkspaceState();
   const latestApplication = workspace.applications[0];
   const [profile, setProfile] = useState<ContractorProfileType>(() => {
@@ -151,6 +156,8 @@ export function ContractorProfile() {
   });
   const [tab, setTab] = useState<ProfileTab>("details");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [documentNotice, setDocumentNotice] = useState<string | null>(null);
   const [customSkill, setCustomSkill] = useState("");
   const [cvDetectedSkills, setCvDetectedSkills] = useState<string[]>([]);
@@ -182,21 +189,37 @@ export function ContractorProfile() {
     () => evaluateProfileReadiness(profile, activeProfile?.resumeText ?? ""),
     [activeProfile?.resumeText, profile],
   );
-  const save = () => {
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
     const savedProfile =
       readiness.complete && !profile.profileSetupCompletedAt
         ? { ...profile, profileSetupCompletedAt: new Date().toISOString() }
         : profile;
-    setProfile(savedProfile);
-    updateWorkspace((current) => ({
-      ...current,
+    const nextWorkspace = {
+      ...workspace,
       profile: savedProfile,
       inbox: {
-        ...current.inbox,
+        ...workspace.inbox,
         forwardingEmail: savedProfile.forwardingEmail,
       },
-    }));
-    setSaved(true);
+    };
+    setProfile(savedProfile);
+    updateWorkspace(() => nextWorkspace);
+    try {
+      if (user?.id) {
+        await saveCloudWorkspace(user.id, nextWorkspace);
+      }
+      setSaved(true);
+    } catch (caught) {
+      setSaveError(
+        caught instanceof Error
+          ? caught.message
+          : "Your profile could not be saved. Please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const completeness = readiness.percentage;
@@ -1586,18 +1609,32 @@ export function ContractorProfile() {
       <div className="mt-6 flex items-center gap-4">
         <button
           type="button"
-          onClick={save}
-          className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-6 text-sm font-bold text-white hover:bg-brand-800"
+          onClick={() => void save()}
+          disabled={saving}
+          className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-6 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-wait disabled:opacity-60"
         >
           {saved ? <Check size={17} /> : <Save size={17} />}{" "}
-          {saved ? "Profile saved" : "Save profile"}
+          {saving ? "Saving profile" : saved ? "Profile saved" : "Save profile"}
         </button>
         {saved && (
           <p role="status" className="text-sm font-semibold text-emerald-700">
             All profile sections are saved.
           </p>
         )}
+        {saved && readiness.complete && returnTo ? (
+          <Link
+            href={returnTo}
+            className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-300 bg-white px-5 text-sm font-bold text-brand-800 hover:bg-brand-50"
+          >
+            Continue application <ArrowRight size={17} />
+          </Link>
+        ) : null}
       </div>
+      {saveError ? (
+        <p role="alert" className="mt-3 text-sm font-semibold text-rose-700">
+          {saveError}
+        </p>
+      ) : null}
     </WorkspacePage>
   );
 }

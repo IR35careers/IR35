@@ -47,6 +47,7 @@ import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { buildApplicationAttention } from "@/lib/application-attention";
+import { applicationProfileHref } from "@/lib/application-profile-return";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import {
   SAMPLE_CONTRACTOR_PROFILE,
@@ -199,6 +200,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [employerConsentConfirmed, setEmployerConsentConfirmed] =
     useState(false);
   const submissionStatusFailures = useRef(0);
+  const profileCompletionHref = applicationProfileHref(job.id);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
   const profileReadiness = useMemo(
@@ -1372,7 +1374,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 {profileReadiness.missing.map((item) => item.label).join(", ")}
               </p>
               <Link
-                href="/profile#application-readiness"
+                href={profileCompletionHref}
                 className="ir35-focus mt-3 inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
               >
                 Complete profile
@@ -1456,12 +1458,26 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     </div>
                   </div>
                 ) : attention.action.startsWith("/profile") ? (
-                  <Link
-                    href={attention.action}
-                    className="ir35-focus inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
-                  >
-                    {attention.actionLabel}
-                  </Link>
+                  profileReadiness.complete ? (
+                    <button
+                      type="button"
+                      onClick={() => void submitApprovedApplication()}
+                      disabled={busy !== null || submissionInProgress}
+                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
+                    >
+                      {busy === "submit" || submissionInProgress ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : null}
+                      Continue application
+                    </button>
+                  ) : (
+                    <Link
+                      href={profileCompletionHref}
+                      className="ir35-focus inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                    >
+                      {attention.actionLabel}
+                    </Link>
+                  )
                 ) : attention.kind === "email_verification" ? (
                   <>
                     <button
@@ -1522,7 +1538,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   </>
                 ) : attention.kind === "profile_missing" ? (
                   <Link
-                    href="/profile#application-readiness"
+                    href={profileCompletionHref}
                     className="ir35-focus inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
                   >
                     Complete profile
@@ -2443,7 +2459,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 Not now
               </button>
               <Link
-                href="/profile#application-readiness"
+                href={profileCompletionHref}
                 className="ir35-focus inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800"
               >
                 Complete profile

@@ -143,6 +143,7 @@ export async function storeNeedsUser(input: {
     companyName: input.job.company_name,
     jobId: input.job.id,
     applicationId: String(input.packet.id),
+    action: input.action,
     idempotencyKey: `${idempotencyKey}:needs-user:${attentionKey}`,
   }).catch(() => null);
   return questions;

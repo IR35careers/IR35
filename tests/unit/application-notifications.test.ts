@@ -19,6 +19,22 @@ const base: ApplicationNotificationInput = {
 };
 
 describe("application notifications", () => {
+  it("takes profile blockers to the reusable profile and back to the application", () => {
+    const view = applicationNotificationPresentation({
+      kind: "needs_attention",
+      to: "contractor@example.com",
+      jobTitle: "Platform Engineer",
+      companyName: "Example Ltd",
+      jobId: "job-123",
+      applicationId: "11111111-1111-4111-8111-111111111111",
+      idempotencyKey: "profile-action",
+      action: "/profile",
+    });
+    expect(view.actionLabel).toBe("Complete profile");
+    expect(view.actionPath).toContain("/profile?returnTo=");
+    expect(view.actionPath).toContain("#application-readiness");
+  });
+
   it("stores a needs-attention notification in the candidate inbox", () => {
     const record = buildApplicationInboxRecord(base);
     expect(record).toMatchObject({

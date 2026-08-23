@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { InboxClassification } from "@/lib/workspace/types";
+import { applicationProfileHref } from "@/lib/application-profile-return";
 
 export type ApplicationNotificationKind =
   | "submitted"
@@ -28,6 +29,7 @@ export interface ApplicationNotificationInput {
   userId?: string;
   inboxAlias?: string;
   occurredAt?: string;
+  action?: string;
 }
 
 export interface ApplicationInboxRecord {
@@ -97,6 +99,18 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         actionPath: applicationPath,
       };
     case "needs_attention":
+      if (input.action === "/profile")
+        return {
+          subject: `Complete your profile: ${role}`,
+          eyebrow: "Profile information needed",
+          title: "Complete the highlighted profile details",
+          body: `Your approved application for ${role} is saved. Complete the highlighted reusable profile details, then return to the same application and continue.`,
+          accent: "#b45309",
+          actionLabel: "Complete profile",
+          actionPath: applicationProfileHref(
+            input.jobId || input.applicationId,
+          ),
+        };
       return {
         subject: `Your answer is needed: ${role}`,
         eyebrow: "Needs your attention",
