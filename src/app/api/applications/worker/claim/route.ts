@@ -12,6 +12,7 @@ import type {
 } from "@/lib/application-worker-types";
 import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import { applicationInboxAlias, ensureInboxAlias } from "@/lib/email/inbox-alias";
+import { recoverPendingVerificationEmails } from "@/lib/email/recover-pending-verifications";
 import type { JobDetail } from "@/lib/job-types";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -99,8 +100,15 @@ export async function POST(request: Request): Promise<Response> {
         version: parsed.version || "unknown",
       });
     if (heartbeatResult.error) throw new Error(heartbeatResult.error.message);
-    if (!parsed.acceptTask)
+    if (!parsed.acceptTask) {
+      await recoverPendingVerificationEmails({ admin }).catch((error) =>
+        console.warn("worker_verification_recovery_failed", {
+          reason:
+            error instanceof Error ? error.message.slice(0, 240) : "unknown",
+        }),
+      );
       return Response.json({ assignment: null }, { headers: HEADERS });
+    }
     const claimResult = await admin.rpc("claim_application_worker_task", {
       p_worker_id: parsed.workerId,
     });
