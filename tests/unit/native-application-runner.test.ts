@@ -18,6 +18,7 @@ import {
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
   shouldTreatSingleFileAsResume,
+  shouldSkipConsumedResumeInput,
 } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
 import { buildRunnerFacts, type RunnerField } from "@/lib/application-runner/types";
@@ -117,6 +118,27 @@ describe("native application runner", () => {
         atsKind: "generic",
         fileUploadCount: 2,
         pageCopy: "Upload your CV and portfolio",
+      }),
+    ).toBe(false);
+  });
+
+  it("does not upload a custom portal CV twice after its hidden input is consumed", () => {
+    expect(
+      shouldSkipConsumedResumeInput({
+        fieldType: "file",
+        resumeAlreadyUploaded: true,
+      }),
+    ).toBe(true);
+    expect(
+      shouldSkipConsumedResumeInput({
+        fieldType: "file",
+        resumeAlreadyUploaded: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldSkipConsumedResumeInput({
+        fieldType: "text",
+        resumeAlreadyUploaded: true,
       }),
     ).toBe(false);
   });

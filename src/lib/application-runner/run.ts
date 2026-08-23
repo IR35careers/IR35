@@ -25,6 +25,7 @@ import {
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
   shouldTreatSingleFileAsResume,
+  shouldSkipConsumedResumeInput,
   type AtsDefinition,
 } from "@/lib/application-runner/ats";
 import {
@@ -124,12 +125,6 @@ type RunnerPageDiagnostic = {
   networkFailures: string[];
   messages: string[];
 };
-
-function safeEmployerFailureDetail(value: string): string {
-  return clean(value, 300)
-    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]")
-    .replace(/\b\d{6,}\b/g, "[number]");
-}
 
 /**
  * Captures labels and control state only. Field values and page HTML are
@@ -1317,9 +1312,11 @@ async function fillStep(
   coverLetter: string,
   employerTermsConsent: boolean,
 ): Promise<RunnerField[]> {
-  await uploadApprovedResumeForKnownPortal({ page, ats, resume }).catch(
-    () => false,
-  );
+  const resumeUploaded = await uploadApprovedResumeForKnownPortal({
+    page,
+    ats,
+    resume,
+  }).catch(() => false);
   const controls = await snapshotFields(page, step, ats.kind);
   const unknown: RunnerField[] = [];
   const mappings = new Map<string, FieldMapping>();
@@ -1338,6 +1335,17 @@ async function fillStep(
   >();
   for (const control of controls) {
     const { field } = control;
+    // Totaljobs uses a custom upload component which consumes and then clears
+    // its hidden file input. Re-filling that cleared input starts a second,
+    // concurrent CV parsing request and can leave the final submit action
+    // disabled even though the first upload was accepted.
+    if (
+      shouldSkipConsumedResumeInput({
+        fieldType: field.type,
+        resumeAlreadyUploaded: resumeUploaded,
+      })
+    )
+      continue;
     if (
       field.type === "checkbox" &&
       canAutomaticallyAcceptEmployerTerms({
@@ -1584,24 +1592,13 @@ export async function runNativeApplication(
       ),
     );
     page = await context.newPage();
-    context.on("response", async (response) => {
+    context.on("response", (response) => {
       if (response.status() < 400) return;
       try {
         const failed = new URL(response.url());
         if (!approvedHosts.has(failed.hostname.toLowerCase())) return;
-        let detail = "";
-        if (
-          response.status() < 500 &&
-          /\/(?:cvtojobfit-bff|application\/process-bff)\//i.test(
-            failed.pathname,
-          )
-        ) {
-          detail = safeEmployerFailureDetail(
-            await response.text().catch(() => ""),
-          );
-        }
         networkFailures.add(
-          `${response.request().method()} ${failed.hostname}${failed.pathname} returned ${response.status()}${detail ? `: ${detail}` : ""}`,
+          `${response.request().method()} ${failed.hostname}${failed.pathname} returned ${response.status()}`,
         );
       } catch {
         // Keep diagnostics value-free when a browser reports a malformed URL.

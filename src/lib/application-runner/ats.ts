@@ -10,6 +10,13 @@ export function shouldTreatSingleFileAsResume(input: {
   return /(?:cv|resume|curriculum)/i.test(input.pageCopy);
 }
 
+export function shouldSkipConsumedResumeInput(input: {
+  fieldType: string;
+  resumeAlreadyUploaded: boolean;
+}): boolean {
+  return input.fieldType === "file" && input.resumeAlreadyUploaded;
+}
+
 export interface AtsDefinition {
   kind: AtsKind;
   label: string;
