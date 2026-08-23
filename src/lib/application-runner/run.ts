@@ -12,6 +12,7 @@ import {
   isApplicationFormEvidence,
   isEmployerAccountAccessPage,
   isJobBoardUtilityControl,
+  requiresEmployerTermsAcceptance,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
@@ -481,6 +482,21 @@ async function handlePortalAccess(
       /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
         bodyText,
       );
+    if (
+      createAccount &&
+      !hasSavedSession &&
+      !accountAlreadyExists &&
+      requiresEmployerTermsAcceptance(bodyText)
+    ) {
+      return {
+        handled: false,
+        stop: {
+          message:
+            "Review the employer's account terms and privacy notice on this page. After you accept them, IR35Careers will create the account and continue the prepared application.",
+          action: "employer_terms",
+        },
+      };
+    }
     const accessAction =
       hasSavedSession || accountAlreadyExists
         ? signIn ??
@@ -974,12 +990,20 @@ export async function runNativeApplication(
         handoffBody,
       )
     ) {
-      sessionDisposition = "clear";
-      return reviewReceipt(
-        "The job board blocked access to the employer application page. This role cannot be submitted from its current source and will not be retried automatically.",
-        [],
-        "source_access_denied",
+      const sourceAccountAccess = await actionLocator(
+        page,
+        /^(login to continue|log in to continue|sign in to continue|continue with email|create account|register)$/i,
       );
+      if (sourceAccountAccess && payload.candidate.portalAccountConsent) {
+        page = await clickAndFollow(page, sourceAccountAccess, 900);
+      } else {
+        sessionDisposition = "clear";
+        return reviewReceipt(
+          "The job board blocked access to the employer application page. Continue the same prepared application in your secure desktop browser.",
+          [],
+          "source_access_denied",
+        );
+      }
     }
     const applicationDestination = await validatePublicHttpsUrl(page.url());
     approvedHosts.add(applicationDestination.hostname.toLowerCase());

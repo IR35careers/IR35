@@ -4,6 +4,7 @@ import {
   isEmployerAccountAccessPage,
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
+  requiresEmployerTermsAcceptance,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   isTrustedApplicationPortalSender,
@@ -122,6 +123,19 @@ describe("native application runner", () => {
   it("recognises a blocked job-board handoff as a source problem", () => {
     expect(isSourceAccessDeniedPage("Access Denied", "Reference 123")).toBe(true);
     expect(isSourceAccessDeniedPage("Apply", "Complete your application")).toBe(false);
+  });
+
+  it("requires the contractor to accept third-party account terms", () => {
+    expect(
+      requiresEmployerTermsAcceptance(
+        "By registering with Example Jobs you agree to our Terms and Conditions and Privacy Notice.",
+      ),
+    ).toBe(true);
+    expect(
+      requiresEmployerTermsAcceptance(
+        "Create your application account to save progress and continue.",
+      ),
+    ).toBe(false);
   });
 
   it("trusts confirmation mail only from the ATS family used by the application", () => {

@@ -124,6 +124,12 @@ export function isSourceAccessDeniedPage(
   );
 }
 
+export function requiresEmployerTermsAcceptance(body: string): boolean {
+  return /(?:by\s+(?:creating|registering|signing\s+up)|when\s+you\s+(?:create|register)).{0,220}(?:agree|accept).{0,160}(?:terms|conditions|privacy)/i.test(
+    body.replace(/\s+/g, " "),
+  );
+}
+
 export function isEmployerAccountAccessPage(input: {
   body: string;
   hasEmailInput: boolean;
