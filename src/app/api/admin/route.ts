@@ -1111,7 +1111,7 @@ export async function POST(request: Request): Promise<Response> {
       const staleBefore = new Date(
         Date.now() - SUBMISSION_LOCK_MAX_AGE_MS,
       ).toISOString();
-      const [staleResult, legacyFailureResult, legacyNeedsUserResult] = await Promise.all([
+      const [staleResult, legacyFailureResult, recoverableNeedsUserResult] = await Promise.all([
         supabase
           .from("application_submissions")
           .select("id, user_id, application_id, idempotency_key, receipt, updated_at")
@@ -1135,25 +1135,36 @@ export async function POST(request: Request): Promise<Response> {
           .select("id, user_id, application_id, idempotency_key, receipt, updated_at")
           .eq("status", "processing")
           .eq("error_code", "needs_user")
-          .contains("receipt", { action: "browser_continue" })
           .limit(500),
       ]);
       if (
         staleResult.error ||
         legacyFailureResult.error ||
-        legacyNeedsUserResult.error
+        recoverableNeedsUserResult.error
       )
         throw (
           staleResult.error ||
           legacyFailureResult.error ||
-          legacyNeedsUserResult.error
+          recoverableNeedsUserResult.error
         );
+      const recoverableNeedsUserActions = new Set([
+        "browser_continue",
+        "employer_login",
+        "account_recovery_email",
+        "verification_link",
+      ]);
+      const recoverableNeedsUser = (recoverableNeedsUserResult.data ?? []).filter(
+        (submission) => {
+          const receipt = submission.receipt as Record<string, unknown> | null;
+          return recoverableNeedsUserActions.has(String(receipt?.action ?? ""));
+        },
+      );
       const stale = Array.from(
         new Map(
           [
             ...(staleResult.data ?? []),
             ...(legacyFailureResult.data ?? []),
-            ...(legacyNeedsUserResult.data ?? []),
+            ...recoverableNeedsUser,
           ].map((submission) => [submission.id, submission]),
         ).values(),
       );
