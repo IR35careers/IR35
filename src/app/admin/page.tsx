@@ -436,6 +436,8 @@ export default function AdminPage() {
   const [reviewingConnectionId, setReviewingConnectionId] = useState<string | null>(null);
   const [testingRunner, setTestingRunner] = useState(false);
   const [runnerTestResult, setRunnerTestResult] = useState<RunnerTestResult | null>(null);
+  const [emailLoopTestResult, setEmailLoopTestResult] = useState<RunnerTestResult | null>(null);
+  const [testingEmailLoop, setTestingEmailLoop] = useState(false);
   const [recoveringSubmissions, setRecoveringSubmissions] = useState(false);
   const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
@@ -735,6 +737,42 @@ export default function AdminPage() {
       setError(caught instanceof Error ? caught.message : "The application runner test failed");
     } finally {
       setTestingRunner(false);
+    }
+  };
+
+  const runInboundEmailLoopTest = async () => {
+    setTestingEmailLoop(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "test_inbound_email_loop" }),
+      });
+      const json = (await response.json()) as RunnerTestResult & {
+        error?: string;
+      };
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok)
+        throw new Error(json.error ?? "The application email test could not start");
+      setEmailLoopTestResult(json);
+      setNotice(
+        json.state === "submitted"
+          ? "The private application email was received, linked and accepted for forwarding."
+          : "The email loop test found a delivery issue. Review the failed check below.",
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The application email loop test failed",
+      );
+    } finally {
+      setTestingEmailLoop(false);
     }
   };
 
@@ -1203,7 +1241,7 @@ export default function AdminPage() {
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
           ) : section === "system" && data ? (
-            <SystemMapPanel integrations={data.integrations ?? []} applicationRuns={data.applicationRuns ?? []} workerQueue={data.workerQueue} query={normalisedQuery} testing={testingRunner} testResult={runnerTestResult} onRunTest={() => void runApplicationRunnerTest()} />
+            <SystemMapPanel integrations={data.integrations ?? []} applicationRuns={data.applicationRuns ?? []} workerQueue={data.workerQueue} query={normalisedQuery} testing={testingRunner} testingEmail={testingEmailLoop} testResult={runnerTestResult} emailTestResult={emailLoopTestResult} onRunTest={() => void runApplicationRunnerTest()} onRunEmailTest={() => void runInboundEmailLoopTest()} />
           ) : null}
         </main>
       </div>

@@ -13,7 +13,7 @@
  */
 
 import type { User } from "@supabase/supabase-js";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { adminAllowlist, adminSessionCookieName, cookieValue, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
 import {
   emailCampaignTemplates,
@@ -50,6 +50,10 @@ import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import { createApplicationRunnerTestToken } from "@/lib/application-runner/test-token";
 import { providerReviewQuestions } from "@/lib/application-submission";
 import { SUBMISSION_LOCK_MAX_AGE_MS } from "@/lib/application-submission-state";
+import {
+  applicationInboxAlias,
+  ensureInboxAlias,
+} from "@/lib/email/inbox-alias";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
@@ -889,6 +893,218 @@ export async function POST(request: Request): Promise<Response> {
         });
         return Response.json({ ok: false, state: "failed", message, testedAt, checks });
       }
+    }
+
+    if (body.action === "test_inbound_email_loop") {
+      const testedAt = new Date().toISOString();
+      const emailConfig = transactionalEmailConfig();
+      if (!emailConfig)
+        return Response.json(
+          { error: "Transactional email is not configured." },
+          { status: 503 },
+        );
+
+      const inbox = await ensureInboxAlias(
+        supabase,
+        admin.id,
+        admin.email,
+        true,
+      );
+      if (!inbox)
+        return Response.json(
+          { error: "The inbound IR35Careers mailbox is not configured." },
+          { status: 503 },
+        );
+
+      const applicationId = randomUUID();
+      const marker = randomUUID().replaceAll("-", "").slice(0, 12);
+      const subject = `IR35Careers email loop test ${marker}`;
+      const applicationAddress = applicationInboxAlias(
+        inbox.alias,
+        applicationId,
+      );
+      const job = {
+        ...DEMO_JOBS[0],
+        id: applicationId,
+        title: "Platform Engineer email loop test",
+        company_name: "IR35Careers Test Portal",
+        source_domain: "www.ir35careers.com",
+        apply_url: "https://www.ir35careers.com/testing/application-form",
+      };
+
+      const packetInsert = await supabase.from("application_packets").insert({
+        id: applicationId,
+        user_id: admin.id,
+        job_id: null,
+        job_snapshot: job,
+        status: "ready",
+        mode: "external_handoff",
+        match_score: 100,
+        resume_version_label: "Controlled email loop test",
+        source_cv_text: "Controlled test data",
+        tailored_cv_text: "Controlled test data",
+        cover_letter: "Controlled test data",
+        screening_answers: [],
+        matched_keywords: [],
+        missing_keywords: [],
+        truth_approved: true,
+        materials_approved: true,
+        submission_approved: true,
+        receipt: {
+          destination: "https://www.ir35careers.com/testing/application-form",
+        },
+        idempotency_key: `email-loop:${marker}`,
+      });
+      if (packetInsert.error) throw new Error(packetInsert.error.message);
+
+      const delivery = await getTransactionalResend(emailConfig).emails.send(
+        {
+          from: emailConfig.from,
+          to: [applicationAddress],
+          subject,
+          html: `<p>This controlled message verifies the signed inbound webhook, application linking and forwarding delivery.</p><p>Reference: ${marker}</p>`,
+          text: `This controlled message verifies the signed inbound webhook, application linking and forwarding delivery. Reference: ${marker}`,
+          ...(emailConfig.replyTo ? { replyTo: emailConfig.replyTo } : {}),
+          headers: { "X-Entity-Ref-ID": `email-loop:${marker}` },
+          tags: [{ name: "email_type", value: "inbound_loop_test" }],
+        },
+        { idempotencyKey: `ir35-inbound-loop-${marker}` },
+      );
+      if (delivery.error || !delivery.data?.id)
+        throw new Error(
+          delivery.error?.message || "The controlled inbound message was rejected.",
+        );
+
+      let receivedMessage: {
+        id: string;
+        provider_message_id: string | null;
+        application_id: string | null;
+      } | null = null;
+      let forwardingSummary: Record<string, unknown> = {};
+      const deadline = Date.now() + 75_000;
+      while (Date.now() < deadline) {
+        const received = await supabase
+          .from("inbox_messages")
+          .select("id, provider_message_id, application_id")
+          .eq("user_id", admin.id)
+          .eq("application_id", applicationId)
+          .eq("subject", subject)
+          .maybeSingle();
+        if (received.error) throw new Error(received.error.message);
+        receivedMessage = received.data;
+        if (receivedMessage?.provider_message_id) {
+          const forwarded = await supabase
+            .from("moderation_logs")
+            .select("summary")
+            .eq("run_type", "inbound_email_delivery")
+            .eq(
+              "summary->>provider_message_id",
+              receivedMessage.provider_message_id,
+            )
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (forwarded.error) throw new Error(forwarded.error.message);
+          if (
+            forwarded.data?.summary &&
+            typeof forwarded.data.summary === "object"
+          ) {
+            forwardingSummary = forwarded.data.summary as Record<
+              string,
+              unknown
+            >;
+            break;
+          }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2_500));
+      }
+
+      const forwardingAccepted =
+        forwardingSummary.forwarding_status === "accepted" &&
+        typeof forwardingSummary.forwarding_delivery_id === "string";
+      const linked = receivedMessage?.application_id === applicationId;
+      const checks = [
+        {
+          label: "Inbound message accepted",
+          passed: Boolean(delivery.data?.id),
+          detail: "Resend accepted the controlled message for the private application address.",
+        },
+        {
+          label: "Signed webhook received",
+          passed: Boolean(receivedMessage?.provider_message_id),
+          detail: receivedMessage
+            ? "The signed inbound webhook stored the original message."
+            : "No signed inbound webhook arrived within 75 seconds.",
+        },
+        {
+          label: "Application linked",
+          passed: linked,
+          detail: linked
+            ? "The application-specific address linked the message to the correct packet."
+            : "The message was not linked to the controlled application.",
+        },
+        {
+          label: "Forwarding accepted",
+          passed: forwardingAccepted,
+          detail: forwardingAccepted
+            ? `The forwarded notification was accepted for ${admin.email}.`
+            : String(
+                forwardingSummary.forwarding_error ||
+                  "The forwarding provider did not return an accepted delivery.",
+              ),
+        },
+      ];
+      const passed = checks.every((check) => check.passed);
+
+      await supabase.from("moderation_logs").insert({
+        run_type: "inbound_email_loop_test",
+        summary: {
+          action: "controlled_inbound_email_loop",
+          by: admin.email,
+          state: passed ? "submitted" : "failed",
+          tested_at: testedAt,
+          outbound_delivery_id: delivery.data.id,
+          inbound_message_id: receivedMessage?.provider_message_id ?? null,
+          forwarding_delivery_id:
+            forwardingSummary.forwarding_delivery_id ?? null,
+          checks,
+        },
+      });
+
+      if (passed) {
+        await supabase
+          .from("inbox_messages")
+          .delete()
+          .eq("user_id", admin.id)
+          .eq("application_id", applicationId);
+        await supabase
+          .from("application_events")
+          .delete()
+          .eq("user_id", admin.id)
+          .eq("application_id", applicationId);
+        await supabase
+          .from("application_packets")
+          .delete()
+          .eq("user_id", admin.id)
+          .eq("id", applicationId);
+      }
+
+      return Response.json(
+        {
+          ok: passed,
+          state: passed ? "submitted" : "failed",
+          message: passed
+            ? `The private application email was received, linked and forwarded to ${admin.email}.`
+            : "The controlled email loop did not complete. Review the failed check.",
+          receiptId:
+            typeof forwardingSummary.forwarding_delivery_id === "string"
+              ? forwardingSummary.forwarding_delivery_id
+              : delivery.data.id,
+          testedAt,
+          checks,
+        },
+        { status: passed ? 201 : 200 },
+      );
     }
 
     if (body.action === "recover_stale_submissions") {

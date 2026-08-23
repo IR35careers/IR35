@@ -349,27 +349,66 @@ export async function POST(request: Request) {
       }, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true });
     }
 
+    let forwardingDeliveryId: string | null = null;
+    let forwardingError: string | null = null;
     if (
       applicationId &&
       linkedJob &&
       alias.forwarding_enabled &&
       alias.forwarding_email
     ) {
-      await sendApplicationNotification({
-        kind: forwardingKind,
-        to: String(alias.forwarding_email),
-        jobTitle: linkedJob.title,
-        companyName: linkedJob.company_name,
-        jobId: linkedJob.id,
-        applicationId,
-        originalSubject: payload.subject,
-        originalMessage: payload.text,
-        ...(trustedSender ? { replyTo: payload.sender } : {}),
-        idempotencyKey: `mail:${payload.providerMessageId}`,
-      }).catch(() => null);
+      try {
+        forwardingDeliveryId = await sendApplicationNotification({
+          kind: forwardingKind,
+          to: String(alias.forwarding_email),
+          jobTitle: linkedJob.title,
+          companyName: linkedJob.company_name,
+          jobId: linkedJob.id,
+          applicationId,
+          originalSubject: payload.subject,
+          originalMessage: payload.text,
+          ...(trustedSender ? { replyTo: payload.sender } : {}),
+          idempotencyKey: `mail:${payload.providerMessageId}`,
+        });
+      } catch (error) {
+        forwardingError =
+          error instanceof Error
+            ? error.message.slice(0, 300)
+            : "Forwarding delivery failed.";
+      }
+
+      await admin.from("moderation_logs").insert({
+        run_type: "inbound_email_delivery",
+        summary: {
+          user_id: alias.user_id,
+          application_id: applicationId,
+          provider_message_id: payload.providerMessageId,
+          recipient: String(alias.forwarding_email),
+          linked: true,
+          trusted_sender: trustedSender,
+          classification,
+          forwarding_status: forwardingDeliveryId
+            ? "accepted"
+            : forwardingError
+              ? "failed"
+              : "not_configured",
+          forwarding_delivery_id: forwardingDeliveryId,
+          forwarding_error: forwardingError,
+        },
+      });
     }
 
-    return NextResponse.json({ accepted: true, classification, linked: Boolean(applicationId), trustedSender, resumeQueued }, { status: 200, headers: RESPONSE_HEADERS });
+    return NextResponse.json(
+      {
+        accepted: true,
+        classification,
+        linked: Boolean(applicationId),
+        trustedSender,
+        resumeQueued,
+        forwardingAccepted: Boolean(forwardingDeliveryId),
+      },
+      { status: 200, headers: RESPONSE_HEADERS },
+    );
   } catch {
     return NextResponse.json({ error: "Inbound message could not be processed." }, { status: 500, headers: RESPONSE_HEADERS });
   }

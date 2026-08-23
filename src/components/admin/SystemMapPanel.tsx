@@ -139,7 +139,7 @@ function buildLanes(integrations: IntegrationStatus[]): Lane[] {
   ];
 }
 
-export function SystemMapPanel({ integrations, applicationRuns, workerQueue, query, testing, testResult, onRunTest }: { integrations: IntegrationStatus[]; applicationRuns: ApplicationRunSummary[]; workerQueue?: ApplicationWorkerQueueSummary; query: string; testing: boolean; testResult: RunnerTestResult | null; onRunTest: () => void }) {
+export function SystemMapPanel({ integrations, applicationRuns, workerQueue, query, testing, testingEmail, testResult, emailTestResult, onRunTest, onRunEmailTest }: { integrations: IntegrationStatus[]; applicationRuns: ApplicationRunSummary[]; workerQueue?: ApplicationWorkerQueueSummary; query: string; testing: boolean; testingEmail: boolean; testResult: RunnerTestResult | null; emailTestResult: RunnerTestResult | null; onRunTest: () => void; onRunEmailTest: () => void }) {
   const lanes = useMemo(() => buildLanes(integrations), [integrations]);
   const allNodes = lanes.flatMap((lane) => lane.nodes);
   const [selectedId, setSelectedId] = useState("ats_submission");
@@ -159,10 +159,13 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
   return (
     <div className="mt-7 space-y-5">
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 text-white shadow-sm">
-        <div className="grid gap-5 px-5 py-5 sm:grid-cols-3 sm:px-6">
+        <div className="grid gap-5 px-5 py-5 sm:grid-cols-[1fr_1fr_auto] sm:px-6">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.17em] text-slate-500">Components healthy</p><p className="mt-2 text-3xl font-semibold">{connected}<span className="text-base text-slate-500">/{allNodes.length}</span></p></div>
           <div><p className="text-[10px] font-bold uppercase tracking-[0.17em] text-slate-500">Needs attention</p><p className="mt-2 text-3xl font-semibold text-amber-300">{attention}</p></div>
-          <div className="flex items-center sm:justify-end"><button type="button" onClick={onRunTest} disabled={testing} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-70">{testing ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} fill="currentColor" />}{testing ? "Running live test" : "Run application test"}</button></div>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <button type="button" onClick={onRunTest} disabled={testing || testingEmail} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-70">{testing ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} fill="currentColor" />}{testing ? "Testing application" : "Test application"}</button>
+            <button type="button" onClick={onRunEmailTest} disabled={testing || testingEmail} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-wait disabled:opacity-70">{testingEmail ? <Loader2 className="animate-spin" size={16} /> : <MailCheck size={16} />}{testingEmail ? "Testing email" : "Test email loop"}</button>
+          </div>
         </div>
         <div className="border-t border-white/10 bg-white/[0.04] px-5 py-3 text-xs leading-5 text-slate-300 sm:px-6">This controlled production test uses the real hosted runner, CV upload, multi-step form and confirmation detector. It does not contact an employer.</div>
       </section>
@@ -201,6 +204,16 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
             <div className="min-w-0 flex-1"><p className="font-semibold text-slate-950">{testResult.state === "submitted" ? "Application runner passed" : "Application runner needs attention"}</p><p className="mt-1 text-sm leading-6 text-slate-600">{testResult.message}</p><p className="mt-2 text-xs text-slate-500">Tested {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(testResult.testedAt))}{testResult.receiptId ? ` · Receipt ${testResult.receiptId}` : ""}</p></div>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{testResult.checks.map((check) => <div key={check.label} className="rounded-xl border border-black/5 bg-white/70 px-3 py-3"><p className="flex items-center gap-2 text-xs font-semibold text-slate-900">{check.passed ? <CheckCircle2 size={14} className="text-emerald-600" /> : <CircleAlert size={14} className="text-amber-600" />}{check.label}</p><p className="mt-1 text-[11px] leading-4 text-slate-500">{check.detail}</p></div>)}</div>
+        </section>
+      )}
+
+      {emailTestResult && (
+        <section className={`rounded-2xl border p-5 ${emailTestResult.state === "submitted" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+          <div className="flex items-start gap-3">
+            {emailTestResult.state === "submitted" ? <MailCheck className="mt-0.5 shrink-0 text-emerald-600" size={20} /> : <CircleAlert className="mt-0.5 shrink-0 text-amber-600" size={20} />}
+            <div className="min-w-0 flex-1"><p className="font-semibold text-slate-950">{emailTestResult.state === "submitted" ? "Application email loop passed" : "Application email loop needs attention"}</p><p className="mt-1 text-sm leading-6 text-slate-600">{emailTestResult.message}</p><p className="mt-2 text-xs text-slate-500">Tested {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(emailTestResult.testedAt))}{emailTestResult.receiptId ? ` · Delivery ${emailTestResult.receiptId}` : ""}</p></div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{emailTestResult.checks.map((check) => <div key={check.label} className="rounded-xl border border-black/5 bg-white/70 px-3 py-3"><p className="flex items-center gap-2 text-xs font-semibold text-slate-900">{check.passed ? <CheckCircle2 size={14} className="text-emerald-600" /> : <CircleAlert size={14} className="text-amber-600" />}{check.label}</p><p className="mt-1 text-[11px] leading-4 text-slate-500">{check.detail}</p></div>)}</div>
         </section>
       )}
 
