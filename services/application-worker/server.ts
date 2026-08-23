@@ -104,6 +104,7 @@ async function remoteVerificationCode(
         applicationId: task.application_id,
         alias,
         requestedAfter,
+        providerSync: attempt % 5 === 0,
       },
       20_000,
     ).catch(() => ({ code: null }));

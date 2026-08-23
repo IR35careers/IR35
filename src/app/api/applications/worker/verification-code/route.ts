@@ -4,6 +4,11 @@ import {
   readSignedApplicationWorkerJson,
 } from "@/lib/application-worker-request";
 import { waitForEmailVerificationCode } from "@/lib/email/wait-for-verification-code";
+import {
+  getResend,
+  resendInboundConfig,
+} from "@/lib/email/resend";
+import { findResendVerificationEmail } from "@/lib/email/resend-verification-sync";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -19,6 +24,7 @@ function validRequest(value: unknown): value is {
   applicationId: string;
   alias: string;
   requestedAfter: string;
+  providerSync?: boolean;
 } {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
@@ -34,7 +40,9 @@ function validRequest(value: unknown): value is {
       /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(body.alias) &&
       typeof body.requestedAfter === "string" &&
       Number.isFinite(new Date(body.requestedAfter).getTime()) &&
-      new Date(body.requestedAfter).getTime() >= Date.now() - 30 * 60_000,
+      new Date(body.requestedAfter).getTime() >= Date.now() - 30 * 60_000 &&
+      (body.providerSync === undefined ||
+        typeof body.providerSync === "boolean"),
   );
 }
 
@@ -51,8 +59,9 @@ export async function POST(request: Request): Promise<Response> {
         { error: "The verification-code request is invalid." },
         { status: 400, headers: HEADERS },
       );
-    const code = await waitForEmailVerificationCode({
-      admin: getSupabaseAdmin(),
+    const admin = getSupabaseAdmin();
+    let code = await waitForEmailVerificationCode({
+      admin,
       userId: parsed.userId,
       applicationId: parsed.applicationId,
       alias: parsed.alias,
@@ -60,7 +69,43 @@ export async function POST(request: Request): Promise<Response> {
       attempts: 1,
       intervalMs: 250,
     });
-    return Response.json({ code }, { headers: HEADERS });
+    let providerSynced = false;
+    if (!code && parsed.providerSync) {
+      const inbound = resendInboundConfig();
+      if (inbound) {
+        const providerEmail = await findResendVerificationEmail({
+          resend: getResend(inbound),
+          userId: parsed.userId,
+          applicationId: parsed.applicationId,
+          alias: parsed.alias,
+          requestedAfter: parsed.requestedAfter,
+        });
+        if (providerEmail) {
+          code = providerEmail.code;
+          providerSynced = true;
+          const stored = await admin.from("inbox_messages").upsert(
+            {
+              user_id: parsed.userId,
+              application_id: parsed.applicationId,
+              provider_message_id: providerEmail.providerMessageId,
+              sender: providerEmail.sender,
+              recipient: providerEmail.recipient,
+              subject: providerEmail.subject,
+              body_text: providerEmail.text,
+              preview: providerEmail.text.replace(/\s+/g, " ").slice(0, 220),
+              classification: "other",
+              received_at: providerEmail.receivedAt,
+            },
+            {
+              onConflict: "user_id,provider_message_id",
+              ignoreDuplicates: true,
+            },
+          );
+          if (stored.error) throw stored.error;
+        }
+      }
+    }
+    return Response.json({ code, providerSynced }, { headers: HEADERS });
   } catch (error) {
     if (error instanceof ApplicationWorkerRequestError)
       return Response.json(
