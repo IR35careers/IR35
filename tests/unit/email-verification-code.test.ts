@@ -15,6 +15,12 @@ describe("email verification codes", () => {
         "Use A7F42Q to continue your application.",
       ),
     ).toBe("A7F42Q");
+    expect(
+      extractEmailVerificationCode(
+        "Email verification",
+        "Your code is 184205",
+      ),
+    ).toBe("184205");
   });
 
   it("does not treat unrelated numbers or words as a code", () => {

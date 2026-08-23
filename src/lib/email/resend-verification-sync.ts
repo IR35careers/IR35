@@ -1,4 +1,4 @@
-import type { Resend } from "resend";
+import type { ListReceivingEmail, Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import {
@@ -54,11 +54,37 @@ export async function findResendVerificationEmail(input: {
   const requestedAfter = new Date(input.requestedAfter).getTime();
   if (!Number.isFinite(requestedAfter)) return null;
 
-  const listed = await input.resend.emails.receiving.list({ limit: 50 });
-  if (listed.error || !listed.data) return null;
+  // Provider timestamps can be a little earlier than the worker clock. The
+  // application-scoped recipient keeps this small allowance unambiguous.
+  const earliestAcceptedAt = requestedAfter - 5 * 60_000;
+  const receivedItems: ListReceivingEmail[] = [];
+  let after: string | undefined;
+  for (let page = 0; page < 3; page += 1) {
+    const listed = await input.resend.emails.receiving.list({
+      limit: 100,
+      ...(after ? { after } : {}),
+    });
+    if (listed.error || !listed.data) {
+      if (page === 0) return null;
+      break;
+    }
+    const pageItems = listed.data.data;
+    receivedItems.push(...pageItems);
+    if (!listed.data.has_more || pageItems.length === 0) break;
+    const oldestOnPage = Math.min(
+      ...pageItems.map((item) => new Date(item.created_at).getTime()),
+    );
+    if (
+      Number.isFinite(oldestOnPage) &&
+      oldestOnPage < earliestAcceptedAt
+    )
+      break;
+    after = pageItems[pageItems.length - 1]?.id;
+    if (!after) break;
+  }
 
-  const candidates = listed.data.data
-    .filter((item) => new Date(item.created_at).getTime() >= requestedAfter)
+  const candidates = receivedItems
+    .filter((item) => new Date(item.created_at).getTime() >= earliestAcceptedAt)
     .filter((item) =>
       [...(item.to ?? []), ...(item.received_for ?? [])].some((value) => {
         const recipient = extractEmailAddress(String(value));
@@ -72,7 +98,12 @@ export async function findResendVerificationEmail(input: {
         );
       }),
     )
-    .slice(0, 10);
+    .sort(
+      (left, right) =>
+        new Date(right.created_at).getTime() -
+        new Date(left.created_at).getTime(),
+    )
+    .slice(0, 30);
 
   for (const candidate of candidates) {
     const received = await input.resend.emails.receiving.get(candidate.id, {

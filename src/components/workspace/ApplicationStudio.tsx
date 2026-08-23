@@ -1452,17 +1452,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     {attention.actionLabel}
                   </Link>
                 ) : attention.kind === "email_verification" ? (
-                  <button
-                    type="button"
-                    onClick={() => void submitApprovedApplication()}
-                    disabled={busy !== null || submissionInProgress}
-                    className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
-                  >
-                    {busy === "submit" || submissionInProgress ? (
-                      <Loader2 size={15} className="animate-spin" />
-                    ) : null}
-                    Check verification email
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void submitApprovedApplication()}
+                      disabled={busy !== null || submissionInProgress}
+                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
+                    >
+                      {busy === "submit" || submissionInProgress ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : null}
+                      Check verification email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void continueInEmployerBrowser()}
+                      disabled={busy !== null}
+                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-400 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      {busy === "handoff" ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : null}
+                      Open employer verification <ArrowRight size={15} />
+                    </button>
+                  </>
                 ) : attention.kind === "security_check" ||
                 attention.kind === "employer_account" ||
                 attention.kind === "employer_form" ||
