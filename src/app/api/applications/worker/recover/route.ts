@@ -185,6 +185,10 @@ export async function POST(request: Request): Promise<Response> {
                 string,
                 unknown
               > | null;
+              const review =
+                receipt?.review && typeof receipt.review === "object"
+                  ? (receipt.review as Record<string, unknown>)
+                  : null;
               const task = tasksByApplication.get(submission.application_id);
               return {
                 applicationId: submission.application_id,
@@ -198,7 +202,7 @@ export async function POST(request: Request): Promise<Response> {
                 errorCode: submission.error_code,
                 taskStatus: task?.status ?? "missing",
                 taskDestinationHost: hostname(String(task?.destination ?? "")),
-                diagnostic: safeDiagnostic(receipt?.diagnostic),
+                diagnostic: safeDiagnostic(review?.diagnostic),
               };
             }),
           },
