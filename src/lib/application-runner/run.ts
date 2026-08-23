@@ -125,6 +125,12 @@ type RunnerPageDiagnostic = {
   messages: string[];
 };
 
+function safeEmployerFailureDetail(value: string): string {
+  return clean(value, 300)
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]")
+    .replace(/\b\d{6,}\b/g, "[number]");
+}
+
 /**
  * Captures labels and control state only. Field values and page HTML are
  * deliberately excluded because this snapshot is retained for protected
@@ -1578,13 +1584,24 @@ export async function runNativeApplication(
       ),
     );
     page = await context.newPage();
-    context.on("response", (response) => {
+    context.on("response", async (response) => {
       if (response.status() < 400) return;
       try {
         const failed = new URL(response.url());
         if (!approvedHosts.has(failed.hostname.toLowerCase())) return;
+        let detail = "";
+        if (
+          response.status() < 500 &&
+          /\/(?:cvtojobfit-bff|application\/process-bff)\//i.test(
+            failed.pathname,
+          )
+        ) {
+          detail = safeEmployerFailureDetail(
+            await response.text().catch(() => ""),
+          );
+        }
         networkFailures.add(
-          `${response.request().method()} ${failed.hostname}${failed.pathname} returned ${response.status()}`,
+          `${response.request().method()} ${failed.hostname}${failed.pathname} returned ${response.status()}${detail ? `: ${detail}` : ""}`,
         );
       } catch {
         // Keep diagnostics value-free when a browser reports a malformed URL.
