@@ -1,5 +1,15 @@
 export type AtsKind = "greenhouse" | "lever" | "ashby" | "workable" | "smartrecruiters" | "workday" | "totaljobs" | "generic";
 
+export function shouldTreatSingleFileAsResume(input: {
+  atsKind: AtsKind;
+  fileUploadCount: number;
+  pageCopy: string;
+}): boolean {
+  if (input.fileUploadCount !== 1) return false;
+  if (input.atsKind === "totaljobs") return true;
+  return /(?:cv|resume|curriculum)/i.test(input.pageCopy);
+}
+
 export interface AtsDefinition {
   kind: AtsKind;
   label: string;

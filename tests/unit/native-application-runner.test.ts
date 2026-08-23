@@ -17,6 +17,7 @@ import {
   isTrustedApplicationPortalSender,
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
+  shouldTreatSingleFileAsResume,
 } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
 import { buildRunnerFacts, type RunnerField } from "@/lib/application-runner/types";
@@ -84,6 +85,30 @@ describe("native application runner", () => {
     expect(nativeRunnerHostAllowed("evilashbyhq.com")).toBe(false);
     expect(nativeRunnerHostAllowed("fake-adzuna.co.uk.attacker.example")).toBe(false);
     expect(nativeRunnerHostAllowed("greenhouse.io.attacker.example")).toBe(false);
+  });
+
+  it("recognises Totaljobs' single Experience upload as the application CV", () => {
+    expect(
+      shouldTreatSingleFileAsResume({
+        atsKind: "totaljobs",
+        fileUploadCount: 1,
+        pageCopy: "Let's complete your application Contact details Experience",
+      }),
+    ).toBe(true);
+    expect(
+      shouldTreatSingleFileAsResume({
+        atsKind: "generic",
+        fileUploadCount: 1,
+        pageCopy: "Upload your CV",
+      }),
+    ).toBe(true);
+    expect(
+      shouldTreatSingleFileAsResume({
+        atsKind: "generic",
+        fileUploadCount: 2,
+        pageCopy: "Upload your CV and portfolio",
+      }),
+    ).toBe(false);
   });
 
   it("maps normal identity and work-authorisation fields deterministically", () => {

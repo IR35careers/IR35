@@ -24,6 +24,7 @@ import {
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
+  shouldTreatSingleFileAsResume,
   type AtsDefinition,
 } from "@/lib/application-runner/ats";
 import {
@@ -959,6 +960,7 @@ async function handlePortalAccess(
 async function snapshotFields(
   page: Page,
   step: number,
+  atsKind: AtsDefinition["kind"],
 ): Promise<Array<{ field: RunnerField; locator: Locator }>> {
   const controls = page.locator(
     'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea',
@@ -967,8 +969,11 @@ async function snapshotFields(
   const pageCopy = fileUploadCount === 1
     ? clean(await page.locator("body").innerText().catch(() => ""), 25_000)
     : "";
-  const singleResumeUpload =
-    fileUploadCount === 1 && /(?:cv|resume|curriculum)/i.test(pageCopy);
+  const singleResumeUpload = shouldTreatSingleFileAsResume({
+    atsKind,
+    fileUploadCount,
+    pageCopy,
+  });
   const count = Math.min(await controls.count(), MAX_FIELDS);
   const fields: Array<{ field: RunnerField; locator: Locator }> = [];
   for (let index = 0; index < count; index += 1) {
@@ -1165,12 +1170,13 @@ async function fillField(input: {
 async function fillStep(
   page: Page,
   step: number,
+  ats: AtsDefinition,
   facts: RunnerFacts,
   resume: Buffer | null,
   coverLetter: string,
   employerTermsConsent: boolean,
 ): Promise<RunnerField[]> {
-  const controls = await snapshotFields(page, step);
+  const controls = await snapshotFields(page, step, ats.kind);
   const unknown: RunnerField[] = [];
   const mappings = new Map<string, FieldMapping>();
   for (const { field } of controls) {
@@ -1301,8 +1307,9 @@ async function waitForSubmissionConfirmation(
 async function invalidRequiredFields(
   page: Page,
   step: number,
+  ats: AtsDefinition,
 ): Promise<RunnerField[]> {
-  const fields = await snapshotFields(page, step);
+  const fields = await snapshotFields(page, step, ats.kind);
   const invalid = await Promise.all(
     fields.map(async ({ field, locator }) => {
       if (!field.required) return null;
@@ -1575,6 +1582,7 @@ export async function runNativeApplication(
       const needsUser = await fillStep(
         page,
         step,
+        ats,
         facts,
         resume,
         payload.coverLetter,
@@ -1647,7 +1655,7 @@ export async function runNativeApplication(
         };
       }
       if (isSubmit) {
-        const fields = await invalidRequiredFields(page, step + 1);
+        const fields = await invalidRequiredFields(page, step + 1, ats);
         return reviewReceipt(
           "The employer did not confirm submission. Review the highlighted fields before another attempt.",
           fields,
