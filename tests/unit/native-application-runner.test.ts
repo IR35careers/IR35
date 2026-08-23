@@ -8,6 +8,7 @@ import {
   isEmployerPasswordSetupPage,
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
+  matchesApplicationAction,
   requiresEmployerTermsAcceptance,
   isEmployerTermsCheckbox,
   isClosedListingPage,
@@ -148,6 +149,24 @@ describe("native application runner", () => {
     expect(preferredResumeUploadFormat("totaljobs")).toBe("docx");
     expect(preferredResumeUploadFormat("greenhouse")).toBe("pdf");
     expect(preferredResumeUploadFormat("generic")).toBe("pdf");
+  });
+
+  it("matches actions when visible and accessibility labels repeat", () => {
+    const submit = detectAts("https://www.totaljobs.com/job/123/application").submitPattern;
+    expect(
+      matchesApplicationAction(submit, [
+        "Send application",
+        null,
+        "Send application",
+      ]),
+    ).toBe(true);
+    expect(
+      matchesApplicationAction(submit, [
+        "Good fit",
+        null,
+        "View job fit details",
+      ]),
+    ).toBe(false);
   });
 
   it("maps normal identity and work-authorisation fields deterministically", () => {

@@ -17,6 +17,7 @@ import {
   isEmployerEmailLinkPending,
   isEmployerPasswordSetupPage,
   isJobBoardUtilityControl,
+  matchesApplicationAction,
   requiresEmployerTermsAcceptance,
   isEmployerTermsCheckbox,
   isVerificationResendControl,
@@ -369,11 +370,13 @@ async function actionLocator(
       !(await item.isEnabled().catch(() => false))
     )
       continue;
-    const text = clean(
-      `${await item.innerText().catch(() => "")} ${(await item.getAttribute("value")) ?? ""} ${(await item.getAttribute("aria-label")) ?? ""}`,
-      160,
-    );
-    if (pattern.test(text)) return item;
+    if (
+      matchesApplicationAction(pattern, [
+        await item.innerText().catch(() => ""),
+        await item.getAttribute("value"),
+        await item.getAttribute("aria-label"),
+      ])
+    ) return item;
   }
   return null;
 }

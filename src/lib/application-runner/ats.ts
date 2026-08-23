@@ -24,6 +24,18 @@ export function preferredResumeUploadFormat(atsKind: AtsKind): "pdf" | "docx" {
   return atsKind === "totaljobs" ? "docx" : "pdf";
 }
 
+export function matchesApplicationAction(
+  pattern: RegExp,
+  labels: Array<string | null | undefined>,
+): boolean {
+  return labels.some((value) => {
+    const label = String(value ?? "").replace(/\s+/g, " ").trim();
+    if (!label) return false;
+    pattern.lastIndex = 0;
+    return pattern.test(label);
+  });
+}
+
 export interface AtsDefinition {
   kind: AtsKind;
   label: string;
