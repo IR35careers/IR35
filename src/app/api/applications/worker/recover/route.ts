@@ -47,6 +47,60 @@ function hostname(value: string): string {
   }
 }
 
+function safeStrings(
+  value: unknown,
+  limit: number,
+  maxLength: number,
+): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry): entry is string => typeof entry === "string")
+    .slice(0, limit)
+    .map((entry) => entry.slice(0, maxLength));
+}
+
+function safeDiagnostic(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  const diagnostic = value as Record<string, unknown>;
+  const actions = Array.isArray(diagnostic.actions)
+    ? diagnostic.actions.slice(0, 30).map((entry) => {
+        const action =
+          entry && typeof entry === "object"
+            ? (entry as Record<string, unknown>)
+            : {};
+        return {
+          label: String(action.label ?? "").slice(0, 180),
+          enabled: action.enabled === true,
+          role: String(action.role ?? "").slice(0, 60),
+        };
+      })
+    : [];
+  const controls = Array.isArray(diagnostic.controls)
+    ? diagnostic.controls.slice(0, 80).map((entry) => {
+        const control =
+          entry && typeof entry === "object"
+            ? (entry as Record<string, unknown>)
+            : {};
+        return {
+          label: String(control.label ?? "").slice(0, 180),
+          type: String(control.type ?? "").slice(0, 60),
+          required: control.required === true,
+          completed: control.completed === true,
+          valid: control.valid === true,
+        };
+      })
+    : [];
+  return {
+    title: String(diagnostic.title ?? "").slice(0, 160),
+    headings: safeStrings(diagnostic.headings, 20, 180),
+    actions,
+    controls,
+    blockedHosts: safeStrings(diagnostic.blockedHosts, 30, 253),
+    networkFailures: safeStrings(diagnostic.networkFailures, 30, 300),
+    messages: safeStrings(diagnostic.messages, 30, 300),
+  };
+}
+
 export async function POST(request: Request): Promise<Response> {
   try {
     const parsed = await readSignedApplicationWorkerJson(request, 10_000);
@@ -135,6 +189,7 @@ export async function POST(request: Request): Promise<Response> {
               return {
                 applicationId: submission.application_id,
                 action: String(receipt?.action ?? ""),
+                message: String(receipt?.message ?? "").slice(0, 500),
                 receiptState: String(receipt?.state ?? ""),
                 receiptDestinationHost: hostname(
                   String(receipt?.destination ?? ""),
@@ -143,6 +198,7 @@ export async function POST(request: Request): Promise<Response> {
                 errorCode: submission.error_code,
                 taskStatus: task?.status ?? "missing",
                 taskDestinationHost: hostname(String(task?.destination ?? "")),
+                diagnostic: safeDiagnostic(receipt?.diagnostic),
               };
             }),
           },
