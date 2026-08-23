@@ -1223,6 +1223,7 @@ async function fillField(input: {
   value: string;
   resume: Buffer | null;
   coverLetter: string;
+  atsKind: AtsDefinition["kind"];
 }): Promise<boolean> {
   const { locator, field } = input;
   if (field.type === "file") {
@@ -1238,9 +1239,24 @@ async function fillField(input: {
     });
     return true;
   }
-  const value = /cover\s*letter/i.test(`${field.label} ${field.name}`)
+  let value = /cover\s*letter/i.test(`${field.label} ${field.name}`)
     ? input.coverLetter
     : input.value;
+  // Totaljobs renders the calling code and subscriber number as separate
+  // controls. Supplying the profile's full international number (for example
+  // +44 7700...) leaves its React form invalid even though the native input
+  // reports valid. Send only the national subscriber digits to that control.
+  if (
+    input.atsKind === "totaljobs" &&
+    /phone|mobile|telephone/i.test(
+      `${field.label} ${field.name} ${field.placeholder}`,
+    )
+  ) {
+    value = value.replace(/\D/g, "");
+    if (value.startsWith("0044")) value = value.slice(4);
+    else if (value.startsWith("44") && value.length > 10) value = value.slice(2);
+    if (value.startsWith("0")) value = value.slice(1);
+  }
   if (!value) return false;
   if (field.type === "select") {
     const option = closestOption(value, field.options);
@@ -1361,9 +1377,13 @@ async function fillStep(
     );
     const filled =
       carriesApplicationMaterial || Boolean(directAnswer) || canUseMapping
-        ? await fillField({ ...control, value, resume, coverLetter }).catch(
-            () => false,
-          )
+        ? await fillField({
+            ...control,
+            value,
+            resume,
+            coverLetter,
+            atsKind: ats.kind,
+          }).catch(() => false)
         : false;
     // A radio group is complete when any option is selected. Do not mark an
     // earlier option unresolved before a later matching option is processed.
