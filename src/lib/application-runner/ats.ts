@@ -78,6 +78,13 @@ const JOB_BOARD_DOMAINS = [
   "totaljobs.com",
 ] as const;
 
+// Totaljobs mounts part of its application experience from this fixed bucket
+// after the candidate fields are entered. Keep this exact-host only: broad S3
+// access would weaken the runner's candidate-data boundary.
+const ATS_AUXILIARY_HOSTS = [
+  "tjgliveassets.s3.eu-west-1.amazonaws.com",
+] as const;
+
 function hostMatches(host: string, domain: string): boolean {
   return host === domain || host.endsWith(`.${domain}`);
 }
@@ -86,6 +93,7 @@ export function nativeRunnerHostAllowed(value: string): boolean {
   const host = (value.includes("://") ? new URL(value).hostname : value).toLowerCase().replace(/\.$/, "");
   if (ATS_DOMAINS.some(({ domain }) => hostMatches(host, domain))) return true;
   if (JOB_BOARD_DOMAINS.some((domain) => hostMatches(host, domain))) return true;
+  if (ATS_AUXILIARY_HOSTS.includes(host as (typeof ATS_AUXILIARY_HOSTS)[number])) return true;
   if (host === "ir35careers.com" || host === "www.ir35careers.com") return true;
   const configured = (process.env.APPLICATION_RUNNER_ALLOWED_HOSTS ?? "")
     .split(",")

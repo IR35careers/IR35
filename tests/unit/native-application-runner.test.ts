@@ -82,6 +82,16 @@ describe("native application runner", () => {
     expect(nativeRunnerHostAllowed("www.reed.co.uk")).toBe(true);
     expect(nativeRunnerHostAllowed("www.cv-library.co.uk")).toBe(true);
     expect(nativeRunnerHostAllowed("www.totaljobs.com")).toBe(true);
+    expect(
+      nativeRunnerHostAllowed(
+        "tjgliveassets.s3.eu-west-1.amazonaws.com",
+      ),
+    ).toBe(true);
+    expect(
+      nativeRunnerHostAllowed(
+        "tjgliveassets.s3.eu-west-1.amazonaws.com.attacker.example",
+      ),
+    ).toBe(false);
     expect(nativeRunnerHostAllowed("evilashbyhq.com")).toBe(false);
     expect(nativeRunnerHostAllowed("fake-adzuna.co.uk.attacker.example")).toBe(false);
     expect(nativeRunnerHostAllowed("greenhouse.io.attacker.example")).toBe(false);
