@@ -24,6 +24,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { IntegrationState, IntegrationStatus } from "@/lib/integration-status";
+import {
+  classifyAdminApplicationRun,
+  type AdminApplicationRunState,
+} from "@/lib/admin/application-run-status";
 
 export type RunnerTestResult = {
   state: "submitted" | "processing" | "needs_user" | "failed";
@@ -152,9 +156,13 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
     [run.jobTitle, run.companyName, run.sourceHost, run.status, run.errorCode, run.action, run.message]
       .some((value) => value?.toLowerCase().includes(term)),
   );
-  const confirmedRuns = applicationRuns.filter((run) => run.status === "succeeded").length;
-  const needsUserRuns = applicationRuns.filter((run) => run.errorCode === "needs_user").length;
-  const failedRuns = applicationRuns.filter((run) => run.status === "failed").length;
+  const runStates = applicationRuns.map(classifyAdminApplicationRun);
+  const runCount = (state: AdminApplicationRunState) =>
+    runStates.filter((item) => item === state).length;
+  const confirmedRuns = runCount("confirmed");
+  const needsUserRuns = runCount("needs_action");
+  const unavailableRuns = runCount("unavailable");
+  const failedRuns = runCount("failed");
 
   return (
     <div className="mt-7 space-y-5">
@@ -226,16 +234,45 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
           <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wide">
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">{confirmedRuns} confirmed</span>
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">{needsUserRuns} needs action</span>
-            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700">{failedRuns} unavailable</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{unavailableRuns} unavailable</span>
+            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700">{failedRuns} failed</span>
           </div>
         </div>
         {visibleRuns.length ? (
           <div className="divide-y divide-slate-100">
             {visibleRuns.slice(0, 12).map((run) => {
-              const confirmed = run.status === "succeeded";
-              const needsAction = run.errorCode === "needs_user";
-              const label = confirmed ? "Confirmed" : needsAction ? "Needs action" : run.status === "processing" ? "Processing" : "Unavailable";
-              const tone = confirmed ? "bg-emerald-50 text-emerald-700" : needsAction ? "bg-amber-50 text-amber-700" : run.status === "processing" ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700";
+              const runState = classifyAdminApplicationRun(run);
+              const confirmed = runState === "confirmed";
+              const presentation: Record<
+                AdminApplicationRunState,
+                { label: string; tone: string }
+              > = {
+                confirmed: {
+                  label: "Confirmed",
+                  tone: "bg-emerald-50 text-emerald-700",
+                },
+                needs_action: {
+                  label: "Needs action",
+                  tone: "bg-amber-50 text-amber-700",
+                },
+                unavailable: {
+                  label: "Unavailable",
+                  tone: "bg-slate-100 text-slate-700",
+                },
+                processing: {
+                  label: "Processing",
+                  tone: "bg-blue-50 text-blue-700",
+                },
+                failed: {
+                  label: "Failed",
+                  tone: "bg-rose-50 text-rose-700",
+                },
+                review: {
+                  label: "Review",
+                  tone: "bg-violet-50 text-violet-700",
+                },
+              };
+              const { label, tone } = presentation[runState];
               return (
                 <article key={run.id} className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-6">
                   <div className="min-w-0">
