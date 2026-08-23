@@ -963,12 +963,23 @@ async function snapshotFields(
   const controls = page.locator(
     'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea',
   );
+  const fileUploadCount = await page.locator('input[type="file"]').count();
+  const pageCopy = fileUploadCount === 1
+    ? clean(await page.locator("body").innerText().catch(() => ""), 25_000)
+    : "";
+  const singleResumeUpload =
+    fileUploadCount === 1 && /(?:cv|resume|curriculum)/i.test(pageCopy);
   const count = Math.min(await controls.count(), MAX_FIELDS);
   const fields: Array<{ field: RunnerField; locator: Locator }> = [];
   for (let index = 0; index < count; index += 1) {
     const locator = controls.nth(index);
+    const inputType = clean(
+      (await locator.getAttribute("type").catch(() => "")) ?? "",
+      40,
+    ).toLowerCase();
+    const isFileUpload = inputType === "file";
     if (
-      !(await locator.isVisible().catch(() => false)) ||
+      (!isFileUpload && !(await locator.isVisible().catch(() => false))) ||
       !(await locator.isEnabled().catch(() => false))
     )
       continue;
@@ -1037,7 +1048,10 @@ async function snapshotFields(
         id: `step_${step}_field_${index}`,
         index,
         type: clean(snapshot.type, 40),
-        label: clean(snapshot.label, 500),
+        label: clean(
+          `${snapshot.label}${snapshot.type === "file" && singleResumeUpload ? " CV upload" : ""}`,
+          500,
+        ),
         name: clean(snapshot.name, 200),
         placeholder: clean(snapshot.placeholder, 300),
         required: snapshot.required,
@@ -1581,7 +1595,7 @@ export async function runNativeApplication(
       // to render its controls before classifying it as unsupported.
       for (
         let renderAttempt = 0;
-        !submit && !next && renderAttempt < 10;
+        !submit && !next && renderAttempt < 20;
         renderAttempt += 1
       ) {
         if (await successMessage(page, ats)) break;
