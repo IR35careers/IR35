@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   APPLICATION_WORKER_MAX_ATTEMPTS,
+  applicationWorkerCallbackErrorStatus,
   applicationWorkerRetryDelayMs,
   shouldAutomaticallyRetryWorkerAttention,
 } from "@/lib/application-worker-retry";
 
 describe("application worker retry policy", () => {
+  it("keeps callback errors recoverable instead of marking them failed", () => {
+    expect(applicationWorkerCallbackErrorStatus()).toBe("needs_user");
+  });
+
   it("retries delayed verification mail without asking the user", () => {
     expect(
       shouldAutomaticallyRetryWorkerAttention({

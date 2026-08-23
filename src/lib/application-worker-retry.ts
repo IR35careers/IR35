@@ -1,5 +1,12 @@
 export const APPLICATION_WORKER_MAX_ATTEMPTS = 5;
 
+// A callback error is not an employer rejection and must not be presented as
+// a terminal worker failure. The approved packet remains recoverable and the
+// contractor is given the exact continuation action by storeNeedsUser().
+export function applicationWorkerCallbackErrorStatus(): "needs_user" {
+  return "needs_user";
+}
+
 export function shouldAutomaticallyRetryWorkerAttention(input: {
   action?: string;
   attempts: number;

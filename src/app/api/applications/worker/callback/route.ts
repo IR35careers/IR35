@@ -21,6 +21,7 @@ import {
   savePortalSession,
 } from "@/lib/application-portal-session";
 import {
+  applicationWorkerCallbackErrorStatus,
   applicationWorkerRetryDelayMs,
   shouldAutomaticallyRetryWorkerAttention,
 } from "@/lib/application-worker-retry";
@@ -155,7 +156,7 @@ export async function POST(request: Request): Promise<Response> {
       await admin
         .from("application_worker_tasks")
         .update({
-          status: "failed",
+          status: applicationWorkerCallbackErrorStatus(),
           last_error: callback.error.slice(0, 500),
           lease_owner: null,
           lease_expires_at: null,
