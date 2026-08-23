@@ -168,6 +168,72 @@ export async function POST(request: Request): Promise<Response> {
       );
     if (receipt.state === "needs_user") {
       const action = callbackAction(providerReviewAction(receipt));
+      if (action === "listing_unavailable") {
+        const now = callback.completedAt;
+        const jobId = String(job.id || "").trim();
+        const updates = [
+          admin
+            .from("application_submissions")
+            .update({
+              status: "cancelled",
+              error_code: "listing_unavailable",
+              receipt: {
+                state: "cancelled",
+                message:
+                  "This role is no longer accepting applications at its original source.",
+                action,
+              },
+              updated_at: now,
+            })
+            .eq("user_id", callback.userId)
+            .eq("idempotency_key", callback.idempotencyKey),
+          admin
+            .from("application_packets")
+            .update({ status: "skipped", updated_at: now })
+            .eq("id", callback.applicationId)
+            .eq("user_id", callback.userId),
+          admin.from("application_events").upsert(
+            {
+              user_id: callback.userId,
+              application_id: callback.applicationId,
+              event_type: "status_changed",
+              label: "Role no longer accepting applications",
+              idempotency_key: `submit:${callback.applicationId}:listing-unavailable`,
+              metadata: { action },
+            },
+            {
+              onConflict: "user_id,idempotency_key",
+              ignoreDuplicates: true,
+            },
+          ),
+          admin
+            .from("application_worker_tasks")
+            .update({
+              status: "cancelled",
+              last_error: null,
+              lease_owner: null,
+              lease_expires_at: null,
+              completed_at: now,
+              updated_at: now,
+            })
+            .eq("id", callback.taskId),
+        ];
+        if (jobId)
+          updates.push(
+            admin
+              .from("jobs")
+              .update({ expired_at: now })
+              .eq("id", jobId)
+              .is("expired_at", null),
+          );
+        const results = await Promise.all(updates);
+        const failure = results.find((result) => result.error)?.error;
+        if (failure) throw failure;
+        return Response.json(
+          { ok: true, state: "cancelled" },
+          { headers: HEADERS },
+        );
+      }
       await storeNeedsUser({
         admin,
         userId: callback.userId,

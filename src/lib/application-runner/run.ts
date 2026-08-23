@@ -210,18 +210,20 @@ async function clickAndFollow(
   const popupPromise = page
     .waitForEvent("popup", { timeout: 1_500 })
     .catch(() => null);
-  await Promise.all([
-    page
-      .waitForLoadState("domcontentloaded", { timeout: 15_000 })
-      .catch(() => null),
-    action.click({ timeout: 12_000 }),
-  ]);
+  try {
+    await action.click({ timeout: 12_000 });
+  } catch (error) {
+    const stillActionable =
+      (await action.isVisible().catch(() => false)) &&
+      (await action.isEnabled().catch(() => false));
+    if (!stillActionable) throw error;
+    await action.click({ timeout: 5_000, force: true });
+  }
   const popup = await popupPromise;
   const destination = popup ?? page;
-  if (popup)
-    await popup
-      .waitForLoadState("domcontentloaded", { timeout: 20_000 })
-      .catch(() => null);
+  await destination
+    .waitForLoadState("domcontentloaded", { timeout: 20_000 })
+    .catch(() => null);
   await destination.waitForTimeout(settleMs);
   await validatePublicHttpsUrl(destination.url());
   return destination;
@@ -959,8 +961,10 @@ export async function runNativeApplication(
         host: startUrl.hostname,
         reason: error instanceof Error ? clean(error.message, 240) : "unknown",
       });
-      throw new Error(
-        "The employer application page is unavailable or closed.",
+      return reviewReceipt(
+        "This job listing is no longer available at its original source.",
+        [],
+        "listing_unavailable",
       );
     }
     if (navigationStatus && [401, 403, 429].includes(navigationStatus)) {
@@ -971,8 +975,10 @@ export async function runNativeApplication(
       );
     }
     if (navigationStatus && navigationStatus >= 400) {
-      throw new Error(
-        "The employer application page is unavailable or closed.",
+      return reviewReceipt(
+        "This job listing is no longer available at its original source.",
+        [],
+        "listing_unavailable",
       );
     }
     await validatePublicHttpsUrl(page.url());
