@@ -212,6 +212,11 @@ describe("native application runner", () => {
         "Check your inbox. We sent a secure sign-in link.",
       ),
     ).toBe(true);
+    expect(
+      isEmployerEmailLinkPending(
+        "An email is on the way! Open the login link sent to apply@example.com to sign in.",
+      ),
+    ).toBe(true);
   });
 
   it("recognises employer listings that can no longer be submitted", () => {

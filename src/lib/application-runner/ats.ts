@@ -184,7 +184,7 @@ export function isEmployerPasswordSetupPage(body: string): boolean {
 }
 
 export function isEmployerEmailLinkPending(body: string): boolean {
-  return /check your (?:email|inbox)|(?:sent|emailed).{0,80}(?:link|verification)|click.{0,40}(?:link|email)|magic link/i.test(
+  return /check your (?:email|inbox)|(?:sent|emailed).{0,80}(?:link|verification)|(?:open|use|click).{0,60}(?:login|log[ -]?in|sign[ -]?in|one[ -]?time|verification|magic).{0,40}link|(?:login|log[ -]?in|sign[ -]?in|one[ -]?time).{0,40}link.{0,40}(?:sent|emailed)|an email is on the way|magic link/i.test(
     body.replace(/\s+/g, " "),
   );
 }
