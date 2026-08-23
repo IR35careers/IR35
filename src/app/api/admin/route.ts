@@ -944,11 +944,8 @@ export async function POST(request: Request): Promise<Response> {
       const workerConfig = applicationWorkerConfig();
       const callbackUrl = new URL(
         "/api/applications/worker/callback",
-        process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-          "https://www.ir35careers.com",
+        "https://www.ir35careers.com",
       );
-      if (callbackUrl.hostname === "ir35careers.com")
-        callbackUrl.hostname = "www.ir35careers.com";
       let requeued = 0;
       for (const submission of stale) {
         const now = new Date().toISOString();

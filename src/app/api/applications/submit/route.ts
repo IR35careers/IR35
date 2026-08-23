@@ -467,14 +467,10 @@ export async function POST(request: Request): Promise<Response> {
     const workerConfig = applicationWorkerConfig();
     let persistentWorkerQueued = false;
     if (provider?.kind === "native" && workerConfig.enabled) {
-      const callbackBase =
-        process.env.NEXT_PUBLIC_SITE_URL?.trim() || request.url;
       const callbackUrl = new URL(
         "/api/applications/worker/callback",
-        callbackBase,
+        "https://www.ir35careers.com",
       );
-      if (callbackUrl.hostname === "ir35careers.com")
-        callbackUrl.hostname = "www.ir35careers.com";
       if (callbackUrl.protocol === "https:") {
         const { error: workerQueueError } = await admin
           .from("application_worker_tasks")
