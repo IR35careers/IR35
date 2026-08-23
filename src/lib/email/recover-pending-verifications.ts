@@ -38,6 +38,21 @@ export function verificationRecoveryRequestedAfter(
   ).toISOString();
 }
 
+export function shouldRequestVerificationRetry(input: {
+  retryCount: number;
+  lastRequestedAt?: string;
+  nowMs?: number;
+}): boolean {
+  if (!Number.isInteger(input.retryCount) || input.retryCount < 0)
+    return false;
+  if (input.retryCount >= 2) return false;
+  const lastMs = new Date(input.lastRequestedAt ?? "").getTime();
+  return (
+    !Number.isFinite(lastMs) ||
+    (input.nowMs ?? Date.now()) - lastMs >= 30 * 60_000
+  );
+}
+
 export async function recoverPendingVerificationEmails(input: {
   admin: SupabaseClient;
   limit?: number;
@@ -87,6 +102,94 @@ export async function recoverPendingVerificationEmails(input: {
       });
 
       if (!providerEmail) {
+        const retryEvents = await input.admin
+          .from("application_events")
+          .select("created_at", { count: "exact" })
+          .eq("user_id", row.user_id)
+          .eq("application_id", row.application_id)
+          .eq("label", "Employer verification retry requested")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (retryEvents.error) throw retryEvents.error;
+        const lastRetryAt = retryEvents.data?.[0]?.created_at
+          ? String(retryEvents.data[0].created_at)
+          : undefined;
+        const retryCount = retryEvents.count ?? 0;
+        if (
+          shouldRequestVerificationRetry({
+            retryCount,
+            lastRequestedAt: lastRetryAt,
+            nowMs,
+          })
+        ) {
+          const taskUpdate = await input.admin
+            .from("application_worker_tasks")
+            .update({
+              status: "queued",
+              attempts: 0,
+              available_at: checkedAt,
+              lease_owner: null,
+              lease_expires_at: null,
+              last_error: null,
+              completed_at: null,
+              updated_at: checkedAt,
+            })
+            .eq("user_id", row.user_id)
+            .eq("application_id", row.application_id)
+            .in("status", ["needs_user", "failed"])
+            .select("id");
+          if (taskUpdate.error) throw taskUpdate.error;
+          if (taskUpdate.data?.length) {
+            const retryNumber = retryCount + 1;
+            const retryResults = await Promise.all([
+              input.admin
+                .from("application_submissions")
+                .update({
+                  status: "processing",
+                  error_code: null,
+                  receipt: {
+                    state: "processing",
+                    action: "verification_code",
+                    message:
+                      "IR35Careers is requesting a fresh employer verification email and will continue automatically.",
+                  },
+                  updated_at: checkedAt,
+                })
+                .eq("user_id", row.user_id)
+                .eq("application_id", row.application_id)
+                .eq("error_code", "needs_user"),
+              input.admin
+                .from("application_packets")
+                .update({ status: "ready", updated_at: checkedAt })
+                .eq("id", row.application_id)
+                .eq("user_id", row.user_id),
+              input.admin.from("application_events").upsert(
+                {
+                  user_id: row.user_id,
+                  application_id: row.application_id,
+                  event_type: "status_changed",
+                  label: "Employer verification retry requested",
+                  metadata: {
+                    action: "verification_code",
+                    retryNumber,
+                    source: "worker_recovery",
+                  },
+                  idempotency_key: `submit:${row.application_id}:verification-background-retry:${retryNumber}`,
+                },
+                {
+                  onConflict: "user_id,idempotency_key",
+                  ignoreDuplicates: true,
+                },
+              ),
+            ]);
+            const retryFailure = retryResults.find(
+              (result) => result.error,
+            )?.error;
+            if (retryFailure) throw retryFailure;
+            recovered.push(row.application_id);
+            continue;
+          }
+        }
         await input.admin
           .from("application_submissions")
           .update({

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  shouldRequestVerificationRetry,
   verificationRecoveryDue,
   verificationRecoveryRequestedAfter,
 } from "@/lib/email/recover-pending-verifications";
@@ -29,5 +30,28 @@ describe("pending verification recovery policy", () => {
         now,
       ),
     ).toBe("2026-08-22T06:00:00.000Z");
+  });
+
+  it("requests at most two fresh codes with a 30 minute gap", () => {
+    expect(shouldRequestVerificationRetry({ retryCount: 0, nowMs: now })).toBe(
+      true,
+    );
+    expect(
+      shouldRequestVerificationRetry({
+        retryCount: 1,
+        lastRequestedAt: "2026-08-23T05:45:00.000Z",
+        nowMs: now,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRequestVerificationRetry({
+        retryCount: 1,
+        lastRequestedAt: "2026-08-23T05:29:00.000Z",
+        nowMs: now,
+      }),
+    ).toBe(true);
+    expect(shouldRequestVerificationRetry({ retryCount: 2, nowMs: now })).toBe(
+      false,
+    );
   });
 });
