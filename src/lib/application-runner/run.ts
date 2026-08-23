@@ -8,8 +8,10 @@ import {
 } from "playwright-core";
 import { createHash } from "node:crypto";
 import {
+  canAutomaticallyAcceptEmployerTerms,
   detectAts,
   isApplicationFormEvidence,
+  isClosedListingPage,
   isEmployerAccountAccessPage,
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
@@ -18,6 +20,7 @@ import {
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
+  preferEmployerSignIn,
   type AtsDefinition,
 } from "@/lib/application-runner/ats";
 import {
@@ -329,8 +332,13 @@ async function handlePortalAccess(
   payload: SubmissionProviderPayload,
   runtime: NativeSubmissionRuntime | undefined,
   requestedAfter: string,
-  hasSavedSession: boolean,
-): Promise<{ handled: boolean; stop?: { message: string; action: string } }> {
+  accountState?: "created",
+): Promise<{
+  handled: boolean;
+  accountCreated?: boolean;
+  accountCreationStarted?: boolean;
+  stop?: { message: string; action: string };
+}> {
   const captcha = page.locator(
     'iframe[src*="captcha" i], [id*="captcha" i], [class*="captcha" i], iframe[src*="recaptcha" i], iframe[src*="hcaptcha" i]',
   );
@@ -425,7 +433,7 @@ async function handlePortalAccess(
         },
       };
     await clickAndFollow(page, verify, 800);
-    return { handled: true };
+    return { handled: true, accountCreated: true };
   }
 
   const passwordInputs = page.locator('input[type="password"]:visible');
@@ -510,8 +518,7 @@ async function handlePortalAccess(
       );
     if (
       createAccount &&
-      !hasSavedSession &&
-      !accountAlreadyExists &&
+      !preferEmployerSignIn({ accountAlreadyExists, accountState }) &&
       requiresEmployerTermsAcceptance(bodyText) &&
       !payload.candidate.employerTermsConsent
     ) {
@@ -524,8 +531,12 @@ async function handlePortalAccess(
         },
       };
     }
+    const useSignIn = preferEmployerSignIn({
+      accountAlreadyExists,
+      accountState,
+    });
     const accessAction =
-      hasSavedSession || accountAlreadyExists
+      useSignIn
         ? signIn ??
           createAccount ??
           (await actionLocator(page, /^(continue|next|continue with email)$/i))
@@ -542,7 +553,12 @@ async function handlePortalAccess(
         },
       };
     await clickAndFollow(page, accessAction, 900);
-    return { handled: true };
+    return {
+      handled: true,
+      accountCreationStarted: Boolean(
+        createAccount && accessAction === createAccount && !useSignIn,
+      ),
+    };
   }
   return { handled: false };
 }
@@ -745,6 +761,7 @@ async function fillStep(
   facts: RunnerFacts,
   resume: Buffer | null,
   coverLetter: string,
+  employerTermsConsent: boolean,
 ): Promise<RunnerField[]> {
   const controls = await snapshotFields(page, step);
   const unknown: RunnerField[] = [];
@@ -764,6 +781,17 @@ async function fillStep(
   >();
   for (const control of controls) {
     const { field } = control;
+    if (
+      field.type === "checkbox" &&
+      canAutomaticallyAcceptEmployerTerms({
+        label: `${field.label} ${field.name}`,
+        required: field.required,
+        consent: employerTermsConsent,
+      })
+    ) {
+      await control.locator.check().catch(() => undefined);
+      if (await control.locator.isChecked().catch(() => false)) continue;
+    }
     if (field.type === "radio") {
       const groupKey = field.name || field.label || field.id;
       if (field.required && !requiredRadioGroups.has(groupKey))
@@ -904,6 +932,8 @@ export async function runNativeApplication(
   let context: BrowserContext | null = null;
   let page: Page | null = null;
   let sessionDisposition: "save" | "clear" = "save";
+  let portalAccountState: "created" | undefined;
+  let accountCreationPending = false;
   let timedOut = false;
   const budgetTimer = setTimeout(() => {
     timedOut = true;
@@ -920,6 +950,7 @@ export async function runNativeApplication(
     const savedSession = payload.candidate.portalAccountConsent
       ? await runtime?.loadPortalSession?.().catch(() => null)
       : null;
+    portalAccountState = savedSession?.accountState;
     let startUrl = destination;
     if (savedSession?.currentUrl) {
       try {
@@ -1016,6 +1047,19 @@ export async function runNativeApplication(
       8_000,
     );
     if (
+      isClosedListingPage(
+        await page.title().catch(() => ""),
+        handoffBody,
+      )
+    ) {
+      sessionDisposition = "clear";
+      return reviewReceipt(
+        "This role is no longer accepting applications at its original source.",
+        [],
+        "listing_unavailable",
+      );
+    }
+    if (
       isSourceAccessDeniedPage(
         await page.title().catch(() => ""),
         handoffBody,
@@ -1054,8 +1098,14 @@ export async function runNativeApplication(
         payload,
         runtime,
         requestedAfter,
-        Boolean(savedSession),
+        portalAccountState,
       );
+      if (portalAccess.accountCreated) {
+        portalAccountState = "created";
+        accountCreationPending = false;
+      }
+      if (portalAccess.accountCreationStarted)
+        accountCreationPending = true;
       if (portalAccess.stop)
         return reviewReceipt(
           portalAccess.stop.message,
@@ -1074,6 +1124,10 @@ export async function runNativeApplication(
       }
       const stop = await blocker(page);
       if (stop) return reviewReceipt(stop.message, [], stop.action);
+      if (accountCreationPending) {
+        portalAccountState = "created";
+        accountCreationPending = false;
+      }
       sensitive = true;
       const needsUser = await fillStep(
         page,
@@ -1081,6 +1135,7 @@ export async function runNativeApplication(
         facts,
         resume,
         payload.coverLetter,
+        Boolean(payload.candidate.employerTermsConsent),
       );
       if (needsUser.length)
         return reviewReceipt(
@@ -1166,6 +1221,7 @@ export async function runNativeApplication(
           await runtime.savePortalSession?.({
             storageState: await context.storageState(),
             currentUrl: currentUrl.toString(),
+            accountState: portalAccountState,
           });
         } catch {
           // A failed session snapshot must not replace the useful application

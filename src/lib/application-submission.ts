@@ -51,6 +51,7 @@ export interface NativePortalStorageState {
 export interface NativePortalSession {
   storageState: NativePortalStorageState;
   currentUrl?: string;
+  accountState?: "created";
 }
 
 export interface NativeSubmissionRuntime {

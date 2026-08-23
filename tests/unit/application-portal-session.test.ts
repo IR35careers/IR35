@@ -9,6 +9,7 @@ afterEach(() => vi.unstubAllEnvs());
 
 const SESSION: NativePortalSession = {
   currentUrl: "https://jobs.ashbyhq.com/example/application",
+  accountState: "created",
   storageState: {
     cookies: [
       {

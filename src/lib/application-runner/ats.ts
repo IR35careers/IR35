@@ -140,6 +140,31 @@ export function isEmployerTermsCheckbox(label: string): boolean {
   );
 }
 
+export function canAutomaticallyAcceptEmployerTerms(input: {
+  label: string;
+  required: boolean;
+  consent: boolean;
+}): boolean {
+  return Boolean(
+    input.consent &&
+      input.required &&
+      isEmployerTermsCheckbox(input.label),
+  );
+}
+
+export function preferEmployerSignIn(input: {
+  accountAlreadyExists: boolean;
+  accountState?: "created";
+}): boolean {
+  return input.accountAlreadyExists || input.accountState === "created";
+}
+
+export function isClosedListingPage(title: string, body: string): boolean {
+  return /(?:job|role|position|vacancy|opportunity|application).{0,80}(?:is |has been |was )?(?:no longer available|closed|expired|filled|removed)|no longer accepting applications|applications? (?:are )?closed|application deadline (?:has )?passed|this job (?:could not be found|does not exist)|page not found/i.test(
+    `${title} ${body}`.replace(/\s+/g, " "),
+  );
+}
+
 export function isVerificationResendControl(label: string): boolean {
   return /^(?:resend|send|request|email)(?: the)?(?: verification)?(?: a| another| new)? code(?: again)?$/i.test(
     label.replace(/\s+/g, " ").trim(),

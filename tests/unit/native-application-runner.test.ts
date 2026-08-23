@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  canAutomaticallyAcceptEmployerTerms,
   detectAts,
   isEmployerAccountAccessPage,
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
   isEmployerTermsCheckbox,
+  isClosedListingPage,
   isVerificationResendControl,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   isTrustedApplicationPortalSender,
   nativeRunnerHostAllowed,
+  preferEmployerSignIn,
 } from "@/lib/application-runner/ats";
 import { closestOption, deterministicMapping, screeningAnswer } from "@/lib/application-runner/field-mapping";
 import { buildRunnerFacts, type RunnerField } from "@/lib/application-runner/types";
@@ -145,6 +148,56 @@ describe("native application runner", () => {
     expect(isEmployerTermsCheckbox("I confirm the candidate declaration")).toBe(true);
     expect(isEmployerTermsCheckbox("Send me marketing offers and job alerts")).toBe(false);
     expect(isEmployerTermsCheckbox("Join the talent community newsletter")).toBe(false);
+  });
+
+  it("uses explicit permission only for required employer terms", () => {
+    expect(
+      canAutomaticallyAcceptEmployerTerms({
+        label: "I agree to the Terms and Conditions",
+        required: true,
+        consent: true,
+      }),
+    ).toBe(true);
+    expect(
+      canAutomaticallyAcceptEmployerTerms({
+        label: "Send me marketing offers",
+        required: true,
+        consent: true,
+      }),
+    ).toBe(false);
+    expect(
+      canAutomaticallyAcceptEmployerTerms({
+        label: "I agree to the Privacy Notice",
+        required: false,
+        consent: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("does not mistake a pre-account saved page for an existing account", () => {
+    expect(preferEmployerSignIn({ accountAlreadyExists: false })).toBe(false);
+    expect(
+      preferEmployerSignIn({
+        accountAlreadyExists: false,
+        accountState: "created",
+      }),
+    ).toBe(true);
+    expect(preferEmployerSignIn({ accountAlreadyExists: true })).toBe(true);
+  });
+
+  it("recognises employer listings that can no longer be submitted", () => {
+    expect(
+      isClosedListingPage(
+        "Senior Data Scientist",
+        "This role is no longer accepting applications.",
+      ),
+    ).toBe(true);
+    expect(
+      isClosedListingPage(
+        "DevOps Engineer",
+        "Complete the application form below.",
+      ),
+    ).toBe(false);
   });
 
   it("recognises ordinary verification resend controls", () => {
