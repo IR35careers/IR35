@@ -489,6 +489,7 @@ export async function GET(request: Request): Promise<Response> {
           inboxAlias: inbox?.alias,
           jobTitle: job.title,
           companyName: job.company_name,
+          jobId: job.id,
           applicationId,
           idempotencyKey: `submit:${applicationId}:needs-user:${providerReceipt.providerSubmissionId}`,
         }).catch(() => null);
@@ -589,6 +590,7 @@ export async function GET(request: Request): Promise<Response> {
       inboxAlias: inbox?.alias,
       jobTitle: job.title,
       companyName: job.company_name,
+      jobId: job.id,
       applicationId,
       idempotencyKey: `submit:${applicationId}:submitted`,
     }).catch(() => null);

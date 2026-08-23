@@ -140,6 +140,7 @@ export async function storeNeedsUser(input: {
     candidateName: input.candidateName,
     jobTitle: input.job.title,
     companyName: input.job.company_name,
+    jobId: input.job.id,
     applicationId: String(input.packet.id),
     idempotencyKey: `${idempotencyKey}:needs-user:${attentionKey}`,
   }).catch(() => null);
@@ -226,6 +227,7 @@ export async function storeSubmittedApplication(input: {
     candidateName: input.candidateName,
     jobTitle: input.job.title,
     companyName: input.job.company_name,
+    jobId: input.job.id,
     applicationId: String(input.packet.id),
     idempotencyKey: `${idempotencyKey}:submitted`,
   }).catch(() => null);

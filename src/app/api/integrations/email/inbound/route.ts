@@ -9,10 +9,11 @@ import {
 } from "@/lib/email/resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { sendApplicationNotification, type ApplicationNotificationKind } from "@/lib/email/application-notifications";
+import { applicationMessageTransition } from "@/lib/email/application-message-transition";
 import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
 import { isVerifiedRecruiterRecipient } from "@/lib/email/recruiter-reply";
 import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
-import type { ApplicationRecord, ApplicationStatus, InboxClassification } from "@/lib/workspace/types";
+import type { ApplicationRecord } from "@/lib/workspace/types";
 import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumeRateLimitKey } from "@/lib/security/rate-limit";
 import { isTrustedApplicationPortalSender } from "@/lib/application-runner/ats";
@@ -29,18 +30,6 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const RESPONSE_HEADERS = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
-
-function messageTransition(classification: InboxClassification, current: ApplicationStatus): { status: ApplicationStatus; label: string; notification: ApplicationNotificationKind } {
-  if (classification === "interview") return { status: "interview", label: "Interview message received", notification: "interview" };
-  if (classification === "rejection") return { status: "rejected", label: "Employer closed the application", notification: "rejection" };
-  if (classification === "action_required") return { status: "needs_review", label: "Recruiter needs more information", notification: "needs_attention" };
-  if (classification === "application_update") return {
-    status: current === "applied" ? "viewed" : ["ready", "preparing", "needs_review"].includes(current) ? "applied" : current,
-    label: "Application update received",
-    notification: "update",
-  };
-  return { status: ["interview", "offer", "rejected", "withdrawn"].includes(current) ? current : "replied", label: "Recruiter message received", notification: "reply" };
-}
 
 export async function POST(request: Request) {
   if (process.env.ENABLE_INBOUND_MAIL !== "true") {
@@ -295,8 +284,12 @@ export async function POST(request: Request) {
 
     let forwardingKind: ApplicationNotificationKind = "message";
     if (applicationId && trustedSender) {
-      const currentStatus = (linkedPacket?.status ?? "applied") as ApplicationStatus;
-      const transition = messageTransition(classification, currentStatus);
+      const currentStatus = (linkedPacket?.status ??
+        "applied") as ApplicationRecord["status"];
+      const transition = applicationMessageTransition(
+        classification,
+        currentStatus,
+      );
       forwardingKind = transition.notification;
       const now = new Date().toISOString();
       const existingReceipt = linkedPacket?.receipt as ApplicationRecord["receipt"];
@@ -367,6 +360,7 @@ export async function POST(request: Request) {
         to: String(alias.forwarding_email),
         jobTitle: linkedJob.title,
         companyName: linkedJob.company_name,
+        jobId: linkedJob.id,
         applicationId,
         originalSubject: payload.subject,
         originalMessage: payload.text,

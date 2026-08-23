@@ -28,6 +28,10 @@ import type {
   ResumeProfile,
 } from "@/lib/workspace/types";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  disableEmployerAutomation,
+  enableEmployerAutomation,
+} from "@/lib/application-automation-consent";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import type { ResumeProfileExtraction } from "@/lib/resume/profile-extraction";
 
@@ -198,6 +202,19 @@ export function ContractorProfile() {
   const completeness = readiness.percentage;
   const skills = profile.skills ?? [];
   const certifications = profile.certifications ?? [];
+  const employerAutomationEnabled = Boolean(
+    profile.portalAccountConsent &&
+      profile.employerTermsConsent &&
+      profile.automaticEmailVerification,
+  );
+  const setEmployerAutomation = (enabled: boolean) => {
+    setSaved(false);
+    setProfile((current) =>
+      enabled
+        ? enableEmployerAutomation(current)
+        : disableEmployerAutomation(current),
+    );
+  };
   const addSkill = (value: string) => {
     const skill = value.trim().replace(/\s+/g, " ");
     if (!skill) return;
@@ -781,74 +798,36 @@ export function ContractorProfile() {
               <div className="flex items-center gap-3">
                 <ShieldCheck className="text-emerald-700" />
                 <div>
-                  <h2 className="font-semibold">Employer portal automation</h2>
+                  <h2 className="font-semibold">Automatic employer applications</h2>
                   <p className="text-sm text-slate-600">
-                    Choose what IR35Careers may do after you approve an
-                    application.
+                    Give this permission once so approved applications can be
+                    completed without repeatedly stopping for account setup.
                   </p>
                 </div>
               </div>
-              <div className="mt-5 space-y-3">
-                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
-                  <span>
-                    <strong className="block text-sm text-slate-950">
-                      Create and sign in to employer accounts
-                    </strong>
-                    <span className="mt-1 block text-xs leading-5 text-slate-600">
-                      Use your assigned IR35Careers email and a protected
-                      site-specific password.
-                    </span>
+              <label className="mt-5 flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
+                <span>
+                  <strong className="block text-sm text-slate-950">
+                    Enable automatic applications
+                  </strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">
+                    For applications you approve, IR35Careers may create and
+                    sign in to employer accounts using your private application
+                    email, accept required account terms, and use ordinary email
+                    verification codes. Marketing choices are never selected.
+                    CAPTCHA, identity checks and new legal questions still come
+                    back to you.
                   </span>
-                  <input
-                    type="checkbox"
-                    checked={profile.portalAccountConsent === true}
-                    onChange={(event) =>
-                      set("portalAccountConsent", event.target.checked)
-                    }
-                    className="mt-1 h-5 w-5 accent-emerald-700"
-                  />
-                </label>
-                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
-                  <span>
-                    <strong className="block text-sm text-slate-950">
-                      Accept required employer account terms
-                    </strong>
-                    <span className="mt-1 block text-xs leading-5 text-slate-600">
-                      After you approve an application, IR35Careers may accept
-                      the required account terms needed to submit it. Marketing
-                      choices are never selected.
-                    </span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={profile.employerTermsConsent === true}
-                    onChange={(event) =>
-                      set("employerTermsConsent", event.target.checked)
-                    }
-                    className="mt-1 h-5 w-5 accent-emerald-700"
-                  />
-                </label>
-                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
-                  <span>
-                    <strong className="block text-sm text-slate-950">
-                      Use ordinary email verification codes
-                    </strong>
-                    <span className="mt-1 block text-xs leading-5 text-slate-600">
-                      Read a job-site code sent to your assigned inbox and use
-                      it only for the matching application. CAPTCHA and identity
-                      checks still require you.
-                    </span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={profile.automaticEmailVerification === true}
-                    onChange={(event) =>
-                      set("automaticEmailVerification", event.target.checked)
-                    }
-                    className="mt-1 h-5 w-5 accent-emerald-700"
-                  />
-                </label>
-              </div>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={employerAutomationEnabled}
+                  onChange={(event) =>
+                    setEmployerAutomation(event.target.checked)
+                  }
+                  className="mt-1 h-5 w-5 shrink-0 accent-emerald-700"
+                />
+              </label>
             </section>
             <section id="work-authorisation" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <h2 className="font-semibold">Experience and projects</h2>

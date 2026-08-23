@@ -476,6 +476,7 @@ async function reportResult(request: Request, body: DbRow): Promise<Response> {
         candidateName,
         jobTitle: context.job.title,
         companyName: context.job.company_name,
+        jobId: context.job.id,
         applicationId: handoff.applicationId,
         idempotencyKey: `${idempotencyKey}:browser-submitted`,
       }).catch(() => null);
@@ -538,6 +539,7 @@ async function reportResult(request: Request, body: DbRow): Promise<Response> {
         candidateName,
         jobTitle: context.job.title,
         companyName: context.job.company_name,
+        jobId: context.job.id,
         applicationId: handoff.applicationId,
         idempotencyKey: `${idempotencyKey}:browser-needs-user:${action}`,
       }).catch(() => null);

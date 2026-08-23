@@ -215,6 +215,7 @@ export async function POST(request: Request): Promise<Response> {
         candidateName: profile.fullName,
         jobTitle: application.job.title,
         companyName: application.job.company_name,
+        jobId: application.job.id,
         applicationId: application.id,
         idempotencyKey: `auto:${application.job.id}:needs-user`,
       }).catch(() => null);

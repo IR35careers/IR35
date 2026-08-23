@@ -885,6 +885,7 @@ export async function POST(request: Request): Promise<Response> {
           candidateName,
           jobTitle: job.title,
           companyName: job.company_name,
+          jobId: job.id,
           applicationId: String(packet.id),
           idempotencyKey: `${idempotencyKey}:submission-issue`,
         }).catch(() => null);

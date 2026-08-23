@@ -15,3 +15,16 @@ export function enableEmployerAutomation(
     employerAutomationConsentVersion: EMPLOYER_AUTOMATION_CONSENT_VERSION,
   };
 }
+
+export function disableEmployerAutomation(
+  profile: ContractorProfile,
+): ContractorProfile {
+  return {
+    ...profile,
+    portalAccountConsent: false,
+    employerTermsConsent: false,
+    automaticEmailVerification: false,
+    employerAutomationConsentAt: undefined,
+    employerAutomationConsentVersion: undefined,
+  };
+}

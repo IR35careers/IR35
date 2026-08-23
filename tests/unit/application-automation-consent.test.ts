@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  disableEmployerAutomation,
   EMPLOYER_AUTOMATION_CONSENT_VERSION,
   enableEmployerAutomation,
 } from "@/lib/application-automation-consent";
@@ -25,5 +26,19 @@ describe("employer automation consent", () => {
       employerAutomationConsentAt: acceptedAt,
       employerAutomationConsentVersion: EMPLOYER_AUTOMATION_CONSENT_VERSION,
     });
+  });
+
+  it("revokes every linked employer automation permission together", () => {
+    const profile = disableEmployerAutomation(
+      enableEmployerAutomation(createSeedWorkspaceState().profile),
+    );
+
+    expect(profile).toMatchObject({
+      portalAccountConsent: false,
+      employerTermsConsent: false,
+      automaticEmailVerification: false,
+    });
+    expect(profile.employerAutomationConsentAt).toBeUndefined();
+    expect(profile.employerAutomationConsentVersion).toBeUndefined();
   });
 });

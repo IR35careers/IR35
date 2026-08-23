@@ -19,6 +19,7 @@ export interface ApplicationNotificationInput {
   candidateName?: string;
   jobTitle: string;
   companyName: string;
+  jobId?: string;
   applicationId: string;
   originalSubject?: string;
   originalMessage?: string;
@@ -81,7 +82,9 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
   actionPath: string;
 } {
   const role = `${input.jobTitle} at ${input.companyName}`;
-  const applicationPath = `/applications/new/${encodeURIComponent(input.applicationId)}`;
+  const applicationPath = `/applications/new/${encodeURIComponent(
+    input.jobId || input.applicationId,
+  )}`;
   switch (input.kind) {
     case "submitted":
       return {

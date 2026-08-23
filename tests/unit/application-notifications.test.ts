@@ -12,6 +12,7 @@ const base: ApplicationNotificationInput = {
   inboxAlias: "apply-test@mail.ir35careers.com",
   jobTitle: "Senior Data Scientist",
   companyName: "Michael Page Technology",
+  jobId: "33333333-3333-4333-8333-333333333333",
   applicationId: "22222222-2222-4222-8222-222222222222",
   idempotencyKey: "submit:test:needs-user",
   occurredAt: "2026-08-21T22:44:00.000Z",
@@ -37,16 +38,16 @@ describe("application notifications", () => {
     expect(buildApplicationInboxRecord(base)?.provider_message_id).toBe(buildApplicationInboxRecord(base)?.provider_message_id);
   });
 
-  it("sends action links to the application tracker instead of an invalid job route", () => {
+  it("sends action links to the exact job workspace", () => {
     expect(applicationNotificationPresentation(base).actionPath).toBe(
-      `/applications/new/${base.applicationId}#needs-attention`,
+      `/applications/new/${base.jobId}#needs-attention`,
     );
     expect(
       applicationNotificationPresentation({
         ...base,
         kind: "submission_issue",
       }).actionPath,
-    ).toBe(`/applications/new/${base.applicationId}#needs-attention`);
+    ).toBe(`/applications/new/${base.jobId}#needs-attention`);
   });
 
   it("presents an unverified linked email without calling it a recruiter reply", () => {
