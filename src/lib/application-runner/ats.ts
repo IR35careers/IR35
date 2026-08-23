@@ -55,6 +55,7 @@ const JOB_BOARD_DOMAINS = [
   "adzuna.co.uk",
   "reed.co.uk",
   "cv-library.co.uk",
+  "totaljobs.com",
 ] as const;
 
 function hostMatches(host: string, domain: string): boolean {

@@ -24,6 +24,15 @@ describe("application source resolution", () => {
     ).toBeNull();
   });
 
+  it("recognises Totaljobs evidence on an Adzuna listing", () => {
+    expect(
+      discoveryProviderFromAdzunaPage({
+        body: "DevOps Engineer",
+        html: '<img alt="Total Jobs" src="provider-logo.png">',
+      }),
+    ).toBe("totaljobs");
+  });
+
   it("requires both the role and company before using a direct listing", () => {
     const exact = {
       title: "Mould Joiner/ Carpenter",
@@ -59,5 +68,34 @@ describe("application source resolution", () => {
         job,
       )?.href,
     ).toBe("/job/225520701/mould-joiner-carpenter");
+  });
+
+  it("selects an exact Totaljobs role only when the company also matches", () => {
+    const totalJobsRole = {
+      title: "DevOps Engineer",
+      company_name: "TALENT INTERNATIONAL UK LTD",
+      location: "UK",
+    };
+    expect(
+      bestDiscoveryCandidate(
+        [
+          {
+            title: "DevOps Engineer",
+            context:
+              "TALENT INTERNATIONAL UK LTD UK £480.00 per day Contract Published 2 days ago",
+            href:
+              "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+          },
+          {
+            title: "DevOps Engineer",
+            context: "Another recruiter London £550 per day Contract",
+            href: "/job/devops-engineer/another-recruiter-job107879999",
+          },
+        ],
+        totalJobsRole,
+      )?.href,
+    ).toBe(
+      "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+    );
   });
 });

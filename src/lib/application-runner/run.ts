@@ -310,6 +310,53 @@ async function cvLibraryCandidates(page: Page): Promise<DiscoveryCandidate[]> {
   return candidates;
 }
 
+async function totalJobsCandidates(page: Page): Promise<DiscoveryCandidate[]> {
+  const anchors = page.locator('a[href^="/job/"]');
+  const count = Math.min(await anchors.count(), 120);
+  const candidates: DiscoveryCandidate[] = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < count; index += 1) {
+    const anchor = anchors.nth(index);
+    const href = (await anchor.getAttribute("href").catch(() => null)) ?? "";
+    if (!/^\/job\/.+-job\d+(?:[/?#]|$)/i.test(href) || seen.has(href))
+      continue;
+    seen.add(href);
+    const title = clean(await anchor.innerText().catch(() => ""), 240);
+    if (!title) continue;
+    const context = clean(
+      await anchor
+        .evaluate((node) => {
+          let current: HTMLElement | null = node as HTMLElement;
+          let useful = current.innerText || current.textContent || "";
+          for (let depth = 0; depth < 8 && current.parentElement; depth += 1) {
+            current = current.parentElement;
+            const text = current.innerText || current.textContent || "";
+            if (text.length <= 2_200) useful = text;
+            if (/\b(published|ago|contract|per (?:hour|day|annum))\b/i.test(text))
+              break;
+          }
+          return useful;
+        })
+        .catch(() => ""),
+      2_200,
+    );
+    candidates.push({ title, context, href });
+  }
+  return candidates;
+}
+
+function totalJobsSearchUrl(job: SubmissionProviderPayload["job"]): string {
+  const slug = clean(job.title, 120)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const url = new URL(
+    `https://www.totaljobs.com/jobs/${slug || "contract"}`,
+  );
+  url.searchParams.set("keywords", job.title);
+  return url.toString();
+}
+
 async function resolveDiscoveryApplicationPage(
   page: Page,
   job: SubmissionProviderPayload["job"],
@@ -327,15 +374,20 @@ async function resolveDiscoveryApplicationPage(
     page.locator("body").innerText().catch(() => ""),
     page.content().catch(() => ""),
   ]);
-  if (discoveryProviderFromAdzunaPage({ body, html }) !== "cv_library")
-    return page;
+  const provider = discoveryProviderFromAdzunaPage({ body, html });
+  if (!provider) return page;
 
   const searchPage = await page.context().newPage();
   try {
-    await searchPage.goto("https://www.cv-library.co.uk/search-jobs", {
-      waitUntil: "domcontentloaded",
-      timeout: 25_000,
-    });
+    await searchPage.goto(
+      provider === "cv_library"
+        ? "https://www.cv-library.co.uk/search-jobs"
+        : totalJobsSearchUrl(job),
+      {
+        waitUntil: "domcontentloaded",
+        timeout: 25_000,
+      },
+    );
     const essentialCookies = await actionLocator(
       searchPage,
       /^(essential cookies only|reject optional cookies|only necessary cookies)$/i,
@@ -344,21 +396,29 @@ async function resolveDiscoveryApplicationPage(
       await clickAndFollow(searchPage, essentialCookies, 250).catch(
         () => undefined,
       );
-    const keywordInput = searchPage.getByRole("combobox", {
-      name: /keywords/i,
-    });
-    const locationInput = searchPage.getByRole("combobox", {
-      name: /location/i,
-    });
-    if (!(await keywordInput.count()) || !(await locationInput.count()))
-      throw new Error("search_unavailable");
-    await keywordInput.first().fill(job.title);
-    await locationInput.first().fill(job.location.split(",")[0] || job.location);
-    const findJobs = searchPage.getByRole("button", { name: /^find jobs$/i });
-    if (!(await findJobs.count())) throw new Error("search_unavailable");
-    await clickAndFollow(searchPage, findJobs.first(), 1_200);
+    if (provider === "cv_library") {
+      const keywordInput = searchPage.getByRole("combobox", {
+        name: /keywords/i,
+      });
+      const locationInput = searchPage.getByRole("combobox", {
+        name: /location/i,
+      });
+      if (!(await keywordInput.count()) || !(await locationInput.count()))
+        throw new Error("search_unavailable");
+      await keywordInput.first().fill(job.title);
+      await locationInput.first().fill(
+        job.location.split(",")[0] || job.location,
+      );
+      const findJobs = searchPage.getByRole("button", {
+        name: /^find jobs$/i,
+      });
+      if (!(await findJobs.count())) throw new Error("search_unavailable");
+      await clickAndFollow(searchPage, findJobs.first(), 1_200);
+    }
     const match = bestDiscoveryCandidate(
-      await cvLibraryCandidates(searchPage),
+      provider === "cv_library"
+        ? await cvLibraryCandidates(searchPage)
+        : await totalJobsCandidates(searchPage),
       job,
     );
     if (!match) throw new Error("source_match_unavailable");

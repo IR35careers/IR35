@@ -1,6 +1,6 @@
 import type { JobDetail } from "@/lib/job-types";
 
-export type DiscoveryProvider = "cv_library";
+export type DiscoveryProvider = "cv_library" | "totaljobs";
 
 function compact(value: string): string {
   return value
@@ -35,9 +35,10 @@ export function discoveryProviderFromAdzunaPage(input: {
   html: string;
 }): DiscoveryProvider | null {
   const evidence = `${input.body} ${input.html}`;
-  return /(?:cv[\s-]?library|logo_cv_library)/i.test(evidence)
-    ? "cv_library"
-    : null;
+  if (/(?:cv[\s-]?library|logo_cv_library)/i.test(evidence))
+    return "cv_library";
+  if (/(?:totaljobs|total jobs)/i.test(evidence)) return "totaljobs";
+  return null;
 }
 
 export interface DiscoveryCandidate {
