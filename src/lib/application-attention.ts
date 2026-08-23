@@ -30,7 +30,7 @@ export function buildApplicationAttention(input: {
       title: `Answer ${questionIds.length} employer question${questionIds.length === 1 ? "" : "s"}`,
       message,
       action: "#needs-attention",
-      actionLabel: "Continue on employer form",
+      actionLabel: questionIds.length === 1 ? "Answer question" : "Answer questions",
       questionIds,
     };
   }

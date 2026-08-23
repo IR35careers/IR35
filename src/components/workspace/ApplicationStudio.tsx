@@ -1552,17 +1552,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 attention.kind === "employer_form" ||
                 attention.kind === "retry" ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => void continueInEmployerBrowser()}
-                      disabled={busy !== null}
-                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
-                    >
-                      {busy === "handoff" ? (
-                        <Loader2 size={15} className="animate-spin" />
-                      ) : null}
-                      Continue securely <ArrowRight size={15} />
-                    </button>
                     {attention.questionIds.length > 0 ? (
                       <button
                         type="button"
@@ -1574,11 +1563,23 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                               block: "start",
                             })
                         }
-                        className="ir35-focus inline-flex min-h-10 items-center rounded-xl border border-amber-400 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-100"
+                        className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
                       >
-                        Answer inside IR35Careers
+                        {attention.actionLabel} <ArrowRight size={15} />
                       </button>
-                    ) : null}
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void continueInEmployerBrowser()}
+                        disabled={busy !== null}
+                        className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
+                      >
+                        {busy === "handoff" ? (
+                          <Loader2 size={15} className="animate-spin" />
+                        ) : null}
+                        Continue securely <ArrowRight size={15} />
+                      </button>
+                    )}
                   </>
                 ) : attention.kind === "profile_missing" ? (
                   <Link

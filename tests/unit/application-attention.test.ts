@@ -63,7 +63,7 @@ describe("application attention", () => {
 
     expect(attention.kind).toBe("employer_form");
     expect(attention.title).toBe("Answer 1 employer question");
-    expect(attention.actionLabel).toBe("Continue on employer form");
+    expect(attention.actionLabel).toBe("Answer question");
     expect(attention.questionIds).toEqual(["employer-reference"]);
   });
 });
