@@ -1175,6 +1175,10 @@ export async function POST(request: Request): Promise<Response> {
         "employer_login",
         "account_recovery_email",
         "verification_link",
+        // An administrator uses this recovery action after deploying support
+        // for a changed employer form. The original approved task and exact
+        // destination are reused, so no new application is created.
+        "unsupported_form",
       ]);
       const recoverableNeedsUser = (recoverableNeedsUserResult.data ?? []).filter(
         (submission) => {
