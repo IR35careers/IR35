@@ -22,9 +22,12 @@ const CONCURRENCY = Math.max(
   1,
   Math.min(Number(process.env.APPLICATION_WORKER_CONCURRENCY || 2), 4),
 );
-const WORKER_ID = `${hostname().replace(/[^a-z0-9-]/gi, "-").slice(0, 50)}-${process.pid}`;
+const WORKER_ID = `${hostname()
+  .replace(/[^a-z0-9-]/gi, "-")
+  .slice(0, 50)}-${process.pid}`;
 const WORKER_STARTED_AT = new Date().toISOString();
-const WORKER_VERSION = process.env.APPLICATION_WORKER_VERSION?.trim().slice(0, 80) || "development";
+const WORKER_VERSION =
+  process.env.APPLICATION_WORKER_VERSION?.trim().slice(0, 80) || "development";
 const APP_ORIGIN = applicationWorkerAppOrigin(process.env.IR35CAREERS_APP_URL);
 
 let active = 0;
@@ -33,12 +36,53 @@ let failed = 0;
 let stopping = false;
 let claiming = false;
 
-async function executeTask(assignment: ApplicationWorkerAssignment): Promise<void> {
+async function executeTask(
+  assignment: ApplicationWorkerAssignment,
+): Promise<void> {
   const task = assignment.task;
   const callback = await executeApplicationWorkerAssignment({
     assignment,
     appOrigin: APP_ORIGIN,
   });
+
+  const review =
+    callback.receipt?.review && typeof callback.receipt.review === "object"
+      ? (callback.receipt.review as Record<string, unknown>)
+      : null;
+  const diagnostic =
+    review?.diagnostic && typeof review.diagnostic === "object"
+      ? (review.diagnostic as Record<string, unknown>)
+      : null;
+  if (callback.receipt?.state === "needs_user") {
+    let destinationHost = "";
+    try {
+      destinationHost = new URL(callback.receipt.destination ?? "").hostname;
+    } catch {
+      destinationHost = "";
+    }
+    console.info("application_worker_attention", {
+      taskId: task.id,
+      applicationId: task.application_id,
+      action: String(review?.action ?? ""),
+      destinationHost,
+      title: String(diagnostic?.title ?? "").slice(0, 160),
+      headings: Array.isArray(diagnostic?.headings)
+        ? diagnostic.headings.slice(0, 20)
+        : [],
+      actions: Array.isArray(diagnostic?.actions)
+        ? diagnostic.actions.slice(0, 30)
+        : [],
+      controls: Array.isArray(diagnostic?.controls)
+        ? diagnostic.controls.slice(0, 80)
+        : [],
+      blockedHosts: Array.isArray(diagnostic?.blockedHosts)
+        ? diagnostic.blockedHosts.slice(0, 30)
+        : [],
+      networkFailures: Array.isArray(diagnostic?.networkFailures)
+        ? diagnostic.networkFailures.slice(0, 30)
+        : [],
+    });
+  }
 
   try {
     await postApplicationWorkerCallback({
@@ -56,7 +100,9 @@ async function executeTask(assignment: ApplicationWorkerAssignment): Promise<voi
   }
 }
 
-async function claimTask(acceptTask: boolean): Promise<ApplicationWorkerAssignment | null> {
+async function claimTask(
+  acceptTask: boolean,
+): Promise<ApplicationWorkerAssignment | null> {
   const claim: ApplicationWorkerClaimRequest = {
     workerId: WORKER_ID,
     startedAt: WORKER_STARTED_AT,
