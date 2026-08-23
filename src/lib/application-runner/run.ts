@@ -1234,6 +1234,7 @@ async function fillField(input: {
     await locator
       .selectOption({ label: option })
       .catch(async () => locator.selectOption(option));
+    await locator.blur().catch(() => undefined);
     return true;
   }
   if (field.type === "radio") {
@@ -1253,6 +1254,10 @@ async function fillField(input: {
     return true;
   }
   await locator.fill(value);
+  // React employer forms often validate on focusout rather than input. Without
+  // this transition the DOM contains a valid value while the submit control
+  // remains disabled in the application's internal form state.
+  await locator.blur().catch(() => undefined);
   return true;
 }
 
@@ -1690,6 +1695,8 @@ export async function runNativeApplication(
         payload.coverLetter,
         Boolean(payload.candidate.employerTermsConsent),
       );
+      await page.keyboard.press("Tab").catch(() => undefined);
+      await page.waitForTimeout(350);
       if (needsUser.length)
         return reviewReceipt(
           "The employer requires information that is not in your saved profile. Continue on the prepared employer form to answer only the highlighted questions.",
