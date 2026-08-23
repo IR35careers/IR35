@@ -358,6 +358,18 @@ describe("native application runner", () => {
         "https://careers.employer.example/role",
       ),
     ).toBe(false);
+    expect(
+      isTrustedApplicationPortalSender(
+        "Recruiter <updates@mail.company.co.uk>",
+        "https://careers.company.co.uk/role",
+      ),
+    ).toBe(true);
+    expect(
+      isTrustedApplicationPortalSender(
+        "Fake recruiter <updates@attacker.co.uk>",
+        "https://careers.company.co.uk/role",
+      ),
+    ).toBe(false);
   });
 
   it("uses only confirmed saved answers for employer-specific questions", () => {

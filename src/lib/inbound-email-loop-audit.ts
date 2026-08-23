@@ -43,7 +43,7 @@ export async function runInboundEmailLoopAudit(input: {
 
   const applicationId = randomUUID();
   const marker = randomUUID().replaceAll("-", "").slice(0, 12);
-  const subject = `IR35Careers email loop test ${marker}`;
+  const subject = `Application received: Platform Engineer email loop test ${marker}`;
   const applicationAddress = applicationInboxAlias(inbox.alias, applicationId);
   const job = {
     ...DEMO_JOBS[0],
@@ -85,8 +85,8 @@ export async function runInboundEmailLoopAudit(input: {
         from: emailConfig.from,
         to: [applicationAddress],
         subject,
-        html: `<p>This controlled message verifies the signed inbound webhook, application linking and forwarding delivery.</p><p>Reference: ${marker}</p>`,
-        text: `This controlled message verifies the signed inbound webhook, application linking and forwarding delivery. Reference: ${marker}`,
+        html: `<p>Thank you for applying. We have received your application for the Platform Engineer email loop test.</p><p>Reference: ${marker}</p>`,
+        text: `Thank you for applying. We have received your application for the Platform Engineer email loop test. Reference: ${marker}`,
         ...(emailConfig.replyTo ? { replyTo: emailConfig.replyTo } : {}),
         headers: { "X-Entity-Ref-ID": `email-loop:${marker}` },
         tags: [{ name: "email_type", value: "inbound_loop_test" }],
@@ -146,6 +146,14 @@ export async function runInboundEmailLoopAudit(input: {
       forwardingSummary.forwarding_status === "accepted" &&
       typeof forwardingSummary.forwarding_delivery_id === "string";
     const linked = receivedMessage?.application_id === applicationId;
+    const packetStatus = await client
+      .from("application_packets")
+      .select("status")
+      .eq("user_id", userId)
+      .eq("id", applicationId)
+      .maybeSingle();
+    if (packetStatus.error) throw new Error(packetStatus.error.message);
+    const statusApplied = packetStatus.data?.status === "applied";
     const checks: InboundEmailLoopAuditCheck[] = [
       {
         label: "Inbound message accepted",
@@ -176,6 +184,13 @@ export async function runInboundEmailLoopAudit(input: {
               forwardingSummary.forwarding_error ||
                 "The forwarding provider did not return an accepted delivery.",
             ),
+      },
+      {
+        label: "Application status updated",
+        passed: statusApplied,
+        detail: statusApplied
+          ? "The trusted employer confirmation moved the application to Applied."
+          : `The application remained ${String(packetStatus.data?.status || "unknown")}.`,
       },
     ];
     const passed = checks.every((check) => check.passed);

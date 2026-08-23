@@ -115,6 +115,36 @@ function hostMatches(host: string, domain: string): boolean {
   return host === domain || host.endsWith(`.${domain}`);
 }
 
+const MULTI_LABEL_PUBLIC_SUFFIXES = new Set([
+  "ac.uk",
+  "co.uk",
+  "gov.uk",
+  "ltd.uk",
+  "me.uk",
+  "net.uk",
+  "nhs.uk",
+  "org.uk",
+  "plc.uk",
+  "sch.uk",
+  "com.au",
+  "com.br",
+  "com.cn",
+  "com.sg",
+  "co.in",
+  "co.jp",
+  "co.nz",
+  "co.za",
+]);
+
+function organisationalDomain(host: string): string | null {
+  const labels = host.toLowerCase().replace(/\.$/, "").split(".").filter(Boolean);
+  if (labels.length < 2) return null;
+  const suffix = labels.slice(-2).join(".");
+  const labelCount = MULTI_LABEL_PUBLIC_SUFFIXES.has(suffix) ? 3 : 2;
+  if (labels.length < labelCount) return null;
+  return labels.slice(-labelCount).join(".");
+}
+
 export function nativeRunnerHostAllowed(value: string): boolean {
   const host = (value.includes("://") ? new URL(value).hostname : value).toLowerCase().replace(/\.$/, "");
   if (ATS_DOMAINS.some(({ domain }) => hostMatches(host, domain))) return true;
@@ -299,11 +329,15 @@ export function isTrustedApplicationPortalSender(
     try {
       const destinationHost = new URL(applicationDestination).hostname.toLowerCase();
       // Generic employer career sites commonly send from their parent domain
-      // or a notification subdomain. Keep this deliberately conservative:
-      // sibling domains and merely similar names are not trusted.
+      // or a sibling notification subdomain. Trust only the same
+      // organisational domain; merely similar names and public suffix peers
+      // are not trusted.
       return (
         hostMatches(senderHost, destinationHost) ||
-        hostMatches(destinationHost, senderHost)
+        hostMatches(destinationHost, senderHost) ||
+        (organisationalDomain(senderHost) !== null &&
+          organisationalDomain(senderHost) ===
+            organisationalDomain(destinationHost))
       );
     } catch {
       return false;
