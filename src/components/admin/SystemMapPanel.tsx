@@ -60,6 +60,7 @@ export type ApplicationRunSummary = {
       valid: boolean;
     }>;
     blockedHosts: string[];
+    messages: string[];
   } | null;
   confirmationReference: string | null;
   updatedAt: string;
@@ -305,6 +306,7 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
                         {run.diagnostic.actions.length ? <p className="mt-1">Actions: {run.diagnostic.actions.map((item) => `${item.label} (${item.enabled ? "enabled" : "disabled"})`).join(" | ")}</p> : null}
                         {run.diagnostic.controls.length ? <p className="mt-1">Controls: {run.diagnostic.controls.map((item) => `${item.label} (${item.type}${item.required ? ", required" : ""}, ${item.completed ? "complete" : "empty"}${item.valid ? "" : ", invalid"})`).join(" | ")}</p> : null}
                         {run.diagnostic.blockedHosts.length ? <p className="mt-1">Blocked application hosts: {run.diagnostic.blockedHosts.join(" | ")}</p> : null}
+                        {run.diagnostic.messages.length ? <p className="mt-1">Form messages: {run.diagnostic.messages.join(" | ")}</p> : null}
                       </details>
                     ) : null}
                   </div>

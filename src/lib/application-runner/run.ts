@@ -121,6 +121,7 @@ type RunnerPageDiagnostic = {
     valid: boolean;
   }>;
   blockedHosts: string[];
+  messages: string[];
 };
 
 /**
@@ -210,12 +211,25 @@ async function pageDiagnostic(
     });
   }
 
+  const messageNodes = page.locator(
+    '[role="alert"]:visible, [aria-live="assertive"]:visible, [id*="error" i]:visible, [class*="error-message" i]:visible',
+  );
+  const messages: string[] = [];
+  for (let index = 0; index < Math.min(await messageNodes.count(), 30); index += 1) {
+    const message = clean(
+      await messageNodes.nth(index).innerText().catch(() => ""),
+      240,
+    );
+    if (message && !messages.includes(message)) messages.push(message);
+  }
+
   return {
     title,
     headings,
     actions,
     controls,
     blockedHosts: Array.from(blockedHosts).slice(0, 30),
+    messages,
   };
 }
 
@@ -1253,7 +1267,15 @@ async function fillField(input: {
     await locator.check();
     return true;
   }
-  await locator.fill(value);
+  if (
+    ["text", "tel", "email", "url", "number"].includes(field.type) &&
+    value.length <= 300
+  ) {
+    await locator.fill("");
+    await locator.pressSequentially(value, { delay: 1 });
+  } else {
+    await locator.fill(value);
+  }
   // React employer forms often validate on focusout rather than input. Without
   // this transition the DOM contains a valid value while the submit control
   // remains disabled in the application's internal form state.
