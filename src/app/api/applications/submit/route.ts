@@ -769,6 +769,7 @@ export async function POST(request: Request): Promise<Response> {
               receipt: {
                 state: "processing",
                 message: providerReceipt.message,
+                destination: providerReceipt.destination ?? destination,
               },
               updated_at: new Date().toISOString(),
             })

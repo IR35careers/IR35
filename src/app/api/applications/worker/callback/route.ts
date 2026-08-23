@@ -264,6 +264,7 @@ export async function POST(request: Request): Promise<Response> {
                 message:
                   "Waiting for the employer verification email. IR35Careers will check again automatically.",
                 action,
+                destination: receipt.destination ?? null,
               },
               updated_at: now,
             })
@@ -360,7 +361,11 @@ export async function POST(request: Request): Promise<Response> {
             status: "processing",
             provider_submission_id: receipt.providerSubmissionId,
             error_code: null,
-            receipt: { state: "processing", message: receipt.message },
+            receipt: {
+              state: "processing",
+              message: receipt.message,
+              destination: receipt.destination ?? null,
+            },
             updated_at: callback.completedAt,
           })
           .eq("user_id", callback.userId)

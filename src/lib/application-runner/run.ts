@@ -73,12 +73,14 @@ function reviewReceipt(
   message: string,
   fields: RunnerField[],
   action?: string,
+  destination?: string,
 ): SubmissionProviderReceipt {
   return {
     state: "needs_user",
     providerSubmissionId: "",
     submittedAt: new Date().toISOString(),
     message,
+    destination,
     review: {
       action,
       questions: fields.slice(0, 30).map((field) => ({
@@ -89,6 +91,17 @@ function reviewReceipt(
       })),
     },
   };
+}
+
+function currentDestination(page: Page | null, fallback: string): string {
+  const value = page?.url() ?? "";
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === "https:") return parsed.toString();
+  } catch {
+    // Keep the approved public destination when navigation did not complete.
+  }
+  return fallback;
 }
 
 async function publicRequestGuard(
@@ -1021,6 +1034,7 @@ export async function runNativeApplication(
         "This job listing is no longer available at its original source.",
         [],
         "listing_unavailable",
+        currentDestination(page, startUrl.toString()),
       );
     }
     if (navigationStatus && [401, 403, 429].includes(navigationStatus)) {
@@ -1028,6 +1042,7 @@ export async function runNativeApplication(
         "The job board requires a sign-in or browser verification before it will accept this application.",
         [],
         "employer_login",
+        currentDestination(page, startUrl.toString()),
       );
     }
     if (navigationStatus && navigationStatus >= 400) {
@@ -1035,6 +1050,7 @@ export async function runNativeApplication(
         "This job listing is no longer available at its original source.",
         [],
         "listing_unavailable",
+        currentDestination(page, startUrl.toString()),
       );
     }
     await validatePublicHttpsUrl(page.url());
@@ -1057,6 +1073,7 @@ export async function runNativeApplication(
         "This role is no longer accepting applications at its original source.",
         [],
         "listing_unavailable",
+        currentDestination(page, startUrl.toString()),
       );
     }
     if (
@@ -1077,6 +1094,7 @@ export async function runNativeApplication(
           "The job board blocked access to the employer application page. Continue the same prepared application in your secure desktop browser.",
           [],
           "source_access_denied",
+          currentDestination(page, startUrl.toString()),
         );
       }
     }
@@ -1091,6 +1109,7 @@ export async function runNativeApplication(
           "The employer portal did not finish within the safe application window. Your approved application is ready to retry.",
           [],
           "runner_timeout",
+          currentDestination(page, startUrl.toString()),
         );
       }
       const portalAccess = await handlePortalAccess(
@@ -1111,6 +1130,7 @@ export async function runNativeApplication(
           portalAccess.stop.message,
           [],
           portalAccess.stop.action,
+          currentDestination(page, startUrl.toString()),
         );
       if (portalAccess.handled) {
         portalAccessAttempts += 1;
@@ -1119,11 +1139,18 @@ export async function runNativeApplication(
             "The employer did not accept the automatic account sign-in. Open the employer page to sign in or reset the account, then retry.",
             [],
             "employer_login",
+            currentDestination(page, startUrl.toString()),
           );
         continue;
       }
       const stop = await blocker(page);
-      if (stop) return reviewReceipt(stop.message, [], stop.action);
+      if (stop)
+        return reviewReceipt(
+          stop.message,
+          [],
+          stop.action,
+          currentDestination(page, startUrl.toString()),
+        );
       if (accountCreationPending) {
         portalAccountState = "created";
         accountCreationPending = false;
@@ -1142,6 +1169,7 @@ export async function runNativeApplication(
           "The employer requires information that is not in your saved profile. Continue on the prepared employer form to answer only the highlighted questions.",
           needsUser,
           "browser_continue",
+          currentDestination(page, startUrl.toString()),
         );
 
       const submit = await actionLocator(page, ats.submitPattern);
@@ -1166,6 +1194,7 @@ export async function runNativeApplication(
           "IR35Careers could not identify the next employer-form action. Review this application before continuing.",
           [],
           "unsupported_form",
+          currentDestination(page, startUrl.toString()),
         );
       }
 
@@ -1193,6 +1222,7 @@ export async function runNativeApplication(
           "The employer did not confirm submission. Review the highlighted fields before another attempt.",
           fields,
           "validation_failed",
+          currentDestination(page, startUrl.toString()),
         );
       }
     }
@@ -1200,6 +1230,7 @@ export async function runNativeApplication(
       "The employer application contains more steps than the automatic runner can safely complete.",
       [],
       "form_too_long",
+      currentDestination(page, startUrl.toString()),
     );
   } catch (error) {
     if (timedOut) {
@@ -1207,6 +1238,7 @@ export async function runNativeApplication(
         "The employer portal did not finish within the safe application window. Your approved application is ready to retry.",
         [],
         "runner_timeout",
+        currentDestination(page, payload.destination),
       );
     }
     throw error;

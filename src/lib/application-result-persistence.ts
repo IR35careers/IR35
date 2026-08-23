@@ -106,6 +106,7 @@ export async function storeNeedsUser(input: {
             review: input.providerReceipt?.review ?? null,
             message: input.message,
             action: input.action ?? null,
+            destination: input.providerReceipt?.destination ?? null,
             attention,
           },
           updated_at: now,

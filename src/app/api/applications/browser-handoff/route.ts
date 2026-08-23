@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { continuationDestinationCandidates } from "@/lib/application-continuation-destination";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import {
   clearApplicationBrowserHandoff,
@@ -180,20 +181,40 @@ async function createHandoff(request: Request, applicationId: string): Promise<R
       { error: "Review and approve the final application before continuing." },
       { status: 409, headers: headers(request) },
     );
-  let destination = await validatePublicHttpsUrl(context.job.apply_url);
-  const savedPortal = await loadPortalSession({
-    admin,
-    userId: authUser.id,
-    applicationId,
-  }).catch(() => null);
-  if (savedPortal?.currentUrl) {
+  const [savedPortal, submissionResult] = await Promise.all([
+    loadPortalSession({
+      admin,
+      userId: authUser.id,
+      applicationId,
+    }).catch(() => null),
+    admin
+      .from("application_submissions")
+      .select("receipt")
+      .eq("user_id", authUser.id)
+      .eq("application_id", applicationId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (submissionResult.error) throw submissionResult.error;
+  let destination: URL | null = null;
+  for (const candidate of continuationDestinationCandidates({
+    savedSessionUrl: savedPortal?.currentUrl,
+    receipt: submissionResult.data?.receipt,
+    approvedJobUrl: context.job.apply_url,
+  })) {
     try {
-      destination = await validatePublicHttpsUrl(savedPortal.currentUrl);
+      destination = await validatePublicHttpsUrl(candidate);
+      break;
     } catch {
-      // Fall back to the approved job destination if the saved employer step
-      // is no longer a valid public HTTPS page.
+      // Try the next durable destination. The approved job URL is always last.
     }
   }
+  if (!destination)
+    return Response.json(
+      { error: "The employer application destination is no longer available." },
+      { status: 409, headers: headers(request) },
+    );
   const created = await createApplicationBrowserHandoff({
     admin,
     userId: authUser.id,
@@ -219,6 +240,7 @@ async function createHandoff(request: Request, applicationId: string): Promise<R
         receipt: {
           state: "processing",
           message: "The approved application is continuing in your secure browser.",
+          destination: destination.toString(),
         },
         submitted_at: null,
         updated_at: now,
