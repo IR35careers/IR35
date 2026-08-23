@@ -35,6 +35,24 @@ let completed = 0;
 let failed = 0;
 let stopping = false;
 let claiming = false;
+let lastControlPlaneAt: string | null = null;
+let lastControlPlaneError: string | null = null;
+let consecutiveControlPlaneFailures = 0;
+const CONTROL_PLANE_FAILURE_RESTART_LIMIT = 6;
+
+function restartAfterRepeatedControlPlaneFailures(): void {
+  if (
+    stopping ||
+    active > 0 ||
+    consecutiveControlPlaneFailures < CONTROL_PLANE_FAILURE_RESTART_LIMIT
+  )
+    return;
+  console.error("worker_control_plane_restart", {
+    failures: consecutiveControlPlaneFailures,
+    reason: lastControlPlaneError,
+  });
+  process.exit(2);
+}
 
 async function executeTask(
   assignment: ApplicationWorkerAssignment,
@@ -113,7 +131,20 @@ async function claimTask(
     failed,
     version: WORKER_VERSION,
   };
-  return claimApplicationWorkerAssignment({ appOrigin: APP_ORIGIN, claim });
+  try {
+    const assignment = await claimApplicationWorkerAssignment({
+      appOrigin: APP_ORIGIN,
+      claim,
+    });
+    lastControlPlaneAt = new Date().toISOString();
+    lastControlPlaneError = null;
+    consecutiveControlPlaneFailures = 0;
+    return assignment;
+  } catch (error) {
+    lastControlPlaneError = safeApplicationWorkerError(error);
+    consecutiveControlPlaneFailures += 1;
+    throw error;
+  }
 }
 
 async function pump(): Promise<void> {
@@ -128,6 +159,7 @@ async function pump(): Promise<void> {
         console.error("worker_claim_failed", {
           reason: safeApplicationWorkerError(error),
         });
+        restartAfterRepeatedControlPlaneFailures();
         return;
       }
       if (!assignment?.task) return;
@@ -149,6 +181,7 @@ async function heartbeat(): Promise<void> {
     console.error("worker_heartbeat_failed", {
       reason: safeApplicationWorkerError(error),
     });
+    restartAfterRepeatedControlPlaneFailures();
   }
 }
 
@@ -173,6 +206,13 @@ const server = createServer((request, response) => {
         concurrency: CONCURRENCY,
         completed,
         failed,
+        version: WORKER_VERSION,
+        controlPlane: {
+          connected: Boolean(lastControlPlaneAt),
+          lastConnectedAt: lastControlPlaneAt,
+          consecutiveFailures: consecutiveControlPlaneFailures,
+          error: lastControlPlaneError,
+        },
       }),
     );
     return;

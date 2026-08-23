@@ -46,13 +46,36 @@ Add-Content `
   -LiteralPath $watchdog `
   -Value "worker_watchdog_start { at: '$([DateTime]::UtcNow.ToString("o"))', version: '$($env:APPLICATION_WORKER_VERSION)' }"
 
+# Task Scheduler can terminate the PowerShell supervisor before its finally
+# block runs, leaving the Node child behind. Starting another child then fails
+# with EADDRINUSE and every queued application appears to stop immediately.
+# A new scheduled supervisor is authoritative, so remove only processes whose
+# command line identifies this application worker before launching one owner.
+$existingWorkers = Get-CimInstance Win32_Process |
+  Where-Object {
+    $_.Name -eq "node.exe" -and
+    (
+      $_.CommandLine -like "*services/application-worker/server.ts*" -or
+      $_.CommandLine -like "*services/application-worker/dist/server.mjs*"
+    )
+  }
+
+foreach ($existingWorker in $existingWorkers) {
+  Add-Content `
+    -LiteralPath $watchdog `
+    -Value "worker_watchdog_cleanup { at: '$([DateTime]::UtcNow.ToString("o"))', pid: '$($existingWorker.ProcessId)' }"
+  Stop-Process -Id $existingWorker.ProcessId -Force -ErrorAction SilentlyContinue
+}
+
+if ($existingWorkers.Count -gt 0) {
+  Start-Sleep -Seconds 2
+}
+
 $worker = Start-Process `
   -FilePath $node `
   -ArgumentList @(
     "--env-file=services/application-worker/.env",
-    "--import",
-    "tsx",
-    "services/application-worker/server.ts"
+    "services/application-worker/dist/server.mjs"
   ) `
   -WorkingDirectory $workspace `
   -WindowStyle Hidden `
@@ -60,7 +83,7 @@ $worker = Start-Process `
   -RedirectStandardError $stderr `
   -PassThru
 
-$startupGraceEnds = [DateTime]::UtcNow.AddSeconds(45)
+$startupGraceEnds = [DateTime]::UtcNow.AddSeconds(20)
 $consecutiveHealthFailures = 0
 
 try {

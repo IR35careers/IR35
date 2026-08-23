@@ -14,6 +14,8 @@ tmp/
 out/
 build/
 dist/
+!services/application-worker/dist/
+!services/application-worker/dist/server.mjs
 .vinext/
 .wrangler/
 
