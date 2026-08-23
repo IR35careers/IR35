@@ -12,7 +12,10 @@ import {
   detectAts,
   isApplicationFormEvidence,
   isClosedListingPage,
+  isEmployerAuthenticationFailure,
   isEmployerAccountAccessPage,
+  isEmployerEmailLinkPending,
+  isEmployerPasswordSetupPage,
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
   isEmployerTermsCheckbox,
@@ -48,6 +51,7 @@ import {
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
 import { buildResumePdf } from "@/lib/resume/export";
+import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
 import type {
   NativeSubmissionRuntime,
   SubmissionProviderPayload,
@@ -515,11 +519,15 @@ async function handlePortalAccess(
   payload: SubmissionProviderPayload,
   runtime: NativeSubmissionRuntime | undefined,
   requestedAfter: string,
-  accountState?: "created",
+  accountState?: "created" | "verified" | "recovered",
+  accountAccessAttempts = 0,
+  accountRecoveryAttempted = false,
 ): Promise<{
   handled: boolean;
   accountCreated?: boolean;
   accountCreationStarted?: boolean;
+  accountRecovered?: boolean;
+  recoveryAttempted?: boolean;
   stop?: { message: string; action: string };
 }> {
   const captcha = page.locator(
@@ -548,6 +556,9 @@ async function handlePortalAccess(
       .catch(() => ""),
     25_000,
   );
+  const managedAlias =
+    parseApplicationInboxAlias(payload.candidate.email).applicationId ===
+    payload.applicationId;
   const codeInput = await visibleInput(
     page,
     'input[autocomplete="one-time-code"], input[name*="code" i], input[id*="code" i], input[aria-label*="code" i], input[placeholder*="code" i]',
@@ -619,6 +630,41 @@ async function handlePortalAccess(
     return { handled: true, accountCreated: true };
   }
 
+  if (
+    managedAlias &&
+    payload.candidate.automaticEmailVerification &&
+    runtime?.resolveEmailActionLink &&
+    isEmployerEmailLinkPending(bodyText)
+  ) {
+    const actionLink = await runtime.resolveEmailActionLink({
+      hostname: new URL(page.url()).hostname,
+      requestedAfter,
+      purpose: accountRecoveryAttempted
+        ? "account_recovery"
+        : "account_verification",
+    });
+    if (!actionLink)
+      return {
+        handled: false,
+        recoveryAttempted: accountRecoveryAttempted,
+        stop: {
+          message:
+            "The employer email link has not arrived in your IR35Careers inbox yet. IR35Careers will keep checking and continue automatically when it arrives.",
+          action: "verification_link",
+        },
+      };
+    const verifiedActionLink = await validatePublicHttpsUrl(actionLink);
+    await page.goto(verifiedActionLink.toString(), {
+      waitUntil: "domcontentloaded",
+    });
+    return {
+      handled: true,
+      accountCreated: !accountRecoveryAttempted,
+      accountRecovered: accountRecoveryAttempted,
+      recoveryAttempted: accountRecoveryAttempted,
+    };
+  }
+
   const passwordInputs = page.locator('input[type="password"]:visible');
   const passwordCount = Math.min(await passwordInputs.count(), 3);
   const emailInput = await visibleInput(
@@ -645,6 +691,70 @@ async function handlePortalAccess(
             "This employer requires an application account. Enable employer account automation in your profile, or sign in on the employer page.",
           action: "employer_login",
         },
+      };
+    }
+    const authenticationFailed = isEmployerAuthenticationFailure(bodyText);
+    const passwordSetupPage = isEmployerPasswordSetupPage(bodyText);
+    const shouldRecoverAccount = Boolean(
+      managedAlias &&
+        payload.candidate.automaticEmailVerification &&
+        payload.candidate.employerTermsConsent &&
+        runtime?.resolveEmailActionLink &&
+        !passwordSetupPage &&
+        !accountRecoveryAttempted &&
+        (authenticationFailed || accountAccessAttempts >= 2),
+    );
+    if (shouldRecoverAccount) {
+      const resetControl = await actionLocator(
+        page,
+        /^(forgot (?:your )?password\??|reset password|password help|trouble (?:signing|logging) in)$/i,
+      );
+      if (!resetControl)
+        return {
+          handled: false,
+          stop: {
+            message:
+              "The employer rejected the managed application account, but did not provide an automatic password-recovery control. Continue on the employer page to recover this account, then IR35Careers will resume the prepared form.",
+            action: "employer_login",
+          },
+        };
+      await clickAndFollow(page, resetControl, 700);
+      const recoveryEmail = await visibleInput(
+        page,
+        'input[type="email"], input[autocomplete="email"], input[name*="email" i], input[id*="email" i]',
+      );
+      if (recoveryEmail) await recoveryEmail.fill(payload.candidate.email);
+      const sendRecovery = await actionLocator(
+        page,
+        /^(send|continue|next|send (?:reset|recovery|sign[ -]?in|magic) link|email me|reset password)$/i,
+      );
+      const recoveryRequestedAfter = new Date(
+        Date.now() - 30_000,
+      ).toISOString();
+      if (sendRecovery) await clickAndFollow(page, sendRecovery, 800);
+      const actionLink = await runtime?.resolveEmailActionLink?.({
+        hostname: new URL(page.url()).hostname,
+        requestedAfter: recoveryRequestedAfter,
+        purpose: "account_recovery",
+      });
+      if (!actionLink)
+        return {
+          handled: false,
+          recoveryAttempted: true,
+          stop: {
+            message:
+              "IR35Careers requested an employer account recovery email and is waiting for its secure link. The application will continue automatically when the email arrives.",
+            action: "account_recovery_email",
+          },
+        };
+      const verifiedActionLink = await validatePublicHttpsUrl(actionLink);
+      await page.goto(verifiedActionLink.toString(), {
+        waitUntil: "domcontentloaded",
+      });
+      return {
+        handled: true,
+        accountRecovered: true,
+        recoveryAttempted: true,
       };
     }
     if (emailInput) await emailInput.fill(payload.candidate.email);
@@ -695,6 +805,12 @@ async function handlePortalAccess(
       /^(create account|create an account|register|sign up)$/i,
     );
     const signIn = await actionLocator(page, /^(sign in|log in)$/i);
+    const resetPassword = passwordSetupPage
+      ? await actionLocator(
+          page,
+          /^(reset|set|save|update|change|continue)(?: (?:my|your|new))? password$|^continue$/i,
+        )
+      : null;
     const accountAlreadyExists =
       /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
         bodyText,
@@ -718,14 +834,14 @@ async function handlePortalAccess(
       accountAlreadyExists,
       accountState,
     });
-    const accessAction =
-      useSignIn
+    const accessAction = resetPassword ??
+      (useSignIn
         ? signIn ??
           createAccount ??
           (await actionLocator(page, /^(continue|next|continue with email)$/i))
         : createAccount ??
           signIn ??
-          (await actionLocator(page, /^(continue|next|continue with email)$/i));
+          (await actionLocator(page, /^(continue|next|continue with email)$/i)));
     if (!accessAction)
       return {
         handled: false,
@@ -738,6 +854,8 @@ async function handlePortalAccess(
     await clickAndFollow(page, accessAction, 900);
     return {
       handled: true,
+      accountRecovered: Boolean(resetPassword),
+      recoveryAttempted: accountRecoveryAttempted || Boolean(resetPassword),
       accountCreationStarted: Boolean(
         createAccount && accessAction === createAccount && !useSignIn,
       ),
@@ -1115,8 +1233,9 @@ export async function runNativeApplication(
   let context: BrowserContext | null = null;
   let page: Page | null = null;
   let sessionDisposition: "save" | "clear" = "save";
-  let portalAccountState: "created" | undefined;
+  let portalAccountState: "created" | "verified" | "recovered" | undefined;
   let accountCreationPending = false;
+  let accountRecoveryAttempted = false;
   let timedOut = false;
   const budgetTimer = setTimeout(() => {
     timedOut = true;
@@ -1297,6 +1416,8 @@ export async function runNativeApplication(
         runtime,
         requestedAfter,
         portalAccountState,
+        portalAccessAttempts,
+        accountRecoveryAttempted,
       );
       if (portalAccess.accountCreated) {
         portalAccountState = "created";
@@ -1304,6 +1425,12 @@ export async function runNativeApplication(
       }
       if (portalAccess.accountCreationStarted)
         accountCreationPending = true;
+      if (portalAccess.accountRecovered) {
+        portalAccountState = "recovered";
+        accountCreationPending = false;
+      }
+      if (portalAccess.recoveryAttempted)
+        accountRecoveryAttempted = true;
       if (portalAccess.stop)
         return reviewReceipt(
           portalAccess.stop.message,
@@ -1315,7 +1442,9 @@ export async function runNativeApplication(
         portalAccessAttempts += 1;
         if (portalAccessAttempts > 6)
           return reviewReceipt(
-            "The employer did not accept the automatic account sign-in. Open the employer page to sign in or reset the account, then retry.",
+            accountRecoveryAttempted
+              ? "The employer did not accept the recovered application account. Continue on the prepared employer page to complete its security step, then IR35Careers will resume the application."
+              : "The employer did not accept the automatic account sign-in. Continue on the prepared employer page to sign in, then IR35Careers will resume the application.",
             [],
             "employer_login",
             currentDestination(page, startUrl.toString()),

@@ -51,7 +51,7 @@ export interface NativePortalStorageState {
 export interface NativePortalSession {
   storageState: NativePortalStorageState;
   currentUrl?: string;
-  accountState?: "created";
+  accountState?: "created" | "verified" | "recovered";
 }
 
 export interface NativeSubmissionRuntime {
@@ -61,6 +61,11 @@ export interface NativeSubmissionRuntime {
   resolveEmailVerificationCode?: (input: {
     hostname: string;
     requestedAfter: string;
+  }) => Promise<string | null>;
+  resolveEmailActionLink?: (input: {
+    hostname: string;
+    requestedAfter: string;
+    purpose: "account_verification" | "account_recovery";
   }) => Promise<string | null>;
   loadPortalSession?: () => Promise<NativePortalSession | null>;
   savePortalSession?: (session: NativePortalSession) => Promise<void>;

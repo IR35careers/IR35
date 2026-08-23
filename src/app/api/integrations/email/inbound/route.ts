@@ -23,6 +23,7 @@ import {
 } from "@/lib/application-portal-session";
 import { createHash } from "node:crypto";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
+import { extractEmailActionLink } from "@/lib/email/action-link";
 import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
 import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
 
@@ -143,6 +144,10 @@ export async function POST(request: Request) {
       payload.subject,
       payload.text,
     );
+    const emailActionLink = extractEmailActionLink(
+      payload.subject,
+      payload.text,
+    );
     const hintedApplicationId = routedRecipient?.applicationId;
     const validHint = hintedApplicationId
       ? (packetRows ?? []).some(
@@ -157,9 +162,9 @@ export async function POST(request: Request) {
       candidates,
     );
     let verificationApplicationMatched = Boolean(
-      validHint && verificationCode,
+      validHint && (verificationCode || emailActionLink),
     );
-    if (!applicationId && verificationCode) {
+    if (!applicationId && (verificationCode || emailActionLink)) {
       const { data: pendingRows, error: pendingRowsError } = await admin
         .from("application_submissions")
         .select("application_id, receipt")
@@ -174,9 +179,12 @@ export async function POST(request: Request) {
           action?: unknown;
           attention?: { action?: unknown };
         } | null;
-        return (
-          String(receipt?.action ?? receipt?.attention?.action ?? "") ===
-          "verification_code"
+        return [
+          "verification_code",
+          "verification_link",
+          "account_recovery_email",
+        ].includes(
+          String(receipt?.action ?? receipt?.attention?.action ?? ""),
         );
       });
       if (verificationApplications.length === 1) {
@@ -225,7 +233,7 @@ export async function POST(request: Request) {
     let resumeQueued = false;
     if (
       applicationId &&
-      verificationCode &&
+      (verificationCode || emailActionLink) &&
       (trustedSender || verificationApplicationMatched)
     ) {
       const { data: pendingSubmission, error: pendingError } = await admin
@@ -245,7 +253,11 @@ export async function POST(request: Request) {
       if (
         pendingSubmission?.status === "processing" &&
         pendingSubmission.error_code === "needs_user" &&
-        pendingAction === "verification_code"
+        [
+          "verification_code",
+          "verification_link",
+          "account_recovery_email",
+        ].includes(pendingAction)
       ) {
         const resumeAuthorization = createApplicationResumeAuthorization({
           applicationId,

@@ -81,6 +81,44 @@ async function remoteVerificationCode(input: {
   return null;
 }
 
+async function remoteEmailActionLink(input: {
+  task: ApplicationWorkerTaskRow;
+  alias: string;
+  requestedAfter: string;
+  appOrigin: string;
+}): Promise<string | null> {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const result = await signedPost<{ actionLink?: string | null }>(
+      `${input.appOrigin}/api/applications/worker/email-action`,
+      {
+        userId: input.task.user_id,
+        applicationId: input.task.application_id,
+        alias: input.alias,
+        requestedAfter: input.requestedAfter,
+        providerSync: attempt % 5 === 0,
+      },
+      20_000,
+    ).catch(() => ({ actionLink: null }));
+    if (result.actionLink) {
+      try {
+        const url = new URL(result.actionLink);
+        if (
+          url.protocol === "https:" &&
+          !url.username &&
+          !url.password &&
+          !url.port
+        )
+          return url.toString();
+      } catch {
+        // Keep polling for a valid public employer action link.
+      }
+    }
+    if (attempt < 29)
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
+  }
+  return null;
+}
+
 async function buildAndRun(
   assignment: ApplicationWorkerAssignment,
   appOrigin: string,
@@ -106,6 +144,15 @@ async function buildAndRun(
     resolveEmailVerificationCode: candidate.automaticEmailVerification
       ? ({ requestedAfter }) =>
           remoteVerificationCode({
+            task,
+            alias: candidate.email,
+            requestedAfter,
+            appOrigin,
+          })
+      : undefined,
+    resolveEmailActionLink: candidate.automaticEmailVerification
+      ? ({ requestedAfter }) =>
+          remoteEmailActionLink({
             task,
             alias: candidate.email,
             requestedAfter,

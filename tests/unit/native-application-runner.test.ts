@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   canAutomaticallyAcceptEmployerTerms,
   detectAts,
+  isEmployerAuthenticationFailure,
   isEmployerAccountAccessPage,
+  isEmployerEmailLinkPending,
+  isEmployerPasswordSetupPage,
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
@@ -185,6 +188,25 @@ describe("native application runner", () => {
       }),
     ).toBe(true);
     expect(preferEmployerSignIn({ accountAlreadyExists: true })).toBe(true);
+  });
+
+  it("recognises account recovery states without mistaking normal copy", () => {
+    expect(
+      isEmployerAuthenticationFailure("The password is incorrect. Try again."),
+    ).toBe(true);
+    expect(
+      isEmployerAuthenticationFailure("Welcome back to your candidate account"),
+    ).toBe(false);
+    expect(
+      isEmployerPasswordSetupPage(
+        "Choose a new password and confirm your password",
+      ),
+    ).toBe(true);
+    expect(
+      isEmployerEmailLinkPending(
+        "Check your inbox. We sent a secure sign-in link.",
+      ),
+    ).toBe(true);
   });
 
   it("recognises employer listings that can no longer be submitted", () => {

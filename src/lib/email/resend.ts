@@ -1,4 +1,5 @@
 import { Resend, type EmailReceivedEvent, type GetReceivingEmailResponseSuccess, type WebhookEventPayload } from "resend";
+import { appendEmailActionLinks } from "@/lib/email/action-link";
 
 export interface ResendInboundConfig {
   apiKey: string;
@@ -113,7 +114,8 @@ export function normaliseResendEmail(
   ].map(extractEmailAddress).filter((address) => address.endsWith(expectedSuffix)))).slice(0, 50);
   const sender = clean(email.from || event.data.from, 254);
   const subject = clean(email.subject || event.data.subject, 500);
-  const text = clean(email.text?.trim() || htmlToPlainText(email.html ?? ""), 100_000);
+  const plainText = clean(email.text?.trim() || htmlToPlainText(email.html ?? ""), 100_000);
+  const text = appendEmailActionLinks(plainText, email.html ?? "");
   const dateCandidate = email.created_at || event.data.created_at || event.created_at;
   const receivedAt = Number.isFinite(new Date(dateCandidate).getTime())
     ? new Date(dateCandidate).toISOString()

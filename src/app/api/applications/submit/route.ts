@@ -20,6 +20,7 @@ import {
 } from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { waitForEmailVerificationCode } from "@/lib/email/wait-for-verification-code";
+import { waitForEmailActionLink } from "@/lib/email/action-link";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   isStaleSubmissionLock,
@@ -638,6 +639,17 @@ export async function POST(request: Request): Promise<Response> {
                         submissionCandidate.automaticEmailVerification
                           ? ({ requestedAfter }) =>
                               waitForEmailVerificationCode({
+                                admin,
+                                userId,
+                                applicationId: String(packet.id),
+                                alias: submissionCandidate.email,
+                                requestedAfter,
+                              })
+                          : undefined,
+                      resolveEmailActionLink:
+                        submissionCandidate.automaticEmailVerification
+                          ? ({ requestedAfter }) =>
+                              waitForEmailActionLink({
                                 admin,
                                 userId,
                                 applicationId: String(packet.id),

@@ -2,13 +2,16 @@ import type { ListReceivingEmail, Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import {
+  appendEmailActionLinks,
+  extractEmailActionLink,
+} from "@/lib/email/action-link";
+import {
   extractEmailAddress,
   htmlToPlainText,
 } from "@/lib/email/resend";
 import { verificationRecipientMatches } from "@/lib/email/wait-for-verification-code";
 
-export interface ProviderVerificationEmail {
-  code: string;
+interface ProviderAccountEmail {
   providerMessageId: string;
   sender: string;
   recipient: string;
@@ -17,11 +20,19 @@ export interface ProviderVerificationEmail {
   receivedAt: string;
 }
 
+export interface ProviderVerificationEmail extends ProviderAccountEmail {
+  code: string;
+}
+
+export interface ProviderActionEmail extends ProviderAccountEmail {
+  actionLink: string;
+}
+
 export async function storeRecoveredVerificationEmail(input: {
   admin: SupabaseClient;
   userId: string;
   applicationId: string;
-  email: ProviderVerificationEmail;
+  email: ProviderAccountEmail;
 }): Promise<void> {
   const stored = await input.admin.from("inbox_messages").upsert(
     {
@@ -44,18 +55,14 @@ export async function storeRecoveredVerificationEmail(input: {
   if (stored.error) throw stored.error;
 }
 
-export async function findResendVerificationEmail(input: {
+async function listApplicationEmailCandidates(input: {
   resend: Resend;
-  userId: string;
   applicationId: string;
   alias: string;
   requestedAfter: string;
-}): Promise<ProviderVerificationEmail | null> {
+}): Promise<ListReceivingEmail[]> {
   const requestedAfter = new Date(input.requestedAfter).getTime();
-  if (!Number.isFinite(requestedAfter)) return null;
-
-  // Provider timestamps can be a little earlier than the worker clock. The
-  // application-scoped recipient keeps this small allowance unambiguous.
+  if (!Number.isFinite(requestedAfter)) return [];
   const earliestAcceptedAt = requestedAfter - 5 * 60_000;
   const receivedItems: ListReceivingEmail[] = [];
   let after: string | undefined;
@@ -64,26 +71,19 @@ export async function findResendVerificationEmail(input: {
       limit: 100,
       ...(after ? { after } : {}),
     });
-    if (listed.error || !listed.data) {
-      if (page === 0) return null;
-      break;
-    }
+    if (listed.error || !listed.data) break;
     const pageItems = listed.data.data;
     receivedItems.push(...pageItems);
     if (!listed.data.has_more || pageItems.length === 0) break;
     const oldestOnPage = Math.min(
       ...pageItems.map((item) => new Date(item.created_at).getTime()),
     );
-    if (
-      Number.isFinite(oldestOnPage) &&
-      oldestOnPage < earliestAcceptedAt
-    )
+    if (Number.isFinite(oldestOnPage) && oldestOnPage < earliestAcceptedAt)
       break;
     after = pageItems[pageItems.length - 1]?.id;
     if (!after) break;
   }
-
-  const candidates = receivedItems
+  return receivedItems
     .filter((item) => new Date(item.created_at).getTime() >= earliestAcceptedAt)
     .filter((item) =>
       [...(item.to ?? []), ...(item.received_for ?? [])].some((value) => {
@@ -104,6 +104,62 @@ export async function findResendVerificationEmail(input: {
         new Date(left.created_at).getTime(),
     )
     .slice(0, 30);
+}
+
+export async function findResendActionEmail(input: {
+  resend: Resend;
+  userId: string;
+  applicationId: string;
+  alias: string;
+  requestedAfter: string;
+}): Promise<ProviderActionEmail | null> {
+  const candidates = await listApplicationEmailCandidates(input);
+  for (const candidate of candidates) {
+    const received = await input.resend.emails.receiving.get(candidate.id, {
+      html_format: "cid",
+    });
+    if (received.error || !received.data) continue;
+    const recipient = [...received.data.to, ...received.data.received_for]
+      .map((value) => extractEmailAddress(String(value)))
+      .find(
+        (value) =>
+          value &&
+          verificationRecipientMatches({
+            actual: value,
+            expected: input.alias,
+            applicationId: input.applicationId,
+          }),
+      );
+    if (!recipient) continue;
+    const plainText =
+      received.data.text?.trim() || htmlToPlainText(received.data.html ?? "");
+    const text = appendEmailActionLinks(
+      plainText,
+      received.data.html ?? "",
+    );
+    const actionLink = extractEmailActionLink(received.data.subject, text);
+    if (!actionLink) continue;
+    return {
+      actionLink,
+      providerMessageId: `resend:${received.data.id}`,
+      sender: String(received.data.from ?? "").slice(0, 254),
+      recipient,
+      subject: String(received.data.subject ?? "").slice(0, 500),
+      text: text.slice(0, 100_000),
+      receivedAt: new Date(received.data.created_at).toISOString(),
+    };
+  }
+  return null;
+}
+
+export async function findResendVerificationEmail(input: {
+  resend: Resend;
+  userId: string;
+  applicationId: string;
+  alias: string;
+  requestedAfter: string;
+}): Promise<ProviderVerificationEmail | null> {
+  const candidates = await listApplicationEmailCandidates(input);
 
   for (const candidate of candidates) {
     const received = await input.resend.emails.receiving.get(candidate.id, {

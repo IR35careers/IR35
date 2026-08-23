@@ -156,9 +156,27 @@ export function canAutomaticallyAcceptEmployerTerms(input: {
 
 export function preferEmployerSignIn(input: {
   accountAlreadyExists: boolean;
-  accountState?: "created";
+  accountState?: "created" | "verified" | "recovered";
 }): boolean {
-  return input.accountAlreadyExists || input.accountState === "created";
+  return input.accountAlreadyExists || Boolean(input.accountState);
+}
+
+export function isEmployerAuthenticationFailure(body: string): boolean {
+  return /incorrect (?:email|password)|invalid (?:email|password|credentials)|password (?:is )?(?:incorrect|invalid|wrong)|unable to (?:sign|log) in|(?:sign|log)[ -]?in failed|authentication failed|credentials (?:are )?(?:incorrect|invalid)|account.{0,50}(?:locked|not found)/i.test(
+    body.replace(/\s+/g, " "),
+  );
+}
+
+export function isEmployerPasswordSetupPage(body: string): boolean {
+  return /(?:reset|set|choose|create|update|new) (?:your )?password|password reset|confirm (?:your )?(?:new )?password/i.test(
+    body.replace(/\s+/g, " "),
+  );
+}
+
+export function isEmployerEmailLinkPending(body: string): boolean {
+  return /check your (?:email|inbox)|(?:sent|emailed).{0,80}(?:link|verification)|click.{0,40}(?:link|email)|magic link/i.test(
+    body.replace(/\s+/g, " "),
+  );
 }
 
 export function isClosedListingPage(title: string, body: string): boolean {

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { getResend, resendInboundConfig } from "@/lib/email/resend";
 import {
+  findResendActionEmail,
   findResendVerificationEmail,
   storeRecoveredVerificationEmail,
 } from "@/lib/email/resend-verification-sync";
@@ -72,8 +73,12 @@ export async function recoverPendingVerificationEmails(input: {
 
   const pending = ((data ?? []) as PendingVerificationRow[]).filter(
     (row) =>
-      row.receipt?.action === "verification_code" &&
-      verificationRecoveryDue(row.receipt.providerSyncCheckedAt, nowMs),
+      [
+        "verification_code",
+        "verification_link",
+        "account_recovery_email",
+      ].includes(String(row.receipt?.action ?? "")) &&
+      verificationRecoveryDue(row.receipt?.providerSyncCheckedAt, nowMs),
   );
   const recovered: string[] = [];
   let checked = 0;
@@ -90,7 +95,8 @@ export async function recoverPendingVerificationEmails(input: {
       );
       if (!inbox?.alias) continue;
 
-      const providerEmail = await findResendVerificationEmail({
+      const action = String(row.receipt?.action ?? "verification_code");
+      const providerInput = {
         resend: getResend(inbound),
         userId: row.user_id,
         applicationId: row.application_id,
@@ -99,7 +105,11 @@ export async function recoverPendingVerificationEmails(input: {
           row.updated_at,
           nowMs,
         ),
-      });
+      };
+      const providerEmail =
+        action === "verification_code"
+          ? await findResendVerificationEmail(providerInput)
+          : await findResendActionEmail(providerInput);
 
       if (!providerEmail) {
         const retryEvents = await input.admin
@@ -149,9 +159,9 @@ export async function recoverPendingVerificationEmails(input: {
                   error_code: null,
                   receipt: {
                     state: "processing",
-                    action: "verification_code",
+                    action,
                     message:
-                      "IR35Careers is requesting a fresh employer verification email and will continue automatically.",
+                      "IR35Careers is requesting a fresh employer account email and will continue automatically.",
                   },
                   updated_at: checkedAt,
                 })
@@ -170,7 +180,7 @@ export async function recoverPendingVerificationEmails(input: {
                   event_type: "status_changed",
                   label: "Employer verification retry requested",
                   metadata: {
-                    action: "verification_code",
+                    action,
                     retryNumber,
                     source: "worker_recovery",
                   },
@@ -234,9 +244,9 @@ export async function recoverPendingVerificationEmails(input: {
             error_code: null,
             receipt: {
               state: "processing",
-              action: "verification_code",
+              action,
               message:
-                "Verification email received. IR35Careers is continuing the application.",
+                "Employer account email received. IR35Careers is continuing the application.",
             },
             updated_at: checkedAt,
           })
@@ -253,9 +263,9 @@ export async function recoverPendingVerificationEmails(input: {
             user_id: row.user_id,
             application_id: row.application_id,
             event_type: "status_changed",
-            label: "Employer verification email received",
+            label: "Employer account email received",
             metadata: {
-              action: "verification_code",
+              action,
               source: "worker_recovery",
             },
             idempotency_key: `submit:${row.application_id}:verification-recovered:${providerEmail.providerMessageId}`,
