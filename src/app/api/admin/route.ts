@@ -594,6 +594,12 @@ export async function GET(request: Request): Promise<Response> {
         const receipt = row.receipt && typeof row.receipt === "object"
           ? row.receipt as Record<string, unknown>
           : {};
+        const review = receipt.review && typeof receipt.review === "object"
+          ? receipt.review as Record<string, unknown>
+          : {};
+        const diagnostic = review.diagnostic && typeof review.diagnostic === "object"
+          ? review.diagnostic as Record<string, unknown>
+          : null;
         return {
           id: String(row.id),
           applicationId: String(row.application_id),
@@ -606,6 +612,20 @@ export async function GET(request: Request): Promise<Response> {
           message: receipt.message ? String(receipt.message).slice(0, 500) : null,
           destination: receipt.destination
             ? String(receipt.destination).slice(0, 2_000)
+            : null,
+          diagnostic: diagnostic
+            ? {
+                title: String(diagnostic.title || "").slice(0, 160),
+                headings: Array.isArray(diagnostic.headings)
+                  ? diagnostic.headings.slice(0, 20).map((value) => String(value).slice(0, 180))
+                  : [],
+                actions: Array.isArray(diagnostic.actions)
+                  ? diagnostic.actions.slice(0, 80)
+                  : [],
+                controls: Array.isArray(diagnostic.controls)
+                  ? diagnostic.controls.slice(0, 80)
+                  : [],
+              }
             : null,
           confirmationReference: row.provider_submission_id ? String(row.provider_submission_id) : null,
           updatedAt: String(row.updated_at),

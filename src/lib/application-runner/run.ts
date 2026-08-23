@@ -87,6 +87,7 @@ function reviewReceipt(
   fields: RunnerField[],
   action?: string,
   destination?: string,
+  diagnostic?: RunnerPageDiagnostic,
 ): SubmissionProviderReceipt {
   return {
     state: "needs_user",
@@ -96,6 +97,7 @@ function reviewReceipt(
     destination,
     review: {
       action,
+      diagnostic,
       questions: fields.slice(0, 30).map((field) => ({
         id: `native:${field.id}`,
         label: field.label || field.name || "Employer question",
@@ -104,6 +106,89 @@ function reviewReceipt(
       })),
     },
   };
+}
+
+type RunnerPageDiagnostic = {
+  title: string;
+  headings: string[];
+  actions: Array<{ label: string; enabled: boolean; role: string }>;
+  controls: Array<{ label: string; type: string; required: boolean }>;
+};
+
+/**
+ * Captures labels and control state only. Field values and page HTML are
+ * deliberately excluded because this snapshot is retained for protected
+ * administrator diagnostics when an employer changes its form.
+ */
+async function pageDiagnostic(page: Page): Promise<RunnerPageDiagnostic> {
+  const title = clean(await page.title().catch(() => ""), 160);
+  const headingNodes = page.locator("h1:visible, h2:visible, h3:visible, legend:visible");
+  const headings: string[] = [];
+  for (let index = 0; index < Math.min(await headingNodes.count(), 20); index += 1) {
+    const label = clean(await headingNodes.nth(index).innerText().catch(() => ""), 180);
+    if (label && !headings.includes(label)) headings.push(label);
+  }
+
+  const actionNodes = page.locator(
+    'button:visible, input[type="submit"]:visible, input[type="button"]:visible, [role="button"]:visible, a:visible',
+  );
+  const actions: RunnerPageDiagnostic["actions"] = [];
+  for (let index = 0; index < Math.min(await actionNodes.count(), 80); index += 1) {
+    const item = actionNodes.nth(index);
+    const label = clean(
+      `${await item.innerText().catch(() => "")} ${(await item.getAttribute("value")) ?? ""} ${(await item.getAttribute("aria-label")) ?? ""}`,
+      180,
+    );
+    if (!label || actions.some((entry) => entry.label === label)) continue;
+    actions.push({
+      label,
+      enabled: await item.isEnabled().catch(() => false),
+      role: clean(
+        (await item.getAttribute("role")) ||
+          (await item.evaluate((node) => node.tagName.toLowerCase()).catch(() => "control")),
+        30,
+      ),
+    });
+  }
+
+  const controlNodes = page.locator(
+    'input:not([type="hidden"]):visible, select:visible, textarea:visible, [role="checkbox"]:visible, [role="radio"]:visible, [role="combobox"]:visible',
+  );
+  const controls: RunnerPageDiagnostic["controls"] = [];
+  for (let index = 0; index < Math.min(await controlNodes.count(), 80); index += 1) {
+    const item = controlNodes.nth(index);
+    const snapshot = await item.evaluate((node) => {
+      const element = node as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      const labels = "labels" in element
+        ? Array.from(element.labels ?? []).map((label) => label.textContent ?? "").join(" ")
+        : "";
+      return {
+        label:
+          element.getAttribute("aria-label") ||
+          labels ||
+          element.getAttribute("placeholder") ||
+          element.getAttribute("name") ||
+          element.getAttribute("role") ||
+          element.tagName,
+        type:
+          element.getAttribute("type") ||
+          element.getAttribute("role") ||
+          element.tagName.toLowerCase(),
+        required:
+          element.hasAttribute("required") ||
+          element.getAttribute("aria-required") === "true",
+      };
+    });
+    const label = clean(snapshot.label, 180);
+    if (!label) continue;
+    controls.push({
+      label,
+      type: clean(snapshot.type, 40),
+      required: snapshot.required,
+    });
+  }
+
+  return { title, headings, actions, controls };
 }
 
 function currentDestination(page: Page | null, fallback: string): string {
@@ -1503,6 +1588,7 @@ export async function runNativeApplication(
           [],
           "unsupported_form",
           currentDestination(page, startUrl.toString()),
+          await pageDiagnostic(page),
         );
       }
 

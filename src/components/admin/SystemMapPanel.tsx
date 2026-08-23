@@ -48,6 +48,12 @@ export type ApplicationRunSummary = {
   action: string | null;
   message: string | null;
   destination: string | null;
+  diagnostic: {
+    title: string;
+    headings: string[];
+    actions: Array<{ label: string; enabled: boolean; role: string }>;
+    controls: Array<{ label: string; type: string; required: boolean }>;
+  } | null;
   confirmationReference: string | null;
   updatedAt: string;
 };
@@ -284,6 +290,15 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
                     <p className="mt-1 text-xs text-slate-500">{run.sourceHost || "Employer portal"} · {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(run.updatedAt))}</p>
                     {run.message ? <p className="mt-2 text-xs leading-5 text-slate-700">{run.message}</p> : null}
                     {run.destination?.startsWith("https://") ? <a href={run.destination} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-emerald-700 hover:border-emerald-300">Inspect employer page</a> : null}
+                    {run.diagnostic ? (
+                      <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-700">
+                        <summary className="cursor-pointer font-semibold text-slate-900">Protected stopped-page snapshot</summary>
+                        <p className="mt-2 font-semibold">{run.diagnostic.title || "Employer form"}</p>
+                        {run.diagnostic.headings.length ? <p className="mt-1">Headings: {run.diagnostic.headings.join(" | ")}</p> : null}
+                        {run.diagnostic.actions.length ? <p className="mt-1">Actions: {run.diagnostic.actions.map((item) => `${item.label} (${item.enabled ? "enabled" : "disabled"})`).join(" | ")}</p> : null}
+                        {run.diagnostic.controls.length ? <p className="mt-1">Controls: {run.diagnostic.controls.map((item) => `${item.label} (${item.type}${item.required ? ", required" : ""})`).join(" | ")}</p> : null}
+                      </details>
+                    ) : null}
                   </div>
                   <dl className="grid min-w-[190px] grid-cols-2 gap-2 text-xs sm:text-right">
                     <div><dt className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Reason</dt><dd className="mt-1 text-slate-700">{run.errorCode || "None"}</dd></div>
