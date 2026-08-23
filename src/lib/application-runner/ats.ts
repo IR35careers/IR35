@@ -1,4 +1,4 @@
-export type AtsKind = "greenhouse" | "lever" | "ashby" | "workable" | "smartrecruiters" | "workday" | "generic";
+export type AtsKind = "greenhouse" | "lever" | "ashby" | "workable" | "smartrecruiters" | "workday" | "totaljobs" | "generic";
 
 export interface AtsDefinition {
   kind: AtsKind;
@@ -16,6 +16,13 @@ const COMMON = {
   successPattern: /(application (?:has been )?(?:submitted|received|sent)|thank you for (?:your )?application|thank you for applying|we(?:['’]ve| have) received your application|application complete|successfully applied)/i,
 };
 
+const TOTALJOBS = {
+  ...COMMON,
+  // Totaljobs starts its application renderer with an email-first account
+  // check. This is a progression control, not the final submission action.
+  nextPattern: /^(next|continue|continue with email|save (?:&|and) continue|continue application|review|review application|review and submit)$/i,
+};
+
 const DEFINITIONS: Record<AtsKind, AtsDefinition> = {
   greenhouse: { kind: "greenhouse", label: "Greenhouse", ...COMMON },
   lever: { kind: "lever", label: "Lever", ...COMMON },
@@ -23,6 +30,7 @@ const DEFINITIONS: Record<AtsKind, AtsDefinition> = {
   workable: { kind: "workable", label: "Workable", ...COMMON },
   smartrecruiters: { kind: "smartrecruiters", label: "SmartRecruiters", ...COMMON },
   workday: { kind: "workday", label: "Workday", ...COMMON },
+  totaljobs: { kind: "totaljobs", label: "Totaljobs", ...TOTALJOBS },
   generic: { kind: "generic", label: "Employer application portal", ...COMMON },
 };
 
@@ -37,6 +45,7 @@ const ATS_DOMAINS: Array<{ domain: string; kind: Exclude<AtsKind, "generic"> }> 
   { domain: "myworkdayjobs.com", kind: "workday" },
   { domain: "myworkday.com", kind: "workday" },
   { domain: "workday.com", kind: "workday" },
+  { domain: "totaljobs.com", kind: "totaljobs" },
 ];
 
 const ATS_SENDER_DOMAINS: Record<Exclude<AtsKind, "generic">, string[]> = {
@@ -46,6 +55,7 @@ const ATS_SENDER_DOMAINS: Record<Exclude<AtsKind, "generic">, string[]> = {
   workable: ["workable.com", "workablemail.com"],
   smartrecruiters: ["smartrecruiters.com"],
   workday: ["workday.com", "myworkday.com", "myworkdayjobs.com"],
+  totaljobs: ["totaljobs.com"],
 };
 
 // These are job-discovery handoff pages rather than employer ATS products.

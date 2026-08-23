@@ -61,6 +61,11 @@ describe("native application runner", () => {
     expect(detectAts("https://boards.greenhouse.io/company/jobs/1").kind).toBe("greenhouse");
     expect(detectAts("https://jobs.lever.co/company/role").kind).toBe("lever");
     expect(detectAts("https://jobs.ashbyhq.com/company/role").kind).toBe("ashby");
+    const totaljobs = detectAts(
+      "https://www.totaljobs.com/job/123/application/authentication",
+    );
+    expect(totaljobs.kind).toBe("totaljobs");
+    expect(totaljobs.nextPattern.test("Continue with email")).toBe(true);
     expect(detectAts("https://careers.example.com/role").kind).toBe("generic");
     expect(nativeRunnerHostAllowed("jobs.ashbyhq.com")).toBe(true);
     expect(nativeRunnerHostAllowed("www.adzuna.co.uk")).toBe(true);
