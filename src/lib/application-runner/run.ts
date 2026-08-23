@@ -757,13 +757,17 @@ async function handlePortalAccess(
     page,
     'input[type="email"], input[autocomplete="email"], input[name*="email" i], input[id*="email" i]',
   );
+  const emailContinuation = emailInput
+    ? await actionLocator(page, /^continue with email$/i)
+    : null;
   const applicationFormVisible = await hasApplicationForm(page);
-  const accountAccessPage = isEmployerAccountAccessPage({
-    body: bodyText,
-    hasEmailInput: Boolean(emailInput),
-    hasPasswordInput: passwordCount > 0,
-    hasApplicationForm: applicationFormVisible,
-  });
+  const accountAccessPage = Boolean(emailContinuation) ||
+    isEmployerAccountAccessPage({
+      body: bodyText,
+      hasEmailInput: Boolean(emailInput),
+      hasPasswordInput: passwordCount > 0,
+      hasApplicationForm: applicationFormVisible,
+    });
   if (accountAccessPage) {
     const portalPassword =
       (await runtime?.resolvePortalPassword?.(
@@ -920,7 +924,8 @@ async function handlePortalAccess(
       accountAlreadyExists,
       accountState,
     });
-    const portalContinuation = await actionLocator(page, ats.nextPattern);
+    const portalContinuation = emailContinuation ??
+      (await actionLocator(page, ats.nextPattern));
     const accessAction = resetPassword ??
       (useSignIn
         ? signIn ??

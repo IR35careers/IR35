@@ -56,6 +56,14 @@ describe("native application runner", () => {
         hasApplicationForm: true,
       }),
     ).toBe(false);
+    expect(
+      isEmployerAccountAccessPage({
+        body: "Email address. Continue with email. You are applying for DevOps Engineer.",
+        hasEmailInput: true,
+        hasPasswordInput: false,
+        hasApplicationForm: true,
+      }),
+    ).toBe(true);
   });
   it("detects common ATS destinations without relying on a third-party submission API", () => {
     expect(detectAts("https://boards.greenhouse.io/company/jobs/1").kind).toBe("greenhouse");

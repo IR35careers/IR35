@@ -208,6 +208,11 @@ export function isEmployerAccountAccessPage(input: {
   hasApplicationForm: boolean;
 }): boolean {
   if (input.hasPasswordInput) return true;
+  if (
+    input.hasEmailInput &&
+    /continue with email/i.test(input.body)
+  )
+    return true;
   return Boolean(
     input.hasEmailInput &&
       !input.hasApplicationForm &&
