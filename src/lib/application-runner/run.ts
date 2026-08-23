@@ -414,7 +414,7 @@ async function handlePortalAccess(
         handled: false,
         stop: {
           message:
-            "The employer verification email has not arrived in your IR35Careers inbox yet. Wait a minute, then select Apply again.",
+            "The employer verification email has not arrived in your IR35Careers inbox yet. IR35Careers will keep checking and continue automatically when it arrives.",
           action: "verification_code",
         },
       };

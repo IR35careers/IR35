@@ -46,4 +46,24 @@ describe("application submission client state", () => {
   it("does not keep a submitted application in progress", () => {
     expect(hasActiveSubmission("applied", [{ label: "Application submission started" }])).toBe(false);
   });
+
+  it("keeps a verification-paused application subscribed to automatic recovery", () => {
+    expect(
+      hasActiveSubmission(
+        "needs_review",
+        [{ label: "Application needs your answer" }],
+        { kind: "email_verification" },
+      ),
+    ).toBe(true);
+  });
+
+  it("does not poll indefinitely for a legal or security action", () => {
+    expect(
+      hasActiveSubmission(
+        "needs_review",
+        [{ label: "Application needs your answer" }],
+        { kind: "employer_account" },
+      ),
+    ).toBe(false);
+  });
 });

@@ -230,7 +230,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     application?.status === "applied" &&
     application.receipt?.mode === "external_handoff";
   const submissionInProgress = Boolean(
-    application && hasActiveSubmission(application.status, application.events),
+    application &&
+      hasActiveSubmission(
+        application.status,
+        application.events,
+        application.attention,
+      ),
   );
   const selectedSuggestions =
     aiResult?.suggestions.filter((item) =>

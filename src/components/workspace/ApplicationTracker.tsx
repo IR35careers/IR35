@@ -213,7 +213,9 @@ export function ApplicationTracker() {
   const refreshIds = useMemo(
     () =>
       workspace.applications
-        .filter((item) => hasActiveSubmission(item.status, item.events))
+        .filter((item) =>
+          hasActiveSubmission(item.status, item.events, item.attention),
+        )
         .slice(0, 10)
         .map((item) => item.id),
     [workspace.applications],

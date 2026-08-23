@@ -11,13 +11,29 @@ export const SUBMISSION_LIFECYCLE_LABELS = [
 ] as const;
 
 type SubmissionLifecycleEvent = { label: string };
+type SubmissionAttention = { kind?: string } | null | undefined;
 
 export function latestSubmissionLifecycleEvent<T extends SubmissionLifecycleEvent>(events: T[]): T | undefined {
   return [...events].reverse().find((event) => SUBMISSION_LIFECYCLE_LABELS.includes(event.label as typeof SUBMISSION_LIFECYCLE_LABELS[number]));
 }
 
-export function hasActiveSubmission(status: string, events: SubmissionLifecycleEvent[]): boolean {
-  return status === "ready" && latestSubmissionLifecycleEvent(events)?.label === "Application submission started";
+export function hasActiveSubmission(
+  status: string,
+  events: SubmissionLifecycleEvent[],
+  attention?: SubmissionAttention,
+): boolean {
+  const latest = latestSubmissionLifecycleEvent(events)?.label;
+  if (status === "ready") return latest === "Application submission started";
+
+  // Verification messages can arrive after the employer runner has paused.
+  // Keep these applications subscribed to status recovery so an inbound code
+  // restarts the saved portal session without another click from the user.
+  return (
+    status === "needs_review" &&
+    attention?.kind === "email_verification" &&
+    (latest === "Application needs your answer" ||
+      latest === "Application attempt stopped and is ready to retry")
+  );
 }
 
 export function submissionLockAgeMs(updatedAt: string | null | undefined, nowMs = Date.now()): number {

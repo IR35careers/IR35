@@ -166,9 +166,12 @@ export async function GET(request: Request): Promise<Response> {
             )
           : null;
         if (inbound && inbox?.alias) {
+          // The recipient is application-scoped, so a wider recovery window is
+          // safe and lets an application recover after the user closes the page
+          // or an employer delivers its verification email unusually late.
           const requestedAfter = new Date(
             Math.max(
-              Date.now() - 30 * 60_000,
+              Date.now() - 24 * 60 * 60_000,
               new Date(submission.updated_at).getTime() - 15 * 60_000,
             ),
           ).toISOString();
