@@ -16,6 +16,7 @@
     "test": "npm run test:unit",
     "test:unit": "vitest run",
     "test:legacy": "tsx scripts/test-processing.ts && tsx scripts/test-tax.ts && tsx scripts/test-aggregators.ts && tsx scripts/test-fetchers.ts",
+    "test:extension": "node scripts/test-application-assistant.mjs",
     "email:preview": "tsx scripts/render-email-preview.ts",
     "email:audit-launch": "tsx scripts/audit-launch-audience.ts",
     "worker:install-browser": "playwright-core install chromium",
