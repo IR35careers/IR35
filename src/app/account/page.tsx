@@ -14,10 +14,11 @@ import { authenticatedDestination } from "@/lib/portal-access";
 import { GoogleIdentityButton } from "@/components/GoogleIdentityButton";
 
 function AccountForm() {
-  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, requestPasswordReset, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = resolvePostAuthPath(searchParams.get("next"));
+  const switchRequested = searchParams.get("switch") === "1";
   const signupNext = searchParams.get("next") ? next : "/profile#application-readiness";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,15 +30,31 @@ function AccountForm() {
   const [confirmSent, setConfirmSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
+  const [switchingAccount, setSwitchingAccount] = useState(switchRequested);
+
+  useEffect(() => {
+    if (loading || !switchRequested) return;
+
+    let cancelled = false;
+    void signOut().finally(() => {
+      if (cancelled) return;
+      setSwitchingAccount(false);
+      router.replace(`/account?mode=signin&next=${encodeURIComponent(next)}`);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, next, router, signOut, switchRequested]);
 
   // Already signed in → leave this page.
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !switchRequested) {
       const destination = authenticatedDestination(user.email, next);
       if (destination.startsWith("https://")) window.location.replace(destination);
       else router.replace(destination);
     }
-  }, [user, loading, next, router]);
+  }, [user, loading, next, router, switchRequested]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +118,14 @@ function AccountForm() {
     router.replace(signupNext);
   };
 
-  if (!loading && user) return null;
+  if (switchingAccount || switchRequested || (!loading && user)) {
+    return (
+      <div className="flex w-full max-w-sm items-center justify-center gap-3 rounded-3xl border border-slate-300 bg-white/95 p-8 text-sm font-semibold text-slate-700 backdrop-blur-xl">
+        <Loader2 className="animate-spin" size={18} />
+        Preparing contractor sign in
+      </div>
+    );
+  }
 
   if (confirmSent || resetSent) {
     return (

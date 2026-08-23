@@ -95,6 +95,12 @@ export default function AdminLoginPage() {
             {!user && <><div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-white/[0.08]" /><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">or</span><span className="h-px flex-1 bg-white/[0.08]" /></div><GoogleIdentityButton admin onError={setError} /></>}
 
             <p className="mt-6 text-center text-[11px] leading-5 text-slate-600">Protected by an administrator allowlist, server verification and a short-lived HttpOnly session.</p>
+            <a
+              href="https://www.ir35careers.com/account?switch=1&mode=signin&next=%2Fapplications"
+              className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xl text-xs font-semibold text-slate-400 transition hover:bg-white/[0.04] hover:text-white"
+            >
+              Switch to a contractor account
+            </a>
           </section>
         </div>
       </div>
