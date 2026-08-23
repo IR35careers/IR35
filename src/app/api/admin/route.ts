@@ -625,6 +625,9 @@ export async function GET(request: Request): Promise<Response> {
                 controls: Array.isArray(diagnostic.controls)
                   ? diagnostic.controls.slice(0, 80)
                   : [],
+                blockedHosts: Array.isArray(diagnostic.blockedHosts)
+                  ? diagnostic.blockedHosts.slice(0, 30).map((value) => String(value).slice(0, 253))
+                  : [],
               }
             : null,
           confirmationReference: row.provider_submission_id ? String(row.provider_submission_id) : null,

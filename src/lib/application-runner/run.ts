@@ -113,7 +113,14 @@ type RunnerPageDiagnostic = {
   title: string;
   headings: string[];
   actions: Array<{ label: string; enabled: boolean; role: string }>;
-  controls: Array<{ label: string; type: string; required: boolean }>;
+  controls: Array<{
+    label: string;
+    type: string;
+    required: boolean;
+    completed: boolean;
+    valid: boolean;
+  }>;
+  blockedHosts: string[];
 };
 
 /**
@@ -121,7 +128,10 @@ type RunnerPageDiagnostic = {
  * deliberately excluded because this snapshot is retained for protected
  * administrator diagnostics when an employer changes its form.
  */
-async function pageDiagnostic(page: Page): Promise<RunnerPageDiagnostic> {
+async function pageDiagnostic(
+  page: Page,
+  blockedHosts: ReadonlySet<string> = new Set(),
+): Promise<RunnerPageDiagnostic> {
   const title = clean(await page.title().catch(() => ""), 160);
   const headingNodes = page.locator("h1:visible, h2:visible, h3:visible, legend:visible");
   const headings: string[] = [];
@@ -153,7 +163,7 @@ async function pageDiagnostic(page: Page): Promise<RunnerPageDiagnostic> {
   }
 
   const controlNodes = page.locator(
-    'input:not([type="hidden"]):visible, select:visible, textarea:visible, [role="checkbox"]:visible, [role="radio"]:visible, [role="combobox"]:visible',
+    'input:not([type="hidden"]):visible, input[type="file"], select:visible, textarea:visible, [role="checkbox"]:visible, [role="radio"]:visible, [role="combobox"]:visible',
   );
   const controls: RunnerPageDiagnostic["controls"] = [];
   for (let index = 0; index < Math.min(await controlNodes.count(), 80); index += 1) {
@@ -178,6 +188,15 @@ async function pageDiagnostic(page: Page): Promise<RunnerPageDiagnostic> {
         required:
           element.hasAttribute("required") ||
           element.getAttribute("aria-required") === "true",
+        completed:
+          element instanceof HTMLInputElement && element.type === "file"
+            ? Boolean(element.files?.length)
+            : element instanceof HTMLInputElement &&
+                (element.type === "checkbox" || element.type === "radio")
+              ? element.checked
+              : Boolean(element.value?.trim()),
+        valid:
+          typeof element.checkValidity !== "function" || element.checkValidity(),
       };
     });
     const label = clean(snapshot.label, 180);
@@ -186,10 +205,18 @@ async function pageDiagnostic(page: Page): Promise<RunnerPageDiagnostic> {
       label,
       type: clean(snapshot.type, 40),
       required: snapshot.required,
+      completed: snapshot.completed,
+      valid: snapshot.valid,
     });
   }
 
-  return { title, headings, actions, controls };
+  return {
+    title,
+    headings,
+    actions,
+    controls,
+    blockedHosts: Array.from(blockedHosts).slice(0, 30),
+  };
 }
 
 function currentDestination(page: Page | null, fallback: string): string {
@@ -207,6 +234,7 @@ async function publicRequestGuard(
   route: import("playwright-core").Route,
   approvedHosts: Set<string>,
   sensitiveMode: () => boolean,
+  onBlockedHost?: (hostname: string) => void,
 ): Promise<void> {
   const request = route.request();
   const url = request.url();
@@ -246,6 +274,7 @@ async function publicRequestGuard(
         // not trust their hosts with candidate data after fields are filled.
         await validatePublicHttpsUrl(url);
       } else {
+        if (sensitiveMode()) onBlockedHost?.(hostname);
         throw new Error("blocked");
       }
     } else if (
@@ -258,6 +287,46 @@ async function publicRequestGuard(
   } catch {
     await route.abort("blockedbyclient");
   }
+}
+
+async function uploadApprovedResumeForKnownPortal(input: {
+  page: Page;
+  ats: AtsDefinition;
+  resume: Buffer | null;
+}): Promise<boolean> {
+  if (input.ats.kind !== "totaljobs" || !input.resume) return false;
+  const payload = {
+    name: "IR35Careers-Application-CV.pdf",
+    mimeType: "application/pdf",
+    buffer: input.resume,
+  };
+  const fileInputs = input.page.locator('input[type="file"]');
+  if (await fileInputs.count()) {
+    const inputControl = fileInputs.first();
+    const attached = await inputControl
+      .setInputFiles(payload)
+      .then(async () =>
+        inputControl.evaluate((node) =>
+          Boolean((node as HTMLInputElement).files?.length),
+        ),
+      )
+      .catch(() => false);
+    if (attached) return true;
+  }
+
+  const chooseFile = await actionLocator(
+    input.page,
+    /^(choose file|upload (?:a )?(?:file|cv|resume)|add (?:a )?(?:file|cv|resume))$/i,
+  );
+  if (!chooseFile) return false;
+  const chooserPromise = input.page
+    .waitForEvent("filechooser", { timeout: 5_000 })
+    .catch(() => null);
+  await chooseFile.click().catch(() => undefined);
+  const chooser = await chooserPromise;
+  if (!chooser) return false;
+  await chooser.setFiles(payload);
+  return true;
 }
 
 async function actionLocator(
@@ -1176,6 +1245,9 @@ async function fillStep(
   coverLetter: string,
   employerTermsConsent: boolean,
 ): Promise<RunnerField[]> {
+  await uploadApprovedResumeForKnownPortal({ page, ats, resume }).catch(
+    () => false,
+  );
   const controls = await snapshotFields(page, step, ats.kind);
   const unknown: RunnerField[] = [];
   const mappings = new Map<string, FieldMapping>();
@@ -1420,13 +1492,19 @@ export async function runNativeApplication(
     });
     context.setDefaultTimeout(12_000);
     context.setDefaultNavigationTimeout(25_000);
-    const approvedHosts = new Set<string>([
+  const approvedHosts = new Set<string>([
       destination.hostname,
       startUrl.hostname,
-    ]);
+  ]);
+    const blockedHosts = new Set<string>();
     let sensitive = false;
     await context.route("**/*", (route) =>
-      publicRequestGuard(route, approvedHosts, () => sensitive),
+      publicRequestGuard(
+        route,
+        approvedHosts,
+        () => sensitive,
+        (hostname) => blockedHosts.add(hostname),
+      ),
     );
     page = await context.newPage();
     let navigationStatus: number | null = null;
@@ -1551,7 +1629,7 @@ export async function runNativeApplication(
           [],
           portalAccess.stop.action,
           currentDestination(page, startUrl.toString()),
-          await pageDiagnostic(page),
+           await pageDiagnostic(page, blockedHosts),
         );
       if (portalAccess.handled) {
         portalAccessAttempts += 1;
@@ -1632,7 +1710,7 @@ export async function runNativeApplication(
           [],
           "unsupported_form",
           currentDestination(page, startUrl.toString()),
-          await pageDiagnostic(page),
+          await pageDiagnostic(page, blockedHosts),
         );
       }
 
