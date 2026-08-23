@@ -1574,8 +1574,21 @@ export async function runNativeApplication(
           currentDestination(page, startUrl.toString()),
         );
 
-      const submit = await actionLocator(page, ats.submitPattern);
-      const next = await actionLocator(page, ats.nextPattern);
+      let submit = await actionLocator(page, ats.submitPattern);
+      let next = await actionLocator(page, ats.nextPattern);
+      // Client-rendered employer forms can briefly expose only their header
+      // after account creation. Give the approved page a bounded opportunity
+      // to render its controls before classifying it as unsupported.
+      for (
+        let renderAttempt = 0;
+        !submit && !next && renderAttempt < 10;
+        renderAttempt += 1
+      ) {
+        if (await successMessage(page, ats)) break;
+        await page.waitForTimeout(500);
+        submit = await actionLocator(page, ats.submitPattern);
+        next = await actionLocator(page, ats.nextPattern);
+      }
       const action = submit ?? next;
       if (!action) {
         const confirmed = await successMessage(page, ats);
