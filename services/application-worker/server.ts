@@ -110,6 +110,8 @@ if (!process.env.CHROME_EXECUTABLE_PATH)
   process.env.CHROME_EXECUTABLE_PATH = playwrightChromium.executablePath();
 if (!process.env.APPLICATION_RUNNER_BUDGET_MS)
   process.env.APPLICATION_RUNNER_BUDGET_MS = "300000";
+if (!process.env.APPLICATION_RUNNER_HEADLESS)
+  process.env.APPLICATION_RUNNER_HEADLESS = "false";
 
 const server = createServer((request, response) => {
   if (request.method === "GET" && request.url === "/health") {

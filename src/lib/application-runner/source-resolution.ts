@@ -49,7 +49,8 @@ export interface DiscoveryCandidate {
 
 export function discoveryCandidateScore(
   candidate: DiscoveryCandidate,
-  job: Pick<JobDetail, "title" | "company_name" | "location">,
+  job: Pick<JobDetail, "title" | "company_name" | "location"> &
+    Partial<Pick<JobDetail, "description">>,
 ): number {
   const titleOverlap = overlap(job.title, candidate.title);
   if (titleOverlap < 0.72) return 0;
@@ -65,16 +66,21 @@ export function discoveryCandidateScore(
   const exactTitle = compact(candidate.title) === compact(job.title);
   const location = job.location.split(",")[0] ?? job.location;
   const locationMatched = overlap(location, candidate.context) >= 0.5;
+  const descriptionMatched = job.description
+    ? overlap(job.description, candidate.context)
+    : 0;
   return Math.round(
     (exactTitle ? 70 : titleOverlap * 60) +
       25 +
-      (locationMatched ? 5 : 0),
+      (locationMatched ? 5 : 0) +
+      descriptionMatched * 20,
   );
 }
 
 export function bestDiscoveryCandidate(
   candidates: DiscoveryCandidate[],
-  job: Pick<JobDetail, "title" | "company_name" | "location">,
+  job: Pick<JobDetail, "title" | "company_name" | "location"> &
+    Partial<Pick<JobDetail, "description">>,
 ): DiscoveryCandidate | null {
   const ranked = candidates
     .map((candidate) => ({

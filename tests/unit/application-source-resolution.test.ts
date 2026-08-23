@@ -98,4 +98,37 @@ describe("application source resolution", () => {
       "/job/devops-engineer/talent-international-uk-ltd-job107879337",
     );
   });
+
+  it("uses the advert description to distinguish duplicate title and company matches", () => {
+    const totalJobsRole = {
+      title: "DevOps Engineer",
+      company_name: "TALENT INTERNATIONAL UK LTD",
+      location: "UK",
+      description:
+        "Senior DevOps Engineer supporting an AWS data platform with Terraform, GitLab CI/CD, Python and active SC clearance.",
+    };
+    expect(
+      bestDiscoveryCandidate(
+        [
+          {
+            title: "DevOps Engineer",
+            context:
+              "TALENT INTERNATIONAL UK LTD UK £480 per day. Senior DevOps Engineer supporting an AWS data platform with Terraform, GitLab CI/CD, Python and active SC clearance.",
+            href:
+              "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+          },
+          {
+            title: "DevOps Engineer",
+            context:
+              "TALENT INTERNATIONAL UK LTD UK £480 per day. Streamline software development, testing and deployment processes.",
+            href:
+              "/job/devops-engineer/talent-international-uk-ltd-job107877198",
+          },
+        ],
+        totalJobsRole,
+      )?.href,
+    ).toBe(
+      "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+    );
+  });
 });

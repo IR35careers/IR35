@@ -41,6 +41,10 @@ import {
   discoveryProviderFromAdzunaPage,
   type DiscoveryCandidate,
 } from "@/lib/application-runner/source-resolution";
+import {
+  applicationRunnerHeadless,
+  applicationRunnerWindowArgs,
+} from "@/lib/application-runner/runtime-config";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
 import { buildResumePdf } from "@/lib/resume/export";
@@ -262,7 +266,7 @@ async function openApplicationForm(
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const dismiss = await actionLocator(
       page,
-      /^(decline all|reject all|reject optional cookies|only necessary cookies|no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i,
+      /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary|no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i,
     );
     if (dismiss) {
       page = await clickAndFollow(page, dismiss, 300);
@@ -326,14 +330,15 @@ async function totalJobsCandidates(page: Page): Promise<DiscoveryCandidate[]> {
     const context = clean(
       await anchor
         .evaluate((node) => {
+          const article = node.closest("article");
+          if (article)
+            return article.innerText || article.textContent || "";
           let current: HTMLElement | null = node as HTMLElement;
           let useful = current.innerText || current.textContent || "";
           for (let depth = 0; depth < 8 && current.parentElement; depth += 1) {
             current = current.parentElement;
             const text = current.innerText || current.textContent || "";
             if (text.length <= 2_200) useful = text;
-            if (/\b(published|ago|contract|per (?:hour|day|annum))\b/i.test(text))
-              break;
           }
           return useful;
         })
@@ -1156,12 +1161,20 @@ export async function runNativeApplication(
     const customExecutablePath = process.env.CHROME_EXECUTABLE_PATH?.trim();
     const executablePath =
       customExecutablePath || (await chromiumBinary.executablePath());
+    const headless = applicationRunnerHeadless({
+      configured: process.env.APPLICATION_RUNNER_HEADLESS,
+      hasCustomExecutable: Boolean(customExecutablePath),
+    });
     browser = await chromium.launch({
       executablePath,
       args: customExecutablePath
-        ? ["--disable-dev-shm-usage", "--no-sandbox"]
+        ? [
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+            ...applicationRunnerWindowArgs(headless),
+          ]
         : chromiumBinary.args,
-      headless: true,
+      headless,
     });
     context = await browser.newContext({
       acceptDownloads: false,
