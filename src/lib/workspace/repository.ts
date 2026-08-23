@@ -15,6 +15,7 @@ import type {
 } from "@/lib/workspace/types";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type { JobDetail } from "@/lib/job-types";
+import { submissionAttentionFromRow } from "@/lib/workspace/submission-attention";
 
 type DbRow = Record<string, unknown>;
 
@@ -145,13 +146,16 @@ function mapEvent(row: DbRow): ApplicationEvent {
 function mapApplication(
   row: DbRow,
   events: ApplicationEvent[],
+  submission?: DbRow,
 ): ApplicationRecord {
   const applicationEvents = events.filter(
     (event) => event.applicationId === String(row.id),
   );
-  const latestAttention = [...applicationEvents]
+  const eventAttention = [...applicationEvents]
     .reverse()
     .find((event) => event.metadata?.attention)?.metadata?.attention;
+  const submissionAttention = submissionAttentionFromRow(submission);
+  const latestAttention = submissionAttention ?? eventAttention;
   return {
     id: String(row.id),
     job: row.job_snapshot as JobDetail,
@@ -209,6 +213,7 @@ export async function loadCloudWorkspace(
     rulesResult,
     runsResult,
     entitlementResult,
+    submissionsResult,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -251,6 +256,11 @@ export async function loadCloudWorkspace(
       .select("*")
       .eq("user_id", userId)
       .maybeSingle(),
+    supabase
+      .from("application_submissions")
+      .select("application_id, status, error_code, receipt, updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false }),
   ]);
 
   const failure = [
@@ -262,6 +272,7 @@ export async function loadCloudWorkspace(
     rulesResult,
     runsResult,
     entitlementResult,
+    submissionsResult,
   ].find((result) => result.error);
   if (failure?.error) throw new Error(failure.error.message);
 
@@ -271,6 +282,12 @@ export async function loadCloudWorkspace(
   const aliasRow = aliasResult.data as DbRow | null;
   const rulesRow = rulesResult.data as DbRow | null;
   const entitlementRow = entitlementResult.data as DbRow | null;
+  const submissionMap = new Map<string, DbRow>();
+  for (const row of (submissionsResult.data ?? []) as DbRow[]) {
+    const applicationId = String(row.application_id ?? "");
+    if (applicationId && !submissionMap.has(applicationId))
+      submissionMap.set(applicationId, row);
+  }
 
   const automation: AutomationRules = rulesRow
     ? {
@@ -334,7 +351,7 @@ export async function loadCloudWorkspace(
     ...state,
     profile: profileFromRow(profileRow, state.profile),
     applications: ((applicationsResult.data ?? []) as DbRow[]).map((row) =>
-      mapApplication(row, events),
+      mapApplication(row, events, submissionMap.get(String(row.id))),
     ),
     messages: ((messagesResult.data ?? []) as DbRow[]).map(mapMessage),
     automation,
