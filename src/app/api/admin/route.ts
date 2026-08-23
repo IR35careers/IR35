@@ -1179,7 +1179,7 @@ export async function POST(request: Request): Promise<Response> {
         const [packetResult, existingTaskResult] = await Promise.all([
           supabase
             .from("application_packets")
-            .select("job_snapshot, truth_approved, materials_approved, submission_approved")
+            .select("job_snapshot, screening_answers, truth_approved, materials_approved, submission_approved")
             .eq("id", submission.application_id)
             .eq("user_id", submission.user_id)
             .maybeSingle(),
@@ -1196,6 +1196,7 @@ export async function POST(request: Request): Promise<Response> {
         const packet = packetResult.data as
           | {
               job_snapshot?: Record<string, unknown>;
+              screening_answers?: Array<Record<string, unknown>>;
               truth_approved?: boolean;
               materials_approved?: boolean;
               submission_approved?: boolean;
@@ -1215,6 +1216,12 @@ export async function POST(request: Request): Promise<Response> {
         } catch {
           secureDestination = false;
         }
+        const questionsReady = (packet?.screening_answers ?? []).every(
+          (question) =>
+            !question.required ||
+            (question.reviewed === true && String(question.answer ?? "").trim()),
+        );
+        const hasPriorApprovedWorkerTask = Boolean(existingTaskResult.data);
         const canRequeue = Boolean(
           workerConfig.enabled &&
             callbackUrl.protocol === "https:" &&
@@ -1222,7 +1229,8 @@ export async function POST(request: Request): Promise<Response> {
             idempotencyKey &&
             packet?.truth_approved &&
             packet?.materials_approved &&
-            packet?.submission_approved,
+            questionsReady &&
+            (packet?.submission_approved || hasPriorApprovedWorkerTask),
         );
         if (canRequeue) {
           const { error: workerQueueError } = await supabase
@@ -1261,7 +1269,11 @@ export async function POST(request: Request): Promise<Response> {
               .eq("id", submission.id),
             supabase
               .from("application_packets")
-              .update({ status: "ready", updated_at: now })
+              .update({
+                status: "ready",
+                submission_approved: true,
+                updated_at: now,
+              })
               .eq("id", submission.application_id)
               .eq("user_id", submission.user_id),
             supabase.from("application_events").upsert(
