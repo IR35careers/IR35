@@ -184,8 +184,21 @@ export function isTrustedApplicationPortalSender(
   } catch {
     return false;
   }
-  if (ats.kind === "generic") return false;
   const senderHost = senderMatch[1].replace(/\.$/, "");
+  if (ats.kind === "generic") {
+    try {
+      const destinationHost = new URL(applicationDestination).hostname.toLowerCase();
+      // Generic employer career sites commonly send from their parent domain
+      // or a notification subdomain. Keep this deliberately conservative:
+      // sibling domains and merely similar names are not trusted.
+      return (
+        hostMatches(senderHost, destinationHost) ||
+        hostMatches(destinationHost, senderHost)
+      );
+    } catch {
+      return false;
+    }
+  }
   return ATS_SENDER_DOMAINS[ats.kind].some((domain) =>
     hostMatches(senderHost, domain),
   );

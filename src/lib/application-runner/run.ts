@@ -1064,9 +1064,9 @@ export async function runNativeApplication(
       );
       if (needsUser.length)
         return reviewReceipt(
-          "The employer requires information that is not safely available in your saved profile.",
+          "The employer requires information that is not in your saved profile. Continue on the prepared employer form to answer only the highlighted questions.",
           needsUser,
-          "/profile",
+          "browser_continue",
         );
 
       const submit = await actionLocator(page, ats.submitPattern);

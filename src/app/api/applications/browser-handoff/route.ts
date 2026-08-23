@@ -16,6 +16,7 @@ import { sendApplicationNotification } from "@/lib/email/application-notificatio
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import { buildResumePdf } from "@/lib/resume/export";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
+import { loadPortalSession } from "@/lib/application-portal-session";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -59,10 +60,9 @@ function approved(row: DbRow): boolean {
   return Boolean(
     row.truth_approved &&
       row.materials_approved &&
-      row.submission_approved &&
       questions.every(
         (question) =>
-          !question.required || (question.reviewed && question.answer.trim()),
+          !question.answer.trim() || question.reviewed,
       ),
   );
 }
@@ -180,7 +180,20 @@ async function createHandoff(request: Request, applicationId: string): Promise<R
       { error: "Review and approve the final application before continuing." },
       { status: 409, headers: headers(request) },
     );
-  const destination = await validatePublicHttpsUrl(context.job.apply_url);
+  let destination = await validatePublicHttpsUrl(context.job.apply_url);
+  const savedPortal = await loadPortalSession({
+    admin,
+    userId: authUser.id,
+    applicationId,
+  }).catch(() => null);
+  if (savedPortal?.currentUrl) {
+    try {
+      destination = await validatePublicHttpsUrl(savedPortal.currentUrl);
+    } catch {
+      // Fall back to the approved job destination if the saved employer step
+      // is no longer a valid public HTTPS page.
+    }
+  }
   const created = await createApplicationBrowserHandoff({
     admin,
     userId: authUser.id,
@@ -304,6 +317,7 @@ async function packetResponse(request: Request, token: string): Promise<Response
           ? applicationPortalPassword(handoff.userId, handoff.destination)
           : undefined,
         automaticEmailVerification: Boolean(candidate.automaticEmailVerification),
+        employerTermsConsent: Boolean(candidate.employerTermsConsent),
       },
       expiresAt: handoff.expiresAt,
     },

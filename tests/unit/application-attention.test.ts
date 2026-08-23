@@ -41,6 +41,28 @@ describe("application attention", () => {
     expect(attention.title).toBe("Continue on the employer page");
     expect(attention.actionLabel).toBe("Continue securely");
   });
+
+  it("opens the prepared employer form when a new required question is found", () => {
+    const attention = buildApplicationAttention({
+      action: "browser_continue",
+      message: "The employer requires one answer that is not saved.",
+      questions: [
+        {
+          id: "employer-reference",
+          label: "Employer reference",
+          answer: "",
+          required: true,
+          reviewed: false,
+          source: "job",
+        },
+      ],
+    });
+
+    expect(attention.kind).toBe("employer_form");
+    expect(attention.title).toBe("Answer 1 employer question");
+    expect(attention.actionLabel).toBe("Continue on employer form");
+    expect(attention.questionIds).toEqual(["employer-reference"]);
+  });
 });
 
 describe("profile readiness", () => {

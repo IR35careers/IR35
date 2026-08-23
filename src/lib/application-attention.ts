@@ -24,6 +24,17 @@ export function buildApplicationAttention(input: {
     .filter((question) => question.required && !question.answer.trim())
     .map((question) => question.id);
 
+  if (action === "browser_continue" && questionIds.length > 0) {
+    return {
+      kind: "employer_form",
+      title: `Answer ${questionIds.length} employer question${questionIds.length === 1 ? "" : "s"}`,
+      message,
+      action: "#needs-attention",
+      actionLabel: "Continue on employer form",
+      questionIds,
+    };
+  }
+
   if (action === "/profile" || questionIds.length > 0) {
     return {
       kind: questionIds.length > 0 ? "answer_questions" : "profile_missing",

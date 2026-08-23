@@ -7,6 +7,7 @@
   const CAPTCHA = 'iframe[src*="captcha" i], [id*="captcha" i], [class*="captcha" i], iframe[src*="recaptcha" i], iframe[src*="hcaptcha" i]';
   const SENSITIVE = /(date of birth|birth date|national insurance|passport|social security|gender|sex|ethnic|race|religion|medical|health|veteran|current salary|signature)/i;
   const LEGAL = /(terms(?: and conditions)?|privacy|declaration|agreement|consent to|certif(?:y|ication)|acknowledge)/i;
+  const OPTIONAL_MARKETING = /(newsletter|marketing|promotion|offers|job alerts|talent community)/i;
   const PATTERNS = [
     ["first_name", /\b(first|given)\s*name\b/i], ["last_name", /\b(last|family|sur)\s*name\b/i],
     ["full_name", /\b(full|legal)\s*name\b|^name$/i], ["email", /e-?mail/i], ["phone", /phone|mobile|telephone/i],
@@ -94,6 +95,21 @@
     });
   }
   function bodyText() { return clean(document.body?.innerText || "", 30000); }
+  function requiredEmployerTerms(field) {
+    return field.element instanceof HTMLInputElement &&
+      field.element.type === "checkbox" &&
+      !field.element.checked &&
+      LEGAL.test(field.label) &&
+      !OPTIONAL_MARKETING.test(field.label) &&
+      field.required;
+  }
+  function applyEmployerTerms(packet, fields) {
+    const legal = fields.filter(requiredEmployerTerms);
+    if (!legal.length) return [];
+    if (!packet.account.employerTermsConsent) return legal;
+    legal.forEach((field) => field.element.click());
+    return [];
+  }
 
   function overlay(options) {
     document.getElementById("ir35careers-assistant")?.remove();
@@ -210,15 +226,15 @@
     const email = fields.find((field) => /email/i.test(field.label) && field.element instanceof HTMLInputElement);
     if (email && !currentValue(email.element)) setNativeValue(email.element, packet.account.email);
     for (const password of passwords) if (!currentValue(password.element)) setNativeValue(password.element, packet.account.password);
-    const accountUnresolved = await fillApplication(
-      packet,
-      fields.filter((field) => !passwords.includes(field)),
-    );
-    const legal = fields.filter((field) => field.element instanceof HTMLInputElement && field.element.type === "checkbox" && !field.element.checked && LEGAL.test(field.label));
+    const legal = applyEmployerTerms(packet, fields);
     if (legal.length) {
       await pause("employer_terms", "Read and accept the employer's declaration on this page. IR35Careers will continue with the same prepared application after you confirm it.", legal);
       return true;
     }
+    const accountUnresolved = await fillApplication(
+      packet,
+      fields.filter((field) => !passwords.includes(field)),
+    );
     if (accountUnresolved.length) {
       await pause("employer_login", "Complete the highlighted employer account fields. Your private IR35Careers email and secure password are already filled.", accountUnresolved);
       return true;
@@ -326,12 +342,12 @@
       return;
     }
     overlay({ title: "Completing your application", message: `Uploading your approved CV and filling saved answers for ${packet.job.title}.` });
-    const unresolved = await fillApplication(packet, fields);
-    const legal = fields.filter((field) => field.element instanceof HTMLInputElement && field.element.type === "checkbox" && !field.element.checked && LEGAL.test(field.label));
+    const legal = applyEmployerTerms(packet, fields);
     if (legal.length) {
       await pause("employer_terms", "Review and accept the employer declaration shown on this page. Then continue the same application.", legal);
       return;
     }
+    const unresolved = await fillApplication(packet, fields);
     if (unresolved.length) {
       await pause("/profile", "Complete the highlighted employer questions. Your CV and all other saved details have already been filled.", unresolved);
       return;

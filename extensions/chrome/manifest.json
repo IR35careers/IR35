@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "IR35Careers Application Assistant",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Continue an approved IR35Careers application on the real employer page, including account setup, CV upload, saved answers and confirmation capture.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAonuLvAhFzcZjwVlsnSLBHGJdp5Drzecn+GCOOPU7tJykxTXKgJy8Vgx1zivSagrcurnPBAp0aoUG03FnLsBKEjLvibBWkBwqeO3CzRLZSHnFwO132ZsclZgyoAUWmX9Kfs3KzVwwrvmU1j9SHCH4bm5sQ442Z6cq7iZVBwSdosn0+pEkcoHNl3YpqlBTO8BsIF66sB8ntYBjgYyciOFtqLwj0S3Agz7YwLQ1nZK8FTcFaovzgLOoNQaKt77v0XUCH1+ikubOcDN4gFQHstyxLiLuUHErvt5EhUIUKrzVkFhyYqwMTsfqssG/4c5k/nK4BWH945OHk2jAV/PqTFpUxQIDAQAB",
   "permissions": ["activeTab", "storage", "tabs"],

@@ -164,6 +164,12 @@ describe("native application runner", () => {
         "Recruiter <updates@employer.example>",
         "https://careers.employer.example/role",
       ),
+    ).toBe(true);
+    expect(
+      isTrustedApplicationPortalSender(
+        "Fake recruiter <updates@unrelated.example>",
+        "https://careers.employer.example/role",
+      ),
     ).toBe(false);
   });
 
