@@ -65,23 +65,21 @@ export async function POST(request: Request): Promise<Response> {
       .limit(100);
     if (submissionsResult.error) throw submissionsResult.error;
 
-    const submissions = (submissionsResult.data ?? []).filter((row) => {
+    const inspectedSubmissions = submissionsResult.data ?? [];
+    const submissions = inspectedSubmissions.filter((row) => {
       const receipt = row.receipt as Record<string, unknown> | null;
       return RECOVERABLE_ACTIONS.has(String(receipt?.action ?? ""));
     });
-    const applicationIds = submissions.map((row) => row.application_id);
-    if (!applicationIds.length)
-      return Response.json(
-        { ok: true, candidates: [], requeued: 0 },
-        { headers: HEADERS },
-      );
+    const applicationIds = [...new Set(inspectedSubmissions.map((row) => row.application_id))];
 
-    const tasksResult = await supabase
-      .from("application_worker_tasks")
-      .select(
-        "id, user_id, application_id, idempotency_key, destination, callback_url, status",
-      )
-      .in("application_id", applicationIds);
+    const tasksResult = applicationIds.length
+      ? await supabase
+          .from("application_worker_tasks")
+          .select(
+            "id, user_id, application_id, idempotency_key, destination, callback_url, status",
+          )
+          .in("application_id", applicationIds)
+      : { data: [], error: null };
     if (tasksResult.error) throw tasksResult.error;
     const tasksByApplication = new Map(
       (tasksResult.data ?? []).map((task) => [task.application_id, task]),
@@ -114,6 +112,25 @@ export async function POST(request: Request): Promise<Response> {
             taskStatus: task?.status ?? "missing",
             destination: task?.destination ?? "",
           })),
+          diagnostics: {
+            submissionsInspected: inspectedSubmissions.length,
+            recoverableSubmissions: submissions.length,
+            tasksInspected: tasksResult.data?.length ?? 0,
+            recent: inspectedSubmissions.slice(0, 20).map((submission) => {
+              const receipt = submission.receipt as Record<string, unknown> | null;
+              const task = tasksByApplication.get(submission.application_id);
+              return {
+                applicationId: submission.application_id,
+                action: String(receipt?.action ?? ""),
+                receiptState: String(receipt?.state ?? ""),
+                receiptDestinationHost: hostname(String(receipt?.destination ?? "")),
+                submissionStatus: submission.status,
+                errorCode: submission.error_code,
+                taskStatus: task?.status ?? "missing",
+                taskDestinationHost: hostname(String(task?.destination ?? "")),
+              };
+            }),
+          },
           requeued: 0,
         },
         { headers: HEADERS },
