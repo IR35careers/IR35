@@ -1141,6 +1141,26 @@ async function snapshotFields(
   return fields;
 }
 
+async function waitForFillableControls(page: Page): Promise<void> {
+  const controls = page.locator(
+    'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="search"]), select, textarea, input[type="file"]',
+  );
+  const deadline = Date.now() + 12_000;
+  while (Date.now() < deadline) {
+    const count = Math.min(await controls.count(), MAX_FIELDS);
+    for (let index = 0; index < count; index += 1) {
+      const control = controls.nth(index);
+      const type = ((await control.getAttribute("type")) ?? "").toLowerCase();
+      if (
+        (type === "file" || (await control.isVisible().catch(() => false))) &&
+        (await control.isEnabled().catch(() => false))
+      )
+        return;
+    }
+    await page.waitForTimeout(300);
+  }
+}
+
 async function loadResume(url: string | undefined): Promise<Buffer | null> {
   if (!url) return null;
   const approved = await validatePublicHttpsUrl(url);
@@ -1656,6 +1676,10 @@ export async function runNativeApplication(
         portalAccountState = "created";
         accountCreationPending = false;
       }
+      // Totaljobs and other React application forms can show their shell before
+      // mounting the actual controls. Filling before the controls exist leaves
+      // the later-rendered form empty and its submit button disabled.
+      await waitForFillableControls(page);
       sensitive = true;
       const needsUser = await fillStep(
         page,
