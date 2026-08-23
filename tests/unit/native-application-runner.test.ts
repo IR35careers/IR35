@@ -62,6 +62,7 @@ describe("native application runner", () => {
     expect(nativeRunnerHostAllowed("jobs.ashbyhq.com")).toBe(true);
     expect(nativeRunnerHostAllowed("www.adzuna.co.uk")).toBe(true);
     expect(nativeRunnerHostAllowed("www.reed.co.uk")).toBe(true);
+    expect(nativeRunnerHostAllowed("www.cv-library.co.uk")).toBe(true);
     expect(nativeRunnerHostAllowed("evilashbyhq.com")).toBe(false);
     expect(nativeRunnerHostAllowed("fake-adzuna.co.uk.attacker.example")).toBe(false);
     expect(nativeRunnerHostAllowed("greenhouse.io.attacker.example")).toBe(false);

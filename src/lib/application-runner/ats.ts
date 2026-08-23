@@ -54,6 +54,7 @@ const ATS_SENDER_DOMAINS: Record<Exclude<AtsKind, "generic">, string[]> = {
 const JOB_BOARD_DOMAINS = [
   "adzuna.co.uk",
   "reed.co.uk",
+  "cv-library.co.uk",
 ] as const;
 
 function hostMatches(host: string, domain: string): boolean {

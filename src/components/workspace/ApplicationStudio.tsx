@@ -334,16 +334,16 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     ) => {
       const now = new Date().toISOString();
       const sourceUnavailable = action === "source_access_denied";
+      const eventLabel = sourceUnavailable
+        ? "Employer application page is unavailable"
+        : attention?.title || "Application needs review";
       const next: ApplicationRecord = {
         ...application,
         status: sourceUnavailable ? "failed" : "ready",
         attention: attention ?? application.attention,
         updatedAt: now,
         events:
-          latestSubmissionLifecycleEvent(application.events)?.label ===
-          (sourceUnavailable
-            ? "Employer application page is unavailable"
-            : "Application attempt stopped and is ready to retry")
+          latestSubmissionLifecycleEvent(application.events)?.label === eventLabel
             ? application.events
             : [
                 ...application.events,
@@ -351,9 +351,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   id: newWorkspaceId(),
                   applicationId,
                   type: "status_changed",
-                  label: sourceUnavailable
-                    ? "Employer application page is unavailable"
-                    : "Application attempt stopped and is ready to retry",
+                  label: eventLabel,
+                  metadata: attention ? { attention } : undefined,
                   createdAt: now,
                 },
               ],
@@ -435,7 +434,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 id: newWorkspaceId(),
                 applicationId,
                 type: "status_changed",
-                label: "Application needs your answer",
+                label:
+                  payload.attention?.title || "Application needs your answer",
+                metadata: payload.attention
+                  ? { attention: payload.attention }
+                  : undefined,
                 createdAt: now,
               },
             ],

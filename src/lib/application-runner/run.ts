@@ -36,6 +36,11 @@ import {
   type RunnerFacts,
   type RunnerField,
 } from "@/lib/application-runner/types";
+import {
+  bestDiscoveryCandidate,
+  discoveryProviderFromAdzunaPage,
+  type DiscoveryCandidate,
+} from "@/lib/application-runner/source-resolution";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
 import { buildResumePdf } from "@/lib/resume/export";
@@ -269,6 +274,106 @@ async function openApplicationForm(
     page = await clickAndFollow(page, apply, 800);
   }
   return page;
+}
+
+async function cvLibraryCandidates(page: Page): Promise<DiscoveryCandidate[]> {
+  const anchors = page.locator('a[href^="/job/"]');
+  const count = Math.min(await anchors.count(), 80);
+  const candidates: DiscoveryCandidate[] = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < count; index += 1) {
+    const anchor = anchors.nth(index);
+    const href = (await anchor.getAttribute("href").catch(() => null)) ?? "";
+    if (!/^\/job\/\d+\//.test(href) || seen.has(href)) continue;
+    seen.add(href);
+    const title = clean(await anchor.innerText().catch(() => ""), 240);
+    if (!title) continue;
+    const context = clean(
+      await anchor
+        .evaluate((node) => {
+          let current: HTMLElement | null = node as HTMLElement;
+          let useful = current.innerText || current.textContent || "";
+          for (let depth = 0; depth < 7 && current.parentElement; depth += 1) {
+            current = current.parentElement;
+            const text = current.innerText || current.textContent || "";
+            if (text.length <= 1_800) useful = text;
+            if (/\b(posted|contract|temporary|per (?:hour|day)|easy apply)\b/i.test(text))
+              break;
+          }
+          return useful;
+        })
+        .catch(() => ""),
+      1_800,
+    );
+    candidates.push({ title, context, href });
+  }
+  return candidates;
+}
+
+async function resolveDiscoveryApplicationPage(
+  page: Page,
+  job: SubmissionProviderPayload["job"],
+): Promise<Page> {
+  let host = "";
+  try {
+    host = new URL(page.url()).hostname.toLowerCase();
+  } catch {
+    return page;
+  }
+  if (!(host === "adzuna.co.uk" || host.endsWith(".adzuna.co.uk")))
+    return page;
+
+  const [body, html] = await Promise.all([
+    page.locator("body").innerText().catch(() => ""),
+    page.content().catch(() => ""),
+  ]);
+  if (discoveryProviderFromAdzunaPage({ body, html }) !== "cv_library")
+    return page;
+
+  const searchPage = await page.context().newPage();
+  try {
+    await searchPage.goto("https://www.cv-library.co.uk/search-jobs", {
+      waitUntil: "domcontentloaded",
+      timeout: 25_000,
+    });
+    const essentialCookies = await actionLocator(
+      searchPage,
+      /^(essential cookies only|reject optional cookies|only necessary cookies)$/i,
+    );
+    if (essentialCookies)
+      await clickAndFollow(searchPage, essentialCookies, 250).catch(
+        () => undefined,
+      );
+    const keywordInput = searchPage.getByRole("combobox", {
+      name: /keywords/i,
+    });
+    const locationInput = searchPage.getByRole("combobox", {
+      name: /location/i,
+    });
+    if (!(await keywordInput.count()) || !(await locationInput.count()))
+      throw new Error("search_unavailable");
+    await keywordInput.first().fill(job.title);
+    await locationInput.first().fill(job.location.split(",")[0] || job.location);
+    const findJobs = searchPage.getByRole("button", { name: /^find jobs$/i });
+    if (!(await findJobs.count())) throw new Error("search_unavailable");
+    await clickAndFollow(searchPage, findJobs.first(), 1_200);
+    const match = bestDiscoveryCandidate(
+      await cvLibraryCandidates(searchPage),
+      job,
+    );
+    if (!match) throw new Error("source_match_unavailable");
+    const directUrl = new URL(match.href, searchPage.url());
+    await validatePublicHttpsUrl(directUrl.toString());
+    await searchPage.goto(directUrl.toString(), {
+      waitUntil: "domcontentloaded",
+      timeout: 25_000,
+    });
+    await page.close().catch(() => undefined);
+    return searchPage;
+  } catch {
+    await searchPage.close().catch(() => undefined);
+    return page;
+  }
 }
 
 async function blocker(
@@ -1054,6 +1159,7 @@ export async function runNativeApplication(
       );
     }
     await validatePublicHttpsUrl(page.url());
+    page = await resolveDiscoveryApplicationPage(page, payload.job);
     page = await openApplicationForm(page, ats);
     const handoffBody = clean(
       await page
