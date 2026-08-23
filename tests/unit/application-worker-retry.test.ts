@@ -1,0 +1,53 @@
+import { describe, expect, it } from "vitest";
+import {
+  APPLICATION_WORKER_MAX_ATTEMPTS,
+  applicationWorkerRetryDelayMs,
+  shouldAutomaticallyRetryWorkerAttention,
+} from "@/lib/application-worker-retry";
+
+describe("application worker retry policy", () => {
+  it("retries delayed verification mail without asking the user", () => {
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "verification_code",
+        attempts: 1,
+      }),
+    ).toBe(true);
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "verification_code",
+        attempts: APPLICATION_WORKER_MAX_ATTEMPTS - 1,
+      }),
+    ).toBe(true);
+  });
+
+  it("stops after the controlled retry limit", () => {
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "verification_code",
+        attempts: APPLICATION_WORKER_MAX_ATTEMPTS,
+      }),
+    ).toBe(false);
+  });
+
+  it("does not retry legal consent or security actions", () => {
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "employer_terms",
+        attempts: 1,
+      }),
+    ).toBe(false);
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "captcha",
+        attempts: 1,
+      }),
+    ).toBe(false);
+  });
+
+  it("backs off verification retries up to four minutes", () => {
+    expect(applicationWorkerRetryDelayMs(1)).toBe(60_000);
+    expect(applicationWorkerRetryDelayMs(2)).toBe(120_000);
+    expect(applicationWorkerRetryDelayMs(10)).toBe(240_000);
+  });
+});

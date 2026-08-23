@@ -19,6 +19,10 @@ import {
   clearPortalSession,
   savePortalSession,
 } from "@/lib/application-portal-session";
+import {
+  applicationWorkerRetryDelayMs,
+  shouldAutomaticallyRetryWorkerAttention,
+} from "@/lib/application-worker-retry";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -231,6 +235,73 @@ export async function POST(request: Request): Promise<Response> {
         if (failure) throw failure;
         return Response.json(
           { ok: true, state: "cancelled" },
+          { headers: HEADERS },
+        );
+      }
+      const workerAttempts = Number(taskResult.data.attempts ?? 0);
+      if (
+        shouldAutomaticallyRetryWorkerAttention({
+          action,
+          attempts: workerAttempts,
+        })
+      ) {
+        const now = callback.completedAt;
+        const availableAt = new Date(
+          new Date(now).getTime() +
+            applicationWorkerRetryDelayMs(workerAttempts),
+        ).toISOString();
+        const results = await Promise.all([
+          admin
+            .from("application_submissions")
+            .update({
+              status: "processing",
+              provider_submission_id: receipt.providerSubmissionId,
+              error_code: null,
+              receipt: {
+                state: "processing",
+                message:
+                  "Waiting for the employer verification email. IR35Careers will check again automatically.",
+                action,
+              },
+              updated_at: now,
+            })
+            .eq("user_id", callback.userId)
+            .eq("idempotency_key", callback.idempotencyKey),
+          admin.from("application_events").upsert(
+            {
+              user_id: callback.userId,
+              application_id: callback.applicationId,
+              event_type: "status_changed",
+              label: "Waiting for employer verification email",
+              idempotency_key: `submit:${callback.applicationId}:verification-wait:${workerAttempts}`,
+              metadata: {
+                action,
+                nextAttemptAt: availableAt,
+                workerAttempt: workerAttempts,
+              },
+            },
+            {
+              onConflict: "user_id,idempotency_key",
+              ignoreDuplicates: true,
+            },
+          ),
+          admin
+            .from("application_worker_tasks")
+            .update({
+              status: "queued",
+              available_at: availableAt,
+              last_error: null,
+              lease_owner: null,
+              lease_expires_at: null,
+              completed_at: null,
+              updated_at: now,
+            })
+            .eq("id", callback.taskId),
+        ]);
+        const failure = results.find((result) => result.error)?.error;
+        if (failure) throw failure;
+        return Response.json(
+          { ok: true, state: "processing", availableAt },
           { headers: HEADERS },
         );
       }
