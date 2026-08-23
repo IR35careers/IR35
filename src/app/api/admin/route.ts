@@ -895,17 +895,17 @@ export async function POST(request: Request): Promise<Response> {
       const staleBefore = new Date(
         Date.now() - SUBMISSION_LOCK_MAX_AGE_MS,
       ).toISOString();
-      const [staleResult, legacyFailureResult] = await Promise.all([
+      const [staleResult, legacyFailureResult, legacyNeedsUserResult] = await Promise.all([
         supabase
           .from("application_submissions")
-          .select("id, user_id, application_id, updated_at")
+          .select("id, user_id, application_id, idempotency_key, receipt, updated_at")
           .eq("status", "processing")
           .or("error_code.is.null,error_code.neq.needs_user")
           .lt("updated_at", staleBefore)
           .limit(500),
         supabase
           .from("application_submissions")
-          .select("id, user_id, application_id, updated_at")
+          .select("id, user_id, application_id, idempotency_key, receipt, updated_at")
           .eq("status", "failed")
           .eq("provider_name", "IR35Careers application runner")
           .in("error_code", [
@@ -914,18 +914,147 @@ export async function POST(request: Request): Promise<Response> {
             "stale_processing",
           ])
           .limit(500),
+        supabase
+          .from("application_submissions")
+          .select("id, user_id, application_id, idempotency_key, receipt, updated_at")
+          .eq("status", "processing")
+          .eq("error_code", "needs_user")
+          .contains("receipt", { action: "browser_continue" })
+          .limit(500),
       ]);
-      if (staleResult.error || legacyFailureResult.error)
-        throw staleResult.error || legacyFailureResult.error;
+      if (
+        staleResult.error ||
+        legacyFailureResult.error ||
+        legacyNeedsUserResult.error
+      )
+        throw (
+          staleResult.error ||
+          legacyFailureResult.error ||
+          legacyNeedsUserResult.error
+        );
       const stale = Array.from(
         new Map(
-          [...(staleResult.data ?? []), ...(legacyFailureResult.data ?? [])].map(
-            (submission) => [submission.id, submission],
-          ),
+          [
+            ...(staleResult.data ?? []),
+            ...(legacyFailureResult.data ?? []),
+            ...(legacyNeedsUserResult.data ?? []),
+          ].map((submission) => [submission.id, submission]),
         ).values(),
       );
+      const workerConfig = applicationWorkerConfig();
+      const callbackUrl = new URL(
+        "/api/applications/worker/callback",
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+          "https://www.ir35careers.com",
+      );
+      let requeued = 0;
       for (const submission of stale) {
         const now = new Date().toISOString();
+        const packetResult = await supabase
+          .from("application_packets")
+          .select("job_snapshot, truth_approved, materials_approved, submission_approved")
+          .eq("id", submission.application_id)
+          .eq("user_id", submission.user_id)
+          .maybeSingle();
+        if (packetResult.error) throw packetResult.error;
+        const packet = packetResult.data as
+          | {
+              job_snapshot?: Record<string, unknown>;
+              truth_approved?: boolean;
+              materials_approved?: boolean;
+              submission_approved?: boolean;
+            }
+          | null;
+        const destination = String(packet?.job_snapshot?.apply_url ?? "").trim();
+        const idempotencyKey = String(
+          submission.idempotency_key || `application:${submission.application_id}`,
+        ).trim();
+        let secureDestination = false;
+        try {
+          secureDestination = new URL(destination).protocol === "https:";
+        } catch {
+          secureDestination = false;
+        }
+        const canRequeue = Boolean(
+          workerConfig.enabled &&
+            callbackUrl.protocol === "https:" &&
+            secureDestination &&
+            idempotencyKey &&
+            packet?.truth_approved &&
+            packet?.materials_approved &&
+            packet?.submission_approved,
+        );
+        if (canRequeue) {
+          const { error: workerQueueError } = await supabase
+            .from("application_worker_tasks")
+            .upsert(
+              {
+                user_id: submission.user_id,
+                application_id: submission.application_id,
+                idempotency_key: idempotencyKey,
+                destination,
+                callback_url: callbackUrl.toString(),
+                status: "queued",
+                attempts: 0,
+                available_at: now,
+                lease_owner: null,
+                lease_expires_at: null,
+                last_error: null,
+                completed_at: null,
+              },
+              { onConflict: "user_id,idempotency_key" },
+            );
+          if (workerQueueError) throw workerQueueError;
+          const [submissionUpdate, packetUpdate, eventUpdate] = await Promise.all([
+            supabase
+              .from("application_submissions")
+              .update({
+                status: "processing",
+                error_code: null,
+                receipt: {
+                  state: "processing",
+                  message:
+                    "The approved application is queued for the employer portal.",
+                },
+                updated_at: now,
+              })
+              .eq("id", submission.id),
+            supabase
+              .from("application_packets")
+              .update({ status: "ready", updated_at: now })
+              .eq("id", submission.application_id)
+              .eq("user_id", submission.user_id),
+            supabase.from("application_events").upsert(
+              {
+                user_id: submission.user_id,
+                application_id: submission.application_id,
+                event_type: "status_changed",
+                label: "Application requeued for background submission",
+                idempotency_key: `submit:${submission.application_id}:requeued:${String(submission.updated_at)}`,
+                metadata: {
+                  recoveredBy: admin.email,
+                  reason: "persistent_worker_available",
+                },
+              },
+              {
+                onConflict: "user_id,idempotency_key",
+                ignoreDuplicates: true,
+              },
+            ),
+          ]);
+          if (
+            submissionUpdate.error ||
+            packetUpdate.error ||
+            eventUpdate.error
+          )
+            throw (
+              submissionUpdate.error ||
+              packetUpdate.error ||
+              eventUpdate.error
+            );
+          requeued += 1;
+          continue;
+        }
         const message =
           "The employer portal did not finish in the background. Continue the same approved application on the employer page.";
         const attention = buildApplicationAttention({
@@ -980,10 +1109,15 @@ export async function POST(request: Request): Promise<Response> {
       }
       const audit = await supabase.from("moderation_logs").insert({
         run_type: "application_recovery",
-        summary: { action: "recover_stale_submissions", recovered: stale.length, by: admin.email },
+        summary: {
+          action: "recover_stale_submissions",
+          recovered: stale.length,
+          requeued,
+          by: admin.email,
+        },
       });
       if (audit.error) throw audit.error;
-      return Response.json({ recovered: stale.length });
+      return Response.json({ recovered: stale.length, requeued });
     }
 
     if ((body.action === "approve_employer_connection" || body.action === "reject_employer_connection") && body.connectionId) {

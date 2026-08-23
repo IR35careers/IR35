@@ -748,16 +748,23 @@ export default function AdminPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "recover_stale_submissions" }),
       });
-      const json = await response.json() as { recovered?: number; error?: string };
+      const json = await response.json() as {
+        recovered?: number;
+        requeued?: number;
+        error?: string;
+      };
       if (response.status === 401) {
         setSessionReady(false);
         return;
       }
       if (!response.ok) throw new Error(json.error ?? "Stale application attempts could not be recovered");
       const recovered = json.recovered ?? 0;
+      const requeued = json.requeued ?? 0;
       setNotice(
-        recovered > 0
-          ? `${recovered} interrupted application attempt${recovered === 1 ? "" : "s"} moved to secure continuation.`
+        requeued > 0
+          ? `${requeued} approved application${requeued === 1 ? "" : "s"} returned to the background submission queue.`
+          : recovered > 0
+            ? `${recovered} interrupted application attempt${recovered === 1 ? "" : "s"} moved to secure continuation.`
           : "No stale application attempts were found.",
       );
       await load("analytics");
