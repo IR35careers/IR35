@@ -38,7 +38,15 @@ describe("encrypted employer application sessions", () => {
   it("rejects a modified encrypted session", () => {
     vi.stubEnv("PORTAL_SESSION_SECRET", "test-secret-with-enough-entropy");
     const sealed = sealPortalSession(SESSION);
-    const altered = `${sealed.slice(0, -1)}${sealed.endsWith("A") ? "B" : "A"}`;
+    const [version, iv, tag, ciphertext] = sealed.split(".");
+    const alteredBytes = Buffer.from(ciphertext, "base64url");
+    alteredBytes[0] ^= 1;
+    const altered = [
+      version,
+      iv,
+      tag,
+      alteredBytes.toString("base64url"),
+    ].join(".");
     expect(() => openPortalSession(altered)).toThrow();
   });
 });
