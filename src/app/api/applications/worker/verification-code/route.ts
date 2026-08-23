@@ -8,7 +8,10 @@ import {
   getResend,
   resendInboundConfig,
 } from "@/lib/email/resend";
-import { findResendVerificationEmail } from "@/lib/email/resend-verification-sync";
+import {
+  findResendVerificationEmail,
+  storeRecoveredVerificationEmail,
+} from "@/lib/email/resend-verification-sync";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -83,25 +86,12 @@ export async function POST(request: Request): Promise<Response> {
         if (providerEmail) {
           code = providerEmail.code;
           providerSynced = true;
-          const stored = await admin.from("inbox_messages").upsert(
-            {
-              user_id: parsed.userId,
-              application_id: parsed.applicationId,
-              provider_message_id: providerEmail.providerMessageId,
-              sender: providerEmail.sender,
-              recipient: providerEmail.recipient,
-              subject: providerEmail.subject,
-              body_text: providerEmail.text,
-              preview: providerEmail.text.replace(/\s+/g, " ").slice(0, 220),
-              classification: "other",
-              received_at: providerEmail.receivedAt,
-            },
-            {
-              onConflict: "user_id,provider_message_id",
-              ignoreDuplicates: true,
-            },
-          );
-          if (stored.error) throw stored.error;
+          await storeRecoveredVerificationEmail({
+            admin,
+            userId: parsed.userId,
+            applicationId: parsed.applicationId,
+            email: providerEmail,
+          });
         }
       }
     }

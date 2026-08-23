@@ -24,6 +24,13 @@ describe("application attention", () => {
     expect(buildApplicationAttention({ action: "verification_code" }).kind).toBe("email_verification");
   });
 
+  it("sends employer terms permission to the profile setting", () => {
+    const attention = buildApplicationAttention({ action: "employer_terms" });
+    expect(attention.kind).toBe("employer_account");
+    expect(attention.action).toBe("/profile#portal-automation");
+    expect(attention.actionLabel).toBe("Update permission");
+  });
+
   it("routes an unfinished background run to secure browser continuation", () => {
     const attention = buildApplicationAttention({
       action: "browser_continue",
@@ -39,7 +46,7 @@ describe("application attention", () => {
 describe("profile readiness", () => {
   it("lists incomplete reusable answers before an application starts", () => {
     const profile = createSeedWorkspaceState().profile;
-    const result = evaluateProfileReadiness({ ...profile, portalAccountConsent: false, automaticEmailVerification: false }, "short");
+    const result = evaluateProfileReadiness({ ...profile, portalAccountConsent: false, employerTermsConsent: false, automaticEmailVerification: false }, "short");
     expect(result.complete).toBe(false);
     expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["portal-consent", "cv"]));
   });

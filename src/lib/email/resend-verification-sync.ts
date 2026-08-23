@@ -1,4 +1,5 @@
 import type { Resend } from "resend";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import {
   extractEmailAddress,
@@ -14,6 +15,33 @@ export interface ProviderVerificationEmail {
   subject: string;
   text: string;
   receivedAt: string;
+}
+
+export async function storeRecoveredVerificationEmail(input: {
+  admin: SupabaseClient;
+  userId: string;
+  applicationId: string;
+  email: ProviderVerificationEmail;
+}): Promise<void> {
+  const stored = await input.admin.from("inbox_messages").upsert(
+    {
+      user_id: input.userId,
+      application_id: input.applicationId,
+      provider_message_id: input.email.providerMessageId,
+      sender: input.email.sender,
+      recipient: input.email.recipient,
+      subject: input.email.subject,
+      body_text: input.email.text,
+      preview: input.email.text.replace(/\s+/g, " ").slice(0, 220),
+      classification: "other",
+      received_at: input.email.receivedAt,
+    },
+    {
+      onConflict: "user_id,provider_message_id",
+      ignoreDuplicates: true,
+    },
+  );
+  if (stored.error) throw stored.error;
 }
 
 export async function findResendVerificationEmail(input: {

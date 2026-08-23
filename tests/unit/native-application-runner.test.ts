@@ -5,6 +5,7 @@ import {
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
+  isEmployerTermsCheckbox,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   isTrustedApplicationPortalSender,
@@ -136,6 +137,13 @@ describe("native application runner", () => {
         "Create your application account to save progress and continue.",
       ),
     ).toBe(false);
+  });
+
+  it("accepts only employer account terms and never marketing choices", () => {
+    expect(isEmployerTermsCheckbox("I agree to the Terms and Conditions and Privacy Notice")).toBe(true);
+    expect(isEmployerTermsCheckbox("I confirm the candidate declaration")).toBe(true);
+    expect(isEmployerTermsCheckbox("Send me marketing offers and job alerts")).toBe(false);
+    expect(isEmployerTermsCheckbox("Join the talent community newsletter")).toBe(false);
   });
 
   it("trusts confirmation mail only from the ATS family used by the application", () => {

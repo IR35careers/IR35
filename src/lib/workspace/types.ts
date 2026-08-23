@@ -89,6 +89,7 @@ export interface ContractorProfile {
   yearsOfExperience?: string;
   referralSource?: string;
   portalAccountConsent?: boolean;
+  employerTermsConsent?: boolean;
   automaticEmailVerification?: boolean;
   profileSetupCompletedAt?: string;
   educationInstitution?: string;

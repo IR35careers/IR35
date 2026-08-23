@@ -52,6 +52,7 @@ export function createBlankCloudWorkspaceState(email: string): WorkspaceState {
       yearsOfExperience: "",
       referralSource: "",
       portalAccountConsent: false,
+      employerTermsConsent: false,
       automaticEmailVerification: false,
       educationInstitution: "",
       educationQualification: "",

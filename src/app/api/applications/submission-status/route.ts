@@ -15,6 +15,11 @@ import type {
 } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 import { buildApplicationAttention } from "@/lib/application-attention";
+import { getResend, resendInboundConfig } from "@/lib/email/resend";
+import {
+  findResendVerificationEmail,
+  storeRecoveredVerificationEmail,
+} from "@/lib/email/resend-verification-sync";
 
 export const runtime = "nodejs";
 
@@ -137,9 +142,118 @@ export async function GET(request: Request): Promise<Response> {
         message?: string;
         action?: string;
         attention?: unknown;
+        providerSyncCheckedAt?: string;
       } | null;
       const questions =
         (packet.screening_answers as ApplicationQuestion[]) ?? [];
+      if (stored?.action === "verification_code") {
+        const lastProviderCheck = new Date(
+          stored.providerSyncCheckedAt ?? "",
+        ).getTime();
+        const providerCheckDue =
+          !Number.isFinite(lastProviderCheck) ||
+          Date.now() - lastProviderCheck >= 60_000;
+        const inbound = providerCheckDue ? resendInboundConfig() : null;
+        const inbox = inbound
+          ? await ensureInboxAlias(
+              admin,
+              userId,
+              authData.user.email ?? "",
+              true,
+            )
+          : null;
+        if (inbound && inbox?.alias) {
+          const requestedAfter = new Date(
+            Math.max(
+              Date.now() - 30 * 60_000,
+              new Date(submission.updated_at).getTime() - 15 * 60_000,
+            ),
+          ).toISOString();
+          const providerEmail = await findResendVerificationEmail({
+            resend: getResend(inbound),
+            userId,
+            applicationId,
+            alias: inbox.alias,
+            requestedAfter,
+          });
+          const checkedAt = new Date().toISOString();
+          if (providerEmail) {
+            await storeRecoveredVerificationEmail({
+              admin,
+              userId,
+              applicationId,
+              email: providerEmail,
+            });
+            const results = await Promise.all([
+              admin
+                .from("application_worker_tasks")
+                .update({
+                  status: "queued",
+                  attempts: 0,
+                  available_at: checkedAt,
+                  lease_owner: null,
+                  lease_expires_at: null,
+                  last_error: null,
+                  completed_at: null,
+                  updated_at: checkedAt,
+                })
+                .eq("user_id", userId)
+                .eq("application_id", applicationId)
+                .in("status", ["needs_user", "failed"]),
+              admin
+                .from("application_submissions")
+                .update({
+                  status: "processing",
+                  error_code: null,
+                  receipt: {
+                    state: "processing",
+                    action: "verification_code",
+                    message:
+                      "Verification email received. IR35Careers is continuing the application.",
+                  },
+                  updated_at: checkedAt,
+                })
+                .eq("application_id", applicationId)
+                .eq("user_id", userId),
+              admin
+                .from("application_packets")
+                .update({ status: "ready", updated_at: checkedAt })
+                .eq("id", applicationId)
+                .eq("user_id", userId),
+              admin.from("application_events").upsert(
+                {
+                  user_id: userId,
+                  application_id: applicationId,
+                  event_type: "status_changed",
+                  label: "Employer verification email received",
+                  metadata: { action: "verification_code" },
+                  idempotency_key: `submit:${applicationId}:verification-recovered:${providerEmail.providerMessageId}`,
+                },
+                { onConflict: "user_id,idempotency_key" },
+              ),
+            ]);
+            const failure = results.find((result) => result.error)?.error;
+            if (failure) throw failure;
+            return Response.json(
+              {
+                state: "processing",
+                message:
+                  "Verification email received. IR35Careers is continuing the application.",
+                retryAfterSeconds: 10,
+              },
+              { status: 202, headers: NO_STORE },
+            );
+          }
+          await admin
+            .from("application_submissions")
+            .update({
+              receipt: { ...stored, providerSyncCheckedAt: checkedAt },
+              updated_at: submission.updated_at,
+            })
+            .eq("application_id", applicationId)
+            .eq("user_id", userId);
+        }
+      }
       const attention =
         stored?.attention && typeof stored.attention === "object"
           ? stored.attention

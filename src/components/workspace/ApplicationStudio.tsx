@@ -1339,7 +1339,26 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 {attention.message}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {attention.kind === "security_check" ||
+                {attention.action.startsWith("/profile") ? (
+                  <Link
+                    href={attention.action}
+                    className="ir35-focus inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                  >
+                    {attention.actionLabel}
+                  </Link>
+                ) : attention.kind === "email_verification" ? (
+                  <button
+                    type="button"
+                    onClick={() => void submitApprovedApplication()}
+                    disabled={busy !== null || submissionInProgress}
+                    className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
+                  >
+                    {busy === "submit" || submissionInProgress ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : null}
+                    Check verification email
+                  </button>
+                ) : attention.kind === "security_check" ||
                 attention.kind === "employer_account" ||
                 attention.kind === "employer_form" ||
                 attention.kind === "retry" ? (

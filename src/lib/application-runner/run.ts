@@ -13,6 +13,7 @@ import {
   isEmployerAccountAccessPage,
   isJobBoardUtilityControl,
   requiresEmployerTermsAcceptance,
+  isEmployerTermsCheckbox,
   isSafeApplicationHandoffNavigation,
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
@@ -464,15 +465,18 @@ async function handlePortalAccess(
           .catch(() => ""),
         300,
       );
-      if (/(terms|privacy|agreement|consent|declaration)/i.test(label)) {
-        return {
-          handled: false,
-          stop: {
-            message:
-              "The employer requires you to accept its account terms or declaration. Open the employer page to review and accept it, then retry.",
-            action: "employer_login",
-          },
-        };
+      if (isEmployerTermsCheckbox(label)) {
+        if (!payload.candidate.employerTermsConsent) {
+          return {
+            handled: false,
+            stop: {
+              message:
+                "Allow required employer account terms in your Application Profile, then IR35Careers can continue this approved application.",
+              action: "employer_terms",
+            },
+          };
+        }
+        await checkbox.check();
       }
     }
     const createAccount = await actionLocator(
@@ -488,13 +492,14 @@ async function handlePortalAccess(
       createAccount &&
       !hasSavedSession &&
       !accountAlreadyExists &&
-      requiresEmployerTermsAcceptance(bodyText)
+      requiresEmployerTermsAcceptance(bodyText) &&
+      !payload.candidate.employerTermsConsent
     ) {
       return {
         handled: false,
         stop: {
           message:
-            "Review the employer's account terms and privacy notice on this page. After you accept them, IR35Careers will create the account and continue the prepared application.",
+            "Allow required employer account terms in your Application Profile, then IR35Careers can create the account and continue this approved application.",
           action: "employer_terms",
         },
       };

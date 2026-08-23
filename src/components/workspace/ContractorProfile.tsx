@@ -811,6 +811,26 @@ export function ContractorProfile() {
                 <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
                   <span>
                     <strong className="block text-sm text-slate-950">
+                      Accept required employer account terms
+                    </strong>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">
+                      After you approve an application, IR35Careers may accept
+                      the required account terms needed to submit it. Marketing
+                      choices are never selected.
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={profile.employerTermsConsent === true}
+                    onChange={(event) =>
+                      set("employerTermsConsent", event.target.checked)
+                    }
+                    className="mt-1 h-5 w-5 accent-emerald-700"
+                  />
+                </label>
+                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
+                  <span>
+                    <strong className="block text-sm text-slate-950">
                       Use ordinary email verification codes
                     </strong>
                     <span className="mt-1 block text-xs leading-5 text-slate-600">

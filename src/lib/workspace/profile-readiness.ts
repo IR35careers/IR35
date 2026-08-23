@@ -112,10 +112,11 @@ export function evaluateProfileReadiness(
     },
     {
       id: "portal-consent",
-      label: "Employer account and email verification permission",
+      label: "Employer account, terms and email verification permission",
       section: "automation",
       complete:
         profile.portalAccountConsent === true &&
+        profile.employerTermsConsent === true &&
         profile.automaticEmailVerification === true,
     },
     {

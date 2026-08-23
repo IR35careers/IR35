@@ -63,10 +63,10 @@ export function buildApplicationAttention(input: {
   if (action === "employer_terms") {
     return {
       kind: "employer_account",
-      title: "Review the employer declaration",
+      title: "Allow required employer account terms",
       message,
-      action: "#needs-attention",
-      actionLabel: "Continue securely",
+      action: "/profile#portal-automation",
+      actionLabel: "Update permission",
       questionIds,
     };
   }

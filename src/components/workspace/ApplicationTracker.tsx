@@ -52,9 +52,14 @@ const CLOSED_STATUSES = new Set<ApplicationStatus>([
 
 function applicationEventDetail(
   event: ApplicationRecord["events"][number],
+  fallbackAttention?: ApplicationRecord["attention"],
 ): string {
   const attention = event.metadata?.attention;
-  if (!attention || typeof attention !== "object") return "";
+  if (!attention || typeof attention !== "object") {
+    return event.label === "Application attempt stopped and is ready to retry"
+      ? fallbackAttention?.message ?? ""
+      : "";
+  }
   const message = (attention as { message?: unknown }).message;
   return typeof message === "string" ? message.trim() : "";
 }
@@ -640,14 +645,23 @@ export function ApplicationTracker() {
                     </summary>
                     <ol className="mt-3 grid gap-2 md:grid-cols-3">
                       {application.events.slice(-3).map((event) => {
-                        const detail = applicationEventDetail(event);
+                        const genericStop =
+                          event.label ===
+                            "Application attempt stopped and is ready to retry" &&
+                          Boolean(application.attention);
+                        const detail = applicationEventDetail(
+                          event,
+                          application.attention,
+                        );
                         return (
                           <li
                             key={event.id}
                             className="rounded-xl bg-slate-50 p-3"
                           >
                             <p className="text-xs font-semibold text-slate-800">
-                              {event.label}
+                              {genericStop
+                                ? application.attention?.title
+                                : event.label}
                             </p>
                             {detail && (
                               <p className="mt-1 text-xs leading-5 text-slate-600">

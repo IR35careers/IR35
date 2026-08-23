@@ -130,6 +130,16 @@ export function requiresEmployerTermsAcceptance(body: string): boolean {
   );
 }
 
+export function isEmployerTermsCheckbox(label: string): boolean {
+  const text = label.replace(/\s+/g, " ").trim();
+  if (!text) return false;
+  if (/(newsletter|marketing|promotion|offers|job alerts|talent community)/i.test(text))
+    return false;
+  return /(terms(?: and conditions)?|conditions of use|privacy (?:notice|policy)|account agreement|candidate declaration|data processing)/i.test(
+    text,
+  );
+}
+
 export function isEmployerAccountAccessPage(input: {
   body: string;
   hasEmailInput: boolean;
