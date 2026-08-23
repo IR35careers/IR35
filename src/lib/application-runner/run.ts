@@ -121,6 +121,7 @@ type RunnerPageDiagnostic = {
     valid: boolean;
   }>;
   blockedHosts: string[];
+  networkFailures: string[];
   messages: string[];
 };
 
@@ -132,6 +133,7 @@ type RunnerPageDiagnostic = {
 async function pageDiagnostic(
   page: Page,
   blockedHosts: ReadonlySet<string> = new Set(),
+  networkFailures: ReadonlySet<string> = new Set(),
 ): Promise<RunnerPageDiagnostic> {
   const title = clean(await page.title().catch(() => ""), 160);
   const headingNodes = page.locator("h1:visible, h2:visible, h3:visible, legend:visible");
@@ -229,6 +231,7 @@ async function pageDiagnostic(
     actions,
     controls,
     blockedHosts: Array.from(blockedHosts).slice(0, 30),
+    networkFailures: Array.from(networkFailures).slice(0, 30),
     messages,
   };
 }
@@ -1564,6 +1567,7 @@ export async function runNativeApplication(
       startUrl.hostname,
   ]);
     const blockedHosts = new Set<string>();
+    const networkFailures = new Set<string>();
     let sensitive = false;
     await context.route("**/*", (route) =>
       publicRequestGuard(
@@ -1574,6 +1578,29 @@ export async function runNativeApplication(
       ),
     );
     page = await context.newPage();
+    context.on("response", (response) => {
+      if (response.status() < 400) return;
+      try {
+        const failed = new URL(response.url());
+        if (!approvedHosts.has(failed.hostname.toLowerCase())) return;
+        networkFailures.add(
+          `${response.request().method()} ${failed.hostname}${failed.pathname} returned ${response.status()}`,
+        );
+      } catch {
+        // Keep diagnostics value-free when a browser reports a malformed URL.
+      }
+    });
+    context.on("requestfailed", (request) => {
+      try {
+        const failed = new URL(request.url());
+        if (!approvedHosts.has(failed.hostname.toLowerCase())) return;
+        networkFailures.add(
+          `${request.method()} ${failed.hostname}${failed.pathname} failed`,
+        );
+      } catch {
+        // Keep diagnostics value-free when a browser reports a malformed URL.
+      }
+    });
     let navigationStatus: number | null = null;
     try {
       const navigation = await page.goto(startUrl.toString(), {
@@ -1696,7 +1723,7 @@ export async function runNativeApplication(
           [],
           portalAccess.stop.action,
           currentDestination(page, startUrl.toString()),
-           await pageDiagnostic(page, blockedHosts),
+           await pageDiagnostic(page, blockedHosts, networkFailures),
         );
       if (portalAccess.handled) {
         portalAccessAttempts += 1;
@@ -1783,7 +1810,7 @@ export async function runNativeApplication(
           [],
           "unsupported_form",
           currentDestination(page, startUrl.toString()),
-          await pageDiagnostic(page, blockedHosts),
+          await pageDiagnostic(page, blockedHosts, networkFailures),
         );
       }
 

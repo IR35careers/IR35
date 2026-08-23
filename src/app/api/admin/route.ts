@@ -628,6 +628,9 @@ export async function GET(request: Request): Promise<Response> {
                 blockedHosts: Array.isArray(diagnostic.blockedHosts)
                   ? diagnostic.blockedHosts.slice(0, 30).map((value) => String(value).slice(0, 253))
                   : [],
+                networkFailures: Array.isArray(diagnostic.networkFailures)
+                  ? diagnostic.networkFailures.slice(0, 30).map((value) => String(value).slice(0, 300))
+                  : [],
                 messages: Array.isArray(diagnostic.messages)
                   ? diagnostic.messages.slice(0, 30).map((value) => String(value).slice(0, 240))
                   : [],
