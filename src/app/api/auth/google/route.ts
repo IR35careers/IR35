@@ -17,6 +17,7 @@ export async function GET(request: Request): Promise<Response> {
       requestOrigin: requestUrl.origin,
       requestedPath: requestUrl.searchParams.get("next"),
       supabaseUrl,
+      selectAccount: requestUrl.searchParams.get("select_account") === "1",
     });
     return new Response(null, {
       status: 302,

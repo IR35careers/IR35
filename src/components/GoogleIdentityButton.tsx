@@ -7,10 +7,14 @@ import { useAuth } from "@/lib/auth-context";
 export function GoogleIdentityButton({
   admin = false,
   mode = "sign-in",
+  next,
+  selectAccount = false,
   onError,
 }: {
   admin?: boolean;
   mode?: "sign-in" | "create";
+  next?: string;
+  selectAccount?: boolean;
   onError: (message: string) => void;
 }) {
   const { signInWithGoogle, signInWithGoogleAdmin } = useAuth();
@@ -23,9 +27,12 @@ export function GoogleIdentityButton({
     if (admin) {
       result = await signInWithGoogleAdmin();
     } else if (mode === "create") {
-      result = await signInWithGoogle("/profile#application-readiness");
+      result = await signInWithGoogle(
+        next || "/profile#application-readiness",
+        selectAccount,
+      );
     } else {
-      result = await signInWithGoogle("/dashboard");
+      result = await signInWithGoogle(next || "/dashboard", selectAccount);
     }
     if (result.error) {
       onError(result.error);

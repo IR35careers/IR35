@@ -18,15 +18,18 @@ export function buildGoogleOAuthAuthorizeUrl({
   requestOrigin,
   requestedPath,
   supabaseUrl,
+  selectAccount = false,
 }: {
   requestOrigin: string;
   requestedPath: string | null;
   supabaseUrl: string;
+  selectAccount?: boolean;
 }): string {
   const target = canonicalOrigin(requestOrigin);
   const path = target.admin ? "/" : resolvePostAuthPath(requestedPath);
   const authorizeUrl = new URL("/auth/v1/authorize", supabaseUrl);
   authorizeUrl.searchParams.set("provider", "google");
   authorizeUrl.searchParams.set("redirect_to", `${target.origin}${path}`);
+  if (selectAccount) authorizeUrl.searchParams.set("prompt", "select_account");
   return authorizeUrl.toString();
 }

@@ -25,6 +25,17 @@ describe("Google OAuth server redirect", () => {
     expect(url.searchParams.get("redirect_to")).toBe("https://admin.ir35careers.com/");
   });
 
+  it("forces the Google account chooser while preserving the contractor destination", () => {
+    const url = new URL(buildGoogleOAuthAuthorizeUrl({
+      requestOrigin: "https://www.ir35careers.com",
+      requestedPath: "/applications",
+      supabaseUrl: SUPABASE_URL,
+      selectAccount: true,
+    }));
+    expect(url.searchParams.get("prompt")).toBe("select_account");
+    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/applications");
+  });
+
   it("rejects an untrusted customer destination", () => {
     const url = new URL(buildGoogleOAuthAuthorizeUrl({
       requestOrigin: "https://www.ir35careers.com",

@@ -28,7 +28,7 @@ interface AuthContextValue {
   signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
   signUpWithPassword: (email: string, password: string, next?: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
-  signInWithGoogle: (next?: string) => Promise<AuthResult>;
+  signInWithGoogle: (next?: string, selectAccount?: boolean) => Promise<AuthResult>;
   signInWithGoogleAdmin: () => Promise<AuthResult>;
   signInWithGoogleIdToken: (token: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
@@ -193,16 +193,22 @@ async function signUpWithPassword(email: string, password: string, next = "/prof
   return { error: null, needsConfirmation: Boolean(data.user && !data.session) };
 }
 
-async function signInWithGoogle(next = "/dashboard"): Promise<AuthResult> {
+async function signInWithGoogle(
+  next = "/dashboard",
+  selectAccount = false,
+): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const destination = resolvePostAuthPath(next);
-  window.open(`/api/auth/google?next=${encodeURIComponent(destination)}`, "_self");
+  window.open(
+    `/api/auth/google?next=${encodeURIComponent(destination)}${selectAccount ? "&select_account=1" : ""}`,
+    "_self",
+  );
   return { error: null };
 }
 
 async function signInWithGoogleAdmin(): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-  window.open("/api/auth/google?next=%2F", "_self");
+  window.open("/api/auth/google?next=%2F&select_account=1", "_self");
   return { error: null };
 }
 
