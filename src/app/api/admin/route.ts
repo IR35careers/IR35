@@ -1188,6 +1188,11 @@ export async function POST(request: Request): Promise<Response> {
         // for a changed employer form. The original approved task and exact
         // destination are reused, so no new application is created.
         "unsupported_form",
+        // A worker interruption or bounded portal timeout is safe to retry
+        // from the existing approved, idempotent task after the runner has
+        // been repaired. Without this entry the admin recovery control reports
+        // success but leaves the application permanently in Needs action.
+        "runner_timeout",
       ]);
       const recoverableNeedsUser = (recoverableNeedsUserResult.data ?? []).filter(
         (submission) => {
