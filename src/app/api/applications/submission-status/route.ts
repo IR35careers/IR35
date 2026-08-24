@@ -338,7 +338,7 @@ export async function GET(request: Request): Promise<Response> {
                 user_id: userId,
                 application_id: applicationId,
                 event_type: "status_changed",
-                label: "Application needs secure browser continuation",
+                label: "Application paused before employer confirmation",
                 idempotency_key: `submit:${applicationId}:stale:${String(submission.updated_at)}`,
                 metadata: { reason: "browser_continue", attention },
               },

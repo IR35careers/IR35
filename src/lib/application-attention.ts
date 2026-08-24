@@ -97,7 +97,7 @@ export function buildApplicationAttention(input: {
       title: "Employer application page unavailable",
       message,
       action: "#needs-attention",
-      actionLabel: "View details",
+      actionLabel: "Retry application",
       questionIds,
     };
   }
@@ -115,13 +115,13 @@ export function buildApplicationAttention(input: {
       kind: "employer_form",
       title:
         action === "browser_continue" || action === "runner_timeout"
-          ? "Continue on the employer page"
+          ? "Application paused before confirmation"
           : "Review the employer form",
       message,
       action: "#needs-attention",
       actionLabel:
         action === "browser_continue" || action === "runner_timeout"
-          ? "Continue securely"
+          ? "Retry application"
           : "Review form",
       questionIds,
     };

@@ -1179,7 +1179,7 @@ export async function POST(request: Request): Promise<Response> {
               user_id: submission.user_id,
               application_id: submission.application_id,
               event_type: "status_changed",
-              label: "Application needs secure browser continuation",
+              label: "Application paused before employer confirmation",
               idempotency_key: `submit:${submission.application_id}:stale:${String(submission.updated_at)}`,
               metadata: {
                 recoveredBy: admin.email,

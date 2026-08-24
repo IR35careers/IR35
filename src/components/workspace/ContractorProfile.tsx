@@ -32,10 +32,6 @@ import type {
   ResumeProfile,
 } from "@/lib/workspace/types";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
-import {
-  disableEmployerAutomation,
-  enableEmployerAutomation,
-} from "@/lib/application-automation-consent";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import type { ResumeProfileExtraction } from "@/lib/resume/profile-extraction";
 
@@ -225,19 +221,6 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   const completeness = readiness.percentage;
   const skills = profile.skills ?? [];
   const certifications = profile.certifications ?? [];
-  const employerAutomationEnabled = Boolean(
-    profile.portalAccountConsent &&
-      profile.employerTermsConsent &&
-      profile.automaticEmailVerification,
-  );
-  const setEmployerAutomation = (enabled: boolean) => {
-    setSaved(false);
-    setProfile((current) =>
-      enabled
-        ? enableEmployerAutomation(current)
-        : disableEmployerAutomation(current),
-    );
-  };
   const addSkill = (value: string) => {
     const skill = value.trim().replace(/\s+/g, " ");
     if (!skill) return;
@@ -508,16 +491,12 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   setTab(
                     item.section === "cv"
                       ? "resume"
-                      : item.section === "automation"
-                        ? "settings"
-                        : "details",
+                      : "details",
                   );
                   const targetId =
                     item.section === "cv"
                       ? "profile-resume"
-                      : item.section === "automation"
-                        ? "portal-automation"
-                        : item.section === "professional" ||
+                      : item.section === "professional" ||
                             ["full-name", "phone", "email"].includes(item.id)
                           ? "profile-professional-details"
                           : item.section === "eligibility" || item.id === "availability"
@@ -813,44 +792,6 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   ))}
                 </div>
               </div>
-            </section>
-            <section
-              id="portal-automation"
-              className="scroll-mt-24 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-card sm:p-6"
-            >
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="text-emerald-700" />
-                <div>
-                  <h2 className="font-semibold">Automatic employer applications</h2>
-                  <p className="text-sm text-slate-600">
-                    Give this permission once so approved applications can be
-                    completed without repeatedly stopping for account setup.
-                  </p>
-                </div>
-              </div>
-              <label className="mt-5 flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-white p-4">
-                <span>
-                  <strong className="block text-sm text-slate-950">
-                    Enable automatic applications
-                  </strong>
-                  <span className="mt-1 block text-xs leading-5 text-slate-600">
-                    For applications you approve, IR35Careers may create and
-                    sign in to employer accounts using your private application
-                    email, accept required account terms, and use ordinary email
-                    verification codes. Marketing choices are never selected.
-                    CAPTCHA, identity checks and new legal questions still come
-                    back to you.
-                  </span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={employerAutomationEnabled}
-                  onChange={(event) =>
-                    setEmployerAutomation(event.target.checked)
-                  }
-                  className="mt-1 h-5 w-5 shrink-0 accent-emerald-700"
-                />
-              </label>
             </section>
             <section id="work-authorisation" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <h2 className="font-semibold">Experience and projects</h2>

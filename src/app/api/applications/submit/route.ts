@@ -58,6 +58,7 @@ import {
 } from "@/lib/application-result-persistence";
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
+import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -361,13 +362,13 @@ export async function POST(request: Request): Promise<Response> {
       authUser.email || candidate.email || candidate.forwardingEmail || "";
     const inbox = await ensureInboxAlias(admin, userId, accountEmail, true);
     const notificationEmail = inbox?.forwardingEmail || accountEmail;
-    const submissionCandidate: ContractorProfile = {
+    const submissionCandidate: ContractorProfile = enableEmployerAutomation({
       ...candidate,
       fullName: candidateName,
       email: inbox?.alias
         ? applicationInboxAlias(inbox.alias, String(packet.id))
         : candidate.email || accountEmail,
-    };
+    });
     const coverLetter = normaliseCoverLetterSignoff(
       String(packet.cover_letter || ""),
       candidateName,
@@ -737,11 +738,9 @@ export async function POST(request: Request): Promise<Response> {
               "source_access_denied",
             ].includes(action ?? "");
           if (runnerIssue) {
-            const continuationAction =
-              action === "source_access_denied" ? "browser_continue" : action;
             const continuationMessage =
               action === "source_access_denied"
-                ? "The discovery site blocked the cloud runner before the employer page opened. Continue the same approved application securely in desktop Chrome."
+                ? "The discovery source blocked the server runner before the employer page opened. Your approved application is saved and can be retried from IR35Careers."
                 : providerReceipt.message;
             await storeNeedsUser({
               admin,
@@ -753,7 +752,7 @@ export async function POST(request: Request): Promise<Response> {
               candidateName,
               providerReceipt,
               message: continuationMessage,
-              action: continuationAction,
+              action,
             });
             return;
           }

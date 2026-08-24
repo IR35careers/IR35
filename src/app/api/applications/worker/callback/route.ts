@@ -37,7 +37,7 @@ const HEADERS = {
 };
 
 function callbackAction(action: string | undefined): string | undefined {
-  return action === "source_access_denied" ? "browser_continue" : action;
+  return action === "browser_continue" ? "runner_timeout" : action;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -157,8 +157,8 @@ export async function POST(request: Request): Promise<Response> {
         candidateName,
         message: profileAction
           ? callback.error
-          : "The employer portal stopped before confirmation. Your approved application is saved and can continue securely without starting again.",
-        action: profileAction ? "/profile" : "browser_continue",
+          : "The employer portal stopped before confirmation. Your approved application is saved and IR35Careers can retry it without starting again.",
+        action: profileAction ? "/profile" : "runner_timeout",
       });
       await admin
         .from("application_worker_tasks")
@@ -348,8 +348,8 @@ export async function POST(request: Request): Promise<Response> {
         candidateName,
         providerReceipt: receipt,
         message:
-          action === "browser_continue"
-            ? "The discovery site blocked the hosted worker before the employer page opened. Continue the same approved application securely in desktop Chrome."
+          action === "runner_timeout"
+            ? "The employer portal paused before confirmation. Your approved application is saved and can be retried from IR35Careers."
             : receipt.message,
         action,
       });

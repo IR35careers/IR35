@@ -55,7 +55,6 @@ import { newWorkspaceId } from "@/lib/workspace/engine";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { applicationProfileHref } from "@/lib/application-profile-return";
-import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import { needsApplicationMaterialApproval } from "@/lib/application-material-approval";
 import {
   SAMPLE_CONTRACTOR_PROFILE,
@@ -70,8 +69,6 @@ type BusyState =
   | "ai"
   | "save"
   | "submit"
-  | "consent"
-  | "handoff"
   | null;
 type ConnectionState = "connected" | "gated";
 
@@ -80,32 +77,6 @@ const WORKFLOW_STEPS = [
   { label: "Tailor", helper: "Compare every edit" },
   { label: "Review & submit", helper: "Approve the exact packet" },
 ] as const;
-
-const APPLICATION_ASSISTANT_EXTENSION_ID =
-  "cmfcgaflmkipmmjkcneoobgkdpfkfeoa";
-
-async function applicationAssistantInstalled(): Promise<boolean> {
-  return await new Promise((resolve) => {
-    let settled = false;
-    const finish = (result: boolean) => {
-      if (settled) return;
-      settled = true;
-      window.removeEventListener("message", onMessage);
-      resolve(result);
-    };
-    const onMessage = (event: MessageEvent) => {
-      if (
-        event.source === window &&
-        event.data?.type === "IR35CAREERS_EXTENSION_READY" &&
-        event.data?.extensionId === APPLICATION_ASSISTANT_EXTENSION_ID
-      )
-        finish(true);
-    };
-    window.addEventListener("message", onMessage);
-    window.postMessage({ type: "IR35CAREERS_EXTENSION_PING" }, window.location.origin);
-    window.setTimeout(() => finish(false), 800);
-  });
-}
 
 function persistApplication(application: ApplicationRecord) {
   updateWorkspace((current) => ({
@@ -193,10 +164,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [profilePrompt, setProfilePrompt] = useState(false);
-  const [assistantMissing, setAssistantMissing] = useState(false);
-  const [assistantNeedsDesktop, setAssistantNeedsDesktop] = useState(false);
-  const [employerConsentConfirmed, setEmployerConsentConfirmed] =
-    useState(false);
   const submissionStatusFailures = useRef(0);
   const profileResumeAttempted = useRef(false);
   const profileCompletionHref = applicationProfileHref(job.id);
@@ -221,11 +188,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     application?.truthApproved &&
     application.materialsApproved &&
     application.submissionApproved,
-  );
-  const employerAutomationEnabled = Boolean(
-    workspace.profile.portalAccountConsent &&
-      workspace.profile.employerTermsConsent &&
-      workspace.profile.automaticEmailVerification,
   );
   const submitted =
     application?.status === "applied" &&
@@ -882,10 +844,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         application.status === "ready" && approvalsComplete
           ? application
           : await persistReviewedPacket(application, false);
-      if (await applicationAssistantInstalled()) {
-        await continueInEmployerBrowser(ready, true);
-        return;
-      }
       setNotice(
         "Starting the secure employer application. You can leave this page while it completes.",
       );
@@ -1122,125 +1080,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
-  const allowEmployerAutomationAndRetry = async () => {
-    if (!application || !employerConsentConfirmed) return;
-    setBusy("consent");
-    setError(null);
-    setNotice(null);
-    let shouldRetry = false;
-    try {
-      const response = await fetchWithFreshSession(
-        "/api/applications/automation-consent",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            applicationId: application.id,
-            consent: "ALLOW_EMPLOYER_ACCOUNT_AUTOMATION",
-          }),
-          signal: AbortSignal.timeout(20_000),
-        },
-      );
-      const payload = (await response.json().catch(() => ({}))) as {
-        ok?: boolean;
-        acceptedAt?: string;
-        error?: string;
-      };
-      if (!response.ok || !payload.ok)
-        throw new Error(
-          payload.error || "Application permissions could not be saved.",
-        );
-      const acceptedAt = payload.acceptedAt || new Date().toISOString();
-      updateWorkspace((current) => ({
-        ...current,
-        profile: enableEmployerAutomation(current.profile, acceptedAt),
-      }));
-      setEmployerConsentConfirmed(false);
-      setNotice(
-        "Permission saved. IR35Careers is retrying the same approved application now.",
-      );
-      shouldRetry = true;
-    } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Application permissions could not be saved.",
-      );
-    } finally {
-      setBusy(null);
-    }
-    if (shouldRetry) await submitApprovedApplication();
-  };
-
-  const continueInEmployerBrowser = async (
-    targetApplication: ApplicationRecord | null = application,
-    assistantConfirmed = false,
-  ) => {
-    if (!targetApplication) return;
-    setBusy("handoff");
-    setError(null);
-    setNotice(null);
-    setAssistantMissing(false);
-    setAssistantNeedsDesktop(false);
-    try {
-      const installed =
-        assistantConfirmed || (await applicationAssistantInstalled());
-      if (!installed) {
-        const needsDesktop = /Android|iPhone|iPad|iPod/i.test(
-          window.navigator.userAgent,
-        );
-        setAssistantMissing(true);
-        setAssistantNeedsDesktop(needsDesktop);
-        setError(
-          needsDesktop
-            ? "This employer requires a browser continuation. Open this application in desktop Chrome to finish the saved application securely."
-            : "Install the IR35Careers Application Assistant in desktop Chrome, then select Continue securely again.",
-        );
-        return;
-      }
-      const response = await fetchWithFreshSession(
-        "/api/applications/browser-handoff",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "create",
-            applicationId: targetApplication.id,
-          }),
-          signal: AbortSignal.timeout(20_000),
-        },
-      );
-      const payload = (await response.json().catch(() => ({}))) as {
-        handoffUrl?: string;
-        error?: string;
-      };
-      if (!response.ok || !payload.handoffUrl)
-        throw new Error(
-          payload.error || "The secure employer continuation could not start.",
-        );
-      const employerTab = window.open(
-        payload.handoffUrl,
-        "_blank",
-        "noopener,noreferrer",
-      );
-      if (!employerTab) {
-        window.location.assign(payload.handoffUrl);
-        return;
-      }
-      setNotice(
-        "The prepared application is open on the employer page. IR35Careers will continue there and update this application after confirmation.",
-      );
-    } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "The secure employer continuation could not start.",
-      );
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const resumeApprovedApplicationAfterProfile = useEffectEvent(() => {
     if (!application) return;
     if (
@@ -1456,51 +1295,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 attention.message.includes(
                   "Employer account, terms and email verification permission",
                 ) ? (
-                  <div
-                    id="employer-terms-consent"
-                    className="w-full rounded-xl border border-amber-300 bg-white p-4"
+                  <button
+                    type="button"
+                    onClick={() => void submitApprovedApplication()}
+                    disabled={busy !== null || submissionInProgress}
+                    className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
                   >
-                    <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={employerConsentConfirmed}
-                        onChange={(event) =>
-                          setEmployerConsentConfirmed(event.target.checked)
-                        }
-                        className="mt-1 h-5 w-5 shrink-0 accent-amber-700"
-                      />
-                      <span>
-                        I authorise IR35Careers to create and sign in to
-                        employer accounts, accept only required account terms,
-                        and use ordinary email verification codes for
-                        applications I approve. Marketing choices are never
-                        selected and security checks are never bypassed.
-                      </span>
-                    </label>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void allowEmployerAutomationAndRetry()
-                        }
-                        disabled={
-                          !employerConsentConfirmed || busy !== null
-                        }
-                        className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
-                      >
-                        {busy === "consent" ? (
-                          <Loader2 size={15} className="animate-spin" />
-                        ) : null}
-                        Allow and retry
-                      </button>
-                      <Link
-                        href="/profile#portal-automation"
-                        className="ir35-focus inline-flex min-h-10 items-center rounded-xl border border-amber-400 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-100"
-                      >
-                        Review permissions
-                      </Link>
-                    </div>
-                  </div>
+                    {busy === "submit" || submissionInProgress ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : null}
+                    Retry application
+                  </button>
                 ) : attention.action.startsWith("/profile") ? (
                   profileReadiness.complete ? (
                     <button
@@ -1523,30 +1328,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     </Link>
                   )
                 ) : attention.kind === "email_verification" ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => void submitApprovedApplication()}
-                      disabled={busy !== null || submissionInProgress}
-                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
-                    >
-                      {busy === "submit" || submissionInProgress ? (
-                        <Loader2 size={15} className="animate-spin" />
-                      ) : null}
-                      Check verification email
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void continueInEmployerBrowser()}
-                      disabled={busy !== null}
-                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-400 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                    >
-                      {busy === "handoff" ? (
-                        <Loader2 size={15} className="animate-spin" />
-                      ) : null}
-                      Open employer verification <ArrowRight size={15} />
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => void submitApprovedApplication()}
+                    disabled={busy !== null || submissionInProgress}
+                    className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
+                  >
+                    {busy === "submit" || submissionInProgress ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : null}
+                    Retry automatic verification
+                  </button>
                 ) : attention.kind === "security_check" ||
                 attention.kind === "employer_account" ||
                 attention.kind === "employer_form" ||
@@ -1567,17 +1359,26 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       >
                         {attention.actionLabel} <ArrowRight size={15} />
                       </button>
+                    ) : attention.kind === "security_check" ? (
+                      <a
+                        href={job.apply_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                      >
+                        Complete employer security check <ArrowRight size={15} />
+                      </a>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => void continueInEmployerBrowser()}
-                        disabled={busy !== null}
+                        onClick={() => void submitApprovedApplication()}
+                        disabled={busy !== null || submissionInProgress}
                         className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:opacity-50"
                       >
-                        {busy === "handoff" ? (
+                        {busy === "submit" || submissionInProgress ? (
                           <Loader2 size={15} className="animate-spin" />
                         ) : null}
-                        Continue securely <ArrowRight size={15} />
+                        Retry application <ArrowRight size={15} />
                       </button>
                     )}
                   </>
@@ -1606,49 +1407,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   </button>
                 )}
               </div>
-              {assistantMissing ? (
-                <div className="mt-3 rounded-xl border border-amber-300 bg-white p-3 text-sm text-slate-700">
-                  {assistantNeedsDesktop ? (
-                    <>
-                      <p className="font-semibold text-slate-900">
-                        Continue on desktop Chrome
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-slate-600">
-                        Your approved CV and answers are saved. Open this same
-                        application on a desktop computer and choose Continue
-                        securely. Mobile browsers cannot control another
-                        employer&apos;s protected website.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p>
-                        The assistant is required only when an employer blocks
-                        the background runner with a login, CAPTCHA or
-                        declaration.
-                      </p>
-                      <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-5 text-slate-600">
-                        <li>Download and extract the ZIP on a desktop computer.</li>
-                        <li>
-                          Open <strong>chrome://extensions</strong>, enable
-                          Developer mode and choose Load unpacked.
-                        </li>
-                        <li>
-                          Select the extracted folder, return here and choose
-                          Continue securely.
-                        </li>
-                      </ol>
-                      <a
-                        href="/downloads/ir35careers-chrome-extension-v2.zip"
-                        download
-                        className="ir35-focus mt-2 inline-flex min-h-10 items-center rounded-lg border border-slate-300 px-3 font-semibold text-slate-900 hover:bg-slate-50"
-                      >
-                        Download Application Assistant
-                      </a>
-                    </>
-                  )}
-                </div>
-              ) : null}
             </div>
           </div>
         </section>
@@ -2265,8 +2023,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       }
                       className="h-5 w-5 accent-emerald-400"
                     />
-                    I confirm the application is accurate, truthful and ready to
-                    submit.
+                    I confirm this application is accurate and authorise
+                    IR35Careers to complete and submit it, including ordinary
+                    employer account and email-verification steps.
                   </label>
                 )}
                 {!submitted && (
@@ -2280,25 +2039,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                           : "Ready. IR35Careers will submit the approved materials and wait for employer confirmation."}
                   </p>
                 )}
-                {!submitted && !employerAutomationEnabled && (
-                  <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm leading-6 text-slate-200">
-                    <input
-                      type="checkbox"
-                      checked={employerConsentConfirmed}
-                      onChange={(event) =>
-                        setEmployerConsentConfirmed(event.target.checked)
-                      }
-                      className="mt-1 h-5 w-5 shrink-0 accent-emerald-400"
-                    />
-                    <span>
-                      Allow IR35Careers to create and sign in to employer
-                      accounts, accept only required account terms, and use
-                      ordinary email verification codes for applications I
-                      approve. Marketing choices are never selected and
-                      security checks are never bypassed.
-                    </span>
-                  </label>
-                )}
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                   {submitted ? (
                     <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-emerald-400/15 px-4 text-sm font-bold text-emerald-200">
@@ -2308,17 +2048,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     <>
                       <button
                         type="button"
-                        onClick={() =>
-                          void (employerAutomationEnabled
-                            ? submitApprovedApplication()
-                            : allowEmployerAutomationAndRetry())
-                        }
+                        onClick={() => void submitApprovedApplication()}
                         disabled={
                           busy !== null ||
                           submissionInProgress ||
-                          submissionConnection !== "connected" ||
-                          (!employerAutomationEnabled &&
-                            !employerConsentConfirmed)
+                          submissionConnection !== "connected"
                         }
                         className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 text-sm font-bold text-emerald-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -2329,13 +2063,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                         )}{" "}
                         {submissionInProgress
                           ? "Processing application"
-                          : busy === "consent"
-                            ? "Saving permission"
                           : busy === "submit"
                             ? `Starting ${submitElapsedSeconds}s`
-                            : employerAutomationEnabled
-                              ? "Approve and apply now"
-                              : "Allow and apply now"}
+                            : "Approve and apply now"}
                       </button>
                       {submissionConnection === "gated" && (
                         <button

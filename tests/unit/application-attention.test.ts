@@ -34,15 +34,15 @@ describe("application attention", () => {
     expect(attention.actionLabel).toBe("Allow and retry");
   });
 
-  it("routes an unfinished background run to secure browser continuation", () => {
+  it("routes an unfinished background run to a server retry", () => {
     const attention = buildApplicationAttention({
       action: "browser_continue",
       message: "Continue the approved application on the employer page.",
     });
 
     expect(attention.kind).toBe("employer_form");
-    expect(attention.title).toBe("Continue on the employer page");
-    expect(attention.actionLabel).toBe("Continue securely");
+    expect(attention.title).toBe("Application paused before confirmation");
+    expect(attention.actionLabel).toBe("Retry application");
   });
 
   it("opens the prepared employer form when a new required question is found", () => {
@@ -73,7 +73,8 @@ describe("profile readiness", () => {
     const profile = createSeedWorkspaceState().profile;
     const result = evaluateProfileReadiness({ ...profile, portalAccountConsent: false, employerTermsConsent: false, automaticEmailVerification: false }, "short");
     expect(result.complete).toBe(false);
-    expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["portal-consent", "cv"]));
+    expect(result.missing.map((item) => item.id)).toContain("cv");
+    expect(result.missing.map((item) => item.id)).not.toContain("portal-consent");
   });
 
   it("requires a role and at least three confirmed skills", () => {
@@ -85,7 +86,7 @@ describe("profile readiness", () => {
     expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["target-role", "skills"]));
   });
 
-  it("routes automation permission directly instead of failing a worker task", () => {
+  it("does not make application automation a separate profile task", () => {
     const profile = createSeedWorkspaceState().profile;
     const readiness = evaluateProfileReadiness(
       {
@@ -96,14 +97,9 @@ describe("profile readiness", () => {
       },
       profile.resumeProfiles?.[0]?.resumeText || "",
     );
-    const consentOnly = {
-      ...readiness,
-      missing: readiness.missing.filter((item) => item.id === "portal-consent"),
-      complete: false,
-    };
-
-    expect(profileReadinessBlocker(consentOnly)).toMatchObject({
-      action: "employer_terms",
-    });
+    expect(readiness.missing.map((item) => item.id)).not.toContain(
+      "portal-consent",
+    );
+    expect(profileReadinessBlocker(readiness)?.action).toBe("/profile");
   });
 });

@@ -26,6 +26,18 @@ describe("application worker retry policy", () => {
     ).toBe(true);
   });
 
+  it("retries transient portal and source interruptions without an extension", () => {
+    for (const action of [
+      "browser_continue",
+      "source_access_denied",
+      "runner_timeout",
+    ]) {
+      expect(
+        shouldAutomaticallyRetryWorkerAttention({ action, attempts: 1 }),
+      ).toBe(true);
+    }
+  });
+
   it("stops after the controlled retry limit", () => {
     expect(
       shouldAutomaticallyRetryWorkerAttention({

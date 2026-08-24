@@ -20,7 +20,7 @@
     "email:preview": "tsx scripts/render-email-preview.ts",
     "email:audit-launch": "tsx scripts/audit-launch-audience.ts",
     "worker:install-browser": "playwright-core install chromium",
-    "worker:build": "esbuild services/application-worker/server.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@=./src --outfile=services/application-worker/dist/server.mjs",
+    "worker:build": "esbuild ./services/application-worker/server.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@=./src --outfile=./services/application-worker/dist/server.mjs",
     "worker:start": "npm run worker:build && node --env-file=services/application-worker/.env services/application-worker/dist/server.mjs",
     "security:source": "node scripts/security-check.mjs",
     "security:audit": "npm audit --audit-level=low",

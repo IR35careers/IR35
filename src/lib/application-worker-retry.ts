@@ -12,7 +12,12 @@ export function shouldAutomaticallyRetryWorkerAttention(input: {
   attempts: number;
 }): boolean {
   return (
-    input.action === "verification_code" &&
+    [
+      "verification_code",
+      "browser_continue",
+      "source_access_denied",
+      "runner_timeout",
+    ].includes(input.action ?? "") &&
     Number.isFinite(input.attempts) &&
     input.attempts >= 1 &&
     input.attempts < APPLICATION_WORKER_MAX_ATTEMPTS

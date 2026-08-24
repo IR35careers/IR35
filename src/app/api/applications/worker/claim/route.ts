@@ -24,6 +24,7 @@ import type {
   ApplicationQuestion,
   ContractorProfile,
 } from "@/lib/workspace/types";
+import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -202,13 +203,13 @@ export async function POST(request: Request): Promise<Response> {
       candidate.email ||
       "";
     const inbox = await ensureInboxAlias(admin, task.user_id, accountEmail, true);
-    const submissionCandidate: ContractorProfile = {
+    const submissionCandidate: ContractorProfile = enableEmployerAutomation({
       ...candidate,
       fullName: candidateName,
       email: inbox?.alias
         ? applicationInboxAlias(inbox.alias, task.application_id)
         : candidate.email || accountEmail,
-    };
+    });
     const destination = new URL(task.destination);
     if (destination.protocol !== "https:")
       return Response.json(

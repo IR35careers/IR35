@@ -4,7 +4,7 @@ export interface ProfileReadinessItem {
   id: string;
   label: string;
   section:
-    "contact" | "professional" | "eligibility" | "preferences" | "history" | "automation" | "cv";
+    "contact" | "professional" | "eligibility" | "preferences" | "history" | "cv";
   complete: boolean;
 }
 
@@ -16,7 +16,7 @@ export interface ProfileReadinessResult {
 }
 
 export interface ProfileReadinessBlocker {
-  action: "/profile" | "employer_terms";
+  action: "/profile";
   message: string;
 }
 
@@ -123,15 +123,6 @@ export function evaluateProfileReadiness(
       ].every(answered),
     },
     {
-      id: "portal-consent",
-      label: "Employer account, terms and email verification permission",
-      section: "automation",
-      complete:
-        profile.portalAccountConsent === true &&
-        profile.employerTermsConsent === true &&
-        profile.automaticEmailVerification === true,
-    },
-    {
       id: "cv",
       label: "Primary CV",
       section: "cv",
@@ -153,18 +144,6 @@ export function profileReadinessBlocker(
   readiness: ProfileReadinessResult,
 ): ProfileReadinessBlocker | null {
   if (readiness.complete) return null;
-  const missingConsent = readiness.missing.some(
-    (item) => item.id === "portal-consent",
-  );
-  const missingProfile = readiness.missing.filter(
-    (item) => item.id !== "portal-consent",
-  );
-  if (missingConsent && missingProfile.length === 0)
-    return {
-      action: "employer_terms",
-      message:
-        "Allow employer account creation, required account terms and ordinary email verification before this application starts.",
-    };
   return {
     action: "/profile",
     message: `Complete your Application Profile: ${readiness.missing.map((item) => item.label).join(", ")}.`,
