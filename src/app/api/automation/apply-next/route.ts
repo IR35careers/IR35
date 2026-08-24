@@ -17,6 +17,7 @@ import type { ApplicationPreferences, ApplicationRecord, AutomationRules, Contra
 import type { JobDetail } from "@/lib/job-types";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
+import { automaticSubmissionPriority } from "@/lib/application-runner/source-resolution";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -226,9 +227,20 @@ export async function POST(request: Request): Promise<Response> {
     if (jobsError || existingError) throw new Error(jobsError?.message || existingError?.message);
     const seen = new Set((existing ?? []).map((row) => String(row.job_id ?? "")));
 
+    const orderedJobs = (jobs ?? [])
+      .map((row, index) => ({
+        job: row as unknown as JobDetail,
+        index,
+      }))
+      .sort(
+        (left, right) =>
+          automaticSubmissionPriority(right.job) -
+            automaticSubmissionPriority(left.job) ||
+          left.index - right.index,
+      );
+
     let application: ApplicationRecord | null = null;
-    for (const row of jobs ?? []) {
-      const job = row as unknown as JobDetail;
+    for (const { job } of orderedJobs) {
       if (seen.has(job.id) || !job.apply_url || !laneMatchesJob(preferences.autoApplyLanes, job)) continue;
       const candidate = prepareApplication({ job, profile, cvText: resume.resumeText, resumeVersionLabel: resume.name });
       if (evaluateAutomationJob(job, candidate.matchScore, rules)) continue;

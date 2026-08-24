@@ -2,6 +2,24 @@ import type { JobDetail } from "@/lib/job-types";
 
 export type DiscoveryProvider = "cv_library" | "totaljobs";
 
+const DIRECT_APPLICATION_DOMAINS = [
+  "greenhouse.io",
+  "greenhouse.com",
+  "lever.co",
+  "lever.com",
+  "ashbyhq.com",
+  "workable.com",
+  "smartrecruiters.com",
+  "myworkdayjobs.com",
+  "myworkday.com",
+  "workday.com",
+  "totaljobs.com",
+] as const;
+
+function hostMatches(host: string, domain: string): boolean {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+
 function compact(value: string): string {
   return value
     .normalize("NFKD")
@@ -39,6 +57,36 @@ export function discoveryProviderFromAdzunaPage(input: {
     return "cv_library";
   if (/(?:totaljobs|total jobs)/i.test(evidence)) return "totaljobs";
   return null;
+}
+
+/** Recovery order when an aggregator page hides or omits its source. */
+export function discoveryProviderOrder(input: {
+  body: string;
+  html: string;
+}): DiscoveryProvider[] {
+  const detected = discoveryProviderFromAdzunaPage(input);
+  if (!detected) return ["totaljobs", "cv_library"];
+  return detected === "totaljobs"
+    ? ["totaljobs", "cv_library"]
+    : ["cv_library", "totaljobs"];
+}
+
+/** Prefer direct employer forms over discovery links for hands-free runs. */
+export function automaticSubmissionPriority(
+  job: Pick<JobDetail, "apply_url" | "source_domain">,
+): number {
+  let host: string;
+  try {
+    host = new URL(job.apply_url).hostname.toLowerCase();
+  } catch {
+    return 0;
+  }
+  if (DIRECT_APPLICATION_DOMAINS.some((domain) => hostMatches(host, domain)))
+    return 300;
+  if (hostMatches(host, "cv-library.co.uk")) return 240;
+  if (hostMatches(host, "reed.co.uk")) return 180;
+  if (hostMatches(host, "adzuna.co.uk")) return 120;
+  return 80;
 }
 
 export interface DiscoveryCandidate {

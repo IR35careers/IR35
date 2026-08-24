@@ -45,7 +45,7 @@ import {
 } from "@/lib/application-runner/types";
 import {
   bestDiscoveryCandidate,
-  discoveryProviderFromAdzunaPage,
+  discoveryProviderOrder,
   type DiscoveryCandidate,
 } from "@/lib/application-runner/source-resolution";
 import {
@@ -566,66 +566,65 @@ async function resolveDiscoveryApplicationPage(
     page.locator("body").innerText().catch(() => ""),
     page.content().catch(() => ""),
   ]);
-  const provider = discoveryProviderFromAdzunaPage({ body, html });
-  if (!provider) return page;
-
-  const searchPage = await page.context().newPage();
-  try {
-    await searchPage.goto(
-      provider === "cv_library"
-        ? "https://www.cv-library.co.uk/search-jobs"
-        : totalJobsSearchUrl(job),
-      {
+  for (const provider of discoveryProviderOrder({ body, html })) {
+    const searchPage = await page.context().newPage();
+    try {
+      await searchPage.goto(
+        provider === "cv_library"
+          ? "https://www.cv-library.co.uk/search-jobs"
+          : totalJobsSearchUrl(job),
+        {
+          waitUntil: "domcontentloaded",
+          timeout: 25_000,
+        },
+      );
+      const essentialCookies = await actionLocator(
+        searchPage,
+        /^(essential cookies only|reject optional cookies|only necessary cookies)$/i,
+      );
+      if (essentialCookies)
+        await clickAndFollow(searchPage, essentialCookies, 250).catch(
+          () => undefined,
+        );
+      if (provider === "cv_library") {
+        const keywordInput = searchPage.getByRole("combobox", {
+          name: /keywords/i,
+        });
+        const locationInput = searchPage.getByRole("combobox", {
+          name: /location/i,
+        });
+        if (!(await keywordInput.count()) || !(await locationInput.count()))
+          throw new Error("search_unavailable");
+        await keywordInput.first().fill(job.title);
+        await locationInput.first().fill(
+          job.location.split(",")[0] || job.location,
+        );
+        const findJobs = searchPage.getByRole("button", {
+          name: /^find jobs$/i,
+        });
+        if (!(await findJobs.count())) throw new Error("search_unavailable");
+        await clickAndFollow(searchPage, findJobs.first(), 1_200);
+      }
+      const match = bestDiscoveryCandidate(
+        provider === "cv_library"
+          ? await cvLibraryCandidates(searchPage)
+          : await totalJobsCandidates(searchPage),
+        job,
+      );
+      if (!match) throw new Error("source_match_unavailable");
+      const directUrl = new URL(match.href, searchPage.url());
+      await validatePublicHttpsUrl(directUrl.toString());
+      await searchPage.goto(directUrl.toString(), {
         waitUntil: "domcontentloaded",
         timeout: 25_000,
-      },
-    );
-    const essentialCookies = await actionLocator(
-      searchPage,
-      /^(essential cookies only|reject optional cookies|only necessary cookies)$/i,
-    );
-    if (essentialCookies)
-      await clickAndFollow(searchPage, essentialCookies, 250).catch(
-        () => undefined,
-      );
-    if (provider === "cv_library") {
-      const keywordInput = searchPage.getByRole("combobox", {
-        name: /keywords/i,
       });
-      const locationInput = searchPage.getByRole("combobox", {
-        name: /location/i,
-      });
-      if (!(await keywordInput.count()) || !(await locationInput.count()))
-        throw new Error("search_unavailable");
-      await keywordInput.first().fill(job.title);
-      await locationInput.first().fill(
-        job.location.split(",")[0] || job.location,
-      );
-      const findJobs = searchPage.getByRole("button", {
-        name: /^find jobs$/i,
-      });
-      if (!(await findJobs.count())) throw new Error("search_unavailable");
-      await clickAndFollow(searchPage, findJobs.first(), 1_200);
+      await page.close().catch(() => undefined);
+      return searchPage;
+    } catch {
+      await searchPage.close().catch(() => undefined);
     }
-    const match = bestDiscoveryCandidate(
-      provider === "cv_library"
-        ? await cvLibraryCandidates(searchPage)
-        : await totalJobsCandidates(searchPage),
-      job,
-    );
-    if (!match) throw new Error("source_match_unavailable");
-    const directUrl = new URL(match.href, searchPage.url());
-    await validatePublicHttpsUrl(directUrl.toString());
-    await searchPage.goto(directUrl.toString(), {
-      waitUntil: "domcontentloaded",
-      timeout: 25_000,
-    });
-    await page.close().catch(() => undefined);
-    return searchPage;
-  } catch {
-    await searchPage.close().catch(() => undefined);
-    return page;
   }
+  return page;
 }
 
 async function blocker(
@@ -1685,6 +1684,17 @@ export async function runNativeApplication(
         currentDestination(page, startUrl.toString()),
       );
     }
+    // Aggregator redirect pages can reject hosted browsers while the original
+    // public employer form is still available. Recover the direct listing
+    // before treating the response as an account or verification blocker.
+    const discoveryPage = await resolveDiscoveryApplicationPage(
+      page,
+      payload.job,
+    );
+    if (discoveryPage !== page) {
+      page = discoveryPage;
+      navigationStatus = null;
+    }
     if (navigationStatus && [401, 403, 429].includes(navigationStatus)) {
       return reviewReceipt(
         "The job board requires a sign-in or browser verification before it will accept this application.",
@@ -1702,7 +1712,7 @@ export async function runNativeApplication(
       );
     }
     await validatePublicHttpsUrl(page.url());
-    page = await resolveDiscoveryApplicationPage(page, payload.job);
+    ats = detectAts(page.url());
     page = await openApplicationForm(page, ats);
     const handoffBody = clean(
       await page

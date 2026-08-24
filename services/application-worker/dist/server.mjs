@@ -545,6 +545,11 @@ function discoveryProviderFromAdzunaPage(input) {
   if (/(?:totaljobs|total jobs)/i.test(evidence)) return "totaljobs";
   return null;
 }
+function discoveryProviderOrder(input) {
+  const detected = discoveryProviderFromAdzunaPage(input);
+  if (!detected) return ["totaljobs", "cv_library"];
+  return detected === "totaljobs" ? ["totaljobs", "cv_library"] : ["cv_library", "totaljobs"];
+}
 function discoveryCandidateScore(candidate, job) {
   const titleOverlap = overlap(job.title, candidate.title);
   if (titleOverlap < 0.72) return 0;
@@ -773,7 +778,7 @@ function isHeading(line) {
 function safeCandidateName(request) {
   const resolved = resolveCandidateName(request.candidateName, request.resumeText);
   if (resolved) return resolved;
-  throw new Error("A candidate name is required before exporting the CV.");
+  throw new Error("A candidate name is required before exporting the Resume.");
 }
 function bodyLines(request) {
   const lines = normaliseExportText(request.resumeText).split("\n");
@@ -832,7 +837,7 @@ async function buildResumeDocx(request) {
   }
   const document2 = new Document({
     creator: name,
-    title: `${name} - CV`,
+    title: `${name} - Resume`,
     description: "Curriculum Vitae",
     styles: {
       default: {
@@ -879,7 +884,7 @@ async function buildResumePdf(request) {
     margins: { top: 48, right: 54, bottom: 54, left: 54 },
     bufferPages: true,
     info: {
-      Title: `${name} - CV`,
+      Title: `${name} - Resume`,
       Author: name,
       Subject: "Curriculum Vitae"
     }
@@ -1306,61 +1311,61 @@ async function resolveDiscoveryApplicationPage(page, job) {
     page.locator("body").innerText().catch(() => ""),
     page.content().catch(() => "")
   ]);
-  const provider = discoveryProviderFromAdzunaPage({ body, html });
-  if (!provider) return page;
-  const searchPage = await page.context().newPage();
-  try {
-    await searchPage.goto(
-      provider === "cv_library" ? "https://www.cv-library.co.uk/search-jobs" : totalJobsSearchUrl(job),
-      {
+  for (const provider of discoveryProviderOrder({ body, html })) {
+    const searchPage = await page.context().newPage();
+    try {
+      await searchPage.goto(
+        provider === "cv_library" ? "https://www.cv-library.co.uk/search-jobs" : totalJobsSearchUrl(job),
+        {
+          waitUntil: "domcontentloaded",
+          timeout: 25e3
+        }
+      );
+      const essentialCookies = await actionLocator(
+        searchPage,
+        /^(essential cookies only|reject optional cookies|only necessary cookies)$/i
+      );
+      if (essentialCookies)
+        await clickAndFollow(searchPage, essentialCookies, 250).catch(
+          () => void 0
+        );
+      if (provider === "cv_library") {
+        const keywordInput = searchPage.getByRole("combobox", {
+          name: /keywords/i
+        });
+        const locationInput = searchPage.getByRole("combobox", {
+          name: /location/i
+        });
+        if (!await keywordInput.count() || !await locationInput.count())
+          throw new Error("search_unavailable");
+        await keywordInput.first().fill(job.title);
+        await locationInput.first().fill(
+          job.location.split(",")[0] || job.location
+        );
+        const findJobs = searchPage.getByRole("button", {
+          name: /^find jobs$/i
+        });
+        if (!await findJobs.count()) throw new Error("search_unavailable");
+        await clickAndFollow(searchPage, findJobs.first(), 1200);
+      }
+      const match = bestDiscoveryCandidate(
+        provider === "cv_library" ? await cvLibraryCandidates(searchPage) : await totalJobsCandidates(searchPage),
+        job
+      );
+      if (!match) throw new Error("source_match_unavailable");
+      const directUrl = new URL(match.href, searchPage.url());
+      await validatePublicHttpsUrl(directUrl.toString());
+      await searchPage.goto(directUrl.toString(), {
         waitUntil: "domcontentloaded",
         timeout: 25e3
-      }
-    );
-    const essentialCookies = await actionLocator(
-      searchPage,
-      /^(essential cookies only|reject optional cookies|only necessary cookies)$/i
-    );
-    if (essentialCookies)
-      await clickAndFollow(searchPage, essentialCookies, 250).catch(
-        () => void 0
-      );
-    if (provider === "cv_library") {
-      const keywordInput = searchPage.getByRole("combobox", {
-        name: /keywords/i
       });
-      const locationInput = searchPage.getByRole("combobox", {
-        name: /location/i
-      });
-      if (!await keywordInput.count() || !await locationInput.count())
-        throw new Error("search_unavailable");
-      await keywordInput.first().fill(job.title);
-      await locationInput.first().fill(
-        job.location.split(",")[0] || job.location
-      );
-      const findJobs = searchPage.getByRole("button", {
-        name: /^find jobs$/i
-      });
-      if (!await findJobs.count()) throw new Error("search_unavailable");
-      await clickAndFollow(searchPage, findJobs.first(), 1200);
+      await page.close().catch(() => void 0);
+      return searchPage;
+    } catch {
+      await searchPage.close().catch(() => void 0);
     }
-    const match = bestDiscoveryCandidate(
-      provider === "cv_library" ? await cvLibraryCandidates(searchPage) : await totalJobsCandidates(searchPage),
-      job
-    );
-    if (!match) throw new Error("source_match_unavailable");
-    const directUrl = new URL(match.href, searchPage.url());
-    await validatePublicHttpsUrl(directUrl.toString());
-    await searchPage.goto(directUrl.toString(), {
-      waitUntil: "domcontentloaded",
-      timeout: 25e3
-    });
-    await page.close().catch(() => void 0);
-    return searchPage;
-  } catch {
-    await searchPage.close().catch(() => void 0);
-    return page;
   }
+  return page;
 }
 async function blocker(page) {
   const captcha = page.locator(
@@ -1738,7 +1743,7 @@ async function snapshotFields(page, step, atsKind) {
         index,
         type: clean(snapshot.type, 40),
         label: clean(
-          `${snapshot.label}${snapshot.type === "file" && singleResumeUpload ? " CV upload" : ""}`,
+          `${snapshot.label}${snapshot.type === "file" && singleResumeUpload ? " Resume upload" : ""}`,
           500
         ),
         name: clean(snapshot.name, 200),
@@ -1788,12 +1793,12 @@ function uploadFromDownloadedResume(buffer) {
   if (isDocx)
     return {
       buffer,
-      name: "IR35Careers-Application-CV.docx",
+      name: "IR35Careers-Application-Resume.docx",
       mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     };
   return {
     buffer,
-    name: isPdf ? "IR35Careers-Application-CV.pdf" : "IR35Careers-Application-CV.txt",
+    name: isPdf ? "IR35Careers-Application-Resume.pdf" : "IR35Careers-Application-Resume.txt",
     mimeType: isPdf ? "application/pdf" : "text/plain"
   };
 }
@@ -1814,17 +1819,17 @@ async function approvedResumeUpload(payload, atsKind) {
     candidateName: payload.candidate.fullName,
     jobTitle: payload.job.title,
     companyName: payload.job.company_name,
-    versionLabel: payload.resume.label || "Application CV"
+    versionLabel: payload.resume.label || "Application Resume"
   };
   const generated = format === "docx" ? await buildResumeDocx(request) : await buildResumePdf(request);
   if (generated.length <= 0 || generated.length > MAX_RESUME_BYTES) return null;
   return format === "docx" ? {
     buffer: generated,
-    name: "IR35Careers-Application-CV.docx",
+    name: "IR35Careers-Application-Resume.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   } : {
     buffer: generated,
-    name: "IR35Careers-Application-CV.pdf",
+    name: "IR35Careers-Application-Resume.pdf",
     mimeType: "application/pdf"
   };
 }
@@ -2124,6 +2129,14 @@ async function runNativeApplication(payload, runtime) {
         currentDestination(page, startUrl.toString())
       );
     }
+    const discoveryPage = await resolveDiscoveryApplicationPage(
+      page,
+      payload.job
+    );
+    if (discoveryPage !== page) {
+      page = discoveryPage;
+      navigationStatus = null;
+    }
     if (navigationStatus && [401, 403, 429].includes(navigationStatus)) {
       return reviewReceipt(
         "The job board requires a sign-in or browser verification before it will accept this application.",
@@ -2141,7 +2154,7 @@ async function runNativeApplication(payload, runtime) {
       );
     }
     await validatePublicHttpsUrl(page.url());
-    page = await resolveDiscoveryApplicationPage(page, payload.job);
+    ats = detectAts(page.url());
     page = await openApplicationForm(page, ats);
     const handoffBody = clean(
       await page.locator("body").innerText().catch(() => ""),

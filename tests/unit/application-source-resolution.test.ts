@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  automaticSubmissionPriority,
   bestDiscoveryCandidate,
   discoveryCandidateScore,
   discoveryProviderFromAdzunaPage,
+  discoveryProviderOrder,
 } from "@/lib/application-runner/source-resolution";
 
 const job = {
@@ -31,6 +33,42 @@ describe("application source resolution", () => {
         html: '<img alt="Total Jobs" src="provider-logo.png">',
       }),
     ).toBe("totaljobs");
+  });
+
+  it("checks both recovery boards when an Adzuna block hides its source", () => {
+    expect(
+      discoveryProviderOrder({
+        body: "Access denied",
+        html: "<title>Forbidden</title>",
+      }),
+    ).toEqual(["totaljobs", "cv_library"]);
+    expect(
+      discoveryProviderOrder({
+        body: "Apply through Resume Library",
+        html: '<img src="logo_cv_library.png">',
+      }),
+    ).toEqual(["cv_library", "totaljobs"]);
+  });
+
+  it("prioritises direct application forms over discovery links", () => {
+    const base = { source_domain: "example.test" };
+    expect(
+      automaticSubmissionPriority({
+        ...base,
+        apply_url: "https://jobs.ashbyhq.com/example/role",
+      }),
+    ).toBeGreaterThan(
+      automaticSubmissionPriority({
+        ...base,
+        apply_url: "https://www.adzuna.co.uk/details/123",
+      }),
+    );
+    expect(
+      automaticSubmissionPriority({
+        ...base,
+        apply_url: "not-a-url",
+      }),
+    ).toBe(0);
   });
 
   it("requires both the role and company before using a direct listing", () => {
