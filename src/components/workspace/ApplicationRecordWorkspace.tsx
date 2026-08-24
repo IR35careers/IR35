@@ -48,11 +48,32 @@ function resumeLabel(value: string) {
 }
 
 function statusHeading(application: ApplicationRecord) {
-  if (application.status === "applied") return "Application submitted";
+  if (application.status === "applied" || application.status === "viewed") return "Application submitted";
+  if (application.status === "replied") return "Employer replied";
+  if (application.status === "interview") return "Interview stage";
+  if (application.status === "offer") return "Offer received";
+  if (application.status === "rejected") return "Application closed";
+  if (application.status === "withdrawn") return "Application withdrawn";
   if (application.status === "needs_review") return "Review before submitting";
   if (application.status === "failed") return "Ready to retry";
   if (application.status === "ready") return "Ready to apply";
   return "Application in progress";
+}
+
+function applicationHasBeenSubmitted(application: ApplicationRecord) {
+  return ["applied", "viewed", "replied", "interview", "offer", "rejected"].includes(
+    application.status,
+  );
+}
+
+function statusSummary(application: ApplicationRecord) {
+  if (application.attention?.message) return application.attention.message;
+  if (application.status === "replied") return "The employer response is linked to this application.";
+  if (application.status === "interview") return "Your interview details and employer messages are saved here.";
+  if (application.status === "offer") return "Your offer and employer messages are saved here.";
+  if (application.status === "rejected") return "This application is closed. Your final Resume remains available.";
+  if (applicationHasBeenSubmitted(application)) return "The final Resume and employer confirmation are saved here.";
+  return "Your profile, answers and Resume are ready for this contract.";
 }
 
 function Field({
@@ -109,10 +130,12 @@ export function ApplicationRecordWorkspace({
   onRefreshTailoring: () => Promise<void>;
   onResumeBlur: () => void;
 }) {
-  const [tab, setTab] = useState<ApplicationTab>("form");
+  const [tab, setTab] = useState<ApplicationTab>(() =>
+    applicationHasBeenSubmitted(application) ? "resume" : "form",
+  );
   const [resumeEditing, setResumeEditing] = useState(false);
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
-  const locked = submitted || submissionInProgress;
+  const locked = submitted || applicationHasBeenSubmitted(application) || submissionInProgress;
   const requiredQuestions = application.questions.filter((item) => item.required);
   const optionalQuestions = application.questions.filter((item) => !item.required);
   const receivedEmail = inbox.alias.trim() || profile.email;
@@ -234,26 +257,21 @@ export function ApplicationRecordWorkspace({
         </div>
 
         <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
-          <div className="grid lg:grid-cols-[320px_minmax(0,1fr)]">
-            <aside className="border-b border-slate-200 bg-[#fbfaf7] p-5 lg:border-b-0 lg:border-r lg:p-6">
+          <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
+            <aside className="border-b border-slate-200 bg-[#fbfaf7] p-5 lg:border-b-0 lg:border-r">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
                 Application status
               </p>
               <h2 className="mt-2 text-xl font-semibold text-slate-950">{statusHeading(application)}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {submitted
-                  ? "The employer confirmation is saved in your tracker."
-                  : application.attention?.message ||
-                    "Your saved profile and tailored Resume are ready for this contract."}
-              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{statusSummary(application)}</p>
               <div className="mt-5 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
                 <Mail className="mt-0.5 shrink-0 text-emerald-700" size={17} />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-slate-500">Application email</p>
-                  <p className="mt-1 break-all text-xs font-medium text-slate-900">{receivedEmail}</p>
+                  <p className="mt-1 truncate text-[11px] font-medium text-slate-900" title={receivedEmail}>{receivedEmail}</p>
                 </div>
               </div>
-              <div className="mt-6 border-t border-slate-200 pt-5">
+              <div className="mt-6 hidden border-t border-slate-200 pt-5 lg:block">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Recruiter updates ({linkedMessages.length})</p>
                 {linkedMessages.length > 0 ? (
                   <ol className="mt-3 space-y-3">
@@ -269,10 +287,30 @@ export function ApplicationRecordWorkspace({
                   <p className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">Employer messages linked to this application will appear here.</p>
                 )}
               </div>
-              <div className="mt-5 border-t border-slate-200 pt-5">
+              <div className="mt-5 hidden border-t border-slate-200 pt-5 lg:block">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Latest activity</p>
                 <p className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold leading-5 text-slate-900">{latestEvents[0]?.label || "Application prepared"}</p>
               </div>
+              <details className="mt-4 rounded-2xl border border-slate-200 bg-white lg:hidden">
+                <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-800">
+                  Application updates ({linkedMessages.length})
+                </summary>
+                <div className="border-t border-slate-200 p-4">
+                  {linkedMessages.length > 0 ? (
+                    <ol className="space-y-3">
+                      {linkedMessages.map((message) => (
+                        <li key={message.id}>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">{message.classification.replaceAll("_", " ")}</p>
+                          <p className="mt-1 text-xs font-semibold leading-5 text-slate-900">{message.subject}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="text-xs leading-5 text-slate-500">Employer messages will appear here.</p>
+                  )}
+                  <p className="mt-4 border-t border-slate-100 pt-3 text-xs font-semibold leading-5 text-slate-700">{latestEvents[0]?.label || "Application prepared"}</p>
+                </div>
+              </details>
             </aside>
 
             <div className="p-5 sm:p-6">
@@ -328,14 +366,14 @@ export function ApplicationRecordWorkspace({
                 </div>
               )}
 
-              <nav className="flex gap-1 overflow-x-auto rounded-2xl bg-slate-100 p-1" aria-label="Application record">
+              <nav className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1" aria-label="Application record">
                 {TABS.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setTab(item.id)}
                     aria-current={tab === item.id ? "page" : undefined}
-                    className={`ir35-focus min-h-11 shrink-0 rounded-xl px-4 text-sm font-semibold ${
+                    className={`ir35-focus min-h-11 min-w-0 rounded-xl px-2 text-xs font-semibold sm:px-4 sm:text-sm ${
                       tab === item.id ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"
                     }`}
                   >
@@ -449,7 +487,8 @@ export function ApplicationRecordWorkspace({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 px-5 sm:px-6">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Optimised Resume</p>
-                      <h2 className="mt-1 truncate text-lg font-semibold">{job.title} application Resume</h2>
+                      <h2 className="mt-1 truncate text-lg font-semibold">{resumeLabel(application.resumeVersionLabel)}</h2>
+                      <p className="mt-1 text-sm text-slate-500">Prepared for {job.title} at {job.company_name}</p>
                     </div>
                     <div className="flex flex-wrap gap-2 px-5 sm:px-6">
                       {!locked && (
@@ -459,16 +498,16 @@ export function ApplicationRecordWorkspace({
                       )}
                       {!locked && (
                         <button type="button" onClick={() => void onRefreshTailoring()} disabled={busy !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-800 disabled:opacity-50">
-                          {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />} Improve
+                          {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />} Improve Resume
                         </button>
                       )}
                       <button type="button" onClick={() => void downloadResume("pdf")} disabled={downloading !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 disabled:opacity-50">
-                        {downloading === "pdf" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download
+                        {downloading === "pdf" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download Resume
                       </button>
                     </div>
                   </div>
                   <details className="mx-5 mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm sm:mx-6">
-                    <summary className="cursor-pointer font-semibold text-slate-700">View match evidence and gaps</summary>
+                    <summary className="cursor-pointer font-semibold text-slate-700">Match details: {application.matchScore}%</summary>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Evidence found</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.matchedKeywords.join(", ") || "No strong keyword matches yet."}</p></div>
                       <div><p className="text-xs font-bold uppercase tracking-wide text-amber-800">Missing from your evidence</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.missingKeywords.join(", ") || "No material gaps found."}</p></div>
@@ -477,7 +516,7 @@ export function ApplicationRecordWorkspace({
                   {resumeEditing && !locked ? (
                     <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus mx-5 mt-4 w-[calc(100%-2.5rem)] resize-y rounded-2xl border border-slate-300 bg-white p-5 font-mono text-sm leading-6 sm:mx-6 sm:w-[calc(100%-3rem)]" />
                   ) : (
-                    <div className="mt-4 overflow-auto bg-slate-100 px-4 py-8 sm:px-8 sm:py-10">
+                    <div className="mt-4 overflow-auto bg-slate-100 px-3 py-5 sm:px-8 sm:py-10">
                       <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} />
                     </div>
                   )}

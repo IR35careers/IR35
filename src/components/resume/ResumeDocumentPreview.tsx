@@ -79,9 +79,9 @@ export function ResumeDocumentPreview({
       : undefined;
 
   return (
-    <article className="mx-auto min-h-[1020px] w-full max-w-[820px] bg-white px-8 py-10 text-slate-950 shadow-[0_18px_55px_rgba(15,23,42,0.14)] sm:px-12 sm:py-12 lg:px-16">
+    <article className="mx-auto w-full max-w-[820px] bg-white px-5 py-7 text-slate-950 shadow-[0_18px_55px_rgba(15,23,42,0.14)] sm:min-h-[1020px] sm:px-12 sm:py-12 lg:px-16">
       <header className="text-center">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-950">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
           {parsed.candidateName}
         </h2>
         {headerDetail && (
@@ -96,7 +96,7 @@ export function ResumeDocumentPreview({
         )}
       </header>
 
-      <div className="mt-7 space-y-6">
+      <div className="mt-6 space-y-5 sm:mt-7 sm:space-y-6">
         {sections.map((section, sectionIndex) => {
           const visibleLines = section.lines.filter(
             (line) =>
