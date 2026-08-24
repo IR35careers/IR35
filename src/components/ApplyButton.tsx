@@ -22,7 +22,7 @@ export function ApplyButton({
         <button
           type="button"
           disabled
-          className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-slate-200 px-6 py-3 text-sm font-semibold text-slate-500"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-200 px-6 py-3 text-sm font-semibold text-slate-500"
         >
           Preview listing
         </button>
@@ -37,7 +37,7 @@ export function ApplyButton({
     <div>
       <Link
         href={`/applications/new/${jobId}`}
-        className="ir35-focus inline-flex min-h-12 items-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+        className="ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
       >
         Apply with IR35Careers <Send size={14} aria-hidden="true" />
       </Link>

@@ -38,7 +38,7 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
       <Link
         href={`/account?next=${encodeURIComponent(`/jobs/${jobId}`)}`}
         prefetch={false}
-        className="ir35-focus inline-flex min-h-12 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-300 hover:bg-brand-50"
+        className="ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-300 hover:bg-brand-50"
       >
         <Bookmark size={15} aria-hidden="true" /> Sign in to save
       </Link>
@@ -83,7 +83,7 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
         onClick={cycle}
         disabled={busy}
         aria-busy={busy}
-        className={`ir35-focus inline-flex min-h-12 items-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors disabled:opacity-60 ${
+        className={`ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors disabled:opacity-60 ${
           status === "applied"
             ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
             : status === "saved"

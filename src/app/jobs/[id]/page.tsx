@@ -78,7 +78,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         </Link>
 
         {/* Title row */}
-        <header className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <header className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
           <div className="min-w-0">
             <h1 className="max-w-4xl text-3xl font-bold tracking-[-0.04em] text-slate-950 sm:text-[42px] sm:leading-[1.08]">{job.title}</h1>
             <p className="mt-2 text-base font-medium text-slate-600">{job.company_name}</p>
@@ -91,15 +91,17 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               )}
             </div>
           </div>
-          <div className="grid shrink-0 gap-2 sm:grid-cols-3 lg:min-w-[440px]">
+          <div className="w-full lg:justify-self-end">
             <ApplyButton jobId={job.id} sourceDomain={job.source_domain} />
-            <Link
-              href={`/jobs/${job.id}/resume`}
-              className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-bold text-white shadow-[0_16px_35px_-20px_rgba(5,150,105,0.75)] hover:bg-brand-800"
-            >
-              <WandSparkles size={16} aria-hidden="true" /> Prepare application
-            </Link>
-            <SaveJobButton jobId={job.id} />
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <Link
+                href={`/jobs/${job.id}/resume`}
+                className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-bold text-white shadow-[0_16px_35px_-20px_rgba(5,150,105,0.75)] hover:bg-brand-800"
+              >
+                <WandSparkles size={16} aria-hidden="true" /> Prepare application
+              </Link>
+              <SaveJobButton jobId={job.id} />
+            </div>
           </div>
         </header>
 
