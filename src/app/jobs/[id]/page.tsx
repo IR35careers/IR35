@@ -13,8 +13,10 @@ import { IR35Badge } from "@/components/ui/ir35-badge";
 import { formatPosted, formatRate, type JobDetail, type JobListing } from "@/lib/job-types";
 import { getPublicJob, getSimilarPublicJobs } from "@/lib/public-jobs";
 
-export const dynamic = "force-static";
-export const revalidate = 60;
+// The per-request CSP nonce must also be applied to the streamed RSC scripts.
+// Static prerendering cannot know that nonce and leaves live contract pages on
+// the loading fallback in browsers that correctly enforce the CSP.
+export const dynamic = "force-dynamic";
 
 const getJob = cache((id: string): Promise<JobDetail | null> => getPublicJob(id));
 
