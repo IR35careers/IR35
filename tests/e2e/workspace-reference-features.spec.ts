@@ -82,6 +82,20 @@ test("incomplete application profiles show the exact next action", async ({ page
   await expect(page.getByRole("button", { name: "Prepare application" })).toBeDisabled();
 });
 
+test("free Auto Apply is limited to five applications per day", async ({ page }) => {
+  await page.goto("/automation");
+  await dismissPrivacyNotice(page);
+
+  const dailyLimit = page.getByLabel("Daily application limit");
+  await expect(dailyLimit).toHaveValue("5");
+  await expect(dailyLimit.locator("option")).toHaveCount(6);
+  await dailyLimit.selectOption("premium");
+
+  await expect(page.getByText("Premium plans are coming soon", { exact: true })).toBeVisible();
+  await expect(page.getByText("The free plan includes up to five applications per day.")).toBeVisible();
+  await expect(dailyLimit).toHaveValue("5");
+});
+
 test("contractors can open the persistent feedback reporter and attach evidence", async ({ page }) => {
   await page.goto("/profile");
   await dismissPrivacyNotice(page);

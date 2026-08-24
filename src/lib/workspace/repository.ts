@@ -16,6 +16,7 @@ import type {
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type { JobDetail } from "@/lib/job-types";
 import { submissionAttentionFromRow } from "@/lib/workspace/submission-attention";
+import { clampDailyApplicationLimit } from "@/lib/automation/daily-limit";
 
 type DbRow = Record<string, unknown>;
 
@@ -302,7 +303,10 @@ export async function loadCloudWorkspace(
           "remote",
           "hybrid",
         ],
-        dailyLimit: Number(rulesRow.daily_limit ?? 5),
+        dailyLimit: clampDailyApplicationLimit(rulesRow.daily_limit, {
+          plan: entitlementRow?.plan === "pro" ? "pro" : "free",
+          billingState: entitlementRow?.billing_state === "active" ? "active" : "not_connected",
+        }),
         prepareCoverLetter: Boolean(rulesRow.prepare_cover_letter ?? true),
         requireHumanApproval: true,
         excludedCompanies: (rulesRow.excluded_companies as string[]) ?? [],
@@ -474,7 +478,7 @@ export async function saveCloudWorkspace(
       minimum_day_rate: state.automation.minimumDayRate,
       ir35_statuses: state.automation.ir35,
       workplaces: state.automation.workplaces,
-      daily_limit: state.automation.dailyLimit,
+      daily_limit: clampDailyApplicationLimit(state.automation.dailyLimit, state.entitlement),
       prepare_cover_letter: state.automation.prepareCoverLetter,
       require_human_approval: true,
       excluded_companies: state.automation.excludedCompanies,

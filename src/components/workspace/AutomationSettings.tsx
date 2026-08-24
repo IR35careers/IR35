@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, Eye, Loader2, PauseCircle, PlayCircle, Plus, Send, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, Eye, Loader2, LockKeyhole, PauseCircle, PlayCircle, Plus, Send, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { AUTO_APPLY_CONSENT_VERSION, DEFAULT_AUTO_APPLY_LANES, hasCurrentAutoApplyConsent } from "@/lib/automation/auto-apply";
+import { clampDailyApplicationLimit, FREE_DAILY_APPLICATION_LIMIT, hasActivePremiumPlan, maximumDailyApplicationLimit } from "@/lib/automation/daily-limit";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { evaluateAutomationJob } from "@/lib/workspace/engine";
@@ -30,7 +31,12 @@ export function AutomationSettings() {
   const workspace = useWorkspaceState();
   const { user } = useAuth();
   const storedPreferences = workspace.profile.applicationPreferences ?? DEFAULT_PREFERENCES;
-  const [rules, setRules] = useState<AutomationRules>(workspace.automation);
+  const premiumActive = hasActivePremiumPlan(workspace.entitlement);
+  const maximumDailyLimit = maximumDailyApplicationLimit(workspace.entitlement);
+  const [rules, setRules] = useState<AutomationRules>(() => ({
+    ...workspace.automation,
+    dailyLimit: clampDailyApplicationLimit(workspace.automation.dailyLimit, workspace.entitlement),
+  }));
   const [autoApplyEnabled, setAutoApplyEnabled] = useState(Boolean(storedPreferences.autoApplyEnabled));
   const [consentAccepted, setConsentAccepted] = useState(hasCurrentAutoApplyConsent({
     enabled: storedPreferences.autoApplyEnabled,
@@ -43,6 +49,7 @@ export function AutomationSettings() {
   const [applyElapsedSeconds, setApplyElapsedSeconds] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const [showPremiumNotice, setShowPremiumNotice] = useState(false);
   const latestRun = workspace.automationRuns[0] ?? null;
 
   useEffect(() => {
@@ -54,6 +61,13 @@ export function AutomationSettings() {
     const timer = window.setInterval(() => setApplyElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1_000);
     return () => window.clearInterval(timer);
   }, [busy]);
+
+  useEffect(() => {
+    setRules((current) => ({
+      ...current,
+      dailyLimit: clampDailyApplicationLimit(current.dailyLimit, workspace.entitlement),
+    }));
+  }, [workspace.entitlement]);
 
   const preferencesForSave = (): ApplicationPreferences => ({
     ...storedPreferences,
@@ -71,7 +85,13 @@ export function AutomationSettings() {
       return null;
     }
     const preferences = preferencesForSave();
-    const safeRules: AutomationRules = { ...rules, enabled: autoApplyEnabled, dryRunOnly: true, requireHumanApproval: true };
+    const safeRules: AutomationRules = {
+      ...rules,
+      enabled: autoApplyEnabled,
+      dryRunOnly: true,
+      requireHumanApproval: true,
+      dailyLimit: clampDailyApplicationLimit(rules.dailyLimit, workspace.entitlement),
+    };
     updateWorkspace((current) => ({
       ...current,
       automation: safeRules,
@@ -134,7 +154,14 @@ export function AutomationSettings() {
       const response = await fetchWithFreshSession("/api/automation/apply-next", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rules: { ...rules, enabled: true }, preferences }),
+        body: JSON.stringify({
+          rules: {
+            ...rules,
+            enabled: true,
+            dailyLimit: clampDailyApplicationLimit(rules.dailyLimit, workspace.entitlement),
+          },
+          preferences,
+        }),
         signal: AbortSignal.timeout(145_000),
       });
       const payload = await response.json().catch(() => ({ error: "The application service returned an unreadable response." })) as { state?: string; application?: ApplicationRecord; message?: string; error?: string; action?: string };
@@ -169,9 +196,61 @@ export function AutomationSettings() {
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <label className="text-sm font-semibold text-slate-800">Minimum match<input type="range" min="40" max="95" step="5" value={rules.minimumMatch} onChange={(event) => setRules((current) => ({ ...current, minimumMatch: Number(event.target.value) }))} className="mt-3 w-full accent-emerald-700" /><span className="mt-1 block text-sm font-bold text-brand-700">{rules.minimumMatch}% or higher</span></label>
               <label className="text-sm font-semibold text-slate-800">Minimum day rate<input type="number" min="0" max="3000" step="25" value={rules.minimumDayRate} onChange={(event) => setRules((current) => ({ ...current, minimumDayRate: Number(event.target.value) }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" /></label>
-              <label className="text-sm font-semibold text-slate-800">Daily application limit<input type="number" min="1" max="25" value={rules.dailyLimit} onChange={(event) => setRules((current) => ({ ...current, dailyLimit: Number(event.target.value) }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" /></label>
+              <div className="text-sm font-semibold text-slate-800">
+                <label htmlFor="daily-application-limit">Daily application limit</label>
+                <div className="mt-2 flex gap-2">
+                  <select
+                    id="daily-application-limit"
+                    value={rules.dailyLimit}
+                    onChange={(event) => {
+                      if (event.target.value === "premium") {
+                        setShowPremiumNotice(true);
+                        return;
+                      }
+                      setRules((current) => ({ ...current, dailyLimit: Number(event.target.value) }));
+                      setSaved(false);
+                    }}
+                    className="ir35-focus min-h-11 min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm font-normal"
+                  >
+                    {Array.from({ length: maximumDailyLimit }, (_, index) => index + 1).map((limit) => (
+                      <option key={limit} value={limit}>{limit} per day</option>
+                    ))}
+                    {!premiumActive && <option value="premium">More than 5, Premium</option>}
+                  </select>
+                  {!premiumActive && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPremiumNotice(true)}
+                      className="ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700"
+                    >
+                      <LockKeyhole size={14} /> More
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-xs font-normal leading-5 text-slate-500">
+                  {premiumActive
+                    ? `Your Premium plan supports up to ${maximumDailyLimit} applications per day.`
+                    : `Free accounts can run up to ${FREE_DAILY_APPLICATION_LIMIT} applications per day.`}
+                </p>
+              </div>
               <label className="text-sm font-semibold text-slate-800">Excluded companies<input value={rules.excludedCompanies.join(", ")} onChange={(event) => setRules((current) => ({ ...current, excludedCompanies: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) }))} placeholder="Agency A, Company B" className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" /></label>
             </div>
+            {showPremiumNotice && !premiumActive && (
+              <div role="status" className="mt-5 flex items-start gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-violet-950">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-violet-700 shadow-sm">
+                  <LockKeyhole size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold">Premium plans are coming soon</p>
+                  <p className="mt-1 text-sm leading-6 text-violet-900">
+                    The free plan includes up to five applications per day. Higher daily limits will be available when Premium launches.
+                  </p>
+                </div>
+                <button type="button" onClick={() => setShowPremiumNotice(false)} aria-label="Close Premium notice" className="ir35-focus rounded-lg p-1 text-violet-700 hover:bg-white">
+                  <XCircle size={18} />
+                </button>
+              </div>
+            )}
           </section>
 
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">

@@ -6,6 +6,7 @@ import {
   laneMatchesJob,
   unresolvedRequiredQuestions,
 } from "@/lib/automation/auto-apply";
+import { FREE_DAILY_APPLICATION_LIMIT, maximumDailyApplicationLimit } from "@/lib/automation/daily-limit";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -29,7 +30,7 @@ function resumeForProfile(profile: ContractorProfile): ResumeProfile | null {
     ?? null;
 }
 
-function rulesFromRow(row: DbRow): AutomationRules {
+function rulesFromRow(row: DbRow, maximumDailyLimit: number): AutomationRules {
   return {
     enabled: Boolean(row.enabled),
     dryRunOnly: true,
@@ -37,7 +38,7 @@ function rulesFromRow(row: DbRow): AutomationRules {
     minimumDayRate: Number(row.minimum_day_rate ?? 0),
     ir35: (row.ir35_statuses as AutomationRules["ir35"]) ?? ["outside"],
     workplaces: (row.workplaces as AutomationRules["workplaces"]) ?? ["remote", "hybrid"],
-    dailyLimit: Math.max(1, Math.min(Number(row.daily_limit ?? 5), 25)),
+    dailyLimit: Math.max(1, Math.min(Number(row.daily_limit ?? FREE_DAILY_APPLICATION_LIMIT), maximumDailyLimit)),
     prepareCoverLetter: Boolean(row.prepare_cover_letter ?? true),
     requireHumanApproval: true,
     excludedCompanies: (row.excluded_companies as string[]) ?? [],
@@ -99,12 +100,22 @@ export async function POST(request: Request): Promise<Response> {
     if (authError || !authData.user) return Response.json({ error: "Your session has expired. Sign in again." }, { status: 401, headers: NO_STORE });
     const userId = authData.user.id;
 
-    const [{ data: profileRow, error: profileError }, { data: ruleRow, error: ruleError }] = await Promise.all([
+    const [
+      { data: profileRow, error: profileError },
+      { data: ruleRow, error: ruleError },
+      { data: entitlementRow, error: entitlementError },
+    ] = await Promise.all([
       admin.from("profiles").select("application_profile").eq("id", userId).maybeSingle(),
       admin.from("automation_rules").select("*").eq("user_id", userId).maybeSingle(),
+      admin.from("user_entitlements").select("plan, billing_state").eq("user_id", userId).maybeSingle(),
     ]);
-    if (profileError || ruleError) throw new Error(profileError?.message || ruleError?.message);
+    if (profileError || ruleError || entitlementError) throw new Error(profileError?.message || ruleError?.message || entitlementError?.message);
     const profile = ((profileRow?.application_profile ?? {}) as ContractorProfile);
+    const entitlement = {
+      plan: entitlementRow?.plan === "pro" ? "pro" as const : "free" as const,
+      billingState: entitlementRow?.billing_state === "active" ? "active" as const : "not_connected" as const,
+    };
+    const maximumDailyLimit = maximumDailyApplicationLimit(entitlement);
     const storedPreferences = (profile.applicationPreferences ?? {}) as ApplicationPreferences;
     const requestedLanes = Array.isArray(body.preferences?.autoApplyLanes)
       ? body.preferences.autoApplyLanes.slice(0, 3).map((lane, index) => ({
@@ -124,6 +135,14 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Review and accept the current Auto Apply consent before starting.", action: "/automation" }, { status: 409, headers: NO_STORE });
     }
     const requestedRules = body.rules;
+    const requestedDailyLimit = Number(requestedRules?.dailyLimit ?? FREE_DAILY_APPLICATION_LIMIT);
+    if (requestedRules && requestedDailyLimit > maximumDailyLimit) {
+      return Response.json({
+        state: "premium_required",
+        error: `Free accounts can run up to ${FREE_DAILY_APPLICATION_LIMIT} applications per day. Premium plans with higher limits are coming soon.`,
+        action: "/automation",
+      }, { status: 403, headers: NO_STORE });
+    }
     const effectiveRuleRow: DbRow = requestedRules ? {
       ...(ruleRow as DbRow | null),
       enabled: requestedRules.enabled === true,
@@ -131,7 +150,7 @@ export async function POST(request: Request): Promise<Response> {
       minimum_day_rate: Math.max(0, Math.min(Number(requestedRules.minimumDayRate ?? 0), 3_000)),
       ir35_statuses: requestedRules.ir35 ?? ["outside"],
       workplaces: requestedRules.workplaces ?? ["remote", "hybrid"],
-      daily_limit: Math.max(1, Math.min(Number(requestedRules.dailyLimit ?? 5), 25)),
+      daily_limit: Math.max(1, Math.min(requestedDailyLimit, maximumDailyLimit)),
       prepare_cover_letter: requestedRules.prepareCoverLetter !== false,
       excluded_companies: requestedRules.excludedCompanies ?? [],
     } : (ruleRow as DbRow | null) ?? {};
@@ -163,7 +182,7 @@ export async function POST(request: Request): Promise<Response> {
     const resume = resumeForProfile(profile);
     if (!resume?.resumeText.trim()) return Response.json({ error: "Add a Resume to your Application Profile before starting Auto Apply.", action: "/profile" }, { status: 422, headers: NO_STORE });
 
-    const rules = rulesFromRow(effectiveRuleRow);
+    const rules = rulesFromRow(effectiveRuleRow, maximumDailyLimit);
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const { count: attemptsToday, error: countError } = await admin.from("application_submissions")
