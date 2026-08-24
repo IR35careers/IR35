@@ -79,7 +79,7 @@ export function BillingManager() {
     }
   };
 
-  return <WorkspacePage eyebrow="Plans and billing" title="Choose the plan that fits your search" description="Review your current plan, available features and account options in one place.">
+  return <WorkspacePage accountSection="billing" eyebrow="Plans and billing" title="Choose the plan that fits your search" description="Review your current plan, available features and account options in one place.">
     {message && <p className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-950" role="status">{message}</p>}
     <div className="grid gap-5 lg:grid-cols-2">
       <article className={`rounded-3xl border p-6 shadow-card ${!active ? "border-brand-300 bg-brand-50" : "border-slate-200 bg-white"}`}><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold uppercase tracking-wide text-brand-700">Contractor Free</p><p className="mt-3 text-3xl font-bold text-slate-950">£0</p><p className="mt-2 text-sm text-slate-600">No payment card required.</p></div><CreditCard className="text-brand-700" /></div><ul className="mt-6 space-y-3">{FREE_FEATURES.map((feature) => <li key={feature} className="flex items-center gap-2 text-sm text-slate-700"><Check className="text-brand-700" size={16} />{feature}</li>)}</ul><div className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white/70 px-4 text-sm font-bold text-slate-600"><Check size={16} />{active ? "Available if Pro ends" : "Current plan"}</div></article>

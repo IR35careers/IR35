@@ -37,7 +37,7 @@ export default function AccountConnectionsPage() {
   const discoveryReady = states.get("reed") === "connected" || states.get("adzuna") === "connected";
 
   return (
-    <WorkspacePage eyebrow="Account services" title="Your application services" description="Review contract discovery, automatic applications and recruiter replies in one place.">
+    <WorkspacePage accountSection="connections" eyebrow="Account services" title="Your application services" description="Review contract discovery, automatic applications and recruiter replies in one place.">
       {loading ? <div className="flex min-h-52 items-center justify-center rounded-3xl border border-slate-200 bg-white text-slate-500"><Loader2 className="animate-spin" size={22} /><span className="sr-only">Checking connections</span></div> : (
         <div className="grid gap-5 lg:grid-cols-3">
           <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-card">

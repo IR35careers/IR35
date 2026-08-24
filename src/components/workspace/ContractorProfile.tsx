@@ -584,6 +584,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   if (firstTimeResumeRequired) {
     return (
       <WorkspacePage
+        accountSection="profile"
         eyebrow="Profile setup"
         title="Start with your resume"
         description="Upload your resume first. IR35Careers will securely extract the details it can verify, save them to your profile and then ask only for what is missing."
@@ -638,6 +639,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
 
   return (
     <WorkspacePage
+      accountSection="profile"
       eyebrow="Contractor profile"
       title="Your professional profile"
       description="Keep your Resume, experience and reusable application answers ready for every contract."

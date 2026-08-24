@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ApplicationStudio } from "@/components/workspace/ApplicationStudio";
+import { HistoricalApplicationResolver } from "@/components/workspace/HistoricalApplicationResolver";
 import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 import type { JobDetail } from "@/lib/job-types";
 import { supabase } from "@/lib/supabase";
@@ -19,10 +20,20 @@ async function getJob(id: string): Promise<JobDetail | null> {
   return data as unknown as JobDetail;
 }
 
-export default async function PrepareApplicationPage({ params }: { params: Promise<{ jobId: string }> }) {
+export default async function PrepareApplicationPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ jobId: string }>;
+  searchParams: Promise<{ applicationId?: string | string[] }>;
+}) {
   const { jobId } = await params;
+  const query = await searchParams;
+  const applicationId = Array.isArray(query.applicationId) ? query.applicationId[0] : query.applicationId;
   const job = await getJob(jobId);
+  if (!job && applicationId && /^[0-9a-z-]{8,80}$/i.test(applicationId)) {
+    return <HistoricalApplicationResolver applicationId={applicationId} jobId={jobId} />;
+  }
   if (!job) notFound();
   return <ApplicationStudio job={job} />;
 }
-

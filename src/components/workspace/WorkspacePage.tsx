@@ -9,6 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspaceCloudSync } from "@/lib/workspace/store";
 import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
+import { AccountSidebar, type AccountSection } from "@/components/account/AccountSidebar";
 
 export function WorkspacePage({
   title,
@@ -17,6 +18,7 @@ export function WorkspacePage({
   actions,
   children,
   density = "default",
+  accountSection,
 }: {
   title: string;
   description: string;
@@ -24,6 +26,7 @@ export function WorkspacePage({
   actions?: ReactNode;
   children: ReactNode;
   density?: "default" | "compact";
+  accountSection?: AccountSection;
 }) {
   const configured = isSupabaseConfigured();
   const { user, loading: authLoading } = useAuth();
@@ -53,15 +56,20 @@ export function WorkspacePage({
             <p><span className="font-semibold">Preview mode.</span> Changes are kept in this browser only.</p>
           </div>
         )}
-        <header className={`flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between ${density === "compact" ? "pb-2" : "pb-3"}`}>
-          <div className="max-w-3xl">
-            {eyebrow && <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">{eyebrow}</p>}
-            <h1 className={`mt-1 font-semibold tracking-[-0.03em] text-slate-950 ${density === "compact" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-[2.5rem]"}`}>{title}</h1>
-            <p className={`mt-2 text-slate-600 ${density === "compact" ? "max-w-2xl text-sm leading-5" : "max-w-3xl text-sm leading-6 sm:text-base"}`}>{description}</p>
+        <div className={accountSection ? "grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]" : undefined}>
+          {accountSection && <AccountSidebar active={accountSection} />}
+          <div className="min-w-0">
+            <header className={`flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between ${density === "compact" ? "pb-2" : "pb-3"}`}>
+              <div className="max-w-3xl">
+                {eyebrow && <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">{eyebrow}</p>}
+                <h1 className={`mt-1 font-semibold tracking-[-0.03em] text-slate-950 ${density === "compact" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-[2.5rem]"}`}>{title}</h1>
+                <p className={`mt-2 text-slate-600 ${density === "compact" ? "max-w-2xl text-sm leading-5" : "max-w-3xl text-sm leading-6 sm:text-base"}`}>{description}</p>
+              </div>
+              {actions}
+            </header>
+            <div className={density === "compact" ? "mt-4" : "mt-5"}>{children}</div>
           </div>
-          {actions}
-        </header>
-        <div className={density === "compact" ? "mt-4" : "mt-5"}>{children}</div>
+        </div>
       </main>
     </div>
   );

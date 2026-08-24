@@ -122,6 +122,7 @@ export default function NetworkPage() {
 
   return (
     <WorkspacePage
+      accountSection="referrals"
       eyebrow="Network and referrals"
       title="Turn real relationships into thoughtful outreach"
       description="Track people you actually know, prepare role-specific referral requests and choose where to send them. IR35Careers never contacts anyone for you."

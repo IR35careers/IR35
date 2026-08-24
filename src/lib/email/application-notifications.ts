@@ -86,7 +86,7 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
   const role = `${input.jobTitle} at ${input.companyName}`;
   const applicationPath = `/applications/new/${encodeURIComponent(
     input.jobId || input.applicationId,
-  )}`;
+  )}?applicationId=${encodeURIComponent(input.applicationId)}`;
   switch (input.kind) {
     case "submitted":
       return {

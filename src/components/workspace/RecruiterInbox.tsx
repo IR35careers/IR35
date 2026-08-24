@@ -324,6 +324,7 @@ export function RecruiterInbox() {
 
   return (
     <WorkspacePage
+      accountSection="email"
       eyebrow="Recruiter inbox"
       title="Your application messages"
       description="Recruiter replies, interviews and application updates, linked to the right contract."

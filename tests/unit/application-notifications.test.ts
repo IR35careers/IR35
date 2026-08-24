@@ -56,14 +56,14 @@ describe("application notifications", () => {
 
   it("sends action links to the exact job workspace", () => {
     expect(applicationNotificationPresentation(base).actionPath).toBe(
-      `/applications/new/${base.jobId}#needs-attention`,
+      `/applications/new/${base.jobId}?applicationId=${base.applicationId}#needs-attention`,
     );
     expect(
       applicationNotificationPresentation({
         ...base,
         kind: "submission_issue",
       }).actionPath,
-    ).toBe(`/applications/new/${base.jobId}#needs-attention`);
+    ).toBe(`/applications/new/${base.jobId}?applicationId=${base.applicationId}#needs-attention`);
   });
 
   it("presents an unverified linked email without calling it a recruiter reply", () => {

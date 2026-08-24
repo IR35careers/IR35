@@ -594,7 +594,7 @@ export function ApplicationTracker() {
                         <p className="mt-1 text-xs text-slate-400">{messageCounts.get(application.id) ?? 0} linked message{(messageCounts.get(application.id) ?? 0) === 1 ? "" : "s"}</p>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <Link href={`/applications/new/${application.job.id}${attention ? "#needs-attention" : ""}`} className={`ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white hover:bg-emerald-800" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"}`}>
+                        <Link href={`/applications/new/${application.job.id}?applicationId=${encodeURIComponent(application.id)}${attention ? "#needs-attention" : ""}`} className={`ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white hover:bg-emerald-800" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"}`}>
                           {actionLabel} <ChevronRight size={14} />
                         </Link>
                       </td>
@@ -627,7 +627,7 @@ export function ApplicationTracker() {
                   </div>
                   {attention && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900"><strong className="block">{attention.title}</strong>{attention.message}</div>}
                   <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>{resumeLabel(application.resumeVersionLabel)}</span><span>{messageCounts.get(application.id) ?? 0} messages</span></div>
-                  <Link href={`/applications/new/${application.job.id}${attention ? "#needs-attention" : ""}`} className={`ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-between rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white" : "border border-slate-300 text-slate-700"}`}>
+                  <Link href={`/applications/new/${application.job.id}?applicationId=${encodeURIComponent(application.id)}${attention ? "#needs-attention" : ""}`} className={`ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-between rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white" : "border border-slate-300 text-slate-700"}`}>
                     {actionLabel} <ChevronRight size={15} />
                   </Link>
                 </article>
