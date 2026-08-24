@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, Eye, Loader2, LockKeyhole, PauseCircle, PlayCircle, Plus, Send, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, ChevronRight, Eye, Loader2, LockKeyhole, PauseCircle, PlayCircle, Plus, Send, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { AUTO_APPLY_CONSENT_VERSION, DEFAULT_AUTO_APPLY_LANES, hasCurrentAutoApplyConsent } from "@/lib/automation/auto-apply";
 import { clampDailyApplicationLimit, FREE_DAILY_APPLICATION_LIMIT, hasActivePremiumPlan, maximumDailyApplicationLimit } from "@/lib/automation/daily-limit";
@@ -14,6 +14,8 @@ import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { getProfile, PREVIEW_PROFILE, scoreJob } from "@/lib/profile";
 import type { JobListing } from "@/lib/job-types";
+
+type AutomationSection = "matches" | "materials" | "permission";
 
 const DEFAULT_PREFERENCES: ApplicationPreferences = {
   resumeOptimisation: "honest",
@@ -67,6 +69,7 @@ export function AutomationSettings() {
   const [notice, setNotice] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [showPremiumNotice, setShowPremiumNotice] = useState(false);
+  const [section, setSection] = useState<AutomationSection>("matches");
   const latestRun = workspace.automationRuns[0] ?? null;
 
   useEffect(() => {
@@ -229,9 +232,21 @@ export function AutomationSettings() {
 
   return (
     <WorkspacePage eyebrow="Auto Apply" title="Set your preferences once" description="Choose the contracts you want. IR35Careers prepares each application from your saved profile and keeps every update in your tracker.">
+      <nav className="mb-5 grid max-w-3xl grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]" aria-label="Auto Apply setup">
+        {([
+          ["matches", "Matches", "1. Contract matches"],
+          ["materials", "Resume", "2. Application materials"],
+          ["permission", "Permission", "3. Permission"],
+        ] as const).map(([id, mobileLabel, desktopLabel]) => (
+          <button key={id} type="button" onClick={() => setSection(id)} aria-pressed={section === id} className={`ir35-focus min-h-11 min-w-0 rounded-xl px-2 text-xs font-semibold sm:px-4 sm:text-sm ${section === id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>
+            <span className="sm:hidden">{mobileLabel}</span>
+            <span className="hidden sm:inline">{desktopLabel}</span>
+          </button>
+        ))}
+      </nav>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+          {section === "matches" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><Bot size={21} /></span><div><h2 className="font-semibold text-slate-950">Auto Apply</h2><p className="text-sm text-slate-600">Pause or resume your saved searches at any time.</p></div></div><button type="button" role="switch" aria-checked={autoApplyEnabled} onClick={() => { setAutoApplyEnabled((value) => !value); setSaved(false); }} className={`ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${autoApplyEnabled ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{autoApplyEnabled ? <PlayCircle size={17} /> : <PauseCircle size={17} />}{autoApplyEnabled ? "On" : "Paused"}</button></div>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <label className="text-sm font-semibold text-slate-800">Minimum match<input type="range" min="40" max="95" step="5" value={rules.minimumMatch} onChange={(event) => setRules((current) => ({ ...current, minimumMatch: Number(event.target.value) }))} className="mt-3 w-full accent-emerald-700" /><span className="mt-1 block text-sm font-bold text-brand-700">{rules.minimumMatch}% or higher</span></label>
@@ -291,9 +306,9 @@ export function AutomationSettings() {
                 </button>
               </div>
             )}
-          </section>
+          </section>}
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+          {section === "materials" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">
                 Contract application workflow
@@ -379,21 +394,26 @@ export function AutomationSettings() {
                 ? "Current mode: matching contracts are prepared automatically and wait for your approval before submission."
                 : "Current mode: eligible contracts are submitted automatically after required answers and safe Resume changes are approved."}
             </p>
-          </section>
+          </section>}
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+          {section === "matches" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
             <div className="flex items-start justify-between gap-4"><div><h2 className="font-semibold text-slate-950">Role lanes</h2><p className="mt-1 text-sm text-slate-600">Create up to three focused role searches.</p></div>{lanes.length < 3 && <button type="button" onClick={() => setLanes((current) => [...current, newLane()])} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-sm font-bold"><Plus size={15} /> Add lane</button>}</div>
             <div className="mt-5 space-y-4">{lanes.map((lane, index) => <article key={lane.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-bold text-slate-950">Lane {index + 1}</p><div className="flex items-center gap-2"><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><input type="checkbox" checked={lane.enabled} onChange={(event) => updateLane(lane.id, { enabled: event.target.checked })} className="h-4 w-4 accent-emerald-700" /> Active</label>{lanes.length > 1 && <button type="button" onClick={() => setLanes((current) => current.filter((item) => item.id !== lane.id))} aria-label={`Remove lane ${index + 1}`} className="ir35-focus rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-700"><Trash2 size={15} /></button>}</div></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><input value={lane.role} onChange={(event) => updateLane(lane.id, { role: event.target.value })} placeholder="Role, for example DevOps" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" /><input value={lane.keywords.join(", ")} onChange={(event) => updateLane(lane.id, { keywords: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} placeholder="AWS, Terraform" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" /><input value={lane.location} onChange={(event) => updateLane(lane.id, { location: event.target.value })} placeholder="United Kingdom" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" /></div></article>)}</div>
-          </section>
+          </section>}
 
-          <section className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><h2 className="font-semibold">IR35 statuses</h2><div className="mt-4 space-y-2">{(["outside", "inside", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.ir35.includes(value)} onChange={() => setRules((current) => ({ ...current, ir35: toggleArray(current.ir35, value) }))} className="h-5 w-5 accent-emerald-700" />{value === "unknown" ? "Status not stated" : `${value} IR35`}</label>)}</div></div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><h2 className="font-semibold">Working patterns</h2><div className="mt-4 space-y-2">{(["remote", "hybrid", "onsite", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.workplaces.includes(value)} onChange={() => setRules((current) => ({ ...current, workplaces: toggleArray(current.workplaces, value) }))} className="h-5 w-5 accent-emerald-700" />{value}</label>)}</div></div>
-          </section>
+          {section === "matches" && <section className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><h2 className="font-semibold">IR35 statuses</h2><div className="mt-4 space-y-2">{(["outside", "inside", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.ir35.includes(value)} onChange={() => setRules((current) => ({ ...current, ir35: toggleArray(current.ir35, value) }))} className="h-5 w-5 accent-emerald-700" />{value === "unknown" ? "Status not stated" : `${value} IR35`}</label>)}</div></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><h2 className="font-semibold">Working patterns</h2><div className="mt-4 space-y-2">{(["remote", "hybrid", "onsite", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.workplaces.includes(value)} onChange={() => setRules((current) => ({ ...current, workplaces: toggleArray(current.workplaces, value) }))} className="h-5 w-5 accent-emerald-700" />{value}</label>)}</div></div>
+          </section>}
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-brand-700" /><div><h2 className="font-semibold text-slate-950">Permission to apply</h2><p className="mt-1 text-sm leading-6 text-slate-600">Confirm once to use your approved profile, Resume and saved answers for these searches.</p></div></div><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"><input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-5 w-5 accent-emerald-700" /><span><strong className="block text-slate-950">Allow IR35Careers to apply to my matching roles.</strong>I can pause Auto Apply or change these preferences at any time.</span></label></section>
+          {section === "permission" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-brand-700" /><div><h2 className="font-semibold text-slate-950">Permission to apply</h2><p className="mt-1 text-sm leading-6 text-slate-600">Confirm once to use your approved profile, Resume and saved answers for these searches.</p></div></div><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"><input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-5 w-5 accent-emerald-700" /><span><strong className="block text-slate-950">Allow IR35Careers to apply to my matching roles.</strong>I can pause Auto Apply or change these preferences at any time.</span></label></section>}
 
-          <div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={() => void saveSettings()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50"><CheckCircle2 size={17} /> Save settings</button><button type="button" onClick={() => void runPreview()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50">{busy === "preview" ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {busy === "preview" ? "Checking contracts" : "Preview matches"}</button><button type="button" onClick={() => void runAutoApply()} disabled={busy !== null || !autoApplyEnabled || !consentAccepted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Apply to next match now"}</button>{saved && <span className="self-center text-sm font-semibold text-emerald-700">Saved</span>}</div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button type="button" onClick={() => void saveSettings()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50"><CheckCircle2 size={17} /> Save settings</button>
+            {section === "matches" && <button type="button" onClick={() => void runPreview()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50">{busy === "preview" ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {busy === "preview" ? "Checking contracts" : "Preview matches"}</button>}
+            {section !== "permission" ? <button type="button" onClick={() => setSection(section === "matches" ? "materials" : "permission")} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-brand-800">Continue <ChevronRight size={16} /></button> : <button type="button" onClick={() => void runAutoApply()} disabled={busy !== null || !autoApplyEnabled || !consentAccepted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Apply to next match now"}</button>}
+            {saved && <span className="self-center text-sm font-semibold text-emerald-700">Saved</span>}
+          </div>
           {notice && <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900" role="status">{notice}</p>}
           {runError && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900" role="alert">{runError}</p>}
         </div>

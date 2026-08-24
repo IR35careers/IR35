@@ -112,11 +112,11 @@ export function AppNav() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-[72px] max-w-[1600px] items-center gap-5 px-4 sm:px-6">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-[68px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
           <div className="shrink-0"><Brand href="/dashboard" /></div>
 
-          <nav aria-label="Workspace navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 xl:flex">
+          <nav aria-label="Workspace navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex">
             {PRIMARY_NAV.map((item) => navLink(item))}
           </nav>
 
@@ -125,7 +125,7 @@ export function AppNav() {
               <Settings size={17} aria-hidden="true" />
             </Link>
             <details className="group relative">
-              <summary className="ir35-focus flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200 bg-white py-1.5 pl-1.5 pr-3 text-left hover:bg-slate-50">
+              <summary className="ir35-focus flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200 bg-white py-1.5 pl-1.5 pr-3 text-left shadow-[0_6px_20px_-18px_rgba(15,23,42,0.7)] hover:bg-slate-50">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-xs font-bold text-white">{initials(user?.email)}</span>
                 <span className="max-w-36 truncate text-xs font-semibold text-slate-700">{user?.email ?? "Preview"}</span>
               </summary>
@@ -147,7 +147,7 @@ export function AppNav() {
         <div className="fixed inset-0 z-50 xl:hidden">
           <button type="button" className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />
           <aside id="member-mobile-menu" className="absolute inset-y-0 right-0 flex w-[min(92vw,360px)] flex-col bg-white shadow-2xl" aria-label="Workspace menu">
-            <div className="flex h-[72px] items-center justify-between border-b border-slate-200 px-5">
+            <div className="flex h-[68px] items-center justify-between border-b border-slate-200 px-5">
               <Brand href="/dashboard" />
               <button type="button" onClick={() => setMobileOpen(false)} className="ir35-focus inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600" aria-label="Close navigation"><X size={18} /></button>
             </div>

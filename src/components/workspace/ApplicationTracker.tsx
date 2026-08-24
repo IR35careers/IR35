@@ -463,7 +463,7 @@ export function ApplicationTracker() {
         </span>
       </nav>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-card sm:p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block min-w-0 flex-1">
             <span className="sr-only">Search applications</span>
@@ -510,17 +510,17 @@ export function ApplicationTracker() {
       </section>
 
       <section
-        className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
+        className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:grid-cols-3 lg:grid-cols-6"
         aria-label="Application pipeline summary"
       >
-        {PIPELINE.map((stage) => {
+        {PIPELINE.map((stage, index) => {
           const count = workspace.applications.filter(
             (application) => application.status === stage.id,
           ).length;
           return (
             <div
               key={stage.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4"
+              className={`min-h-[92px] px-4 py-4 ${index < PIPELINE.length - 1 ? "border-r border-slate-200" : ""} ${index < 4 ? "border-b border-slate-200 sm:border-b-0" : ""}`}
             >
               <p className="text-2xl font-bold tabular-nums text-slate-950">
                 {count}

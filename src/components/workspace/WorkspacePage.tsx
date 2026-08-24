@@ -36,17 +36,17 @@ export function WorkspacePage({
   }, [administratorRedirect, authLoading, configured, router, user]);
 
   if (configured && (administratorRedirect || authLoading || !user || cloud.loading)) {
-    return <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500" aria-busy="true"><Loader2 className="animate-spin" size={22} /><span className="sr-only">Loading your private workspace</span></main>;
+    return <main className="flex min-h-screen items-center justify-center bg-[#f7f8f7] text-slate-500" aria-busy="true"><Loader2 className="animate-spin" size={22} /><span className="sr-only">Loading your private workspace</span></main>;
   }
 
   if (configured && cloud.error) {
-    return <div className="min-h-screen bg-slate-50"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">We could not open your workspace</h1><p className="mt-2 text-sm leading-6">Please check your connection and try again. Your information remains protected.</p><button type="button" onClick={() => window.location.reload()} className="ir35-focus mt-5 min-h-11 rounded-xl bg-rose-800 px-4 text-sm font-bold text-white">Try again</button></div></main></div>;
+    return <div className="min-h-screen bg-[#f7f8f7]"><AppNav /><main className="mx-auto max-w-2xl px-4 py-16 sm:px-6"><div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-950" role="alert"><CloudOff size={24} /><h1 className="mt-4 text-xl font-semibold">We could not open your workspace</h1><p className="mt-2 text-sm leading-6">Please check your connection and try again. Your information remains protected.</p><button type="button" onClick={() => window.location.reload()} className="ir35-focus mt-5 min-h-11 rounded-xl bg-rose-800 px-4 text-sm font-bold text-white">Try again</button></div></main></div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="min-h-screen bg-[#f7f8f7] text-slate-950">
       <AppNav />
-      <main className={`mx-auto max-w-[1600px] px-4 sm:px-6 ${density === "compact" ? "py-5 lg:py-6" : "py-7 lg:py-8"}`}>
+      <main className={`mx-auto max-w-[1500px] px-4 sm:px-6 ${density === "compact" ? "py-5 lg:py-6" : "py-7 lg:py-9"}`}>
         {!configured && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
             <FlaskConical className="mt-0.5 shrink-0" size={17} aria-hidden="true" />

@@ -18,7 +18,7 @@ import {
   PoundSterling,
   Target,
   MapPin,
-  ArrowRight,
+  ChevronRight,
   Sparkles,
   CheckCircle2,
   Circle,
@@ -191,10 +191,10 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { icon: Target, value: matches.length > 0 ? String(matches.length) : "0", label: "Matches for you", sub: "View matches", href: "#matches", accent: "green" },
-    { icon: ShieldCheck, value: String(outsideCount), label: "Outside IR35", sub: "View contracts", href: "/jobs?ir35=outside", accent: "green" },
-    { icon: PoundSterling, value: avgRate ? `£${avgRate}` : "N/A", label: "Avg match day rate", sub: "Browse rates", href: "/jobs", accent: "green" },
-    { icon: Briefcase, value: liveTotal !== null ? liveTotal.toLocaleString() : "N/A", label: "Live contracts", sub: "Browse all", href: "/jobs", accent: "green" },
+    { icon: Target, value: matches.length > 0 ? String(matches.length) : "0", label: "Recommended", href: "#matches" },
+    { icon: ShieldCheck, value: String(outsideCount), label: "Outside IR35", href: "/jobs?ir35=outside" },
+    { icon: PoundSterling, value: avgRate ? `£${avgRate}` : "N/A", label: "Average day rate", href: "/jobs" },
+    { icon: Briefcase, value: liveTotal !== null ? liveTotal.toLocaleString() : "N/A", label: "Live contracts", href: "/jobs" },
   ];
 
   const checklist = [
@@ -205,26 +205,26 @@ export default function DashboardPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#f7f8f7] text-slate-900">
       <WelcomeModal userId={user?.id ?? PREVIEW_PROFILE.id} />
       <AppNav />
-      <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
-        {/* Greeting + search */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <main className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:py-9">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Workspace</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em] text-slate-950 sm:text-[2.5rem]">
               {dashboardGreeting}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">Here&apos;s your contract overview.</p>
+            <p className="mt-1.5 text-sm text-slate-600">Your contracts, applications and next actions in one place.</p>
           </div>
-          <form onSubmit={onSearch} className="relative w-full lg:w-[420px]" data-tour="dashboard-search">
-            <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <form onSubmit={onSearch} className="relative w-full lg:w-[440px]" data-tour="dashboard-search">
+            <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
-              type="search" value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder="Search roles, skills, companies…"
-              className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-24 text-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40"
+              type="search" value={q} onChange={(event) => setQ(event.target.value)}
+              placeholder="Search contracts"
+              className="ir35-focus min-h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-24 text-sm shadow-[0_8px_24px_-22px_rgba(15,23,42,0.5)] placeholder:text-slate-400"
             />
-            <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg bg-green-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-green-700">Search</button>
+            <button type="submit" className="ir35-focus absolute right-1.5 top-1/2 min-h-9 -translate-y-1/2 rounded-lg bg-slate-950 px-4 text-xs font-bold text-white hover:bg-brand-800">Search</button>
           </form>
         </div>
 
@@ -233,128 +233,74 @@ export default function DashboardPage() {
           applications={workspace.applications}
         />
 
-        {/* Quick stats */}
-        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {stats.map((s) => (
-            <Link key={s.label} href={s.href} className="rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-green-300">
-              <s.icon className="text-green-600" size={20} />
-              <p className="mt-3 text-2xl font-bold tabular-nums text-slate-900">{s.value}</p>
-              <p className="text-xs text-slate-500">{s.label}</p>
-              <p className="mt-2 text-xs font-semibold text-green-700">{s.sub} →</p>
+        <section className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] lg:grid-cols-4" aria-label="Contract summary">
+          {stats.map((stat, index) => (
+            <Link key={stat.label} href={stat.href} className={`group flex min-h-[106px] items-center gap-4 p-4 transition-colors hover:bg-slate-50 sm:p-5 ${index % 2 === 0 ? "border-r border-slate-200" : ""} ${index < 2 ? "border-b border-slate-200 lg:border-b-0" : ""} ${index > 0 ? "lg:border-l lg:border-slate-200" : ""}`}>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><stat.icon size={19} /></span>
+              <span className="min-w-0"><span className="block text-2xl font-semibold tabular-nums tracking-[-0.03em] text-slate-950">{stat.value}</span><span className="mt-0.5 block text-xs leading-4 text-slate-500">{stat.label}</span></span>
             </Link>
           ))}
-        </div>
+        </section>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
-          {/* Main column */}
-          <div className="min-w-0 space-y-6">
-            {/* Matches */}
-            <section id="matches" className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  <Sparkles size={14} className="text-green-600" /> Top matches for you
-                </h2>
-                <Link href="/jobs" className="text-sm text-slate-500 hover:text-slate-800">View all →</Link>
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <section id="matches" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
+              <div>
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-brand-700"><Sparkles size={14} /> Recommended for you</p>
+                <h2 className="mt-1 text-lg font-semibold tracking-[-0.02em] text-slate-950">Contracts matching your profile</h2>
               </div>
+              <Link href="/jobs" className="ir35-focus inline-flex min-h-10 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-950">View all <ChevronRight size={15} /></Link>
+            </div>
 
-              {profile && profile.skills.length === 0 ? (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center">
-                  <p className="text-sm text-slate-700">Add your skills to unlock matches.</p>
-                  <Link href="/profile#application-readiness" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Complete profile <ArrowRight size={14} /></Link>
-                </div>
-              ) : matchesLoading ? (
-                <div className="mt-8 flex justify-center text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
-              ) : matches.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No matches yet. New contracts arrive through the day.</p>
-              ) : (
-                <ul className="mt-4 space-y-2">
-                  {matches.slice(0, 6).map(({ job, score, matchedSkills }) => (
-                    <li key={job.id}>
-                      <Link href={`/jobs/${job.id}`} className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-green-300 hover:bg-green-50/30">
-                        <ScoreRing score={score} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-900">{job.title}</p>
-                          <p className="flex items-center gap-1 truncate text-xs text-slate-500">
-                            {job.company_name} <span aria-hidden>·</span> <MapPin size={10} /> {job.location}
-                          </p>
-                          <div className="mt-1.5 flex flex-wrap gap-1">
-                            {matchedSkills.slice(0, 3).map((sk) => (
-                              <span key={sk} className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">{sk}</span>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="hidden shrink-0 flex-col items-end gap-1.5 sm:flex">
-                          <span className="text-sm font-semibold tabular-nums">{formatRate(job)}</span>
-                          <IR35Chip status={job.ir35_status} />
-                        </div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {/* Applications */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Your applications</h2>
-                {tracked.length > 0 && <span className="text-xs text-slate-400">{tracked.length} tracked</span>}
+            {profile && profile.skills.length === 0 ? (
+              <div className="m-5 rounded-xl border border-slate-200 bg-slate-50 p-7 text-center sm:m-6">
+                <p className="font-semibold text-slate-900">Complete your profile to see personal recommendations.</p>
+                <p className="mt-1 text-sm text-slate-500">Add your skills and Resume once, then reuse them across applications.</p>
+                <Link href="/profile#application-readiness" className="ir35-focus mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-brand-800">Complete profile <ChevronRight size={15} /></Link>
               </div>
-              {tracked.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">
-                  Nothing saved yet. Open any contract and hit <span className="font-medium text-slate-700">Save job</span> to track it here.
-                </p>
-              ) : (
-                <ul className="mt-4 divide-y divide-slate-100">
-                  {tracked.map(({ status, job }) => (
-                    <li key={job.id}>
-                      <Link href={`/jobs/${job.id}`} className="flex items-center justify-between gap-4 py-3 transition-colors hover:bg-slate-50">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-900">{job.title}</p>
-                          <p className="truncate text-xs text-slate-500">{job.company_name} · {job.location}</p>
-                        </div>
-                        <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${status === "applied" ? "border-green-200 bg-green-50 text-green-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
-                          {status === "applied" ? "Applied" : "Saved"}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </div>
-
-          {/* Right rail */}
-          <div className="space-y-6">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6" data-tour="profile-progress">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-800">Profile strength</h2>
-                <Link href="/profile" className="text-xs font-semibold text-green-700 hover:underline">Edit</Link>
-              </div>
-              <div className="mt-4 flex items-center gap-4">
-                <ScoreRing score={pct} size={72} />
-                <div>
-                  <p className="text-sm font-semibold text-green-700">{pct >= 80 ? "Great!" : pct >= 50 ? "Getting there" : "Let's build this up"}</p>
-                  <p className="text-xs text-slate-500">Add more details to improve your matches.</p>
-                </div>
-              </div>
-              <ul className="mt-4 space-y-2">
-                {checklist.map(([label, done]) => (
-                  <li key={label} className="flex items-center gap-2 text-sm">
-                    {done ? <CheckCircle2 size={15} className="text-green-600" /> : <Circle size={15} className="text-slate-300" />}
-                    <span className={done ? "text-slate-700" : "text-slate-400"}>{label}</span>
+            ) : matchesLoading ? (
+              <div className="flex min-h-56 items-center justify-center text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
+            ) : matches.length === 0 ? (
+              <p className="p-6 text-sm text-slate-500">No close matches yet. New contracts are added throughout the day.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {matches.slice(0, 6).map(({ job, score, matchedSkills }) => (
+                  <li key={job.id}>
+                    <Link href={`/jobs/${job.id}`} className="group grid gap-4 px-5 py-4 transition-colors hover:bg-slate-50 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:px-6">
+                      <ScoreRing score={score} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-950">{job.title}</p>
+                        <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500">{job.company_name}<span aria-hidden="true">·</span><MapPin size={11} />{job.location}</p>
+                        {matchedSkills.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{matchedSkills.slice(0, 3).map((skill) => <span key={skill} className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">{skill}</span>)}</div>}
+                      </div>
+                      <div className="flex items-center gap-2 sm:flex-col sm:items-end"><span className="text-sm font-semibold tabular-nums text-slate-900">{formatRate(job)}</span><IR35Chip status={job.ir35_status} /></div>
+                      <ChevronRight size={17} className="hidden text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 sm:block" />
+                    </Link>
                   </li>
                 ))}
               </ul>
-              <Link href="/profile#application-readiness" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Improve profile</Link>
+            )}
+          </section>
+
+          <aside className="space-y-5">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]" data-tour="profile-progress">
+              <div className="flex items-center justify-between"><h2 className="text-sm font-semibold text-slate-950">Profile readiness</h2><Link href="/profile" className="ir35-focus rounded-lg px-2 py-1 text-xs font-bold text-brand-700 hover:bg-brand-50">Edit</Link></div>
+              <div className="mt-4 flex items-center gap-4"><ScoreRing score={pct} size={68} /><div><p className="text-sm font-semibold text-slate-900">{pct >= 80 ? "Ready to apply" : pct >= 50 ? "Almost ready" : "Complete your details"}</p><p className="mt-1 text-xs leading-5 text-slate-500">A stronger profile reduces questions during applications.</p></div></div>
+              <ul className="mt-4 grid grid-cols-2 gap-2">
+                {checklist.map(([label, done]) => <li key={label} className="flex items-center gap-2 text-xs">{done ? <CheckCircle2 size={14} className="shrink-0 text-brand-600" /> : <Circle size={14} className="shrink-0 text-slate-300" />}<span className={done ? "text-slate-700" : "text-slate-400"}>{label}</span></li>)}
+              </ul>
+              {pct < 100 && <Link href="/profile#application-readiness" className="ir35-focus mt-5 inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-50">Finish profile <ChevronRight size={14} /></Link>}
             </section>
 
-            <Link href="/applications" className="group block rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-brand-300">
-              <p className="text-sm font-semibold text-slate-800">Application tracker</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">See applications, recruiter replies and interviews together.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-brand-700">Open tracker <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" /></span>
-            </Link>
-          </div>
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]">
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4"><div><p className="text-sm font-semibold text-slate-950">Recent applications</p><p className="mt-0.5 text-xs text-slate-500">Latest activity across your tracker</p></div><Link href="/applications" aria-label="Open application tracker" className="ir35-focus rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-950"><ChevronRight size={17} /></Link></div>
+              {tracked.length === 0 ? (
+                <div className="p-5"><p className="text-sm leading-6 text-slate-500">Your prepared and submitted applications will appear here.</p><Link href="/jobs" className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-1 text-sm font-bold text-brand-700">Browse contracts <ChevronRight size={14} /></Link></div>
+              ) : (
+                <ul className="divide-y divide-slate-100">{tracked.slice(0, 4).map(({ status, job }) => <li key={job.id}><Link href={`/jobs/${job.id}`} className="group flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{job.title}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{job.company_name}</span></span><span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${status === "applied" ? "border-brand-200 bg-brand-50 text-brand-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}>{status === "applied" ? "Applied" : "Saved"}</span></Link></li>)}</ul>
+              )}
+            </section>
+          </aside>
         </div>
       </main>
     </div>

@@ -533,7 +533,9 @@ test("application workspace presents a clean review flow and never claims an unc
 
   await page.goto("/automation");
   await expect(page.getByRole("heading", { name: "Set your preferences once" })).toBeVisible();
+  await page.getByRole("button", { name: "3. Permission" }).click();
   await expect(page.getByText(/Allow IR35Careers to apply to my matching roles/i)).toBeVisible();
+  await page.getByRole("button", { name: "1. Contract matches" }).click();
   await page.getByRole("button", { name: "Preview matches" }).click();
   await expect(page.getByText(/matching contracts? found/i)).toBeVisible();
 });

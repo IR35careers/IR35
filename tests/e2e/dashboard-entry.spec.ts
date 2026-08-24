@@ -9,7 +9,7 @@ test("first dashboard visit has a skippable guided tour and later visits welcome
 
   await tour.getByRole("button", { name: "Next" }).click();
   await expect(tour.getByRole("heading", { name: "Search the roles that fit you" })).toBeVisible();
-  await expect(page.getByRole("searchbox", { name: "Search roles, skills, companies…" })).toBeVisible();
+  await expect(page.getByRole("searchbox", { name: "Search contracts" })).toBeVisible();
 
   await tour.getByRole("button", { name: "Next" }).click();
   await expect(tour.getByRole("heading", { name: "Compare UK contract opportunities" })).toBeVisible();
