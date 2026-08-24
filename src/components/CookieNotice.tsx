@@ -9,6 +9,10 @@ export function CookieNotice() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (window.location.hostname === "admin.ir35careers.com") {
+      setOpen(false);
+      return;
+    }
     try {
       setOpen(!window.localStorage.getItem(ANALYTICS_CONSENT_KEY));
     } catch {
