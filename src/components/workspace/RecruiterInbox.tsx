@@ -12,7 +12,6 @@ import {
   Copy,
   Inbox,
   Loader2,
-  Mail,
   MailCheck,
   Reply,
   Search,
@@ -42,10 +41,10 @@ const FILTERS: Array<{ id: FilterId; label: string }> = [
   { id: "assessment", label: "Assessment" },
   { id: "reminder", label: "Reminder" },
   { id: "offer", label: "Offer" },
-  { id: "applied", label: "Applied" },
-  { id: "retry", label: "Retry" },
+  { id: "applied", label: "Confirmations" },
+  { id: "retry", label: "Try again" },
   { id: "rejection", label: "Rejection" },
-  { id: "needs_you", label: "Needs you" },
+  { id: "needs_you", label: "Action needed" },
 ];
 
 function categoryStyle(category: InboxViewCategory): string {
@@ -105,11 +104,6 @@ export function RecruiterInbox() {
   const hasAlias =
     workspace.inbox.alias !== "Not created" &&
     (workspace.inbox.providerState === "connected" || emailState === "preview");
-  const accountEmail =
-    workspace.inbox.forwardingEmail ||
-    workspace.profile.forwardingEmail ||
-    workspace.profile.email;
-
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return workspace.messages.filter((message) => {
@@ -315,41 +309,18 @@ export function RecruiterInbox() {
     <WorkspacePage
       eyebrow="Recruiter inbox"
       title="Your application messages"
-      description="Keep confirmations, recruiter replies, assessments and interviews linked to the right application."
+      description="Recruiter replies, interviews and application updates, linked to the right contract."
     >
-      <nav
-        className="mb-5 inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_12px_35px_-30px_rgba(15,23,42,0.4)]"
-        aria-label="Application communication views"
-      >
-        <span
-          aria-current="page"
-          className="inline-flex min-h-10 items-center rounded-xl bg-slate-950 px-5 text-sm font-bold text-white"
-        >
-          Inbox
-          {unread > 0 && (
-            <span className="ml-2 rounded-full bg-white/15 px-2 py-0.5 text-[10px]">
-              {unread}
-            </span>
-          )}
-        </span>
-        <Link
-          href="/applications"
-          className="ir35-focus inline-flex min-h-10 items-center rounded-xl px-5 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-950"
-        >
-          Pipeline
-        </Link>
-      </nav>
-
       <section
-        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5"
+        className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-4"
         aria-labelledby="inbox-connection-title"
       >
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
             <span
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"}`}
             >
-              <AtSign size={20} aria-hidden="true" />
+              <AtSign size={18} aria-hidden="true" />
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -357,7 +328,7 @@ export function RecruiterInbox() {
                   id="inbox-connection-title"
                   className="text-sm font-semibold text-slate-950"
                 >
-                  Application email identity
+                  Application email
                 </h2>
                 <span
                   className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
@@ -369,25 +340,12 @@ export function RecruiterInbox() {
                       : "Not active"}
                 </span>
               </div>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                IR35Careers email
-              </p>
-              <p className="mt-1 break-all font-mono text-sm font-semibold text-brand-800">
+              <p className="mt-1 break-all font-mono text-xs font-semibold text-brand-800 sm:text-sm">
                 {hasAlias ? workspace.inbox.alias : "Not created"}
-              </p>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                Your account email
-              </p>
-              <p className="mt-1 break-all text-sm font-semibold text-slate-900">
-                {accountEmail || "Not available"}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                Important recruiter messages are forwarded to this email when
-                forwarding is active.
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             {emailState === "connected" && !hasAlias && (
               <button
                 type="button"
@@ -432,36 +390,15 @@ export function RecruiterInbox() {
           </div>
         </div>
         {identityOpen && (
-          <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5 md:grid-cols-3">
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <Mail className="text-brand-700" size={18} />
-              <p className="mt-3 text-sm font-semibold text-slate-950">
-                Use the private email
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">
-                Supported applications use your unique IR35Careers address.
-              </p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <ShieldCheck className="text-brand-700" size={18} />
-              <p className="mt-3 text-sm font-semibold text-slate-950">
-                Keep replies organised
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">
-                Replies are classified and linked to the application that
-                created them.
-              </p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <Send className="text-brand-700" size={18} />
-              <p className="mt-3 text-sm font-semibold text-slate-950">
-                Forward important updates
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">
-                Interview, action and outcome messages also reach{" "}
-                {accountEmail || "your account email"}.
-              </p>
-            </div>
+          <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-600 sm:grid-cols-2">
+            <p className="flex items-start gap-2 rounded-xl bg-slate-50 p-3">
+              <ShieldCheck className="mt-0.5 shrink-0 text-brand-700" size={16} />
+              Recruiter replies are linked automatically to the application that created them.
+            </p>
+            <p className="flex items-start gap-2 rounded-xl bg-slate-50 p-3">
+              <Send className="mt-0.5 shrink-0 text-brand-700" size={16} />
+              Important interviews, actions and outcomes are also sent to your account email.
+            </p>
           </div>
         )}
         {(emailState === "gated" || emailState === "error") && (
