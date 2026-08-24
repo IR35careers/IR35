@@ -15,7 +15,7 @@ import { getProfile, PREVIEW_PROFILE, scoreJob, type ScoredJob } from "@/lib/pro
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import type { JobListing } from "@/lib/job-types";
 
-export function JobMatchPanel({ job }: { job: JobListing }) {
+export function JobMatchPanel({ job, showTailorAction = true }: { job: JobListing; showTailorAction?: boolean }) {
   const { user, loading } = useAuth();
   const preview = !isSupabaseConfigured();
   const [result, setResult] = useState<ScoredJob | "profile_empty" | "no_overlap" | null>(null);
@@ -147,12 +147,14 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
           <p className="text-[11px] leading-5 text-slate-500">This is a deterministic comparison of structured listing data and your saved preferences. It is not an AI assessment, hiring prediction or guarantee.</p>
         </div>
       </details>
-      <Link
-        href={`/jobs/${job.id}/resume`}
-        className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
-      >
-        <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your Resume
-      </Link>
+      {showTailorAction && (
+        <Link
+          href={`/jobs/${job.id}/resume`}
+          className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
+        >
+          <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your Resume
+        </Link>
+      )}
     </div>
   );
 }

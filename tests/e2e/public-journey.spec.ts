@@ -114,6 +114,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expect(page.getByText("Demo data never submits an application.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Advertiser-stated" })).toBeVisible();
   await expect(page.getByText("IR35 evidence", { exact: true })).toBeVisible();
+  await page.getByText("Why this status", { exact: true }).click();
   await expect(page.getByText(/Evidence checked/)).toBeVisible();
   await expect(page.getByText(/not an independent legal determination/i)).toBeVisible();
   await page.getByText("How this score is calculated").click();
