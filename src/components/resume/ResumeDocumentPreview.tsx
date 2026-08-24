@@ -47,12 +47,18 @@ function ContentLine({ line, index }: { line: string; index: number }) {
 export function ResumeDocumentPreview({
   resumeText,
   filename,
+  candidateName,
 }: {
   resumeText: string;
   filename: string;
+  candidateName?: string;
 }) {
   const parsed = parseResumeText(resumeText, filename);
-  const normalisedName = parsed.candidateName.trim().toLocaleLowerCase("en-GB");
+  const resolvedCandidateName =
+    parsed.candidateName !== "Candidate"
+      ? parsed.candidateName
+      : candidateName?.trim() || "Candidate";
+  const normalisedName = resolvedCandidateName.trim().toLocaleLowerCase("en-GB");
   const normalisedContact = parsed.contactLine.trim().toLocaleLowerCase("en-GB");
 
   const sections = parsed.sections
@@ -69,20 +75,25 @@ export function ResumeDocumentPreview({
     }))
     .filter((section) => section.lines.some((line) => line.trim()));
 
-  const firstSection = sections[0];
-  const headerDetail =
-    firstSection?.title === "Profile" && firstSection.kind === "other"
-      ? firstSection.lines.find((line) => {
-          const clean = cleanDisplayLine(line);
-          return clean.length > 0 && !/@|linkedin|\+?\d[\d ()-]{7,}/i.test(clean);
-        })
-      : undefined;
+  const headerDetail = sections
+    .slice(0, 2)
+    .flatMap((section) => section.lines)
+    .find((line) => {
+      const clean = cleanDisplayLine(line);
+      return (
+        clean.length > 0 &&
+        clean.length <= 80 &&
+        clean.toLocaleLowerCase("en-GB") !== normalisedName &&
+        !/@|linkedin|\+?\d[\d ()-]{7,}/i.test(clean) &&
+        /\b(engineer|developer|architect|analyst|manager|consultant|specialist|scientist|designer|administrator|director|lead|officer|contractor)\b/i.test(clean)
+      );
+    });
 
   return (
     <article className="mx-auto w-full max-w-[820px] bg-white px-5 py-7 text-slate-950 shadow-[0_18px_55px_rgba(15,23,42,0.14)] sm:min-h-[1020px] sm:px-12 sm:py-12 lg:px-16">
       <header className="text-center">
         <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-          {parsed.candidateName}
+          {resolvedCandidateName}
         </h2>
         {headerDetail && (
           <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-slate-600">
@@ -100,11 +111,7 @@ export function ResumeDocumentPreview({
         {sections.map((section, sectionIndex) => {
           const visibleLines = section.lines.filter(
             (line) =>
-              !(
-                sectionIndex === 0 &&
-                headerDetail &&
-                cleanDisplayLine(line) === cleanDisplayLine(headerDetail)
-              ),
+              !(headerDetail && cleanDisplayLine(line) === cleanDisplayLine(headerDetail)),
           );
           if (visibleLines.every((line) => !line.trim())) return null;
           const title =

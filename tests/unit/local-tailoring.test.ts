@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
+import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 
 describe("local role tailoring", () => {
@@ -37,5 +38,15 @@ Built AWS infrastructure with Terraform for UK product teams.`;
     expect(skills?.replacement).toContain("- Terraform");
     expect(skills?.replacement).not.toContain("Kubernetes");
     expect(skills?.evidenceQuote).toBe("Git, Communication, Terraform, AWS, Linux");
+  });
+
+  it("keeps a clean boundary when adding a missing profile section", () => {
+    const cv = `Alex Morgan
+Senior Platform Engineer
+Ten years delivering AWS and Terraform platforms.`;
+    const result = buildLocalTailoringResult(cv, DEMO_JOBS[0]);
+    const tailored = applyAiTailoringSuggestions(cv, result.suggestions);
+    expect(tailored).toMatch(/Resume\.\n\nAlex Morgan/);
+    expect(tailored).not.toContain("Resume.Alex Morgan");
   });
 });

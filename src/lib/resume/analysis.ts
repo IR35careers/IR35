@@ -120,6 +120,8 @@ const TITLE_STOP_WORDS = new Set([
   "the",
 ]);
 
+const NAME_BLOCKLIST = /\b(curriculum|vitae|resume|profile|summary|engineer|developer|architect|analyst|manager|consultant|specialist|scientist|designer|administrator|director|lead|officer|contractor|platform|reliability|devops)\b/i;
+
 function clamp(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
@@ -161,6 +163,30 @@ function looksLikeHeading(line: string): boolean {
   return /^[A-Z][A-Z &/+-]{2,}$/.test(trimmed);
 }
 
+function findCandidateName(lines: string[], contactIndex: number): string {
+  const candidates = lines.slice(0, 20).flatMap((raw, index) => {
+    const line = raw.trim();
+    const words = line.split(/\s+/).filter(Boolean);
+    if (
+      words.length < 2 ||
+      words.length > 5 ||
+      line.length > 60 ||
+      /@|linkedin|https?:|www\.|\+?\d[\d ()-]{7,}/i.test(line) ||
+      sectionKind(line) ||
+      NAME_BLOCKLIST.test(line) ||
+      !/^[\p{L}][\p{L}'’-]*(?:\s+[\p{L}][\p{L}'’-]*)+$/u.test(line)
+    ) return [];
+
+    let score = words.length <= 3 ? 5 : 2;
+    if (index <= 5) score += 4;
+    if (contactIndex >= 0 && index < contactIndex && contactIndex - index <= 4) score += 3;
+    if (words.every((word) => /^\p{Lu}[\p{L}'’-]*$/u.test(word) || /^\p{Lu}+$/u.test(word))) score += 2;
+    return [{ line, index, score }];
+  });
+
+  return candidates.sort((left, right) => right.score - left.score || left.index - right.index)[0]?.line ?? "Candidate";
+}
+
 export function parseResumeText(rawText: string, filename = "Pasted Resume"): ParsedResume {
   const text = rawText
     .replace(/\r\n?/g, "\n")
@@ -169,8 +195,9 @@ export function parseResumeText(rawText: string, filename = "Pasted Resume"): Pa
     .trim();
   const lines = text.split("\n");
   const nonEmpty = lines.map((line) => line.trim()).filter(Boolean);
-  const candidateName = nonEmpty[0] ?? "Candidate";
-  const contactLine = nonEmpty.slice(1, 4).find((line) => /@|linkedin|\+?\d[\d ()-]{7,}/i.test(line)) ?? "";
+  const contactIndex = nonEmpty.slice(0, 20).findIndex((line) => /@|linkedin|\+?\d[\d ()-]{7,}/i.test(line));
+  const contactLine = contactIndex >= 0 ? nonEmpty[contactIndex] : "";
+  const candidateName = findCandidateName(nonEmpty, contactIndex);
 
   const sections: ResumeSection[] = [];
   let currentTitle = "Profile";
@@ -185,7 +212,8 @@ export function parseResumeText(rawText: string, filename = "Pasted Resume"): Pa
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (looksLikeHeading(trimmed)) {
+    const isIdentityLine = trimmed.toLocaleLowerCase("en-GB") === candidateName.toLocaleLowerCase("en-GB");
+    if (!isIdentityLine && looksLikeHeading(trimmed)) {
       flush();
       currentTitle = trimmed;
       currentKind = sectionKind(trimmed) ?? "other";

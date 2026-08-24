@@ -135,6 +135,7 @@ export function ApplicationRecordWorkspace({
     applicationHasBeenSubmitted(application) ? "resume" : "form",
   );
   const [resumeEditing, setResumeEditing] = useState(false);
+  const [coverEditing, setCoverEditing] = useState(false);
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const locked = submitted || applicationHasBeenSubmitted(application) || submissionInProgress;
   const requiredQuestions = application.questions.filter((item) => item.required);
@@ -156,6 +157,15 @@ export function ApplicationRecordWorkspace({
     [application.id, messages],
   );
   const contractRate = formatRate(job);
+  const parsedResume = useMemo(
+    () => parseResumeText(application.tailoredCvText, application.resumeVersionLabel),
+    [application.resumeVersionLabel, application.tailoredCvText],
+  );
+  const resumeOwner =
+    parsedResume.candidateName !== "Candidate"
+      ? parsedResume.candidateName
+      : profile.fullName.trim() || "Your";
+  const displayResumeName = `${resumeOwner} Resume`;
 
   const downloadResume = async (format: "pdf" | "docx") => {
     const parsed = parseResumeText(
@@ -258,7 +268,7 @@ export function ApplicationRecordWorkspace({
         </div>
 
         <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
-          <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="grid lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[270px_minmax(0,1fr)]">
             <aside className="border-b border-slate-200 bg-[#fbfaf7] p-5 lg:border-b-0 lg:border-r">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
                 Application status
@@ -290,10 +300,6 @@ export function ApplicationRecordWorkspace({
                 ) : (
                   <p className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">Employer messages linked to this application will appear here.</p>
                 )}
-              </div>
-              <div className="mt-5 hidden border-t border-slate-200 pt-5 lg:block">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Latest activity</p>
-                <p className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold leading-5 text-slate-900">{latestEvents[0]?.label || "Application prepared"}</p>
               </div>
               <details className="mt-4 rounded-2xl border border-slate-200 bg-white lg:hidden">
                 <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-800">
@@ -411,8 +417,8 @@ export function ApplicationRecordWorkspace({
                     </div>
                     <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{resumeLabel(application.resumeVersionLabel)}</p>
-                        <p className="mt-1 text-xs text-slate-500">Tailored Resume selected for this contract</p>
+                        <p className="text-sm font-semibold text-slate-900">{displayResumeName}</p>
+                        <p className="mt-1 text-xs text-slate-500">Resume selected for this application</p>
                       </div>
                       <button type="button" onClick={() => setTab("resume")} className="ir35-focus min-h-10 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Review Resume</button>
                     </div>
@@ -490,9 +496,8 @@ export function ApplicationRecordWorkspace({
                 <section className="mt-6 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 px-5 sm:px-6">
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Resume preview</p>
-                      <h2 className="mt-1 truncate text-lg font-semibold">{resumeLabel(application.resumeVersionLabel)}</h2>
-                      <p className="mt-1 text-sm text-slate-500">Prepared for {job.title} at {job.company_name}</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Application Resume</p>
+                      <h2 className="mt-1 truncate text-lg font-semibold">{displayResumeName}</h2>
                     </div>
                     <div className="flex flex-wrap gap-2 px-5 sm:px-6">
                       {!locked && (
@@ -528,28 +533,45 @@ export function ApplicationRecordWorkspace({
                         <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-[13px] leading-6 text-slate-800" />
                       </section>
                       <div className="hidden xl:block">
-                        <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} />
+                        <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} candidateName={profile.fullName} />
                       </div>
                     </div>
                   ) : (
                     <div className="mt-4 overflow-auto bg-slate-100 px-3 py-5 sm:px-8 sm:py-10">
-                      <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} />
+                      <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} candidateName={profile.fullName} />
                     </div>
                   )}
                 </section>
               )}
 
               {tab === "cover" && (
-                <section className="mt-6">
-                  <h2 className="text-xl font-semibold">Cover letter</h2>
-                  <p className="mt-1 text-sm text-slate-500">Prepared from verified experience in your Resume.</p>
-                  {locked ? (
-                    <div className="mt-4 bg-slate-100 p-5 sm:p-8">
-                      <article className="mx-auto min-h-[760px] max-w-[780px] whitespace-pre-wrap bg-white px-8 py-10 text-sm leading-7 text-slate-800 shadow-[0_18px_55px_rgba(15,23,42,0.12)] sm:px-14 sm:py-12">{application.coverLetter}</article>
+                <section className="mt-6 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6">
+                  <div className="flex flex-col gap-3 px-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Application letter</p>
+                      <h2 className="mt-1 text-lg font-semibold">Cover letter</h2>
                     </div>
-                  ) : (
-                    <textarea aria-label="Cover letter" value={application.coverLetter} onChange={(event) => onUpdate((current) => ({ ...current, coverLetter: event.target.value, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} rows={20} className="ir35-focus mt-4 w-full resize-y rounded-2xl border border-slate-300 bg-white p-5 text-sm leading-7" />
-                  )}
+                    {!locked && (
+                      <button type="button" onClick={() => setCoverEditing((current) => !current)} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:self-auto">
+                        {coverEditing ? <FileText size={15} /> : <PencilLine size={15} />}
+                        {coverEditing ? "Close editor" : "Edit letter"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-4 bg-slate-100 p-5 sm:p-8">
+                    {coverEditing && !locked ? (
+                      <div className="mx-auto grid max-w-[1180px] gap-5 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)]">
+                        <section className="self-start rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                          <p className="text-sm font-semibold text-slate-950">Edit cover letter</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">Your changes appear in the letter preview and reset final approval.</p>
+                          <textarea aria-label="Cover letter" value={application.coverLetter} onChange={(event) => onUpdate((current) => ({ ...current, coverLetter: event.target.value, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} rows={24} className="ir35-focus mt-4 w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 text-sm leading-7" />
+                        </section>
+                        <article className="min-h-[760px] whitespace-pre-wrap bg-white px-8 py-10 text-sm leading-7 text-slate-800 shadow-[0_18px_55px_rgba(15,23,42,0.12)] sm:px-14 sm:py-12">{application.coverLetter}</article>
+                      </div>
+                    ) : (
+                      <article className="mx-auto min-h-[760px] max-w-[780px] whitespace-pre-wrap bg-white px-8 py-10 text-sm leading-7 text-slate-800 shadow-[0_18px_55px_rgba(15,23,42,0.12)] sm:px-14 sm:py-12">{application.coverLetter}</article>
+                    )}
+                  </div>
                 </section>
               )}
 

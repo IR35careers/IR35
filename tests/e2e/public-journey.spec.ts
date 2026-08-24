@@ -512,11 +512,14 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByText("Application email", { exact: true })).toBeVisible();
   await expect(page.getByText("Employer questions", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
-  await expect(page.getByText("Prepared for Senior DevOps Engineer - Outside IR35 at Northstar Digital")).toBeVisible();
+  await expect(page.getByText("Application Resume", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Alex Morgan Resume" })).toBeVisible();
   await page.getByRole("button", { name: "Edit Resume" }).click();
   await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
   await expect(page.getByRole("button", { name: "Improve Resume" })).toBeVisible();
   await page.getByRole("button", { name: "Cover letter", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Cover letter" })).toBeVisible();
+  await page.getByRole("button", { name: "Edit letter" }).click();
   await expect(page.getByLabel("Cover letter")).toBeVisible();
   await page.getByRole("button", { name: "Contract", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contract description" })).toBeVisible();

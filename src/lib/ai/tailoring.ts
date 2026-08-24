@@ -8,6 +8,13 @@ export function applyAiTailoringSuggestions(
 ): string {
   let result = sourceCv;
   for (const suggestion of suggestions) {
+    if (!suggestion.original.trim()) {
+      const replacement = normaliseResumeText(suggestion.replacement);
+      if (replacement && !result.includes(replacement)) {
+        result = `${replacement}\n\n${result}`;
+      }
+      continue;
+    }
     if (result.includes(suggestion.original)) {
       result = result.replace(
         suggestion.original,
