@@ -14,9 +14,10 @@ import {
   Loader2,
   Mail,
   MapPin,
+  PencilLine,
+  RefreshCcw,
   Send,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { ResumeDocumentPreview } from "@/components/resume/ResumeDocumentPreview";
@@ -276,9 +277,12 @@ export function ApplicationRecordWorkspace({
                 {linkedMessages.length > 0 ? (
                   <ol className="mt-3 space-y-3">
                     {linkedMessages.map((message) => (
-                      <li key={message.id} className="rounded-xl border border-slate-200 bg-white p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">{message.classification.replaceAll("_", " ")}</p>
-                        <p className="mt-1 text-xs font-semibold leading-5 text-slate-900">{message.subject}</p>
+                      <li key={message.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.5)]">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">{message.classification.replaceAll("_", " ")}</p>
+                          <span className="text-[10px] text-slate-400">{new Date(message.receivedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                        </div>
+                        <p className="mt-2 text-xs font-semibold leading-5 text-slate-900">{message.subject}</p>
                         <p className="mt-1 truncate text-[11px] text-slate-500">{message.from}</p>
                       </li>
                     ))}
@@ -486,23 +490,24 @@ export function ApplicationRecordWorkspace({
                 <section className="mt-6 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 px-5 sm:px-6">
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Optimised Resume</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Resume preview</p>
                       <h2 className="mt-1 truncate text-lg font-semibold">{resumeLabel(application.resumeVersionLabel)}</h2>
                       <p className="mt-1 text-sm text-slate-500">Prepared for {job.title} at {job.company_name}</p>
                     </div>
                     <div className="flex flex-wrap gap-2 px-5 sm:px-6">
                       {!locked && (
-                        <button type="button" onClick={() => setResumeEditing((current) => !current)} className="ir35-focus min-h-10 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700">
-                          {resumeEditing ? "Preview Resume" : "Edit Resume"}
+                        <button type="button" onClick={() => setResumeEditing((current) => !current)} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                          {resumeEditing ? <FileText size={15} /> : <PencilLine size={15} />}
+                          {resumeEditing ? "Close editor" : "Edit Resume"}
                         </button>
                       )}
                       {!locked && (
-                        <button type="button" onClick={() => void onRefreshTailoring()} disabled={busy !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-800 disabled:opacity-50">
-                          {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />} Improve Resume
+                        <button type="button" onClick={() => void onRefreshTailoring()} disabled={busy !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800 disabled:opacity-50">
+                          {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <RefreshCcw size={15} />} Improve Resume
                         </button>
                       )}
                       <button type="button" onClick={() => void downloadResume("pdf")} disabled={downloading !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 disabled:opacity-50">
-                        {downloading === "pdf" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download Resume
+                        {downloading === "pdf" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download PDF
                       </button>
                     </div>
                   </div>
@@ -514,7 +519,18 @@ export function ApplicationRecordWorkspace({
                     </div>
                   </details>
                   {resumeEditing && !locked ? (
-                    <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus mx-5 mt-4 w-[calc(100%-2.5rem)] resize-y rounded-2xl border border-slate-300 bg-white p-5 font-mono text-sm leading-6 sm:mx-6 sm:w-[calc(100%-3rem)]" />
+                    <div className="mt-4 grid gap-4 bg-slate-100 px-3 py-5 sm:px-6 sm:py-8 xl:grid-cols-[minmax(340px,0.75fr)_minmax(0,1.25fr)]">
+                      <section className="self-start rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                        <div className="mb-3">
+                          <p className="text-sm font-semibold text-slate-950">Edit Resume text</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">Changes appear in the document preview. Your approval is reset after an edit.</p>
+                        </div>
+                        <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-[13px] leading-6 text-slate-800" />
+                      </section>
+                      <div className="hidden xl:block">
+                        <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} />
+                      </div>
+                    </div>
                   ) : (
                     <div className="mt-4 overflow-auto bg-slate-100 px-3 py-5 sm:px-8 sm:py-10">
                       <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} />
