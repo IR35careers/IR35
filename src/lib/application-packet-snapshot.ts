@@ -128,7 +128,7 @@ export function normaliseApprovedApplicationPacket(value: unknown, applicationId
 
   const sourceCvText = text(source.sourceCvText, 250_000);
   const tailoredCvText = text(source.tailoredCvText, 250_000);
-  if (!sourceCvText && !tailoredCvText) throw new InvalidApplicationPacketError("Add a CV before applying.");
+  if (!sourceCvText && !tailoredCvText) throw new InvalidApplicationPacketError("Add a Resume before applying.");
 
   return {
     id,
@@ -141,7 +141,7 @@ export function normaliseApprovedApplicationPacket(value: unknown, applicationId
     missingKeywords: strings(source.missingKeywords ?? [], 100, 120),
     sourceCvText,
     tailoredCvText,
-    resumeVersionLabel: text(source.resumeVersionLabel, 300) || "Application CV",
+    resumeVersionLabel: text(source.resumeVersionLabel, 300) || "Application Resume",
     coverLetter: text(source.coverLetter, 50_000),
     questions: questions(source.questions ?? []),
     truthApproved: true,

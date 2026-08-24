@@ -77,7 +77,7 @@ export function getIntegrationStatuses(options?: { includeOperations?: boolean }
     },
     {
       id: "ai_tailoring",
-      name: "Role-specific CV tailoring",
+      name: "Role-specific Resume tailoring",
       state: aiTailoringConnected ? "connected" : "provider_gate",
       scope: "Evidence-grounded role tailoring with a local fallback and optional enhanced language-model suggestions.",
       nextStep: aiTailoringConnected ? "Users can request enhanced suggestions and approve each edit." : "Local evidence-based suggestions remain available. Add OPENROUTER_API_KEY for enhanced language suggestions.",

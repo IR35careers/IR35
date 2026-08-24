@@ -3,7 +3,7 @@ import { createBlankCloudWorkspaceState } from "@/lib/workspace/repository";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 
 describe("new contractor profile", () => {
-  it("never inherits fictional preview identity or CV evidence", () => {
+  it("never inherits fictional preview identity or Resume evidence", () => {
     const state = createBlankCloudWorkspaceState("new.contractor@example.com");
 
     expect(state.profile).toMatchObject({

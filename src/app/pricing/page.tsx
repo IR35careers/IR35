@@ -8,7 +8,7 @@ import { billingConfig } from "@/lib/billing/stripe";
 
 export const metadata: Metadata = { title: "Public Beta Access", description: "Current public beta access and future plan availability for IR35Careers." };
 
-const CURRENT = ["Browse all indexed UK contracts", "IR35 and source evidence", "Contractor calculators and guides", "Saved roles and searches", "Role-specific CV analysis", "Dry-run application preparation"];
+const CURRENT = ["Browse all indexed UK contracts", "IR35 and source evidence", "Contractor calculators and guides", "Saved roles and searches", "Role-specific Resume analysis", "Dry-run application preparation"];
 const LOCKED = ["Approved plan benefits will be listed before sale", "Secure checkout remains locked until release approval"];
 
 export default function PricingPage() {

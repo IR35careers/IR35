@@ -1,5 +1,5 @@
 /**
- * Profile helpers: load/save the user's profile, upload CVs to private
+ * Profile helpers: load/save the user's profile, upload Resumes to private
  * storage, time-aware greetings, and the match-scoring engine.
  *
  * Match scoring (no AI required — AI upgrades this later):
@@ -36,7 +36,7 @@ export const PREVIEW_PROFILE: Profile = {
   preferred_remote: "any",
   skills: ["AWS", "Terraform", "Kubernetes", "DevOps", "CI/CD"],
   cv_path: null,
-  cv_filename: "Platform Engineering CV v4",
+  cv_filename: "Platform Engineering Resume v4",
   phone: "+44 7700 900000",
   linkedin_url: "https://www.linkedin.com/in/alex-morgan-example",
   job_title: "Senior Platform Engineer",
@@ -112,15 +112,15 @@ function cvExtension(file: Pick<File, "name">): "pdf" | "docx" | null {
 }
 
 export function validateCvFile(file: File): string | null {
-  if (file.size === 0) return "That CV file is empty.";
-  if (file.size > CV_MAX_BYTES) return "CV must be under 5MB.";
-  if (/\.doc$/i.test(file.name)) return "Older .doc files cannot be checked safely. Save the CV as .docx or PDF.";
+  if (file.size === 0) return "That Resume file is empty.";
+  if (file.size > CV_MAX_BYTES) return "Resume must be under 5MB.";
+  if (/\.doc$/i.test(file.name)) return "Older .doc files cannot be checked safely. Save the Resume as .docx or PDF.";
   if (!cvExtension(file)) return "Please upload a PDF or DOCX document.";
   return null;
 }
 
 /**
- * Inspect the bytes before a CV enters private storage. This is intentionally
+ * Inspect the bytes before a Resume enters private storage. This is intentionally
  * strict and local: it verifies the real container and rejects active PDF or
  * embedded Word content without sending the file to another provider.
  */
@@ -175,7 +175,7 @@ export async function validateCvFileContents(file: File): Promise<string | null>
   }
 }
 
-/** Upload a CV into the user's private folder; returns { path } or { error }. */
+/** Upload a Resume into the user's private folder; returns { path } or { error }. */
 export async function uploadCv(
   userId: string,
   file: File
@@ -194,9 +194,9 @@ export async function uploadCv(
   return { path, error: null };
 }
 
-/** Remove only a path inside the current user's private CV folder. */
+/** Remove only a path inside the current user's private Resume folder. */
 export async function deleteCv(userId: string, path: string): Promise<string | null> {
-  if (!path.startsWith(`${userId}/`) || path.includes("..")) return "Invalid CV storage path.";
+  if (!path.startsWith(`${userId}/`) || path.includes("..")) return "Invalid Resume storage path.";
   const { error } = await supabase.storage.from("cvs").remove([path]);
   return error?.message ?? null;
 }

@@ -352,7 +352,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         {
           error:
-            "Add your full name to your Application Profile or CV before submitting.",
+            "Add your full name to your Application Profile or Resume before submitting.",
           action: "/profile",
         },
         { status: 422, headers: NO_STORE },
@@ -556,7 +556,7 @@ export async function POST(request: Request): Promise<Response> {
             jobTitle: job.title,
             companyName: job.company_name,
             versionLabel: String(
-              packet.resume_version_label || "Application CV",
+              packet.resume_version_label || "Application Resume",
             ),
           });
           if (
@@ -572,7 +572,7 @@ export async function POST(request: Request): Promise<Response> {
               });
             if (uploadError)
               throw new Error(
-                "Your approved CV could not be prepared for the employer form.",
+                "Your approved Resume could not be prepared for the employer form.",
               );
             const { data: signedResume, error: signedError } =
               await admin.storage
@@ -580,7 +580,7 @@ export async function POST(request: Request): Promise<Response> {
                 .createSignedUrl(storagePath, 60 * 60);
             if (signedError || !signedResume?.signedUrl)
               throw new Error(
-                "Your approved CV could not be prepared for the employer form.",
+                "Your approved Resume could not be prepared for the employer form.",
               );
             resumeUrl = signedResume.signedUrl;
           }
@@ -616,7 +616,7 @@ export async function POST(request: Request): Promise<Response> {
                   candidate: submissionCandidate,
                   resume: {
                     label: String(
-                      packet.resume_version_label || "Application CV",
+                      packet.resume_version_label || "Application Resume",
                     ),
                     text: resumeText,
                     url: resumeUrl,

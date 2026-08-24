@@ -7,7 +7,7 @@ import { PublicHeader } from "@/components/PublicHeader";
 export const metadata: Metadata = { title: "IR35Careers updates", description: "Product updates and practical notes for UK contractors." };
 
 const UPDATES = [
-  { date: "19 August 2026", title: "Introducing the truth-first CV and application workspace", summary: "Role scoring, evidence gaps, side-by-side approval, cover letters, screening answers and dry-run receipts now share one review workflow.", href: "/analyse-job" },
+  { date: "19 August 2026", title: "Introducing the truth-first Resume and application workspace", summary: "Role scoring, evidence gaps, side-by-side approval, cover letters, screening answers and dry-run receipts now share one review workflow.", href: "/analyse-job" },
   { date: "19 August 2026", title: "Why IR35 evidence is shown beside every contract", summary: "A listing claim is useful evidence, but it is not a substitute for the client determination or the real working practices.", href: "/resources" },
   { date: "19 August 2026", title: "From saved roles to a contractor pipeline", summary: "The application tracker and linked recruiter inbox reduce manual admin while preserving explicit status changes.", href: "/applications" },
 ];

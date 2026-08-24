@@ -12,7 +12,7 @@ const sections = [
   { id: "who-we-are", label: "Who we are" },
   { id: "data-we-use", label: "Information we use" },
   { id: "purposes", label: "Purposes and lawful bases" },
-  { id: "cv-analysis", label: "CV analysis and scoring" },
+  { id: "cv-analysis", label: "Resume analysis and scoring" },
   { id: "sharing", label: "Sharing and international transfers" },
   { id: "retention", label: "Retention and security" },
   { id: "rights", label: "Your rights" },
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
     >
       <section aria-labelledby="who-we-are">
         <h2 id="who-we-are">Who we are</h2>
-        <p className="mt-3"><strong>{operator?.legalName || "IR35Careers"}</strong>{operator?.legalName && operator.legalName !== "IR35Careers" ? ", trading as IR35Careers," : ""} is responsible for the personal information processed through this website and contractor workspace. In data-protection terms, this operator acts as the controller for account, profile, CV, application-workspace and support information.</p>
+        <p className="mt-3"><strong>{operator?.legalName || "IR35Careers"}</strong>{operator?.legalName && operator.legalName !== "IR35Careers" ? ", trading as IR35Careers," : ""} is responsible for the personal information processed through this website and contractor workspace. In data-protection terms, this operator acts as the controller for account, profile, Resume, application-workspace and support information.</p>
         {operator && <address className="mt-3 not-italic text-sm leading-7 text-slate-600"><strong>Controller address:</strong> {operator.legalAddress}<br /><strong>Privacy email:</strong> <a href={`mailto:${operator.privacyEmail}`}>{operator.privacyEmail}</a>{operator.icoNumber && <><br /><strong>ICO registration:</strong> {operator.icoNumber}</>}</address>}
         <p className="mt-3">You can contact us using the <Link href="/contact">contact form</Link>. Choose a privacy or data-rights enquiry and include the email address linked to your account so we can verify and respond securely.</p>
       </section>
@@ -40,8 +40,8 @@ export default function PrivacyPage() {
         <ul className="mt-4">
           <li><strong>Account information:</strong> email address, authentication identifiers, sign-in events and account preferences.</li>
           <li><strong>Contractor profile information:</strong> identity and contact details, address, education, work authorisation, work preferences, application defaults, availability and optional limited-company details you choose to provide.</li>
-          <li><strong>CV and application-workspace information:</strong> uploaded CV text, edits, role-specific scores, approved versions, screening-answer drafts, reviewed-material receipt snapshots, receipt feedback, application-tracking records and short-lived browser-continuation state for an application you started.</li>
-          <li><strong>Application analytics:</strong> summaries calculated from your own application records, status events and linked responses. CSV analytics exports exclude CV text, screening answers and message bodies.</li>
+          <li><strong>Resume and application-workspace information:</strong> uploaded Resume text, edits, role-specific scores, approved versions, screening-answer drafts, reviewed-material receipt snapshots, receipt feedback, application-tracking records and short-lived browser-continuation state for an application you started.</li>
+          <li><strong>Application analytics:</strong> summaries calculated from your own application records, status events and linked responses. CSV analytics exports exclude Resume text, screening answers and message bodies.</li>
           <li><strong>Search and alert information:</strong> queries, filters, saved contracts and alert preferences.</li>
           <li><strong>Networking and referral information:</strong> contact names, professional context, private notes, follow-up dates and referral drafts that you choose to store. IR35Careers does not contact those people for you.</li>
           <li><strong>Communications and support:</strong> enquiries, feedback, support replies and recruiter messages routed through enabled workspace features. If you attach a screenshot to a support ticket, we store it privately with the page address and basic browser information needed to investigate the issue.</li>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
           <li><strong>Job listing information:</strong> role data obtained from employers, authorised feeds, job boards and public applicant-tracking-system endpoints. This normally concerns organisations and vacancies rather than site users.</li>
           <li><strong>Employer connection information:</strong> employer or agency name, contact name, recruitment email, public careers-board identifier, authorisation confirmation, verification events and abuse-prevention signals supplied when an organisation asks to connect a job source or application inbox.</li>
         </ul>
-        <LegalCallout><strong>Please minimise sensitive data.</strong> Do not add health, equality-monitoring, criminal-record, national-insurance, passport, bank or other special-category/high-risk information to a CV unless it is genuinely necessary for your own application.</LegalCallout>
+        <LegalCallout><strong>Please minimise sensitive data.</strong> Do not add health, equality-monitoring, criminal-record, national-insurance, passport, bank or other special-category/high-risk information to a Resume unless it is genuinely necessary for your own application.</LegalCallout>
       </section>
 
       <section aria-labelledby="purposes">
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
           <table className="w-full min-w-[620px] border-separate border-spacing-0 text-left text-sm">
             <thead><tr><th className="border-b border-slate-200 px-3 py-3 font-bold">Purpose</th><th className="border-b border-slate-200 px-3 py-3 font-bold">Typical lawful basis</th></tr></thead>
             <tbody className="text-slate-600">
-              <tr><td className="border-b border-slate-100 px-3 py-3">Create and secure your account; provide saved jobs, CV tools, workspace functions and applications you ask us to submit</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you</td></tr>
+              <tr><td className="border-b border-slate-100 px-3 py-3">Create and secure your account; provide saved jobs, Resume tools, workspace functions and applications you ask us to submit</td><td className="border-b border-slate-100 px-3 py-3">Performance of our contract with you</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Operate, protect, debug and improve the service; prevent abuse; keep accurate source links</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests in running a safe, useful contractor platform</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Respond to enquiries and data-rights requests</td><td className="border-b border-slate-100 px-3 py-3">Legitimate interests, contract steps or legal obligation, depending on the request</td></tr>
               <tr><td className="border-b border-slate-100 px-3 py-3">Verify an employer&apos;s public job board and recruitment destination, prevent abusive requests and administer candidate delivery</td><td className="border-b border-slate-100 px-3 py-3">Steps requested before a service connection and legitimate interests in operating a secure job and application network</td></tr>
@@ -69,19 +69,19 @@ export default function PrivacyPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-4">Providing an email address and password is necessary to create an account. Other profile and CV fields are optional, but some workspace features cannot work without the information they analyse or save.</p>
+        <p className="mt-4">Providing an email address and password is necessary to create an account. Other profile and Resume fields are optional, but some workspace features cannot work without the information they analyse or save.</p>
       </section>
 
       <section aria-labelledby="cv-analysis">
-        <h2 id="cv-analysis">CV analysis, scoring and automated processing</h2>
-        <p className="mt-3">IR35Careers can compare CV text with a job description, calculate an advisory match score, identify missing terms and suggest truth-preserving edits. The score is based on role keywords, evidence strength, CV structure and clarity. Missing experience is not automatically added.</p>
+        <h2 id="cv-analysis">Resume analysis, scoring and automated processing</h2>
+        <p className="mt-3">IR35Careers can compare Resume text with a job description, calculate an advisory match score, identify missing terms and suggest truth-preserving edits. The score is based on role keywords, evidence strength, Resume structure and clarity. Missing experience is not automatically added.</p>
         <ul className="mt-4">
           <li>The tool supports your own preparation; it does not decide whether you receive an interview or a job.</li>
           <li>No application is submitted and no suggestion is accepted without your action.</li>
           <li>You can review, reject and edit suggestions side by side and download the version you approve.</li>
           <li>You may ask us to explain the scoring approach or raise an accuracy or bias concern through the contact form.</li>
         </ul>
-        <p className="mt-3">If you request optional AI tailoring, the provider receives redacted CV evidence and the role description to return structured suggestions. You must choose each edit. IR35Careers does not use solely automated processing to make decisions that produce legal or similarly significant effects about you.</p>
+        <p className="mt-3">If you request optional AI tailoring, the provider receives redacted Resume evidence and the role description to return structured suggestions. You must choose each edit. IR35Careers does not use solely automated processing to make decisions that produce legal or similarly significant effects about you.</p>
       </section>
 
       <section aria-labelledby="sharing">
@@ -92,8 +92,8 @@ export default function PrivacyPage() {
           <li><strong>Vercel:</strong> website hosting, delivery, operational logs and security.</li>
           <li><strong>Stripe:</strong> hosted checkout, subscription billing and customer-portal services only if you choose a paid plan. IR35Careers does not store full card details.</li>
           <li><strong>Authentication providers:</strong> for example Google, only when you choose that sign-in method.</li>
-          <li><strong>OpenRouter and the selected model provider:</strong> only when you deliberately request optional AI tailoring. We redact direct email, phone and common profile identifiers first, request zero-data-retention routing and deny providers that require data collection. The remaining CV evidence and job description are still personal data and may be processed outside the UK.</li>
-          <li><strong>Application delivery:</strong> when you choose one-click apply, the IR35Careers server runner or a verified recruitment connection enters the exact profile, CV, cover letter and answers you approved into the employer portal and records the outcome. No browser extension is required. The employer, job board and applicant-tracking system receive the submitted application under their own privacy notices.</li>
+          <li><strong>OpenRouter and the selected model provider:</strong> only when you deliberately request optional AI tailoring. We redact direct email, phone and common profile identifiers first, request zero-data-retention routing and deny providers that require data collection. The remaining Resume evidence and job description are still personal data and may be processed outside the UK.</li>
+          <li><strong>Application delivery:</strong> when you choose one-click apply, the IR35Careers server runner or a verified recruitment connection enters the exact profile, Resume, cover letter and answers you approved into the employer portal and records the outcome. No browser extension is required. The employer, job board and applicant-tracking system receive the submitted application under their own privacy notices.</li>
           <li><strong>Professional advisers, regulators or authorities:</strong> where reasonably necessary or legally required.</li>
           <li><strong>Original job websites:</strong> when you choose an Apply or source link, that independent website receives information from your visit under its own notice.</li>
         </ul>
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
       <section aria-labelledby="rights">
         <h2 id="rights">Your rights</h2>
         <p className="mt-3">Depending on the purpose and lawful basis, you may have rights to be informed, access your data, correct it, erase it, restrict processing, object, receive portable data and withdraw consent. You also have the right to object to direct marketing at any time.</p>
-        <p className="mt-3">Signed-in users can download a portable account export and permanently delete their account and private CV files in <Link href="/settings">Settings</Link>. You can also read the <Link href="/delete-account">account deletion instructions</Link>.</p>
+        <p className="mt-3">Signed-in users can download a portable account export and permanently delete their account and private Resume files in <Link href="/settings">Settings</Link>. You can also read the <Link href="/delete-account">account deletion instructions</Link>.</p>
         <p className="mt-3">We may ask for proportionate information to verify identity before disclosing or changing account data. Rights are not absolute, and we will explain any lawful reason why a request cannot be completed in full.</p>
       </section>
 

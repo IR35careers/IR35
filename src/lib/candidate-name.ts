@@ -19,7 +19,7 @@ function looksLikeCvName(value: string): boolean {
   return parts.filter((part) => /^\p{Lu}/u.test(part)).length >= 2;
 }
 
-/** Uses the saved profile first, then a plausible personal name near the top of the CV. */
+/** Uses the saved profile first, then a plausible personal name near the top of the Resume. */
 export function resolveCandidateName(profileName: string, cvText: string): string | null {
   const supplied = cleanName(profileName);
   if (nameParts(supplied)) return supplied;

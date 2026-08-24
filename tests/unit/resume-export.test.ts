@@ -21,7 +21,7 @@ EXPERIENCE
 - Improved AWS platform reliability by 28%.`,
 };
 
-describe("CV exports", () => {
+describe("Resume exports", () => {
   it("creates a real PDF document", async () => {
     const buffer = await buildResumePdf(request);
     expect(buffer.subarray(0, 4).toString("ascii")).toBe("%PDF");

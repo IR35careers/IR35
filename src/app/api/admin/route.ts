@@ -863,7 +863,7 @@ export async function POST(request: Request): Promise<Response> {
             automaticEmailVerification: true,
           },
           resume: {
-            label: "Alex Morgan CV",
+            label: "Alex Morgan Resume",
             text: "Alex Morgan, Platform Engineer. AWS, Terraform, Kubernetes and CI/CD delivery experience.",
             url: resumeUrl.toString(),
           },
@@ -887,7 +887,7 @@ export async function POST(request: Request): Promise<Response> {
         const checks = [
           { label: "Portal reached", passed: true, detail: "The protected production form was opened." },
           { label: "Session recovery", passed: true, detail: "Encrypted employer progress was stored, recovered and removed successfully." },
-          { label: "CV uploaded", passed: !unresolved.some((label) => /resume|cv|curriculum/i.test(label)), detail: unresolved.some((label) => /resume|cv|curriculum/i.test(label)) ? unresolvedDetail : "The approved PDF reached the application form." },
+          { label: "Resume uploaded", passed: !unresolved.some((label) => /resume|cv|curriculum/i.test(label)), detail: unresolved.some((label) => /resume|cv|curriculum/i.test(label)) ? unresolvedDetail : "The approved PDF reached the application form." },
           { label: "Fields completed", passed: receipt.state !== "needs_user", detail: receipt.state !== "needs_user" ? "Employer account, email verification, profile and screening answers completed successfully." : unresolvedDetail },
           { label: "Confirmation captured", passed: receipt.state === "submitted", detail: receipt.state === "submitted" ? "The portal returned a positive application receipt." : unresolvedDetail },
         ];
@@ -914,7 +914,7 @@ export async function POST(request: Request): Promise<Response> {
         const message = error instanceof Error ? error.message : "The controlled application test failed.";
         const checks = [
           { label: "Portal reached", passed: false, detail: "The runner stopped before a confirmed submission." },
-          { label: "CV uploaded", passed: false, detail: "No successful upload receipt was captured." },
+          { label: "Resume uploaded", passed: false, detail: "No successful upload receipt was captured." },
           { label: "Fields completed", passed: false, detail: "The full form workflow did not complete." },
           { label: "Confirmation captured", passed: false, detail: message },
         ];

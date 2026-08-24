@@ -165,7 +165,7 @@ function mapApplication(
     missingKeywords: (row.missing_keywords as string[]) ?? [],
     sourceCvText: normaliseResumeText(String(row.source_cv_text ?? "")),
     tailoredCvText: normaliseResumeText(String(row.tailored_cv_text ?? "")),
-    resumeVersionLabel: String(row.resume_version_label ?? "Application CV"),
+    resumeVersionLabel: String(row.resume_version_label ?? "Application Resume"),
     coverLetter: String(row.cover_letter ?? ""),
     questions: (row.screening_answers as ApplicationRecord["questions"]) ?? [],
     truthApproved: Boolean(row.truth_approved),

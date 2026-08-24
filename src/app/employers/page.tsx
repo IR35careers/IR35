@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const STEPS = [
   { icon: Database, title: "Add the public board", body: "Choose Greenhouse, Lever, Ashby, Workable or SmartRecruiters and enter the identifier already used by your careers page." },
   { icon: MailCheck, title: "Confirm the recruitment inbox", body: "A 24-hour confirmation link proves where candidate-approved applications may be delivered." },
-  { icon: Zap, title: "Receive relevant applications", body: "Published contract roles join the daily feed. Supported applications arrive with the candidate's approved CV and answers." },
+  { icon: Zap, title: "Receive relevant applications", body: "Published contract roles join the daily feed. Supported applications arrive with the candidate's approved Resume and answers." },
 ] as const;
 
 export default function EmployersPage() {
@@ -32,7 +32,7 @@ export default function EmployersPage() {
             </div>
             <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
               <p className="flex items-center gap-2 font-bold text-emerald-950"><ShieldCheck size={19} /> Employer-controlled delivery</p>
-              <p className="mt-2 text-sm leading-6 text-emerald-900">Candidates review every CV, cover letter and answer before submission. New legal or personal questions pause for the candidate instead of being guessed.</p>
+              <p className="mt-2 text-sm leading-6 text-emerald-900">Candidates review every Resume, cover letter and answer before submission. New legal or personal questions pause for the candidate instead of being guessed.</p>
             </div>
           </div>
           <EmployerOnboardingForm />

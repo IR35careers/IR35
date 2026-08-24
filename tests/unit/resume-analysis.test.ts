@@ -26,7 +26,7 @@ EXPERIENCE
 EDUCATION
 BSc Computing`;
 
-describe("role-specific CV analysis", () => {
+describe("role-specific Resume analysis", () => {
   it("parses common sections and contact evidence", () => {
     const parsed = parseResumeText(source, "alex.docx");
     expect(parsed.candidateName).toBe("Alex Morgan");

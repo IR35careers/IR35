@@ -39,7 +39,7 @@ const ARTICLES = [
     source: "GOV.UK CEST",
   },
   {
-    title: "What a CV match score can and cannot tell you",
+    title: "What a Resume match score can and cannot tell you",
     category: "Applications",
     readTime: "4 min read",
     summary: "A match score highlights evidence and missing terms. It cannot predict an interview, replace recruiter judgement or justify adding experience you do not have.",

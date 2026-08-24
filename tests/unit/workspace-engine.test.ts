@@ -67,18 +67,18 @@ describe("application workspace engine", () => {
     expect(applicationIsReady(approved)).toBe(true);
   });
 
-  it("uses the CV name when an old generic contractor label is stored", () => {
+  it("uses the Resume name when an old generic contractor label is stored", () => {
     const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cv });
     expect(application.coverLetter).toMatch(/Kind regards,\nAlex Morgan$/);
     expect(application.coverLetter).not.toMatch(/Kind regards,\nContractor$/);
   });
 
-  it("prefers the saved profile name over a different CV heading", () => {
+  it("prefers the saved profile name over a different Resume heading", () => {
     const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Priya Shah" }, cvText: cv });
     expect(application.coverLetter).toMatch(/Kind regards,\nPriya Shah$/);
   });
 
-  it("rejects preparation when neither profile nor CV contains a real name", () => {
+  it("rejects preparation when neither profile nor Resume contains a real name", () => {
     const cvWithoutName = cv.replace("Alex Morgan", "PROFESSIONAL PROFILE");
     expect(resolveCandidateName("Contractor", cvWithoutName)).toBeNull();
     expect(() => prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cvWithoutName })).toThrow(/Add your full name/);
@@ -105,7 +105,7 @@ describe("application workspace engine", () => {
     const receipt = issueDryRunReceipt(approved);
     expect(receipt.mode).toBe("dry_run");
     expect(receipt.message).toMatch(/No application or personal data was sent/);
-    expect(receipt.reviewedSnapshot?.resumeVersionLabel).toBe("Application CV");
+    expect(receipt.reviewedSnapshot?.resumeVersionLabel).toBe("Application Resume");
     expect(receipt.reviewedSnapshot?.answers).toHaveLength(approved.questions.length);
     expect(receipt.review).toBeNull();
 

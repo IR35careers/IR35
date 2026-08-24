@@ -73,7 +73,7 @@ type BusyState =
 type ConnectionState = "connected" | "gated";
 
 const WORKFLOW_STEPS = [
-  { label: "Add CV", helper: "Upload or paste" },
+  { label: "Add Resume", helper: "Upload or paste" },
   { label: "Tailor", helper: "Compare every edit" },
   { label: "Review & submit", helper: "Approve the exact packet" },
 ] as const;
@@ -215,7 +215,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       )
     : "";
   const selectedScore = selectedPreview
-    ? scoreResumeForRole(selectedPreview, job, cvFilename || "Application CV")
+    ? scoreResumeForRole(selectedPreview, job, cvFilename || "Application Resume")
         .overall
     : (application?.matchScore ?? 0);
   const checklist = [
@@ -245,7 +245,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       return;
     setCvText(preferredResume.resumeText);
     setCvFilename(
-      preferredResume.name || workspace.profile.defaultCvLabel || "Application CV",
+      preferredResume.name || workspace.profile.defaultCvLabel || "Application Resume",
     );
   }, [
     application,
@@ -481,7 +481,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         error?: string;
       };
       if (!response.ok || !payload.text)
-        throw new Error(payload.error ?? "We could not read that CV.");
+        throw new Error(payload.error ?? "We could not read that Resume.");
       setCvText(payload.text);
       setCvFilename(payload.filename || file.name);
       setApplication(null);
@@ -490,7 +490,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       await prepare(payload.text, payload.filename || file.name);
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "We could not read that CV.",
+        caught instanceof Error ? caught.message : "We could not read that Resume.",
       );
     } finally {
       setBusy(null);
@@ -564,7 +564,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           resumeVersionLabel:
             inputFilename ||
             workspace.profile.defaultCvLabel ||
-            "Application CV",
+            "Application Resume",
         }),
       });
       const payload = (await response.json()) as {
@@ -572,7 +572,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         error?: string;
       };
       if (!response.ok || !payload.application)
-        throw new Error(payload.error ?? "Could not analyse this CV.");
+        throw new Error(payload.error ?? "Could not analyse this Resume.");
       let prepared = applicationPreferences.generateCoverLetter
         ? payload.application
         : {
@@ -618,23 +618,23 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           tailoringNotice =
             result.suggestions.length > 0 &&
             applicationPreferences.autoApproveSafeEdits
-              ? `${result.suggestions.length} evidence-based CV improvements were applied for this role. Review them before submitting.`
+              ? `${result.suggestions.length} evidence-based Resume improvements were applied for this role. Review them before submitting.`
               : result.suggestions.length > 0
-                ? `${result.suggestions.length} evidence-based CV improvements are ready for your review.`
-                : "Your CV was checked against the role. No safe wording changes were needed.";
+                ? `${result.suggestions.length} evidence-based Resume improvements are ready for your review.`
+                : "Your Resume was checked against the role. No safe wording changes were needed.";
         } catch {
           tailoringNotice =
-            "Your role match is ready using verified evidence from your CV.";
+            "Your role match is ready using verified evidence from your Resume.";
         }
       } else
         tailoringNotice =
-          "Resume optimisation is off for this profile. Your source CV remains unchanged.";
+          "Resume optimisation is off for this profile. Your source Resume remains unchanged.";
       setApplication(prepared);
       persistApplication(prepared);
       setNotice(tailoringNotice);
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "Could not analyse this CV.",
+        caught instanceof Error ? caught.message : "Could not analyse this Resume.",
       );
     } finally {
       setBusy(null);
@@ -679,11 +679,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         setApplication(updated);
         persistApplication(updated);
         setNotice(
-          `Tailoring refreshed and ${suggestionIds.length} verified CV improvement${suggestionIds.length === 1 ? " was" : "s were"} applied. Review the final CV before approving it.`,
+          `Tailoring refreshed and ${suggestionIds.length} verified Resume improvement${suggestionIds.length === 1 ? " was" : "s were"} applied. Review the final Resume before approving it.`,
         );
       } else {
         setNotice(
-          `Tailoring refreshed. ${suggestionIds.length} verified CV improvement${suggestionIds.length === 1 ? " is" : "s are"} selected for your review.`,
+          `Tailoring refreshed. ${suggestionIds.length} verified Resume improvement${suggestionIds.length === 1 ? " is" : "s are"} selected for your review.`,
         );
       }
     } catch (caught) {
@@ -692,7 +692,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       else
         setError(
           message ||
-            "The wording refresh could not finish. Your existing CV has not been changed. Try again in a moment.",
+            "The wording refresh could not finish. Your existing Resume has not been changed. Try again in a moment.",
         );
     } finally {
       setBusy(null);
@@ -734,7 +734,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }));
     setError(null);
     setNotice(
-      `${selectedSuggestions.length} approved edit${selectedSuggestions.length === 1 ? "" : "s"} applied to your CV. Review the full text below.`,
+      `${selectedSuggestions.length} approved edit${selectedSuggestions.length === 1 ? "" : "s"} applied to your Resume. Review the full text below.`,
     );
   };
 
@@ -1142,7 +1142,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       density="compact"
       eyebrow="Application workspace"
       title={`Apply to ${job.company_name}`}
-      description="Tailor your CV, confirm the application and apply without leaving your workspace."
+      description="Tailor your Resume, confirm the application and apply without leaving your workspace."
       actions={
         <Link
           href={`/jobs/${job.id}`}
@@ -1422,7 +1422,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               Application runner active · {submitElapsedSeconds}s
             </p>
             <p className="mt-1 leading-6 text-sky-900">
-              Your approved CV and answers are being completed on the employer
+              Your approved Resume and answers are being completed on the employer
               form. IR35Careers will show Applied only after the employer
               returns a confirmation.
             </p>
@@ -1458,7 +1458,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     Step 1
                   </p>
                   <h2 className="font-semibold text-slate-950">
-                    Add the CV you want to use
+                    Add the Resume you want to use
                   </h2>
                   <p className="mt-1 text-sm text-slate-600">
                     PDF, DOCX or text, up to 5MB. You can check the extracted
@@ -1475,7 +1475,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 />
                 <Upload size={22} className="text-brand-700" />
                 <span className="mt-2 text-sm font-bold text-slate-900">
-                  {busy === "parse" ? "Reading your CV…" : "Choose CV file"}
+                  {busy === "parse" ? "Reading your Resume…" : "Choose Resume file"}
                 </span>
                 <span className="mt-1 text-xs text-slate-500">
                   or paste the extracted text below
@@ -1486,18 +1486,18 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   htmlFor="application-cv"
                   className="text-sm font-semibold text-slate-900"
                 >
-                  CV text
+                  Resume text
                 </label>
                 {showDemoTools && (
                   <button
                     type="button"
                     onClick={() => {
                       setCvText(SAMPLE_CV_TEXT);
-                      setCvFilename("Platform Engineering CV v4");
+                      setCvFilename("Platform Engineering Resume v4");
                     }}
                     className="text-xs font-semibold text-brand-700"
                   >
-                    Load labelled sample CV
+                    Load labelled sample Resume
                   </button>
                 )}
               </div>
@@ -1507,7 +1507,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 onChange={(event) => setCvText(event.target.value)}
                 rows={12}
                 maxLength={80_000}
-                placeholder="Paste your CV here…"
+                placeholder="Paste your Resume here…"
                 className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800"
               />
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1543,7 +1543,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       {application.matchScore}% role match
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
-                      We compared the role with the experience and skills in your CV.
+                      We compared the role with the experience and skills in your Resume.
                     </p>
                   </div>
                   <button
@@ -1555,7 +1555,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     }}
                     className="ir35-focus inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700"
                   >
-                    <RotateCcw size={14} /> Change CV
+                    <RotateCcw size={14} /> Change Resume
                   </button>
                 </div>
                 <details className="mt-5 rounded-2xl border border-slate-200 bg-slate-50">
@@ -1615,7 +1615,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     </span>
                     <div>
                       <h2 className="font-semibold text-slate-950">
-                        Improve your CV for this role
+                        Improve your Resume for this role
                       </h2>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
                         Review every suggested change before it is used.
@@ -1637,11 +1637,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     )}{" "}
                     {busy === "ai"
                       ? tailoringElapsedSeconds < 3
-                        ? "Checking CV evidence"
+                        ? "Checking Resume evidence"
                         : tailoringElapsedSeconds < 9
                           ? `Matching the role ${tailoringElapsedSeconds}s`
                           : `Finishing safely ${tailoringElapsedSeconds}s`
-                      : aiResult ? "Improve tailoring" : "Tailor my CV"}
+                      : aiResult ? "Improve tailoring" : "Tailor my Resume"}
                   </button>
                   {busy === "ai" && (
                     <div
@@ -1664,7 +1664,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     </div>
                   )}
                   <p className="mt-3 text-xs leading-5 text-slate-500">
-                    Suggestions only use experience already supported by your CV.{" "}
+                    Suggestions only use experience already supported by your Resume.{" "}
                     <Link
                       href="/ai-disclosure"
                       target="_blank"
@@ -1780,7 +1780,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       Your final materials
                     </p>
                     <h2 className="mt-1 font-semibold text-slate-950">
-                      Review your final CV and cover letter
+                      Review your final Resume and cover letter
                     </h2>
                   </div>
                   <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
@@ -1788,7 +1788,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   </span>
                 </div>
                 <label className="mt-5 block text-sm font-semibold text-slate-900">
-                  CV
+                  Resume
                   <textarea
                     value={application.tailoredCvText}
                     onChange={(event) =>
@@ -2164,7 +2164,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
             </div>
             <ul className="mt-5 space-y-3 text-sm">
               {[
-                ["CV supplied", cvReady],
+                ["Resume supplied", cvReady],
                 ["Role match complete", Boolean(application)],
                 ["Answers confirmed", answersReviewed],
                 ["Final approval complete", approvalsComplete],
@@ -2223,7 +2223,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Complete the highlighted reusable answers, then return here and
-              apply again. Your CV and application are already saved.
+              apply again. Your Resume and application are already saved.
             </p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <button

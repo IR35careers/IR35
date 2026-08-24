@@ -21,7 +21,7 @@ Platform engineer with AWS and Terraform delivery experience.
 EXPERIENCE
 Built AWS infrastructure using Terraform and improved deployment reliability by 20%.`;
 
-describe("OpenRouter CV tailoring", () => {
+describe("OpenRouter Resume tailoring", () => {
   it("redacts direct contact identifiers before provider processing", () => {
     const redacted = redactDirectIdentifiers(cv);
     expect(redacted).not.toContain("alex@example.com");
@@ -30,7 +30,7 @@ describe("OpenRouter CV tailoring", () => {
     expect(redacted).toContain("AWS and Terraform");
   });
 
-  it("rejects edits without exact CV evidence or with invented numbers", () => {
+  it("rejects edits without exact Resume evidence or with invented numbers", () => {
     const original = "Built AWS infrastructure using Terraform and improved deployment reliability by 20%.";
     const accepted = validateTailoringSuggestions([
       { section: "Experience", original, replacement: "Improved deployment reliability by 20% while building AWS infrastructure with Terraform.", rationale: "Front-loads the result.", evidence_quote: original, keywords: ["AWS", "Terraform"], impact: "high" },
@@ -41,7 +41,7 @@ describe("OpenRouter CV tailoring", () => {
     expect(accepted[0].replacement).toContain("20%");
   });
 
-  it("rejects a role keyword when the source CV does not evidence it", () => {
+  it("rejects a role keyword when the source Resume does not evidence it", () => {
     const original = "Built AWS infrastructure using Terraform and improved deployment reliability by 20%.";
     const job = { ...DEMO_JOBS[0], skills: ["AWS", "Kubernetes"], description: "Build AWS and Kubernetes platforms." };
     const accepted = validateTailoringSuggestions([

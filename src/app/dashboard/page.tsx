@@ -201,7 +201,7 @@ export default function DashboardPage() {
     ["Skills added", (profile?.skills.length ?? 0) > 0],
     ["Experience added", profile?.years_experience != null],
     ["Preferences set", !!profile?.preferred_ir35],
-    ["CV uploaded", !!profile?.cv_filename],
+    ["Resume uploaded", !!profile?.cv_filename],
   ] as const;
 
   return (

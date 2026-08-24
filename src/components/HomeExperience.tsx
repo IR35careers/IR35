@@ -64,7 +64,7 @@ const GUIDE_CARDS = [
 const WORKFLOW = [
   { icon: Search, title: "Discover", body: "Filter UK contracts by IR35 status, rate, skill and working pattern.", href: "/jobs" },
   { icon: FileCheck2, title: "Understand", body: "Review status evidence, match factors and gaps before investing time.", href: "/analyse-job" },
-  { icon: ClipboardCheck, title: "Prepare", body: "Tailor the CV, draft a grounded letter and approve every screening answer.", href: "/applications" },
+  { icon: ClipboardCheck, title: "Prepare", body: "Tailor the Resume, draft a grounded letter and approve every screening answer.", href: "/applications" },
   { icon: ListChecks, title: "Track", body: "Move applications through a readable pipeline without drag-and-drop.", href: "/applications" },
   { icon: Inbox, title: "Respond", body: "Keep recruiter messages linked to the contract that generated them.", href: "/inbox" },
 ] as const;
@@ -72,9 +72,9 @@ const WORKFLOW = [
 const FAQS = [
   ["How does IR35Careers find contracts?", "Authorised job-board APIs and public employer ATS feeds are normalised, deduplicated and refreshed. Every result keeps its original source link and last-seen evidence."],
   ["Does an Outside IR35 label guarantee the status?", "No. The label reports what the advert explicitly says. The client determination and the real working practices still matter, so TBC is shown when no clear status was found."],
-  ["Will CV Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
+  ["Will Resume Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
   ["Can I apply without leaving IR35Careers?", "Yes for supported public employer forms. Review the tailored application once and choose Apply now. If an employer asks for a sign-in, verification or a new personal answer, the application pauses and tells you what needs attention."],
-  ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private CV files from Settings."],
+  ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private Resume files from Settings."],
   ["Is there a paid plan?", "The current public beta is free. Any future paid plan will show its benefits, full price and renewal terms before you choose it."],
 ] as const;
 

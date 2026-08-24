@@ -9,7 +9,7 @@ export async function GET(request: Request): Promise<Response> {
   return new Response(pdf, {
     headers: {
       "Cache-Control": "no-store",
-      "Content-Disposition": "attachment; filename=IR35Careers-Runner-Test-CV.pdf",
+      "Content-Disposition": "attachment; filename=IR35Careers-Runner-Test-Resume.pdf",
       "Content-Type": "application/pdf",
       "X-Robots-Tag": "noindex, nofollow, noarchive",
     },

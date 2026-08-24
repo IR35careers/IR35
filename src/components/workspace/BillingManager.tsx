@@ -7,7 +7,7 @@ import { WorkspacePage } from "@/components/workspace/WorkspacePage";
 import { BILLING_POLICY_VERSION } from "@/lib/billing/constants";
 import { useWorkspaceState } from "@/lib/workspace/store";
 
-const FREE_FEATURES = ["Contract discovery", "CV Studio", "Dry-run application receipts", "Application tracker and analytics"];
+const FREE_FEATURES = ["Contract discovery", "Resume Studio", "Dry-run application receipts", "Application tracker and analytics"];
 const PRO_FEATURES = (process.env.NEXT_PUBLIC_PRO_PLAN_FEATURES || "Paid plan benefits are not approved for sale|Checkout remains locked until release approval").split("|").map((value) => value.trim()).filter(Boolean);
 
 async function authenticatedPost(path: string, idempotencyKey?: string, requestBody?: object): Promise<{ url?: string; error?: string }> {

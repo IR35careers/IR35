@@ -36,11 +36,11 @@ export function applicationSubmissionFailure(
       message:
         "IR35Careers could not verify the employer application page. No application was sent. Review the role link, then select Apply again.",
     };
-  if (/approved CV|resume|source page/i.test(message))
+  if (/approved Resume|resume|source page/i.test(message))
     return {
       code: "cv_unavailable",
       message:
-        "IR35Careers could not load the approved CV for this attempt. No application was sent. Open the application and select Apply again.",
+        "IR35Careers could not load the approved Resume for this attempt. No application was sent. Open the application and select Apply again.",
     };
   return {
     code: "temporary_runner_error",

@@ -147,8 +147,8 @@ export function buildAnalyticsSnapshot(workspace: WorkspaceState, now = new Date
   const offerRate = percentage(offers, submitted);
   const insights: string[] = [];
   if (applications.length === 0) insights.push("Prepare your first role-specific application to start measuring outcomes.");
-  if (applications.length > 0 && averageMatch < 70) insights.push("Average CV match is below 70%; review evidence gaps before preparing more applications.");
-  if (submitted >= 3 && responseRate < 20) insights.push("Response rate is below 20%; prioritise closer-fit roles and review the opening third of your CV.");
+  if (applications.length > 0 && averageMatch < 70) insights.push("Average Resume match is below 70%; review evidence gaps before preparing more applications.");
+  if (submitted >= 3 && responseRate < 20) insights.push("Response rate is below 20%; prioritise closer-fit roles and review the opening third of your Resume.");
   if (interviews > 0) insights.push(`${interviewRate}% of submitted applications reached interview or offer stage.`);
   if (staleActive > 0) insights.push(`${staleActive} active application${staleActive === 1 ? " has" : "s have"} not changed for 14 days.`);
   if (unreadMessages > 0) insights.push(`${unreadMessages} recruiter message${unreadMessages === 1 ? " needs" : "s need"} review.`);

@@ -161,7 +161,7 @@ function looksLikeHeading(line: string): boolean {
   return /^[A-Z][A-Z &/+-]{2,}$/.test(trimmed);
 }
 
-export function parseResumeText(rawText: string, filename = "Pasted CV"): ParsedResume {
+export function parseResumeText(rawText: string, filename = "Pasted Resume"): ParsedResume {
   const text = rawText
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+\n/g, "\n")
@@ -196,7 +196,7 @@ export function parseResumeText(rawText: string, filename = "Pasted CV"): Parsed
   flush();
 
   if (sections.length === 0 && text) {
-    sections.push({ kind: "other", title: "CV", content: text });
+    sections.push({ kind: "other", title: "Resume", content: text });
   }
 
   return { filename, rawText: text, candidateName, contactLine, sections };
@@ -261,7 +261,7 @@ function roleRelevanceScore(text: string, jobTitle: string, keywordCoverage: num
 export function scoreResumeForRole(
   text: string,
   job: Pick<JobDetail, "title" | "description" | "skills">,
-  filename = "CV"
+  filename = "Resume"
 ): ResumeScore {
   const parsed = parseResumeText(text, filename);
   const keywords = extractRoleKeywords(job);
@@ -319,7 +319,7 @@ function makeSuggestions(
   const focusTerms = baseline.matchedKeywords.slice(0, 5);
 
   if (focusTerms.length > 0) {
-    const evidenceLine = `Experience includes ${focusTerms.join(", ")}, supported by the delivery examples in this CV.`;
+    const evidenceLine = `Experience includes ${focusTerms.join(", ")}, supported by the delivery examples in this Resume.`;
     const original = summary?.content.trim() ?? "";
     const replacement = original ? `${original.replace(/\s+$/g, "")}\n${evidenceLine}` : `PROFILE\n${evidenceLine}`;
     if (!resumeContainsTerm(original, job.title) || focusTerms.some((term) => !resumeContainsTerm(original, term))) {
@@ -327,7 +327,7 @@ function makeSuggestions(
         id: "summary-role-focus",
         kind: "summary",
         title: original ? "Focus the opening profile" : "Add a role-focused profile",
-        rationale: "Moves only skills already evidenced elsewhere in your CV into the first scan area.",
+        rationale: "Moves only skills already evidenced elsewhere in your Resume into the first scan area.",
         original,
         replacement,
         evidenceTerms: focusTerms,
@@ -367,9 +367,9 @@ function makeSuggestions(
       title: `Verify ${keyword}`,
       rationale:
         roleKeyword?.source === "listed-skill"
-          ? "This skill is explicitly listed for the role, but it is not evidenced in your CV. Add it only if it is genuinely yours."
-          : "This term appears in the role description, but not your CV. Add it only if you can support it in an interview.",
-      original: "Not found in your CV",
+          ? "This skill is explicitly listed for the role, but it is not evidenced in your Resume. Add it only if it is genuinely yours."
+          : "This term appears in the role description, but not your Resume. Add it only if you can support it in an interview.",
+      original: "Not found in your Resume",
       replacement: keyword,
       evidenceTerms: [],
       requiresConfirmation: true,

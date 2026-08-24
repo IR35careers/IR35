@@ -12,11 +12,11 @@ const job = {
 };
 
 describe("application source resolution", () => {
-  it("recognises CV Library evidence on an Adzuna listing", () => {
+  it("recognises Resume Library evidence on an Adzuna listing", () => {
     expect(
       discoveryProviderFromAdzunaPage({
         body: "Mould Joiner role",
-        html: '<img src="logo_cv_library.png" alt="CV-Library">',
+        html: '<img src="logo_cv_library.png" alt="Resume-Library">',
       }),
     ).toBe("cv_library");
     expect(

@@ -26,7 +26,7 @@ async function parseFile(filename: string, type: string, bytes: Buffer) {
   return parseResume(new Request("http://localhost/api/resume/parse", { method: "POST", body: formData }));
 }
 
-describe("CV parsing route", () => {
+describe("Resume parsing route", () => {
   it("extracts text from a generated PDF", async () => {
     const bytes = await buildResumePdf(exportRequest);
     const response = await parseFile("alex.pdf", "application/pdf", bytes);

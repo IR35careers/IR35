@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 /**
  * Preserve old onboarding links while keeping one application-profile source
- * of truth. The profile page now owns CV extraction, reusable answers and the
+ * of truth. The profile page now owns Resume extraction, reusable answers and the
  * readiness gate used by the application runner.
  */
 export default function OnboardingPage() {

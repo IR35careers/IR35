@@ -40,9 +40,9 @@ describe("application submission provider", () => {
       destination: "https://employer.example.test/apply",
       job: DEMO_JOBS[0],
       candidate: {
-        fullName: "Alex Morgan", email: "alex@example.test", phone: "", location: "London", linkedInUrl: "", portfolioUrl: "", rightToWork: "yes", availability: "Now", noticePeriod: "", limitedCompanyName: "", companyNumber: "", vatRegistered: false, clearance: "", defaultCvLabel: "CV", forwardingEmail: "alex@example.test",
+        fullName: "Alex Morgan", email: "alex@example.test", phone: "", location: "London", linkedInUrl: "", portfolioUrl: "", rightToWork: "yes", availability: "Now", noticePeriod: "", limitedCompanyName: "", companyNumber: "", vatRegistered: false, clearance: "", defaultCvLabel: "Resume", forwardingEmail: "alex@example.test",
       },
-      resume: { label: "CV", text: "Approved CV evidence" },
+      resume: { label: "Resume", text: "Approved Resume evidence" },
       coverLetter: "Approved cover letter",
       screeningAnswers: [],
     }, "submit:application-1");
@@ -66,7 +66,7 @@ describe("application submission provider", () => {
       destination: "https://jobs.ashbyhq.com/example/role",
       job: DEMO_JOBS[0],
       candidate: SAMPLE_CONTRACTOR_PROFILE,
-      resume: { label: "CV", text: "Approved CV evidence", url: "https://example.test/signed-resume.pdf" },
+      resume: { label: "Resume", text: "Approved Resume evidence", url: "https://example.test/signed-resume.pdf" },
       coverLetter: "Approved cover letter",
       screeningAnswers: [],
     }, "submit:application-2");

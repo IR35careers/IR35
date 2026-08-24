@@ -244,7 +244,7 @@ function AccountForm() {
               className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-700"
             />
             <span>
-              I agree to the <Link href="/terms" target="_blank" className="font-semibold text-brand-700 underline underline-offset-2">Terms of Use</Link> and acknowledge the <Link href="/privacy" target="_blank" className="font-semibold text-brand-700 underline underline-offset-2">Privacy Notice</Link>. CV scoring is advisory and does not make hiring decisions.
+              I agree to the <Link href="/terms" target="_blank" className="font-semibold text-brand-700 underline underline-offset-2">Terms of Use</Link> and acknowledge the <Link href="/privacy" target="_blank" className="font-semibold text-brand-700 underline underline-offset-2">Privacy Notice</Link>. Resume scoring is advisory and does not make hiring decisions.
             </span>
           </label>
         )}

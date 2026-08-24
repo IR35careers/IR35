@@ -124,7 +124,7 @@ export function evaluateProfileReadiness(
     },
     {
       id: "cv",
-      label: "Primary CV",
+      label: "Primary Resume",
       section: "cv",
       complete: resumeText.trim().length >= 120,
     },

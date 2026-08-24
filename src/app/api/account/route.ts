@@ -142,11 +142,11 @@ export async function DELETE(request: Request) {
   try {
     privateFiles = await listPrivateFiles(admin, auth.user.id);
   } catch {
-    return NextResponse.json({ error: "Private CV files could not be inventoried safely. Nothing else was deleted." }, { status: 500, headers: NO_STORE });
+    return NextResponse.json({ error: "Private Resume files could not be inventoried safely. Nothing else was deleted." }, { status: 500, headers: NO_STORE });
   }
   for (let start = 0; start < privateFiles.length; start += 100) {
     const removal = await admin.storage.from("cvs").remove(privateFiles.slice(start, start + 100));
-    if (removal.error) return NextResponse.json({ error: "The account was not deleted. Some private CV files may already have been removed; please contact support before retrying." }, { status: 500, headers: NO_STORE });
+    if (removal.error) return NextResponse.json({ error: "The account was not deleted. Some private Resume files may already have been removed; please contact support before retrying." }, { status: 500, headers: NO_STORE });
   }
 
   const deleted = await admin.auth.admin.deleteUser(auth.user.id);

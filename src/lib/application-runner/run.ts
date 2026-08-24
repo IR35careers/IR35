@@ -1151,7 +1151,7 @@ async function snapshotFields(
         index,
         type: clean(snapshot.type, 40),
         label: clean(
-          `${snapshot.label}${snapshot.type === "file" && singleResumeUpload ? " CV upload" : ""}`,
+          `${snapshot.label}${snapshot.type === "file" && singleResumeUpload ? " Resume upload" : ""}`,
           500,
         ),
         name: clean(snapshot.name, 200),
@@ -1216,15 +1216,15 @@ function uploadFromDownloadedResume(buffer: Buffer): ApprovedResumeUpload {
   if (isDocx)
     return {
       buffer,
-      name: "IR35Careers-Application-CV.docx",
+      name: "IR35Careers-Application-Resume.docx",
       mimeType:
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     };
   return {
     buffer,
     name: isPdf
-      ? "IR35Careers-Application-CV.pdf"
-      : "IR35Careers-Application-CV.txt",
+      ? "IR35Careers-Application-Resume.pdf"
+      : "IR35Careers-Application-Resume.txt",
     mimeType: isPdf ? "application/pdf" : "text/plain",
   };
 }
@@ -1252,7 +1252,7 @@ async function approvedResumeUpload(
     candidateName: payload.candidate.fullName,
     jobTitle: payload.job.title,
     companyName: payload.job.company_name,
-    versionLabel: payload.resume.label || "Application CV",
+    versionLabel: payload.resume.label || "Application Resume",
   } as const;
   const generated =
     format === "docx"
@@ -1262,13 +1262,13 @@ async function approvedResumeUpload(
   return format === "docx"
     ? {
         buffer: generated,
-        name: "IR35Careers-Application-CV.docx",
+        name: "IR35Careers-Application-Resume.docx",
         mimeType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       }
     : {
         buffer: generated,
-        name: "IR35Careers-Application-CV.pdf",
+        name: "IR35Careers-Application-Resume.pdf",
         mimeType: "application/pdf",
       };
 }
@@ -1389,7 +1389,7 @@ async function fillStep(
     const { field } = control;
     // Totaljobs uses a custom upload component which consumes and then clears
     // its hidden file input. Re-filling that cleared input starts a second,
-    // concurrent CV parsing request and can leave the final submit action
+    // concurrent Resume parsing request and can leave the final submit action
     // disabled even though the first upload was accepted.
     if (
       shouldSkipConsumedResumeInput({
@@ -1583,7 +1583,7 @@ export async function runNativeApplication(
       }
     }
     // A short-lived storage link can expire or be temporarily unavailable
-    // before the hosted browser reaches the upload step. The approved CV text
+    // before the hosted browser reaches the upload step. The approved Resume text
     // is already part of this packet, so generate the same truthful document
     // in the runner instead of asking the candidate to upload it again.
     const resume = await approvedResumeUpload(payload, ats.kind);

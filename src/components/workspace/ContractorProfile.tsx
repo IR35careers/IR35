@@ -123,7 +123,7 @@ function startingProfiles(
   return [
     {
       id: crypto.randomUUID(),
-      name: profile.defaultCvLabel || "Primary CV",
+      name: profile.defaultCvLabel || "Primary Resume",
       resumeText: fallbackResume,
       coverLetter: fallbackCover,
       isDefault: true,
@@ -185,13 +185,21 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     () => evaluateProfileReadiness(profile, activeProfile?.resumeText ?? ""),
     [activeProfile?.resumeText, profile],
   );
-  const save = async () => {
+  const persistProfile = async (candidate: ContractorProfileType) => {
     setSaving(true);
     setSaveError(null);
+    const candidateResume =
+      candidate.resumeProfiles?.find(
+        (item) => item.id === candidate.activeResumeProfileId,
+      ) ?? candidate.resumeProfiles?.[0];
+    const candidateReadiness = evaluateProfileReadiness(
+      candidate,
+      candidateResume?.resumeText ?? "",
+    );
     const savedProfile =
-      readiness.complete && !profile.profileSetupCompletedAt
-        ? { ...profile, profileSetupCompletedAt: new Date().toISOString() }
-        : profile;
+      candidateReadiness.complete && !candidate.profileSetupCompletedAt
+        ? { ...candidate, profileSetupCompletedAt: new Date().toISOString() }
+        : candidate;
     const nextWorkspace = {
       ...workspace,
       profile: savedProfile,
@@ -207,16 +215,19 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         await saveCloudWorkspace(user.id, nextWorkspace);
       }
       setSaved(true);
+      return true;
     } catch (caught) {
       setSaveError(
         caught instanceof Error
           ? caught.message
           : "Your profile could not be saved. Please try again.",
       );
+      return false;
     } finally {
       setSaving(false);
     }
   };
+  const save = async () => persistProfile(profile);
 
   const completeness = readiness.percentage;
   const skills = profile.skills ?? [];
@@ -315,7 +326,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !activeProfile) return;
-    setDocumentNotice("Reading your CV.");
+    setDocumentNotice("Reading your resume.");
     const form = new FormData();
     form.append("file", file);
     const response = await fetch("/api/resume/parse", {
@@ -329,50 +340,50 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       extraction?: ResumeProfileExtraction;
     };
     if (!response.ok || !payload.text) {
-      setDocumentNotice(payload.error ?? "The CV could not be read.");
+      setDocumentNotice(payload.error ?? "The resume could not be read.");
       return;
     }
     const extraction = payload.extraction;
     const detectedSkills = extraction?.detectedSkills ?? extractSkills("", payload.text);
     const prefill = extraction?.prefill ?? {};
-    setProfile((current) => {
-      const keepOrFill = (currentValue: string | undefined, nextValue: string | undefined) =>
-        currentValue?.trim() ? currentValue : nextValue ?? currentValue ?? "";
-      return {
-        ...current,
-        fullName: keepOrFill(current.fullName, prefill.fullName),
-        email: keepOrFill(current.email, prefill.email),
-        phone: keepOrFill(current.phone, prefill.phone),
-        location: keepOrFill(current.location, prefill.location),
-        addressLine1: keepOrFill(current.addressLine1, prefill.addressLine1),
-        city: keepOrFill(current.city, prefill.city),
-        postcode: keepOrFill(current.postcode, prefill.postcode),
-        country: keepOrFill(current.country, prefill.country),
-        linkedInUrl: keepOrFill(current.linkedInUrl, prefill.linkedInUrl),
-        portfolioUrl: keepOrFill(current.portfolioUrl, prefill.portfolioUrl),
-        githubUrl: keepOrFill(current.githubUrl, prefill.githubUrl),
-        professionalSummary: keepOrFill(current.professionalSummary, prefill.professionalSummary),
-        targetRole: keepOrFill(current.targetRole, prefill.targetRole),
-        yearsOfExperience: keepOrFill(current.yearsOfExperience, prefill.yearsOfExperience),
-        experienceText: keepOrFill(current.experienceText, prefill.experienceText),
-        projectsText: keepOrFill(current.projectsText, prefill.projectsText),
-        educationInstitution: keepOrFill(current.educationInstitution, prefill.educationInstitution),
-        educationQualification: keepOrFill(current.educationQualification, prefill.educationQualification),
-        certifications: [
-          ...new Set([...(current.certifications ?? []), ...(prefill.certifications ?? [])]),
-        ],
-        skills: [...new Set([...(current.skills ?? []), ...detectedSkills])],
-        resumeProfiles: (current.resumeProfiles ?? []).map((item) =>
-          item.id === activeProfile.id
-            ? {
-                ...item,
-                name: payload.filename || item.name,
-                resumeText: payload.text as string,
-              }
-            : item,
-        ),
-      };
-    });
+    const keepOrFill = (currentValue: string | undefined, nextValue: string | undefined) =>
+      currentValue?.trim() ? currentValue : nextValue ?? currentValue ?? "";
+    const nextProfile: ContractorProfileType = {
+      ...profile,
+      fullName: keepOrFill(profile.fullName, prefill.fullName),
+      email: keepOrFill(profile.email, prefill.email),
+      phone: keepOrFill(profile.phone, prefill.phone),
+      location: keepOrFill(profile.location, prefill.location),
+      addressLine1: keepOrFill(profile.addressLine1, prefill.addressLine1),
+      city: keepOrFill(profile.city, prefill.city),
+      postcode: keepOrFill(profile.postcode, prefill.postcode),
+      country: keepOrFill(profile.country, prefill.country),
+      linkedInUrl: keepOrFill(profile.linkedInUrl, prefill.linkedInUrl),
+      portfolioUrl: keepOrFill(profile.portfolioUrl, prefill.portfolioUrl),
+      githubUrl: keepOrFill(profile.githubUrl, prefill.githubUrl),
+      professionalSummary: keepOrFill(profile.professionalSummary, prefill.professionalSummary),
+      targetRole: keepOrFill(profile.targetRole, prefill.targetRole),
+      yearsOfExperience: keepOrFill(profile.yearsOfExperience, prefill.yearsOfExperience),
+      experienceText: keepOrFill(profile.experienceText, prefill.experienceText),
+      projectsText: keepOrFill(profile.projectsText, prefill.projectsText),
+      educationInstitution: keepOrFill(profile.educationInstitution, prefill.educationInstitution),
+      educationQualification: keepOrFill(profile.educationQualification, prefill.educationQualification),
+      certifications: [
+        ...new Set([...(profile.certifications ?? []), ...(prefill.certifications ?? [])]),
+      ],
+      skills: [...new Set([...(profile.skills ?? []), ...detectedSkills])],
+      defaultCvLabel: profile.defaultCvLabel || payload.filename || "Primary Resume",
+      resumeProfiles: (profile.resumeProfiles ?? []).map((item) =>
+        item.id === activeProfile.id
+          ? {
+              ...item,
+              name: payload.filename || item.name,
+              resumeText: payload.text as string,
+            }
+          : item,
+      ),
+    };
+    setProfile(nextProfile);
     setCvDetectedSkills(detectedSkills);
     setSuggestedSkills(
       (extraction?.suggestedSkills ?? []).filter(
@@ -384,8 +395,17 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     );
     setCvDetectedFields(extraction?.detectedFieldLabels ?? []);
     setTab("details");
+    setDocumentNotice("Resume read. Saving the information we found to your profile.");
+    const stored = await persistProfile(nextProfile);
+    const foundFields = extraction?.detectedFieldLabels.length ?? 0;
     setDocumentNotice(
-      `CV read. ${detectedSkills.length} skill${detectedSkills.length === 1 ? "" : "s"} and ${extraction?.detectedFieldLabels.length ?? 0} profile field${extraction?.detectedFieldLabels.length === 1 ? "" : "s"} found. Review the highlighted suggestions, complete anything missing, then save.`,
+      stored
+        ? `Resume saved. We found ${detectedSkills.length} skill${detectedSkills.length === 1 ? "" : "s"} and ${foundFields} profile field${foundFields === 1 ? "" : "s"}. Complete the missing items shown below.`
+        : "Your resume was read, but the extracted profile could not be saved. Check your connection and select Save profile.",
+    );
+    window.setTimeout(
+      () => document.getElementById("application-readiness")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      100,
     );
   };
 
@@ -406,14 +426,14 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     });
     if (!response.ok) {
       const payload = (await response.json()) as { error?: string };
-      setDocumentNotice(payload.error ?? "The CV could not be downloaded.");
+      setDocumentNotice(payload.error ?? "The resume could not be downloaded.");
       return;
     }
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${profile.fullName || "Candidate"}-CV.${format}`;
+    anchor.download = `${profile.fullName || "Candidate"}-Resume.${format}`;
     anchor.click();
     URL.revokeObjectURL(url);
     setDocumentNotice(`${format.toUpperCase()} downloaded.`);
@@ -432,11 +452,69 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     URL.revokeObjectURL(url);
   };
 
+  const resumeReady = (activeProfile?.resumeText.trim().length ?? 0) >= 120;
+  const firstTimeResumeRequired = !profile.profileSetupCompletedAt && !resumeReady;
+
+  if (firstTimeResumeRequired) {
+    return (
+      <WorkspacePage
+        eyebrow="Profile setup"
+        title="Start with your resume"
+        description="Upload your resume first. IR35Careers will securely extract the details it can verify, save them to your profile and then ask only for what is missing."
+      >
+        <section className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-card">
+          <div className="bg-gradient-to-br from-slate-950 to-emerald-950 px-6 py-7 text-white sm:px-8 sm:py-9">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-300">Step 1 of 3</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Upload your primary resume</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
+              We use the resume to prefill your name, contact details, role, experience, education, certifications, links and verified skills. Existing information is never overwritten.
+            </p>
+          </div>
+          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div>
+              <label className="ir35-focus flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-6 text-center transition hover:border-emerald-500 hover:bg-emerald-100/70">
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt"
+                  onChange={(event) => void parseResume(event)}
+                  className="sr-only"
+                />
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm"><Upload size={24} aria-hidden="true" /></span>
+                <span className="mt-4 text-base font-bold text-slate-950">Choose your resume</span>
+                <span className="mt-1 text-sm text-slate-600">PDF, DOCX or TXT, up to 5 MB</span>
+              </label>
+              {documentNotice && (
+                <p role="status" className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold leading-6 text-brand-900">
+                  {documentNotice}
+                </p>
+              )}
+              {saveError && (
+                <p role="alert" className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold leading-6 text-rose-800">{saveError}</p>
+              )}
+            </div>
+            <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <h3 className="font-semibold text-slate-950">What happens next</h3>
+              <ol className="mt-4 space-y-4 text-sm leading-6 text-slate-600">
+                <li className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">1</span><span>Your resume is read and the extracted facts are saved privately.</span></li>
+                <li className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">2</span><span>You review the information and confirm suggested skills.</span></li>
+                <li className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">3</span><span>We show only the missing application details for you to complete.</span></li>
+              </ol>
+              <div className="mt-5 flex gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs leading-5 text-blue-900">
+                <ShieldCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+                <p>Right-to-work, background, accommodation and other sensitive answers are never guessed from your resume.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </WorkspacePage>
+    );
+  }
+
   return (
     <WorkspacePage
       eyebrow="Contractor profile"
       title="Your professional profile"
-      description="Manage the facts, CV versions, cover letters and application preferences used for role preparation."
+      description="Manage the facts, resume versions, cover letters and application preferences used for role preparation."
     >
       <section
         id="application-readiness"
@@ -631,7 +709,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </div>
               {cvDetectedFields.length > 0 && (
                 <div role="status" className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
-                  <p className="font-semibold">Filled from your CV</p>
+                  <p className="font-semibold">Filled from your resume</p>
                   <p className="mt-1 leading-6">
                     {cvDetectedFields.join(", ")}. Existing profile information was kept. Review these details before saving.
                   </p>
@@ -699,7 +777,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
                 <h2 className="font-semibold">Skills</h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Skills explicitly found in your CV are added. Related skills stay as suggestions until you confirm them.
+                  Skills explicitly found in your resume are added. Related skills stay as suggestions until you confirm them.
                 </p>
                 <form
                   className="mt-4 flex gap-2"
@@ -742,7 +820,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 {suggestedSkills.length > 0 && (
                   <div className="mt-5 border-t border-slate-200 pt-4">
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
-                      Suggested from your CV
+                      Suggested from your resume
                     </p>
                     <p className="mt-1 text-xs leading-5 text-slate-500">
                       Add only skills you can support with real experience.
@@ -1111,7 +1189,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               <div>
                 <h2 className="font-semibold">Resume studio</h2>
                 <p className="text-xs text-slate-500">
-                  Edit, format and export the active CV version.
+                  Edit, format and export the active resume version.
                 </p>
               </div>
             </div>
@@ -1356,7 +1434,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   ).nodes
                 ) : (
                   <p className="text-slate-400">
-                    Add your CV text to preview it here.
+                    Add your resume text to preview it here.
                   </p>
                 )}
               </div>
@@ -1434,7 +1512,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             <h2 className="font-semibold">Resume optimisation</h2>
             <p className="mt-1 text-sm text-slate-600">
               Choose how role-specific wording is prepared from evidence already
-              in your CV.
+              in your resume.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {(
@@ -1442,7 +1520,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   {
                     id: "off",
                     label: "Off",
-                    help: "Keep the source CV unchanged.",
+                    help: "Keep the source resume unchanged.",
                   },
                   {
                     id: "honest",
@@ -1486,7 +1564,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 [
                   {
                     key: "autoApproveSafeEdits",
-                    label: "Auto-approve safe CV edits",
+                    label: "Auto-approve safe resume edits",
                     help: "Apply truth-preserving changes during preparation.",
                   },
                   {

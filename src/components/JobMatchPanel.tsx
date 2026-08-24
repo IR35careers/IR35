@@ -151,7 +151,7 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
         href={`/jobs/${job.id}/resume`}
         className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
       >
-        <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your CV
+        <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your Resume
       </Link>
     </div>
   );

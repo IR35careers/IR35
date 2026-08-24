@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const AVAILABLE = [
   "Open signup without a waitlist or invitation code",
   "UK contract discovery with IR35, rate and working-pattern evidence",
-  "Role-specific CV analysis, scoring and missing-keyword identification",
+  "Role-specific Resume analysis, scoring and missing-keyword identification",
   "Truth-preserving suggested edits with side-by-side approval and version history",
   "Application preparation and tracking with the contractor in control",
 ];
@@ -58,7 +58,7 @@ export default function BetaPage() {
               <li>Features, wording and page layouts may change as usability improves.</li>
               <li>Some external email, billing and application providers remain gated until their connection and safety checks pass.</li>
               <li>Occasional defects or interruptions may occur; confirmed issues will be prioritised and recorded.</li>
-              <li>No feature will submit an application or approve a CV change without the contractor&apos;s action.</li>
+              <li>No feature will submit an application or approve a Resume change without the contractor&apos;s action.</li>
             </ul>
           </article>
         </section>
@@ -66,7 +66,7 @@ export default function BetaPage() {
         <section className="border-y border-slate-200 bg-white">
           <div className="ir35-container grid gap-6 py-12 sm:py-16 lg:grid-cols-3">
             <article className="rounded-2xl border border-slate-200 p-6"><ShieldCheck className="text-brand-700" /><h2 className="mt-4 font-bold text-slate-950">Verify important information</h2><p className="mt-2 text-sm leading-6 text-slate-600">Check the original advert, rate, IR35 evidence and any Status Determination Statement before acting. Platform guidance is educational, not legal or tax advice.</p></article>
-            <article className="rounded-2xl border border-slate-200 p-6"><MessageSquareText className="text-brand-700" /><h2 className="mt-4 font-bold text-slate-950">Report a problem</h2><p className="mt-2 text-sm leading-6 text-slate-600">Use the contact page for broken workflows, inaccurate listings, confusing language or accessibility barriers. Do not include passwords, CV contents or sensitive personal data.</p></article>
+            <article className="rounded-2xl border border-slate-200 p-6"><MessageSquareText className="text-brand-700" /><h2 className="mt-4 font-bold text-slate-950">Report a problem</h2><p className="mt-2 text-sm leading-6 text-slate-600">Use the contact page for broken workflows, inaccurate listings, confusing language or accessibility barriers. Do not include passwords, Resume contents or sensitive personal data.</p></article>
             <article className="rounded-2xl border border-slate-200 p-6"><RefreshCcw className="text-brand-700" /><h2 className="mt-4 font-bold text-slate-950">Follow improvements</h2><p className="mt-2 text-sm leading-6 text-slate-600">Meaningful releases and safety changes are published in the changelog. An official launch will be announced only after the release criteria are satisfied.</p></article>
           </div>
         </section>

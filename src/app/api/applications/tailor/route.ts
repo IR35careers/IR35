@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
     const body = await readJsonBody<{ cvText?: string; job?: JobDetail }>(request, 180_000);
     if (!body.job?.id || !body.job.title || !body.job.company_name || typeof body.cvText !== "string") {
-      return Response.json({ error: "A CV and complete role are required." }, { status: 400, headers: NO_STORE });
+      return Response.json({ error: "A Resume and complete role are required." }, { status: 400, headers: NO_STORE });
     }
     const outcome = await tailorResumeWithFastFallback({ cvText: body.cvText, job: body.job });
     return Response.json(outcome, {
@@ -34,6 +34,6 @@ export async function POST(request: Request): Promise<Response> {
     if (error instanceof RequestBodyError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
     const message = error instanceof Error ? error.message : "AI tailoring failed.";
     const status = message === "AI tailoring is not configured." ? 503 : 502;
-    return Response.json({ error: status === 503 ? message : "AI tailoring could not be completed. Your original CV is unchanged." }, { status, headers: NO_STORE });
+    return Response.json({ error: status === 503 ? message : "AI tailoring could not be completed. Your original Resume is unchanged." }, { status, headers: NO_STORE });
   }
 }

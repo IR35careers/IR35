@@ -17,7 +17,7 @@ describe("application analytics", () => {
     expect(snapshot.funnel.map((item) => item.label)).toEqual(["Prepared", "Applied", "Responses", "Interviews", "Offers"]);
   });
 
-  it("exports role data as escaped CSV without CV or message contents", () => {
+  it("exports role data as escaped CSV without Resume or message contents", () => {
     const workspace = createSeedWorkspaceState();
     workspace.applications[0] = {
       ...workspace.applications[0],

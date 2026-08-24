@@ -161,7 +161,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const resume = resumeForProfile(profile);
-    if (!resume?.resumeText.trim()) return Response.json({ error: "Add a CV to your Application Profile before starting Auto Apply.", action: "/profile" }, { status: 422, headers: NO_STORE });
+    if (!resume?.resumeText.trim()) return Response.json({ error: "Add a Resume to your Application Profile before starting Auto Apply.", action: "/profile" }, { status: 422, headers: NO_STORE });
 
     const rules = rulesFromRow(effectiveRuleRow);
     const today = new Date();

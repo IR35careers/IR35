@@ -64,7 +64,7 @@ export default function ConnectionsPage() {
           {[
             [KeyRound, "Secrets stay server-side", "Credentials belong in Vercel environment variables and provider secret stores. Never place them in Git, browser storage or support messages."],
             [ShieldCheck, "Least privilege", "Job sources receive read-only access. Write scopes are added only for an approved, tested workflow."],
-            [LockKeyhole, "Human approval", "CV edits, application materials and any future submission remain reviewable and revocable."],
+            [LockKeyhole, "Human approval", "Resume edits, application materials and any future submission remain reviewable and revocable."],
           ].map(([Icon, title, body]) => {
             const Item = Icon as typeof PlugZap;
             return <article key={String(title)} className="rounded-3xl border border-slate-200 bg-white p-6"><Item size={20} className="text-brand-700" /><h2 className="mt-4 font-bold">{String(title)}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{String(body)}</p></article>;

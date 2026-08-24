@@ -132,9 +132,9 @@ function ScoreBreakdown({ score }: { score: ResumeScore }) {
 
 function StepRail({ phase }: { phase: StudioPhase }) {
   const active = phase === "source" ? 1 : phase === "review" ? 2 : 3;
-  const steps = ["Add CV", "Review evidence", "Approve & export"];
+  const steps = ["Add Resume", "Review evidence", "Approve & export"];
   return (
-    <ol className="grid grid-cols-3 gap-2" aria-label="CV tailoring progress">
+    <ol className="grid grid-cols-3 gap-2" aria-label="Resume tailoring progress">
       {steps.map((label, index) => {
         const number = index + 1;
         const complete = number < active;
@@ -192,7 +192,7 @@ function SuggestionCard({
       {suggestion.kind === "verified-keyword" ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">CV evidence</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Resume evidence</p>
             <p className="mt-1 text-sm text-slate-600">{suggestion.original}</p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -226,12 +226,12 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<StudioPhase>("source");
   const [sourceText, setSourceText] = useState("");
-  const [sourceFilename, setSourceFilename] = useState("Pasted CV");
+  const [sourceFilename, setSourceFilename] = useState("Pasted Resume");
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [acceptedIds, setAcceptedIds] = useState<string[]>([]);
   const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
   const [tailoredText, setTailoredText] = useState("");
-  const [versionLabel, setVersionLabel] = useState("Application CV");
+  const [versionLabel, setVersionLabel] = useState("Application Resume");
   const [versions, setVersions] = useState<ResumeVersion[]>([]);
   const [busy, setBusy] = useState<"parse" | "save" | "approve" | "pdf" | "docx" | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -271,7 +271,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     setError("");
     setNotice("");
     if (file.size > 5 * 1024 * 1024) {
-      setError("CV must be under 5MB.");
+      setError("Resume must be under 5MB.");
       return;
     }
     setBusy("parse");
@@ -280,12 +280,12 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
       formData.append("file", file);
       const response = await fetch("/api/resume/parse", { method: "POST", body: formData });
       const payload = (await response.json()) as { text?: string; filename?: string; error?: string; warnings?: string[] };
-      if (!response.ok || !payload.text) throw new Error(payload.error ?? "CV could not be read.");
+      if (!response.ok || !payload.text) throw new Error(payload.error ?? "Resume could not be read.");
       setSourceText(payload.text);
       setSourceFilename(payload.filename ?? file.name);
-      if (payload.warnings?.length) setNotice("The CV was read, but some Word formatting was simplified for analysis.");
+      if (payload.warnings?.length) setNotice("The Resume was read, but some Word formatting was simplified for analysis.");
     } catch (parseError) {
-      setError(parseError instanceof Error ? parseError.message : "CV could not be read.");
+      setError(parseError instanceof Error ? parseError.message : "Resume could not be read.");
     } finally {
       setBusy(null);
     }
@@ -295,7 +295,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     setError("");
     setNotice("");
     if (sourceText.trim().length < 120) {
-      setError("Add at least 120 characters of CV text so the score has enough evidence.");
+      setError("Add at least 120 characters of Resume text so the score has enough evidence.");
       return;
     }
     const next = analyseResumeForRole(sourceText, sourceFilename, job);
@@ -338,7 +338,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
       jobTitle: job.title,
       companyName: job.company_name,
       sourceFilename,
-      label: versionLabel.trim() || "Application CV",
+      label: versionLabel.trim() || "Application Resume",
       status,
       sourceText,
       tailoredText,
@@ -388,13 +388,13 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
         const failure = (await response.json().catch(() => ({}))) as {
           error?: string;
         };
-        throw new Error(failure.error || "The CV could not be exported.");
+        throw new Error(failure.error || "The Resume could not be exported.");
       }
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${parsed.candidateName || "Candidate"}-CV.${format}`;
+      anchor.download = `${parsed.candidateName || "Candidate"}-Resume.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -440,8 +440,8 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
             <Link href={backHref ?? `/jobs/${job.id}`} className="ir35-focus inline-flex min-h-10 items-center gap-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-950">
               <ArrowLeft size={15} /> Back to role
             </Link>
-            <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-brand-700">CV Studio</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Tailor your CV with evidence you control</h1>
+            <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-brand-700">Resume Studio</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Tailor your Resume with evidence you control</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
               {job.title} at {job.company_name}. Scores are transparent, missing keywords are never treated as experience, and every edit needs your approval.
             </p>
@@ -465,7 +465,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><FileText size={19} /></span>
                 <div>
-                  <h2 id="add-cv-title" className="text-lg font-bold">Add the CV you want to tailor</h2>
+                  <h2 id="add-cv-title" className="text-lg font-bold">Add the Resume you want to tailor</h2>
                   <p className="mt-1 text-sm leading-6 text-slate-600">PDF, DOCX or plain text, up to 5MB. Files are read for this analysis and are not retained by the parser.</p>
                 </div>
               </div>
@@ -473,7 +473,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               <input
                 ref={fileInputRef}
                 type="file"
-                aria-label="Upload CV file"
+                aria-label="Upload Resume file"
                 accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                 className="sr-only"
                 onChange={(event) => { const file = event.target.files?.[0]; if (file) void parseAndSetFile(file); }}
@@ -486,27 +486,27 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
                 className={`mt-6 rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${dragging ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-slate-50"}`}
               >
                 {busy === "parse" ? <Loader2 className="mx-auto animate-spin text-brand-700" size={25} /> : <UploadCloud className="mx-auto text-slate-500" size={27} />}
-                <p className="mt-3 text-sm font-semibold text-slate-900">{busy === "parse" ? "Reading your CV…" : "Drop your CV here"}</p>
+                <p className="mt-3 text-sm font-semibold text-slate-900">{busy === "parse" ? "Reading your Resume…" : "Drop your Resume here"}</p>
                 <p className="mt-1 text-xs text-slate-500">or</p>
                 <button type="button" disabled={busy === "parse"} onClick={() => fileInputRef.current?.click()} className="ir35-focus mt-2 inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-slate-400 disabled:opacity-50">
                   Choose a file
                 </button>
-                {sourceFilename !== "Pasted CV" && sourceText && <p className="mt-3 text-xs font-medium text-brand-700">Ready: {sourceFilename}</p>}
+                {sourceFilename !== "Pasted Resume" && sourceText && <p className="mt-3 text-xs font-medium text-brand-700">Ready: {sourceFilename}</p>}
               </div>
 
               <div className="my-5 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-slate-200" />or paste the text<span className="h-px flex-1 bg-slate-200" /></div>
-              <label htmlFor="cv-source" className="text-sm font-semibold text-slate-800">CV text</label>
+              <label htmlFor="cv-source" className="text-sm font-semibold text-slate-800">Resume text</label>
               <textarea
                 id="cv-source"
                 value={sourceText}
-                onChange={(event) => { setSourceText(event.target.value); setSourceFilename("Pasted CV"); }}
+                onChange={(event) => { setSourceText(event.target.value); setSourceFilename("Pasted Resume"); }}
                 rows={14}
-                placeholder="Paste your CV here. Keep the headings and bullet points so the readability check can assess the structure."
+                placeholder="Paste your Resume here. Keep the headings and bullet points so the readability check can assess the structure."
                 className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-3 font-mono text-sm leading-6 text-slate-800 placeholder:font-sans placeholder:text-slate-400"
               />
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <button type="button" onClick={() => { setSourceText(sampleResume(job)); setSourceFilename("Alex-Morgan-sample-CV.txt"); setNotice("Sample CV loaded. It is fictional and labelled for preview testing."); }} className="ir35-focus min-h-11 rounded-xl text-left text-sm font-semibold text-brand-700 hover:text-brand-800">
-                  Try the labelled sample CV
+                <button type="button" onClick={() => { setSourceText(sampleResume(job)); setSourceFilename("Alex-Morgan-sample-Resume.txt"); setNotice("Sample Resume loaded. It is fictional and labelled for preview testing."); }} className="ir35-focus min-h-11 rounded-xl text-left text-sm font-semibold text-brand-700 hover:text-brand-800">
+                  Try the labelled sample Resume
                 </button>
                 <button type="button" onClick={runAnalysis} disabled={busy === "parse" || sourceText.trim().length < 120} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white shadow-card hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
                   <Sparkles size={16} /> Analyse against this role
@@ -559,7 +559,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
           <div className="mt-6">
             <div className="grid gap-4 md:grid-cols-2">
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-                <div className="flex items-center gap-4"><ScoreRing score={analysis.baseline.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Current CV</p><h2 className="mt-1 text-lg font-bold">Role-specific score</h2><p className="mt-1 text-sm text-slate-600">Before approved changes</p></div></div>
+                <div className="flex items-center gap-4"><ScoreRing score={analysis.baseline.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Current Resume</p><h2 className="mt-1 text-lg font-bold">Role-specific score</h2><p className="mt-1 text-sm text-slate-600">Before approved changes</p></div></div>
               </section>
               <section className="rounded-2xl border border-brand-200 bg-brand-50/60 p-5 shadow-card">
                 <div className="flex items-center gap-4"><ScoreRing score={previewScore.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Live projection</p><h2 className="mt-1 text-lg font-bold">{previewScore.overall - analysis.baseline.overall >= 0 ? "+" : ""}{previewScore.overall - analysis.baseline.overall} points</h2><p className="mt-1 text-sm text-slate-600">Based only on approved or confirmed edits</p></div></div>
@@ -569,8 +569,8 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
             <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
               <section>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Side-by-side approval</p><h2 className="mt-1 text-xl font-bold">Review every suggested change</h2><p className="mt-1 text-sm text-slate-600">Green edits use evidence already in the CV. Amber skills require your explicit confirmation.</p></div>
-                  <button type="button" onClick={() => setPhase("source")} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><RotateCcw size={15} /> Change source CV</button>
+                  <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Side-by-side approval</p><h2 className="mt-1 text-xl font-bold">Review every suggested change</h2><p className="mt-1 text-sm text-slate-600">Green edits use evidence already in the Resume. Amber skills require your explicit confirmation.</p></div>
+                  <button type="button" onClick={() => setPhase("source")} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><RotateCcw size={15} /> Change source Resume</button>
                 </div>
                 <div className="mt-4 space-y-3">
                   {analysis.suggestions.length ? analysis.suggestions.map((suggestion) => (
@@ -589,7 +589,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
                 <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-sm font-bold">Projected score details</p><div className="mt-4"><ScoreBreakdown score={previewScore} /></div></section>
                 <section className="rounded-2xl border border-slate-200 bg-white p-5">
                   <p className="text-sm font-bold text-slate-900">Keyword evidence</p>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-brand-700">Found in CV</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-brand-700">Found in Resume</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">{analysis.baseline.matchedKeywords.length ? analysis.baseline.matchedKeywords.map((keyword) => <span key={keyword} className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-800">{keyword}</span>) : <span className="text-xs text-slate-500">No role keywords found yet.</span>}</div>
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-amber-700">Missing - not assumed</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">{analysis.baseline.missingKeywords.length ? analysis.baseline.missingKeywords.map((keyword) => <span key={keyword} className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{keyword}</span>) : <span className="text-xs text-slate-500">No priority gaps found.</span>}</div>
@@ -603,12 +603,12 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
           <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-7">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Final review</p><h2 className="mt-1 text-xl font-bold">Your approved, editable CV</h2><p className="mt-1 text-sm leading-6 text-slate-600">Read every line. Edit anything you would not confidently explain to a client or recruiter.</p></div>
+                <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Final review</p><h2 className="mt-1 text-xl font-bold">Your approved, editable Resume</h2><p className="mt-1 text-sm leading-6 text-slate-600">Read every line. Edit anything you would not confidently explain to a client or recruiter.</p></div>
                 <button type="button" onClick={() => setPhase("review")} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><ArrowLeft size={15} /> Review suggestions</button>
               </div>
               <label htmlFor="version-label" className="mt-6 block text-sm font-semibold text-slate-800">Version name</label>
               <input id="version-label" value={versionLabel} onChange={(event) => setVersionLabel(event.target.value)} maxLength={80} className="ir35-focus mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900" />
-              <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">CV text</label>
+              <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">Resume text</label>
               <textarea id="tailored-cv" value={tailoredText} onChange={(event) => setTailoredText(event.target.value)} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-sm leading-6 text-slate-800" />
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => void persistVersion("draft")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 hover:border-slate-400 disabled:opacity-50">{busy === "save" ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save new version</button>

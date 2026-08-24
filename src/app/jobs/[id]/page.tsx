@@ -99,7 +99,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               href={`/jobs/${job.id}/resume`}
               className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-800 shadow-card hover:bg-brand-100"
             >
-              <WandSparkles size={16} aria-hidden="true" /> Tailor CV to this role
+              <WandSparkles size={16} aria-hidden="true" /> Tailor Resume to this role
             </Link>
             <SaveJobButton jobId={job.id} />
           </div>
@@ -153,7 +153,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               </div>
               <p className="mt-2 text-sm text-slate-600">
                 This role is advertised via {job.source_domain.replace("www.", "")}. IR35Careers keeps the source
-                reference for accuracy while your CV review, answers, approval and supported submission stay in this workspace.
+                reference for accuracy while your Resume review, answers, approval and supported submission stay in this workspace.
               </p>
             </section>
           </div>
@@ -186,7 +186,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-sm font-semibold text-slate-800">Contractor tools</p>
               <Link href={`/jobs/${job.id}/resume`} className="mt-3 block rounded-xl border border-brand-200 bg-brand-50/60 p-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50">
-                <span className="flex items-center gap-2 font-semibold text-brand-800"><WandSparkles size={15} aria-hidden="true" /> CV Studio</span>
+                <span className="flex items-center gap-2 font-semibold text-brand-800"><WandSparkles size={15} aria-hidden="true" /> Resume Studio</span>
                 <span className="mt-1 block text-xs leading-5 text-brand-900/75">Score, tailor, approve and export for this role</span>
               </Link>
               <Link href="/tools/take-home" className="mt-3 block rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-green-300 hover:bg-green-50/30">

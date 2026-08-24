@@ -102,15 +102,15 @@ export function renderWelcomeEmail(input: WelcomeEmailInput = {}): EmailContent 
           <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
             <a href="${siteUrl}/profile#application-readiness" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;line-height:20px;text-decoration:none;">Set up your contractor profile</a>
           </td></tr></table>
-          <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">It takes around two minutes. Your CV remains private to your account.</p>
+          <p style="margin:12px 0 0;color:#6b7c8f;font-family:Arial,sans-serif;font-size:12px;line-height:18px;">It takes around two minutes. Your Resume remains private to your account.</p>
         </td></tr>
         <tr><td style="border-top:1px solid ${BRAND.border};padding:30px;">
           <h2 style="margin:0 0 22px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:20px;line-height:27px;">A simple way to get started</h2>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-            ${featureRow("1", "Complete your contractor profile", "Add your skills, rate preferences, working pattern and private CV so your workspace reflects the work you actually want.")}
+            ${featureRow("1", "Complete your contractor profile", "Add your skills, rate preferences, working pattern and private Resume so your workspace reflects the work you actually want.")}
             ${featureRow("2", "Find relevant UK contract roles", "Search by IR35 status, rate, location, skill and working pattern, with the original source kept visible.")}
             ${featureRow("3", "Analyse the role before applying", "Review an explainable match score, matched evidence and missing keywords against the job description.")}
-            ${featureRow("4", "Tailor your CV with control", "Review truth-preserving suggestions side by side, approve only the edits you want and keep version history.")}
+            ${featureRow("4", "Tailor your Resume with control", "Review truth-preserving suggestions side by side, approve only the edits you want and keep version history.")}
             ${featureRow("5", "Prepare and track applications", "Build a reviewable application pack, submit only with your approval and keep recruiter responses linked to the correct role when inbox features are enabled.")}
           </table>
         </td></tr>
@@ -144,7 +144,7 @@ GET STARTED
 Set up your contractor profile: ${siteUrl}/profile#application-readiness
 
 1. Complete your contractor profile
-Add your skills, rate preferences, working pattern and private CV.
+Add your skills, rate preferences, working pattern and private Resume.
 
 2. Find relevant UK contract roles
 Search by IR35 status, rate, location, skill and working pattern.
@@ -152,7 +152,7 @@ Search by IR35 status, rate, location, skill and working pattern.
 3. Analyse the role before applying
 Review an explainable match score, matched evidence and missing keywords.
 
-4. Tailor your CV with control
+4. Tailor your Resume with control
 Review truth-preserving suggestions side by side, approve edits and keep version history.
 
 5. Prepare and track applications
@@ -199,7 +199,7 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
   </style>
 </head>
 <body style="margin:0;padding:0;background:${BRAND.page};word-spacing:normal;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Find better UK contract roles, improve your CV and manage applications in one secure workspace.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Find better UK contract roles, improve your Resume and manage applications in one secure workspace.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:${BRAND.page};">
     <tr><td class="email-shell" align="center" style="padding:32px 12px;">
       <table class="email-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:640px;background:${BRAND.white};border:1px solid ${BRAND.border};border-radius:20px;overflow:hidden;box-shadow:0 14px 40px rgba(7,17,31,.09);">
@@ -213,7 +213,7 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
         <tr><td class="email-pad" style="padding:42px 32px 18px;">
           <p style="margin:0 0 13px;color:${BRAND.green};font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Your access is ready</p>
           <h1 class="email-title" style="margin:0;max-width:520px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:34px;font-weight:700;letter-spacing:-1px;line-height:42px;">Make your next contract application stronger.</h1>
-          <p style="margin:18px 0 0;max-width:540px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:26px;">You joined the IR35Careers waitlist, and the public beta is now open. Create your free account to find UK contract roles, improve your CV for each opportunity and keep your applications organised.</p>
+          <p style="margin:18px 0 0;max-width:540px;color:${BRAND.slate};font-family:Arial,sans-serif;font-size:16px;line-height:26px;">You joined the IR35Careers waitlist, and the public beta is now open. Create your free account to find UK contract roles, improve your Resume for each opportunity and keep your applications organised.</p>
         </td></tr>
         <tr><td class="email-pad" style="padding:18px 32px 36px;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:auto;"><tr><td bgcolor="${BRAND.green}" style="border-radius:10px;">
@@ -226,8 +226,8 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
           <h2 style="margin:0 0 24px;color:${BRAND.navy};font-family:Arial,sans-serif;font-size:22px;line-height:29px;">Everything you need for a better application</h2>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
             ${featureRow("1", "Find contracts that fit", "Filter UK roles by IR35 status, rate, skill, location and working pattern. Every listing keeps its original source visible.")}
-            ${featureRow("2", "Strengthen your CV for the role", "Compare your CV with the job description, identify missing keywords and review ATS friendly improvements grounded in your real experience.")}
-            ${featureRow("3", "Apply with confidence", "Review the final CV, cover letter and application answers before anything is submitted, then track progress from your workspace.")}
+            ${featureRow("2", "Strengthen your Resume for the role", "Compare your Resume with the job description, identify missing keywords and review ATS friendly improvements grounded in your real experience.")}
+            ${featureRow("3", "Apply with confidence", "Review the final Resume, cover letter and application answers before anything is submitted, then track progress from your workspace.")}
           </table>
         </td></tr>
         <tr><td class="email-pad" style="padding:0 32px 34px;">
@@ -256,7 +256,7 @@ export function renderBetaLaunchEmail(input: BetaLaunchEmailInput = {}): EmailCo
 
 Make your next contract application stronger.
 
-You joined the IR35Careers waitlist, and the public beta is now open. Create your free account to find UK contract roles, improve your CV for each opportunity and keep your applications organised.
+You joined the IR35Careers waitlist, and the public beta is now open. Create your free account to find UK contract roles, improve your Resume for each opportunity and keep your applications organised.
 
 CREATE MY FREE ACCOUNT
 ${siteUrl}/account?mode=create
@@ -268,11 +268,11 @@ EVERYTHING YOU NEED FOR A BETTER APPLICATION
 1. Find contracts that fit
 Filter UK roles by IR35 status, rate, skill, location and working pattern. Every listing keeps its original source visible.
 
-2. Strengthen your CV for the role
-Compare your CV with the job description, identify missing keywords and review ATS friendly improvements grounded in your real experience.
+2. Strengthen your Resume for the role
+Compare your Resume with the job description, identify missing keywords and review ATS friendly improvements grounded in your real experience.
 
 3. Apply with confidence
-Review the final CV, cover letter and application answers before anything is submitted, then track progress from your workspace.
+Review the final Resume, cover letter and application answers before anything is submitted, then track progress from your workspace.
 
 YOU REMAIN IN CONTROL
 IR35Careers never invents experience and does not submit an application without your approval. As this is a public beta, some features may change. Job information, IR35 guidance and match scores should be independently verified.

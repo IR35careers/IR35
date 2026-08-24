@@ -225,7 +225,7 @@ function requiredCandidateFields(
     ["government-ties answer", candidate.hasGovernmentTies],
     ["education institution", clean(candidate.educationInstitution)],
     ["qualification", clean(candidate.educationQualification)],
-    ["approved CV", resumeUrl],
+    ["approved Resume", resumeUrl],
   ];
   return checks
     .filter(

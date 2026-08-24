@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const features = [
   [ScanSearch, "Find", "Search live UK contracts by IR35 status, rate, skills, location and working pattern."],
   [BriefcaseBusiness, "Understand", "Open role details with source links, freshness and the evidence behind every IR35 label."],
-  [ClipboardCheck, "Prepare", "Score and tailor a CV, review application materials and retain the exact approved packet."],
+  [ClipboardCheck, "Prepare", "Score and tailor a Resume, review application materials and retain the exact approved packet."],
   [BellRing, "Track", "Return to saved searches, the application pipeline and recruiter-response workspace."],
 ] as const;
 

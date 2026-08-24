@@ -125,7 +125,7 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         subject: `Application ready to retry: ${role}`,
         eyebrow: "Application update",
         title: "Your application needs another attempt",
-        body: `IR35Careers stopped before the employer confirmed your application for ${role}. It has not been marked as submitted. Your approved CV and answers are saved. Open the application and select Apply again.`,
+        body: `IR35Careers stopped before the employer confirmed your application for ${role}. It has not been marked as submitted. Your approved Resume and answers are saved. Open the application and select Apply again.`,
         accent: "#b45309",
         actionLabel: "Open and retry",
         actionPath: `${applicationPath}#needs-attention`,

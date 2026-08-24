@@ -1263,7 +1263,7 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   const cards = [
     { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-50 text-emerald-700", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
     { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-blue-50 text-blue-700", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
-    { label: "CV readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
+    { label: "Resume readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
     { label: "Beta audience", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Mail, tone: "bg-amber-50 text-amber-700", detail: "Former opt-ins for one beta invitation", badge: "Private" },
   ];
 
@@ -1345,7 +1345,7 @@ function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: Analy
   const funnel = [
     { label: "Accounts", value: analytics.totalUsers, tone: "bg-slate-950" },
     { label: "Profiles", value: analytics.profiles, tone: "bg-emerald-700" },
-    { label: "CVs", value: analytics.cvsUploaded, tone: "bg-emerald-500" },
+    { label: "Resumes", value: analytics.cvsUploaded, tone: "bg-emerald-500" },
     { label: "Applications", value: analytics.applicationPackets, tone: "bg-cyan-500" },
     { label: "Submissions", value: analytics.submissions, tone: "bg-blue-500" },
   ];
@@ -1358,7 +1358,7 @@ function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: Analy
   const cards = [
     { label: "Contractors", value: analytics.totalUsers, detail: `+${formatNumber(analytics.newUsers30d)} in the last 30 days`, icon: Users, tone: "bg-blue-50 text-blue-700" },
     { label: "Active this week", value: analytics.activeUsers7d, detail: `${activeRate}% of all accounts`, icon: Activity, tone: "bg-emerald-50 text-emerald-700" },
-    { label: "CV readiness", value: `${cvRate}%`, detail: `${formatNumber(analytics.cvsUploaded)} uploaded CVs`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700" },
+    { label: "Resume readiness", value: `${cvRate}%`, detail: `${formatNumber(analytics.cvsUploaded)} uploaded Resumes`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700" },
     { label: "Submission progress", value: `${submissionRate}%`, detail: `${formatNumber(analytics.submissions)} submission records`, icon: Send, tone: "bg-amber-50 text-amber-700" },
   ];
 
@@ -1382,7 +1382,7 @@ function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: Analy
             {[
               ["Saved jobs", analytics.savedJobs, "Roles contractors want to revisit"],
               ["Active alerts", analytics.alerts, "Automated role discovery"],
-              ["CV versions", analytics.resumeVersions, "Prepared application documents"],
+              ["Resume versions", analytics.resumeVersions, "Prepared application documents"],
               ["Recruiter messages", analytics.inboxMessages, "Responses received in workspace"],
             ].map(([label, value, detail]) => <div key={String(label)} className="flex items-center justify-between gap-4 py-4"><div><dt className="text-sm font-semibold text-slate-900">{label}</dt><p className="mt-1 text-xs text-slate-500">{detail}</p></div><dd className="text-xl font-semibold tabular-nums text-slate-950">{formatNumber(Number(value))}</dd></div>)}
           </dl>
@@ -1596,7 +1596,7 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
           { label: "Registered", value: total, detail: `${users.length} loaded`, icon: Users, tone: "bg-blue-50 text-blue-700" },
           { label: "Verified email", value: verified, detail: `${users.length ? Math.round((verified / users.length) * 100) : 0}% of loaded accounts`, icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
           { label: "Active in 30 days", value: active30d, detail: "Based on last sign-in", icon: Activity, tone: "bg-violet-50 text-violet-700" },
-          { label: "CV uploaded", value: withCv, detail: `${users.length ? Math.round((withCv / users.length) * 100) : 0}% adoption`, icon: FileCheck2, tone: "bg-amber-50 text-amber-700" },
+          { label: "Resume uploaded", value: withCv, detail: `${users.length ? Math.round((withCv / users.length) * 100) : 0}% adoption`, icon: FileCheck2, tone: "bg-amber-50 text-amber-700" },
         ].map((item) => (
           <article key={item.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
             <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={18} /></span>
@@ -1679,14 +1679,14 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
                     ["Applied", activity?.applied ?? 0],
                     ["Needs attention", activity?.needsAttention ?? 0],
                     ["Saved jobs", activity?.savedJobs ?? 0],
-                    ["CV versions", activity?.resumeVersions ?? 0],
+                    ["Resume versions", activity?.resumeVersions ?? 0],
                     ["Inbox", activity?.inboxMessages ?? 0],
                   ].map(([label, value]) => <div key={String(label)} className="rounded-xl border border-slate-100 bg-slate-50 p-3"><p className="text-lg font-semibold tabular-nums text-slate-950">{value}</p><p className="mt-0.5 text-[11px] text-slate-500">{label}</p></div>)}
                 </div>
               </div>
 
               <div className="mt-6 border-t border-slate-100 pt-5">
-                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">CV and skills</p>{profile?.cv_filename ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> CV uploaded</span> : <span className="text-[11px] text-slate-400">No CV</span>}</div>
+                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Resume and skills</p>{profile?.cv_filename ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Resume uploaded</span> : <span className="text-[11px] text-slate-400">No Resume</span>}</div>
                 {profile?.cv_filename && <p className="mt-2 truncate text-xs font-medium text-slate-700">{profile.cv_filename}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">{profile?.skills?.length ? profile.skills.slice(0, 12).map((skill) => <span key={skill} className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">{skill}</span>) : <p className="text-xs text-slate-500">No skills added.</p>}</div>
               </div>
@@ -1806,9 +1806,9 @@ function EmailCampaignsPanel({
   const audienceLabel = audience === "registered"
     ? "Registered contractors"
     : audience === "registered_with_cv"
-      ? "Contractors with a CV"
+      ? "Contractors with a Resume"
       : audience === "registered_without_cv"
-        ? "Contractors without a CV"
+        ? "Contractors without a Resume"
         : audience === "inactive_30d"
           ? "Inactive for 30 days"
           : audience === "waitlist"
@@ -1857,8 +1857,8 @@ function EmailCampaignsPanel({
                 <label className="text-xs font-semibold text-slate-700">Audience
                   <select value={audience} onChange={(event) => onAudienceChange(event.target.value as CampaignAudience)} className={fieldClass}>
                     <option value="registered">Registered contractors ({counts.registered})</option>
-                    <option value="registered_with_cv">Contractors with a CV ({counts.registered_with_cv})</option>
-                    <option value="registered_without_cv">Contractors without a CV ({counts.registered_without_cv})</option>
+                    <option value="registered_with_cv">Contractors with a Resume ({counts.registered_with_cv})</option>
+                    <option value="registered_without_cv">Contractors without a Resume ({counts.registered_without_cv})</option>
                     <option value="inactive_30d">Inactive for 30 days ({counts.inactive_30d})</option>
                     <option value="waitlist">Former waitlist ({counts.waitlist})</option>
                     <option value="all">All unique contacts ({counts.all})</option>

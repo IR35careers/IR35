@@ -3,7 +3,7 @@ import { classifyFeedback, enrichFeedback, feedbackSummary, prioritiseFeedback, 
 
 describe("admin feedback intelligence", () => {
   it("classifies common customer requests", () => {
-    expect(classifyFeedback("My application is blocked after CV tailoring")).toBe("application");
+    expect(classifyFeedback("My application is blocked after Resume tailoring")).toBe("application");
     expect(classifyFeedback("This expired job listing still appears")).toBe("job_listing");
     expect(classifyFeedback("I cannot sign in to my account")).toBe("account");
     expect(classifyFeedback("The contrast is difficult for screen reader users")).toBe("accessibility");

@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
     { icon: Target, label: "Prepared", value: analytics.total, note: `${analytics.active} active` },
     { icon: MessageSquareText, label: "Response rate", value: `${analytics.responseRate}%`, note: `${analytics.responses} responses` },
     { icon: Trophy, label: "Interview rate", value: `${analytics.interviewRate}%`, note: `${analytics.interviews} interview or offer` },
-    { icon: Gauge, label: "Average CV match", value: `${analytics.averageMatch}%`, note: "Advisory, not a hiring prediction" },
+    { icon: Gauge, label: "Average Resume match", value: `${analytics.averageMatch}%`, note: "Advisory, not a hiring prediction" },
     { icon: PoundSterling, label: "Average known day rate", value: analytics.averageKnownDayRate ? `£${analytics.averageKnownDayRate}` : "N/A", note: "Daily-rate roles only" },
     { icon: Clock3, label: "Average response time", value: analytics.averageResponseDays === null ? "N/A" : `${analytics.averageResponseDays}d`, note: "From preparation to first recorded reply" },
   ];
@@ -79,7 +79,7 @@ export default function AnalyticsPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3"><Breakdown title="IR35 mix" items={analytics.ir35} /><Breakdown title="Working pattern" items={analytics.workplaces} /><Breakdown title="Role sources" items={analytics.sources.length > 0 ? analytics.sources : [{ id: "none", label: "No source data", count: 0, percentage: 0 }]} /></div>
 
-      <section className="mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-950 sm:p-6"><h2 className="font-bold">How these numbers are calculated</h2><p className="mt-2">Response, interview and offer rates use applications marked as applied as the denominator. A response is a recorded reply, interview, offer, rejection or linked recruiter-message event. Average response time runs from packet creation to the first recorded response. CSV export contains role and pipeline fields only. It never includes CV text, screening answers or message bodies.</p></section>
+      <section className="mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-950 sm:p-6"><h2 className="font-bold">How these numbers are calculated</h2><p className="mt-2">Response, interview and offer rates use applications marked as applied as the denominator. A response is a recorded reply, interview, offer, rejection or linked recruiter-message event. Average response time runs from packet creation to the first recorded response. CSV export contains role and pipeline fields only. It never includes Resume text, screening answers or message bodies.</p></section>
     </WorkspacePage>
   );
 }

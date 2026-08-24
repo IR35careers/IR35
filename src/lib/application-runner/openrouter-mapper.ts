@@ -15,7 +15,7 @@ function extractJson(value: string): string {
 
 /**
  * OpenRouter sees only field labels and the names of allowed saved facts. It
- * never receives the applicant's values, CV or direct identifiers here.
+ * never receives the applicant's values, Resume or direct identifiers here.
  */
 export async function mapUnknownFields(fields: RunnerField[]): Promise<FieldMapping[]> {
   const config = openRouterTailoringConfig();

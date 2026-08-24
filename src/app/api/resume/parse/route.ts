@@ -24,9 +24,9 @@ export async function POST(request: Request) {
   try {
     const formData = await readFormDataBody(request, MAX_BYTES + 128 * 1024);
     const file = formData.get("file");
-    if (!(file instanceof File)) return errorResponse("Choose a PDF, DOCX or text CV.");
+    if (!(file instanceof File)) return errorResponse("Choose a PDF, DOCX or text Resume.");
     if (file.size === 0) return errorResponse("That file is empty.");
-    if (file.size > MAX_BYTES) return errorResponse("CV must be under 5MB.", 413);
+    if (file.size > MAX_BYTES) return errorResponse("Resume must be under 5MB.", 413);
 
     const extension = file.name.split(".").pop()?.toLocaleLowerCase("en-GB");
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -73,12 +73,12 @@ export async function POST(request: Request) {
     } else if (extension === "doc") {
       return errorResponse("Older .doc files cannot be read safely. Save it as .docx or PDF, then try again.");
     } else {
-      return errorResponse("Use a PDF, DOCX or plain-text CV.");
+      return errorResponse("Use a PDF, DOCX or plain-text Resume.");
     }
 
     text = text.replace(/\u0000/g, "").replace(/\r\n?/g, "\n").trim();
-    if (!text) return errorResponse("No readable text was found. If this is a scanned PDF, paste the CV text instead.", 422);
-    if (text.length > MAX_TEXT_CHARS) return errorResponse("This CV contains too much text to analyse safely.", 413);
+    if (!text) return errorResponse("No readable text was found. If this is a scanned PDF, paste the Resume text instead.", 422);
+    if (text.length > MAX_TEXT_CHARS) return errorResponse("This Resume contains too much text to analyse safely.", 413);
 
     return NextResponse.json(
       {
@@ -98,6 +98,6 @@ export async function POST(request: Request) {
     if (parseError instanceof Error && parseError.message === "active-docx-content") {
       return errorResponse("That Word document contains macros or embedded objects. Export a clean DOCX and try again.");
     }
-    return errorResponse("We could not read that CV. Try a different PDF/DOCX or paste the text.", 422);
+    return errorResponse("We could not read that Resume. Try a different PDF/DOCX or paste the text.", 422);
   }
 }

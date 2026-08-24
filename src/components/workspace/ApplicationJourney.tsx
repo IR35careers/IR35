@@ -20,11 +20,11 @@ export function ApplicationJourney({ profileReady, applications }: { profileRead
   ];
   const activeIndex = Math.max(0, steps.findIndex((item) => !item.done));
   const next = !profileReady
-    ? { title: "Complete your evidence profile", body: "Add skills and a CV so match scores and suggested edits use your real experience.", href: "/profile", action: "Complete profile" }
+    ? { title: "Complete your evidence profile", body: "Add skills and a Resume so match scores and suggested edits use your real experience.", href: "/profile", action: "Complete profile" }
     : !prepared
       ? { title: "Choose a contract to prepare", body: "Open a matching role, inspect the IR35 evidence, then start a role-specific application.", href: "/jobs", action: "Find contracts" }
       : !approved
-        ? { title: `Review ${current?.job.title ?? "your application"}`, body: "Check your CV, missing keywords, cover letter and screening answers before approval.", href: `/applications/new/${current?.job.id}`, action: "Continue review" }
+        ? { title: `Review ${current?.job.title ?? "your application"}`, body: "Check your Resume, missing keywords, cover letter and screening answers before approval.", href: `/applications/new/${current?.job.id}`, action: "Continue review" }
         : !submitted
           ? { title: "Your application is ready", body: "Open it to submit now. If the employer needs more information, we will tell you exactly what to complete.", href: `/applications/new/${current?.job.id}`, action: "Open application" }
           : { title: "Track the employer response", body: "Keep recruiter messages, interviews and next actions tied to the application.", href: "/applications", action: "Open applications" };

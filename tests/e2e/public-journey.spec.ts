@@ -262,7 +262,7 @@ test("account flow has explicit modes and neutral sign-in errors", async ({ page
   await expectNoSeriousA11yViolations(signInPage);
 });
 
-test("an external job can be previewed and opened in local CV Studio", async ({ page }) => {
+test("an external job can be previewed and opened in local Resume Studio", async ({ page }) => {
   await page.route("**/api/jobs/preview", async (route) => {
     await route.fulfill({
       status: 200,
@@ -295,8 +295,8 @@ test("an external job can be previewed and opened in local CV Studio", async ({ 
   await page.getByRole("button", { name: "Analyse job" }).click();
   await expect(page.getByRole("heading", { name: /Platform Engineer Contract/ })).toBeVisible();
   await expect(page.getByText("Advertiser-stated in the job title")).toBeVisible();
-  await page.getByRole("button", { name: "Tailor CV locally" }).click();
-  await expect(page.getByRole("heading", { name: "Tailor your CV with evidence you control" })).toBeVisible();
+  await page.getByRole("button", { name: "Tailor Resume locally" }).click();
+  await expect(page.getByRole("heading", { name: "Tailor your Resume with evidence you control" })).toBeVisible();
   await expect(page.getByText(/Scores are transparent, missing keywords are never treated as experience/)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 });
@@ -447,7 +447,7 @@ test("mobile navigation exposes all primary destinations", async ({ page }, test
   await expect(page.getByRole("link", { name: "Tools" })).toBeVisible();
 });
 
-test("CV Studio analyses, verifies, versions and exports a role-ready CV", async ({ page, request }) => {
+test("Resume Studio analyses, verifies, versions and exports a role-ready Resume", async ({ page, request }) => {
   test.setTimeout(180_000);
   const parsed = await request.post("/api/resume/parse", {
     multipart: {
@@ -477,24 +477,24 @@ test("CV Studio analyses, verifies, versions and exports a role-ready CV", async
 
   await page.goto("/jobs/11111111-1111-4111-8111-111111111111/resume");
   await dismissPrivacyNotice(page);
-  await expect(page.getByRole("heading", { name: "Tailor your CV with evidence you control" })).toBeVisible();
-  await page.getByRole("button", { name: "Try the labelled sample CV" }).click();
+  await expect(page.getByRole("heading", { name: "Tailor your Resume with evidence you control" })).toBeVisible();
+  await page.getByRole("button", { name: "Try the labelled sample Resume" }).click();
   await page.getByRole("button", { name: "Analyse against this role" }).click();
 
   await expect(page.getByRole("heading", { name: "Review every suggested change" })).toBeVisible();
   await expect(page.getByText("Missing - not assumed")).toBeVisible();
   const kubernetesSuggestion = page.getByRole("article").filter({ hasText: "Verify Kubernetes" });
-  await expect(kubernetesSuggestion.getByText("Not found in your CV")).toBeVisible();
+  await expect(kubernetesSuggestion.getByText("Not found in your Resume")).toBeVisible();
   await kubernetesSuggestion.getByRole("button", { name: "I genuinely have this" }).click();
   await expect(kubernetesSuggestion.getByRole("button", { name: "Experience confirmed" })).toBeVisible();
 
   await page.getByRole("button", { name: "Build approved version" }).click();
-  const editor = page.getByLabel("CV text");
+  const editor = page.getByLabel("Resume text");
   await expect(editor).toHaveValue(/VERIFIED ROLE SKILLS/);
   await expect(editor).toHaveValue(/Kubernetes/);
   await page.getByRole("button", { name: "Save new version" }).click();
   await expect(page.getByText("Draft version saved.")).toBeVisible();
-  await expect(page.getByText("Application CV").last()).toBeVisible();
+  await expect(page.getByText("Application Resume").last()).toBeVisible();
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "PDF", exact: true }).click();
@@ -512,14 +512,14 @@ test("application workspace presents a clean review flow and never claims an unc
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Complete your reusable profile before applying" })).toHaveCount(0);
-  await expect(page.getByLabel("CV text")).toHaveValue(/AWS, Terraform and Kubernetes/);
+  await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
   await page.getByRole("button", { name: "Prepare application" }).click();
 
   await expect(page.getByRole("heading", { name: /% role match/ })).toBeVisible();
   await page.getByText("View match details", { exact: true }).click();
   await expect(page.getByText("Missing keywords, not assumed")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Improve your CV for this role" })).toBeVisible();
-  await page.getByRole("button", { name: /Tailor my CV|Improve tailoring/ }).click();
+  await expect(page.getByRole("heading", { name: "Improve your Resume for this role" })).toBeVisible();
+  await page.getByRole("button", { name: /Tailor my Resume|Improve tailoring/ }).click();
   await expect(page.getByText("Compare before approving")).toBeVisible({ timeout: 2_000 });
   await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
   const checkboxes = page.locator('input[type="checkbox"]:enabled:visible');

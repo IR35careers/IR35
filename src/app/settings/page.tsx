@@ -160,7 +160,7 @@ export default function SettingsPage() {
     ["Skills added", (profile?.skills.length ?? 0) > 0],
     ["Experience added", profile?.years_experience != null],
     ["Preferences set", !!profile?.preferred_ir35],
-    ["CV uploaded", !!profile?.cv_filename],
+    ["Resume uploaded", !!profile?.cv_filename],
   ] as const;
   const applicationProfile = workspace.profile;
   const applyPreferences = applicationProfile.applicationPreferences;
@@ -265,7 +265,7 @@ export default function SettingsPage() {
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500"><SlidersHorizontal size={15} /> Application defaults</h2><p className="mt-2 text-sm leading-6 text-slate-600">Control how CV improvements and cover letters are prepared. Every employer submission still requires your final approval.</p></div><Link href="/profile#apply-settings" className="ir35-focus inline-flex min-h-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800">Edit apply settings</Link></div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500"><SlidersHorizontal size={15} /> Application defaults</h2><p className="mt-2 text-sm leading-6 text-slate-600">Control how Resume improvements and cover letters are prepared. Every employer submission still requires your final approval.</p></div><Link href="/profile#apply-settings" className="ir35-focus inline-flex min-h-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800">Edit apply settings</Link></div>
               <dl className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Resume optimisation</dt><dd className="mt-1 text-sm font-semibold capitalize text-slate-900">{applyPreferences?.resumeOptimisation ?? "honest"}</dd></div><div className="rounded-xl bg-slate-50 p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Safe edits</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{applyPreferences?.autoApproveSafeEdits ? "Apply automatically, then review" : "Review each suggestion"}</dd></div><div className="rounded-xl bg-slate-50 p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Final review</dt><dd className="mt-1 text-sm font-semibold text-slate-900">Always required</dd></div><div className="rounded-xl bg-slate-50 p-4"><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Cover letter</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{applyPreferences?.generateCoverLetter === false ? "Use saved letter only" : "Prepare when required"}</dd></div></dl>
             </section>
 
@@ -339,7 +339,7 @@ export default function SettingsPage() {
               <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
                 <Download size={15} /> Your data and account
               </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Download a portable JSON copy of your profile, saved roles, alerts, CV versions, application workspace, inbox and automation records.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Download a portable JSON copy of your profile, saved roles, alerts, Resume versions, application workspace, inbox and automation records.</p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => void downloadData()} disabled={dataBusy !== null} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:border-brand-300 disabled:opacity-60">
                   {dataBusy === "export" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download account data
@@ -350,7 +350,7 @@ export default function SettingsPage() {
               </div>
               {deleteOpen && (
                 <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
-                  <p className="text-sm font-bold text-rose-950">This permanently deletes the account and private CV files.</p>
+                  <p className="text-sm font-bold text-rose-950">This permanently deletes the account and private Resume files.</p>
                   <p className="mt-1 text-xs leading-5 text-rose-800">Download your data first. To confirm, enter the signed-in email address <span className="font-semibold">{user.email}</span>.</p>
                   <label className="mt-3 block text-xs font-semibold text-rose-900">Account email
                     <input value={deleteEmail} onChange={(event) => setDeleteEmail(event.target.value)} type="email" autoComplete="email" className="ir35-focus mt-1.5 min-h-11 w-full rounded-xl border border-rose-300 bg-white px-3 text-sm text-slate-950" />

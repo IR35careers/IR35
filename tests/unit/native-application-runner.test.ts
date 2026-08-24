@@ -100,7 +100,7 @@ describe("native application runner", () => {
     expect(nativeRunnerHostAllowed("greenhouse.io.attacker.example")).toBe(false);
   });
 
-  it("recognises Totaljobs' single Experience upload as the application CV", () => {
+  it("recognises Totaljobs' single Experience upload as the application Resume", () => {
     expect(
       shouldTreatSingleFileAsResume({
         atsKind: "totaljobs",
@@ -112,19 +112,19 @@ describe("native application runner", () => {
       shouldTreatSingleFileAsResume({
         atsKind: "generic",
         fileUploadCount: 1,
-        pageCopy: "Upload your CV",
+        pageCopy: "Upload your Resume",
       }),
     ).toBe(true);
     expect(
       shouldTreatSingleFileAsResume({
         atsKind: "generic",
         fileUploadCount: 2,
-        pageCopy: "Upload your CV and portfolio",
+        pageCopy: "Upload your Resume and portfolio",
       }),
     ).toBe(false);
   });
 
-  it("does not upload a custom portal CV twice after its hidden input is consumed", () => {
+  it("does not upload a custom portal Resume twice after its hidden input is consumed", () => {
     expect(
       shouldSkipConsumedResumeInput({
         fieldType: "file",

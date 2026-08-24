@@ -4,12 +4,12 @@ import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { analyseResumeForRole, parseResumeText, resumeContainsTerm, scoreResumeForRole } from "@/lib/resume/analysis";
 
 /**
- * A no-network fallback for role-specific CV improvements. It only reorders or
- * tightens text already present in the CV, so tailoring remains useful when an
+ * A no-network fallback for role-specific Resume improvements. It only reorders or
+ * tightens text already present in the Resume, so tailoring remains useful when an
  * external language-model provider is unavailable.
  */
 export function buildLocalTailoringResult(cvText: string, job: JobDetail): AiTailoringResult {
-  const analysis = analyseResumeForRole(cvText, "Application CV", job);
+  const analysis = analyseResumeForRole(cvText, "Application Resume", job);
   const safeSuggestions = analysis.suggestions.filter((suggestion) => !suggestion.requiresConfirmation);
   const skillsSection = parseResumeText(cvText).sections.find((section) => section.kind === "skills");
   const skillItems = skillsSection?.content
@@ -51,13 +51,13 @@ export function buildLocalTailoringResult(cvText: string, job: JobDetail): AiTai
     model: "ir35careers-evidence-engine",
     summary: suggestions.length
       ? "Role-specific improvements are ready for review."
-      : "Your CV is already using the role-relevant evidence the local review could verify.",
+      : "Your Resume is already using the role-relevant evidence the local review could verify.",
     mustHaveRequirements: job.skills.slice(0, 12),
     niceToHaveRequirements: [],
     suggestions,
     coverLetter: "",
     baseline: analysis.baseline,
-    projected: scoreResumeForRole(applyAiTailoringSuggestions(cvText, suggestions), job, "Application CV"),
+    projected: scoreResumeForRole(applyAiTailoringSuggestions(cvText, suggestions), job, "Application Resume"),
     privacy: {
       directIdentifiersRedacted: true,
       zeroDataRetentionRequested: true,

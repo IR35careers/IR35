@@ -28,7 +28,7 @@ EDUCATION
 BSc Computer Science
 University of Bristol`;
 
-describe("CV profile extraction", () => {
+describe("Resume profile extraction", () => {
   it("extracts high-confidence personal and professional fields", () => {
     const result = extractResumeProfile(cv);
 

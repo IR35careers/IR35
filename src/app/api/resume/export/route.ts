@@ -36,8 +36,8 @@ export async function POST(request: Request) {
       body = await readJsonBody<Partial<ResumeExportRequest>>(request, 250_000);
     }
     if (body.format !== "pdf" && body.format !== "docx") return invalid("Choose PDF or DOCX export.");
-    if (!body.resumeText?.trim()) return invalid("The CV is empty.");
-    if (body.resumeText.length > MAX_TEXT_CHARS) return invalid("The CV is too large to export.", 413);
+    if (!body.resumeText?.trim()) return invalid("The Resume is empty.");
+    if (body.resumeText.length > MAX_TEXT_CHARS) return invalid("The Resume is too large to export.", 413);
 
     const payload: ResumeExportRequest = {
       format: body.format,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       versionLabel: body.versionLabel?.slice(0, 80) ?? "Approved version",
     };
     const bytes = body.format === "pdf" ? await buildResumePdf(payload) : await buildResumeDocx(payload);
-    const filename = `${safeFilename(`${payload.candidateName}-CV`)}.${body.format}`;
+    const filename = `${safeFilename(`${payload.candidateName}-Resume`)}.${body.format}`;
     const responseContentType =
       body.format === "pdf"
         ? "application/pdf"
@@ -67,6 +67,6 @@ export async function POST(request: Request) {
     console.error("resume_export_failed", {
       type: error instanceof Error ? error.name : "UnknownError",
     });
-    return invalid("The CV could not be exported. Review the text and try again.", 422);
+    return invalid("The Resume could not be exported. Review the text and try again.", 422);
   }
 }

@@ -13,7 +13,7 @@ test("profile keeps reusable identity, resume, cover letter and application cont
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add profile" })).toBeVisible();
   await expect(page.getByText("Application readiness", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Employer portal automation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Truth-first profile" })).toBeVisible();
   await expect(page.getByLabel("Are you willing to travel for work?")).toBeVisible();
   await expect(page.getByLabel("Target annual salary")).toBeVisible();
   await page.getByLabel("Add your own skill").fill("FinOps");
@@ -41,8 +41,8 @@ Salesforce, Agile and Jira
 EXPERIENCE
 Senior Salesforce Consultant at Example Consulting. Delivered secure Salesforce services and Agile change programmes.`),
   });
-  await expect(page.getByText("Filled from your CV", { exact: true })).toBeVisible();
-  await expect(page.getByText("Suggested from your CV", { exact: true })).toBeVisible();
+  await expect(page.getByText("Filled from your resume", { exact: true })).toBeVisible();
+  await expect(page.getByText("Suggested from your resume", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Business Analysis/ })).toBeVisible();
 
   await page.getByRole("button", { name: "Cover letter", exact: true }).click();
@@ -77,7 +77,7 @@ test("incomplete application profiles show the exact next action", async ({ page
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Complete profile" })).toHaveAttribute(
     "href",
-    "/profile#application-readiness",
+    /^\/profile\?returnTo=.+#application-readiness$/,
   );
   await expect(page.getByRole("button", { name: "Prepare application" })).toBeDisabled();
 });

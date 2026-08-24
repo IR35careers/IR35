@@ -42,14 +42,14 @@ function cleanLine(value: string, max = 240): string {
 
 function evidenceSentence(matched: string[]): string {
   if (matched.length === 0) {
-    return "My CV contains transferable delivery experience relevant to the responsibilities described in this contract.";
+    return "My Resume contains transferable delivery experience relevant to the responsibilities described in this contract.";
   }
   const shown = matched.slice(0, 4);
   const formatted =
     shown.length === 1
       ? shown[0]
       : `${shown.slice(0, -1).join(", ")} and ${shown.at(-1)}`;
-  return `My background includes evidenced experience with ${formatted}, as detailed in the attached CV.`;
+  return `My background includes evidenced experience with ${formatted}, as detailed in the attached Resume.`;
 }
 
 export function buildTruthPreservingCoverLetter(
@@ -61,7 +61,7 @@ export function buildTruthPreservingCoverLetter(
   const name = resolveCandidateName(profile.fullName, cvText);
   if (!name)
     throw new Error(
-      "Add your full name to your profile or place it at the top of your CV before continuing.",
+      "Add your full name to your profile or place it at the top of your Resume before continuing.",
     );
   const title = cleanLine(job.title, 160);
   const company = cleanLine(job.company_name, 120);
@@ -369,21 +369,21 @@ export function prepareApplication(
   const cvText = normaliseResumeText(input.cvText);
   if (cvText.length < 120)
     throw new Error(
-      "Add at least 120 characters of CV evidence before preparing an application.",
+      "Add at least 120 characters of Resume evidence before preparing an application.",
     );
   if (cvText.length > MAX_CV_CHARACTERS)
-    throw new Error("CV text is too large. Keep it below 80,000 characters.");
+    throw new Error("Resume text is too large. Keep it below 80,000 characters.");
   if (!input.job.id || !input.job.title || !input.job.company_name)
     throw new Error("The role is missing required details.");
   if (!resolveCandidateName(input.profile.fullName, cvText)) {
     throw new Error(
-      "Add your full name to your profile or place it at the top of your CV before continuing.",
+      "Add your full name to your profile or place it at the top of your Resume before continuing.",
     );
   }
 
   const analysis = analyseResumeForRole(
     cvText,
-    input.resumeVersionLabel ?? "Application CV",
+    input.resumeVersionLabel ?? "Application Resume",
     input.job,
   );
   const now = new Date().toISOString();
@@ -405,7 +405,7 @@ export function prepareApplication(
     missingKeywords: analysis.baseline.missingKeywords,
     sourceCvText: cvText,
     tailoredCvText: cvText,
-    resumeVersionLabel: input.resumeVersionLabel ?? "Application CV",
+    resumeVersionLabel: input.resumeVersionLabel ?? "Application Resume",
     coverLetter: buildTruthPreservingCoverLetter(
       input.job,
       input.profile,

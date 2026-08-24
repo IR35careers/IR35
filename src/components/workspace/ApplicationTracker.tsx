@@ -145,7 +145,7 @@ function manualRecord(input: {
     missingKeywords: [],
     sourceCvText: "",
     tailoredCvText: "",
-    resumeVersionLabel: "Application CV",
+    resumeVersionLabel: "Application Resume",
     coverLetter: "",
     questions: [],
     truthApproved: false,
@@ -580,7 +580,7 @@ export function ApplicationTracker() {
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusPill status={application.status} />
                       <span className="text-xs font-semibold text-slate-500">
-                        {application.matchScore}% CV match
+                        {application.matchScore}% Resume match
                       </span>
                     </div>
                     <h2 className="mt-2 truncate text-lg font-semibold text-slate-950">

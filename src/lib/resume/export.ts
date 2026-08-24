@@ -30,7 +30,7 @@ function isHeading(line: string): boolean {
 function safeCandidateName(request: ResumeExportRequest): string {
   const resolved = resolveCandidateName(request.candidateName, request.resumeText);
   if (resolved) return resolved;
-  throw new Error("A candidate name is required before exporting the CV.");
+  throw new Error("A candidate name is required before exporting the Resume.");
 }
 
 function bodyLines(request: ResumeExportRequest): string[] {
@@ -93,7 +93,7 @@ export async function buildResumeDocx(request: ResumeExportRequest): Promise<Buf
 
   const document = new Document({
     creator: name,
-    title: `${name} - CV`,
+    title: `${name} - Resume`,
     description: "Curriculum Vitae",
     styles: {
       default: {
@@ -149,7 +149,7 @@ export async function buildResumePdf(request: ResumeExportRequest): Promise<Buff
     margins: { top: 48, right: 54, bottom: 54, left: 54 },
     bufferPages: true,
     info: {
-      Title: `${name} - CV`,
+      Title: `${name} - Resume`,
       Author: name,
       Subject: "Curriculum Vitae",
     },

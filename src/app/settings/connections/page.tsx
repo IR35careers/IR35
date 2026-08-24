@@ -58,7 +58,7 @@ export default function AccountConnectionsPage() {
           <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
             <div className="flex items-start justify-between gap-4"><span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"><Send size={22} /></span><Status ready={runnerReady} label={runnerReady ? "Ready" : "Role dependent"} /></div>
             <h2 className="mt-5 text-lg font-bold text-slate-950">Automatic applications</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">IR35Careers can complete supported public employer forms using only the profile, CV and answers you approved.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">IR35Careers can complete supported public employer forms using only the profile, Resume and answers you approved.</p>
             <Link href="/automation" className="ir35-focus mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-bold text-slate-800">Manage Auto Apply</Link>
           </article>
         </div>

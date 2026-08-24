@@ -35,7 +35,7 @@ export const SAMPLE_CONTRACTOR_PROFILE: ContractorProfile = {
   portalAccountConsent: true,
   employerTermsConsent: true,
   automaticEmailVerification: true,
-  defaultCvLabel: "Platform Engineering CV v4",
+  defaultCvLabel: "Platform Engineering Resume v4",
   forwardingEmail: "alex.morgan@example.test",
   professionalSummary: "Senior platform and DevOps engineer delivering secure cloud services for UK organisations.",
   targetRole: "Senior Platform Engineer",

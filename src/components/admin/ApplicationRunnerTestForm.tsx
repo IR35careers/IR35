@@ -97,7 +97,7 @@ export function ApplicationRunnerTestForm() {
             <label className="text-sm font-semibold text-slate-900">Phone number<input name="phone" type="tel" required className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal" /></label>
           </div>
           <label className="block text-sm font-semibold text-slate-900">Are you authorised to work in the UK?<select name="work_authorisation" required defaultValue="" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-3 font-normal"><option value="" disabled>Select an answer</option><option>Yes</option><option>No</option></select></label>
-          <label className="block text-sm font-semibold text-slate-900">Upload your CV<input name="resume" type="file" accept="application/pdf" required className="mt-2 block w-full rounded-xl border border-slate-300 p-3 font-normal" /></label>
+          <label className="block text-sm font-semibold text-slate-900">Upload your Resume<input name="resume" type="file" accept="application/pdf" required className="mt-2 block w-full rounded-xl border border-slate-300 p-3 font-normal" /></label>
           <button type="submit" className="min-h-11 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white">Next</button>
         </form>
       ) : (

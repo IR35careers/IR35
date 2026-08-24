@@ -44,14 +44,14 @@ const TOUR_STEPS = [
     icon: Target,
     eyebrow: "Prepare and apply",
     title: "Follow one clear application path",
-    body: "Move from profile to role, CV improvements, approval, submission and tracking. Supported employer connections submit your approved application from IR35Careers and return a receipt.",
+    body: "Move from profile to role, Resume improvements, approval, submission and tracking. Supported employer connections submit your approved application from IR35Careers and return a receipt.",
   },
   {
     target: "profile-progress",
     icon: FileCheck2,
     eyebrow: "Your evidence",
     title: "Build matches from facts, never guesses",
-    body: "Add your real skills, preferences and CV. Suggested changes stay reviewable and IR35Careers never invents experience or submits an unapproved packet.",
+    body: "Add your real skills, preferences and Resume. Suggested changes stay reviewable and IR35Careers never invents experience or submits an unapproved packet.",
   },
 ] as const;
 

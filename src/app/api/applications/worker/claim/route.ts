@@ -192,7 +192,7 @@ export async function POST(request: Request): Promise<Response> {
         {
           assignment: preflight(
             task,
-            "Add your full name to your Application Profile or CV.",
+            "Add your full name to your Application Profile or Resume.",
           ),
         },
         { headers: HEADERS },
@@ -231,7 +231,7 @@ export async function POST(request: Request): Promise<Response> {
         job,
         candidate: submissionCandidate,
         resume: {
-          label: String(packet.resume_version_label || "Application CV"),
+          label: String(packet.resume_version_label || "Application Resume"),
           text: resumeText,
         },
         coverLetter: normaliseCoverLetterSignoff(

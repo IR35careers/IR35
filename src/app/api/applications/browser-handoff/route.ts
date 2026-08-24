@@ -311,7 +311,7 @@ async function packetResponse(request: Request, token: string): Promise<Response
     candidateName,
     jobTitle: context.job.title,
     companyName: context.job.company_name,
-    versionLabel: String(context.packet.resume_version_label || "Application CV"),
+    versionLabel: String(context.packet.resume_version_label || "Application Resume"),
   });
   const facts = buildRunnerFacts(candidate, questions);
   return Response.json(
@@ -328,7 +328,7 @@ async function packetResponse(request: Request, token: string): Promise<Response
         candidateName,
       ),
       resume: {
-        filename: `${context.job.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "application"}-CV.pdf`,
+        filename: `${context.job.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "application"}-Resume.pdf`,
         mimeType: "application/pdf",
         base64: resumePdf.toString("base64"),
       },
