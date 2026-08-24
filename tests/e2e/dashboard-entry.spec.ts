@@ -12,8 +12,13 @@ test("first dashboard visit has a skippable guided tour and later visits welcome
   await expect(page.getByRole("searchbox", { name: "Search roles, skills, companies…" })).toBeVisible();
 
   await tour.getByRole("button", { name: "Next" }).click();
-  await expect(tour.getByRole("heading", { name: "Follow one clear application path" })).toBeVisible();
-  await expect(page.locator('[data-tour="application-journey"]')).toBeVisible();
+  await expect(tour.getByRole("heading", { name: "Compare UK contract opportunities" })).toBeVisible();
+
+  await tour.getByRole("button", { name: "Next" }).click();
+  await expect(tour.getByRole("heading", { name: "Let approved applications run in the background" })).toBeVisible();
+
+  await tour.getByRole("button", { name: "Next" }).click();
+  await expect(tour.getByRole("heading", { name: "See every application and employer reply" })).toBeVisible();
 
   await tour.getByRole("button", { name: "Next" }).click();
   await expect(tour.getByRole("heading", { name: "Build matches from facts, never guesses" })).toBeVisible();

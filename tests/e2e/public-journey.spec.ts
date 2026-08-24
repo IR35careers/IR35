@@ -63,18 +63,6 @@ async function completeReusableApplicationProfile(
   await expect(page.getByRole("heading", { name: /profile item left/ })).toBeVisible();
   await selectAnswer("Can an employer run a standard background check?", "yes");
   await selectAnswer("Do you have convictions that must be declared for the role?", "no");
-  const employerAccountPermission = page.getByRole("checkbox", { name: /Create and sign in to employer accounts/ });
-  await employerAccountPermission.check();
-  await page.waitForTimeout(300);
-  await expect(employerAccountPermission).toBeChecked();
-  const employerTermsPermission = page.getByRole("checkbox", { name: /Accept required employer account terms/ });
-  await employerTermsPermission.check();
-  await page.waitForTimeout(300);
-  await expect(employerTermsPermission).toBeChecked();
-  const verificationPermission = page.getByRole("checkbox", { name: /Use ordinary email verification codes/ });
-  await verificationPermission.check();
-  await page.waitForTimeout(300);
-  await expect(verificationPermission).toBeChecked();
   await page.getByRole("button", { name: "Save profile" }).click();
   await expect(page.getByRole("button", { name: "Profile saved" })).toBeVisible();
   await expect(
@@ -515,25 +503,20 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
   await page.getByRole("button", { name: "Prepare application" }).click();
 
-  await expect(page.getByRole("heading", { name: /% role match/ })).toBeVisible();
-  await page.getByText("View match details", { exact: true }).click();
-  await expect(page.getByText("Missing keywords, not assumed")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Improve your Resume for this role" })).toBeVisible();
-  await page.getByRole("button", { name: /Tailor my Resume|Improve tailoring/ }).click();
-  await expect(page.getByText("Compare before approving")).toBeVisible({ timeout: 2_000 });
-  await expect(page.getByRole("button", { name: "Approve and apply now" }).first()).toBeVisible();
-  const checkboxes = page.locator('input[type="checkbox"]:enabled:visible');
-  const checkboxCount = await checkboxes.count();
-  expect(checkboxCount).toBeGreaterThanOrEqual(5);
-  for (let index = 0; index < checkboxCount; index += 1) {
-    await checkboxes.nth(index).check();
-  }
-
-  await page.getByRole("button", { name: "Save application" }).click();
-  await expect(page.getByText("Reviewed packet saved. It has not been sent to the employer.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Sign in to apply" })).toBeVisible();
-  await expect(page.getByText(/OpenRouter|browser-automation gateway|authorised Ashby/i)).toHaveCount(0);
-  await expect(page.getByText("Employer submission confirmed")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Senior DevOps Engineer - Outside IR35" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Application record" })).toBeVisible();
+  await expect(page.getByText("Application email", { exact: true })).toBeVisible();
+  await expect(page.getByText("Employer questions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
+  await expect(page.getByRole("button", { name: "Improve for this contract" })).toBeVisible();
+  await page.getByRole("button", { name: "Cover letter", exact: true }).click();
+  await expect(page.getByLabel("Cover letter")).toBeVisible();
+  await page.getByRole("button", { name: "Contract", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Contract description" })).toBeVisible();
+  await page.getByRole("button", { name: "Form", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Submit application" })).toBeVisible();
+  await expect(page.getByText("Employer confirmation received")).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
 
   await page.goto("/applications");

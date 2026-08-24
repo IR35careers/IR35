@@ -8,6 +8,7 @@ import {
   useEffectEvent,
   useRef,
   type ChangeEvent,
+  type ReactNode,
 } from "react";
 import {
   AlertTriangle,
@@ -32,6 +33,7 @@ import {
   WorkspacePage,
   StatusPill,
 } from "@/components/workspace/WorkspacePage";
+import { ApplicationRecordWorkspace } from "@/components/workspace/ApplicationRecordWorkspace";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
@@ -1136,6 +1138,30 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     submissionConnection,
     submissionInProgress,
   ]);
+
+  let recordWorkspace: ReactNode = null;
+  if (application) {
+    recordWorkspace = (
+      <ApplicationRecordWorkspace
+        job={job}
+        application={application}
+        profile={workspace.profile}
+        inbox={workspace.inbox}
+        busy={busy}
+        notice={notice}
+        error={error}
+        submitted={submitted}
+        submissionInProgress={submissionInProgress}
+        answersReviewed={answersReviewed}
+        approvalsComplete={approvalsComplete}
+        onUpdate={updateApplication}
+        onSubmit={submitApprovedApplication}
+        onRefreshTailoring={runAiTailoring}
+        onResumeBlur={recalculateEditedCv}
+      />
+    );
+  }
+  if (recordWorkspace) return recordWorkspace;
 
   return (
     <WorkspacePage

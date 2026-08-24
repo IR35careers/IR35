@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
-  AlertCircle,
   ArrowRight,
   BriefcaseBusiness,
-  CalendarClock,
   ChevronRight,
   Download,
   Plus,
@@ -42,26 +40,37 @@ const PIPELINE: Array<{ id: ApplicationStatus; label: string }> = [
   { id: "offer", label: "Offer" },
 ];
 
-const CLOSED_STATUSES = new Set<ApplicationStatus>([
-  "offer",
-  "rejected",
-  "withdrawn",
-  "failed",
-  "skipped",
-]);
+type ApplicationView =
+  | "all"
+  | "submitted"
+  | "in_flight"
+  | "needs_review"
+  | "failed"
+  | "skipped";
 
-function applicationEventDetail(
-  event: ApplicationRecord["events"][number],
-  fallbackAttention?: ApplicationRecord["attention"],
-): string {
-  const attention = event.metadata?.attention;
-  if (!attention || typeof attention !== "object") {
-    return event.label === "Application attempt stopped and is ready to retry"
-      ? fallbackAttention?.message ?? ""
-      : "";
-  }
-  const message = (attention as { message?: unknown }).message;
-  return typeof message === "string" ? message.trim() : "";
+const APPLICATION_VIEWS: Array<{ id: ApplicationView; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "submitted", label: "Submitted" },
+  { id: "in_flight", label: "In flight" },
+  { id: "needs_review", label: "Needs you" },
+  { id: "failed", label: "Not submitted" },
+  { id: "skipped", label: "Skipped" },
+];
+
+function matchesApplicationView(
+  status: ApplicationStatus,
+  view: ApplicationView,
+): boolean {
+  if (view === "all") return true;
+  if (view === "submitted")
+    return ["applied", "viewed", "replied", "interview", "offer", "rejected"].includes(status);
+  if (view === "in_flight")
+    return ["ready", "applied", "viewed", "replied", "interview"].includes(status);
+  return status === view;
+}
+
+function resumeLabel(value: string) {
+  return value.replace(/\bCV\b/gi, "Resume");
 }
 
 function csvValue(value: unknown): string {
@@ -169,7 +178,7 @@ function manualRecord(input: {
 
 export function ApplicationTracker() {
   const workspace = useWorkspaceState();
-  const [filter, setFilter] = useState<"active" | "all" | "closed">("active");
+  const [view, setView] = useState<ApplicationView>("all");
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -185,11 +194,7 @@ export function ApplicationTracker() {
   const applications = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return workspace.applications.filter((application) => {
-      const statusMatches =
-        filter === "all" ||
-        (filter === "closed"
-          ? CLOSED_STATUSES.has(application.status)
-          : !CLOSED_STATUSES.has(application.status));
+      const statusMatches = matchesApplicationView(application.status, view);
       const searchMatches =
         !needle ||
         `${application.job.company_name} ${application.job.title} ${application.job.location}`
@@ -197,7 +202,7 @@ export function ApplicationTracker() {
           .includes(needle);
       return statusMatches && searchMatches;
     });
-  }, [filter, query, workspace.applications]);
+  }, [query, view, workspace.applications]);
   const messageCounts = useMemo(
     () =>
       new Map(
@@ -529,15 +534,15 @@ export function ApplicationTracker() {
       </section>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
-          {(["active", "all", "closed"] as const).map((item) => (
+        <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1">
+          {APPLICATION_VIEWS.map((item) => (
             <button
-              key={item}
+              key={item.id}
               type="button"
-              onClick={() => setFilter(item)}
-              className={`ir35-focus min-h-10 rounded-lg px-4 text-sm font-semibold capitalize ${filter === item ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              onClick={() => setView(item.id)}
+              className={`ir35-focus min-h-10 shrink-0 rounded-lg px-4 text-sm font-semibold ${view === item.id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
             >
-              {item}
+              {item.label}
             </button>
           ))}
         </div>
@@ -561,136 +566,93 @@ export function ApplicationTracker() {
           </p>
         </div>
       ) : (
-        <div className="mt-6 grid gap-4">
-          {applications.map((application) => {
-            const attention = application.attention;
-            const actionLabel =
-              attention?.actionLabel ??
-              (application.status === "ready" ||
-              application.status === "needs_review"
-                ? "Review and apply"
-                : "View application");
-            return (
-              <article
-                key={application.id}
-                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"
-              >
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px_220px] lg:items-center">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill status={application.status} />
-                      <span className="text-xs font-semibold text-slate-500">
-                        {application.matchScore}% Resume match
-                      </span>
-                    </div>
-                    <h2 className="mt-2 truncate text-lg font-semibold text-slate-950">
-                      {application.job.title}
-                    </h2>
-                    <p className="truncate text-sm text-slate-600">
-                      {application.job.company_name} ·{" "}
-                      {application.job.location}
-                    </p>
-                    <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-                      <CalendarClock size={13} /> Updated{" "}
-                      {new Date(application.updatedAt).toLocaleDateString(
-                        "en-GB",
-                        { day: "numeric", month: "short", year: "numeric" },
-                      )}
-                    </p>
-                    {application.status === "needs_review" && attention && (
-                      <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                        <AlertCircle
-                          size={15}
-                          className="mt-0.5 shrink-0 text-amber-700"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-amber-950">
-                            {attention.title}
-                          </p>
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-amber-900">
-                            {attention.message}
-                          </p>
+        <section className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[900px] border-collapse text-left">
+              <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                <tr>
+                  <th className="px-5 py-4">Contract</th>
+                  <th className="px-5 py-4">Resume</th>
+                  <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4">Updated</th>
+                  <th className="px-5 py-4"><span className="sr-only">Action</span></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {applications.map((application) => {
+                  const attention = application.attention;
+                  const actionLabel = application.status === "needs_review"
+                    ? "Review and apply"
+                    : application.status === "failed"
+                      ? "Review and retry"
+                      : application.status === "ready"
+                        ? "Review and apply"
+                        : "View application";
+                  return (
+                    <tr key={application.id} className="hover:bg-slate-50/70">
+                      <td className="px-5 py-4">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold text-brand-800">{application.job.company_name.slice(0, 1).toUpperCase()}</span>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-950">{application.job.title}</p>
+                            <p className="mt-1 text-xs text-slate-500">{application.job.company_name} · {application.job.location}</p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="max-w-48 truncate text-sm font-medium text-slate-800">{resumeLabel(application.resumeVersionLabel)}</p>
+                        <p className="mt-1 text-xs text-slate-500">{application.matchScore}% match</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <StatusPill status={application.status} />
+                        {attention && <p className="mt-2 max-w-56 line-clamp-2 text-xs leading-5 text-amber-800">{attention.title}</p>}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-slate-600">
+                        {new Date(application.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        <p className="mt-1 text-xs text-slate-400">{messageCounts.get(application.id) ?? 0} linked message{(messageCounts.get(application.id) ?? 0) === 1 ? "" : "s"}</p>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <Link href={`/applications/new/${application.job.id}${attention ? "#needs-attention" : ""}`} className={`ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white hover:bg-emerald-800" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"}`}>
+                          {actionLabel} <ChevronRight size={14} />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="divide-y divide-slate-100 md:hidden">
+            {applications.map((application) => {
+              const attention = application.attention;
+              const actionLabel = application.status === "needs_review"
+                ? "Review and apply"
+                : application.status === "failed"
+                  ? "Review and retry"
+                  : application.status === "ready"
+                    ? "Review and apply"
+                    : "View application";
+              return (
+                <article key={application.id} className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <StatusPill status={application.status} />
+                      <h2 className="mt-3 text-lg font-semibold text-slate-950">{application.job.title}</h2>
+                      <p className="mt-1 text-sm text-slate-600">{application.job.company_name} · {application.job.location}</p>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold text-slate-500">{application.matchScore}% match</span>
                   </div>
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                      Linked messages
-                    </p>
-                    <p className="mt-2 text-2xl font-bold text-slate-950">
-                      {messageCounts.get(application.id) ?? 0}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Recruiter updates for this role
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Link
-                      href={`/applications/new/${application.job.id}${attention ? "#needs-attention" : ""}`}
-                      className={`ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white shadow-sm hover:bg-emerald-800" : "border border-slate-300 text-slate-700 hover:border-brand-300"}`}
-                    >
-                      {actionLabel} <ChevronRight size={15} />
-                    </Link>
-                    <Link
-                      href={`/jobs/${application.job.id}`}
-                      className="ir35-focus inline-flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-semibold text-brand-700 hover:bg-brand-50"
-                    >
-                      Open role <ChevronRight size={15} />
-                    </Link>
-                  </div>
-                </div>
-                {application.events.length > 0 && (
-                  <details className="mt-5 border-t border-slate-100 pt-4">
-                    <summary className="ir35-focus cursor-pointer text-xs font-semibold text-slate-500 hover:text-slate-900">
-                      Application history
-                    </summary>
-                    <ol className="mt-3 grid gap-2 md:grid-cols-3">
-                      {application.events.slice(-3).map((event) => {
-                        const genericStop =
-                          event.label ===
-                            "Application attempt stopped and is ready to retry" &&
-                          Boolean(application.attention);
-                        const detail = applicationEventDetail(
-                          event,
-                          application.attention,
-                        );
-                        return (
-                          <li
-                            key={event.id}
-                            className="rounded-xl bg-slate-50 p-3"
-                          >
-                            <p className="text-xs font-semibold text-slate-800">
-                              {genericStop
-                                ? application.attention?.title
-                                : event.label}
-                            </p>
-                            {detail && (
-                              <p className="mt-1 text-xs leading-5 text-slate-600">
-                                {detail}
-                              </p>
-                            )}
-                            <p className="mt-1 text-[11px] text-slate-500">
-                              {new Date(event.createdAt).toLocaleString(
-                                "en-GB",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </p>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </details>
-                )}
-              </article>
-            );
-          })}
-        </div>
+                  {attention && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900"><strong className="block">{attention.title}</strong>{attention.message}</div>}
+                  <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>{resumeLabel(application.resumeVersionLabel)}</span><span>{messageCounts.get(application.id) ?? 0} messages</span></div>
+                  <Link href={`/applications/new/${application.job.id}${attention ? "#needs-attention" : ""}`} className={`ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-between rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white" : "border border-slate-300 text-slate-700"}`}>
+                    {actionLabel} <ChevronRight size={15} />
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {addOpen && (

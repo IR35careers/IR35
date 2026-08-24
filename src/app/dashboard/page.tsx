@@ -192,7 +192,7 @@ export default function DashboardPage() {
 
   const stats = [
     { icon: Target, value: matches.length > 0 ? String(matches.length) : "0", label: "Matches for you", sub: "View matches", href: "#matches", accent: "green" },
-    { icon: ShieldCheck, value: String(outsideCount), label: "Outside IR35", sub: "View jobs", href: "/jobs?ir35=outside", accent: "green" },
+    { icon: ShieldCheck, value: String(outsideCount), label: "Outside IR35", sub: "View contracts", href: "/jobs?ir35=outside", accent: "green" },
     { icon: PoundSterling, value: avgRate ? `£${avgRate}` : "N/A", label: "Avg match day rate", sub: "Browse rates", href: "/jobs", accent: "green" },
     { icon: Briefcase, value: liveTotal !== null ? liveTotal.toLocaleString() : "N/A", label: "Live contracts", sub: "Browse all", href: "/jobs", accent: "green" },
   ];

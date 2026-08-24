@@ -30,13 +30,14 @@ type NavItem = {
   label: string;
   icon: LucideIcon;
   badge?: "applications" | "unread";
+  tour?: string;
 };
 
 const PRIMARY_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Browse jobs", icon: Search },
-  { href: "/automation", label: "Auto Apply", icon: Bot },
-  { href: "/applications", label: "Tracker", icon: BriefcaseBusiness, badge: "applications" },
+  { href: "/jobs", label: "Browse contracts", icon: Search, tour: "browse-contracts" },
+  { href: "/automation", label: "Auto Apply", icon: Bot, tour: "auto-apply" },
+  { href: "/applications", label: "Tracker", icon: BriefcaseBusiness, badge: "applications", tour: "application-tracker" },
   { href: "/inbox", label: "Inbox", icon: Inbox, badge: "unread" },
   { href: "/profile", label: "Profile", icon: UserRound },
 ] satisfies readonly NavItem[];
@@ -83,6 +84,7 @@ export function AppNav() {
       <Link
         key={item.href}
         href={item.href}
+        data-tour={item.tour}
         aria-current={active ? "page" : undefined}
         className={`ir35-focus group inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors ${
           active
