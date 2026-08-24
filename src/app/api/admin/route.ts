@@ -58,6 +58,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { enrichFeedback, feedbackSummary, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
+import { loadGoogleAnalyticsSnapshot } from "@/lib/google-analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -296,6 +297,7 @@ export async function GET(request: Request): Promise<Response> {
         submissionsResult,
         messagesResult,
         campaignsResult,
+        visitorAnalytics,
       ] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }).not("cv_path", "is", null),
@@ -306,6 +308,7 @@ export async function GET(request: Request): Promise<Response> {
         supabase.from("application_submissions").select("status, error_code").limit(5000),
         supabase.from("inbox_messages").select("id", { count: "exact", head: true }),
         supabase.from("moderation_logs").select("summary, created_at").eq("run_type", "email_campaign").order("created_at", { ascending: false }).limit(500),
+        loadGoogleAnalyticsSnapshot(),
       ]);
 
       const now = Date.now();
@@ -357,6 +360,7 @@ export async function GET(request: Request): Promise<Response> {
           campaignsSent: campaignSends.length,
           campaignAccepted,
           campaignFailed,
+          visitorAnalytics,
         },
       });
     }

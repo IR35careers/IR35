@@ -18,6 +18,7 @@ import {
   ExternalLink,
   FileCheck2,
   Gauge,
+  Globe2,
   Home,
   Inbox,
   LayoutDashboard,
@@ -55,6 +56,7 @@ import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from
 import type { IntegrationStatus } from "@/lib/integration-status";
 import { feedbackSummary as summariseFeedback, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
 import { supabase } from "@/lib/supabase";
+import type { GoogleAnalyticsSnapshot } from "@/lib/google-analytics";
 
 type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "feedback" | "campaigns" | "waitlist" | "runs" | "system";
 
@@ -187,6 +189,7 @@ type AnalyticsData = {
   campaignsSent: number;
   campaignAccepted: number;
   campaignFailed: number;
+  visitorAnalytics: GoogleAnalyticsSnapshot;
 };
 
 type AdminData = {
@@ -1337,6 +1340,80 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   );
 }
 
+function compactDuration(seconds: number) {
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+}
+
+function VisitorAnalyticsPanel({ analytics }: { analytics: GoogleAnalyticsSnapshot }) {
+  if (!analytics.trackingConfigured || !analytics.reportingConfigured || !analytics.connected) {
+    const title = !analytics.trackingConfigured
+      ? "Google Analytics setup is waiting for its Measurement ID"
+      : !analytics.reportingConfigured
+        ? "Visitor tracking is ready; reporting access is not connected"
+        : "Google Analytics reporting needs attention";
+    const detail = !analytics.trackingConfigured
+      ? "Finish the Google Analytics property and web data stream, then add the Measurement ID to Vercel. Analytics remains off for every visitor until they actively allow it."
+      : !analytics.reportingConfigured
+        ? "The website can collect consented visits. Add the Analytics property ID and a read-only service account to show locations, devices, sources and pages in this admin panel."
+        : analytics.error || "The Google reporting service did not return data.";
+    return (
+      <Panel title="Website visitors" description="Google Analytics 4, with consent-first tracking and no advertising signals.">
+        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_280px] sm:p-6">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+            <p className="text-sm font-semibold text-amber-950">{title}</p>
+            <p className="mt-2 text-sm leading-6 text-amber-900">{detail}</p>
+            <p className="mt-3 text-xs leading-5 text-amber-800">Required Vercel values: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID, GOOGLE_ANALYTICS_PROPERTY_ID, GOOGLE_ANALYTICS_CLIENT_EMAIL and GOOGLE_ANALYTICS_PRIVATE_KEY.</p>
+          </div>
+          <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="flex min-h-28 items-center justify-between gap-4 rounded-2xl bg-slate-950 p-5 text-white transition hover:bg-slate-900">
+            <span><span className="block text-sm font-semibold">Open Google Analytics</span><span className="mt-2 block text-xs leading-5 text-slate-400">Finish setup or inspect the original reports.</span></span><ExternalLink size={18} />
+          </a>
+        </div>
+      </Panel>
+    );
+  }
+
+  const maxViews = Math.max(...analytics.daily.map((day) => day.pageViews), 1);
+  const summaryCards = [
+    { label: "Live now", value: analytics.realtimeUsers, detail: "Active in the last 30 minutes", icon: Activity, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "Visitors", value: analytics.summary.activeUsers, detail: `${formatNumber(analytics.summary.newUsers)} new visitors`, icon: Users, tone: "bg-blue-50 text-blue-700" },
+    { label: "Sessions", value: analytics.summary.sessions, detail: `${formatNumber(analytics.summary.engagedSessions)} engaged`, icon: Globe2, tone: "bg-violet-50 text-violet-700" },
+    { label: "Page views", value: analytics.summary.pageViews, detail: `${analytics.summary.bounceRate}% bounce rate`, icon: BarChart3, tone: "bg-amber-50 text-amber-700" },
+  ];
+  const list = (title: string, rows: Array<{ label: string; value: number; secondary?: string }>, empty: string) => (
+    <Panel title={title} description="Last 30 days">
+      {rows.length ? <div className="divide-y divide-slate-100">{rows.map((row, index) => <div key={`${row.label}-${index}`} className="flex items-center justify-between gap-4 px-5 py-3.5"><div className="min-w-0"><p className="truncate text-xs font-semibold text-slate-800">{row.label || "Not set"}</p>{row.secondary && <p className="mt-1 truncate text-[11px] text-slate-500">{row.secondary}</p>}</div><span className="shrink-0 text-xs font-semibold tabular-nums text-slate-700">{formatNumber(row.value)}</span></div>)}</div> : <EmptyState title={empty} detail="Data appears after consented visits are processed." />}
+    </Panel>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-700">Google Analytics 4</p><h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Website visitors</h2><p className="mt-1 text-xs text-slate-500">Aggregated, consented traffic. No Resume content, application answers or individual account identity is sent.</p></div>
+        <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:border-slate-300">Open Google Analytics <ExternalLink size={13} /></a>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {summaryCards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{formatNumber(card.value)}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.85fr]">
+        <Panel title="Visitor activity" description="Daily page views during the last 30 days.">
+          <div className="p-5 sm:p-6">
+            <div className="flex h-52 items-end gap-1.5" aria-label="Daily website page views">{analytics.daily.map((day) => <div key={day.date} className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[9px] font-semibold tabular-nums text-slate-500 opacity-0 group-hover:opacity-100">{day.pageViews}</span><div className="w-full rounded-t bg-gradient-to-t from-emerald-700 to-emerald-400" style={{ height: `${Math.max((day.pageViews / maxViews) * 168, day.pageViews ? 7 : 2)}px` }} title={`${day.date}: ${day.pageViews} page views`} /></div>)}</div>
+            <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5"><div><p className="text-xs text-slate-500">Average session</p><p className="mt-1 text-lg font-semibold tabular-nums text-slate-900">{compactDuration(analytics.summary.averageSessionDuration)}</p></div><div><p className="text-xs text-slate-500">Consent scope</p><p className="mt-1 text-sm font-semibold text-emerald-700">Analytics only</p></div></div>
+          </div>
+        </Panel>
+        {list("Visitor countries", analytics.countries, "No country data yet")}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-3">
+        {list("Cities and regions", analytics.cities, "No city data yet")}
+        {list("Traffic sources", analytics.sources, "No source data yet")}
+        {list("Devices", analytics.devices, "No device data yet")}
+      </div>
+      {list("Popular pages", analytics.pages, "No page data yet")}
+    </div>
+  );
+}
+
 function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: AnalyticsData; recovering: boolean; onRecover: () => void }) {
   const cvRate = analytics.profiles > 0 ? Math.round((analytics.cvsUploaded / analytics.profiles) * 100) : 0;
   const activeRate = analytics.totalUsers > 0 ? Math.round((analytics.activeUsers7d / analytics.totalUsers) * 100) : 0;
@@ -1364,6 +1441,7 @@ function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: Analy
 
   return (
     <div className="mt-7 space-y-5">
+      <VisitorAnalyticsPanel analytics={analytics.visitorAnalytics} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"><div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><TrendingUp size={16} className="text-slate-300" /></div><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{typeof card.value === "number" ? formatNumber(card.value) : card.value}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
       </div>

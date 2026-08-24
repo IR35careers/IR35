@@ -5,6 +5,7 @@ import "./globals.css";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
 import { FeedbackBubble } from "@/components/FeedbackBubble";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { SITE_ORIGIN } from "@/lib/seo";
 
 const inter = Inter({
@@ -81,11 +82,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await headers();
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
   return (
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
+        <GoogleAnalytics nonce={nonce} />
         <FeedbackBubble />
         <CookieNotice />
         <PwaRegister />

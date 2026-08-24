@@ -21,7 +21,7 @@ function configuredSupabaseConnectSources(): string[] {
 }
 
 function contentSecurityPolicy(nonce: string): string {
-  const connectSources = ["'self'", ...configuredSupabaseConnectSources()].join(" ");
+  const connectSources = ["'self'", ...configuredSupabaseConnectSources(), "https://www.google-analytics.com", "https://region1.google-analytics.com", "https://analytics.google.com"].join(" ");
   const developmentEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
@@ -29,12 +29,12 @@ function contentSecurityPolicy(nonce: string): string {
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentEval}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com${developmentEval}`,
     "script-src-attr 'none'",
     "style-src 'self'",
     `style-src-elem 'self' 'nonce-${nonce}'`,
     "style-src-attr 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://www.google-analytics.com",
     "font-src 'self' data:",
     `connect-src ${connectSources}`,
     "media-src 'self' blob:",
