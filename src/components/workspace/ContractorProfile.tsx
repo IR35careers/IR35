@@ -1693,8 +1693,8 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             </h2>
             <p className="mt-2 text-sm leading-6 text-emerald-900">
               IR35Careers never invents qualifications, experience or legal
-              answers. A final employer submission always requires your explicit
-              instruction.
+              answers. You choose whether each application pauses for review or
+              uses your saved Auto Apply permission.
             </p>
           </aside>
         </div>

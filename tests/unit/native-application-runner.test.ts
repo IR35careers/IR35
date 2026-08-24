@@ -79,6 +79,11 @@ describe("native application runner", () => {
     expect(totaljobs.kind).toBe("totaljobs");
     expect(totaljobs.nextPattern.test("Continue with email")).toBe(true);
     expect(totaljobs.nextPattern.test("Continue application")).toBe(true);
+    expect(detectAts("https://jobs.example.icims.com/jobs/123").kind).toBe("icims");
+    expect(detectAts("https://example.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/job/123").kind).toBe("oracle");
+    expect(detectAts("https://workforcenow.adp.com/mascsr/default/mdf/recruitment/job/123").kind).toBe("adp");
+    expect(detectAts("https://example.bamboohr.com/careers/123").kind).toBe("bamboohr");
+    expect(detectAts("https://jobs.teamtailor.com/example/123").kind).toBe("teamtailor");
     expect(detectAts("https://careers.example.com/role").kind).toBe("generic");
     expect(nativeRunnerHostAllowed("jobs.ashbyhq.com")).toBe(true);
     expect(nativeRunnerHostAllowed("www.adzuna.co.uk")).toBe(true);

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   AUTO_APPLY_CONSENT_VERSION,
+  autoApplyNeedsReview,
+  autoApplyReviewReason,
   hasCurrentAutoApplyConsent,
   laneMatchesJob,
   unresolvedRequiredQuestions,
@@ -26,5 +28,36 @@ describe("auto apply", () => {
       { id: "3", label: "Optional", answer: "", required: false, reviewed: false, source: "user" as const },
     ];
     expect(unresolvedRequiredQuestions(questions).map((item) => item.id)).toEqual(["2"]);
+  });
+
+  it("keeps Resume review and final submission review as separate controls", () => {
+    expect(
+      autoApplyNeedsReview({
+        resumeOptimisation: "honest",
+        autoApproveSafeEdits: false,
+        reviewBeforeSubmit: false,
+      }),
+    ).toBe(true);
+    expect(
+      autoApplyNeedsReview({
+        resumeOptimisation: "honest",
+        autoApproveSafeEdits: true,
+        reviewBeforeSubmit: true,
+      }),
+    ).toBe(true);
+    expect(
+      autoApplyNeedsReview({
+        resumeOptimisation: "honest",
+        autoApproveSafeEdits: true,
+        reviewBeforeSubmit: false,
+      }),
+    ).toBe(false);
+    expect(
+      autoApplyReviewReason({
+        resumeOptimisation: "strong",
+        autoApproveSafeEdits: false,
+        reviewBeforeSubmit: false,
+      }),
+    ).toContain("Resume changes");
   });
 });

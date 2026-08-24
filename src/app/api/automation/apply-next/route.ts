@@ -2,6 +2,8 @@ import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import { openRouterTailoringConfig, tailorResumeWithOpenRouter } from "@/lib/ai/openrouter-tailoring";
 import {
   applyTailoringResult,
+  autoApplyNeedsReview,
+  autoApplyReviewReason,
   hasCurrentAutoApplyConsent,
   laneMatchesJob,
   unresolvedRequiredQuestions,
@@ -92,6 +94,34 @@ async function saveNeedsUser(application: ApplicationRecord, userId: string): Pr
   if (eventError) throw new Error(eventError.message);
 }
 
+async function saveForReview(
+  application: ApplicationRecord,
+  userId: string,
+  label: string,
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+  const { error: packetError } = await admin
+    .from("application_packets")
+    .upsert(packetRow(application, userId), {
+      onConflict: "user_id,idempotency_key",
+    });
+  if (packetError) throw new Error(packetError.message);
+  const { error: eventError } = await admin.from("application_events").upsert(
+    {
+      id: crypto.randomUUID(),
+      user_id: userId,
+      application_id: application.id,
+      event_type: "prepared",
+      label,
+      metadata: { source: "auto_apply", reviewRequired: true },
+      idempotency_key: `auto:${application.job.id}:review-ready`,
+      created_at: application.updatedAt,
+    },
+    { onConflict: "user_id,idempotency_key" },
+  );
+  if (eventError) throw new Error(eventError.message);
+}
+
 export async function POST(request: Request): Promise<Response> {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
@@ -152,8 +182,34 @@ export async function POST(request: Request): Promise<Response> {
         }))
       : storedPreferences.autoApplyLanes;
     const preferences: ApplicationPreferences = {
-      ...storedPreferences,
-      ...body.preferences,
+      resumeOptimisation:
+        body.preferences?.resumeOptimisation ??
+        storedPreferences.resumeOptimisation ??
+        "honest",
+      autoApproveSafeEdits:
+        body.preferences?.autoApproveSafeEdits ??
+        storedPreferences.autoApproveSafeEdits ??
+        true,
+      reviewBeforeSubmit:
+        body.preferences?.reviewBeforeSubmit ??
+        storedPreferences.reviewBeforeSubmit ??
+        true,
+      generateCoverLetter:
+        body.preferences?.generateCoverLetter ??
+        storedPreferences.generateCoverLetter ??
+        true,
+      usePrivateApplicationEmail:
+        body.preferences?.usePrivateApplicationEmail ??
+        storedPreferences.usePrivateApplicationEmail ??
+        true,
+      autoApplyEnabled:
+        body.preferences?.autoApplyEnabled ?? storedPreferences.autoApplyEnabled,
+      autoApplyConsentAt:
+        body.preferences?.autoApplyConsentAt ??
+        storedPreferences.autoApplyConsentAt,
+      autoApplyConsentVersion:
+        body.preferences?.autoApplyConsentVersion ??
+        storedPreferences.autoApplyConsentVersion,
       autoApplyLanes: requestedLanes,
     };
     if (!hasCurrentAutoApplyConsent({ enabled: preferences.autoApplyEnabled, consentAt: preferences.autoApplyConsentAt, consentVersion: preferences.autoApplyConsentVersion })) {
@@ -249,15 +305,42 @@ export async function POST(request: Request): Promise<Response> {
     }
     if (!application) return Response.json({ state: "no_match", message: "No new contract currently meets your saved Auto Apply rules." }, { headers: NO_STORE });
 
-    let tailoring;
-    try {
-      tailoring = openRouterTailoringConfig()
-        ? await tailorResumeWithOpenRouter({ cvText: application.sourceCvText, job: application.job, timeoutMs: 25_000 })
-        : buildLocalTailoringResult(application.sourceCvText, application.job);
-    } catch {
-      tailoring = buildLocalTailoringResult(application.sourceCvText, application.job);
+    const prepareRoleMaterials =
+      preferences.resumeOptimisation !== "off" ||
+      preferences.generateCoverLetter;
+    if (prepareRoleMaterials) {
+      let tailoring;
+      try {
+        tailoring = openRouterTailoringConfig()
+          ? await tailorResumeWithOpenRouter({
+              cvText: application.sourceCvText,
+              job: application.job,
+              timeoutMs: 25_000,
+            })
+          : buildLocalTailoringResult(
+              application.sourceCvText,
+              application.job,
+            );
+      } catch {
+        tailoring = buildLocalTailoringResult(
+          application.sourceCvText,
+          application.job,
+        );
+      }
+      if (
+        preferences.resumeOptimisation !== "off" &&
+        preferences.autoApproveSafeEdits
+      )
+        application = applyTailoringResult(application, tailoring);
+      else if (preferences.generateCoverLetter && tailoring.coverLetter.trim())
+        application = {
+          ...application,
+          coverLetter: tailoring.coverLetter.trim(),
+          updatedAt: new Date().toISOString(),
+        };
     }
-    application = applyTailoringResult(application, tailoring);
+    if (!preferences.generateCoverLetter)
+      application = { ...application, coverLetter: "" };
     const missing = unresolvedRequiredQuestions(application.questions);
     if (missing.length > 0) {
       application = { ...application, status: "needs_review", submissionApproved: false, updatedAt: new Date().toISOString() };
@@ -276,6 +359,42 @@ export async function POST(request: Request): Promise<Response> {
         idempotencyKey: `auto:${application.job.id}:needs-user`,
       }).catch(() => null);
       return Response.json({ state: "needs_user", application, questions: missing, message: `${missing.length} employer answer${missing.length === 1 ? " is" : "s are"} needed before this application can be sent.` }, { status: 202, headers: NO_STORE });
+    }
+
+    if (autoApplyNeedsReview(preferences)) {
+      const reviewReason = autoApplyReviewReason(preferences);
+      const materialsApproved = Boolean(
+        preferences.autoApproveSafeEdits ||
+          preferences.resumeOptimisation === "off",
+      );
+      application = {
+        ...application,
+        status: materialsApproved ? "ready" : "needs_review",
+        truthApproved: materialsApproved,
+        materialsApproved,
+        submissionApproved: false,
+        updatedAt: new Date().toISOString(),
+        events: [
+          ...application.events,
+          {
+            id: crypto.randomUUID(),
+            applicationId: application.id,
+            type: "prepared",
+            label: reviewReason,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      };
+      await saveForReview(application, userId, reviewReason);
+      return Response.json(
+        {
+          state: "review_ready",
+          application,
+          message: reviewReason,
+          action: `/applications/new/${application.job.id}`,
+        },
+        { status: 202, headers: NO_STORE },
+      );
     }
 
     application = {

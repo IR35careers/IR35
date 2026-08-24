@@ -1,4 +1,24 @@
-export type AtsKind = "greenhouse" | "lever" | "ashby" | "workable" | "smartrecruiters" | "workday" | "totaljobs" | "generic";
+export type AtsKind =
+  | "greenhouse"
+  | "lever"
+  | "ashby"
+  | "workable"
+  | "smartrecruiters"
+  | "workday"
+  | "totaljobs"
+  | "icims"
+  | "oracle"
+  | "adp"
+  | "bamboohr"
+  | "jobvite"
+  | "ukg"
+  | "successfactors"
+  | "dayforce"
+  | "teamtailor"
+  | "recruitee"
+  | "pinpoint"
+  | "rippling"
+  | "generic";
 
 export function shouldTreatSingleFileAsResume(input: {
   atsKind: AtsKind;
@@ -67,6 +87,18 @@ const DEFINITIONS: Record<AtsKind, AtsDefinition> = {
   smartrecruiters: { kind: "smartrecruiters", label: "SmartRecruiters", ...COMMON },
   workday: { kind: "workday", label: "Workday", ...COMMON },
   totaljobs: { kind: "totaljobs", label: "Totaljobs", ...TOTALJOBS },
+  icims: { kind: "icims", label: "iCIMS", ...COMMON },
+  oracle: { kind: "oracle", label: "Oracle Recruiting", ...COMMON },
+  adp: { kind: "adp", label: "ADP", ...COMMON },
+  bamboohr: { kind: "bamboohr", label: "BambooHR", ...COMMON },
+  jobvite: { kind: "jobvite", label: "Jobvite", ...COMMON },
+  ukg: { kind: "ukg", label: "UKG", ...COMMON },
+  successfactors: { kind: "successfactors", label: "SAP SuccessFactors", ...COMMON },
+  dayforce: { kind: "dayforce", label: "Dayforce", ...COMMON },
+  teamtailor: { kind: "teamtailor", label: "Teamtailor", ...COMMON },
+  recruitee: { kind: "recruitee", label: "Recruitee", ...COMMON },
+  pinpoint: { kind: "pinpoint", label: "Pinpoint", ...COMMON },
+  rippling: { kind: "rippling", label: "Rippling", ...COMMON },
   generic: { kind: "generic", label: "Employer application portal", ...COMMON },
 };
 
@@ -82,6 +114,20 @@ const ATS_DOMAINS: Array<{ domain: string; kind: Exclude<AtsKind, "generic"> }> 
   { domain: "myworkday.com", kind: "workday" },
   { domain: "workday.com", kind: "workday" },
   { domain: "totaljobs.com", kind: "totaljobs" },
+  { domain: "icims.com", kind: "icims" },
+  { domain: "oraclecloud.com", kind: "oracle" },
+  { domain: "taleo.net", kind: "oracle" },
+  { domain: "adp.com", kind: "adp" },
+  { domain: "bamboohr.com", kind: "bamboohr" },
+  { domain: "jobvite.com", kind: "jobvite" },
+  { domain: "ultipro.com", kind: "ukg" },
+  { domain: "ukg.com", kind: "ukg" },
+  { domain: "successfactors.com", kind: "successfactors" },
+  { domain: "dayforcehcm.com", kind: "dayforce" },
+  { domain: "teamtailor.com", kind: "teamtailor" },
+  { domain: "recruitee.com", kind: "recruitee" },
+  { domain: "pinpointhq.com", kind: "pinpoint" },
+  { domain: "rippling.com", kind: "rippling" },
 ];
 
 const ATS_SENDER_DOMAINS: Record<Exclude<AtsKind, "generic">, string[]> = {
@@ -92,6 +138,18 @@ const ATS_SENDER_DOMAINS: Record<Exclude<AtsKind, "generic">, string[]> = {
   smartrecruiters: ["smartrecruiters.com"],
   workday: ["workday.com", "myworkday.com", "myworkdayjobs.com"],
   totaljobs: ["totaljobs.com"],
+  icims: ["icims.com"],
+  oracle: ["oraclecloud.com", "taleo.net"],
+  adp: ["adp.com"],
+  bamboohr: ["bamboohr.com"],
+  jobvite: ["jobvite.com"],
+  ukg: ["ultipro.com", "ukg.com"],
+  successfactors: ["successfactors.com", "sap.com"],
+  dayforce: ["dayforcehcm.com"],
+  teamtailor: ["teamtailor.com"],
+  recruitee: ["recruitee.com"],
+  pinpoint: ["pinpointhq.com"],
+  rippling: ["rippling.com"],
 };
 
 // These are job-discovery handoff pages rather than employer ATS products.

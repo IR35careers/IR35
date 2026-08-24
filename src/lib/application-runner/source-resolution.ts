@@ -14,6 +14,20 @@ const DIRECT_APPLICATION_DOMAINS = [
   "myworkday.com",
   "workday.com",
   "totaljobs.com",
+  "icims.com",
+  "oraclecloud.com",
+  "taleo.net",
+  "adp.com",
+  "bamboohr.com",
+  "jobvite.com",
+  "ultipro.com",
+  "ukg.com",
+  "successfactors.com",
+  "dayforcehcm.com",
+  "teamtailor.com",
+  "recruitee.com",
+  "pinpointhq.com",
+  "rippling.com",
 ] as const;
 
 function hostMatches(host: string, domain: string): boolean {

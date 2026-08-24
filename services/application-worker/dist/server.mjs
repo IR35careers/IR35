@@ -72,6 +72,18 @@ var DEFINITIONS = {
   smartrecruiters: { kind: "smartrecruiters", label: "SmartRecruiters", ...COMMON },
   workday: { kind: "workday", label: "Workday", ...COMMON },
   totaljobs: { kind: "totaljobs", label: "Totaljobs", ...TOTALJOBS },
+  icims: { kind: "icims", label: "iCIMS", ...COMMON },
+  oracle: { kind: "oracle", label: "Oracle Recruiting", ...COMMON },
+  adp: { kind: "adp", label: "ADP", ...COMMON },
+  bamboohr: { kind: "bamboohr", label: "BambooHR", ...COMMON },
+  jobvite: { kind: "jobvite", label: "Jobvite", ...COMMON },
+  ukg: { kind: "ukg", label: "UKG", ...COMMON },
+  successfactors: { kind: "successfactors", label: "SAP SuccessFactors", ...COMMON },
+  dayforce: { kind: "dayforce", label: "Dayforce", ...COMMON },
+  teamtailor: { kind: "teamtailor", label: "Teamtailor", ...COMMON },
+  recruitee: { kind: "recruitee", label: "Recruitee", ...COMMON },
+  pinpoint: { kind: "pinpoint", label: "Pinpoint", ...COMMON },
+  rippling: { kind: "rippling", label: "Rippling", ...COMMON },
   generic: { kind: "generic", label: "Employer application portal", ...COMMON }
 };
 var ATS_DOMAINS = [
@@ -85,7 +97,21 @@ var ATS_DOMAINS = [
   { domain: "myworkdayjobs.com", kind: "workday" },
   { domain: "myworkday.com", kind: "workday" },
   { domain: "workday.com", kind: "workday" },
-  { domain: "totaljobs.com", kind: "totaljobs" }
+  { domain: "totaljobs.com", kind: "totaljobs" },
+  { domain: "icims.com", kind: "icims" },
+  { domain: "oraclecloud.com", kind: "oracle" },
+  { domain: "taleo.net", kind: "oracle" },
+  { domain: "adp.com", kind: "adp" },
+  { domain: "bamboohr.com", kind: "bamboohr" },
+  { domain: "jobvite.com", kind: "jobvite" },
+  { domain: "ultipro.com", kind: "ukg" },
+  { domain: "ukg.com", kind: "ukg" },
+  { domain: "successfactors.com", kind: "successfactors" },
+  { domain: "dayforcehcm.com", kind: "dayforce" },
+  { domain: "teamtailor.com", kind: "teamtailor" },
+  { domain: "recruitee.com", kind: "recruitee" },
+  { domain: "pinpointhq.com", kind: "pinpoint" },
+  { domain: "rippling.com", kind: "rippling" }
 ];
 var JOB_BOARD_DOMAINS = [
   "adzuna.co.uk",

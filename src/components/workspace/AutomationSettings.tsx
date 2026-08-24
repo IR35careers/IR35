@@ -38,6 +38,23 @@ export function AutomationSettings() {
     dailyLimit: clampDailyApplicationLimit(workspace.automation.dailyLimit, workspace.entitlement),
   }));
   const [autoApplyEnabled, setAutoApplyEnabled] = useState(Boolean(storedPreferences.autoApplyEnabled));
+  const [workflowPreferences, setWorkflowPreferences] = useState<
+    Pick<
+      ApplicationPreferences,
+      | "resumeOptimisation"
+      | "autoApproveSafeEdits"
+      | "reviewBeforeSubmit"
+      | "generateCoverLetter"
+      | "usePrivateApplicationEmail"
+    >
+  >({
+    resumeOptimisation: storedPreferences.resumeOptimisation ?? "honest",
+    autoApproveSafeEdits: storedPreferences.autoApproveSafeEdits ?? true,
+    reviewBeforeSubmit: storedPreferences.reviewBeforeSubmit ?? true,
+    generateCoverLetter: storedPreferences.generateCoverLetter ?? true,
+    usePrivateApplicationEmail:
+      storedPreferences.usePrivateApplicationEmail ?? true,
+  });
   const [consentAccepted, setConsentAccepted] = useState(hasCurrentAutoApplyConsent({
     enabled: storedPreferences.autoApplyEnabled,
     consentAt: storedPreferences.autoApplyConsentAt,
@@ -71,6 +88,7 @@ export function AutomationSettings() {
 
   const preferencesForSave = (): ApplicationPreferences => ({
     ...storedPreferences,
+    ...workflowPreferences,
     autoApplyEnabled: autoApplyEnabled && consentAccepted,
     autoApplyConsentAt: autoApplyEnabled && consentAccepted
       ? storedPreferences.autoApplyConsentAt || new Date().toISOString()
@@ -194,6 +212,7 @@ export function AutomationSettings() {
       }
       if (!response.ok && response.status !== 202) throw new Error(payload.error ?? payload.message ?? "Auto Apply could not complete the contract.");
       if (payload.state === "needs_user") setNotice(payload.message || "This application needs an answer from you. Open Applications to continue.");
+      else if (payload.state === "review_ready") setNotice(payload.message || "The application is prepared and ready for your review.");
       else if (payload.application?.status === "applied") setNotice(`Applied successfully to ${payload.application.job.title} at ${payload.application.job.company_name}.`);
       else setNotice(payload.message || "The application has started. Its employer status will update in Applications.");
     } catch (error) {
@@ -272,6 +291,94 @@ export function AutomationSettings() {
                 </button>
               </div>
             )}
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">
+                Contract application workflow
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-slate-950">
+                Find, prepare, apply and track
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                These controls decide what IR35Careers does in the background
+                for every matching UK contract.
+              </p>
+            </div>
+            <ol className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                ["01", "Find", "Match role, rate, IR35 status and location."],
+                ["02", "Prepare", "Build truthful role-specific application materials."],
+                ["03", "Apply", "Complete a compatible employer form in the cloud."],
+                ["04", "Track", "Store the receipt and connect recruiter replies."],
+              ].map(([number, label, help]) => (
+                <li key={number} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <span className="text-xs font-bold text-brand-700">{number}</span>
+                  <strong className="mt-2 block text-sm text-slate-950">{label}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <h3 className="text-sm font-bold text-slate-950">Resume preparation</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {(
+                  [
+                    ["off", "Off", "Use the saved Resume unchanged."],
+                    ["honest", "Honest", "Improve relevance using existing evidence."],
+                    ["strong", "Strong", "Rewrite more comprehensively without adding claims."],
+                  ] as const
+                ).map(([value, label, help]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={workflowPreferences.resumeOptimisation === value}
+                    onClick={() => {
+                      setWorkflowPreferences((current) => ({ ...current, resumeOptimisation: value }));
+                      setSaved(false);
+                    }}
+                    className={`ir35-focus min-h-24 rounded-2xl border p-4 text-left ${workflowPreferences.resumeOptimisation === value ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white"}`}
+                  >
+                    <strong className="block text-sm text-slate-950">{label}</strong>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  ["autoApproveSafeEdits", "Auto-approve safe Resume edits", "Apply only evidence-backed edits without pausing."],
+                  ["reviewBeforeSubmit", "Review before submit", "Prepare the form, then wait for your final approval."],
+                  ["generateCoverLetter", "Generate a cover letter", "Create a concise letter from verified Resume evidence."],
+                  ["usePrivateApplicationEmail", "Use my IR35Careers application email", "Link employer replies to the correct contract and forward them."],
+                ] as const
+              ).map(([key, label, help]) => (
+                <label key={key} className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4">
+                  <span>
+                    <strong className="block text-sm text-slate-950">{label}</strong>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={workflowPreferences[key]}
+                    onChange={(event) => {
+                      setWorkflowPreferences((current) => ({ ...current, [key]: event.target.checked }));
+                      setSaved(false);
+                    }}
+                    className="mt-1 h-5 w-5 shrink-0 accent-emerald-700"
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="mt-4 rounded-2xl bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-200">
+              {workflowPreferences.reviewBeforeSubmit
+                ? "Current mode: matching contracts are prepared automatically and wait for your approval before submission."
+                : "Current mode: eligible contracts are submitted automatically after required answers and safe Resume changes are approved."}
+            </p>
           </section>
 
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">

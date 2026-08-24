@@ -1,6 +1,11 @@
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
-import type { ApplicationQuestion, ApplicationRecord, AutoApplyLane } from "@/lib/workspace/types";
+import type {
+  ApplicationPreferences,
+  ApplicationQuestion,
+  ApplicationRecord,
+  AutoApplyLane,
+} from "@/lib/workspace/types";
 
 export const AUTO_APPLY_CONSENT_VERSION = "2026-08-21";
 
@@ -19,6 +24,33 @@ export function hasCurrentAutoApplyConsent(input: {
 
 export function unresolvedRequiredQuestions(questions: ApplicationQuestion[]): ApplicationQuestion[] {
   return questions.filter((question) => question.required && (!question.reviewed || !question.answer.trim()));
+}
+
+export function autoApplyNeedsReview(
+  preferences: Pick<
+    ApplicationPreferences,
+    "resumeOptimisation" | "autoApproveSafeEdits" | "reviewBeforeSubmit"
+  >,
+): boolean {
+  return Boolean(
+    preferences.reviewBeforeSubmit ||
+      (preferences.resumeOptimisation !== "off" &&
+        !preferences.autoApproveSafeEdits),
+  );
+}
+
+export function autoApplyReviewReason(
+  preferences: Pick<
+    ApplicationPreferences,
+    "resumeOptimisation" | "autoApproveSafeEdits" | "reviewBeforeSubmit"
+  >,
+): string {
+  if (
+    preferences.resumeOptimisation !== "off" &&
+    !preferences.autoApproveSafeEdits
+  )
+    return "Your role-specific Resume changes are ready for review.";
+  return "Your application is prepared and waiting for your final review.";
 }
 
 export function applyTailoringResult(application: ApplicationRecord, result: AiTailoringResult): ApplicationRecord {
