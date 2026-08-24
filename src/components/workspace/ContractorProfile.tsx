@@ -37,6 +37,17 @@ import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSug
 
 type ProfileTab = "details" | "resume" | "cover" | "settings";
 type ProfileDetailsSection = "identity" | "experience" | "answers" | "company";
+type ProfileNavigationId = ProfileDetailsSection | Exclude<ProfileTab, "details">;
+
+const PROFILE_NAVIGATION: Array<{ id: ProfileNavigationId; label: string }> = [
+  { id: "identity", label: "About you" },
+  { id: "experience", label: "Experience" },
+  { id: "answers", label: "Application answers" },
+  { id: "company", label: "Company" },
+  { id: "resume", label: "Resume" },
+  { id: "cover", label: "Cover letter" },
+  { id: "settings", label: "Apply settings" },
+];
 
 const DEFAULT_PREFERENCES: ApplicationPreferences = {
   resumeOptimisation: "honest",
@@ -163,6 +174,16 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
   const [skillSuggestionDetails, setSkillSuggestionDetails] = useState<ResumeSkillSuggestion[]>([]);
   const [cvDetectedFields, setCvDetectedFields] = useState<string[]>([]);
+  const activeNavigationId: ProfileNavigationId =
+    tab === "details" ? detailsSection : tab;
+  const selectProfileSection = (id: ProfileNavigationId) => {
+    if (["identity", "experience", "answers", "company"].includes(id)) {
+      setTab("details");
+      setDetailsSection(id as ProfileDetailsSection);
+      return;
+    }
+    setTab(id as Exclude<ProfileTab, "details">);
+  };
   const resumeProfiles = profile.resumeProfiles ?? [];
   const activeProfile =
     resumeProfiles.find((item) => item.id === profile.activeResumeProfileId) ??
@@ -579,16 +600,16 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     <WorkspacePage
       eyebrow="Contractor profile"
       title="Your professional profile"
-      description="Manage the facts, resume versions, cover letters and application preferences used for role preparation."
+      description="Keep your Resume, experience and reusable application answers ready for every contract."
     >
       <section
         id="application-readiness"
-        className={`scroll-mt-24 rounded-2xl border bg-white p-5 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-6 ${readiness.complete ? "border-emerald-200" : "border-amber-200"}`}
+        className={`scroll-mt-24 rounded-2xl border bg-white p-3 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5 ${readiness.complete ? "border-emerald-200" : "border-amber-200"}`}
       >
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex gap-3">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 gap-3">
             <span
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${readiness.complete ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${readiness.complete ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
             >
               {readiness.complete ? (
                 <Check size={20} />
@@ -600,32 +621,30 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-600">
                 Application readiness
               </p>
-              <h2 className="mt-1 text-xl font-semibold text-slate-950">
+              <h2 className="mt-0.5 text-lg font-semibold text-slate-950 sm:mt-1 sm:text-xl">
                 {readiness.complete
-                  ? "Your reusable application profile is ready"
-                  : `${readiness.missing.length} profile item${readiness.missing.length === 1 ? "" : "s"} left`}
+                  ? "Ready for applications"
+                  : `${readiness.missing.length} detail${readiness.missing.length === 1 ? "" : "s"} to complete`}
               </h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
-                Complete these answers once so employer forms can be filled
-                consistently. New or sensitive questions will still be shown for
-                your approval.
+              <p className="mt-1 hidden max-w-3xl text-sm leading-6 text-slate-600 sm:block">
+                Finish these details once so future application forms need less input.
               </p>
             </div>
           </div>
-          <div className="min-w-44">
+          <div className="min-w-44 lg:w-48">
             <div className="h-2 overflow-hidden rounded-full bg-white/80">
               <div
                 className={`h-full rounded-full ${readiness.complete ? "bg-emerald-600" : "bg-amber-500"}`}
                 style={{ width: `${readiness.percentage}%` }}
               />
             </div>
-            <p className="mt-2 text-right text-sm font-bold text-slate-800">
+            <p className="mt-1.5 text-right text-xs font-bold text-slate-800 sm:mt-2 sm:text-sm">
               {readiness.percentage}% complete
             </p>
           </div>
         </div>
         {!readiness.complete && (
-          <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3 sm:mt-4 sm:pt-4">
             {readiness.missing.slice(0, 4).map((item) => (
               <button
                 key={item.id}
@@ -665,15 +684,15 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                     50,
                   );
                 }}
-                className="ir35-focus flex min-h-11 items-center gap-2 rounded-xl border border-amber-200 bg-white px-3 text-left text-xs font-semibold text-slate-800"
+                className="ir35-focus inline-flex min-h-9 items-center gap-2 rounded-full border border-amber-200 bg-amber-50/60 px-3 text-left text-[11px] font-semibold text-slate-800 hover:bg-amber-50 sm:text-xs"
               >
                 <AlertCircle size={14} className="shrink-0 text-amber-600" />{" "}
                 {item.label}
               </button>
             ))}
             {readiness.missing.length > 4 && (
-              <p className="flex min-h-11 items-center px-3 text-xs font-semibold text-slate-600">
-                Complete these first, then review {readiness.missing.length - 4} more profile item{readiness.missing.length - 4 === 1 ? "" : "s"}.
+              <p className="flex min-h-9 items-center px-2 text-xs font-semibold text-slate-600">
+                Complete these first, then review {readiness.missing.length - 4} more detail{readiness.missing.length - 4 === 1 ? "" : "s"}.
               </p>
             )}
           </div>
@@ -684,87 +703,17 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           {documentNotice}
         </p>
       )}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 gap-3 overflow-x-auto pb-1">
-            {resumeProfiles.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => set("activeResumeProfileId", item.id)}
-                className={`ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${activeProfile?.id === item.id ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 text-slate-600"}`}
-              >
-                {item.isDefault && <Star size={14} fill="currentColor" />}
-                {item.name}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={addResumeProfile}
-              disabled={resumeProfiles.length >= 5}
-              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-40"
-            >
-              <Plus size={15} /> Add profile
-            </button>
-            <button
-              type="button"
-              onClick={makeDefault}
-              disabled={activeProfile?.isDefault}
-              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-40"
-            >
-              <Star size={15} /> Make default
-            </button>
-            <button
-              type="button"
-              onClick={deleteResumeProfile}
-              disabled={resumeProfiles.length === 1}
-              aria-label="Delete profile"
-              className="ir35-focus flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 text-rose-700 disabled:opacity-30"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        </div>
-        {activeProfile && (
-          <label className="mt-4 block text-xs font-semibold text-slate-600">
-            Profile name
-            <input
-              value={activeProfile.name}
-              onChange={(event) =>
-                setActiveProfile((current) => ({
-                  ...current,
-                  name: event.target.value,
-                }))
-              }
-              maxLength={80}
-              className="ir35-focus mt-2 min-h-10 w-full max-w-md rounded-xl border border-slate-300 px-3 text-sm font-normal text-slate-900"
-            />
-          </label>
-        )}
-      </section>
-
       <div className="sticky top-[68px] z-20 mt-5 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.5)] backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
-        <nav className="grid min-w-0 flex-1 grid-cols-4 gap-1" aria-label="Profile sections">
-          {(
-            [
-              { id: "details", mobile: "Details", desktop: "Profile details" },
-              { id: "resume", mobile: "Resume", desktop: "Resume" },
-              { id: "cover", mobile: "Letter", desktop: "Cover letter" },
-              { id: "settings", mobile: "Settings", desktop: "Apply settings" },
-            ] as const
-          ).map((item) => (
+        <nav className="flex min-w-0 flex-1 gap-1 overflow-x-auto" aria-label="Profile sections">
+          {PROFILE_NAVIGATION.map((item) => (
             <button
               key={item.id}
               type="button"
-              aria-label={item.desktop}
-              aria-pressed={tab === item.id}
-              onClick={() => setTab(item.id)}
-              className={`ir35-focus min-h-10 min-w-0 rounded-xl px-2 text-xs font-semibold sm:px-4 sm:text-sm ${tab === item.id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              aria-pressed={activeNavigationId === item.id}
+              onClick={() => selectProfileSection(item.id)}
+              className={`ir35-focus min-h-10 shrink-0 rounded-xl px-3 text-xs font-semibold xl:flex-1 xl:px-4 xl:text-sm ${activeNavigationId === item.id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
             >
-              <span className="sm:hidden">{item.mobile}</span>
-              <span className="hidden sm:inline">{item.desktop}</span>
+              {item.label}
             </button>
           ))}
         </nav>
@@ -784,30 +733,40 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       </div>
       {saveError ? <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{saveError}</p> : null}
 
+      {(tab === "resume" || tab === "cover") && (
+        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 gap-3 overflow-x-auto pb-1">
+              {resumeProfiles.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => set("activeResumeProfileId", item.id)}
+                  className={`ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${activeProfile?.id === item.id ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 text-slate-600"}`}
+                >
+                  {item.isDefault && <Star size={14} fill="currentColor" />}
+                  {item.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={addResumeProfile} disabled={resumeProfiles.length >= 5} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-semibold text-slate-700 disabled:opacity-40"><Plus size={14} /> Add version</button>
+              <button type="button" onClick={makeDefault} disabled={activeProfile?.isDefault} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-semibold text-slate-700 disabled:opacity-40"><Star size={14} /> Make default</button>
+              <button type="button" onClick={deleteResumeProfile} disabled={resumeProfiles.length === 1} aria-label="Delete Resume version" className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-rose-700 disabled:opacity-30"><Trash2 size={15} /></button>
+            </div>
+          </div>
+          {activeProfile && (
+            <label className="mt-3 block max-w-md text-xs font-semibold text-slate-600">
+              Version name
+              <input value={activeProfile.name} onChange={(event) => setActiveProfile((current) => ({ ...current, name: event.target.value }))} maxLength={80} className="ir35-focus mt-2 min-h-10 w-full rounded-xl border border-slate-300 px-3 text-sm font-normal text-slate-900" />
+            </label>
+          )}
+        </section>
+      )}
+
       {tab === "details" && (
         <div className="mt-6">
-          <nav
-            aria-label="Profile detail groups"
-            className="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_45px_-38px_rgba(15,23,42,0.45)] sm:grid-cols-4"
-          >
-            {([
-              ["identity", "About you"],
-              ["experience", "Experience"],
-              ["answers", "Application answers"],
-              ["company", "Company"],
-            ] as Array<[ProfileDetailsSection, string]>).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={detailsSection === id}
-                onClick={() => setDetailsSection(id)}
-                className={`ir35-focus min-h-11 rounded-xl px-3 text-xs font-bold sm:text-sm ${detailsSection === id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-          <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6">
             {detailsSection === "identity" && (
               <>
