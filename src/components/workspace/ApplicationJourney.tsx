@@ -21,14 +21,14 @@ export function ApplicationJourney({ profileReady, applications }: { profileRead
   const firstIncompleteIndex = steps.findIndex((item) => !item.done);
   const activeIndex = firstIncompleteIndex === -1 ? steps.length - 1 : firstIncompleteIndex;
   const next = !profileReady
-    ? { title: "Complete your evidence profile", body: "Add skills and a Resume so match scores and suggested edits use your real experience.", href: "/profile", action: "Complete profile" }
+    ? { title: "Complete your profile", body: "Add your Resume and a few details so we can find contracts that suit you.", href: "/profile", action: "Complete profile" }
     : !prepared
-      ? { title: "Choose a contract to prepare", body: "Open a matching role, inspect the IR35 evidence, then start a role-specific application.", href: "/jobs", action: "Find contracts" }
+      ? { title: "Choose a contract", body: "Open a role to see the important details and begin your application.", href: "/jobs", action: "Find contracts" }
       : !approved
-        ? { title: `Review ${current?.job.title ?? "your application"}`, body: "Check your Resume, missing keywords, cover letter and screening answers before approval.", href: `/applications/new/${current?.job.id}`, action: "Continue review" }
+        ? { title: `Review ${current?.job.title ?? "your application"}`, body: "Check your Resume and answers before you apply.", href: `/applications/new/${current?.job.id}`, action: "Continue review" }
         : !submitted
-          ? { title: "Your application is ready", body: "Open it to submit now. If the employer needs more information, we will tell you exactly what to complete.", href: `/applications/new/${current?.job.id}`, action: "Open application" }
-          : { title: "Track the employer response", body: "Keep recruiter messages, interviews and next actions tied to the application.", href: "/applications", action: "Open applications" };
+          ? { title: "Ready to apply", body: "Review once, then submit. We will ask only if something is missing.", href: `/applications/new/${current?.job.id}`, action: "Open application" }
+          : { title: "Track your application", body: "See confirmations, recruiter messages and interviews in one place.", href: "/applications", action: "Open tracker" };
 
   return (
     <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-26px_rgba(15,23,42,0.32)]" aria-labelledby="journey-title" data-tour="application-journey">

@@ -138,12 +138,17 @@ export default function DashboardPage() {
   }, [profile, preview]);
 
   useEffect(() => {
+    const applicationItems = workspace.applications.map((application) => ({
+      status: application.status,
+      job: application.job,
+    }));
     if (preview) {
       setLiveTotal(DEMO_JOBS.length);
-      setTracked(uniqueTrackedJobs(workspace.applications.map((application) => ({ status: application.status, job: application.job }))));
+      setTracked(uniqueTrackedJobs(applicationItems));
       return;
     }
     if (!user || administratorRedirect) return;
+    setTracked(uniqueTrackedJobs(applicationItems));
     fetch("/api/jobs/search?per_page=1")
       .then((r) => (r.ok ? r.json() : null))
       .then((j: { total?: number } | null) => j?.total && setLiveTotal(j.total))
@@ -155,7 +160,10 @@ export default function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(10)
       .then(({ data }: { data: Array<{ status: string; jobs: unknown }> | null }) => {
-        setTracked(uniqueTrackedJobs((data ?? []).filter((r) => r.jobs).map((r) => ({ status: r.status, job: r.jobs as unknown as JobListing }))));
+        const savedItems = (data ?? [])
+          .filter((row) => row.jobs)
+          .map((row) => ({ status: "saved", job: row.jobs as unknown as JobListing }));
+        setTracked(uniqueTrackedJobs([...applicationItems, ...savedItems]));
       });
   }, [administratorRedirect, user, preview, workspace.applications]);
 
