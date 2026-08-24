@@ -14,8 +14,10 @@ test("profile keeps reusable identity, resume, cover letter and application cont
   await expect(page.getByRole("button", { name: "Add profile" })).toBeVisible();
   await expect(page.getByText("Application readiness", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Truth-first profile" })).toBeVisible();
+  await page.getByRole("button", { name: "Application answers", exact: true }).click();
   await expect(page.getByLabel("Are you willing to travel for work?")).toBeVisible();
   await expect(page.getByLabel("Target annual salary")).toBeVisible();
+  await page.getByRole("button", { name: "About you", exact: true }).click();
   await page.getByLabel("Add your own skill").fill("FinOps");
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByRole("button", { name: "Remove FinOps" })).toBeVisible();

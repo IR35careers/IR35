@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   AtSign,
   Check,
   CheckCheck,
@@ -95,6 +96,7 @@ export function RecruiterInbox() {
   const [selectedId, setSelectedId] = useState<string | null>(
     workspace.messages[0]?.id ?? null,
   );
+  const [mobileReading, setMobileReading] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [replyMessage, setReplyMessage] = useState<InboxMessage | null>(null);
   const [replyRequestKey, setReplyRequestKey] = useState("");
@@ -201,6 +203,7 @@ export function RecruiterInbox() {
 
   const selectMessage = (message: InboxMessage) => {
     setSelectedId(message.id);
+    setMobileReading(true);
     if (!message.read)
       updateWorkspace((current) => ({
         ...current,
@@ -315,7 +318,7 @@ export function RecruiterInbox() {
       description="Keep confirmations, recruiter replies, assessments and interviews linked to the right application."
     >
       <nav
-        className="mb-5 flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1"
+        className="mb-5 inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_12px_35px_-30px_rgba(15,23,42,0.4)]"
         aria-label="Application communication views"
       >
         <span
@@ -338,7 +341,7 @@ export function RecruiterInbox() {
       </nav>
 
       <section
-        className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"
+        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5"
         aria-labelledby="inbox-connection-title"
       >
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -366,13 +369,13 @@ export function RecruiterInbox() {
                       : "Not active"}
                 </span>
               </div>
-              <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
                 IR35Careers email
               </p>
               <p className="mt-1 break-all font-mono text-sm font-semibold text-brand-800">
                 {hasAlias ? workspace.inbox.alias : "Not created"}
               </p>
-              <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
                 Your account email
               </p>
               <p className="mt-1 break-all text-sm font-semibold text-slate-900">
@@ -474,7 +477,7 @@ export function RecruiterInbox() {
         )}
       </section>
 
-      <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-card">
+      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block min-w-0 flex-1">
             <span className="sr-only">Search messages</span>
@@ -516,7 +519,7 @@ export function RecruiterInbox() {
                 key={item.id}
                 type="button"
                 aria-pressed={filter === item.id}
-                onClick={() => setFilter(item.id)}
+                onClick={() => { setFilter(item.id); setMobileReading(false); }}
                 className={`ir35-focus inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold ${filter === item.id ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"}`}
               >
                 {item.label}
@@ -533,8 +536,8 @@ export function RecruiterInbox() {
         </div>
       </section>
 
-      <section className="mt-4 grid min-h-[540px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card lg:grid-cols-[380px_1fr]">
-        <div className="border-b border-slate-200 lg:border-b-0 lg:border-r">
+      <section className="mt-4 grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_55px_-42px_rgba(15,23,42,0.5)] lg:min-h-[560px] lg:grid-cols-[360px_1fr]">
+        <div className={`${mobileReading ? "hidden" : "block"} border-b border-slate-200 lg:block lg:border-b-0 lg:border-r`}>
           {visible.length === 0 ? (
             <div className="p-8 text-center">
               <Inbox className="mx-auto text-slate-400" />
@@ -597,9 +600,10 @@ export function RecruiterInbox() {
             ))
           )}
         </div>
-        <div className="min-w-0 p-5 sm:p-8">
+        <div className={`${mobileReading ? "block" : "hidden"} min-w-0 p-5 sm:p-8 lg:block`}>
           {selected ? (
             <article>
+              <button type="button" onClick={() => setMobileReading(false)} className="ir35-focus mb-5 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 lg:hidden"><ArrowLeft size={14} /> Back to messages</button>
               <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CategoryPill message={selected} />

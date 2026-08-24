@@ -57,6 +57,7 @@ async function completeReusableApplicationProfile(
   };
   await page.goto("/profile");
   await dismissPrivacyNotice(page);
+  await page.getByRole("button", { name: "Application answers", exact: true }).click();
   await selectAnswer("Are you willing to travel for work?", "yes");
   await selectAnswer("Are you willing to work shifts?", "no");
   await selectAnswer("Are you willing to work weekends?", "no");
@@ -71,6 +72,7 @@ async function completeReusableApplicationProfile(
     }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: "Edit Resume text" }).click();
   await page.getByLabel("Resume text").fill(
     "Alex Morgan\nSenior Platform Engineer\nTen years of experience delivering secure AWS, Terraform and Kubernetes platforms for UK organisations. Built CI and CD controls, observability, incident response and infrastructure automation across regulated environments.",
   );

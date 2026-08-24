@@ -36,6 +36,7 @@ import { extractSkills } from "@/lib/processing/skills-extractor";
 import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSuggestion } from "@/lib/resume/profile-extraction";
 
 type ProfileTab = "details" | "resume" | "cover" | "settings";
+type ProfileDetailsSection = "identity" | "experience" | "answers" | "company";
 
 const DEFAULT_PREFERENCES: ApplicationPreferences = {
   resumeOptimisation: "honest",
@@ -151,6 +152,8 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     };
   });
   const [tab, setTab] = useState<ProfileTab>("details");
+  const [detailsSection, setDetailsSection] = useState<ProfileDetailsSection>("identity");
+  const [resumeEditing, setResumeEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -580,12 +583,12 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     >
       <section
         id="application-readiness"
-        className={`scroll-mt-24 rounded-3xl border p-5 shadow-card sm:p-6 ${readiness.complete ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}
+        className={`scroll-mt-24 rounded-2xl border bg-white p-5 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-6 ${readiness.complete ? "border-emerald-200" : "border-amber-200"}`}
       >
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-3">
             <span
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${readiness.complete ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${readiness.complete ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
             >
               {readiness.complete ? (
                 <Check size={20} />
@@ -623,7 +626,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         </div>
         {!readiness.complete && (
           <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {readiness.missing.map((item) => (
+            {readiness.missing.slice(0, 4).map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -633,6 +636,15 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                       ? "resume"
                       : "details",
                   );
+                  if (item.section !== "cv") {
+                    setDetailsSection(
+                      item.section === "professional" || ["full-name", "phone", "email"].includes(item.id)
+                        ? "identity"
+                        : item.section === "eligibility" || item.id === "availability"
+                          ? "experience"
+                          : "answers",
+                    );
+                  }
                   const targetId =
                     item.section === "cv"
                       ? "profile-resume"
@@ -659,6 +671,11 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 {item.label}
               </button>
             ))}
+            {readiness.missing.length > 4 && (
+              <p className="flex min-h-11 items-center px-3 text-xs font-semibold text-slate-600">
+                Complete these first, then review {readiness.missing.length - 4} more profile item{readiness.missing.length - 4 === 1 ? "" : "s"}.
+              </p>
+            )}
           </div>
         )}
       </section>
@@ -667,7 +684,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           {documentNotice}
         </p>
       )}
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-card sm:p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 gap-3 overflow-x-auto pb-1">
             {resumeProfiles.map((item) => (
@@ -728,33 +745,72 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         )}
       </section>
 
-      <nav
-        className="mt-5 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1"
-        aria-label="Profile sections"
-      >
-        {(
-          [
-            { id: "details", label: "Profile details" },
-            { id: "resume", label: "Resume" },
-            { id: "cover", label: "Cover letter" },
-            { id: "settings", label: "Apply settings" },
-          ] as const
-        ).map((item) => (
+      <div className="sticky top-[68px] z-20 mt-5 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.5)] backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
+        <nav className="grid min-w-0 flex-1 grid-cols-4 gap-1" aria-label="Profile sections">
+          {(
+            [
+              { id: "details", mobile: "Details", desktop: "Profile details" },
+              { id: "resume", mobile: "Resume", desktop: "Resume" },
+              { id: "cover", mobile: "Letter", desktop: "Cover letter" },
+              { id: "settings", mobile: "Settings", desktop: "Apply settings" },
+            ] as const
+          ).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-label={item.desktop}
+              aria-pressed={tab === item.id}
+              onClick={() => setTab(item.id)}
+              className={`ir35-focus min-h-10 min-w-0 rounded-xl px-2 text-xs font-semibold sm:px-4 sm:text-sm ${tab === item.id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            >
+              <span className="sm:hidden">{item.mobile}</span>
+              <span className="hidden sm:inline">{item.desktop}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2 border-t border-slate-100 px-1 pt-1 lg:border-l lg:border-t-0 lg:pl-2 lg:pt-0">
           <button
-            key={item.id}
             type="button"
-            aria-pressed={tab === item.id}
-            onClick={() => setTab(item.id)}
-            className={`ir35-focus min-h-10 shrink-0 rounded-xl px-5 text-sm font-semibold ${tab === item.id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            onClick={() => void save()}
+            disabled={saving}
+            className="ir35-focus inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-xs font-bold text-white hover:bg-brand-800 disabled:cursor-wait disabled:opacity-60 lg:flex-none"
           >
-            {item.label}
+            {saved ? <Check size={15} /> : <Save size={15} />} {saving ? "Saving" : saved ? "Profile saved" : "Save profile"}
           </button>
-        ))}
-      </nav>
+          {saved && readiness.complete && returnTo ? (
+            <Link href={returnTo} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-300 bg-white px-3 text-xs font-bold text-brand-800">Continue <ArrowRight size={15} /></Link>
+          ) : null}
+        </div>
+      </div>
+      {saveError ? <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{saveError}</p> : null}
 
       {tab === "details" && (
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="mt-6">
+          <nav
+            aria-label="Profile detail groups"
+            className="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_45px_-38px_rgba(15,23,42,0.45)] sm:grid-cols-4"
+          >
+            {([
+              ["identity", "About you"],
+              ["experience", "Experience"],
+              ["answers", "Application answers"],
+              ["company", "Company"],
+            ] as Array<[ProfileDetailsSection, string]>).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={detailsSection === id}
+                onClick={() => setDetailsSection(id)}
+                className={`ir35-focus min-h-11 rounded-xl px-3 text-xs font-bold sm:text-sm ${detailsSection === id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+          <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6">
+            {detailsSection === "identity" && (
+              <>
             <section id="profile-professional-details" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
@@ -946,6 +1002,10 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 </div>
               </div>
             </section>
+              </>
+            )}
+            {detailsSection === "experience" && (
+              <>
             <section id="work-authorisation" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <h2 className="font-semibold">Experience and projects</h2>
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -1024,6 +1084,9 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 />
               </div>
             </section>
+              </>
+            )}
+            {detailsSection === "answers" && (
             <section
               id="reusable-answers"
               className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"
@@ -1171,6 +1234,8 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 />
               </div>
             </section>
+            )}
+            {detailsSection === "company" && (
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <div className="flex items-center gap-3">
                 <Building2 className="text-violet-700" />
@@ -1208,6 +1273,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 </label>
               </div>
             </section>
+            )}
           </div>
           <aside className="space-y-5 xl:sticky xl:top-24 xl:h-max">
             <section className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-card">
@@ -1250,6 +1316,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </p>
             </section>
           </aside>
+          </div>
         </div>
       )}
 
@@ -1258,7 +1325,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           id="profile-resume"
           className="mt-6 scroll-mt-24 grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)]"
         >
-          <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
+          <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)]">
             <div className="flex items-center gap-3">
               <FileText className="text-brand-700" />
               <div>
@@ -1291,6 +1358,14 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold"
               >
                 <Download size={14} /> DOCX
+              </button>
+              <button
+                type="button"
+                aria-pressed={resumeEditing}
+                onClick={() => setResumeEditing((current) => !current)}
+                className={`ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 text-xs font-bold ${resumeEditing ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 text-slate-700"}`}
+              >
+                {resumeEditing ? "Close editor" : "Edit Resume text"}
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1428,7 +1503,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 </div>
               </details>
             )}
-            <label className="block text-xs font-semibold">
+            {resumeEditing && <label className="block text-xs font-semibold">
               Resume text
               <textarea
                 value={activeProfile.resumeText}
@@ -1441,9 +1516,9 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 rows={20}
                 className="ir35-focus mt-2 w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-3 font-mono text-xs leading-5"
               />
-            </label>
+            </label>}
           </section>
-          <article className="min-h-[760px] rounded-3xl bg-slate-200 p-4 shadow-inner sm:p-8">
+          <article className="min-h-[760px] rounded-2xl bg-[#e8ecef] p-4 shadow-inner sm:p-8">
             <div
               className="mx-auto min-h-[700px] max-w-[780px] bg-white px-8 py-10 shadow-xl sm:px-14"
               style={{
@@ -1700,35 +1775,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         </div>
       )}
 
-      <div className="mt-6 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => void save()}
-          disabled={saving}
-          className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-6 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-wait disabled:opacity-60"
-        >
-          {saved ? <Check size={17} /> : <Save size={17} />}{" "}
-          {saving ? "Saving profile" : saved ? "Profile saved" : "Save profile"}
-        </button>
-        {saved && (
-          <p role="status" className="text-sm font-semibold text-emerald-700">
-            All profile sections are saved.
-          </p>
-        )}
-        {saved && readiness.complete && returnTo ? (
-          <Link
-            href={returnTo}
-            className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-300 bg-white px-5 text-sm font-bold text-brand-800 hover:bg-brand-50"
-          >
-            Continue application <ArrowRight size={17} />
-          </Link>
-        ) : null}
-      </div>
-      {saveError ? (
-        <p role="alert" className="mt-3 text-sm font-semibold text-rose-700">
-          {saveError}
-        </p>
-      ) : null}
+      {saved && <p role="status" className="mt-5 text-sm font-semibold text-emerald-700">All profile sections are saved.</p>}
     </WorkspacePage>
   );
 }
