@@ -11,10 +11,12 @@
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
 import { isSevenAmInLondon } from "@/lib/pipeline/schedule";
+import { runScheduledAutoApply } from "@/lib/automation/scheduled-runner";
 import { timingSafeEqual } from "node:crypto";
+import { after } from "next/server";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // Hobby-plan ceiling; keep the registry modest
+export const maxDuration = 300;
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
@@ -51,6 +53,28 @@ export async function GET(request: Request): Promise<Response> {
       reason: "Outside the 07:00 Europe/London refresh window.",
     }, { headers: NO_STORE });
   }
+
+  const origin =
+    process.env.IR35CAREERS_APP_URL?.trim() || new URL(request.url).origin;
+  after(async () => {
+    try {
+      const automation = await runScheduledAutoApply({ origin });
+      console.info("scheduled_auto_apply_finished", {
+        enabledAccounts: automation.enabledAccounts,
+        accountsAttempted: automation.accountsAttempted,
+        applicationsStarted: automation.applicationsStarted,
+        needsUser: automation.needsUser,
+        failed: automation.failed,
+      });
+    } catch (automationError) {
+      console.error("scheduled_auto_apply_failed", {
+        reason:
+          automationError instanceof Error
+            ? automationError.message.slice(0, 240)
+            : "unknown",
+      });
+    }
+  });
 
   try {
     const summary = await runFetchPipeline();

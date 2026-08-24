@@ -7,6 +7,8 @@ import {
   unresolvedRequiredQuestions,
 } from "@/lib/automation/auto-apply";
 import { FREE_DAILY_APPLICATION_LIMIT, maximumDailyApplicationLimit } from "@/lib/automation/daily-limit";
+import { DAILY_LIMIT_COUNTED_SUBMISSION_STATUSES } from "@/lib/automation/daily-usage";
+import { verifyScheduledAutoApplyAuthorization } from "@/lib/automation/internal-auth";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -14,6 +16,7 @@ import { evaluateAutomationJob, prepareApplication } from "@/lib/workspace/engin
 import type { ApplicationPreferences, ApplicationRecord, AutomationRules, ContractorProfile, ResumeProfile } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
+import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -91,12 +94,33 @@ async function saveNeedsUser(application: ApplicationRecord, userId: string): Pr
 export async function POST(request: Request): Promise<Response> {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  if (!token) return Response.json({ error: "Sign in again before running Auto Apply." }, { status: 401, headers: NO_STORE });
 
   try {
-    const body = await readJsonBody<{ rules?: Partial<AutomationRules>; preferences?: Partial<ApplicationPreferences> }>(request, 150_000);
+    const body = await readJsonBody<{
+      rules?: Partial<AutomationRules>;
+      preferences?: Partial<ApplicationPreferences>;
+      internalUserId?: string;
+    }>(request, 150_000);
     const admin = getSupabaseAdmin();
-    const { data: authData, error: authError } = await admin.auth.getUser(token);
+    const internalUserId = /^[0-9a-f-]{36}$/i.test(body.internalUserId ?? "")
+      ? String(body.internalUserId)
+      : "";
+    const internalAuthorized = Boolean(
+      internalUserId &&
+      verifyScheduledAutoApplyAuthorization({
+        userId: internalUserId,
+        timestamp: request.headers.get("x-ir35-auto-apply-timestamp")?.trim() ?? "",
+        suppliedSignature: request.headers.get("x-ir35-auto-apply-signature")?.trim() ?? "",
+      }),
+    );
+    if (!token && !internalAuthorized)
+      return Response.json(
+        { error: "Sign in again before running Auto Apply." },
+        { status: 401, headers: NO_STORE },
+      );
+    const { data: authData, error: authError } = internalAuthorized
+      ? await admin.auth.admin.getUserById(internalUserId)
+      : await admin.auth.getUser(token);
     if (authError || !authData.user) return Response.json({ error: "Your session has expired. Sign in again." }, { status: 401, headers: NO_STORE });
     const userId = authData.user.id;
 
@@ -188,6 +212,7 @@ export async function POST(request: Request): Promise<Response> {
     const { count: attemptsToday, error: countError } = await admin.from("application_submissions")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
+      .in("status", [...DAILY_LIMIT_COUNTED_SUBMISSION_STATUSES])
       .gte("created_at", today.toISOString());
     if (countError) throw new Error(countError.message);
     if ((attemptsToday ?? 0) >= rules.dailyLimit) {
@@ -250,10 +275,30 @@ export async function POST(request: Request): Promise<Response> {
       submissionApproved: true,
       updatedAt: new Date().toISOString(),
     };
+    const internalSubmissionAuthorization = internalAuthorized
+      ? createApplicationResumeAuthorization({
+          applicationId: application.id,
+          userId,
+        })
+      : null;
+    const submitHeaders: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (internalSubmissionAuthorization) {
+      submitHeaders["x-ir35-resume-timestamp"] = internalSubmissionAuthorization.timestamp;
+      submitHeaders["x-ir35-resume-signature"] = internalSubmissionAuthorization.signature;
+    } else if (authorization) {
+      submitHeaders.authorization = authorization;
+    }
     const submitResponse = await fetch(new URL("/api/applications/submit", request.url), {
       method: "POST",
-      headers: { authorization, "Content-Type": "application/json" },
-      body: JSON.stringify({ applicationId: application.id, approval: "SUBMIT_APPROVED_APPLICATION", packet: application }),
+      headers: submitHeaders,
+      body: JSON.stringify({
+        applicationId: application.id,
+        approval: "SUBMIT_APPROVED_APPLICATION",
+        packet: application,
+        internalUserId: internalAuthorized ? userId : undefined,
+      }),
       cache: "no-store",
       signal: AbortSignal.timeout(105_000),
     });

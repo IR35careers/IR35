@@ -79,7 +79,7 @@ export function AutomationSettings() {
     autoApplyLanes: lanes,
   });
 
-  const persistSettings = (): ApplicationPreferences | null => {
+  const persistSettings = async (): Promise<ApplicationPreferences | null> => {
     if (autoApplyEnabled && !consentAccepted) {
       setRunError("Confirm the Auto Apply instruction before enabling it.");
       return null;
@@ -92,16 +92,37 @@ export function AutomationSettings() {
       requireHumanApproval: true,
       dailyLimit: clampDailyApplicationLimit(rules.dailyLimit, workspace.entitlement),
     };
-    updateWorkspace((current) => ({
-      ...current,
+    const nextWorkspace = {
+      ...workspace,
       automation: safeRules,
-      profile: { ...current.profile, applicationPreferences: preferences },
-    }));
+      profile: { ...workspace.profile, applicationPreferences: preferences },
+    };
+    updateWorkspace(() => nextWorkspace);
+    try {
+      if (user && isSupabaseConfigured()) {
+        const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
+        await saveCloudWorkspace(user.id, nextWorkspace);
+      }
+    } catch {
+      setRunError("Auto Apply settings could not be saved. Check your connection and try again.");
+      setSaved(false);
+      return null;
+    }
     setRules(safeRules);
     setSaved(true);
     setRunError(null);
-    setNotice("Auto Apply settings saved.");
+    setNotice(
+      safeRules.enabled
+        ? "Auto Apply is on. Matching applications will run each morning."
+        : "Auto Apply is paused.",
+    );
     return preferences;
+  };
+
+  const saveSettings = async () => {
+    setRunError(null);
+    setNotice("Saving your Auto Apply settings.");
+    await persistSettings();
   };
 
   const runPreview = async () => {
@@ -141,7 +162,7 @@ export function AutomationSettings() {
   };
 
   const runAutoApply = async () => {
-    const preferences = persistSettings();
+    const preferences = await persistSettings();
     if (!preferences) return;
     if (!user) {
       setRunError("Sign in before starting Auto Apply.");
@@ -265,12 +286,21 @@ export function AutomationSettings() {
 
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-brand-700" /><div><h2 className="font-semibold text-slate-950">Permission to apply</h2><p className="mt-1 text-sm leading-6 text-slate-600">Confirm once to use your approved profile, Resume and saved answers for these searches.</p></div></div><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"><input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-5 w-5 accent-emerald-700" /><span><strong className="block text-slate-950">Allow IR35Careers to apply to my matching roles.</strong>I can pause Auto Apply or change these preferences at any time.</span></label></section>
 
-          <div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={() => void persistSettings()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50"><CheckCircle2 size={17} /> Save settings</button><button type="button" onClick={() => void runPreview()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50">{busy === "preview" ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {busy === "preview" ? "Checking contracts" : "Preview matches"}</button><button type="button" onClick={() => void runAutoApply()} disabled={busy !== null || !autoApplyEnabled || !consentAccepted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Find and apply next"}</button>{saved && <span className="self-center text-sm font-semibold text-emerald-700">Saved</span>}</div>
+          <div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={() => void saveSettings()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50"><CheckCircle2 size={17} /> Save settings</button><button type="button" onClick={() => void runPreview()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50">{busy === "preview" ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {busy === "preview" ? "Checking contracts" : "Preview matches"}</button><button type="button" onClick={() => void runAutoApply()} disabled={busy !== null || !autoApplyEnabled || !consentAccepted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Apply to next match now"}</button>{saved && <span className="self-center text-sm font-semibold text-emerald-700">Saved</span>}</div>
           {notice && <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900" role="status">{notice}</p>}
           {runError && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900" role="alert">{runError}</p>}
         </div>
 
         <aside className="space-y-5 xl:sticky xl:top-24 xl:h-max">
+          <section className={`rounded-3xl border p-5 shadow-card ${autoApplyEnabled && consentAccepted ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}>
+            <div className="flex items-start gap-3">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${autoApplyEnabled && consentAccepted ? "bg-white text-emerald-700" : "bg-slate-100 text-slate-500"}`}><Bot size={18} /></span>
+              <div>
+                <p className="font-bold text-slate-950">{autoApplyEnabled && consentAccepted ? "Auto Apply is on" : "Auto Apply is paused"}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{autoApplyEnabled && consentAccepted ? "IR35Careers checks your saved matches each morning and starts eligible applications automatically." : "Turn it on and save your preferences to run matching applications automatically."}</p>
+              </div>
+            </div>
+          </section>
           <section className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-card"><p className="text-xs font-bold uppercase tracking-wide text-emerald-300">Latest match check</p>{latestRun ? <><p className="mt-3 text-4xl font-bold tabular-nums">{latestRun.matchingJobIds.length}</p><p className="mt-1 text-sm text-slate-300">contracts match your current rules</p><p className="mt-4 text-xs text-slate-400">Checked {new Date(latestRun.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p></> : <p className="mt-3 text-sm leading-6 text-slate-300">Preview current contracts before starting Auto Apply.</p>}</section>
           {latestRun && !isSupabaseConfigured() && <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><h2 className="font-semibold">Decision log</h2><ul className="mt-4 space-y-3">{DEMO_JOBS.map((job) => { const skip = latestRun.skipped.find((item) => item.jobId === job.id); return <li key={job.id} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0"><span className="mt-0.5">{skip ? <XCircle className="text-slate-400" size={17} /> : <CheckCircle2 className="text-emerald-600" size={17} />}</span><div><p className="text-sm font-semibold text-slate-800">{job.title}</p><p className="mt-1 text-xs text-slate-500">{skip?.reason ?? "Matches your saved rules"}</p></div></li>; })}</ul></section>}
         </aside>
