@@ -42,7 +42,7 @@ export function ApplyButton({
         Apply with IR35Careers <Send size={14} aria-hidden="true" />
       </Link>
       <p className="mt-2 text-xs text-slate-600">
-        Prepare, approve and submit without leaving your workspace when this employer connection is supported.
+        Uses your saved Resume and profile. We pause only if the employer needs more information.
       </p>
     </div>
   );

@@ -1,18 +1,18 @@
 "use client";
 
 /**
- * SaveJobButton — save a job, mark it applied, or remove it.
- * Signed-out visitors receive an explicit sign-in-to-save action that returns
- * them to the job. Signed-in updates are optimistic and roll back on failure.
+ * SaveJobButton keeps a role in the contractor's saved list or removes it.
+ * Application status belongs to the verified submission workflow and is never
+ * changed here. Signed-in updates are optimistic and roll back on failure.
  */
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, CheckCircle2 } from "lucide-react";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 
-type Status = "none" | "saved" | "applied";
+type Status = "none" | "saved";
 
 export function SaveJobButton({ jobId }: { jobId: string }) {
   const { user } = useAuth();
@@ -29,7 +29,7 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
       .eq("job_id", jobId)
       .maybeSingle()
       .then(({ data }: { data: { status: string } | null }) => {
-        if (data) setStatus(data.status as Status);
+        if (data) setStatus("saved");
       });
   }, [user, jobId]);
 
@@ -47,12 +47,12 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
 
   const cycle = async () => {
     const previous = status;
-    const next: Status = status === "none" ? "saved" : status === "saved" ? "applied" : "none";
+    const next: Status = status === "none" ? "saved" : "none";
     setError(null);
     setStatus(next);
     setBusy(true);
     try {
-      if (next === "saved" || next === "applied") {
+      if (next === "saved") {
         const { error: saveError } = await supabase
           .from("saved_jobs")
           .upsert({ user_id: user.id, job_id: jobId, status: next });
@@ -73,9 +73,8 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
     }
   };
 
-  const label =
-    status === "none" ? "Save job" : status === "saved" ? "Mark as applied" : "Applied ✓ (remove)";
-  const Icon = status === "none" ? Bookmark : status === "saved" ? BookmarkCheck : CheckCircle2;
+  const label = status === "none" ? "Save job" : "Saved";
+  const Icon = status === "none" ? Bookmark : BookmarkCheck;
 
   return (
     <div>
@@ -84,11 +83,9 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
         disabled={busy}
         aria-busy={busy}
         className={`ir35-focus inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-medium transition-colors disabled:opacity-60 ${
-          status === "applied"
-            ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
-            : status === "saved"
-              ? "border-brand-300 bg-brand-50 text-brand-800 hover:bg-brand-100"
-              : "border-slate-300 bg-white text-slate-800 hover:border-brand-300 hover:bg-brand-50"
+          status === "saved"
+            ? "border-brand-300 bg-brand-50 text-brand-800 hover:bg-brand-100"
+            : "border-slate-300 bg-white text-slate-800 hover:border-brand-300 hover:bg-brand-50"
         }`}
       >
         <Icon size={15} aria-hidden="true" /> {label}

@@ -111,6 +111,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expect(page.getByRole("heading", { name: /Senior DevOps Engineer/i })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in to save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Preview listing" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Prepare application" })).toHaveCount(0);
   await expect(page.getByText("Demo data never submits an application.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Advertiser-stated" })).toBeVisible();
   await expect(page.getByText("IR35 evidence", { exact: true })).toBeVisible();

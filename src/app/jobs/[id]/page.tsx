@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase, WandSparkles } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
 import { IR35EvidencePanel } from "@/components/IR35EvidencePanel";
 import { SaveJobButton } from "@/components/SaveJobButton";
@@ -93,13 +93,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           </div>
           <div className="w-full lg:justify-self-end">
             <ApplyButton jobId={job.id} sourceDomain={job.source_domain} />
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <Link
-                href={`/jobs/${job.id}/resume`}
-                className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-bold text-white shadow-[0_16px_35px_-20px_rgba(5,150,105,0.75)] hover:bg-brand-800"
-              >
-                <WandSparkles size={16} aria-hidden="true" /> Prepare application
-              </Link>
+            <div className="mt-2">
               <SaveJobButton jobId={job.id} />
             </div>
           </div>
