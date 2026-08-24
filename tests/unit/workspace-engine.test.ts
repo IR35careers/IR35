@@ -89,6 +89,23 @@ describe("application workspace engine", () => {
     expect(normaliseCoverLetterSignoff("Dear team,\n\nI am applying.", "Alex Morgan")).toMatch(/Kind regards,\nAlex Morgan$/);
   });
 
+  it("removes stale and repeated signatures before using the verified applicant", () => {
+    const letter = `Dear team,
+
+Please review my attached CV.
+
+Kind regards,
+Alex Morgan
+
+Kind regards, Anvesh Mannuru`;
+    const normalised = normaliseCoverLetterSignoff(letter, "Anvesh Mannuru");
+
+    expect(normalised).toContain("attached Resume");
+    expect(normalised).not.toContain("Alex Morgan");
+    expect(normalised.match(/Kind regards,/g)).toHaveLength(1);
+    expect(normalised).toMatch(/Kind regards,\nAnvesh Mannuru$/);
+  });
+
   it("requires every answer and all approvals before issuing a receipt", () => {
     const application = prepareApplication({ job, profile: SAMPLE_CONTRACTOR_PROFILE, cvText: cv });
     expect(applicationIsReady(application)).toBe(false);

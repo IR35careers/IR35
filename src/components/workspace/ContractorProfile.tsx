@@ -35,6 +35,12 @@ import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSuggestion } from "@/lib/resume/profile-extraction";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
+import {
+  normaliseCoverLetterSignoff,
+  normaliseCoverLetterTerminology,
+  resolveCandidateName,
+  stripCoverLetterSignoff,
+} from "@/lib/candidate-name";
 
 type ProfileTab = "details" | "resume" | "cover" | "settings";
 type ProfileDetailsSection = "identity" | "experience" | "answers" | "company";
@@ -219,6 +225,17 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       resumeProfiles: candidate.resumeProfiles?.map((resumeProfile) => ({
         ...resumeProfile,
         resumeText: normaliseResumeText(resumeProfile.resumeText),
+        coverLetter: (() => {
+          const candidateName = resolveCandidateName(
+            candidate.fullName,
+            resumeProfile.resumeText,
+          );
+          return candidateName
+            ? normaliseCoverLetterSignoff(resumeProfile.coverLetter, candidateName)
+            : normaliseCoverLetterTerminology(
+                stripCoverLetterSignoff(resumeProfile.coverLetter),
+              );
+        })(),
       })),
     };
     const candidateResume =
@@ -290,6 +307,20 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       skills.filter((skill) => skill !== value),
     );
   const activeResumeText = activeProfile?.resumeText ?? "";
+  const coverLetterCandidateName = resolveCandidateName(
+    profile.fullName,
+    activeResumeText,
+  );
+  const displayCoverLetter = activeProfile?.coverLetter
+    ? coverLetterCandidateName
+      ? normaliseCoverLetterSignoff(
+          activeProfile.coverLetter,
+          coverLetterCandidateName,
+        )
+      : normaliseCoverLetterTerminology(
+          stripCoverLetterSignoff(activeProfile.coverLetter),
+        )
+    : "";
   const previewLines = useMemo(() => {
     const previewText = normaliseResumeText(activeResumeText);
     return previewText ? previewText.split(/\r?\n/) : [];
@@ -535,8 +566,8 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   };
 
   const downloadCoverLetter = () => {
-    if (!activeProfile?.coverLetter.trim()) return;
-    const blob = new Blob([activeProfile.coverLetter], {
+    if (!displayCoverLetter.trim()) return;
+    const blob = new Blob([displayCoverLetter], {
       type: "text/plain;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
@@ -1576,7 +1607,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             <label className="mt-5 block text-sm font-semibold">
               Letter text
               <textarea
-                value={activeProfile.coverLetter}
+                value={displayCoverLetter}
                 onChange={(event) =>
                   setActiveProfile((current) => ({
                     ...current,
@@ -1590,7 +1621,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             <button
               type="button"
               onClick={downloadCoverLetter}
-              disabled={!activeProfile.coverLetter.trim()}
+              disabled={!displayCoverLetter.trim()}
               className="ir35-focus mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-bold disabled:opacity-40"
             >
               <Download size={15} /> Download
@@ -1607,18 +1638,9 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   .join(" | ")}
               </p>
               <div className="mt-10 whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                {activeProfile.coverLetter ||
+                {displayCoverLetter ||
                   "Add a base cover letter to preview it here."}
               </div>
-              {activeProfile.coverLetter &&
-                !activeProfile.coverLetter
-                  .toLowerCase()
-                  .includes(profile.fullName.toLowerCase()) && (
-                  <div className="mt-8">
-                    <p className="text-sm text-slate-700">Kind regards,</p>
-                    <p className="mt-2 font-semibold">{profile.fullName}</p>
-                  </div>
-                )}
             </div>
           </article>
         </div>

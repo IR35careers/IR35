@@ -46,7 +46,9 @@ import {
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import {
   normaliseCoverLetterSignoff,
+  normaliseCoverLetterTerminology,
   resolveCandidateName,
+  stripCoverLetterSignoff,
 } from "@/lib/candidate-name";
 import type { JobDetail } from "@/lib/job-types";
 import { scoreResumeForRole } from "@/lib/resume/analysis";
@@ -104,7 +106,9 @@ function cleanExisting(
   );
   const coverLetter = candidateName
     ? normaliseCoverLetterSignoff(application.coverLetter, candidateName)
-    : application.coverLetter;
+    : normaliseCoverLetterTerminology(
+        stripCoverLetterSignoff(application.coverLetter),
+      );
   const cleaned = {
     ...application,
     sourceCvText: normaliseResumeText(application.sourceCvText),

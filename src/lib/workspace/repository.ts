@@ -17,6 +17,12 @@ import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type { JobDetail } from "@/lib/job-types";
 import { submissionAttentionFromRow } from "@/lib/workspace/submission-attention";
 import { clampDailyApplicationLimit } from "@/lib/automation/daily-limit";
+import {
+  normaliseCoverLetterSignoff,
+  normaliseCoverLetterTerminology,
+  resolveCandidateName,
+  stripCoverLetterSignoff,
+} from "@/lib/candidate-name";
 
 type DbRow = Record<string, unknown>;
 
@@ -115,7 +121,7 @@ function profileFromRow(row: DbRow | null, fallback: ContractorProfile): Contrac
     ? row.skills.filter((item): item is string => typeof item === "string")
     : [];
   const legacyYears = Number(row.years_experience);
-  return {
+  const merged: ContractorProfile = {
     ...profile,
     fullName: profile.fullName.trim() || String(row.full_name ?? ""),
     phone: profile.phone.trim() || String(row.phone ?? ""),
@@ -127,6 +133,24 @@ function profileFromRow(row: DbRow | null, fallback: ContractorProfile): Contrac
     skills: profile.skills?.length ? profile.skills : legacySkills,
     defaultCvLabel:
       profile.defaultCvLabel.trim() || String(row.cv_filename ?? ""),
+  };
+  return {
+    ...merged,
+    resumeProfiles: merged.resumeProfiles?.map((resumeProfile) => {
+      const candidateName = resolveCandidateName(
+        merged.fullName,
+        resumeProfile.resumeText,
+      );
+      return {
+        ...resumeProfile,
+        resumeText: normaliseResumeText(resumeProfile.resumeText),
+        coverLetter: candidateName
+          ? normaliseCoverLetterSignoff(resumeProfile.coverLetter, candidateName)
+          : normaliseCoverLetterTerminology(
+              stripCoverLetterSignoff(resumeProfile.coverLetter),
+            ),
+      };
+    }),
   };
 }
 
