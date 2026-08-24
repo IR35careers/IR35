@@ -1147,6 +1147,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         application={application}
         profile={workspace.profile}
         inbox={workspace.inbox}
+        messages={workspace.messages}
         busy={busy}
         notice={notice}
         error={error}

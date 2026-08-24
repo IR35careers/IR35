@@ -26,6 +26,7 @@ import { parseResumeText } from "@/lib/resume/analysis";
 import type {
   ApplicationRecord,
   ContractorProfile,
+  InboxMessage,
   InboxSettings,
 } from "@/lib/workspace/types";
 
@@ -78,6 +79,7 @@ export function ApplicationRecordWorkspace({
   application,
   profile,
   inbox,
+  messages,
   busy,
   notice,
   error,
@@ -94,6 +96,7 @@ export function ApplicationRecordWorkspace({
   application: ApplicationRecord;
   profile: ContractorProfile;
   inbox: InboxSettings;
+  messages: InboxMessage[];
   busy: "parse" | "prepare" | "ai" | "save" | "submit" | null;
   notice: string | null;
   error: string | null;
@@ -116,6 +119,17 @@ export function ApplicationRecordWorkspace({
   const latestEvents = useMemo(
     () => [...application.events].reverse().slice(0, 5),
     [application.events],
+  );
+  const linkedMessages = useMemo(
+    () =>
+      messages
+        .filter((message) => message.applicationId === application.id)
+        .sort(
+          (a, b) =>
+            new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime(),
+        )
+        .slice(0, 3),
+    [application.id, messages],
   );
   const contractRate = formatRate(job);
 
@@ -240,15 +254,24 @@ export function ApplicationRecordWorkspace({
                 </div>
               </div>
               <div className="mt-6 border-t border-slate-200 pt-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Recruiter updates ({linkedMessages.length})</p>
+                {linkedMessages.length > 0 ? (
+                  <ol className="mt-3 space-y-3">
+                    {linkedMessages.map((message) => (
+                      <li key={message.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">{message.classification.replaceAll("_", " ")}</p>
+                        <p className="mt-1 text-xs font-semibold leading-5 text-slate-900">{message.subject}</p>
+                        <p className="mt-1 truncate text-[11px] text-slate-500">{message.from}</p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">Employer messages linked to this application will appear here.</p>
+                )}
+              </div>
+              <div className="mt-5 border-t border-slate-200 pt-5">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Latest activity</p>
-                <ol className="mt-3 space-y-3">
-                  {latestEvents.slice(0, 3).map((event) => (
-                    <li key={event.id} className="rounded-xl border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-semibold leading-5 text-slate-900">{event.label}</p>
-                      <p className="mt-1 text-[11px] text-slate-500">{new Date(event.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p>
-                    </li>
-                  ))}
-                </ol>
+                <p className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold leading-5 text-slate-900">{latestEvents[0]?.label || "Application prepared"}</p>
               </div>
             </aside>
 
