@@ -28,19 +28,22 @@ import { useWorkspaceCloudSync, useWorkspaceState } from "@/lib/workspace/store"
 type NavItem = {
   href: string;
   label: string;
+  mobileLabel?: string;
   icon: LucideIcon;
   badge?: "applications" | "unread";
   tour?: string;
 };
 
 const PRIMARY_NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Browse contracts", icon: Search, tour: "browse-contracts" },
+  { href: "/dashboard", label: "Dashboard", mobileLabel: "Home", icon: LayoutDashboard },
+  { href: "/jobs", label: "Browse contracts", mobileLabel: "Browse", icon: Search, tour: "browse-contracts" },
   { href: "/automation", label: "Auto Apply", icon: Bot, tour: "auto-apply" },
   { href: "/applications", label: "Tracker", icon: BriefcaseBusiness, badge: "applications", tour: "application-tracker" },
   { href: "/inbox", label: "Inbox", icon: Inbox, badge: "unread" },
   { href: "/profile", label: "Profile", icon: UserRound },
 ] satisfies readonly NavItem[];
+
+const MOBILE_QUICK_NAV = PRIMARY_NAV.slice(0, 5);
 
 const SECONDARY_NAV = [
   { href: "/alerts", label: "Job alerts", icon: Bell },
@@ -142,6 +145,38 @@ export function AppNav() {
           </button>
         </div>
       </header>
+
+      <nav
+        aria-label="Quick workspace navigation"
+        className="sticky top-[68px] z-30 border-b border-slate-200/80 bg-white/95 shadow-[0_8px_24px_-24px_rgba(15,23,42,0.8)] backdrop-blur-xl xl:hidden"
+      >
+        <div className="mx-auto grid min-w-[360px] max-w-[1500px] grid-cols-5 px-1">
+          {MOBILE_QUICK_NAV.map((item) => {
+            const active = activeRoute(pathname, item.href);
+            const badge = item.badge ? counts[item.badge] : 0;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                data-tour={item.tour}
+                aria-current={active ? "page" : undefined}
+                className={`ir35-focus relative flex min-h-[58px] min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-bold transition-colors ${active ? "text-brand-800 after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-brand-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
+              >
+                <span className="relative">
+                  <Icon size={17} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
+                  {badge > 0 && (
+                    <span className="absolute -right-3 -top-2 min-w-4 rounded-full bg-slate-950 px-1 py-0.5 text-center text-[8px] leading-none text-white">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
+                <span className="max-w-full truncate">{item.mobileLabel ?? item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 xl:hidden">

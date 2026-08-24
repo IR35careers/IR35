@@ -5,6 +5,37 @@ async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
   if (await button.waitFor({ state: "visible", timeout: 3_000 }).then(() => true).catch(() => false)) await button.click();
 }
 
+test("mobile workspace keeps core destinations one tap away", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile-chrome", "Mobile quick navigation only");
+  await page.addInitScript(() => {
+    window.localStorage.setItem("ir35careers:dashboard-tour:v2:local-preview", "complete");
+  });
+  await page.goto("/dashboard");
+  await dismissPrivacyNotice(page);
+
+  const quickNavigation = page.getByRole("navigation", { name: "Quick workspace navigation" });
+  await expect(quickNavigation).toBeVisible();
+  await expect(quickNavigation.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/dashboard");
+  await expect(quickNavigation.getByRole("link", { name: "Browse" })).toHaveAttribute("href", "/jobs");
+  await expect(quickNavigation.getByRole("link", { name: "Auto Apply" })).toHaveAttribute("href", "/automation");
+  await expect(quickNavigation.getByRole("link", { name: /Tracker/ })).toHaveAttribute("href", "/applications");
+  await expect(quickNavigation.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/inbox");
+
+  for (const destination of [
+    { href: "/jobs", name: "Browse" },
+    { href: "/automation", name: "Auto Apply" },
+    { href: "/applications", name: "Tracker" },
+    { href: "/inbox", name: "Inbox" },
+  ]) {
+    await page.goto(destination.href);
+    await expect(
+      page
+        .getByRole("navigation", { name: "Quick workspace navigation" })
+        .getByRole("link", { name: new RegExp(destination.name) }),
+    ).toHaveAttribute("aria-current", "page");
+  }
+});
+
 test("profile keeps reusable identity, resume, cover letter and application controls together", async ({ page }) => {
   await page.goto("/profile");
   await dismissPrivacyNotice(page);
