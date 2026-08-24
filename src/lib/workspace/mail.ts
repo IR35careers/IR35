@@ -26,6 +26,44 @@ export function classifyInboundMessage(subject: string, body: string): InboxClas
 }
 
 /**
+ * Job boards often send recommendation newsletters to an application alias
+ * after it has been used on their site. These are not recruiter responses and
+ * should not appear beside application confirmations or interview messages.
+ */
+export function isUnsolicitedJobMarketingMessage(
+  subject: string,
+  body: string,
+  sender = "",
+): boolean {
+  const subjectText = normalise(subject);
+  const text = normalise(`${subject} ${body}`);
+
+  const applicationResponse = /\b(application (?:received|submitted|update|status)|thanks? for applying|thank you for applying|interview|assessment|verification code|action required|unfortunately|not progressing|offer letter|contract offer)\b/.test(
+    text,
+  );
+  if (applicationResponse) return false;
+
+  const recommendationSubject = /\b(?:our |your )?recommendation(?:s)?\b|\brecommended jobs?\b|\bjobs? (?:picked|selected) for you\b|\bjob alerts?\b|\bsimilar jobs?\b|\bnew jobs? for you\b/.test(
+    subjectText,
+  );
+  const recommendationBody = /\bwe recommend this job for you\b|\btake a look and see if you want to apply\b|\bjobs? matching your (?:profile|search)\b|\bmore jobs? like this\b/.test(
+    text,
+  );
+  const marketingSender = /(?:^|[.@_-])(?:job|jobs|alerts?|recommendations?)(?:[.@_-]|$)|totaljobsmail/i.test(
+    sender,
+  );
+  const permanentPromotion =
+    /\bpermanent\b/.test(text) &&
+    /\b(?:good fit|recommended|recommendation|take a look|job alert)\b/.test(text);
+
+  return (
+    recommendationSubject ||
+    recommendationBody ||
+    (marketingSender && permanentPromotion)
+  );
+}
+
+/**
  * Presentation-only categories for the contractor inbox. The database keeps
  * its conservative five-value classification while the UI can distinguish
  * common application messages without requiring a destructive migration.

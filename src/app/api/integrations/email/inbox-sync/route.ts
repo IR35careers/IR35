@@ -7,6 +7,7 @@ import {
 } from "@/lib/email/application-notifications";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { JobDetail } from "@/lib/job-types";
+import { isUnsolicitedJobMarketingMessage } from "@/lib/workspace/mail";
 
 export const runtime = "nodejs";
 
@@ -88,7 +89,17 @@ export async function POST(request: Request): Promise<Response> {
       .order("received_at", { ascending: false })
       .limit(500);
     if (messageError) throw new Error(messageError.message);
-    return Response.json({ messages: (messages ?? []).map((row) => mapMessage(row as DbRow)), backfilled }, { headers: NO_STORE });
+    const visibleMessages = (messages ?? [])
+      .map((row) => mapMessage(row as DbRow))
+      .filter(
+        (message) =>
+          !isUnsolicitedJobMarketingMessage(
+            message.subject,
+            message.body,
+            message.from,
+          ),
+      );
+    return Response.json({ messages: visibleMessages, backfilled }, { headers: NO_STORE });
   } catch (error) {
     console.error("inbox_sync_failed", { reason: error instanceof Error ? error.message.slice(0, 180) : "unknown" });
     return Response.json({ error: "Your application messages could not be refreshed." }, { status: 502, headers: NO_STORE });

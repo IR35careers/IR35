@@ -26,6 +26,7 @@ import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import {
   inboxViewCategory,
   inboxViewCategoryLabel,
+  isUnsolicitedJobMarketingMessage,
   type InboxViewCategory,
 } from "@/lib/workspace/mail";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
@@ -107,6 +108,14 @@ export function RecruiterInbox() {
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return workspace.messages.filter((message) => {
+      if (
+        isUnsolicitedJobMarketingMessage(
+          message.subject,
+          message.body,
+          message.from,
+        )
+      )
+        return false;
       const category = inboxViewCategory(message);
       const categoryMatches = filter === "all" || category === filter;
       const searchMatches =
@@ -124,7 +133,15 @@ export function RecruiterInbox() {
         (item) => item.id === selected.applicationId,
       ) ?? null
     : null;
-  const unread = workspace.messages.filter((message) => !message.read).length;
+  const unread = workspace.messages.filter(
+    (message) =>
+      !message.read &&
+      !isUnsolicitedJobMarketingMessage(
+        message.subject,
+        message.body,
+        message.from,
+      ),
+  ).length;
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;

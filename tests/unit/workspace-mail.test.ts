@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { classifyInboundMessage, findLinkedApplication, inboxViewCategory } from "@/lib/workspace/mail";
+import {
+  classifyInboundMessage,
+  findLinkedApplication,
+  inboxViewCategory,
+  isUnsolicitedJobMarketingMessage,
+} from "@/lib/workspace/mail";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 
 describe("inbound recruiter mail", () => {
@@ -16,6 +21,23 @@ describe("inbound recruiter mail", () => {
     ];
     expect(findLinkedApplication("Northstar Digital - Senior DevOps Engineer", "Thanks for applying", applications)).toBe("northstar");
     expect(findLinkedApplication("General update", "No role information", applications)).toBeNull();
+  });
+
+  it("filters job-board recommendations without hiding application responses", () => {
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Our recommendation: Senior DevOps Engineer",
+        "Hello Anvesh, we recommend this job for you. Good Fit. Permanent.",
+        "info@jobs.totaljobsmail.com",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Application received: Senior DevOps Engineer",
+        "Thank you for applying. We have received your application.",
+        "no-reply@totaljobs.com",
+      ),
+    ).toBe(false);
   });
 
   it("derives detailed inbox categories without changing stored classifications", () => {

@@ -12,7 +12,11 @@ import { sendApplicationNotification, type ApplicationNotificationKind } from "@
 import { applicationMessageTransition } from "@/lib/email/application-message-transition";
 import { resolveEmployerDestinationForJob } from "@/lib/employer-destinations";
 import { isVerifiedRecruiterRecipient } from "@/lib/email/recruiter-reply";
-import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
+import {
+  classifyInboundMessage,
+  findLinkedApplication,
+  isUnsolicitedJobMarketingMessage,
+} from "@/lib/workspace/mail";
 import type { ApplicationRecord } from "@/lib/workspace/types";
 import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumeRateLimitKey } from "@/lib/security/rate-limit";
@@ -122,6 +126,18 @@ export async function POST(request: Request) {
     );
     if (!payload.providerMessageId || !payload.sender || !receivedForAlias) {
       return NextResponse.json({ error: "Required received-email fields are missing." }, { status: 400, headers: RESPONSE_HEADERS });
+    }
+    if (
+      isUnsolicitedJobMarketingMessage(
+        payload.subject,
+        payload.text,
+        payload.sender,
+      )
+    ) {
+      return NextResponse.json(
+        { accepted: true, ignored: true, reason: "job_marketing" },
+        { status: 200, headers: RESPONSE_HEADERS },
+      );
     }
 
     const { data: existingMessage, error: duplicateError } = await admin.from("inbox_messages")
