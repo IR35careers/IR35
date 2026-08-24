@@ -72,4 +72,59 @@ describe("Resume profile extraction", () => {
     expect(result.prefill).not.toHaveProperty("rightToWork");
     expect(result.prefill).not.toHaveProperty("isOver18");
   });
+
+  it("extracts explicit application, preference and limited-company facts", () => {
+    const result = extractResumeProfile(`${cv}
+
+APPLICATION DETAILS
+Right to work: Yes
+Availability: Immediately
+Notice period: None
+Security clearance: Active SC clearance
+Target day rate: £650
+Target annual salary: £85,000
+Limited company name: Priya Data Consulting Ltd
+Companies House number: 12345678
+VAT registered: Yes
+Open to hybrid work
+Willing to relocate
+Own transport
+Willing to travel
+Willing to work shifts
+No weekend work`);
+
+    expect(result.prefill).toMatchObject({
+      rightToWork: "yes",
+      availability: "Immediately",
+      noticePeriod: "None",
+      canStartImmediately: true,
+      clearance: "Active SC clearance",
+      hasGovernmentClearance: true,
+      targetDayRate: "£650",
+      targetAnnualSalary: "£85,000",
+      limitedCompanyName: "Priya Data Consulting Ltd",
+      companyNumber: "12345678",
+      vatRegistered: true,
+      canWorkInPerson: true,
+      canRelocate: true,
+      hasTransportation: true,
+      willingToTravel: true,
+      willingToWorkShifts: true,
+      willingToWorkWeekends: false,
+    });
+  });
+
+  it("extracts a county from a complete UK address", () => {
+    const result = extractResumeProfile(cv.replace(
+      "10 High Street, Bristol, BS1 4ST",
+      "10 High Street, Bristol, Avon, BS1 4ST",
+    ));
+
+    expect(result.prefill).toMatchObject({
+      addressLine1: "10 High Street",
+      city: "Bristol",
+      county: "Avon",
+      postcode: "BS1 4ST",
+    });
+  });
 });

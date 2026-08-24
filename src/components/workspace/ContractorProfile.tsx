@@ -348,6 +348,8 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     const prefill = extraction?.prefill ?? {};
     const keepOrFill = (currentValue: string | undefined, nextValue: string | undefined) =>
       currentValue?.trim() ? currentValue : nextValue ?? currentValue ?? "";
+    const keepBoolean = (currentValue: boolean | null | undefined, nextValue: boolean | undefined) =>
+      currentValue === true || currentValue === false ? currentValue : nextValue ?? currentValue;
     const nextProfile: ContractorProfileType = {
       ...profile,
       fullName: keepOrFill(profile.fullName, prefill.fullName),
@@ -356,6 +358,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       location: keepOrFill(profile.location, prefill.location),
       addressLine1: keepOrFill(profile.addressLine1, prefill.addressLine1),
       city: keepOrFill(profile.city, prefill.city),
+      county: keepOrFill(profile.county, prefill.county),
       postcode: keepOrFill(profile.postcode, prefill.postcode),
       country: keepOrFill(profile.country, prefill.country),
       linkedInUrl: keepOrFill(profile.linkedInUrl, prefill.linkedInUrl),
@@ -364,6 +367,26 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       professionalSummary: keepOrFill(profile.professionalSummary, prefill.professionalSummary),
       targetRole: keepOrFill(profile.targetRole, prefill.targetRole),
       yearsOfExperience: keepOrFill(profile.yearsOfExperience, prefill.yearsOfExperience),
+      availability: keepOrFill(profile.availability, prefill.availability),
+      noticePeriod: keepOrFill(profile.noticePeriod, prefill.noticePeriod),
+      clearance: keepOrFill(profile.clearance, prefill.clearance),
+      rightToWork:
+        profile.rightToWork === "prefer_not_to_say" && prefill.rightToWork
+          ? prefill.rightToWork
+          : profile.rightToWork,
+      hasGovernmentClearance: keepBoolean(profile.hasGovernmentClearance, prefill.hasGovernmentClearance),
+      canWorkInPerson: keepBoolean(profile.canWorkInPerson, prefill.canWorkInPerson),
+      canRelocate: keepBoolean(profile.canRelocate, prefill.canRelocate),
+      canStartImmediately: keepBoolean(profile.canStartImmediately, prefill.canStartImmediately),
+      hasTransportation: keepBoolean(profile.hasTransportation, prefill.hasTransportation),
+      willingToTravel: keepBoolean(profile.willingToTravel, prefill.willingToTravel),
+      willingToWorkShifts: keepBoolean(profile.willingToWorkShifts, prefill.willingToWorkShifts),
+      willingToWorkWeekends: keepBoolean(profile.willingToWorkWeekends, prefill.willingToWorkWeekends),
+      targetDayRate: keepOrFill(profile.targetDayRate, prefill.targetDayRate),
+      targetAnnualSalary: keepOrFill(profile.targetAnnualSalary, prefill.targetAnnualSalary),
+      limitedCompanyName: keepOrFill(profile.limitedCompanyName, prefill.limitedCompanyName),
+      companyNumber: keepOrFill(profile.companyNumber, prefill.companyNumber),
+      vatRegistered: profile.vatRegistered || prefill.vatRegistered === true,
       experienceText: keepOrFill(profile.experienceText, prefill.experienceText),
       projectsText: keepOrFill(profile.projectsText, prefill.projectsText),
       educationInstitution: keepOrFill(profile.educationInstitution, prefill.educationInstitution),
@@ -372,6 +395,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         ...new Set([...(profile.certifications ?? []), ...(prefill.certifications ?? [])]),
       ],
       skills: [...new Set([...(profile.skills ?? []), ...detectedSkills])],
+      forwardingEmail: keepOrFill(profile.forwardingEmail, prefill.email),
       defaultCvLabel: profile.defaultCvLabel || payload.filename || "Primary Resume",
       resumeProfiles: (profile.resumeProfiles ?? []).map((item) =>
         item.id === activeProfile.id
@@ -396,11 +420,15 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     setCvDetectedFields(extraction?.detectedFieldLabels ?? []);
     setTab("details");
     setDocumentNotice("Resume read. Saving the information we found to your profile.");
+    const readinessAfterAutofill = evaluateProfileReadiness(nextProfile, payload.text);
     const stored = await persistProfile(nextProfile);
     const foundFields = extraction?.detectedFieldLabels.length ?? 0;
+    const remainingLabels = readinessAfterAutofill.missing.map((item) => item.label);
     setDocumentNotice(
       stored
-        ? `Resume saved. We found ${detectedSkills.length} skill${detectedSkills.length === 1 ? "" : "s"} and ${foundFields} profile field${foundFields === 1 ? "" : "s"}. Complete the missing items shown below.`
+        ? remainingLabels.length > 0
+          ? `Resume saved. ${foundFields} detail${foundFields === 1 ? " was" : "s were"} filled automatically, including ${detectedSkills.length} confirmed skill${detectedSkills.length === 1 ? "" : "s"}. Please complete: ${remainingLabels.join(", ")}.`
+          : `Resume saved. ${foundFields} detail${foundFields === 1 ? " was" : "s were"} filled automatically and your application profile is ready.`
         : "Your resume was read, but the extracted profile could not be saved. Check your connection and select Save profile.",
     );
     window.setTimeout(
@@ -501,7 +529,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </ol>
               <div className="mt-5 flex gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs leading-5 text-blue-900">
                 <ShieldCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-                <p>Right-to-work, background, accommodation and other sensitive answers are never guessed from your resume.</p>
+                <p>Eligibility and sensitive answers are never guessed from nationality or missing information. We only use a direct statement in your resume; anything else stays for you to confirm.</p>
               </div>
             </aside>
           </div>
@@ -906,7 +934,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                     Work authorisation and availability
                   </h2>
                   <p className="text-sm text-slate-600">
-                    These answers are never inferred.
+                    Explicit statements in your resume are filled automatically. Anything unstated stays blank for you to confirm.
                   </p>
                 </div>
               </div>
