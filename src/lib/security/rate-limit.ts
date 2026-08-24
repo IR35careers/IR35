@@ -40,6 +40,9 @@ export async function consumeRateLimitKey(
   const memory = consumeMemory(`${scope}:${key}`, limit, windowMs);
   if (!memory.allowed) return memory;
 
+  // Unit and build-time tests retain the process-local guard without making
+  // network calls to the production rate-limit store.
+  if (process.env.NODE_ENV === "test") return memory;
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) return memory;
   try {
     const admin = getSupabaseAdmin();
