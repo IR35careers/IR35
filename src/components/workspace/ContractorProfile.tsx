@@ -34,6 +34,7 @@ import type {
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSuggestion } from "@/lib/resume/profile-extraction";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 
 type ProfileTab = "details" | "resume" | "cover" | "settings";
 type ProfileDetailsSection = "identity" | "experience" | "answers" | "company";
@@ -213,18 +214,25 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   const persistProfile = async (candidate: ContractorProfileType) => {
     setSaving(true);
     setSaveError(null);
+    const normalisedCandidate: ContractorProfileType = {
+      ...candidate,
+      resumeProfiles: candidate.resumeProfiles?.map((resumeProfile) => ({
+        ...resumeProfile,
+        resumeText: normaliseResumeText(resumeProfile.resumeText),
+      })),
+    };
     const candidateResume =
-      candidate.resumeProfiles?.find(
-        (item) => item.id === candidate.activeResumeProfileId,
-      ) ?? candidate.resumeProfiles?.[0];
+      normalisedCandidate.resumeProfiles?.find(
+        (item) => item.id === normalisedCandidate.activeResumeProfileId,
+      ) ?? normalisedCandidate.resumeProfiles?.[0];
     const candidateReadiness = evaluateProfileReadiness(
-      candidate,
+      normalisedCandidate,
       candidateResume?.resumeText ?? "",
     );
     const savedProfile =
-      candidateReadiness.complete && !candidate.profileSetupCompletedAt
-        ? { ...candidate, profileSetupCompletedAt: new Date().toISOString() }
-        : candidate;
+      candidateReadiness.complete && !normalisedCandidate.profileSetupCompletedAt
+        ? { ...normalisedCandidate, profileSetupCompletedAt: new Date().toISOString() }
+        : normalisedCandidate;
     const nextWorkspace = {
       ...workspace,
       profile: savedProfile,
@@ -281,10 +289,11 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       "skills",
       skills.filter((skill) => skill !== value),
     );
-  const previewLines = useMemo(
-    () => activeProfile?.resumeText.split(/\r?\n/) ?? [],
-    [activeProfile?.resumeText],
-  );
+  const activeResumeText = activeProfile?.resumeText ?? "";
+  const previewLines = useMemo(() => {
+    const previewText = normaliseResumeText(activeResumeText);
+    return previewText ? previewText.split(/\r?\n/) : [];
+  }, [activeResumeText]);
   const resumeSections = useMemo(
     () =>
       previewLines
@@ -452,7 +461,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           ? {
               ...item,
               name: payload.filename || item.name,
-              resumeText: payload.text as string,
+              resumeText: normaliseResumeText(payload.text as string),
             }
           : item,
       ),

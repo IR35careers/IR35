@@ -8,6 +8,7 @@ import type {
   ResumeSuggestion,
   RoleKeyword,
 } from "@/lib/resume/types";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 
 const HEADING_KINDS: Array<[RegExp, ResumeSectionKind]> = [
   [/^(profile|professional profile|summary|professional summary|about me)$/i, "summary"],
@@ -188,9 +189,7 @@ function findCandidateName(lines: string[], contactIndex: number): string {
 }
 
 export function parseResumeText(rawText: string, filename = "Pasted Resume"): ParsedResume {
-  const text = rawText
-    .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]+\n/g, "\n")
+  const text = normaliseResumeText(rawText)
     .replace(/\n{4,}/g, "\n\n\n")
     .trim();
   const lines = text.split("\n");

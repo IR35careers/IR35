@@ -58,6 +58,22 @@ Site reliability engineer with five years of experience.`, "anvesh.pdf");
     expect(parsed.sections.some((section) => section.content.includes("ANVESH MANNURU"))).toBe(true);
   });
 
+  it("removes empty bullet rows before building Resume sections", () => {
+    const parsed = parseResumeText(`Alex Morgan
+alex@example.com
+
+EXPERIENCE
+Built reliable delivery pipelines.
+•
+•
+•
+Reduced deployment failures by 28%.`, "alex.pdf");
+
+    expect(parsed.rawText).not.toMatch(/^\s*•\s*$/m);
+    expect(parsed.rawText).toContain("Built reliable delivery pipelines.");
+    expect(parsed.rawText).toContain("Reduced deployment failures by 28%.");
+  });
+
   it("reports matched and missing role keywords using a transparent score", () => {
     const score = scoreResumeForRole(source, job, "alex.docx");
     expect(score.matchedKeywords).toEqual(expect.arrayContaining(["AWS", "Terraform"]));
