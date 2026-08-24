@@ -8,6 +8,7 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
+  Download,
   ExternalLink,
   FileText,
   Loader2,
@@ -18,8 +19,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { ResumeDocumentPreview } from "@/components/resume/ResumeDocumentPreview";
 import { StatusPill } from "@/components/workspace/WorkspacePage";
 import { formatRate, type JobDetail } from "@/lib/job-types";
+import { parseResumeText } from "@/lib/resume/analysis";
 import type {
   ApplicationRecord,
   ContractorProfile,
@@ -104,6 +107,8 @@ export function ApplicationRecordWorkspace({
   onResumeBlur: () => void;
 }) {
   const [tab, setTab] = useState<ApplicationTab>("form");
+  const [resumeEditing, setResumeEditing] = useState(false);
+  const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const locked = submitted || submissionInProgress;
   const requiredQuestions = application.questions.filter((item) => item.required);
   const optionalQuestions = application.questions.filter((item) => !item.required);
@@ -113,6 +118,40 @@ export function ApplicationRecordWorkspace({
     [application.events],
   );
   const contractRate = formatRate(job);
+
+  const downloadResume = async (format: "pdf" | "docx") => {
+    const parsed = parseResumeText(
+      application.tailoredCvText,
+      application.resumeVersionLabel,
+    );
+    setDownloading(format);
+    try {
+      const response = await fetch("/api/resume/export", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          format,
+          resumeText: application.tailoredCvText,
+          candidateName: parsed.candidateName,
+          jobTitle: job.title,
+          companyName: job.company_name,
+          versionLabel: resumeLabel(application.resumeVersionLabel),
+        }),
+      });
+      if (!response.ok) throw new Error("Resume export failed.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${parsed.candidateName || "Candidate"}-Resume.${format}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    } finally {
+      setDownloading(null);
+    }
+  };
 
   const updateQuestion = (id: string, answer: string) => {
     onUpdate((current) => ({
@@ -181,26 +220,37 @@ export function ApplicationRecordWorkspace({
         </div>
 
         <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
-          <div className="grid border-b border-slate-200 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <div className="border-b border-slate-200 bg-slate-950 p-5 text-white lg:border-b-0 lg:border-r">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+          <div className="grid lg:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="border-b border-slate-200 bg-[#fbfaf7] p-5 lg:border-b-0 lg:border-r lg:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
                 Application status
               </p>
-              <h2 className="mt-2 text-xl font-semibold">{statusHeading(application)}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
+              <h2 className="mt-2 text-xl font-semibold text-slate-950">{statusHeading(application)}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
                 {submitted
                   ? "The employer confirmation is saved in your tracker."
                   : application.attention?.message ||
                     "Your saved profile and tailored Resume are ready for this contract."}
               </p>
-              <div className="mt-5 flex items-start gap-3 rounded-2xl bg-white/10 p-3">
-                <Mail className="mt-0.5 shrink-0 text-emerald-300" size={17} />
+              <div className="mt-5 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                <Mail className="mt-0.5 shrink-0 text-emerald-700" size={17} />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-200">Application email</p>
-                  <p className="mt-1 break-all text-xs text-white">{receivedEmail}</p>
+                  <p className="text-xs font-semibold text-slate-500">Application email</p>
+                  <p className="mt-1 break-all text-xs font-medium text-slate-900">{receivedEmail}</p>
                 </div>
               </div>
-            </div>
+              <div className="mt-6 border-t border-slate-200 pt-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Latest activity</p>
+                <ol className="mt-3 space-y-3">
+                  {latestEvents.slice(0, 3).map((event) => (
+                    <li key={event.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                      <p className="text-xs font-semibold leading-5 text-slate-900">{event.label}</p>
+                      <p className="mt-1 text-[11px] text-slate-500">{new Date(event.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </aside>
 
             <div className="p-5 sm:p-6">
               {application.attention && application.status === "needs_review" && (
@@ -372,43 +422,42 @@ export function ApplicationRecordWorkspace({
               )}
 
               {tab === "resume" && (
-                <section className="mt-6">
+                <section className="mt-6 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">{application.matchScore}% contract match</p>
-                      <h2 className="mt-1 text-xl font-semibold">{resumeLabel(application.resumeVersionLabel)}</h2>
+                    <div className="min-w-0 px-5 sm:px-6">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Optimised Resume</p>
+                      <h2 className="mt-1 truncate text-lg font-semibold">{job.title} application Resume</h2>
                     </div>
-                    {!locked && (
-                      <button
-                        type="button"
-                        onClick={() => void onRefreshTailoring()}
-                        disabled={busy !== null}
-                        className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-800 disabled:opacity-50"
-                      >
-                        {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
-                        Improve for this contract
+                    <div className="flex flex-wrap gap-2 px-5 sm:px-6">
+                      {!locked && (
+                        <button type="button" onClick={() => setResumeEditing((current) => !current)} className="ir35-focus min-h-10 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700">
+                          {resumeEditing ? "Preview Resume" : "Edit Resume"}
+                        </button>
+                      )}
+                      {!locked && (
+                        <button type="button" onClick={() => void onRefreshTailoring()} disabled={busy !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-800 disabled:opacity-50">
+                          {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />} Improve
+                        </button>
+                      )}
+                      <button type="button" onClick={() => void downloadResume("pdf")} disabled={downloading !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 disabled:opacity-50">
+                        {downloading === "pdf" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download
                       </button>
-                    )}
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Evidence found</p>
-                      <p className="mt-2 text-sm leading-6 text-emerald-950">{application.matchedKeywords.join(", ") || "No strong keyword matches yet."}</p>
-                    </div>
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wide text-amber-800">Missing from your evidence</p>
-                      <p className="mt-2 text-sm leading-6 text-amber-950">{application.missingKeywords.join(", ") || "No material gaps found."}</p>
                     </div>
                   </div>
-                  <textarea
-                    aria-label="Resume text"
-                    value={application.tailoredCvText}
-                    readOnly={locked}
-                    onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))}
-                    onBlur={onResumeBlur}
-                    rows={24}
-                    className="ir35-focus mt-4 w-full resize-y rounded-2xl border border-slate-300 bg-white p-5 font-mono text-sm leading-6 read-only:bg-slate-50"
-                  />
+                  <details className="mx-5 mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm sm:mx-6">
+                    <summary className="cursor-pointer font-semibold text-slate-700">View match evidence and gaps</summary>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Evidence found</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.matchedKeywords.join(", ") || "No strong keyword matches yet."}</p></div>
+                      <div><p className="text-xs font-bold uppercase tracking-wide text-amber-800">Missing from your evidence</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.missingKeywords.join(", ") || "No material gaps found."}</p></div>
+                    </div>
+                  </details>
+                  {resumeEditing && !locked ? (
+                    <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus mx-5 mt-4 w-[calc(100%-2.5rem)] resize-y rounded-2xl border border-slate-300 bg-white p-5 font-mono text-sm leading-6 sm:mx-6 sm:w-[calc(100%-3rem)]" />
+                  ) : (
+                    <div className="mt-4 overflow-auto bg-slate-100 px-4 py-8 sm:px-8 sm:py-10">
+                      <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} />
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -416,14 +465,13 @@ export function ApplicationRecordWorkspace({
                 <section className="mt-6">
                   <h2 className="text-xl font-semibold">Cover letter</h2>
                   <p className="mt-1 text-sm text-slate-500">Prepared from verified experience in your Resume.</p>
-                  <textarea
-                    aria-label="Cover letter"
-                    value={application.coverLetter}
-                    readOnly={locked}
-                    onChange={(event) => onUpdate((current) => ({ ...current, coverLetter: event.target.value, materialsApproved: false, submissionApproved: false, status: "needs_review" }))}
-                    rows={20}
-                    className="ir35-focus mt-4 w-full resize-y rounded-2xl border border-slate-300 bg-white p-5 text-sm leading-7 read-only:bg-slate-50"
-                  />
+                  {locked ? (
+                    <div className="mt-4 bg-slate-100 p-5 sm:p-8">
+                      <article className="mx-auto min-h-[760px] max-w-[780px] whitespace-pre-wrap bg-white px-8 py-10 text-sm leading-7 text-slate-800 shadow-[0_18px_55px_rgba(15,23,42,0.12)] sm:px-14 sm:py-12">{application.coverLetter}</article>
+                    </div>
+                  ) : (
+                    <textarea aria-label="Cover letter" value={application.coverLetter} onChange={(event) => onUpdate((current) => ({ ...current, coverLetter: event.target.value, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} rows={20} className="ir35-focus mt-4 w-full resize-y rounded-2xl border border-slate-300 bg-white p-5 text-sm leading-7" />
+                  )}
                 </section>
               )}
 
