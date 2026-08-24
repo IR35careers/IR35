@@ -44,7 +44,15 @@ export interface ResumeProfileExtraction {
   prefill: ResumeProfilePrefill;
   detectedSkills: string[];
   suggestedSkills: string[];
+  skillSuggestions: ResumeSkillSuggestion[];
   detectedFieldLabels: string[];
+}
+
+export interface ResumeSkillSuggestion {
+  skill: string;
+  evidenceSkills: string[];
+  reason: string;
+  confidence: "strong" | "related";
 }
 
 const UK_POSTCODE = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i;
@@ -67,42 +75,111 @@ const ALL_HEADINGS = new Set(Object.values(HEADING_ALIASES).flat());
 const ROLE_WORDS = /\b(engineer|developer|architect|analyst|manager|consultant|specialist|scientist|designer|administrator|director|lead|officer|contractor|programmer|technician)\b/i;
 const NAME_BLOCKLIST = /\b(curriculum|vitae|resume|profile|summary|engineer|developer|architect|analyst|manager|consultant|specialist|scientist|director|lead|contractor)\b/i;
 
-const RELATED_SKILLS: Record<string, string[]> = {
-  JavaScript: ["TypeScript", "React", "Node.js", "Jest"],
-  TypeScript: ["JavaScript", "React", "Node.js", "Next.js"],
-  React: ["TypeScript", "Next.js", "Redux", "Jest"],
-  "Node.js": ["TypeScript", "REST API", "Microservices", "PostgreSQL"],
-  Python: ["FastAPI", "Django", "SQL", "AWS"],
-  Java: ["Spring Boot", "Microservices", "SQL", "Kubernetes"],
-  ".NET": ["C#", "Azure", "SQL Server", "Microservices"],
-  AWS: ["Terraform", "Docker", "Kubernetes", "Serverless"],
-  Azure: ["Terraform", "Docker", "Kubernetes", "PowerShell"],
-  GCP: ["Terraform", "Docker", "Kubernetes", "Data Engineering"],
-  DevOps: ["CI/CD", "Docker", "Kubernetes", "Terraform"],
-  Kubernetes: ["Docker", "Terraform", "Helm", "CI/CD"],
-  Terraform: ["AWS", "Azure", "GCP", "Ansible"],
-  SQL: ["PostgreSQL", "SQL Server", "Data Engineering", "Power BI"],
-  "Data Engineering": ["SQL", "Python", "Airflow", "dbt"],
-  "Data Science": ["Python", "SQL", "Machine Learning", "Power BI"],
-  "Machine Learning": ["Python", "Data Science", "NLP", "AI/LLM"],
-  "Cyber Security": ["Penetration Testing", "AWS", "Azure", "Linux"],
-  Salesforce: ["Business Analysis", "Agile", "Data Engineering"],
-  "Business Analysis": ["Agile", "Jira", "Project Management", "Power BI"],
-  "Project Management": ["Agile", "Jira", "Business Analysis", "Product Management"],
-};
+interface SkillPath {
+  name: string;
+  rolePattern: RegExp;
+  signals: string[];
+  suggestions: string[];
+}
 
-const SKILL_CLUSTERS = [
-  ["JavaScript", "TypeScript", "React", "Next.js", "Vue", "Angular", "HTML", "CSS", "Redux"],
-  ["Node.js", "Java", ".NET", "C#", "Python", "Spring Boot", "REST API", "GraphQL", "Microservices"],
-  ["AWS", "Azure", "GCP", "DevOps", "Kubernetes", "Docker", "Terraform", "Ansible", "CI/CD", "Linux"],
-  ["SQL", "PostgreSQL", "SQL Server", "Python", "Data Engineering", "Airflow", "dbt", "Snowflake", "Databricks", "Kafka"],
-  ["Data Science", "Machine Learning", "Python", "SQL", "AI/LLM", "NLP", "Power BI", "Tableau"],
-  ["Cypress", "Playwright", "Selenium", "Jest", "QA/Testing", "CI/CD"],
-  ["Cyber Security", "Penetration Testing", "Linux", "AWS", "Azure", "SC Cleared", "DV Cleared"],
-  ["Salesforce", "SAP", "Dynamics 365", "ServiceNow", "Workday", "Business Analysis", "Agile"],
-  ["Project Management", "Product Management", "Business Analysis", "Agile", "Jira", "Solutions Architecture"],
-  ["iOS", "Android", "Flutter", "React Native", "Swift", "Kotlin"],
-] as const;
+const SKILL_PATHS: SkillPath[] = [
+  {
+    name: "cloud and platform engineering",
+    rolePattern: /\b(?:devops|platform|cloud|site reliability|sre|infrastructure)\b/i,
+    signals: ["AWS", "Azure", "GCP", "DevOps", "Kubernetes", "Docker", "Terraform", "Ansible", "CI/CD", "Linux"],
+    suggestions: ["Kubernetes", "Helm", "Terraform", "Ansible", "CI/CD", "Prometheus", "Grafana", "Serverless"],
+  },
+  {
+    name: "data engineering",
+    rolePattern: /\b(?:data engineer|analytics engineer|etl|data platform)\b/i,
+    signals: ["Python", "SQL", "Data Engineering", "Airflow", "dbt", "Snowflake", "Databricks", "Kafka", "AWS", "Azure"],
+    suggestions: ["Snowflake", "Databricks", "Kafka", "PySpark", "Azure Data Factory", "Data Modelling", "Data Quality", "Power BI"],
+  },
+  {
+    name: "data science and machine learning",
+    rolePattern: /\b(?:data scientist|machine learning|ml engineer|artificial intelligence|ai engineer)\b/i,
+    signals: ["Data Science", "Machine Learning", "Python", "SQL", "AI/LLM", "NLP", "Power BI", "Tableau"],
+    suggestions: ["Machine Learning", "NLP", "AI/LLM", "MLOps", "Feature Engineering", "Model Monitoring", "Power BI", "Tableau"],
+  },
+  {
+    name: "front-end engineering",
+    rolePattern: /\b(?:front[- ]?end|ui engineer|react developer|web developer)\b/i,
+    signals: ["JavaScript", "TypeScript", "React", "Next.js", "Vue", "Angular", "HTML", "CSS", "Redux"],
+    suggestions: ["TypeScript", "Next.js", "Redux", "Jest", "Cypress", "Playwright", "Accessibility", "Web Performance"],
+  },
+  {
+    name: "back-end engineering",
+    rolePattern: /\b(?:back[- ]?end|software engineer|software developer|api developer|java developer|\.net developer)\b/i,
+    signals: ["Node.js", "Java", ".NET", "C#", "Spring Boot", "REST API", "GraphQL", "Microservices", "PostgreSQL", "SQL Server"],
+    suggestions: ["REST API", "GraphQL", "Microservices", "PostgreSQL", "Docker", "Unit Testing", "System Design", "Event-Driven Architecture"],
+  },
+  {
+    name: "quality engineering",
+    rolePattern: /\b(?:qa|quality|test automation|software tester|sdet)\b/i,
+    signals: ["Cypress", "Playwright", "Selenium", "Jest", "QA/Testing", "CI/CD"],
+    suggestions: ["Playwright", "Cypress", "Selenium", "API Testing", "Performance Testing", "BDD", "CI/CD", "Test Strategy"],
+  },
+  {
+    name: "cyber security",
+    rolePattern: /\b(?:cyber|security|penetration|soc analyst|information security)\b/i,
+    signals: ["Cyber Security", "Penetration Testing", "Linux", "AWS", "Azure", "SC Cleared", "DV Cleared"],
+    suggestions: ["Threat Modelling", "SIEM", "Vulnerability Management", "Cloud Security", "Incident Response", "IAM", "ISO 27001", "NIST"],
+  },
+  {
+    name: "Salesforce delivery",
+    rolePattern: /\b(?:salesforce|crm consultant|crm developer)\b/i,
+    signals: ["Salesforce", "Business Analysis", "Agile", "Jira"],
+    suggestions: ["Business Analysis", "Apex", "Lightning Web Components", "SOQL", "Integration APIs", "Data Migration", "Agile", "Jira"],
+  },
+  {
+    name: "product and change delivery",
+    rolePattern: /\b(?:business analyst|project manager|product manager|programme manager|scrum master|change manager)\b/i,
+    signals: ["Project Management", "Product Management", "Business Analysis", "Agile", "Jira"],
+    suggestions: ["Stakeholder Management", "Requirements Gathering", "Process Mapping", "Risk Management", "Agile", "Jira", "User Stories", "Roadmapping"],
+  },
+  {
+    name: "mobile engineering",
+    rolePattern: /\b(?:mobile|ios|android|flutter|react native)\b/i,
+    signals: ["iOS", "Android", "Flutter", "React Native", "Swift", "Kotlin"],
+    suggestions: ["Swift", "Kotlin", "Flutter", "React Native", "Mobile CI/CD", "App Store Delivery", "Mobile Testing", "Accessibility"],
+  },
+];
+
+function makeSkillSuggestions(detectedSkills: string[], role: string): ResumeSkillSuggestion[] {
+  const detected = new Set(detectedSkills.map((skill) => skill.toLocaleLowerCase("en-GB")));
+  const ranked = new Map<string, ResumeSkillSuggestion & { score: number }>();
+
+  for (const path of SKILL_PATHS) {
+    const evidenceSkills = path.signals.filter((skill) => detected.has(skill.toLocaleLowerCase("en-GB")));
+    const roleMatch = path.rolePattern.test(role);
+    if (!roleMatch && evidenceSkills.length < 2) continue;
+    const score = evidenceSkills.length * 2 + (roleMatch ? 4 : 0);
+    const confidence: ResumeSkillSuggestion["confidence"] = roleMatch || evidenceSkills.length >= 3 ? "strong" : "related";
+    const evidenceText = evidenceSkills.slice(0, 4).join(", ");
+    const reason = evidenceText
+      ? `Suggested for ${path.name} because your resume mentions ${evidenceText}.`
+      : `Suggested because your resume targets ${path.name} roles.`;
+
+    for (const skill of path.suggestions) {
+      const key = skill.toLocaleLowerCase("en-GB");
+      if (detected.has(key)) continue;
+      const current = ranked.get(key);
+      if (!current || score > current.score) {
+        ranked.set(key, { skill, evidenceSkills: evidenceSkills.slice(0, 4), reason, confidence, score });
+      }
+    }
+  }
+
+  return [...ranked.values()]
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 12)
+    .map((suggestion) => ({
+      skill: suggestion.skill,
+      evidenceSkills: suggestion.evidenceSkills,
+      reason: suggestion.reason,
+      confidence: suggestion.confidence,
+    }));
+}
 
 function cleanLine(value: string): string {
   return value.replace(/^[\s•·▪◦‣●*-]+/, "").replace(/\s+/g, " ").trim();
@@ -411,22 +488,14 @@ export function extractResumeProfile(text: string): ResumeProfileExtraction {
     ...(qualification ? { educationQualification: qualification } : {}),
   };
   const detectedSkills = extractSkills("", flattened);
-  const clusterSuggestions = SKILL_CLUSTERS
-    .filter((cluster) => cluster.some((skill) => detectedSkills.includes(skill)))
-    .flatMap((cluster) => [...cluster]);
-  const suggestedSkills = [
-    ...new Set([
-      ...detectedSkills.flatMap((skill) => RELATED_SKILLS[skill] ?? []),
-      ...clusterSuggestions,
-    ]),
-  ]
-    .filter((skill) => !detectedSkills.includes(skill))
-    .slice(0, 12);
+  const skillSuggestions = makeSkillSuggestions(detectedSkills, role);
+  const suggestedSkills = skillSuggestions.map((suggestion) => suggestion.skill);
 
   return {
     prefill,
     detectedSkills,
     suggestedSkills,
+    skillSuggestions,
     detectedFieldLabels: fieldLabels(prefill),
   };
 }

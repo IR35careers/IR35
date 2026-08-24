@@ -33,7 +33,7 @@ import type {
 } from "@/lib/workspace/types";
 import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
 import { extractSkills } from "@/lib/processing/skills-extractor";
-import type { ResumeProfileExtraction } from "@/lib/resume/profile-extraction";
+import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSuggestion } from "@/lib/resume/profile-extraction";
 
 type ProfileTab = "details" | "resume" | "cover" | "settings";
 
@@ -158,6 +158,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   const [customSkill, setCustomSkill] = useState("");
   const [cvDetectedSkills, setCvDetectedSkills] = useState<string[]>([]);
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
+  const [skillSuggestionDetails, setSkillSuggestionDetails] = useState<ResumeSkillSuggestion[]>([]);
   const [cvDetectedFields, setCvDetectedFields] = useState<string[]>([]);
   const resumeProfiles = profile.resumeProfiles ?? [];
   const activeProfile =
@@ -244,6 +245,11 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         (item) => item.toLocaleLowerCase("en-GB") !== skill.toLocaleLowerCase("en-GB"),
       ),
     );
+    setSkillSuggestionDetails((current) =>
+      current.filter(
+        (item) => item.skill.toLocaleLowerCase("en-GB") !== skill.toLocaleLowerCase("en-GB"),
+      ),
+    );
     setCustomSkill("");
   };
   const removeSkill = (value: string) =>
@@ -282,6 +288,26 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
   }, []);
+
+  useEffect(() => {
+    const resumeText = activeProfile?.resumeText?.trim() ?? "";
+    if (!resumeText) {
+      setCvDetectedSkills([]);
+      setSuggestedSkills([]);
+      setSkillSuggestionDetails([]);
+      return;
+    }
+    const extraction = extractResumeProfile(resumeText);
+    const currentSkills = new Set(
+      (profile.skills ?? []).map((skill) => skill.toLocaleLowerCase("en-GB")),
+    );
+    const availableSuggestions = extraction.skillSuggestions.filter(
+      (suggestion) => !currentSkills.has(suggestion.skill.toLocaleLowerCase("en-GB")),
+    );
+    setCvDetectedSkills(extraction.detectedSkills);
+    setSuggestedSkills(availableSuggestions.map((suggestion) => suggestion.skill));
+    setSkillSuggestionDetails(availableSuggestions);
+  }, [activeProfile?.id, activeProfile?.resumeText, profile.skills]);
 
   const addResumeProfile = () => {
     const created: ResumeProfile = {
@@ -412,9 +438,17 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     setSuggestedSkills(
       (extraction?.suggestedSkills ?? []).filter(
         (skill) =>
-          !skills.some(
+          !(nextProfile.skills ?? []).some(
             (current) => current.toLocaleLowerCase("en-GB") === skill.toLocaleLowerCase("en-GB"),
           ) && !detectedSkills.includes(skill),
+      ),
+    );
+    setSkillSuggestionDetails(
+      (extraction?.skillSuggestions ?? []).filter(
+        (suggestion) =>
+          !(nextProfile.skills ?? []).some(
+            (current) => current.toLocaleLowerCase("en-GB") === suggestion.skill.toLocaleLowerCase("en-GB"),
+          ) && !detectedSkills.includes(suggestion.skill),
       ),
     );
     setCvDetectedFields(extraction?.detectedFieldLabels ?? []);
@@ -848,22 +882,35 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 {suggestedSkills.length > 0 && (
                   <div className="mt-5 border-t border-slate-200 pt-4">
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
-                      Suggested from your resume
+                      Suggestions based on your resume
                     </p>
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Add only skills you can support with real experience.
+                      These adjacent skills are recommended from your role and the experience already found. Add only skills you can support with real work.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {suggestedSkills.map((skill) => (
+                    <div className="mt-3 grid gap-2">
+                      {suggestedSkills.map((skill) => {
+                        const detail = skillSuggestionDetails.find((item) => item.skill === skill);
+                        return (
                         <button
                           type="button"
                           key={skill}
                           onClick={() => addSkill(skill)}
-                          className="ir35-focus inline-flex min-h-9 items-center gap-1.5 rounded-full border border-dashed border-brand-300 bg-white px-3 text-xs font-semibold text-brand-800 hover:bg-brand-50"
+                          aria-label={`Add suggested skill ${skill}`}
+                          className="ir35-focus flex min-h-14 w-full items-start gap-3 rounded-xl border border-brand-200 bg-brand-50/60 p-3 text-left hover:border-brand-400 hover:bg-brand-50"
                         >
-                          <Plus size={12} aria-hidden="true" /> {skill}
+                          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm"><Plus size={13} aria-hidden="true" /></span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-bold text-slate-950">{skill}</span>
+                            <span className="mt-0.5 block text-xs font-normal leading-5 text-slate-600">
+                              {detail?.reason ?? "Suggested from the role and skills found in your resume."}
+                            </span>
+                          </span>
+                          <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-700">
+                            Add
+                          </span>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

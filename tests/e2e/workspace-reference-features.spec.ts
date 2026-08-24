@@ -42,7 +42,7 @@ EXPERIENCE
 Senior Salesforce Consultant at Example Consulting. Delivered secure Salesforce services and Agile change programmes.`),
   });
   await expect(page.getByText("Filled from your resume", { exact: true })).toBeVisible();
-  await expect(page.getByText("Suggested from your resume", { exact: true })).toBeVisible();
+  await expect(page.getByText("Suggestions based on your resume", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Business Analysis/ })).toBeVisible();
 
   await page.getByRole("button", { name: "Cover letter", exact: true }).click();

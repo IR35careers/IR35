@@ -65,6 +65,30 @@ describe("Resume profile extraction", () => {
     );
     expect(result.suggestedSkills).toContain("Kubernetes");
     expect(result.detectedSkills).not.toContain("Kubernetes");
+    expect(result.suggestedSkills).not.toEqual(expect.arrayContaining(["Java", ".NET", "React"]));
+    expect(result.skillSuggestions.find((suggestion) => suggestion.skill === "Snowflake")).toMatchObject({
+      confidence: "strong",
+      evidenceSkills: expect.arrayContaining(["Python", "SQL"]),
+    });
+    expect(result.skillSuggestions.find((suggestion) => suggestion.skill === "Snowflake")?.reason).toContain("your resume mentions");
+  });
+
+  it("uses the target role and multiple resume signals instead of a generic skill list", () => {
+    const result = extractResumeProfile(`Alex Morgan
+Senior Salesforce Consultant
+
+PROFESSIONAL SUMMARY
+Salesforce consultant delivering regulated CRM programmes using Agile delivery.
+
+SKILLS
+Salesforce, Agile, Jira
+
+EXPERIENCE
+Led Salesforce change programmes and requirements workshops.`);
+
+    expect(result.suggestedSkills).toEqual(expect.arrayContaining(["Business Analysis", "Apex", "SOQL"]));
+    expect(result.suggestedSkills).not.toEqual(expect.arrayContaining(["Kubernetes", "Machine Learning", "React"]));
+    expect(result.skillSuggestions[0].reason).toContain("Salesforce");
   });
 
   it("does not infer protected or eligibility answers", () => {
