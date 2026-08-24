@@ -231,12 +231,12 @@ export function AutomationSettings() {
   const toggleArray = <T extends string>(values: T[], value: T): T[] => values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 
   return (
-    <WorkspacePage eyebrow="Auto Apply" title="Set your preferences once" description="Choose the contracts you want. IR35Careers prepares each application from your saved profile and keeps every update in your tracker.">
+    <WorkspacePage eyebrow="Auto Apply" title="Choose the contracts you want" description="Set your role, rate and IR35 preferences. We prepare matching applications and keep every result in your tracker.">
       <nav className="mb-5 grid max-w-3xl grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]" aria-label="Auto Apply setup">
         {([
-          ["matches", "Matches", "1. Contract matches"],
-          ["materials", "Resume", "2. Application materials"],
-          ["permission", "Permission", "3. Permission"],
+          ["matches", "Matches", "Matches"],
+          ["materials", "Resume", "Resume"],
+          ["permission", "Permission", "Permission"],
         ] as const).map(([id, mobileLabel, desktopLabel]) => (
           <button key={id} type="button" onClick={() => setSection(id)} aria-pressed={section === id} className={`ir35-focus min-h-11 min-w-0 rounded-xl px-2 text-xs font-semibold sm:px-4 sm:text-sm ${section === id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>
             <span className="sm:hidden">{mobileLabel}</span>
@@ -244,7 +244,7 @@ export function AutomationSettings() {
           </button>
         ))}
       </nav>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="space-y-6">
           {section === "matches" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><Bot size={21} /></span><div><h2 className="font-semibold text-slate-950">Auto Apply</h2><p className="text-sm text-slate-600">Pause or resume your saved searches at any time.</p></div></div><button type="button" role="switch" aria-checked={autoApplyEnabled} onClick={() => { setAutoApplyEnabled((value) => !value); setSaved(false); }} className={`ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${autoApplyEnabled ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{autoApplyEnabled ? <PlayCircle size={17} /> : <PauseCircle size={17} />}{autoApplyEnabled ? "On" : "Paused"}</button></div>
@@ -419,15 +419,6 @@ export function AutomationSettings() {
         </div>
 
         <aside className="space-y-5 xl:sticky xl:top-24 xl:h-max">
-          <section className={`rounded-3xl border p-5 shadow-card ${autoApplyEnabled && consentAccepted ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}>
-            <div className="flex items-start gap-3">
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${autoApplyEnabled && consentAccepted ? "bg-white text-emerald-700" : "bg-slate-100 text-slate-500"}`}><Bot size={18} /></span>
-              <div>
-                <p className="font-bold text-slate-950">{autoApplyEnabled && consentAccepted ? "Auto Apply is on" : "Auto Apply is paused"}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{autoApplyEnabled && consentAccepted ? "IR35Careers checks your saved matches each morning and starts eligible applications automatically." : "Turn it on and save your preferences to run matching applications automatically."}</p>
-              </div>
-            </div>
-          </section>
           <section className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-card"><p className="text-xs font-bold uppercase tracking-wide text-emerald-300">Latest match check</p>{latestRun ? <><p className="mt-3 text-4xl font-bold tabular-nums">{latestRun.matchingJobIds.length}</p><p className="mt-1 text-sm text-slate-300">contracts match your current rules</p><p className="mt-4 text-xs text-slate-400">Checked {new Date(latestRun.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p></> : <p className="mt-3 text-sm leading-6 text-slate-300">Preview current contracts before starting Auto Apply.</p>}</section>
           {latestRun && !isSupabaseConfigured() && <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><h2 className="font-semibold">Decision log</h2><ul className="mt-4 space-y-3">{DEMO_JOBS.map((job) => { const skip = latestRun.skipped.find((item) => item.jobId === job.id); return <li key={job.id} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0"><span className="mt-0.5">{skip ? <XCircle className="text-slate-400" size={17} /> : <CheckCircle2 className="text-emerald-600" size={17} />}</span><div><p className="text-sm font-semibold text-slate-800">{job.title}</p><p className="mt-1 text-xs text-slate-500">{skip?.reason ?? "Matches your saved rules"}</p></div></li>; })}</ul></section>}
         </aside>

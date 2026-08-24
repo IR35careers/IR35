@@ -439,30 +439,12 @@ export function ApplicationTracker() {
       actions={
         <Link
           href="/jobs"
-          className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800"
+          className="ir35-focus hidden min-h-11 items-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:inline-flex"
         >
           Browse contracts <ArrowRight size={15} />
         </Link>
       }
     >
-      <nav
-        className="mb-5 flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1"
-        aria-label="Application communication views"
-      >
-        <Link
-          href="/inbox"
-          className="ir35-focus inline-flex min-h-10 items-center rounded-xl px-5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
-        >
-          Inbox
-        </Link>
-        <span
-          aria-current="page"
-          className="inline-flex min-h-10 items-center rounded-xl bg-slate-950 px-5 text-sm font-bold text-white"
-        >
-          Pipeline
-        </span>
-      </nav>
-
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block min-w-0 flex-1">
@@ -494,7 +476,7 @@ export function ApplicationTracker() {
               <Plus size={16} /> Add application
             </button>
             <details className="relative">
-              <summary className="ir35-focus inline-flex min-h-11 cursor-pointer list-none items-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">More</summary>
+              <summary className="ir35-focus inline-flex min-h-11 cursor-pointer list-none items-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Import / export</summary>
               <div className="absolute right-0 z-20 mt-2 grid w-48 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
                 <button type="button" onClick={() => importRef.current?.click()} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"><Upload size={15} /> Import CSV</button>
                 <button type="button" onClick={exportCsv} disabled={!workspace.applications.length} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40"><Download size={15} /> Export CSV</button>
@@ -510,7 +492,7 @@ export function ApplicationTracker() {
       </section>
 
       <section
-        className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:grid-cols-3 lg:grid-cols-6"
+        className="mt-5 flex snap-x snap-mandatory overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] lg:grid lg:grid-cols-6 lg:overflow-hidden"
         aria-label="Application pipeline summary"
       >
         {PIPELINE.map((stage, index) => {
@@ -520,9 +502,9 @@ export function ApplicationTracker() {
           return (
             <div
               key={stage.id}
-              className={`min-h-[92px] px-4 py-4 ${index < PIPELINE.length - 1 ? "border-r border-slate-200" : ""} ${index < 4 ? "border-b border-slate-200 sm:border-b-0" : ""}`}
+              className={`min-w-[118px] snap-start px-4 py-3.5 lg:min-h-[92px] lg:min-w-0 lg:py-4 ${index < PIPELINE.length - 1 ? "border-r border-slate-200" : ""}`}
             >
-              <p className="text-2xl font-bold tabular-nums text-slate-950">
+              <p className="text-xl font-bold tabular-nums text-slate-950 lg:text-2xl">
                 {count}
               </p>
               <p className="mt-1 text-xs font-semibold text-slate-600">

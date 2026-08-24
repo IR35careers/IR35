@@ -61,14 +61,14 @@ async function completeReusableApplicationProfile(
   await selectAnswer("Are you willing to travel for work?", "yes");
   await selectAnswer("Are you willing to work shifts?", "no");
   await selectAnswer("Are you willing to work weekends?", "no");
-  await expect(page.getByRole("heading", { name: /profile item left/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /detail to complete/ })).toBeVisible();
   await selectAnswer("Can an employer run a standard background check?", "yes");
   await selectAnswer("Do you have convictions that must be declared for the role?", "no");
   await page.getByRole("button", { name: "Save profile" }).click();
   await expect(page.getByRole("button", { name: "Profile saved" })).toBeVisible();
   await expect(
     page.getByRole("heading", {
-      name: "Your reusable application profile is ready",
+      name: "Ready for applications",
     }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
@@ -80,7 +80,7 @@ async function completeReusableApplicationProfile(
   await expect(page.getByRole("button", { name: "Profile saved" })).toBeVisible();
   await expect(
     page.getByRole("heading", {
-      name: "Your reusable application profile is ready",
+      name: "Ready for applications",
     }),
   ).toBeVisible();
 }
@@ -535,10 +535,10 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByText("alex.morgan@example.test", { exact: true }).first()).toBeVisible();
 
   await page.goto("/automation");
-  await expect(page.getByRole("heading", { name: "Set your preferences once" })).toBeVisible();
-  await page.getByRole("button", { name: "3. Permission" }).click();
+  await expect(page.getByRole("heading", { name: "Choose the contracts you want" })).toBeVisible();
+  await page.getByRole("button", { name: "Permission", exact: true }).click();
   await expect(page.getByText(/Allow IR35Careers to apply to my matching roles/i)).toBeVisible();
-  await page.getByRole("button", { name: "1. Contract matches" }).click();
+  await page.getByRole("button", { name: "Matches", exact: true }).click();
   await page.getByRole("button", { name: "Preview matches" }).click();
   await expect(page.getByText(/matching contracts? found/i)).toBeVisible();
 });
