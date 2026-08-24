@@ -21,6 +21,14 @@ test("mobile workspace keeps core destinations one tap away", async ({ page }, t
   await expect(quickNavigation.getByRole("link", { name: /Tracker/ })).toHaveAttribute("href", "/applications");
   await expect(quickNavigation.getByRole("link", { name: /Inbox/ })).toHaveAttribute("href", "/inbox");
 
+  await page.getByRole("button", { name: "Open workspace navigation" }).click();
+  const workspaceMenu = page.locator("#member-mobile-menu");
+  await expect(workspaceMenu.getByRole("link", { name: "Job alerts" })).toBeVisible();
+  await expect(workspaceMenu.getByRole("link", { name: "Settings" })).toBeVisible();
+  await expect(workspaceMenu.getByRole("link", { name: "Network" })).toHaveCount(0);
+  await expect(workspaceMenu.getByRole("link", { name: "Analytics" })).toHaveCount(0);
+  await workspaceMenu.getByRole("button", { name: "Close navigation" }).click();
+
   for (const destination of [
     { href: "/jobs", name: "Browse" },
     { href: "/automation", name: "Auto Apply" },

@@ -533,7 +533,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await page.goto("/inbox");
   await expect(page.getByRole("heading", { name: "Your application messages" })).toBeVisible();
   await expect(page.getByText("alex.morgan@inbox.ir35careers.local")).toBeVisible();
-  await expect(page.getByText("alex.morgan@example.test", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("alex.morgan@example.test", { exact: true })).toHaveCount(0);
 
   await page.goto("/automation");
   await expect(page.getByRole("heading", { name: "Choose the contracts you want" })).toBeVisible();
