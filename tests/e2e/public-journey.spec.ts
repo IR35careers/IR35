@@ -503,8 +503,10 @@ test("application workspace presents a clean review flow and never claims an unc
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Complete your reusable profile before applying" })).toHaveCount(0);
-  await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
+  await expect(page.getByRole("heading", { name: "Complete your profile before applying" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Your Resume is ready" })).toBeVisible();
+  await expect(page.getByText("Alex Morgan Resume", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Use a different Resume" })).toBeVisible();
   await page.getByRole("button", { name: "Prepare application" }).click();
 
   await expect(page.getByRole("heading", { name: "Senior DevOps Engineer - Outside IR35" })).toBeVisible();

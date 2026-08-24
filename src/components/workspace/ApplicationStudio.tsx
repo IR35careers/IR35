@@ -75,9 +75,9 @@ type BusyState =
 type ConnectionState = "connected" | "gated";
 
 const WORKFLOW_STEPS = [
-  { label: "Add Resume", helper: "Upload or paste" },
-  { label: "Tailor", helper: "Compare every edit" },
-  { label: "Review & submit", helper: "Approve the exact packet" },
+  { label: "Resume", helper: "Choose what to use" },
+  { label: "Review", helper: "Check your application" },
+  { label: "Apply", helper: "Confirm and send" },
 ] as const;
 
 function persistApplication(application: ApplicationRecord) {
@@ -149,6 +149,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       workspace.profile.defaultCvLabel ??
       "",
   );
+  const [showResumeEditor, setShowResumeEditor] = useState(false);
   const [application, setApplication] = useState<ApplicationRecord | null>(
     initialApplication,
   );
@@ -489,7 +490,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setApplication(null);
       setAiResult(null);
       setSelectedSuggestionIds([]);
-      await prepare(payload.text, payload.filename || file.name);
+      setShowResumeEditor(false);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "We could not read that Resume.",
@@ -1278,7 +1279,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 id="profile-readiness-title"
                 className="font-semibold text-amber-950"
               >
-                Complete your reusable profile before applying
+                Complete your profile before applying
               </h2>
               <p className="mt-1 text-sm leading-6 text-amber-900">
                 {profileReadiness.missing.map((item) => item.label).join(", ")}
@@ -1475,87 +1476,78 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <main className="min-w-0 space-y-5">
           {!application ? (
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-              <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                  <FileText size={19} />
-                </span>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">
-                    Step 1
-                  </p>
-                  <h2 className="font-semibold text-slate-950">
-                    Add the Resume you want to use
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-600">
-                    PDF, DOCX or text, up to 5MB. You can check the extracted
-                    text before analysis.
-                  </p>
+            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+              <div className="p-5 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                      <FileText size={20} />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Resume</p>
+                      <h2 className="mt-1 text-lg font-semibold text-slate-950">
+                        {cvReady ? "Your Resume is ready" : "Add your Resume to continue"}
+                      </h2>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        {cvReady
+                          ? "We will use your saved Resume and profile for this application."
+                          : "Upload a PDF or Word document once. We will read it and prepare the application."}
+                      </p>
+                    </div>
+                  </div>
+                  {cvReady && !showResumeEditor && (
+                    <span className="inline-flex min-h-8 items-center self-start rounded-full bg-emerald-50 px-3 text-xs font-bold text-emerald-700">Ready</span>
+                  )}
                 </div>
-              </div>
-              <label className="ir35-focus mt-5 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center hover:border-brand-400 hover:bg-brand-50/40">
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-                  onChange={parseCvFile}
-                  className="sr-only"
-                />
-                <Upload size={22} className="text-brand-700" />
-                <span className="mt-2 text-sm font-bold text-slate-900">
-                  {busy === "parse" ? "Reading your Resume…" : "Choose Resume file"}
-                </span>
-                <span className="mt-1 text-xs text-slate-500">
-                  or paste the extracted text below
-                </span>
-              </label>
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <label
-                  htmlFor="application-cv"
-                  className="text-sm font-semibold text-slate-900"
-                >
-                  Resume text
-                </label>
-                {showDemoTools && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCvText(SAMPLE_CV_TEXT);
-                      setCvFilename("Platform Engineering Resume v4");
-                    }}
-                    className="text-xs font-semibold text-brand-700"
-                  >
-                    Load labelled sample Resume
-                  </button>
+
+                {cvReady && !showResumeEditor ? (
+                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm"><FileText size={18} /></span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-950">{workspace.profile.fullName.trim() ? `${workspace.profile.fullName.trim()} Resume` : "Saved Resume"}</p>
+                          <p className="mt-1 text-xs text-slate-600">Selected from your profile</p>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setShowResumeEditor(true)} className="ir35-focus min-h-10 rounded-xl border border-emerald-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-emerald-50">Use a different Resume</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <label className="ir35-focus flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-4 text-center hover:border-brand-400 hover:bg-brand-50/40">
+                      <input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" onChange={parseCvFile} className="sr-only" />
+                      {busy === "parse" ? <Loader2 size={22} className="animate-spin text-brand-700" /> : <Upload size={22} className="text-brand-700" />}
+                      <span className="mt-2 text-sm font-bold text-slate-900">{busy === "parse" ? "Reading your Resume" : "Choose Resume file"}</span>
+                      <span className="mt-1 text-xs text-slate-500">PDF, DOCX or text, up to 5MB</span>
+                    </label>
+                    <details className="group mt-3 rounded-xl border border-slate-200 bg-white">
+                      <summary className="ir35-focus flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-sm font-semibold text-slate-700">Paste Resume text instead <ChevronDown size={16} className="transition-transform group-open:rotate-180" /></summary>
+                      <div className="border-t border-slate-200 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <label htmlFor="application-cv" className="text-sm font-semibold text-slate-900">Resume text</label>
+                          {showDemoTools && (
+                            <button type="button" onClick={() => { setCvText(SAMPLE_CV_TEXT); setCvFilename("Application Resume"); }} className="text-xs font-semibold text-brand-700">Load sample</button>
+                          )}
+                        </div>
+                        <textarea id="application-cv" value={cvText} onChange={(event) => setCvText(event.target.value)} rows={10} maxLength={80_000} placeholder="Paste your Resume here" className="ir35-focus mt-2 w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-800" />
+                      </div>
+                    </details>
+                    {cvReady && (
+                      <button type="button" onClick={() => setShowResumeEditor(false)} className="ir35-focus mt-3 min-h-10 text-sm font-semibold text-slate-600 hover:text-slate-950">Keep saved Resume</button>
+                    )}
+                  </div>
                 )}
-              </div>
-              <textarea
-                id="application-cv"
-                value={cvText}
-                onChange={(event) => setCvText(event.target.value)}
-                rows={12}
-                maxLength={80_000}
-                placeholder="Paste your Resume here…"
-                className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800"
-              />
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-slate-500">
-                  {cvFilename ||
-                    `${cvText.length.toLocaleString("en-GB")} characters`}{" "}
-                  · You can review the extracted text before continuing.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void prepare()}
-                  disabled={!cvReady || busy !== null}
-                  className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40"
-                >
-                  {busy === "prepare" ? (
-                    <Loader2 className="animate-spin" size={17} />
-                  ) : (
-                    <ArrowRight size={17} />
-                  )}{" "}
-                  Prepare application
-                </button>
+
+                <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-slate-500">
+                    You will review the Resume and answers before anything is sent.
+                  </p>
+                  <button type="button" onClick={() => void prepare()} disabled={!cvReady || !profileReadiness.complete || busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
+                    {busy === "prepare" ? <Loader2 className="animate-spin" size={17} /> : <ArrowRight size={17} />}
+                    Prepare application
+                  </button>
+                </div>
               </div>
             </section>
           ) : (

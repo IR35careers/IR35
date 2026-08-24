@@ -113,7 +113,7 @@ test("incomplete application profiles show the exact next action", async ({ page
   await dismissPrivacyNotice(page);
   await expect(
     page.getByRole("heading", {
-      name: "Complete your reusable profile before applying",
+      name: "Complete your profile before applying",
     }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Complete profile" })).toHaveAttribute(
