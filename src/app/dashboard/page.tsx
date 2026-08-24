@@ -40,6 +40,7 @@ import {
   profileStrength,
   PREVIEW_PROFILE,
   scoreJob,
+  timeGreeting,
   type Profile,
   type ScoredJob,
 } from "@/lib/profile";
@@ -171,6 +172,15 @@ export default function DashboardPage() {
   }
 
   const pct = profileStrength(profile);
+  const accountName = [
+    profile?.full_name ?? "",
+    typeof user?.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "",
+    typeof user?.user_metadata?.name === "string" ? user.user_metadata.name : "",
+  ].find((value) => value.trim() && !value.includes("@"))?.trim();
+  const contractorFirstName = accountName?.split(/\s+/)[0] ?? "";
+  const dashboardGreeting = contractorFirstName
+    ? `${timeGreeting()}, ${contractorFirstName}`
+    : timeGreeting();
   const outsideCount = matches.filter((m) => m.job.ir35_status === "outside").length;
   const dailyRates = matches.map((m) => m.job.rate_max ?? m.job.rate_min).filter((n): n is number => n !== null);
   const avgRate = dailyRates.length ? Math.round(dailyRates.reduce((a, b) => a + b, 0) / dailyRates.length) : null;
@@ -203,7 +213,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">
-              Hello <span className="text-green-600">IR35</span>
+              {dashboardGreeting}
             </h1>
             <p className="mt-1 text-sm text-slate-500">Here&apos;s your contract overview.</p>
           </div>
