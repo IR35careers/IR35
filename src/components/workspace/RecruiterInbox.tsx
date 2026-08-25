@@ -611,7 +611,7 @@ export function RecruiterInbox() {
                       linkedApplication
                         ? linkedApplication.attention?.action.startsWith("/")
                           ? linkedApplication.attention.action
-                          : `/applications/new/${linkedApplication.job.id}${linkedApplication.attention ? "#needs-attention" : ""}`
+                          : `/applications/new/${linkedApplication.job.id}?applicationId=${encodeURIComponent(linkedApplication.id)}${linkedApplication.attention?.action.startsWith("#") ? linkedApplication.attention.action : linkedApplication.attention ? "#needs-attention" : ""}`
                         : "/applications"
                     }
                     className="ir35-focus mt-3 inline-flex min-h-10 items-center rounded-xl bg-white px-3 text-xs font-bold text-brand-800 shadow-sm"

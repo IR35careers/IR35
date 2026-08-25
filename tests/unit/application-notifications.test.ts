@@ -76,6 +76,23 @@ describe("application notifications", () => {
     expect(view.actionLabel).toBe("Review application");
   });
 
+  it("takes an employer login blocker to the exact account step", () => {
+    const view = applicationNotificationPresentation({
+      ...base,
+      questionLabels: [],
+      action: "employer_login",
+    });
+    expect(view).toMatchObject({
+      subject:
+        "Employer sign-in required: Senior Data Scientist at Michael Page Technology",
+      title: "The employer requires its own account",
+      actionLabel: "Review account step",
+    });
+    expect(view.actionPath).toBe(
+      `/applications/new/${base.jobId}?applicationId=${base.applicationId}#employer-account-access`,
+    );
+  });
+
   it("sends action links to the exact job workspace", () => {
     expect(applicationNotificationPresentation(base).actionPath).toBe(
       `/applications/new/${base.jobId}?applicationId=${base.applicationId}#needs-attention`,

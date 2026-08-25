@@ -136,6 +136,16 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
           actionPath: `${applicationPath}#needs-attention`,
         };
       }
+      if (input.action === "employer_login")
+        return {
+          subject: `Employer sign-in required: ${role}`,
+          eyebrow: "One account step remains",
+          title: "The employer requires its own account",
+          body: `The employer would not accept or recover an application account automatically for ${role}. Your application is saved. Open the account step to see the employer page, your application email and the prepared Resume and cover letter.`,
+          accent: "#b45309",
+          actionLabel: "Review account step",
+          actionPath: `${applicationPath}#employer-account-access`,
+        };
       return {
         subject: `Application action needed: ${role}`,
         eyebrow: "Needs your attention",

@@ -8,6 +8,7 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
+  Copy,
   Download,
   ExternalLink,
   FileText,
@@ -137,6 +138,7 @@ export function ApplicationRecordWorkspace({
   const [resumeEditing, setResumeEditing] = useState(false);
   const [coverEditing, setCoverEditing] = useState(false);
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
+  const [emailCopied, setEmailCopied] = useState(false);
   const locked = submitted || applicationHasBeenSubmitted(application) || submissionInProgress;
   const requiredQuestions = application.questions.filter((item) => item.required);
   const optionalQuestions = application.questions.filter((item) => !item.required);
@@ -173,6 +175,11 @@ export function ApplicationRecordWorkspace({
   const displayResumeName = `${resumeOwner} Resume`;
   const needsAttention = Boolean(
     application.attention && application.status === "needs_review",
+  );
+  const employerAccountAttention = Boolean(
+    needsAttention &&
+      application.attention?.kind === "employer_account" &&
+      application.attention.action !== "#employer-terms-consent",
   );
 
   const focusFirstEmployerQuestion = () => {
@@ -344,7 +351,7 @@ export function ApplicationRecordWorkspace({
             </aside>
 
             <div className="p-5 sm:p-6">
-              {needsAttention && application.attention && (
+              {needsAttention && application.attention && !employerAccountAttention && (
                 <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4" id="needs-attention">
                   <AlertCircle className="mt-0.5 shrink-0 text-amber-700" size={19} />
                   <div className="min-w-0 flex-1">
@@ -370,7 +377,7 @@ export function ApplicationRecordWorkspace({
                         </Link>
                       )}
                     {application.attention.questionIds.length === 0 &&
-                      application.attention.kind === "employer_account" && (
+                      application.attention.action === "#employer-terms-consent" && (
                         <button
                           type="button"
                           onClick={() => void onSubmit()}
@@ -382,11 +389,96 @@ export function ApplicationRecordWorkspace({
                           ) : (
                             <RefreshCcw size={15} />
                           )}
-                          Try application again
+                          {application.attention.actionLabel}
                         </button>
                       )}
                   </div>
                 </div>
+              )}
+
+              {employerAccountAttention && application.attention && (
+                <>
+                  <span id="needs-attention" className="block scroll-mt-28" aria-hidden="true" />
+                  <section
+                    id="employer-account-access"
+                    className="mb-5 scroll-mt-28 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50"
+                    aria-labelledby="employer-account-title"
+                  >
+                  <div className="flex items-start gap-3 p-4 sm:p-5">
+                    <AlertCircle className="mt-0.5 shrink-0 text-amber-700" size={20} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
+                        One employer step remains
+                      </p>
+                      <h2 id="employer-account-title" className="mt-1 text-lg font-semibold text-amber-950">
+                        Sign in on the employer page
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-amber-900">
+                        The employer requires its own account and did not provide a guest, email-link or automatic recovery route. Your application, Resume and answers are saved.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-amber-200 bg-white p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-slate-950">Complete this account step</h3>
+                    <ol className="mt-3 grid gap-3 text-sm leading-6 text-slate-700 lg:grid-cols-3">
+                      <li className="rounded-xl bg-slate-50 p-3">
+                        <span className="font-bold text-slate-950">1. Open the employer page</span>
+                        <span className="mt-1 block">Use the employer&apos;s sign-in or account creation option.</span>
+                      </li>
+                      <li className="rounded-xl bg-slate-50 p-3">
+                        <span className="font-bold text-slate-950">2. Use your application email</span>
+                        <span className="mt-1 block break-all">{receivedEmail}</span>
+                      </li>
+                      <li className="rounded-xl bg-slate-50 p-3">
+                        <span className="font-bold text-slate-950">3. Finish or return here</span>
+                        <span className="mt-1 block">Submit on the employer page, or retry after account access becomes available.</span>
+                      </li>
+                    </ol>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <a
+                        href={job.apply_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                      >
+                        Open employer page <ExternalLink size={15} />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(receivedEmail).then(() => {
+                            setEmailCopied(true);
+                            window.setTimeout(() => setEmailCopied(false), 2_000);
+                          });
+                        }}
+                        className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                      >
+                        {emailCopied ? <CheckCircle2 size={15} /> : <Copy size={15} />}
+                        {emailCopied ? "Email copied" : "Copy application email"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void onSubmit()}
+                        disabled={busy !== null || submissionInProgress}
+                        className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy === "submit" || submissionInProgress ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                          <RefreshCcw size={15} />
+                        )}
+                        Retry after account access
+                      </button>
+                    </div>
+
+                    <p className="mt-4 text-xs leading-5 text-slate-500">
+                      IR35Careers cannot bypass an employer&apos;s private account or security controls. If you submit on the employer page using this application email, the confirmation and later recruiter messages can still be linked to this tracker.
+                    </p>
+                  </div>
+                  </section>
+                </>
               )}
 
               {showSeparateStatus && (

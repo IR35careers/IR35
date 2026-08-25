@@ -57,6 +57,16 @@ export function submissionAttentionFromRow(
         message: exact.message,
         questions: receiptQuestions,
       });
+    if (
+      exact.kind === "employer_account" &&
+      exact.action !== "#employer-terms-consent"
+    )
+      return {
+        ...exact,
+        title: "Employer sign-in is required",
+        action: "#employer-account-access",
+        actionLabel: "Review account step",
+      };
     return exact;
   }
 

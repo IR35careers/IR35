@@ -64,10 +64,10 @@ export function buildApplicationAttention(input: {
   if (action === "employer_login") {
     return {
       kind: "employer_account",
-      title: "Employer account needs attention",
+      title: "Employer sign-in is required",
       message,
-      action: "#needs-attention",
-      actionLabel: "Resolve sign in",
+      action: "#employer-account-access",
+      actionLabel: "Review account step",
       questionIds,
     };
   }

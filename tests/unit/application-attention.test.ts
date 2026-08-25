@@ -27,6 +27,15 @@ describe("application attention", () => {
     expect(buildApplicationAttention({ action: "verification_code" }).kind).toBe("email_verification");
   });
 
+  it("routes an employer login blocker to the dedicated account step", () => {
+    const attention = buildApplicationAttention({ action: "employer_login" });
+    expect(attention).toMatchObject({
+      title: "Employer sign-in is required",
+      action: "#employer-account-access",
+      actionLabel: "Review account step",
+    });
+  });
+
   it("offers employer terms permission directly in the application", () => {
     const attention = buildApplicationAttention({ action: "employer_terms" });
     expect(attention.kind).toBe("employer_account");

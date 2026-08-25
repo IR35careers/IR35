@@ -20,7 +20,9 @@ describe("workspace submission attention", () => {
 
     expect(attention).toMatchObject({
       kind: "employer_account",
-      actionLabel: "Resolve sign in",
+      title: "Employer sign-in is required",
+      action: "#employer-account-access",
+      actionLabel: "Review account step",
     });
   });
 
@@ -36,7 +38,9 @@ describe("workspace submission attention", () => {
 
     expect(attention).toMatchObject({
       kind: "employer_account",
-      title: "Employer account needs attention",
+      title: "Employer sign-in is required",
+      action: "#employer-account-access",
+      actionLabel: "Review account step",
       message: "The employer rejected the automatic account sign-in.",
     });
   });
