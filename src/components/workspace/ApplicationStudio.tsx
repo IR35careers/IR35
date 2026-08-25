@@ -174,6 +174,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [profilePrompt, setProfilePrompt] = useState(false);
   const submissionStatusFailures = useRef(0);
   const profileResumeAttempted = useRef(false);
+  const employerRecoveryAttempted = useRef(false);
   const profileCompletionHref = applicationProfileHref(job.id);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
@@ -1132,6 +1133,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     void submitApprovedApplication();
   });
 
+  const resumeApprovedApplicationAfterEmployerAccess = useEffectEvent(() => {
+    void submitApprovedApplication();
+  });
+
   useEffect(() => {
     if (profileResumeAttempted.current || typeof window === "undefined") return;
     if (new URLSearchParams(window.location.search).get("resume") !== "profile")
@@ -1155,6 +1160,33 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     approvalsComplete,
     busy,
     profileReadiness.complete,
+    submissionConnection,
+    submissionInProgress,
+  ]);
+
+  useEffect(() => {
+    if (employerRecoveryAttempted.current || typeof window === "undefined")
+      return;
+    if (
+      !application ||
+      application.status !== "needs_review" ||
+      application.attention?.kind !== "employer_account" ||
+      application.attention.action === "#employer-terms-consent" ||
+      !answersReviewed ||
+      !approvalsComplete ||
+      busy !== null ||
+      submissionInProgress ||
+      submissionConnection !== "connected"
+    )
+      return;
+
+    employerRecoveryAttempted.current = true;
+    resumeApprovedApplicationAfterEmployerAccess();
+  }, [
+    answersReviewed,
+    application,
+    approvalsComplete,
+    busy,
     submissionConnection,
     submissionInProgress,
   ]);
