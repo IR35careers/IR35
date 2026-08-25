@@ -22,7 +22,8 @@ const RECOVERABLE_ACTIONS = new Set([
 type RecoveryRequest = {
   mode: "preview" | "requeue";
   applicationId?: string;
-  destinationHost: string;
+  jobId?: string;
+  destinationHost?: string;
   workerVersion: string;
 };
 
@@ -34,9 +35,18 @@ function validRequest(value: unknown): value is RecoveryRequest {
     (input.applicationId === undefined ||
       (typeof input.applicationId === "string" &&
         /^[0-9a-f-]{36}$/i.test(input.applicationId))) &&
-    (input.mode !== "requeue" || typeof input.applicationId === "string") &&
-    typeof input.destinationHost === "string" &&
-    /^[a-z0-9.-]{3,253}$/i.test(input.destinationHost) &&
+    (input.jobId === undefined ||
+      (typeof input.jobId === "string" &&
+        /^[0-9a-f-]{36}$/i.test(input.jobId))) &&
+    (input.destinationHost === undefined ||
+      (typeof input.destinationHost === "string" &&
+        /^[a-z0-9.-]{3,253}$/i.test(input.destinationHost))) &&
+    (typeof input.applicationId === "string" ||
+      typeof input.jobId === "string" ||
+      typeof input.destinationHost === "string") &&
+    (input.mode !== "requeue" ||
+      typeof input.applicationId === "string" ||
+      typeof input.jobId === "string") &&
     typeof input.workerVersion === "string" &&
     /^[a-z0-9._-]{3,80}$/i.test(input.workerVersion),
   );
@@ -145,10 +155,21 @@ export async function POST(request: Request): Promise<Response> {
     const tasksByApplication = new Map(
       (tasksResult.data ?? []).map((task) => [task.application_id, task]),
     );
+    const packetsResult = applicationIds.length
+      ? await supabase
+          .from("application_packets")
+          .select("id, job_snapshot")
+          .in("id", applicationIds)
+      : { data: [], error: null };
+    if (packetsResult.error) throw packetsResult.error;
+    const packetsByApplication = new Map(
+      (packetsResult.data ?? []).map((packet) => [packet.id, packet]),
+    );
     const candidates = submissions
       .map((submission) => ({
         submission,
         task: tasksByApplication.get(submission.application_id),
+        packet: packetsByApplication.get(submission.application_id),
         destination: resolveApplicationTaskDestination({
           taskDestination: tasksByApplication.get(submission.application_id)
             ?.destination,
@@ -157,29 +178,42 @@ export async function POST(request: Request): Promise<Response> {
           )?.destination,
         }),
       }))
-      .filter(
-        (entry) =>
-          entry.task &&
-          entry.task.status === "needs_user" &&
-          hostname(String(entry.destination ?? "")) ===
-            parsed.destinationHost.toLowerCase(),
-      );
+      .filter((entry) => {
+        if (!entry.task || entry.task.status !== "needs_user") return false;
+        const job = entry.packet?.job_snapshot as
+          Record<string, unknown> | null | undefined;
+        if (parsed.jobId && String(job?.id ?? "") !== parsed.jobId)
+          return false;
+        if (
+          parsed.destinationHost &&
+          hostname(String(entry.destination ?? "")) !==
+            parsed.destinationHost.toLowerCase()
+        )
+          return false;
+        return true;
+      });
 
     if (parsed.mode === "preview")
       return Response.json(
         {
           ok: true,
-          candidates: candidates.map(({ submission, task, destination }) => ({
-            applicationId: submission.application_id,
-            action: String(
-              (submission.receipt as Record<string, unknown> | null)?.action ??
-                "",
-            ),
-            submissionStatus: submission.status,
-            errorCode: submission.error_code,
-            taskStatus: task?.status ?? "missing",
-            destination: destination ?? "",
-          })),
+          candidates: candidates.map(
+            ({ submission, task, packet, destination }) => ({
+              jobId: String(
+                (packet?.job_snapshot as Record<string, unknown> | null)?.id ??
+                  "",
+              ),
+              applicationId: submission.application_id,
+              action: String(
+                (submission.receipt as Record<string, unknown> | null)
+                  ?.action ?? "",
+              ),
+              submissionStatus: submission.status,
+              errorCode: submission.error_code,
+              taskStatus: task?.status ?? "missing",
+              destination: destination ?? "",
+            }),
+          ),
           diagnostics: {
             submissionsInspected: inspectedSubmissions.length,
             recoverableSubmissions: submissions.length,
@@ -194,7 +228,15 @@ export async function POST(request: Request): Promise<Response> {
                   ? (receipt.review as Record<string, unknown>)
                   : null;
               const task = tasksByApplication.get(submission.application_id);
+              const packet = packetsByApplication.get(
+                submission.application_id,
+              );
+              const job = packet?.job_snapshot as
+                Record<string, unknown> | null | undefined;
               return {
+                jobId: String(job?.id ?? ""),
+                jobTitle: String(job?.title ?? "").slice(0, 180),
+                companyName: String(job?.company_name ?? "").slice(0, 180),
                 applicationId: submission.application_id,
                 action: String(receipt?.action ?? ""),
                 message: String(receipt?.message ?? "").slice(0, 500),
@@ -215,9 +257,13 @@ export async function POST(request: Request): Promise<Response> {
         { headers: HEADERS },
       );
 
-    const selected = candidates.find(
-      ({ submission }) => submission.application_id === parsed.applicationId,
-    );
+    const selected = candidates.find(({ submission, packet }) => {
+      if (parsed.applicationId)
+        return submission.application_id === parsed.applicationId;
+      const job = packet?.job_snapshot as
+        Record<string, unknown> | null | undefined;
+      return String(job?.id ?? "") === parsed.jobId;
+    });
     if (!selected?.task || !selected.destination)
       return Response.json(
         { error: "No matching stopped application was found." },
