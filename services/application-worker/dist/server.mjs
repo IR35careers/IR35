@@ -305,6 +305,24 @@ function isEmployerAuthenticationFailure(body) {
     body.replace(/\s+/g, " ")
   );
 }
+function isEmployerGuestApplicationControl(label) {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /(?:continue|apply|proceed|start).{0,35}(?:as (?:a )?guest|without (?:an )?account|without sign(?:ing)? in)|^(?:continue as guest|guest application|apply as guest|skip sign[ -]?in|not now)$/i.test(
+    value
+  );
+}
+function isEmployerAccountRecoveryControl(label) {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /(?:forgot(?:ten)? (?:your )?(?:password|login)|reset (?:my |your )?password|password (?:help|reset)|recover (?:my |your )?account|account recovery|trouble (?:signing|logging) in|can(?:not|'t|’t) (?:sign|log) in|help (?:me )?(?:sign|log) in|get (?:sign[ -]?in|login) help)/i.test(
+    value
+  );
+}
+function isEmployerPasswordlessAccessControl(label) {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /(?:email|send|get|request|use).{0,45}(?:magic|secure|sign[ -]?in|login|one[ -]?time|verification|access).{0,30}(?:link|code)|(?:email|send) me (?:a )?(?:link|code)|sign in with (?:a )?(?:link|code)|use (?:a )?(?:one[ -]?time )?(?:link|code)/i.test(
+    value
+  );
+}
 function isEmployerPasswordSetupPage(body) {
   return /(?:reset|set|choose|create|update|new) (?:your )?password|password reset|confirm (?:your )?(?:new )?password/i.test(
     body.replace(/\s+/g, " ")
@@ -1333,6 +1351,23 @@ async function actionLocator(page, pattern) {
   }
   return null;
 }
+async function actionLocatorMatching(page, matches) {
+  const actions = page.locator(
+    'button, input[type="submit"], input[type="button"], a[role="button"], a'
+  );
+  const count = Math.min(await actions.count(), 150);
+  for (let index = 0; index < count; index += 1) {
+    const item = actions.nth(index);
+    if (!await item.isVisible().catch(() => false) || !await item.isEnabled().catch(() => false))
+      continue;
+    const label = clean(
+      `${await item.innerText().catch(() => "")} ${await item.getAttribute("value") ?? ""} ${await item.getAttribute("aria-label") ?? ""}`,
+      220
+    );
+    if (label && matches(label)) return item;
+  }
+  return null;
+}
 async function hasApplicationForm(page) {
   const controls = page.locator(
     'input:not([type="hidden"]):not([type="search"]), select, textarea'
@@ -1706,6 +1741,26 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
     hasApplicationForm: applicationFormVisible
   });
   if (accountAccessPage) {
+    const guestApplication = await actionLocatorMatching(
+      page,
+      isEmployerGuestApplicationControl
+    );
+    if (guestApplication) {
+      await clickAndFollow(page, guestApplication, 900);
+      return { handled: true };
+    }
+    const canUseManagedEmail = Boolean(
+      managedAlias && payload.candidate.automaticEmailVerification && runtime?.resolveEmailActionLink
+    );
+    const passwordlessAccess = canUseManagedEmail ? await actionLocatorMatching(page, isEmployerPasswordlessAccessControl) : null;
+    if (passwordlessAccess) {
+      if (emailInput) await emailInput.fill(payload.candidate.email);
+      await clickAndFollow(page, passwordlessAccess, 900);
+      return {
+        handled: true,
+        recoveryAttempted: true
+      };
+    }
     const portalPassword = await runtime?.resolvePortalPassword?.(
       new URL(page.url()).hostname.toLowerCase()
     ) ?? runtime?.portalPassword;
@@ -1724,15 +1779,15 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
       managedAlias && payload.candidate.automaticEmailVerification && payload.candidate.employerTermsConsent && runtime?.resolveEmailActionLink && !passwordSetupPage && !accountRecoveryAttempted && (authenticationFailed || accountAccessAttempts >= 2)
     );
     if (shouldRecoverAccount) {
-      const resetControl = await actionLocator(
+      const resetControl = await actionLocatorMatching(
         page,
-        /^(forgot (?:your )?password\??|reset password|password help|trouble (?:signing|logging) in)$/i
+        isEmployerAccountRecoveryControl
       );
       if (!resetControl)
         return {
           handled: false,
           stop: {
-            message: "The employer rejected the managed application account, but did not provide an automatic password-recovery control. Continue on the employer page to recover this account, then IR35Careers will resume the prepared form.",
+            message: "The employer did not accept the saved application account and did not offer guest access, a secure email link or password recovery. Your application is saved and ready to retry when the employer makes one of those options available.",
             action: "employer_login"
           }
         };

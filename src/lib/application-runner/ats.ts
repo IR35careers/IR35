@@ -448,6 +448,27 @@ export function isEmployerAuthenticationFailure(body: string): boolean {
   );
 }
 
+export function isEmployerGuestApplicationControl(label: string): boolean {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /(?:continue|apply|proceed|start).{0,35}(?:as (?:a )?guest|without (?:an )?account|without sign(?:ing)? in)|^(?:continue as guest|guest application|apply as guest|skip sign[ -]?in|not now)$/i.test(
+    value,
+  );
+}
+
+export function isEmployerAccountRecoveryControl(label: string): boolean {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /(?:forgot(?:ten)? (?:your )?(?:password|login)|reset (?:my |your )?password|password (?:help|reset)|recover (?:my |your )?account|account recovery|trouble (?:signing|logging) in|can(?:not|'t|’t) (?:sign|log) in|help (?:me )?(?:sign|log) in|get (?:sign[ -]?in|login) help)/i.test(
+    value,
+  );
+}
+
+export function isEmployerPasswordlessAccessControl(label: string): boolean {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /(?:email|send|get|request|use).{0,45}(?:magic|secure|sign[ -]?in|login|one[ -]?time|verification|access).{0,30}(?:link|code)|(?:email|send) me (?:a )?(?:link|code)|sign in with (?:a )?(?:link|code)|use (?:a )?(?:one[ -]?time )?(?:link|code)/i.test(
+    value,
+  );
+}
+
 export function isEmployerPasswordSetupPage(body: string): boolean {
   return /(?:reset|set|choose|create|update|new) (?:your )?password|password reset|confirm (?:your )?(?:new )?password/i.test(
     body.replace(/\s+/g, " "),

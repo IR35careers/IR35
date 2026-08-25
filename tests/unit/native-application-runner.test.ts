@@ -3,8 +3,11 @@ import {
   canAutomaticallyAcceptEmployerTerms,
   detectAts,
   isEmployerAuthenticationFailure,
+  isEmployerAccountRecoveryControl,
   isEmployerAccountAccessPage,
   isEmployerEmailLinkPending,
+  isEmployerGuestApplicationControl,
+  isEmployerPasswordlessAccessControl,
   isEmployerPasswordSetupPage,
   isApplicationFormEvidence,
   isJobBoardUtilityControl,
@@ -361,6 +364,28 @@ describe("native application runner", () => {
         "An email is on the way! Open the login link sent to apply@example.com to sign in.",
       ),
     ).toBe(true);
+    expect(
+      isEmployerAccountRecoveryControl("Forgotten your password? Reset it here"),
+    ).toBe(true);
+    expect(
+      isEmployerAccountRecoveryControl("Can't log in? Get sign in help"),
+    ).toBe(true);
+    expect(isEmployerAccountRecoveryControl("Submit application")).toBe(false);
+  });
+
+  it("recognises account-free and passwordless employer application paths", () => {
+    expect(isEmployerGuestApplicationControl("Continue as a guest")).toBe(true);
+    expect(
+      isEmployerGuestApplicationControl("Apply without an account"),
+    ).toBe(true);
+    expect(isEmployerGuestApplicationControl("Sign in")).toBe(false);
+    expect(
+      isEmployerPasswordlessAccessControl("Email me a secure sign-in link"),
+    ).toBe(true);
+    expect(
+      isEmployerPasswordlessAccessControl("Send me a one-time code"),
+    ).toBe(true);
+    expect(isEmployerPasswordlessAccessControl("Create account")).toBe(false);
   });
 
   it("recognises employer listings that can no longer be submitted", () => {

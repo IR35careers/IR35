@@ -68,7 +68,7 @@ function applicationHasBeenSubmitted(application: ApplicationRecord) {
 }
 
 function statusSummary(application: ApplicationRecord) {
-  if (application.attention?.message) return application.attention.message;
+  if (application.attention) return "Everything prepared so far is saved.";
   if (application.status === "replied") return "The employer response is linked to this application.";
   if (application.status === "interview") return "Your interview details and employer messages are saved here.";
   if (application.status === "offer") return "Your offer and employer messages are saved here.";
@@ -166,6 +166,9 @@ export function ApplicationRecordWorkspace({
       ? parsedResume.candidateName
       : profile.fullName.trim() || "Your";
   const displayResumeName = `${resumeOwner} Resume`;
+  const needsAttention = Boolean(
+    application.attention && application.status === "needs_review",
+  );
 
   const downloadResume = async (format: "pdf" | "docx") => {
     const parsed = parseResumeText(
@@ -324,7 +327,7 @@ export function ApplicationRecordWorkspace({
             </aside>
 
             <div className="p-5 sm:p-6">
-              {application.attention && application.status === "needs_review" && (
+              {needsAttention && application.attention && (
                 <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4" id="needs-attention">
                   <AlertCircle className="mt-0.5 shrink-0 text-amber-700" size={19} />
                   <div className="min-w-0 flex-1">
@@ -348,6 +351,22 @@ export function ApplicationRecordWorkspace({
                         >
                           Complete profile
                         </Link>
+                      )}
+                    {application.attention.questionIds.length === 0 &&
+                      application.attention.kind === "employer_account" && (
+                        <button
+                          type="button"
+                          onClick={() => void onSubmit()}
+                          disabled={busy !== null || submissionInProgress}
+                          className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {busy === "submit" || submissionInProgress ? (
+                            <Loader2 className="animate-spin" size={16} />
+                          ) : (
+                            <RefreshCcw size={15} />
+                          )}
+                          Retry automatically
+                        </button>
                       )}
                   </div>
                 </div>

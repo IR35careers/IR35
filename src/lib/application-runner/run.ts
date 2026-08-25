@@ -13,8 +13,11 @@ import {
   isApplicationFormEvidence,
   isClosedListingPage,
   isEmployerAuthenticationFailure,
+  isEmployerAccountRecoveryControl,
   isEmployerAccountAccessPage,
   isEmployerEmailLinkPending,
+  isEmployerGuestApplicationControl,
+  isEmployerPasswordlessAccessControl,
   isEmployerPasswordSetupPage,
   isJobBoardUtilityControl,
   matchesApplicationAction,
@@ -377,6 +380,30 @@ async function actionLocator(
         await item.getAttribute("aria-label"),
       ])
     ) return item;
+  }
+  return null;
+}
+
+async function actionLocatorMatching(
+  page: Page,
+  matches: (label: string) => boolean,
+): Promise<Locator | null> {
+  const actions = page.locator(
+    'button, input[type="submit"], input[type="button"], a[role="button"], a',
+  );
+  const count = Math.min(await actions.count(), 150);
+  for (let index = 0; index < count; index += 1) {
+    const item = actions.nth(index);
+    if (
+      !(await item.isVisible().catch(() => false)) ||
+      !(await item.isEnabled().catch(() => false))
+    )
+      continue;
+    const label = clean(
+      `${await item.innerText().catch(() => "")} ${(await item.getAttribute("value")) ?? ""} ${(await item.getAttribute("aria-label")) ?? ""}`,
+      220,
+    );
+    if (label && matches(label)) return item;
   }
   return null;
 }
@@ -864,8 +891,34 @@ async function handlePortalAccess(
       hasEmailInput: Boolean(emailInput),
       hasPasswordInput: passwordCount > 0,
       hasApplicationForm: applicationFormVisible,
-    });
+  });
   if (accountAccessPage) {
+    const guestApplication = await actionLocatorMatching(
+      page,
+      isEmployerGuestApplicationControl,
+    );
+    if (guestApplication) {
+      await clickAndFollow(page, guestApplication, 900);
+      return { handled: true };
+    }
+
+    const canUseManagedEmail = Boolean(
+      managedAlias &&
+        payload.candidate.automaticEmailVerification &&
+        runtime?.resolveEmailActionLink,
+    );
+    const passwordlessAccess = canUseManagedEmail
+      ? await actionLocatorMatching(page, isEmployerPasswordlessAccessControl)
+      : null;
+    if (passwordlessAccess) {
+      if (emailInput) await emailInput.fill(payload.candidate.email);
+      await clickAndFollow(page, passwordlessAccess, 900);
+      return {
+        handled: true,
+        recoveryAttempted: true,
+      };
+    }
+
     const portalPassword =
       (await runtime?.resolvePortalPassword?.(
         new URL(page.url()).hostname.toLowerCase(),
@@ -892,16 +945,16 @@ async function handlePortalAccess(
         (authenticationFailed || accountAccessAttempts >= 2),
     );
     if (shouldRecoverAccount) {
-      const resetControl = await actionLocator(
+      const resetControl = await actionLocatorMatching(
         page,
-        /^(forgot (?:your )?password\??|reset password|password help|trouble (?:signing|logging) in)$/i,
+        isEmployerAccountRecoveryControl,
       );
       if (!resetControl)
         return {
           handled: false,
           stop: {
             message:
-              "The employer rejected the managed application account, but did not provide an automatic password-recovery control. Continue on the employer page to recover this account, then IR35Careers will resume the prepared form.",
+              "The employer did not accept the saved application account and did not offer guest access, a secure email link or password recovery. Your application is saved and ready to retry when the employer makes one of those options available.",
             action: "employer_login",
           },
         };
