@@ -172,6 +172,35 @@ export async function POST(request: Request): Promise<Response> {
     const packetsByApplication = new Map(
       (packetsResult.data ?? []).map((packet) => [packet.id, packet]),
     );
+    const inboxResult = applicationIds.length
+      ? await supabase
+          .from("inbox_messages")
+          .select("application_id, subject, classification, received_at")
+          .in("application_id", applicationIds)
+          .order("received_at", { ascending: false })
+          .limit(100)
+      : { data: [], error: null };
+    if (inboxResult.error) throw inboxResult.error;
+    const inboxByApplication = new Map<
+      string,
+      Array<{
+        subject: string;
+        classification: string;
+        receivedAt: string;
+      }>
+    >();
+    for (const message of inboxResult.data ?? []) {
+      const applicationId = String(message.application_id ?? "");
+      if (!applicationId) continue;
+      const messages = inboxByApplication.get(applicationId) ?? [];
+      if (messages.length >= 10) continue;
+      messages.push({
+        subject: String(message.subject ?? "").slice(0, 240),
+        classification: String(message.classification ?? "").slice(0, 80),
+        receivedAt: String(message.received_at ?? "").slice(0, 40),
+      });
+      inboxByApplication.set(applicationId, messages);
+    }
     const candidates = submissions
       .map((submission) => ({
         submission,
@@ -255,6 +284,8 @@ export async function POST(request: Request): Promise<Response> {
                 errorCode: submission.error_code,
                 taskStatus: task?.status ?? "missing",
                 taskDestinationHost: hostname(String(task?.destination ?? "")),
+                inboxMessages:
+                  inboxByApplication.get(submission.application_id) ?? [],
                 diagnostic: safeDiagnostic(review?.diagnostic),
               };
             }),
