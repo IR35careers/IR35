@@ -12,6 +12,9 @@ import {
   detectAts,
   isApplicationFormEvidence,
   isClosedListingPage,
+  employerPortalPasswordCandidates,
+  isEmployerAccountCreationControl,
+  isEmployerAccountMissing,
   isEmployerAuthenticationFailure,
   isEmployerAccountRecoveryControl,
   isEmployerAccountAccessPage,
@@ -732,12 +735,15 @@ async function handlePortalAccess(
   accountState?: "created" | "verified" | "recovered",
   accountAccessAttempts = 0,
   accountRecoveryAttempted = false,
+  passwordAttemptCount = 0,
 ): Promise<{
   handled: boolean;
   accountCreated?: boolean;
   accountCreationStarted?: boolean;
   accountRecovered?: boolean;
   recoveryAttempted?: boolean;
+  passwordAttempted?: boolean;
+  clearSession?: boolean;
   stop?: { message: string; action: string };
 }> {
   const captcha = page.locator(
@@ -919,10 +925,27 @@ async function handlePortalAccess(
       };
     }
 
+    const createAccount = await actionLocatorMatching(
+      page,
+      isEmployerAccountCreationControl,
+    );
+    const signIn = await actionLocator(page, /^(sign in|log in)$/i);
+    const accountMissing = isEmployerAccountMissing(bodyText);
+    const accountAlreadyExists =
+      /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
+        bodyText,
+      );
+    const resolvedPortalPassword = await runtime?.resolvePortalPassword?.(
+      new URL(page.url()).hostname.toLowerCase(),
+    );
+    const portalPasswords = employerPortalPasswordCandidates({
+      resolvedPassword: resolvedPortalPassword,
+      destinationPassword: runtime?.portalPassword,
+    });
     const portalPassword =
-      (await runtime?.resolvePortalPassword?.(
-        new URL(page.url()).hostname.toLowerCase(),
-      )) ?? runtime?.portalPassword;
+      portalPasswords[
+        Math.min(passwordAttemptCount, Math.max(0, portalPasswords.length - 1))
+      ];
     if (!payload.candidate.portalAccountConsent || !portalPassword) {
       return {
         handled: false,
@@ -935,14 +958,18 @@ async function handlePortalAccess(
     }
     const authenticationFailed = isEmployerAuthenticationFailure(bodyText);
     const passwordSetupPage = isEmployerPasswordSetupPage(bodyText);
+    const triedEveryPassword =
+      passwordAttemptCount >= Math.max(1, portalPasswords.length);
     const shouldRecoverAccount = Boolean(
       managedAlias &&
         payload.candidate.automaticEmailVerification &&
         payload.candidate.employerTermsConsent &&
         runtime?.resolveEmailActionLink &&
         !passwordSetupPage &&
+        !accountMissing &&
         !accountRecoveryAttempted &&
-        (authenticationFailed || accountAccessAttempts >= 2),
+        ((authenticationFailed && triedEveryPassword) ||
+          accountAccessAttempts >= Math.max(4, portalPasswords.length + 2)),
     );
     if (shouldRecoverAccount) {
       const resetControl = await actionLocatorMatching(
@@ -952,9 +979,10 @@ async function handlePortalAccess(
       if (!resetControl)
         return {
           handled: false,
+          clearSession: authenticationFailed,
           stop: {
             message:
-              "The employer did not accept the saved application account and did not offer guest access, a secure email link or password recovery. Your application is saved and ready to retry when the employer makes one of those options available.",
+              "IR35Careers tried the employer's available sign-in, account creation, email-link and password-recovery routes. The employer still requires its own account access. Your prepared application is saved.",
             action: "employer_login",
           },
         };
@@ -1040,21 +1068,12 @@ async function handlePortalAccess(
         await checkbox.check();
       }
     }
-    const createAccount = await actionLocator(
-      page,
-      /^(create account|create an account|register|sign up)$/i,
-    );
-    const signIn = await actionLocator(page, /^(sign in|log in)$/i);
     const resetPassword = passwordSetupPage
       ? await actionLocator(
           page,
           /^(reset|set|save|update|change|continue)(?: (?:my|your|new))? password$|^continue$/i,
         )
       : null;
-    const accountAlreadyExists =
-      /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
-        bodyText,
-      );
     if (
       createAccount &&
       !preferEmployerSignIn({ accountAlreadyExists, accountState }) &&
@@ -1070,10 +1089,11 @@ async function handlePortalAccess(
         },
       };
     }
-    const useSignIn = preferEmployerSignIn({
-      accountAlreadyExists,
-      accountState,
-    });
+    const useSignIn = !accountMissing &&
+      preferEmployerSignIn({
+        accountAlreadyExists,
+        accountState,
+      });
     const portalContinuation = emailContinuation ??
       (await actionLocator(page, ats.nextPattern));
     const accessAction = resetPassword ??
@@ -1098,6 +1118,9 @@ async function handlePortalAccess(
       handled: true,
       accountRecovered: Boolean(resetPassword),
       recoveryAttempted: accountRecoveryAttempted || Boolean(resetPassword),
+      passwordAttempted: Boolean(
+        signIn && accessAction === signIn && passwordCount > 0,
+      ),
       accountCreationStarted: Boolean(
         createAccount && accessAction === createAccount && !useSignIn,
       ),
@@ -1815,6 +1838,7 @@ export async function runNativeApplication(
     ats = detectAts(applicationDestination.toString());
 
     let portalAccessAttempts = 0;
+    let portalPasswordAttempts = 0;
     for (let step = 0; step < MAX_STEPS; step += 1) {
       if (Date.now() - startedAt >= budgetMs) {
         return reviewReceipt(
@@ -1833,6 +1857,7 @@ export async function runNativeApplication(
         portalAccountState,
         portalAccessAttempts,
         accountRecoveryAttempted,
+        portalPasswordAttempts,
       );
       if (portalAccess.accountCreated) {
         portalAccountState = "created";
@@ -1846,6 +1871,10 @@ export async function runNativeApplication(
       }
       if (portalAccess.recoveryAttempted)
         accountRecoveryAttempted = true;
+      if (portalAccess.passwordAttempted)
+        portalPasswordAttempts += 1;
+      if (portalAccess.clearSession)
+        sessionDisposition = "clear";
       if (portalAccess.stop)
         return reviewReceipt(
           portalAccess.stop.message,

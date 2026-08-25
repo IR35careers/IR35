@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   canAutomaticallyAcceptEmployerTerms,
   detectAts,
+  employerPortalPasswordCandidates,
+  isEmployerAccountCreationControl,
+  isEmployerAccountMissing,
   isEmployerAuthenticationFailure,
   isEmployerAccountRecoveryControl,
   isEmployerAccountAccessPage,
@@ -371,6 +374,34 @@ describe("native application runner", () => {
       isEmployerAccountRecoveryControl("Can't log in? Get sign in help"),
     ).toBe(true);
     expect(isEmployerAccountRecoveryControl("Submit application")).toBe(false);
+  });
+
+  it("distinguishes a missing account from a bad password and finds registration controls", () => {
+    expect(
+      isEmployerAccountMissing(
+        "We could not find an account registered with this email address.",
+      ),
+    ).toBe(true);
+    expect(isEmployerAccountMissing("The password is incorrect.")).toBe(false);
+    expect(isEmployerAccountCreationControl("Create an account")).toBe(true);
+    expect(isEmployerAccountCreationControl("Create your account")).toBe(true);
+    expect(isEmployerAccountCreationControl("Register now")).toBe(true);
+    expect(isEmployerAccountCreationControl("Sign in")).toBe(false);
+  });
+
+  it("tries both the current account host password and the original destination password", () => {
+    expect(
+      employerPortalPasswordCandidates({
+        resolvedPassword: "current-host-password",
+        destinationPassword: "original-host-password",
+      }),
+    ).toEqual(["current-host-password", "original-host-password"]);
+    expect(
+      employerPortalPasswordCandidates({
+        resolvedPassword: "same-password",
+        destinationPassword: "same-password",
+      }),
+    ).toEqual(["same-password"]);
   });
 
   it("recognises account-free and passwordless employer application paths", () => {

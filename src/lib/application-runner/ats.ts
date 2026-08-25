@@ -448,6 +448,29 @@ export function isEmployerAuthenticationFailure(body: string): boolean {
   );
 }
 
+export function isEmployerAccountMissing(body: string): boolean {
+  return /(?:account|candidate|email|user).{0,70}(?:does not exist|doesn't exist|not found|not registered|has not been registered|cannot be found|could not be found)|no account.{0,45}(?:found|exists|registered)|we (?:could not|couldn't|cannot|can't) find.{0,70}(?:account|email|user)/i.test(
+    body.replace(/\s+/g, " "),
+  );
+}
+
+export function isEmployerAccountCreationControl(label: string): boolean {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /^(?:create(?: (?:a|an|your|new))? (?:candidate |jobseeker |application )?account|register(?: now| with email| as (?:a )?candidate)?|sign up(?: now| with email| for free| as (?:a )?candidate)?)$/i.test(
+    value,
+  );
+}
+
+export function employerPortalPasswordCandidates(input: {
+  resolvedPassword?: string;
+  destinationPassword?: string;
+}): string[] {
+  return [input.resolvedPassword, input.destinationPassword].filter(
+    (password, index, values): password is string =>
+      Boolean(password) && values.indexOf(password) === index,
+  );
+}
+
 export function isEmployerGuestApplicationControl(label: string): boolean {
   const value = label.replace(/\s+/g, " ").trim();
   return /(?:continue|apply|proceed|start).{0,35}(?:as (?:a )?guest|without (?:an )?account|without sign(?:ing)? in)|^(?:continue as guest|guest application|apply as guest|skip sign[ -]?in|not now)$/i.test(

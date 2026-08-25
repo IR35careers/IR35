@@ -174,7 +174,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [profilePrompt, setProfilePrompt] = useState(false);
   const submissionStatusFailures = useRef(0);
   const profileResumeAttempted = useRef(false);
-  const employerRecoveryAttempted = useRef(false);
   const profileCompletionHref = applicationProfileHref(job.id);
 
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
@@ -915,10 +914,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           setApplication(needsUserApplication);
           persistApplication(needsUserApplication);
           if (payload.action === "/profile") setProfilePrompt(true);
-          setNotice(
-            payload.message ||
-              "One answer needs your attention before this application can be sent.",
-          );
+          setNotice(null);
           return;
         }
         const submissionStarted: ApplicationRecord = {
@@ -1071,10 +1067,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
             setApplication(needsUserApplication);
             persistApplication(needsUserApplication);
             if (statusPayload.action === "/profile") setProfilePrompt(true);
-            setNotice(
-              statusPayload.message ||
-                "One answer needs your attention before this application can be sent.",
-            );
+            setNotice(null);
             return;
           }
           if (statusPayload.state === "processing") {
@@ -1133,10 +1126,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     void submitApprovedApplication();
   });
 
-  const resumeApprovedApplicationAfterEmployerAccess = useEffectEvent(() => {
-    void submitApprovedApplication();
-  });
-
   useEffect(() => {
     if (profileResumeAttempted.current || typeof window === "undefined") return;
     if (new URLSearchParams(window.location.search).get("resume") !== "profile")
@@ -1160,33 +1149,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     approvalsComplete,
     busy,
     profileReadiness.complete,
-    submissionConnection,
-    submissionInProgress,
-  ]);
-
-  useEffect(() => {
-    if (employerRecoveryAttempted.current || typeof window === "undefined")
-      return;
-    if (
-      !application ||
-      application.status !== "needs_review" ||
-      application.attention?.kind !== "employer_account" ||
-      application.attention.action === "#employer-terms-consent" ||
-      !answersReviewed ||
-      !approvalsComplete ||
-      busy !== null ||
-      submissionInProgress ||
-      submissionConnection !== "connected"
-    )
-      return;
-
-    employerRecoveryAttempted.current = true;
-    resumeApprovedApplicationAfterEmployerAccess();
-  }, [
-    answersReviewed,
-    application,
-    approvalsComplete,
-    busy,
     submissionConnection,
     submissionInProgress,
   ]);
@@ -1443,14 +1405,18 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       >
                         {attention.actionLabel} <ArrowRight size={15} />
                       </button>
-                    ) : attention.kind === "security_check" ? (
+                    ) : attention.kind === "security_check" ||
+                      attention.kind === "employer_account" ? (
                       <a
                         href={job.apply_url}
                         target="_blank"
                         rel="noreferrer"
                         className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
                       >
-                        Complete employer security check <ArrowRight size={15} />
+                        {attention.kind === "security_check"
+                          ? "Complete employer security check"
+                          : "Open employer account"}{" "}
+                        <ArrowRight size={15} />
                       </a>
                     ) : (
                       <button

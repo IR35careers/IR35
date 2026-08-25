@@ -156,6 +156,11 @@ export function ApplicationRecordWorkspace({
         .slice(0, 3),
     [application.id, messages],
   );
+  const attentionMessage = application.attention?.message.trim() ?? "";
+  const statusMessage = (error ?? notice)?.trim() ?? "";
+  const showSeparateStatus = Boolean(
+    statusMessage && statusMessage !== attentionMessage,
+  );
   const contractRate = formatRate(job);
   const parsedResume = useMemo(
     () => parseResumeText(application.tailoredCvText, application.resumeVersionLabel),
@@ -377,14 +382,14 @@ export function ApplicationRecordWorkspace({
                           ) : (
                             <RefreshCcw size={15} />
                           )}
-                          Retry automatically
+                          Try application again
                         </button>
                       )}
                   </div>
                 </div>
               )}
 
-              {(error || notice) && (
+              {showSeparateStatus && (
                 <p
                   role={error ? "alert" : "status"}
                   className={`mb-5 rounded-2xl border px-4 py-3 text-sm ${
@@ -393,7 +398,7 @@ export function ApplicationRecordWorkspace({
                       : "border-emerald-200 bg-emerald-50 text-emerald-900"
                   }`}
                 >
-                  {error ?? notice}
+                  {statusMessage}
                 </p>
               )}
 
