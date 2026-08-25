@@ -52,6 +52,7 @@ import {
 import {
   bestDirectEmployerCandidate,
   bestDiscoveryCandidate,
+  directEmployerCandidatesFromSearchHtml,
   duckDuckGoResultTarget,
   discoveryProviderOrder,
   isDiscoveryOnlyHost,
@@ -154,10 +155,22 @@ async function pageDiagnostic(
   networkFailures: ReadonlySet<string> = new Set(),
 ): Promise<RunnerPageDiagnostic> {
   const title = clean(await page.title().catch(() => ""), 160);
-  const headingNodes = page.locator("h1:visible, h2:visible, h3:visible, legend:visible");
+  const headingNodes = page.locator(
+    "h1:visible, h2:visible, h3:visible, legend:visible",
+  );
   const headings: string[] = [];
-  for (let index = 0; index < Math.min(await headingNodes.count(), 20); index += 1) {
-    const label = clean(await headingNodes.nth(index).innerText().catch(() => ""), 180);
+  for (
+    let index = 0;
+    index < Math.min(await headingNodes.count(), 20);
+    index += 1
+  ) {
+    const label = clean(
+      await headingNodes
+        .nth(index)
+        .innerText()
+        .catch(() => ""),
+      180,
+    );
     if (label && !headings.includes(label)) headings.push(label);
   }
 
@@ -165,7 +178,11 @@ async function pageDiagnostic(
     'button:visible, input[type="submit"]:visible, input[type="button"]:visible, [role="button"]:visible, a:visible',
   );
   const actions: RunnerPageDiagnostic["actions"] = [];
-  for (let index = 0; index < Math.min(await actionNodes.count(), 80); index += 1) {
+  for (
+    let index = 0;
+    index < Math.min(await actionNodes.count(), 80);
+    index += 1
+  ) {
     const item = actionNodes.nth(index);
     const label = clean(
       `${await item.innerText().catch(() => "")} ${(await item.getAttribute("value")) ?? ""} ${(await item.getAttribute("aria-label")) ?? ""}`,
@@ -177,7 +194,9 @@ async function pageDiagnostic(
       enabled: await item.isEnabled().catch(() => false),
       role: clean(
         (await item.getAttribute("role")) ||
-          (await item.evaluate((node) => node.tagName.toLowerCase()).catch(() => "control")),
+          (await item
+            .evaluate((node) => node.tagName.toLowerCase())
+            .catch(() => "control")),
         30,
       ),
     });
@@ -187,13 +206,21 @@ async function pageDiagnostic(
     'input:not([type="hidden"]):visible, input[type="file"], select:visible, textarea:visible, [role="checkbox"]:visible, [role="radio"]:visible, [role="combobox"]:visible',
   );
   const controls: RunnerPageDiagnostic["controls"] = [];
-  for (let index = 0; index < Math.min(await controlNodes.count(), 80); index += 1) {
+  for (
+    let index = 0;
+    index < Math.min(await controlNodes.count(), 80);
+    index += 1
+  ) {
     const item = controlNodes.nth(index);
     const snapshot = await item.evaluate((node) => {
-      const element = node as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-      const labels = "labels" in element
-        ? Array.from(element.labels ?? []).map((label) => label.textContent ?? "").join(" ")
-        : "";
+      const element = node as
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      const labels =
+        "labels" in element
+          ? Array.from(element.labels ?? [])
+              .map((label) => label.textContent ?? "")
+              .join(" ")
+          : "";
       return {
         label:
           element.getAttribute("aria-label") ||
@@ -217,7 +244,8 @@ async function pageDiagnostic(
               ? element.checked
               : Boolean(element.value?.trim()),
         valid:
-          typeof element.checkValidity !== "function" || element.checkValidity(),
+          typeof element.checkValidity !== "function" ||
+          element.checkValidity(),
       };
     });
     const label = clean(snapshot.label, 180);
@@ -235,9 +263,16 @@ async function pageDiagnostic(
     '[role="alert"]:visible, [aria-live="assertive"]:visible, [id*="error" i]:visible, [class*="error-message" i]:visible',
   );
   const messages: string[] = [];
-  for (let index = 0; index < Math.min(await messageNodes.count(), 30); index += 1) {
+  for (
+    let index = 0;
+    index < Math.min(await messageNodes.count(), 30);
+    index += 1
+  ) {
     const message = clean(
-      await messageNodes.nth(index).innerText().catch(() => ""),
+      await messageNodes
+        .nth(index)
+        .innerText()
+        .catch(() => ""),
       240,
     );
     if (message && !messages.includes(message)) messages.push(message);
@@ -385,7 +420,8 @@ async function actionLocator(
         await item.getAttribute("value"),
         await item.getAttribute("aria-label"),
       ])
-    ) return item;
+    )
+      return item;
   }
   return null;
 }
@@ -433,7 +469,9 @@ async function hasApplicationForm(page: Page): Promise<boolean> {
     if (isJobBoardUtilityControl(text)) continue;
     if (type === "file" && /(resume|cv|curriculum)/i.test(text))
       hasResumeUpload = true;
-    if (/(first.?name|last.?name|full.?name|given.?name|family.?name)/i.test(text))
+    if (
+      /(first.?name|last.?name|full.?name|given.?name|family.?name)/i.test(text)
+    )
       hasNameField = true;
     if (/(email|phone|mobile)/i.test(text)) hasContactField = true;
     if (
@@ -521,7 +559,11 @@ async function cvLibraryCandidates(page: Page): Promise<DiscoveryCandidate[]> {
             current = current.parentElement;
             const text = current.innerText || current.textContent || "";
             if (text.length <= 1_800) useful = text;
-            if (/\b(posted|contract|temporary|per (?:hour|day)|easy apply)\b/i.test(text))
+            if (
+              /\b(posted|contract|temporary|per (?:hour|day)|easy apply)\b/i.test(
+                text,
+              )
+            )
               break;
           }
           return useful;
@@ -542,8 +584,7 @@ async function totalJobsCandidates(page: Page): Promise<DiscoveryCandidate[]> {
   for (let index = 0; index < count; index += 1) {
     const anchor = anchors.nth(index);
     const href = (await anchor.getAttribute("href").catch(() => null)) ?? "";
-    if (!/^\/job\/.+-job\d+(?:[/?#]|$)/i.test(href) || seen.has(href))
-      continue;
+    if (!/^\/job\/.+-job\d+(?:[/?#]|$)/i.test(href) || seen.has(href)) continue;
     seen.add(href);
     const title = clean(await anchor.innerText().catch(() => ""), 240);
     if (!title) continue;
@@ -551,8 +592,7 @@ async function totalJobsCandidates(page: Page): Promise<DiscoveryCandidate[]> {
       await anchor
         .evaluate((node) => {
           const article = node.closest("article");
-          if (article)
-            return article.innerText || article.textContent || "";
+          if (article) return article.innerText || article.textContent || "";
           let current: HTMLElement | null = node as HTMLElement;
           let useful = current.innerText || current.textContent || "";
           for (let depth = 0; depth < 8 && current.parentElement; depth += 1) {
@@ -575,9 +615,7 @@ function totalJobsSearchUrl(job: SubmissionProviderPayload["job"]): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  const url = new URL(
-    `https://www.totaljobs.com/jobs/${slug || "contract"}`,
-  );
+  const url = new URL(`https://www.totaljobs.com/jobs/${slug || "contract"}`);
   url.searchParams.set("keywords", job.title);
   return url.toString();
 }
@@ -611,13 +649,31 @@ async function directEmployerSearchCandidates(
     if (!href || seen.has(href)) continue;
     seen.add(href);
     const title = clean(await anchor.innerText().catch(() => ""), 240);
-    const context = clean(
-      await result.innerText().catch(() => ""),
-      2_400,
-    );
+    const context = clean(await result.innerText().catch(() => ""), 2_400);
     if (title && context) candidates.push({ title, context, href });
   }
   return candidates;
+}
+
+async function directEmployerSearchCandidatesFromServer(
+  job: SubmissionProviderPayload["job"],
+): Promise<DiscoveryCandidate[]> {
+  const response = await fetch(directEmployerSearchUrl(job), {
+    method: "GET",
+    headers: {
+      accept: "text/html,application/xhtml+xml",
+      "user-agent":
+        "Mozilla/5.0 (compatible; IR35Careers/1.0; +https://www.ir35careers.com)",
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok)
+    throw new Error(`direct_source_search_http_${response.status}`);
+  const html = await response.text();
+  if (html.length > 2_000_000)
+    throw new Error("direct_source_search_too_large");
+  return directEmployerCandidatesFromSearchHtml(html);
 }
 
 async function resolveDirectEmployerPage(
@@ -626,14 +682,17 @@ async function resolveDirectEmployerPage(
 ): Promise<Page | null> {
   const searchPage = await page.context().newPage();
   try {
-    await searchPage.goto(directEmployerSearchUrl(job), {
-      waitUntil: "domcontentloaded",
-      timeout: 20_000,
-    });
-    const match = bestDirectEmployerCandidate(
-      await directEmployerSearchCandidates(searchPage),
-      job,
+    let candidates = await directEmployerSearchCandidatesFromServer(job).catch(
+      () => [],
     );
+    if (!candidates.length) {
+      await searchPage.goto(directEmployerSearchUrl(job), {
+        waitUntil: "domcontentloaded",
+        timeout: 20_000,
+      });
+      candidates = await directEmployerSearchCandidates(searchPage);
+    }
+    const match = bestDirectEmployerCandidate(candidates, job);
     if (!match) throw new Error("direct_source_match_unavailable");
     await validatePublicHttpsUrl(match.href);
     await searchPage.goto(match.href, {
@@ -646,7 +705,10 @@ async function resolveDirectEmployerPage(
         .first()
         .innerText()
         .catch(() => searchPage.title()),
-      searchPage.locator("body").innerText().catch(() => ""),
+      searchPage
+        .locator("body")
+        .innerText()
+        .catch(() => ""),
     ]);
     const verified = bestDirectEmployerCandidate(
       [
@@ -685,7 +747,10 @@ async function resolveDiscoveryApplicationPage(
   if (!(host === "adzuna.co.uk" || host.endsWith(".adzuna.co.uk"))) return page;
 
   const [body, html] = await Promise.all([
-    page.locator("body").innerText().catch(() => ""),
+    page
+      .locator("body")
+      .innerText()
+      .catch(() => ""),
     page.content().catch(() => ""),
   ]);
   for (const provider of discoveryProviderOrder({ body, html })) {
@@ -718,9 +783,9 @@ async function resolveDiscoveryApplicationPage(
         if (!(await keywordInput.count()) || !(await locationInput.count()))
           throw new Error("search_unavailable");
         await keywordInput.first().fill(job.title);
-        await locationInput.first().fill(
-          job.location.split(",")[0] || job.location,
-        );
+        await locationInput
+          .first()
+          .fill(job.location.split(",")[0] || job.location);
         const findJobs = searchPage.getByRole("button", {
           name: /^find jobs$/i,
         });
@@ -983,13 +1048,14 @@ async function handlePortalAccess(
     ? await actionLocator(page, /^continue with email$/i)
     : null;
   const applicationFormVisible = await hasApplicationForm(page);
-  const accountAccessPage = Boolean(emailContinuation) ||
+  const accountAccessPage =
+    Boolean(emailContinuation) ||
     isEmployerAccountAccessPage({
       body: bodyText,
       hasEmailInput: Boolean(emailInput),
       hasPasswordInput: passwordCount > 0,
       hasApplicationForm: applicationFormVisible,
-  });
+    });
   if (accountAccessPage) {
     const guestApplication = await actionLocatorMatching(
       page,
@@ -1002,8 +1068,8 @@ async function handlePortalAccess(
 
     const canUseManagedEmail = Boolean(
       managedAlias &&
-        payload.candidate.automaticEmailVerification &&
-        runtime?.resolveEmailActionLink,
+      payload.candidate.automaticEmailVerification &&
+      runtime?.resolveEmailActionLink,
     );
     const passwordlessAccess = canUseManagedEmail
       ? await actionLocatorMatching(page, isEmployerPasswordlessAccessControl)
@@ -1054,14 +1120,14 @@ async function handlePortalAccess(
       passwordAttemptCount >= Math.max(1, portalPasswords.length);
     const shouldRecoverAccount = Boolean(
       managedAlias &&
-        payload.candidate.automaticEmailVerification &&
-        payload.candidate.employerTermsConsent &&
-        runtime?.resolveEmailActionLink &&
-        !passwordSetupPage &&
-        !accountMissing &&
-        !accountRecoveryAttempted &&
-        ((authenticationFailed && triedEveryPassword) ||
-          accountAccessAttempts >= Math.max(4, portalPasswords.length + 2)),
+      payload.candidate.automaticEmailVerification &&
+      payload.candidate.employerTermsConsent &&
+      runtime?.resolveEmailActionLink &&
+      !passwordSetupPage &&
+      !accountMissing &&
+      !accountRecoveryAttempted &&
+      ((authenticationFailed && triedEveryPassword) ||
+        accountAccessAttempts >= Math.max(4, portalPasswords.length + 2)),
     );
     if (shouldRecoverAccount) {
       const resetControl = await actionLocatorMatching(
@@ -1181,21 +1247,19 @@ async function handlePortalAccess(
         },
       };
     }
-    const useSignIn = !accountMissing &&
+    const useSignIn =
+      !accountMissing &&
       preferEmployerSignIn({
         accountAlreadyExists,
         accountState,
       });
-    const portalContinuation = emailContinuation ??
-      (await actionLocator(page, ats.nextPattern));
-    const accessAction = resetPassword ??
+    const portalContinuation =
+      emailContinuation ?? (await actionLocator(page, ats.nextPattern));
+    const accessAction =
+      resetPassword ??
       (useSignIn
-        ? signIn ??
-          createAccount ??
-          portalContinuation
-        : createAccount ??
-          signIn ??
-          portalContinuation);
+        ? (signIn ?? createAccount ?? portalContinuation)
+        : (createAccount ?? signIn ?? portalContinuation));
     if (!accessAction)
       return {
         handled: false,
@@ -1230,9 +1294,16 @@ async function snapshotFields(
     'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea',
   );
   const fileUploadCount = await page.locator('input[type="file"]').count();
-  const pageCopy = fileUploadCount === 1
-    ? clean(await page.locator("body").innerText().catch(() => ""), 25_000)
-    : "";
+  const pageCopy =
+    fileUploadCount === 1
+      ? clean(
+          await page
+            .locator("body")
+            .innerText()
+            .catch(() => ""),
+          25_000,
+        )
+      : "";
   const singleResumeUpload = shouldTreatSingleFileAsResume({
     atsKind,
     fileUploadCount,
@@ -1484,7 +1555,8 @@ async function fillField(input: {
   ) {
     value = value.replace(/\D/g, "");
     if (value.startsWith("0044")) value = value.slice(4);
-    else if (value.startsWith("44") && value.length > 10) value = value.slice(2);
+    else if (value.startsWith("44") && value.length > 10)
+      value = value.slice(2);
     if (value.startsWith("0")) value = value.slice(1);
   }
   if (!value) return false;
@@ -1613,8 +1685,7 @@ async function fillStep(
     const value =
       directAnswer || (mapping ? valueForMapping(mapping, facts) : "");
     const carriesApplicationMaterial =
-      field.type === "file" ||
-      isApplicationMessageField(field);
+      field.type === "file" || isApplicationMessageField(field);
     const canUseMapping = Boolean(
       mapping && mapping.factKey !== "needs_user" && mapping.factKey !== "skip",
     );
@@ -1698,9 +1769,7 @@ async function invalidRequiredFields(
       const failed = await locator
         .evaluate((node) => {
           const element = node as
-            | HTMLInputElement
-            | HTMLSelectElement
-            | HTMLTextAreaElement;
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
           return (
             element.getAttribute("aria-invalid") === "true" ||
             (typeof element.checkValidity === "function" &&
@@ -1802,10 +1871,10 @@ export async function runNativeApplication(
     });
     context.setDefaultTimeout(12_000);
     context.setDefaultNavigationTimeout(25_000);
-  const approvedHosts = new Set<string>([
+    const approvedHosts = new Set<string>([
       destination.hostname,
       startUrl.hostname,
-  ]);
+    ]);
     const blockedHosts = new Set<string>();
     const networkFailures = new Set<string>();
     let sensitive = false;
@@ -1896,12 +1965,7 @@ export async function runNativeApplication(
         .catch(() => ""),
       8_000,
     );
-    if (
-      isClosedListingPage(
-        await page.title().catch(() => ""),
-        handoffBody,
-      )
-    ) {
+    if (isClosedListingPage(await page.title().catch(() => ""), handoffBody)) {
       sessionDisposition = "clear";
       return reviewReceipt(
         "This role is no longer accepting applications at its original source.",
@@ -1911,10 +1975,7 @@ export async function runNativeApplication(
       );
     }
     if (
-      isSourceAccessDeniedPage(
-        await page.title().catch(() => ""),
-        handoffBody,
-      )
+      isSourceAccessDeniedPage(await page.title().catch(() => ""), handoffBody)
     ) {
       const sourceAccountAccess = await actionLocator(
         page,
@@ -1962,25 +2023,21 @@ export async function runNativeApplication(
         portalAccountState = "created";
         accountCreationPending = false;
       }
-      if (portalAccess.accountCreationStarted)
-        accountCreationPending = true;
+      if (portalAccess.accountCreationStarted) accountCreationPending = true;
       if (portalAccess.accountRecovered) {
         portalAccountState = "recovered";
         accountCreationPending = false;
       }
-      if (portalAccess.recoveryAttempted)
-        accountRecoveryAttempted = true;
-      if (portalAccess.passwordAttempted)
-        portalPasswordAttempts += 1;
-      if (portalAccess.clearSession)
-        sessionDisposition = "clear";
+      if (portalAccess.recoveryAttempted) accountRecoveryAttempted = true;
+      if (portalAccess.passwordAttempted) portalPasswordAttempts += 1;
+      if (portalAccess.clearSession) sessionDisposition = "clear";
       if (portalAccess.stop)
         return reviewReceipt(
           portalAccess.stop.message,
           [],
           portalAccess.stop.action,
           currentDestination(page, startUrl.toString()),
-           await pageDiagnostic(page, blockedHosts, networkFailures),
+          await pageDiagnostic(page, blockedHosts, networkFailures),
         );
       if (portalAccess.handled) {
         portalAccessAttempts += 1;

@@ -826,6 +826,33 @@ function discoveryProviderOrder(input) {
   if (!detected) return ["totaljobs", "cv_library"];
   return detected === "totaljobs" ? ["totaljobs", "cv_library"] : ["cv_library", "totaljobs"];
 }
+function decodeSearchHtml(value) {
+  return value.replace(/<[^>]+>/g, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(
+    /&#(\d+);/g,
+    (_, code) => String.fromCodePoint(Number(code))
+  ).replace(
+    /&#x([0-9a-f]+);/gi,
+    (_, code) => String.fromCodePoint(Number.parseInt(code, 16))
+  ).replace(/\s+/g, " ").trim();
+}
+function directEmployerCandidatesFromSearchHtml(html) {
+  const candidates = [];
+  const seen = /* @__PURE__ */ new Set();
+  const anchors = html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi);
+  for (const match of anchors) {
+    const attributes = match[1] ?? "";
+    const className = attributes.match(/\bclass=["']([^"']*)["']/i)?.[1] ?? "";
+    if (!/(?:^|\s)result__a(?:\s|$)/i.test(className)) continue;
+    const encodedHref = attributes.match(/\bhref=["']([^"']+)["']/i)?.[1] ?? "";
+    const href = duckDuckGoResultTarget(decodeSearchHtml(encodedHref));
+    const title = decodeSearchHtml(match[2] ?? "");
+    if (!href || !title || seen.has(href)) continue;
+    seen.add(href);
+    candidates.push({ title, context: title, href });
+    if (candidates.length >= 12) break;
+  }
+  return candidates;
+}
 function discoveryCandidateScore(candidate, job) {
   const titleOverlap = overlap(job.title, candidate.title);
   if (titleOverlap < 0.72) return 0;
@@ -867,9 +894,7 @@ function duckDuckGoResultTarget(href) {
 }
 function companyHostMatched(company, hostname2) {
   const host = compact(hostname2);
-  return compact(company).split(" ").filter(
-    (token) => token.length >= 3 && !COMPANY_NOISE_WORDS.has(token)
-  ).some((token) => host.includes(token));
+  return compact(company).split(" ").filter((token) => token.length >= 3 && !COMPANY_NOISE_WORDS.has(token)).some((token) => host.includes(token));
 }
 function directEmployerCandidateScore(candidate, job) {
   let destination;
@@ -1320,10 +1345,15 @@ function reviewReceipt(message, fields, action, destination, diagnostic) {
 }
 async function pageDiagnostic(page, blockedHosts = /* @__PURE__ */ new Set(), networkFailures = /* @__PURE__ */ new Set()) {
   const title = clean(await page.title().catch(() => ""), 160);
-  const headingNodes = page.locator("h1:visible, h2:visible, h3:visible, legend:visible");
+  const headingNodes = page.locator(
+    "h1:visible, h2:visible, h3:visible, legend:visible"
+  );
   const headings = [];
   for (let index = 0; index < Math.min(await headingNodes.count(), 20); index += 1) {
-    const label = clean(await headingNodes.nth(index).innerText().catch(() => ""), 180);
+    const label = clean(
+      await headingNodes.nth(index).innerText().catch(() => ""),
+      180
+    );
     if (label && !headings.includes(label)) headings.push(label);
   }
   const actionNodes = page.locator(
@@ -1482,7 +1512,8 @@ async function actionLocator(page, pattern) {
       await item.innerText().catch(() => ""),
       await item.getAttribute("value"),
       await item.getAttribute("aria-label")
-    ])) return item;
+    ]))
+      return item;
   }
   return null;
 }
@@ -1591,7 +1622,9 @@ async function cvLibraryCandidates(page) {
           current = current.parentElement;
           const text = current.innerText || current.textContent || "";
           if (text.length <= 1800) useful = text;
-          if (/\b(posted|contract|temporary|per (?:hour|day)|easy apply)\b/i.test(text))
+          if (/\b(posted|contract|temporary|per (?:hour|day)|easy apply)\b/i.test(
+            text
+          ))
             break;
         }
         return useful;
@@ -1610,16 +1643,14 @@ async function totalJobsCandidates(page) {
   for (let index = 0; index < count; index += 1) {
     const anchor = anchors.nth(index);
     const href = await anchor.getAttribute("href").catch(() => null) ?? "";
-    if (!/^\/job\/.+-job\d+(?:[/?#]|$)/i.test(href) || seen.has(href))
-      continue;
+    if (!/^\/job\/.+-job\d+(?:[/?#]|$)/i.test(href) || seen.has(href)) continue;
     seen.add(href);
     const title = clean(await anchor.innerText().catch(() => ""), 240);
     if (!title) continue;
     const context = clean(
       await anchor.evaluate((node) => {
         const article = node.closest("article");
-        if (article)
-          return article.innerText || article.textContent || "";
+        if (article) return article.innerText || article.textContent || "";
         let current = node;
         let useful = current.innerText || current.textContent || "";
         for (let depth = 0; depth < 8 && current.parentElement; depth += 1) {
@@ -1637,9 +1668,7 @@ async function totalJobsCandidates(page) {
 }
 function totalJobsSearchUrl(job) {
   const slug = clean(job.title, 120).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  const url = new URL(
-    `https://www.totaljobs.com/jobs/${slug || "contract"}`
-  );
+  const url = new URL(`https://www.totaljobs.com/jobs/${slug || "contract"}`);
   url.searchParams.set("keywords", job.title);
   return url.toString();
 }
@@ -1666,25 +1695,42 @@ async function directEmployerSearchCandidates(page) {
     if (!href || seen.has(href)) continue;
     seen.add(href);
     const title = clean(await anchor.innerText().catch(() => ""), 240);
-    const context = clean(
-      await result.innerText().catch(() => ""),
-      2400
-    );
+    const context = clean(await result.innerText().catch(() => ""), 2400);
     if (title && context) candidates.push({ title, context, href });
   }
   return candidates;
 }
+async function directEmployerSearchCandidatesFromServer(job) {
+  const response = await fetch(directEmployerSearchUrl(job), {
+    method: "GET",
+    headers: {
+      accept: "text/html,application/xhtml+xml",
+      "user-agent": "Mozilla/5.0 (compatible; IR35Careers/1.0; +https://www.ir35careers.com)"
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(15e3)
+  });
+  if (!response.ok)
+    throw new Error(`direct_source_search_http_${response.status}`);
+  const html = await response.text();
+  if (html.length > 2e6)
+    throw new Error("direct_source_search_too_large");
+  return directEmployerCandidatesFromSearchHtml(html);
+}
 async function resolveDirectEmployerPage(page, job) {
   const searchPage = await page.context().newPage();
   try {
-    await searchPage.goto(directEmployerSearchUrl(job), {
-      waitUntil: "domcontentloaded",
-      timeout: 2e4
-    });
-    const match = bestDirectEmployerCandidate(
-      await directEmployerSearchCandidates(searchPage),
-      job
+    let candidates = await directEmployerSearchCandidatesFromServer(job).catch(
+      () => []
     );
+    if (!candidates.length) {
+      await searchPage.goto(directEmployerSearchUrl(job), {
+        waitUntil: "domcontentloaded",
+        timeout: 2e4
+      });
+      candidates = await directEmployerSearchCandidates(searchPage);
+    }
+    const match = bestDirectEmployerCandidate(candidates, job);
     if (!match) throw new Error("direct_source_match_unavailable");
     await validatePublicHttpsUrl(match.href);
     await searchPage.goto(match.href, {
@@ -1756,9 +1802,7 @@ async function resolveDiscoveryApplicationPage(page, job) {
         if (!await keywordInput.count() || !await locationInput.count())
           throw new Error("search_unavailable");
         await keywordInput.first().fill(job.title);
-        await locationInput.first().fill(
-          job.location.split(",")[0] || job.location
-        );
+        await locationInput.first().fill(job.location.split(",")[0] || job.location);
         const findJobs = searchPage.getByRole("button", {
           name: /^find jobs$/i
         });
@@ -2138,7 +2182,10 @@ async function snapshotFields(page, step, atsKind) {
     'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea'
   );
   const fileUploadCount = await page.locator('input[type="file"]').count();
-  const pageCopy = fileUploadCount === 1 ? clean(await page.locator("body").innerText().catch(() => ""), 25e3) : "";
+  const pageCopy = fileUploadCount === 1 ? clean(
+    await page.locator("body").innerText().catch(() => ""),
+    25e3
+  ) : "";
   const singleResumeUpload = shouldTreatSingleFileAsResume({
     atsKind,
     fileUploadCount,
@@ -2305,7 +2352,8 @@ async function fillField(input) {
   )) {
     value = value.replace(/\D/g, "");
     if (value.startsWith("0044")) value = value.slice(4);
-    else if (value.startsWith("44") && value.length > 10) value = value.slice(2);
+    else if (value.startsWith("44") && value.length > 10)
+      value = value.slice(2);
     if (value.startsWith("0")) value = value.slice(1);
   }
   if (!value) return false;
@@ -2614,10 +2662,7 @@ async function runNativeApplication(payload, runtime) {
       await page.locator("body").innerText().catch(() => ""),
       8e3
     );
-    if (isClosedListingPage(
-      await page.title().catch(() => ""),
-      handoffBody
-    )) {
+    if (isClosedListingPage(await page.title().catch(() => ""), handoffBody)) {
       sessionDisposition = "clear";
       return reviewReceipt(
         "This role is no longer accepting applications at its original source.",
@@ -2626,10 +2671,7 @@ async function runNativeApplication(payload, runtime) {
         currentDestination(page, startUrl.toString())
       );
     }
-    if (isSourceAccessDeniedPage(
-      await page.title().catch(() => ""),
-      handoffBody
-    )) {
+    if (isSourceAccessDeniedPage(await page.title().catch(() => ""), handoffBody)) {
       const sourceAccountAccess = await actionLocator(
         page,
         /^(login to continue|log in to continue|sign in to continue|continue with email|create account|register)$/i
@@ -2675,18 +2717,14 @@ async function runNativeApplication(payload, runtime) {
         portalAccountState = "created";
         accountCreationPending = false;
       }
-      if (portalAccess.accountCreationStarted)
-        accountCreationPending = true;
+      if (portalAccess.accountCreationStarted) accountCreationPending = true;
       if (portalAccess.accountRecovered) {
         portalAccountState = "recovered";
         accountCreationPending = false;
       }
-      if (portalAccess.recoveryAttempted)
-        accountRecoveryAttempted = true;
-      if (portalAccess.passwordAttempted)
-        portalPasswordAttempts += 1;
-      if (portalAccess.clearSession)
-        sessionDisposition = "clear";
+      if (portalAccess.recoveryAttempted) accountRecoveryAttempted = true;
+      if (portalAccess.passwordAttempted) portalPasswordAttempts += 1;
+      if (portalAccess.clearSession) sessionDisposition = "clear";
       if (portalAccess.stop)
         return reviewReceipt(
           portalAccess.stop.message,

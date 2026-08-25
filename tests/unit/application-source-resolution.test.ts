@@ -4,6 +4,7 @@ import {
   bestDirectEmployerCandidate,
   bestDiscoveryCandidate,
   directEmployerCandidateScore,
+  directEmployerCandidatesFromSearchHtml,
   discoveryCandidateScore,
   discoveryProviderFromAdzunaPage,
   discoveryProviderOrder,
@@ -97,8 +98,7 @@ describe("application source resolution", () => {
         [
           {
             title: "Mould Joiner/ Carpenter",
-            context:
-              "Posted by Net-Temps in Nottingham. Contract. Easy Apply.",
+            context: "Posted by Net-Temps in Nottingham. Contract. Easy Apply.",
             href: "/job/225520701/mould-joiner-carpenter",
           },
           {
@@ -125,8 +125,7 @@ describe("application source resolution", () => {
             title: "DevOps Engineer",
             context:
               "TALENT INTERNATIONAL UK LTD UK £480.00 per day Contract Published 2 days ago",
-            href:
-              "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+            href: "/job/devops-engineer/talent-international-uk-ltd-job107879337",
           },
           {
             title: "DevOps Engineer",
@@ -136,9 +135,7 @@ describe("application source resolution", () => {
         ],
         totalJobsRole,
       )?.href,
-    ).toBe(
-      "/job/devops-engineer/talent-international-uk-ltd-job107879337",
-    );
+    ).toBe("/job/devops-engineer/talent-international-uk-ltd-job107879337");
   });
 
   it("uses the advert description to distinguish duplicate title and company matches", () => {
@@ -156,22 +153,18 @@ describe("application source resolution", () => {
             title: "DevOps Engineer",
             context:
               "TALENT INTERNATIONAL UK LTD UK £480 per day. Senior DevOps Engineer supporting an AWS data platform with Terraform, GitLab CI/CD, Python and active SC clearance.",
-            href:
-              "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+            href: "/job/devops-engineer/talent-international-uk-ltd-job107879337",
           },
           {
             title: "DevOps Engineer",
             context:
               "TALENT INTERNATIONAL UK LTD UK £480 per day. Streamline software development, testing and deployment processes.",
-            href:
-              "/job/devops-engineer/talent-international-uk-ltd-job107877198",
+            href: "/job/devops-engineer/talent-international-uk-ltd-job107877198",
           },
         ],
         totalJobsRole,
       )?.href,
-    ).toBe(
-      "/job/devops-engineer/talent-international-uk-ltd-job107879337",
-    );
+    ).toBe("/job/devops-engineer/talent-international-uk-ltd-job107879337");
   });
 
   it("unwraps direct employer results and rejects another discovery board", () => {
@@ -189,6 +182,24 @@ describe("application source resolution", () => {
     expect(isDiscoveryOnlyHost("viqu.co.uk")).toBe(false);
   });
 
+  it("extracts a recruiter-owned result from the no-script search response", () => {
+    const candidates = directEmployerCandidatesFromSearchHtml(`
+      <div class="result">
+        <a rel="nofollow" class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fviqu.co.uk%2Fjob%2Fdevops%2Dengineer%2F&amp;rut=abc">
+          DevOps Engineer &amp; Platform Specialist - VIQU IT
+        </a>
+      </div>
+      <a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.jobserve.com%2Fjob%2F123">Copied role</a>
+    `);
+    expect(candidates).toEqual([
+      {
+        title: "DevOps Engineer & Platform Specialist - VIQU IT",
+        context: "DevOps Engineer & Platform Specialist - VIQU IT",
+        href: "https://viqu.co.uk/job/devops-engineer/",
+      },
+    ]);
+  });
+
   it("prefers the recruiter-owned copy of an aggregated role", () => {
     const directJob = {
       title: "DevOps Engineer - SC Cleared - Hybrid - Inside IR35",
@@ -198,21 +209,21 @@ describe("application source resolution", () => {
         "DevOps Engineer with valid and transferrable SC Clearance supporting critical infrastructure.",
     };
     const official = {
-      title:
-        "DevOps Engineer - SC Cleared - Hybrid - Inside IR35 - VIQU IT",
+      title: "DevOps Engineer - SC Cleared - Hybrid - Inside IR35 - VIQU IT",
       context:
         "London. DevOps Engineer with valid and transferrable SC Clearance supporting critical infrastructure.",
-      href:
-        "https://viqu.co.uk/job/devops-engineer-sc-cleared-hybrid-inside-ir35/",
+      href: "https://viqu.co.uk/job/devops-engineer-sc-cleared-hybrid-inside-ir35/",
     };
     const copied = {
       ...official,
       href: "https://www.jobserve.com/gb/en/job/123",
     };
-    expect(directEmployerCandidateScore(official, directJob)).toBeGreaterThanOrEqual(85);
+    expect(
+      directEmployerCandidateScore(official, directJob),
+    ).toBeGreaterThanOrEqual(85);
     expect(directEmployerCandidateScore(copied, directJob)).toBe(0);
-    expect(bestDirectEmployerCandidate([copied, official], directJob)?.href).toBe(
-      official.href,
-    );
+    expect(
+      bestDirectEmployerCandidate([copied, official], directJob)?.href,
+    ).toBe(official.href);
   });
 });

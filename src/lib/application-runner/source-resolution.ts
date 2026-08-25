@@ -149,6 +149,49 @@ export interface DiscoveryCandidate {
   href: string;
 }
 
+function decodeSearchHtml(value: string): string {
+  return value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#(\d+);/g, (_, code: string) =>
+      String.fromCodePoint(Number(code)),
+    )
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+      String.fromCodePoint(Number.parseInt(code, 16)),
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Extracts only public result labels and destinations from DuckDuckGo's
+ * no-script HTML response. No candidate data is involved in this lookup.
+ */
+export function directEmployerCandidatesFromSearchHtml(
+  html: string,
+): DiscoveryCandidate[] {
+  const candidates: DiscoveryCandidate[] = [];
+  const seen = new Set<string>();
+  const anchors = html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi);
+  for (const match of anchors) {
+    const attributes = match[1] ?? "";
+    const className = attributes.match(/\bclass=["']([^"']*)["']/i)?.[1] ?? "";
+    if (!/(?:^|\s)result__a(?:\s|$)/i.test(className)) continue;
+    const encodedHref = attributes.match(/\bhref=["']([^"']+)["']/i)?.[1] ?? "";
+    const href = duckDuckGoResultTarget(decodeSearchHtml(encodedHref));
+    const title = decodeSearchHtml(match[2] ?? "");
+    if (!href || !title || seen.has(href)) continue;
+    seen.add(href);
+    candidates.push({ title, context: title, href });
+    if (candidates.length >= 12) break;
+  }
+  return candidates;
+}
+
 export function discoveryCandidateScore(
   candidate: DiscoveryCandidate,
   job: Pick<JobDetail, "title" | "company_name" | "location"> &
@@ -161,7 +204,8 @@ export function discoveryCandidateScore(
   const company = compact(job.company_name);
   const companyMatched = Boolean(
     company &&
-      (candidateContext.includes(company) || overlap(company, candidate.context) >= 0.8),
+    (candidateContext.includes(company) ||
+      overlap(company, candidate.context) >= 0.8),
   );
   if (!companyMatched) return 0;
 
@@ -204,7 +248,10 @@ export function duckDuckGoResultTarget(href: string): string | null {
       : parsed.toString();
     if (!target) return null;
     const destination = new URL(target);
-    if (destination.protocol !== "https:" || isDiscoveryOnlyHost(destination.hostname))
+    if (
+      destination.protocol !== "https:" ||
+      isDiscoveryOnlyHost(destination.hostname)
+    )
       return null;
     return destination.toString();
   } catch {
@@ -216,9 +263,7 @@ function companyHostMatched(company: string, hostname: string): boolean {
   const host = compact(hostname);
   return compact(company)
     .split(" ")
-    .filter(
-      (token) => token.length >= 3 && !COMPANY_NOISE_WORDS.has(token),
-    )
+    .filter((token) => token.length >= 3 && !COMPANY_NOISE_WORDS.has(token))
     .some((token) => host.includes(token));
 }
 
