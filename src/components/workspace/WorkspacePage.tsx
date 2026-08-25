@@ -47,27 +47,30 @@ export function WorkspacePage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8f6] text-slate-950">
+    <div className={`min-h-screen text-slate-950 ${accountSection ? "bg-slate-50" : "bg-[#f7f8f6]"}`}>
       <AppNav />
-      <main className={`mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 ${density === "compact" ? "py-5 lg:py-7" : "py-7 lg:py-10"}`}>
+      <main
+        data-account-layout={accountSection ? "true" : undefined}
+        className={`mx-auto px-4 sm:px-6 ${accountSection ? "max-w-[1600px] py-8" : `max-w-[1400px] lg:px-8 ${density === "compact" ? "py-5 lg:py-7" : "py-7 lg:py-10"}`}`}
+      >
         {!configured && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
             <FlaskConical className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
             <p><span className="font-semibold">Preview mode.</span> Changes are kept in this browser only.</p>
           </div>
         )}
-        <div className={accountSection ? "grid gap-6 lg:grid-cols-[228px_minmax(0,1fr)] xl:gap-8" : undefined}>
+        <div className={accountSection ? "grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]" : undefined}>
           {accountSection && <AccountSidebar active={accountSection} />}
           <div className="min-w-0">
-            <header className={`flex flex-col gap-4 border-b border-slate-200/80 lg:flex-row lg:items-end lg:justify-between ${density === "compact" ? "pb-5" : "pb-6"}`}>
+            <header className={`flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between ${accountSection ? "" : `border-b border-slate-200/80 ${density === "compact" ? "pb-5" : "pb-6"}`}`}>
               <div className="max-w-3xl">
-                {eyebrow && <p className="ir35-eyebrow">{eyebrow}</p>}
-                <h1 className={`mt-2 font-semibold leading-[1.08] tracking-[-0.04em] text-slate-950 ${density === "compact" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-[2.5rem]"}`}>{title}</h1>
-                <p className={`mt-2.5 text-slate-600 ${density === "compact" ? "max-w-2xl text-sm leading-5" : "max-w-3xl text-sm leading-6 sm:text-[15px]"}`}>{description}</p>
+                {eyebrow && <p className={accountSection ? "sr-only" : "ir35-eyebrow"}>{eyebrow}</p>}
+                <h1 className={`font-semibold text-slate-950 ${accountSection ? "text-2xl tracking-tight" : `mt-2 leading-[1.08] tracking-[-0.04em] ${density === "compact" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-[2.5rem]"}`}`}>{title}</h1>
+                <p className={`text-sm ${accountSection ? "mt-1 leading-5 text-slate-500" : `mt-2.5 text-slate-600 ${density === "compact" ? "max-w-2xl leading-5" : "max-w-3xl leading-6 sm:text-[15px]"}`}`}>{description}</p>
               </div>
               {actions}
             </header>
-            <div className={density === "compact" ? "mt-5" : "mt-6"}>{children}</div>
+            <div className={accountSection ? "mt-6" : density === "compact" ? "mt-5" : "mt-6"}>{children}</div>
           </div>
         </div>
       </main>

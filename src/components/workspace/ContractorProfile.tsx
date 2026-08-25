@@ -753,7 +753,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               type="button"
               aria-pressed={activeNavigationId === item.id}
               onClick={() => selectProfileSection(item.id)}
-              className={`ir35-focus min-h-10 shrink-0 rounded-xl px-3 text-xs font-semibold xl:flex-1 xl:px-4 xl:text-sm ${activeNavigationId === item.id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              className={`ir35-focus min-h-10 shrink-0 rounded-xl px-3 text-xs font-semibold xl:flex-1 xl:px-4 xl:text-sm ${activeNavigationId === item.id ? "bg-brand-700 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"}`}
             >
               {item.label}
             </button>
@@ -784,7 +784,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   key={item.id}
                   type="button"
                   onClick={() => set("activeResumeProfileId", item.id)}
-                  className={`ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${activeProfile?.id === item.id ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 text-slate-600"}`}
+                  className={`ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${activeProfile?.id === item.id ? "border-brand-700 bg-brand-700 text-white" : "border-slate-300 text-slate-600"}`}
                 >
                   {item.isDefault && <Star size={14} fill="currentColor" />}
                   {item.name}
@@ -1278,7 +1278,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           </div>
           <aside className="space-y-5 xl:sticky xl:top-24 xl:h-max">
             <section className="ir35-card p-5 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-950 text-xl font-bold text-white">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-xl font-bold text-white">
                 {profile.fullName.trim().charAt(0) || "C"}
               </div>
               <h2 className="mt-4 font-semibold text-slate-950">

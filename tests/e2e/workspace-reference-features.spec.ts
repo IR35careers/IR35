@@ -48,6 +48,8 @@ test("profile keeps reusable identity, resume, cover letter and application cont
   await page.goto("/profile");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Your professional profile" })).toBeVisible();
+  await expect(page.locator('main[data-account-layout="true"]')).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Account" })).toBeVisible();
   await expect(page.getByLabel("Full name")).toBeVisible();
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
   await expect(page.getByText("Application readiness", { exact: true })).toBeVisible();
