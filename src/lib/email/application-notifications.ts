@@ -9,6 +9,7 @@ export type ApplicationNotificationKind =
   | "needs_attention"
   | "submission_issue"
   | "interview"
+  | "offer"
   | "rejection"
   | "update"
   | "message"
@@ -140,6 +141,16 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
         actionLabel: "Read interview message",
         actionPath: "/inbox",
       };
+    case "offer":
+      return {
+        subject: `Offer update: ${role}`,
+        eyebrow: "Congratulations",
+        title: "You have received an offer update",
+        body: `An offer message for ${role} arrived in your IR35Careers inbox. Review the employer's terms and original message before responding.`,
+        accent: "#087f5b",
+        actionLabel: "Review the offer",
+        actionPath: "/inbox",
+      };
     case "rejection": {
       const quote = MOTIVATION[Math.abs(input.idempotencyKey.split("").reduce((sum, value) => sum + value.charCodeAt(0), 0)) % MOTIVATION.length];
       return {
@@ -189,7 +200,7 @@ function inboxClassification(kind: ApplicationNotificationKind): InboxClassifica
   if (kind === "needs_attention") return "action_required";
   if (kind === "interview") return "interview";
   if (kind === "rejection") return "rejection";
-  if (kind === "submitted" || kind === "submission_issue" || kind === "update") return "application_update";
+  if (kind === "submitted" || kind === "submission_issue" || kind === "offer" || kind === "update") return "application_update";
   return "other";
 }
 

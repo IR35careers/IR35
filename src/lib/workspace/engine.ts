@@ -17,6 +17,7 @@ import type {
   PrepareApplicationInput,
 } from "@/lib/workspace/types";
 import type { JobDetail, JobListing } from "@/lib/job-types";
+import { applyRememberedApplicationAnswers } from "@/lib/workspace/answer-memory";
 
 const MAX_CV_CHARACTERS = 80_000;
 
@@ -171,7 +172,7 @@ export function buildScreeningQuestions(
     });
   const limitedCompanyAnswer =
     profile.limitedCompanyName || profile.companyNumber ? "Yes" : "";
-  return [
+  return applyRememberedApplicationAnswers([
     {
       id: "right-to-work",
       label: "Do you have the right to work in the UK?",
@@ -360,7 +361,7 @@ export function buildScreeningQuestions(
       profile.portfolioUrl,
     ),
     ...roleEvidence,
-  ];
+  ], profile.savedApplicationAnswers);
 }
 
 export function prepareApplication(

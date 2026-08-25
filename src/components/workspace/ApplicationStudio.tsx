@@ -66,6 +66,7 @@ import {
 } from "@/lib/workspace/seed";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { ApplicationRecord } from "@/lib/workspace/types";
+import { rememberReviewedApplicationAnswers } from "@/lib/workspace/answer-memory";
 
 type BusyState =
   | "parse"
@@ -786,6 +787,19 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     };
     setApplication(ready);
     persistApplication(ready);
+    const rememberedProfile = rememberReviewedApplicationAnswers(
+      workspace.profile,
+      ready.questions,
+      now,
+    );
+    updateWorkspace((current) => ({
+      ...current,
+      profile: rememberReviewedApplicationAnswers(
+        current.profile,
+        ready.questions,
+        now,
+      ),
+    }));
     if (syncWholeWorkspace && isSupabaseConfigured()) {
       const { data } = await getSupabase().auth.getSession();
       if (!data.session)
@@ -793,6 +807,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
       await saveCloudWorkspace(data.session.user.id, {
         ...workspace,
+        profile: rememberedProfile,
         applications: [
           ready,
           ...workspace.applications.filter(
@@ -1185,7 +1200,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       }
     >
       <section
-        className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card"
+        className="ir35-card overflow-hidden"
         aria-labelledby="application-role-title"
       >
         <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -1480,7 +1495,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <main className="min-w-0 space-y-5">
           {!application ? (
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+            <section className="ir35-card overflow-hidden">
               <div className="p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-3">
@@ -1556,7 +1571,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
             </section>
           ) : (
             <>
-              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+              <section className="ir35-card p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">
@@ -1630,7 +1645,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 </details>
               </section>
 
-              <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+              <section className="ir35-card overflow-hidden">
                 <div className="border-b border-slate-200 p-5 sm:p-6">
                   <div className="flex items-start gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
@@ -1796,7 +1811,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+              <section className="ir35-card p-5 sm:p-6">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">
@@ -1851,7 +1866,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               <details
                 id="employer-questions"
                 open
-                className="group scroll-mt-24 rounded-3xl border border-slate-200 bg-white shadow-card"
+                className="ir35-card group scroll-mt-24"
               >
                 <summary className="ir35-focus flex cursor-pointer list-none items-center justify-between gap-3 p-5 sm:p-6">
                   <div>
@@ -2167,7 +2182,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               </a>
             )}
           </section>
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
+          <section className="ir35-card p-5">
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
@@ -2209,7 +2224,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               ))}
             </ul>
           </section>
-          <section className="rounded-3xl border border-slate-200 bg-white p-5">
+          <section className="ir35-card p-5">
             <div className="flex items-center gap-2 text-brand-700">
               <LockKeyhole size={16} />
               <p className="text-[10px] font-bold uppercase tracking-[0.16em]">

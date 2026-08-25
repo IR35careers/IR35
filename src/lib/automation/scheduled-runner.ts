@@ -27,12 +27,25 @@ export type ScheduledAutoApplySummary = {
   results: AccountResult[];
 };
 
-const DEFAULT_GLOBAL_BATCH_LIMIT = 8;
+const DEFAULT_GLOBAL_BATCH_LIMIT = 25;
 
 function globalBatchLimit(): number {
   const configured = Number(process.env.AUTO_APPLY_DAILY_BATCH_LIMIT ?? "");
   if (!Number.isFinite(configured)) return DEFAULT_GLOBAL_BATCH_LIMIT;
   return Math.max(1, Math.min(Math.round(configured), 25));
+}
+
+export function orderScheduledAccounts<T extends { userId: string }>(
+  accounts: T[],
+  lastRunAt: ReadonlyMap<string, string>,
+): T[] {
+  return [...accounts].sort((left, right) => {
+    const leftRun = Date.parse(lastRunAt.get(left.userId) ?? "");
+    const rightRun = Date.parse(lastRunAt.get(right.userId) ?? "");
+    const leftTime = Number.isFinite(leftRun) ? leftRun : 0;
+    const rightTime = Number.isFinite(rightRun) ? rightRun : 0;
+    return leftTime - rightTime || left.userId.localeCompare(right.userId);
+  });
 }
 
 function safeOrigin(value: string): string {
@@ -63,10 +76,26 @@ export async function runScheduledAutoApply(input: {
     .limit(100);
   if (error) throw new Error(error.message);
 
-  const accounts = (rows ?? []).map((row) => ({
+  const unorderedAccounts = (rows ?? []).map((row) => ({
     userId: String(row.user_id ?? ""),
     dailyLimit: Math.max(1, Math.min(Number(row.daily_limit ?? 1), 25)),
   })).filter((row) => /^[0-9a-f-]{36}$/i.test(row.userId));
+  const userIds = unorderedAccounts.map((account) => account.userId);
+  const lastRunAt = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: recentRuns, error: runsError } = await admin
+      .from("automation_runs")
+      .select("user_id, created_at")
+      .in("user_id", userIds)
+      .order("created_at", { ascending: false })
+      .limit(Math.min(userIds.length * 4, 400));
+    if (runsError) throw new Error(runsError.message);
+    for (const run of recentRuns ?? []) {
+      const userId = String(run.user_id ?? "");
+      if (!lastRunAt.has(userId)) lastRunAt.set(userId, String(run.created_at ?? ""));
+    }
+  }
+  const accounts = orderScheduledAccounts(unorderedAccounts, lastRunAt);
   const summary: ScheduledAutoApplySummary = {
     enabledAccounts: accounts.length,
     accountsAttempted: 0,

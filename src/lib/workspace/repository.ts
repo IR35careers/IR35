@@ -86,6 +86,7 @@ export function createBlankCloudWorkspaceState(email: string): WorkspaceState {
       profileSetupCompletedAt: undefined,
       networkContacts: [],
       referralRequests: [],
+      savedApplicationAnswers: [],
       experience: undefined,
       forwardingEmail: email,
     },

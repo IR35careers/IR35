@@ -10,10 +10,7 @@
  */
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
-import { isSevenAmInLondon } from "@/lib/pipeline/schedule";
-import { runScheduledAutoApply } from "@/lib/automation/scheduled-runner";
 import { timingSafeEqual } from "node:crypto";
-import { after } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -41,40 +38,6 @@ export async function GET(request: Request): Promise<Response> {
   if (!authorized) {
     return Response.json({ error: "Unauthorized" }, { status: 401, headers: NO_STORE });
   }
-
-  // Vercel schedules in UTC. Two protected invocations cover GMT and BST;
-  // only the one falling in London's 07:00 hour performs the daily refresh.
-  // An explicitly authorised manual run is still allowed outside that hour.
-  const isVercelCron = (request.headers.get("user-agent") ?? "").includes("vercel-cron/1.0");
-  if (isVercelCron && !isSevenAmInLondon(new Date())) {
-    return Response.json({
-      ok: true,
-      skipped: true,
-      reason: "Outside the 07:00 Europe/London refresh window.",
-    }, { headers: NO_STORE });
-  }
-
-  const origin =
-    process.env.IR35CAREERS_APP_URL?.trim() || new URL(request.url).origin;
-  after(async () => {
-    try {
-      const automation = await runScheduledAutoApply({ origin });
-      console.info("scheduled_auto_apply_finished", {
-        enabledAccounts: automation.enabledAccounts,
-        accountsAttempted: automation.accountsAttempted,
-        applicationsStarted: automation.applicationsStarted,
-        needsUser: automation.needsUser,
-        failed: automation.failed,
-      });
-    } catch (automationError) {
-      console.error("scheduled_auto_apply_failed", {
-        reason:
-          automationError instanceof Error
-            ? automationError.message.slice(0, 240)
-            : "unknown",
-      });
-    }
-  });
 
   try {
     const summary = await runFetchPipeline();

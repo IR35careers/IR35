@@ -174,6 +174,53 @@ describe("native application runner", () => {
     ).toBe(false);
   });
 
+  it("uses provider-specific application controls instead of one generic rule", () => {
+    const greenhouse = detectAts("https://boards.greenhouse.io/company/jobs/1");
+    expect(greenhouse.applyPattern.test("Apply for this job")).toBe(true);
+    expect(greenhouse.submitPattern.test("Submit Application")).toBe(true);
+    expect(greenhouse.submitPattern.test("Apply now")).toBe(false);
+
+    const smartRecruiters = detectAts(
+      "https://jobs.smartrecruiters.com/company/role",
+    );
+    expect(smartRecruiters.applyPattern.test("I'm interested")).toBe(true);
+    expect(smartRecruiters.submitPattern.test("Submit Application")).toBe(true);
+
+    const workday = detectAts(
+      "https://company.wd1.myworkdaysite.com/en-US/jobs/job/role",
+    );
+    expect(workday.kind).toBe("workday");
+    expect(workday.applyPattern.test("Apply Manually")).toBe(true);
+    expect(workday.submitPattern.test("Submit")).toBe(true);
+
+    const icims = detectAts("https://jobs.example.icims.com/jobs/123");
+    expect(icims.applyPattern.test("Apply for this job online")).toBe(true);
+    expect(icims.submitPattern.test("Submit Profile")).toBe(true);
+
+    const successFactors = detectAts(
+      "https://company.successfactors.com/career?job=123",
+    );
+    expect(successFactors.submitPattern.test("Apply")).toBe(true);
+
+    const adp = detectAts("https://workforcenow.adp.com/job/1");
+    expect(adp.submitPattern.test("Submit my application")).toBe(true);
+
+    const jobvite = detectAts("https://jobs.example.jobvite.com/job/1");
+    expect(jobvite.successPattern.test("Thanks for your application")).toBe(true);
+
+    const ukg = detectAts("https://jobs.example.ukg.com/job/1");
+    expect(ukg.nextPattern.test("Review and submit")).toBe(true);
+
+    const dayforce = detectAts("https://example.dayforcehcm.com/job/1");
+    expect(dayforce.submitPattern.test("Complete application")).toBe(true);
+
+    const pinpoint = detectAts("https://example.pinpointhq.com/job/1");
+    expect(pinpoint.applyPattern.test("Apply for this role")).toBe(true);
+
+    const rippling = detectAts("https://ats.rippling.com/example/job/1");
+    expect(rippling.successPattern.test("Application received")).toBe(true);
+  });
+
   it("maps normal identity and work-authorisation fields deterministically", () => {
     expect(deterministicMapping(field({ label: "First name" }))).toMatchObject({ factKey: "first_name" });
     expect(deterministicMapping(field({ label: "Will you now or in future require visa sponsorship?" }))).toMatchObject({ factKey: "needs_sponsorship" });

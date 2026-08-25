@@ -38,7 +38,7 @@ export function CookieNotice() {
   return (
     <section
       aria-label="Analytics and cookie choices"
-      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-4xl rounded-2xl border border-slate-300 bg-white p-4 shadow-floating sm:bottom-5 sm:p-5"
+      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-slate-200 bg-white p-4 shadow-floating sm:bottom-5 sm:left-5 sm:right-auto sm:max-w-md sm:p-5"
     >
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
@@ -47,16 +47,16 @@ export function CookieNotice() {
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-bold text-slate-950">Help us improve IR35Careers</h2>
           <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">
-            With your permission, Google Analytics will measure visits, popular pages, traffic sources, devices and approximate location. We do not use advertising cookies and we do not send your Resume, application answers or account identity to Google Analytics.
+            Allow anonymous analytics to help us improve the product. We never send your Resume, application answers or account identity.
           </p>
           <Link href="/cookies" className="ir35-focus mt-1 inline-flex rounded text-xs font-semibold text-brand-700 hover:underline sm:text-sm">
             Read the cookie policy
           </Link>
         </div>
       </div>
-      <div className="mt-4 grid gap-2 sm:flex sm:justify-end">
-        <button type="button" onClick={() => choose("denied")} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 hover:bg-slate-50"><ShieldCheck size={16} aria-hidden="true" /> Essential only</button>
-        <button type="button" onClick={() => choose("granted")} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-brand-700"><BarChart3 size={16} aria-hidden="true" /> Allow analytics</button>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => choose("denied")} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"><ShieldCheck size={16} aria-hidden="true" /> Essential only</button>
+        <button type="button" onClick={() => choose("granted")} className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-brand-700"><BarChart3 size={16} aria-hidden="true" /> Allow analytics</button>
       </div>
       <button
         type="button"

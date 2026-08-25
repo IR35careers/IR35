@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
-  const button = page.getByRole("button", { name: "Understood", exact: true });
+  const button = page.getByRole("button", { name: "Essential only", exact: true });
   if (await button.waitFor({ state: "visible", timeout: 10_000 }).then(() => true).catch(() => false)) await button.click();
 }
 

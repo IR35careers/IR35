@@ -317,6 +317,7 @@ export async function POST(request: Request) {
       const transition = applicationMessageTransition(
         classification,
         currentStatus,
+        `${payload.subject}\n${payload.text}`,
       );
       forwardingKind = transition.notification;
       const now = new Date().toISOString();

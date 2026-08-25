@@ -12,6 +12,9 @@ describe("inbound recruiter mail", () => {
     expect(classifyInboundMessage("Interview availability", "Please book a call with the team.")).toBe("interview");
     expect(classifyInboundMessage("Application update", "Unfortunately we are not moving forward.")).toBe("rejection");
     expect(classifyInboundMessage("Action required", "Please confirm your working pattern.")).toBe("action_required");
+    expect(classifyInboundMessage("Technical assessment", "Complete the coding test by Friday.")).toBe("action_required");
+    expect(classifyInboundMessage("Application submitted", "Thank you for applying. We received your application.")).toBe("application_update");
+    expect(classifyInboundMessage("Interview update", "Unfortunately, we will not be progressing your application.")).toBe("rejection");
   });
 
   it("links a message to the strongest matching application", () => {

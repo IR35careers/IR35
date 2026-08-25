@@ -21,15 +21,21 @@ const PERSONAL_ALLOWANCE = 12570;
 const PA_TAPER_START = 100000;
 const BASIC_RATE_BAND = 37700; // taxable income taxed at 20%
 const HIGHER_RATE_TOP = 125140; // additional rate starts above this (total income)
-const BASIC_LIMIT = 50270; // higher-rate threshold (total income)
-
 const NI_PT = 12570; // primary threshold (annual)
 const NI_UEL = 50270; // upper earnings limit (annual)
+const NI_SECONDARY_THRESHOLD = 5000;
+const EMPLOYER_NI_RATE = 0.15;
+
+export const DEFAULT_UMBRELLA_MARGIN = 1200;
 
 const DIVIDEND_ALLOWANCE = 500;
 const DIV_BASIC = 0.1075;
 const DIV_HIGHER = 0.3575;
 const DIV_ADDITIONAL = 0.3935;
+
+function nonNegative(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, value) : 0;
+}
 
 /** Personal allowance after the £100k taper. */
 export function allowanceFor(totalIncome: number): number {
@@ -60,6 +66,11 @@ export function employeeNI(gross: number): number {
   return ni;
 }
 
+/** Class 1 employer National Insurance for a standard category A employee. */
+export function employerNI(gross: number): number {
+  return Math.max(0, nonNegative(gross) - NI_SECONDARY_THRESHOLD) * EMPLOYER_NI_RATE;
+}
+
 /** Corporation tax with marginal relief between £50k and £250k. */
 export function corporationTax(profit: number): number {
   if (profit <= 0) return 0;
@@ -71,25 +82,39 @@ export function corporationTax(profit: number): number {
 }
 
 /** Dividend tax, with dividends stacked on top of `otherIncome` (salary). */
-export function dividendTax(dividends: number, otherIncome: number): number {
+export function dividendTax(
+  dividends: number,
+  otherIncome: number,
+  allowance = allowanceFor(Math.max(0, dividends) + Math.max(0, otherIncome)),
+): number {
   if (dividends <= 0) return 0;
-  const afterAllowance = Math.max(0, dividends - DIVIDEND_ALLOWANCE);
-  if (afterAllowance <= 0) return 0;
-  // The £500 allowance still consumes band space.
-  const basicSpace = Math.max(0, BASIC_LIMIT - Math.max(otherIncome, PERSONAL_ALLOWANCE) - DIVIDEND_ALLOWANCE);
-  const higherSpace = Math.max(0, HIGHER_RATE_TOP - BASIC_LIMIT);
+  const taxableOtherIncome = Math.max(0, otherIncome - allowance);
+  const unusedPersonalAllowance = Math.max(0, allowance - otherIncome);
+  let remaining = Math.max(0, dividends - unusedPersonalAllowance);
+  let dividendAllowanceRemaining = DIVIDEND_ALLOWANCE;
+  let bandCursor = taxableOtherIncome;
   let tax = 0;
-  const basic = Math.min(afterAllowance, basicSpace);
-  tax += basic * DIV_BASIC;
-  const higher = Math.min(Math.max(afterAllowance - basic, 0), higherSpace);
-  tax += higher * DIV_HIGHER;
-  const additional = Math.max(afterAllowance - basic - higher, 0);
-  tax += additional * DIV_ADDITIONAL;
+
+  const taxBand = (amount: number, rate: number) => {
+    const zeroRated = Math.min(amount, dividendAllowanceRemaining);
+    dividendAllowanceRemaining -= zeroRated;
+    tax += (amount - zeroRated) * rate;
+    remaining -= amount;
+    bandCursor += amount;
+  };
+
+  taxBand(Math.min(remaining, Math.max(0, BASIC_RATE_BAND - bandCursor)), DIV_BASIC);
+  taxBand(Math.min(remaining, Math.max(0, HIGHER_RATE_TOP - bandCursor)), DIV_HIGHER);
+  taxBand(remaining, DIV_ADDITIONAL);
   return tax;
 }
 
 export interface TakeHome {
   gross: number;
+  taxablePay: number;
+  businessExpenses: number;
+  employerNationalInsurance: number;
+  umbrellaMargin: number;
   incomeTax: number;
   nationalInsurance: number;
   corporationTax: number;
@@ -98,19 +123,44 @@ export interface TakeHome {
   effectiveRetention: number; // takeHome / gross
 }
 
-/** Inside IR35 / umbrella: taxed as employment income (PAYE). */
-export function insideIR35TakeHome(annualGross: number): TakeHome {
-  const tax = incomeTax(annualGross);
-  const ni = employeeNI(annualGross);
-  const takeHome = annualGross - tax - ni;
+/**
+ * Convert an umbrella assignment rate into taxable salary after the umbrella
+ * margin and employer NI. Employer NI is a cost of the assignment, not a
+ * deduction that should be applied after PAYE has already been calculated.
+ */
+export function umbrellaTaxablePay(
+  annualAssignmentIncome: number,
+  annualUmbrellaMargin = DEFAULT_UMBRELLA_MARGIN,
+): number {
+  const available = Math.max(0, nonNegative(annualAssignmentIncome) - nonNegative(annualUmbrellaMargin));
+  if (available <= NI_SECONDARY_THRESHOLD) return available;
+  return (available + EMPLOYER_NI_RATE * NI_SECONDARY_THRESHOLD) / (1 + EMPLOYER_NI_RATE);
+}
+
+/** Inside IR35 via an umbrella, starting from the advertised assignment rate. */
+export function insideIR35TakeHome(
+  annualAssignmentIncome: number,
+  annualUmbrellaMargin = DEFAULT_UMBRELLA_MARGIN,
+): TakeHome {
+  const assignmentIncome = nonNegative(annualAssignmentIncome);
+  const margin = Math.min(assignmentIncome, nonNegative(annualUmbrellaMargin));
+  const taxablePay = umbrellaTaxablePay(assignmentIncome, margin);
+  const employerNationalInsurance = employerNI(taxablePay);
+  const tax = incomeTax(taxablePay);
+  const ni = employeeNI(taxablePay);
+  const takeHome = Math.max(0, taxablePay - tax - ni);
   return {
-    gross: annualGross,
+    gross: assignmentIncome,
+    taxablePay,
+    businessExpenses: 0,
+    employerNationalInsurance,
+    umbrellaMargin: margin,
     incomeTax: tax,
     nationalInsurance: ni,
     corporationTax: 0,
     dividendTax: 0,
     takeHome,
-    effectiveRetention: annualGross > 0 ? takeHome / annualGross : 0,
+    effectiveRetention: assignmentIncome > 0 ? takeHome / assignmentIncome : 0,
   };
 }
 
@@ -123,24 +173,39 @@ export function outsideIR35TakeHome(
   expenses = 0,
   salary = PERSONAL_ALLOWANCE
 ): TakeHome {
-  const profitBeforeTax = Math.max(0, annualRevenue - salary - expenses);
+  const revenue = nonNegative(annualRevenue);
+  const businessExpenses = Math.min(revenue, nonNegative(expenses));
+  const availableBeforePay = Math.max(0, revenue - businessExpenses);
+  const affordableSalary = umbrellaTaxablePay(availableBeforePay, 0);
+  const actualSalary = Math.min(affordableSalary, nonNegative(salary));
+  const employerNationalInsurance = employerNI(actualSalary);
+  const profitBeforeTax = Math.max(
+    0,
+    availableBeforePay - actualSalary - employerNationalInsurance,
+  );
   const corpTax = corporationTax(profitBeforeTax);
   const dividends = Math.max(0, profitBeforeTax - corpTax);
-  const salaryTax = incomeTax(salary);
-  const salaryNI = employeeNI(salary);
-  const divTax = dividendTax(dividends, salary);
-  const takeHome = salary - salaryTax - salaryNI + dividends - divTax;
+  const personalAllowance = allowanceFor(actualSalary + dividends);
+  const salaryTax = incomeTax(actualSalary, personalAllowance);
+  const salaryNI = employeeNI(actualSalary);
+  const divTax = dividendTax(dividends, actualSalary, personalAllowance);
+  const takeHome = Math.max(0, actualSalary - salaryTax - salaryNI + dividends - divTax);
   return {
-    gross: annualRevenue,
+    gross: revenue,
+    taxablePay: actualSalary,
+    businessExpenses,
+    employerNationalInsurance,
+    umbrellaMargin: 0,
     incomeTax: salaryTax,
     nationalInsurance: salaryNI,
     corporationTax: corpTax,
     dividendTax: divTax,
     takeHome,
-    effectiveRetention: annualRevenue > 0 ? takeHome / annualRevenue : 0,
+    effectiveRetention: revenue > 0 ? takeHome / revenue : 0,
   };
 }
 
 export function gbp(n: number): string {
-  return "£" + Math.round(n).toLocaleString("en-GB");
+  const safeValue = Number.isFinite(n) ? n : 0;
+  return "£" + Math.round(safeValue).toLocaleString("en-GB");
 }

@@ -39,9 +39,15 @@ export async function FeaturedJobs() {
   const featured = await loadFeaturedJobs();
 
   return (
-    <div className="relative min-w-0">
-      <div className="rounded-[28px] border border-slate-200 bg-white/90 p-3 shadow-floating backdrop-blur sm:p-4">
-        <div className="flex items-center justify-between gap-4 px-2 py-2">
+    <div className="relative min-w-0 lg:translate-y-3">
+      <div className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_30px_80px_-48px_rgba(15,23,42,0.42)]">
+        <div className="flex items-center gap-1.5 border-b border-slate-100 bg-[#fafbf9] px-5 py-3" aria-hidden="true">
+          <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+          <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+          <span className="h-2.5 w-2.5 rounded-full bg-brand-200" />
+          <span className="ml-auto rounded-full bg-white px-3 py-1 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200">Live contracts</span>
+        </div>
+        <div className="flex items-center justify-between gap-4 px-5 pb-3 pt-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Fresh contract opportunities</p>
             <p className="mt-1 text-sm font-medium text-slate-950">
@@ -59,7 +65,7 @@ export async function FeaturedJobs() {
           </p>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-2 px-3 pb-3 sm:px-4 sm:pb-4">
           {featured.error && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
               <p className="text-sm font-semibold text-slate-900">We couldn&apos;t load the preview.</p>
@@ -71,7 +77,7 @@ export async function FeaturedJobs() {
             <Link
               key={job.id}
               href={`/jobs/${job.id}`}
-              className="ir35-focus group block rounded-2xl border border-slate-200 bg-white p-4 transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card"
+              className="ir35-focus group block rounded-2xl border border-slate-200 bg-white p-4 transition-[border-color,background-color] duration-150 hover:border-brand-200 hover:bg-brand-50/30"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

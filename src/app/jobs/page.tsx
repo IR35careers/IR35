@@ -317,7 +317,7 @@ function JobsBoard() {
           </p>
         )}
 
-        <div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.45)] sm:grid-cols-[1fr_0.55fr]">
+        <div className="ir35-card grid overflow-hidden p-1.5 sm:grid-cols-[1fr_0.55fr]">
           <label className="relative block">
             <span className="sr-only">Search contracts</span>
             <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
@@ -332,7 +332,7 @@ function JobsBoard() {
           </label>
         </div>
 
-        <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div className="ir35-card-flat mt-3 flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
           <div className="flex flex-wrap gap-2" aria-label="Popular contract filters">
             <button type="button" aria-pressed={ir35 === "outside"} onClick={() => { setIr35(ir35 === "outside" ? "" : "outside"); resetPage(); }} className={`ir35-focus min-h-9 rounded-xl px-3 text-xs font-semibold ${ir35 === "outside" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>Outside IR35</button>
             <button type="button" aria-pressed={remote === "remote"} onClick={() => { setRemote(remote === "remote" ? "" : "remote"); resetPage(); }} className={`ir35-focus min-h-9 rounded-xl px-3 text-xs font-semibold ${remote === "remote" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>Remote</button>
@@ -362,7 +362,7 @@ function JobsBoard() {
 
         <div className="mt-5 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* Sidebar (desktop) */}
-          <aside className="hidden h-max rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.45)] lg:sticky lg:top-24 lg:block"><div className="mb-5 flex items-center justify-between"><h2 className="font-semibold text-slate-950">Refine results</h2>{activeFilterCount > 0 && <button type="button" onClick={clearFilters} className="text-xs font-semibold text-brand-700">Clear all</button>}</div>{Sidebar}</aside>
+          <aside className="ir35-card hidden h-max p-5 lg:sticky lg:top-24 lg:block"><div className="mb-5 flex items-center justify-between"><h2 className="font-semibold text-slate-950">Refine results</h2>{activeFilterCount > 0 && <button type="button" onClick={clearFilters} className="text-xs font-semibold text-brand-700">Clear all</button>}</div>{Sidebar}</aside>
           {/* Sidebar (mobile) */}
           {mobileFilters && <aside className="rounded-2xl border border-slate-200 bg-white p-5 lg:hidden">{Sidebar}</aside>}
 
@@ -380,7 +380,7 @@ function JobsBoard() {
                   const hasRate = job.rate_min !== null || job.rate_max !== null;
                   return (
                     <li key={job.id}>
-                      <Link href={`/jobs/${job.id}`} className="group grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/20 sm:p-5 lg:grid-cols-[minmax(0,1fr)_210px]">
+                      <Link href={`/jobs/${job.id}`} className="ir35-card-flat group grid gap-4 p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/20 sm:p-5 lg:grid-cols-[minmax(0,1fr)_210px]">
                         <div className="flex min-w-0 gap-3.5">
                           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold text-slate-700">{job.company_name.trim().charAt(0).toUpperCase() || <BriefcaseBusiness size={17} />}</span>
                           <div className="min-w-0">

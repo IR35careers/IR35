@@ -9,6 +9,7 @@ import {
   allowanceFor,
   incomeTax,
   employeeNI,
+  employerNI,
   corporationTax,
   dividendTax,
   insideIR35TakeHome,
@@ -54,12 +55,14 @@ check("£100k profit marginal < 25%", corporationTax(100000) < 25000 && corporat
 // 29,500 * 10.75% = £3,171.25
 check("£30k dividends basic → £3,171", near(dividendTax(30000, 12570), 3171.25, 1));
 
-// Inside IR35: £500/day × 220 days = £110,000 gross
+// Inside IR35: £500/day × 220 days = £110,000 assignment income. The
+// umbrella margin and employer NI are removed before PAYE is calculated.
 {
   const r = insideIR35TakeHome(110000);
   check("inside: gross preserved", r.gross === 110000);
   check("inside: take-home < gross", r.takeHome < 110000 && r.takeHome > 60000);
-  check("inside: retention 60-75%", r.effectiveRetention > 0.6 && r.effectiveRetention < 0.78);
+  check("inside: retention 55-65%", r.effectiveRetention > 0.55 && r.effectiveRetention < 0.65);
+  check("inside: employer NI included", near(r.employerNationalInsurance, employerNI(r.taxablePay)));
 }
 
 // Outside IR35 retains more at lower incomes (where it's genuinely efficient).

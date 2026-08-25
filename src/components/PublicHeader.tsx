@@ -33,9 +33,9 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
   if (hideForWorkspaceMembers && ((user && !administrator) || preview)) return null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-      <div className="ir35-container flex h-16 items-center justify-between gap-4 sm:h-[72px]">
-        <div className="flex items-center gap-8">
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+      <div className="ir35-container flex h-[68px] items-center justify-between gap-4 sm:h-[76px]">
+        <div className="flex items-center gap-9">
           <Brand />
           <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
             {NAV_ITEMS.map((item) => {
@@ -45,9 +45,9 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`ir35-focus inline-flex min-h-10 items-center rounded-xl px-3.5 text-sm font-medium transition-colors ${
+                  className={`ir35-focus inline-flex min-h-10 items-center rounded-xl px-3.5 text-sm font-semibold transition-colors ${
                     active
-                      ? "bg-brand-50 text-brand-800"
+                      ? "bg-slate-100 text-slate-950"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                   }`}
                 >
@@ -89,7 +89,7 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
                 prefetch={false}
                 className={buttonClassName({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}
               >
-                <UserPlus size={15} aria-hidden="true" /> Join beta
+                <UserPlus size={15} aria-hidden="true" /> Create free account
               </Link>
             </>
           )}
@@ -144,7 +144,7 @@ export function PublicHeader({ hideForWorkspaceMembers = false }: { hideForWorks
                   onClick={() => setOpen(false)}
                   className={buttonClassName({ variant: "primary", className: "w-full" })}
                 >
-                  Join beta
+                  Create account
                 </Link>
               </div>
             )}

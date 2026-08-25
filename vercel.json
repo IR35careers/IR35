@@ -6,8 +6,8 @@
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/pipeline/fetch",
-      "schedule": "0 7 * * *"
+      "path": "/api/automation/run",
+      "schedule": "15 6 * * *"
     }
   ]
 }

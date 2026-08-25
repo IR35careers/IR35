@@ -2,6 +2,7 @@ import type {
   ApplicationQuestion,
   ContractorProfile,
 } from "@/lib/workspace/types";
+import { mergeApplicationAnswerMemory } from "@/lib/workspace/answer-memory";
 
 export const FACT_KEYS = [
   "full_name",
@@ -132,6 +133,9 @@ export function buildRunnerFacts(
       years_of_experience: candidate.yearsOfExperience ?? "",
       referral_source: candidate.referralSource ?? "",
     },
-    screeningAnswers: questions,
+    screeningAnswers: mergeApplicationAnswerMemory(
+      candidate.savedApplicationAnswers,
+      questions,
+    ),
   };
 }

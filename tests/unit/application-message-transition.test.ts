@@ -23,4 +23,31 @@ describe("inbound application status transition", () => {
       "interview",
     );
   });
+
+  it("recognises an offer without expanding the stored inbox classification", () => {
+    expect(
+      applicationMessageTransition(
+        "application_update",
+        "interview",
+        "We are pleased to offer you the contract role.",
+      ),
+    ).toMatchObject({
+      status: "offer",
+      label: "Offer message received",
+      notification: "offer",
+    });
+  });
+
+  it("labels assessments as a precise user action", () => {
+    expect(
+      applicationMessageTransition(
+        "action_required",
+        "applied",
+        "Please complete the technical assessment.",
+      ),
+    ).toMatchObject({
+      status: "needs_review",
+      label: "Application assessment received",
+    });
+  });
 });

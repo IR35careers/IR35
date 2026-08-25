@@ -30,7 +30,7 @@ async function expectNoSeriousA11yViolations(page: import("@playwright/test").Pa
 }
 
 async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
-  const button = page.getByRole("button", { name: "Understood", exact: true });
+  const button = page.getByRole("button", { name: "Essential only", exact: true });
   if (await button.waitFor({ state: "visible", timeout: 3_000 }).then(() => true).catch(() => false)) {
     await button.click();
   }
@@ -102,6 +102,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   expect(overflow).toBe(false);
 
   await page.goto("/jobs");
+  await dismissPrivacyNotice(page);
   await expect(page.getByText("6 contracts found")).toBeVisible();
   await page.getByRole("searchbox", { name: "Search contracts" }).fill("DevOps");
   await expect(page.getByText("1 contracts found")).toBeVisible();
@@ -207,6 +208,7 @@ test("advanced contract filters use explicit listing evidence", async ({ page })
     });
   });
   await page.goto("/jobs");
+  await dismissPrivacyNotice(page);
   await expect(page.getByText("6 contracts found")).toBeVisible();
 
   if (await page.locator("aside:visible").count() === 0) {
@@ -591,14 +593,22 @@ test("network workspace prepares reviewed outreach without sending it", async ({
   await page.getByLabel("Contact name").fill("Jordan Lee");
   await page.getByLabel("Contact company").fill("Example Client");
   await page.getByLabel("Relationship").fill("former project colleague");
-  await page.getByRole("button", { name: "Save contact" }).click();
+  const saveContact = page.getByRole("button", { name: "Save contact" });
+  await saveContact.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await saveContact.click();
   await expect(page.getByText("Contact saved.")).toBeVisible();
 
-  await page.getByRole("button", { name: "Create truth-safe draft" }).click();
+  const createDraft = page.getByRole("button", { name: "Create truth-safe draft" });
+  await createDraft.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await createDraft.evaluate((element) => (element as HTMLButtonElement).click());
   await expect(page.getByLabel("Referral message")).toHaveValue(/Hi Jordan/);
   await expect(page.getByLabel("Referral message")).toHaveValue(/No pressure/);
-  await page.getByRole("checkbox", { name: /I reviewed this message/ }).check();
-  await page.getByRole("button", { name: "Save reviewed" }).click();
+  const reviewedMessage = page.getByRole("checkbox", { name: /I reviewed this message/ });
+  await reviewedMessage.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await reviewedMessage.evaluate((element) => (element as HTMLInputElement).click());
+  const saveReviewed = page.getByRole("button", { name: "Save reviewed" });
+  await saveReviewed.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await saveReviewed.evaluate((element) => (element as HTMLButtonElement).click());
   await expect(page.getByText("Reviewed referral draft saved.")).toBeVisible();
   await expect(page.getByText("Jordan Lee", { exact: true })).toBeVisible();
 

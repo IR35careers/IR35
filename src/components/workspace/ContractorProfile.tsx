@@ -745,7 +745,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           {documentNotice}
         </p>
       )}
-      <div className="sticky top-[68px] z-20 mt-5 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.5)] backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
+      <div className="sticky top-[72px] z-20 mt-5 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.42)] backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
         <nav className="flex min-w-0 flex-1 gap-1 overflow-x-auto" aria-label="Profile sections">
           {PROFILE_NAVIGATION.map((item) => (
             <button
@@ -776,7 +776,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       {saveError ? <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{saveError}</p> : null}
 
       {(tab === "resume" || tab === "cover") && (
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5">
+        <section className="ir35-card mt-4 p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 gap-3 overflow-x-auto pb-1">
               {resumeProfiles.map((item) => (
@@ -812,7 +812,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           <div className="space-y-6">
             {detailsSection === "identity" && (
               <>
-            <section id="profile-professional-details" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <section id="profile-professional-details" className="ir35-card scroll-mt-24 p-5 sm:p-6">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
                   <UserRound size={20} />
@@ -893,7 +893,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </label>
             </section>
             <section className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
+              <div className="ir35-card p-5">
                 <h2 className="font-semibold">Skills</h2>
                 <p className="mt-1 text-xs text-slate-500">
                   Skills explicitly found in your resume are added. Related skills stay as suggestions until you confirm them.
@@ -972,7 +972,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   </div>
                 )}
               </div>
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
+              <div className="ir35-card p-5">
                 <h2 className="font-semibold">Certifications</h2>
                 <p className="mt-1 text-xs text-slate-500">
                   Separate certifications with commas.
@@ -1007,7 +1007,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             )}
             {detailsSection === "experience" && (
               <>
-            <section id="work-authorisation" className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <section id="work-authorisation" className="ir35-card scroll-mt-24 p-5 sm:p-6">
               <h2 className="font-semibold">Experience and projects</h2>
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 <label className="text-sm font-semibold text-slate-800">
@@ -1034,7 +1034,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 </label>
               </div>
             </section>
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <section className="ir35-card p-5 sm:p-6">
               <div className="flex items-center gap-3">
                 <IdCard className="text-blue-700" />
                 <div>
@@ -1090,7 +1090,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             {detailsSection === "answers" && (
             <section
               id="reusable-answers"
-              className="scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"
+              className="ir35-card scroll-mt-24 p-5 sm:p-6"
             >
               <div className="flex items-center gap-3">
                 <ListChecks className="text-emerald-700" />
@@ -1237,7 +1237,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             </section>
             )}
             {detailsSection === "company" && (
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+            <section className="ir35-card p-5 sm:p-6">
               <div className="flex items-center gap-3">
                 <Building2 className="text-violet-700" />
                 <h2 className="font-semibold">
@@ -1277,7 +1277,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             )}
           </div>
           <aside className="space-y-5 xl:sticky xl:top-24 xl:h-max">
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-card">
+            <section className="ir35-card p-5 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-950 text-xl font-bold text-white">
                 {profile.fullName.trim().charAt(0) || "C"}
               </div>
@@ -1326,7 +1326,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
           id="profile-resume"
           className="mt-6 scroll-mt-24 grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)]"
         >
-          <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)]">
+          <section className="ir35-card space-y-5 p-5">
             <div className="flex items-center gap-3">
               <FileText className="text-brand-700" />
               <div>
@@ -1596,7 +1596,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
 
       {tab === "cover" && activeProfile && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)]">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card">
+          <section className="ir35-card p-5">
             <div className="flex items-center gap-3">
               <Sparkles className="text-violet-700" />
               <div>
@@ -1650,7 +1650,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
 
       {tab === "settings" && (
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card lg:col-span-2">
+          <section className="ir35-card p-5 lg:col-span-2">
             <h2 className="font-semibold">Resume optimisation</h2>
             <p className="mt-1 text-sm text-slate-600">
               Choose how role-specific wording is prepared from evidence already

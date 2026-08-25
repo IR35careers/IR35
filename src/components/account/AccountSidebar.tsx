@@ -62,7 +62,8 @@ export function AccountSidebar({ active }: { active: AccountSection }) {
       : active;
 
   return (
-    <aside className="h-max rounded-2xl border border-slate-200 bg-white p-2 lg:sticky lg:top-24">
+    <aside className="h-max rounded-2xl border border-slate-200/90 bg-white p-2 shadow-[0_18px_50px_-44px_rgba(15,23,42,0.3)] lg:sticky lg:top-24">
+      <p className="hidden px-3 pb-2 pt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600 lg:block">Account</p>
       <nav aria-label="Account" className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-1">
         {ACCOUNT_LINKS.map((item) => {
           const Icon = item.icon;
@@ -72,9 +73,9 @@ export function AccountSidebar({ active }: { active: AccountSection }) {
               key={item.section}
               href={item.href}
               aria-current={selected ? "page" : undefined}
-              className={`ir35-focus flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors ${
+              className={`ir35-focus flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                 selected
-                  ? "bg-emerald-50 font-semibold text-emerald-800"
+                  ? "bg-brand-50 font-semibold text-brand-900"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
               }`}
             >
@@ -89,7 +90,7 @@ export function AccountSidebar({ active }: { active: AccountSection }) {
             await signOut();
             router.replace("/");
           }}
-          className="ir35-focus flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
+          className="ir35-focus flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
         >
           <LogOut size={16} aria-hidden="true" />
           <span>Log out</span>

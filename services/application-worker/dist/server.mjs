@@ -53,37 +53,157 @@ function matchesApplicationAction(pattern, labels) {
   });
 }
 var COMMON = {
-  applyPattern: /^(apply|apply now|apply online|apply for this (?:job|position|role)|start application|continue application|begin application)$/i,
-  nextPattern: /^(next|continue|save (?:&|and) continue|continue application|review|review application|review and submit)$/i,
-  submitPattern: /^(submit|submit (?:my|your)? ?application|send application|apply now|finish application|complete application|confirm and submit)$/i,
-  successPattern: /(application (?:has been )?(?:submitted|received|sent)|thank you for (?:your )?application|thank you for applying|we(?:['’]ve| have) received your application|application complete|successfully applied)/i
+  applyPattern: /^(apply|apply now|apply online|apply manually|apply for this (?:job|position|role)|start application|continue application|begin application|i(?:'|’)?m interested)$/i,
+  nextPattern: /^(next|continue|proceed|save (?:&|and) (?:continue|next)|continue application|continue to review|review|review application|review and submit)$/i,
+  // "Apply now" normally opens the application form. Treating it as a final
+  // submission action caused false failures after the first portal click.
+  submitPattern: /^(submit|submit (?:my|your)? ?application|send application|finish application|complete application|confirm (?:&|and) submit)$/i,
+  successPattern: /(application (?:has been |was )?(?:successfully )?(?:submitted|received|sent)|thank you for (?:your )?application|thank you for applying|we(?:['’]ve| have) received your application|application complete|successfully applied|your application is on its way)/i
+};
+var GREENHOUSE = {
+  ...COMMON,
+  applyPattern: /^(apply|apply now|apply for this job|start application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review application)$/i,
+  submitPattern: /^(submit application|submit my application)$/i
+};
+var LEVER = {
+  ...COMMON,
+  applyPattern: /^(apply for this job|apply now)$/i,
+  nextPattern: /^(next|continue|review application)$/i,
+  submitPattern: /^(submit application|send application)$/i
+};
+var ASHBY = {
+  ...COMMON,
+  applyPattern: /^(apply|apply now|apply for this job)$/i,
+  nextPattern: /^(continue|next|review|review application)$/i,
+  submitPattern: /^(submit application|submit)$/i
+};
+var WORKABLE = {
+  ...COMMON,
+  applyPattern: /^(apply now|apply for this job|start application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review application)$/i,
+  submitPattern: /^(submit application|send application|submit)$/i
+};
+var SMARTRECRUITERS = {
+  ...COMMON,
+  applyPattern: /^(i(?:'|’)?m interested|apply|apply now)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review)$/i,
+  submitPattern: /^(submit application|submit)$/i
+};
+var WORKDAY = {
+  ...COMMON,
+  applyPattern: /^(apply|apply now|apply manually|autofill with resume|start your application)$/i,
+  nextPattern: /^(next|save (?:&|and) continue|continue|review)$/i,
+  submitPattern: /^(submit|submit application)$/i,
+  successPattern: /(application submitted|your application has been submitted|thank you for applying|you have successfully submitted your application)/i
 };
 var TOTALJOBS = {
   ...COMMON,
   // Totaljobs starts its application renderer with an email-first account
   // check. This is a progression control, not the final submission action.
-  nextPattern: /^(next|continue|continue with email|save (?:&|and) continue|continue application|review|review application|review and submit)$/i
+  nextPattern: /^(next|continue|continue with email|save (?:&|and) continue|continue application|review|review application|review and submit)$/i,
+  submitPattern: /^(send application|submit application)$/i,
+  successPattern: /(application sent|application submitted|your application has been sent|thank you for applying)/i
+};
+var ICIMS = {
+  ...COMMON,
+  applyPattern: /^(apply for this job online|apply now|apply)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review)$/i,
+  submitPattern: /^(submit profile|submit application|submit)$/i
+};
+var ORACLE = {
+  ...COMMON,
+  applyPattern: /^(apply now|apply|start application)$/i,
+  nextPattern: /^(continue|next|save (?:&|and) continue|review)$/i,
+  submitPattern: /^(submit|submit application)$/i
+};
+var ADP = {
+  ...COMMON,
+  applyPattern: /^(apply|apply now|apply for this job|start application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review|review application)$/i,
+  submitPattern: /^(submit|submit application|submit my application)$/i,
+  successPattern: /(application submitted|application received|thank you for applying|your application has been submitted)/i
+};
+var BAMBOOHR = {
+  ...COMMON,
+  applyPattern: /^(apply for this job|apply now)$/i,
+  nextPattern: /^(next|continue|review application)$/i,
+  submitPattern: /^(submit application|submit)$/i
+};
+var JOBVITE = {
+  ...COMMON,
+  applyPattern: /^(apply now|apply for this job|start application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review|review application)$/i,
+  submitPattern: /^(submit application|submit my application|submit)$/i,
+  successPattern: /(application submitted|application received|thank you for applying|thanks for your application)/i
+};
+var UKG = {
+  ...COMMON,
+  applyPattern: /^(apply|apply now|apply for this position|start application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review|review and submit)$/i,
+  submitPattern: /^(submit|submit application|complete application)$/i,
+  successPattern: /(application submitted|successfully submitted|thank you for applying|application complete)/i
+};
+var TEAMTAILOR = {
+  ...COMMON,
+  applyPattern: /^(apply for this job|apply now|connect)$/i,
+  nextPattern: /^(continue|next|review)$/i,
+  submitPattern: /^(send application|submit application|submit)$/i
+};
+var RECRUITEE = {
+  ...COMMON,
+  applyPattern: /^(apply now|apply for this job|apply)$/i,
+  nextPattern: /^(continue|next|review application)$/i,
+  submitPattern: /^(submit application|send application|submit)$/i
+};
+var SUCCESSFACTORS = {
+  ...COMMON,
+  applyPattern: /^(apply|apply now|start application)$/i,
+  nextPattern: /^(next|continue|save|review)$/i,
+  // SuccessFactors can use "Apply" on the final reviewed form.
+  submitPattern: /^(apply|submit|submit application|complete application)$/i
+};
+var DAYFORCE = {
+  ...COMMON,
+  applyPattern: /^(apply now|apply|start application)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review|review application)$/i,
+  submitPattern: /^(submit|submit application|complete application)$/i,
+  successPattern: /(application submitted|application has been submitted|thank you for applying|successfully applied)/i
+};
+var PINPOINT = {
+  ...COMMON,
+  applyPattern: /^(apply for this role|apply for this job|apply now|apply)$/i,
+  nextPattern: /^(continue|next|save (?:&|and) continue|review application)$/i,
+  submitPattern: /^(submit application|send application|submit)$/i,
+  successPattern: /(application received|application submitted|thank you for applying|thanks for applying)/i
+};
+var RIPPLING = {
+  ...COMMON,
+  applyPattern: /^(apply now|apply for this job|apply)$/i,
+  nextPattern: /^(next|continue|save (?:&|and) continue|review)$/i,
+  submitPattern: /^(submit application|submit)$/i,
+  successPattern: /(application submitted|application received|thank you for applying|successfully submitted)/i
 };
 var DEFINITIONS = {
-  greenhouse: { kind: "greenhouse", label: "Greenhouse", ...COMMON },
-  lever: { kind: "lever", label: "Lever", ...COMMON },
-  ashby: { kind: "ashby", label: "Ashby", ...COMMON },
-  workable: { kind: "workable", label: "Workable", ...COMMON },
-  smartrecruiters: { kind: "smartrecruiters", label: "SmartRecruiters", ...COMMON },
-  workday: { kind: "workday", label: "Workday", ...COMMON },
+  greenhouse: { kind: "greenhouse", label: "Greenhouse", ...GREENHOUSE },
+  lever: { kind: "lever", label: "Lever", ...LEVER },
+  ashby: { kind: "ashby", label: "Ashby", ...ASHBY },
+  workable: { kind: "workable", label: "Workable", ...WORKABLE },
+  smartrecruiters: { kind: "smartrecruiters", label: "SmartRecruiters", ...SMARTRECRUITERS },
+  workday: { kind: "workday", label: "Workday", ...WORKDAY },
   totaljobs: { kind: "totaljobs", label: "Totaljobs", ...TOTALJOBS },
-  icims: { kind: "icims", label: "iCIMS", ...COMMON },
-  oracle: { kind: "oracle", label: "Oracle Recruiting", ...COMMON },
-  adp: { kind: "adp", label: "ADP", ...COMMON },
-  bamboohr: { kind: "bamboohr", label: "BambooHR", ...COMMON },
-  jobvite: { kind: "jobvite", label: "Jobvite", ...COMMON },
-  ukg: { kind: "ukg", label: "UKG", ...COMMON },
-  successfactors: { kind: "successfactors", label: "SAP SuccessFactors", ...COMMON },
-  dayforce: { kind: "dayforce", label: "Dayforce", ...COMMON },
-  teamtailor: { kind: "teamtailor", label: "Teamtailor", ...COMMON },
-  recruitee: { kind: "recruitee", label: "Recruitee", ...COMMON },
-  pinpoint: { kind: "pinpoint", label: "Pinpoint", ...COMMON },
-  rippling: { kind: "rippling", label: "Rippling", ...COMMON },
+  icims: { kind: "icims", label: "iCIMS", ...ICIMS },
+  oracle: { kind: "oracle", label: "Oracle Recruiting", ...ORACLE },
+  adp: { kind: "adp", label: "ADP", ...ADP },
+  bamboohr: { kind: "bamboohr", label: "BambooHR", ...BAMBOOHR },
+  jobvite: { kind: "jobvite", label: "Jobvite", ...JOBVITE },
+  ukg: { kind: "ukg", label: "UKG", ...UKG },
+  successfactors: { kind: "successfactors", label: "SAP SuccessFactors", ...SUCCESSFACTORS },
+  dayforce: { kind: "dayforce", label: "Dayforce", ...DAYFORCE },
+  teamtailor: { kind: "teamtailor", label: "Teamtailor", ...TEAMTAILOR },
+  recruitee: { kind: "recruitee", label: "Recruitee", ...RECRUITEE },
+  pinpoint: { kind: "pinpoint", label: "Pinpoint", ...PINPOINT },
+  rippling: { kind: "rippling", label: "Rippling", ...RIPPLING },
   generic: { kind: "generic", label: "Employer application portal", ...COMMON }
 };
 var ATS_DOMAINS = [
@@ -95,6 +215,7 @@ var ATS_DOMAINS = [
   { domain: "workable.com", kind: "workable" },
   { domain: "smartrecruiters.com", kind: "smartrecruiters" },
   { domain: "myworkdayjobs.com", kind: "workday" },
+  { domain: "myworkdaysite.com", kind: "workday" },
   { domain: "myworkday.com", kind: "workday" },
   { domain: "workday.com", kind: "workday" },
   { domain: "totaljobs.com", kind: "totaljobs" },
@@ -221,6 +342,31 @@ function detectAts(value) {
   return DEFINITIONS.generic;
 }
 
+// src/lib/workspace/answer-memory.ts
+function normaliseApplicationQuestionLabel(value) {
+  return value.toLocaleLowerCase("en-GB").replace(/\b(?:please|kindly|required)\b/g, " ").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+function mergeApplicationAnswerMemory(saved, current) {
+  const merged = /* @__PURE__ */ new Map();
+  for (const item of saved ?? []) {
+    const key = normaliseApplicationQuestionLabel(item.label);
+    if (!key || !item.answer.trim()) continue;
+    merged.set(key, {
+      id: `remembered:${item.id}`,
+      label: item.label,
+      answer: item.answer,
+      required: false,
+      source: "profile",
+      reviewed: true
+    });
+  }
+  for (const question of current) {
+    const key = normaliseApplicationQuestionLabel(question.label);
+    if (key) merged.set(key, question);
+  }
+  return [...merged.values()];
+}
+
 // src/lib/application-runner/types.ts
 var FACT_KEYS = [
   "full_name",
@@ -310,7 +456,10 @@ function buildRunnerFacts(candidate, questions) {
       years_of_experience: candidate.yearsOfExperience ?? "",
       referral_source: candidate.referralSource ?? ""
     },
-    screeningAnswers: questions
+    screeningAnswers: mergeApplicationAnswerMemory(
+      candidate.savedApplicationAnswers,
+      questions
+    )
   };
 }
 

@@ -116,9 +116,17 @@ export interface ContractorProfile {
   applicationPreferences?: ApplicationPreferences;
   networkContacts?: NetworkContact[];
   referralRequests?: ReferralRequest[];
+  savedApplicationAnswers?: SavedApplicationAnswer[];
   experience?: {
     dashboardTourCompletedAt?: string;
   };
+}
+
+export interface SavedApplicationAnswer {
+  id: string;
+  label: string;
+  answer: string;
+  updatedAt: string;
 }
 
 export type NetworkContactStage =

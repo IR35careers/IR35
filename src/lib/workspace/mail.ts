@@ -18,10 +18,10 @@ function normalise(value: string): string {
 
 export function classifyInboundMessage(subject: string, body: string): InboxClassification {
   const text = normalise(`${subject} ${body}`);
-  if (/\b(interview|schedule a call|book a call|availability for a call|meet the team|technical call)\b/.test(text)) return "interview";
-  if (/\b(unfortunately|not progressing|not moving forward|unsuccessful|other candidates|position has been filled)\b/.test(text)) return "rejection";
-  if (/\b(action required|please confirm|complete your|more information|right to work|working pattern|availability)\b/.test(text)) return "action_required";
-  if (/\b(application received|application update|under review|viewed your application|status update)\b/.test(text)) return "application_update";
+  if (/\b(unfortunately|regret to inform|not progressing|not moving forward|will not be progressing|unsuccessful|other candidates|position has been filled|role has been filled|application has been declined|application was declined)\b/.test(text)) return "rejection";
+  if (/\b(interview|schedule a call|book a call|availability for a call|meet the team|technical call|screening call|interview slot|interview invitation)\b/.test(text)) return "interview";
+  if (/\b(action required|please confirm|complete your|more information|right to work|working pattern|availability|assessment|coding test|technical test|take home (?:task|exercise)|online test|psychometric|verification code|verify your (?:email|identity|account)|one time (?:passcode|password)|security code|otp|upload (?:a |your )?(?:document|documents|identification|id))\b/.test(text)) return "action_required";
+  if (/\b(application received|application submitted|application update|under review|viewed your application|status update|thanks? for applying|thank you for applying|we received your application|submission confirmation|pleased to offer|would like to offer|formal offer|contract offer|offer letter)\b/.test(text)) return "application_update";
   return "other";
 }
 

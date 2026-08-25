@@ -213,14 +213,14 @@ export default function DashboardPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[#f7f8f7] text-slate-900">
+    <div className="min-h-screen bg-[#f7f8f6] text-slate-900">
       <WelcomeModal userId={user?.id ?? PREVIEW_PROFILE.id} />
       <AppNav />
-      <main className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:py-9">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <main className="mx-auto max-w-[1400px] px-4 py-7 sm:px-6 lg:px-8 lg:py-10">
+        <div className="flex flex-col gap-5 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Workspace</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em] text-slate-950 sm:text-[2.5rem]">
+            <p className="ir35-eyebrow">Workspace</p>
+            <h1 className="mt-2 text-3xl font-semibold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-[2.5rem]">
               {dashboardGreeting}
             </h1>
             <p className="mt-1.5 text-sm text-slate-600">Your contracts, applications and next actions in one place.</p>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
             <input
               type="search" value={q} onChange={(event) => setQ(event.target.value)}
               placeholder="Search contracts"
-              className="ir35-focus min-h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-24 text-sm shadow-[0_8px_24px_-22px_rgba(15,23,42,0.5)] placeholder:text-slate-400"
+              className="ir35-focus min-h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-24 text-sm shadow-[0_12px_36px_-30px_rgba(15,23,42,0.4)] placeholder:text-slate-400"
             />
             <button type="submit" className="ir35-focus absolute right-1.5 top-1/2 min-h-9 -translate-y-1/2 rounded-lg bg-slate-950 px-4 text-xs font-bold text-white hover:bg-brand-800">Search</button>
           </form>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
           applications={workspace.applications}
         />
 
-        <section className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] lg:grid-cols-4" aria-label="Contract summary">
+        <section className="ir35-card mt-6 grid grid-cols-2 overflow-hidden lg:grid-cols-4" aria-label="Contract summary">
           {stats.map((stat, index) => (
             <Link key={stat.label} href={stat.href} className={`group flex min-h-[106px] items-center gap-4 p-4 transition-colors hover:bg-slate-50 sm:p-5 ${index % 2 === 0 ? "border-r border-slate-200" : ""} ${index < 2 ? "border-b border-slate-200 lg:border-b-0" : ""} ${index > 0 ? "lg:border-l lg:border-slate-200" : ""}`}>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><stat.icon size={19} /></span>
@@ -251,7 +251,7 @@ export default function DashboardPage() {
         </section>
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <section id="matches" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]">
+          <section id="matches" className="ir35-card overflow-hidden">
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
               <div>
                 <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-brand-700"><Sparkles size={14} /> Recommended for you</p>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
           </section>
 
           <aside className="space-y-5">
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]" data-tour="profile-progress">
+            <section className="ir35-card p-5" data-tour="profile-progress">
               <div className="flex items-center justify-between"><h2 className="text-sm font-semibold text-slate-950">Profile readiness</h2><Link href="/profile" className="ir35-focus rounded-lg px-2 py-1 text-xs font-bold text-brand-700 hover:bg-brand-50">Edit</Link></div>
               <div className="mt-4 flex items-center gap-4"><ScoreRing score={pct} size={68} /><div><p className="text-sm font-semibold text-slate-900">{pct >= 80 ? "Ready to apply" : pct >= 50 ? "Almost ready" : "Complete your details"}</p><p className="mt-1 text-xs leading-5 text-slate-500">A stronger profile reduces questions during applications.</p></div></div>
               <ul className="mt-4 grid grid-cols-2 gap-2">
@@ -300,7 +300,7 @@ export default function DashboardPage() {
               {pct < 100 && <Link href="/profile#application-readiness" className="ir35-focus mt-5 inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-50">Finish profile <ChevronRight size={14} /></Link>}
             </section>
 
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]">
+            <section className="ir35-card overflow-hidden">
               <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4"><div><p className="text-sm font-semibold text-slate-950">Recent applications</p><p className="mt-0.5 text-xs text-slate-500">Latest activity across your tracker</p></div><Link href="/applications" aria-label="Open application tracker" className="ir35-focus rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-950"><ChevronRight size={17} /></Link></div>
               {tracked.length === 0 ? (
                 <div className="p-5"><p className="text-sm leading-6 text-slate-500">Your prepared and submitted applications will appear here.</p><Link href="/jobs" className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-1 text-sm font-bold text-brand-700">Browse contracts <ChevronRight size={14} /></Link></div>
