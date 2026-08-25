@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   automaticSubmissionPriority,
+  bestDirectEmployerCandidate,
   bestDiscoveryCandidate,
+  directEmployerCandidateScore,
   discoveryCandidateScore,
   discoveryProviderFromAdzunaPage,
   discoveryProviderOrder,
+  duckDuckGoResultTarget,
+  isDiscoveryOnlyHost,
 } from "@/lib/application-runner/source-resolution";
 
 const job = {
@@ -167,6 +171,48 @@ describe("application source resolution", () => {
       )?.href,
     ).toBe(
       "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+    );
+  });
+
+  it("unwraps direct employer results and rejects another discovery board", () => {
+    expect(
+      duckDuckGoResultTarget(
+        "//duckduckgo.com/l/?uddg=https%3A%2F%2Fviqu.co.uk%2Fjob%2Fdevops-engineer%2F",
+      ),
+    ).toBe("https://viqu.co.uk/job/devops-engineer/");
+    expect(
+      duckDuckGoResultTarget(
+        "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.jobserve.com%2Fjob%2F123",
+      ),
+    ).toBeNull();
+    expect(isDiscoveryOnlyHost("www.adzuna.co.uk")).toBe(true);
+    expect(isDiscoveryOnlyHost("viqu.co.uk")).toBe(false);
+  });
+
+  it("prefers the recruiter-owned copy of an aggregated role", () => {
+    const directJob = {
+      title: "DevOps Engineer - SC Cleared - Hybrid - Inside IR35",
+      company_name: "VIQU IT Recruitment",
+      location: "London",
+      description:
+        "DevOps Engineer with valid and transferrable SC Clearance supporting critical infrastructure.",
+    };
+    const official = {
+      title:
+        "DevOps Engineer - SC Cleared - Hybrid - Inside IR35 - VIQU IT",
+      context:
+        "London. DevOps Engineer with valid and transferrable SC Clearance supporting critical infrastructure.",
+      href:
+        "https://viqu.co.uk/job/devops-engineer-sc-cleared-hybrid-inside-ir35/",
+    };
+    const copied = {
+      ...official,
+      href: "https://www.jobserve.com/gb/en/job/123",
+    };
+    expect(directEmployerCandidateScore(official, directJob)).toBeGreaterThanOrEqual(85);
+    expect(directEmployerCandidateScore(copied, directJob)).toBe(0);
+    expect(bestDirectEmployerCandidate([copied, official], directJob)?.href).toBe(
+      official.href,
     );
   });
 });

@@ -2,6 +2,39 @@ import type { JobDetail } from "@/lib/job-types";
 
 export type DiscoveryProvider = "cv_library" | "totaljobs";
 
+const DISCOVERY_ONLY_DOMAINS = [
+  "adzuna.co.uk",
+  "reed.co.uk",
+  "cv-library.co.uk",
+  "totaljobs.com",
+  "jobserve.com",
+  "gumtree.com",
+  "talent.com",
+  "jooble.org",
+  "contractoruk.com",
+  "itjobswatch.co.uk",
+  "opentalent.in",
+  "haystack.cv",
+  "devitjobs.uk",
+  "joinhyra.com",
+] as const;
+
+const COMPANY_NOISE_WORDS = new Set([
+  "and",
+  "company",
+  "group",
+  "international",
+  "limited",
+  "ltd",
+  "plc",
+  "recruitment",
+  "solutions",
+  "technology",
+  "technologies",
+  "the",
+  "uk",
+]);
+
 const DIRECT_APPLICATION_DOMAINS = [
   "greenhouse.io",
   "greenhouse.com",
@@ -32,6 +65,13 @@ const DIRECT_APPLICATION_DOMAINS = [
 
 function hostMatches(host: string, domain: string): boolean {
   return host === domain || host.endsWith(`.${domain}`);
+}
+
+export function isDiscoveryOnlyHost(host: string): boolean {
+  const normalised = host.toLowerCase().replace(/^www\./, "");
+  return DISCOVERY_ONLY_DOMAINS.some((domain) =>
+    hostMatches(normalised, domain),
+  );
 }
 
 function compact(value: string): string {
@@ -148,6 +188,88 @@ export function bestDiscoveryCandidate(
     .map((candidate) => ({
       candidate,
       score: discoveryCandidateScore(candidate, job),
+    }))
+    .filter((entry) => entry.score >= 75)
+    .sort((left, right) => right.score - left.score);
+  if (!ranked.length) return null;
+  if (ranked.length > 1 && ranked[0].score === ranked[1].score) return null;
+  return ranked[0].candidate;
+}
+
+export function duckDuckGoResultTarget(href: string): string | null {
+  try {
+    const parsed = new URL(href, "https://html.duckduckgo.com");
+    const target = hostMatches(parsed.hostname.toLowerCase(), "duckduckgo.com")
+      ? parsed.searchParams.get("uddg")
+      : parsed.toString();
+    if (!target) return null;
+    const destination = new URL(target);
+    if (destination.protocol !== "https:" || isDiscoveryOnlyHost(destination.hostname))
+      return null;
+    return destination.toString();
+  } catch {
+    return null;
+  }
+}
+
+function companyHostMatched(company: string, hostname: string): boolean {
+  const host = compact(hostname);
+  return compact(company)
+    .split(" ")
+    .filter(
+      (token) => token.length >= 3 && !COMPANY_NOISE_WORDS.has(token),
+    )
+    .some((token) => host.includes(token));
+}
+
+export function directEmployerCandidateScore(
+  candidate: DiscoveryCandidate,
+  job: Pick<JobDetail, "title" | "company_name" | "location"> &
+    Partial<Pick<JobDetail, "description">>,
+): number {
+  let destination: URL;
+  try {
+    destination = new URL(candidate.href);
+  } catch {
+    return 0;
+  }
+  if (
+    destination.protocol !== "https:" ||
+    isDiscoveryOnlyHost(destination.hostname)
+  )
+    return 0;
+
+  const titleOverlap = overlap(job.title, candidate.title);
+  if (titleOverlap < 0.72) return 0;
+  const directAts = DIRECT_APPLICATION_DOMAINS.some((domain) =>
+    hostMatches(destination.hostname.toLowerCase(), domain),
+  );
+  if (!directAts && !companyHostMatched(job.company_name, destination.hostname))
+    return 0;
+
+  const exactTitle = compact(candidate.title) === compact(job.title);
+  const location = job.location.split(",")[0] ?? job.location;
+  const locationMatched = overlap(location, candidate.context) >= 0.5;
+  const descriptionMatched = job.description
+    ? overlap(job.description, candidate.context)
+    : 0;
+  return Math.round(
+    (exactTitle ? 70 : titleOverlap * 60) +
+      (directAts ? 20 : 25) +
+      (locationMatched ? 5 : 0) +
+      descriptionMatched * 20,
+  );
+}
+
+export function bestDirectEmployerCandidate(
+  candidates: DiscoveryCandidate[],
+  job: Pick<JobDetail, "title" | "company_name" | "location"> &
+    Partial<Pick<JobDetail, "description">>,
+): DiscoveryCandidate | null {
+  const ranked = candidates
+    .map((candidate) => ({
+      candidate,
+      score: directEmployerCandidateScore(candidate, job),
     }))
     .filter((entry) => entry.score >= 75)
     .sort((left, right) => right.score - left.score);

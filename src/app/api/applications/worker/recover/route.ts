@@ -13,7 +13,11 @@ const HEADERS = {
   "X-Content-Type-Options": "nosniff",
 };
 
-const RECOVERABLE_ACTIONS = new Set(["unsupported_form", "runner_timeout"]);
+const RECOVERABLE_ACTIONS = new Set([
+  "unsupported_form",
+  "runner_timeout",
+  "employer_login",
+]);
 
 type RecoveryRequest = {
   mode: "preview" | "requeue";

@@ -305,6 +305,22 @@ function isEmployerAuthenticationFailure(body) {
     body.replace(/\s+/g, " ")
   );
 }
+function isEmployerAccountMissing(body) {
+  return /(?:account|candidate|email|user).{0,70}(?:does not exist|doesn't exist|not found|not registered|has not been registered|cannot be found|could not be found)|no account.{0,45}(?:found|exists|registered)|we (?:could not|couldn't|cannot|can't) find.{0,70}(?:account|email|user)/i.test(
+    body.replace(/\s+/g, " ")
+  );
+}
+function isEmployerAccountCreationControl(label) {
+  const value = label.replace(/\s+/g, " ").trim();
+  return /^(?:create(?: (?:a|an|your|new))? (?:candidate |jobseeker |application )?account|register(?: now| with email| as (?:a )?candidate)?|sign up(?: now| with email| for free| as (?:a )?candidate)?)$/i.test(
+    value
+  );
+}
+function employerPortalPasswordCandidates(input) {
+  return [input.resolvedPassword, input.destinationPassword].filter(
+    (password, index, values) => Boolean(password) && values.indexOf(password) === index
+  );
+}
 function isEmployerGuestApplicationControl(label) {
   const value = label.replace(/\s+/g, " ").trim();
   return /(?:continue|apply|proceed|start).{0,35}(?:as (?:a )?guest|without (?:an )?account|without sign(?:ing)? in)|^(?:continue as guest|guest application|apply as guest|skip sign[ -]?in|not now)$/i.test(
@@ -715,6 +731,73 @@ async function mapUnknownFields(fields) {
 }
 
 // src/lib/application-runner/source-resolution.ts
+var DISCOVERY_ONLY_DOMAINS = [
+  "adzuna.co.uk",
+  "reed.co.uk",
+  "cv-library.co.uk",
+  "totaljobs.com",
+  "jobserve.com",
+  "gumtree.com",
+  "talent.com",
+  "jooble.org",
+  "contractoruk.com",
+  "itjobswatch.co.uk",
+  "opentalent.in",
+  "haystack.cv",
+  "devitjobs.uk",
+  "joinhyra.com"
+];
+var COMPANY_NOISE_WORDS = /* @__PURE__ */ new Set([
+  "and",
+  "company",
+  "group",
+  "international",
+  "limited",
+  "ltd",
+  "plc",
+  "recruitment",
+  "solutions",
+  "technology",
+  "technologies",
+  "the",
+  "uk"
+]);
+var DIRECT_APPLICATION_DOMAINS = [
+  "greenhouse.io",
+  "greenhouse.com",
+  "lever.co",
+  "lever.com",
+  "ashbyhq.com",
+  "workable.com",
+  "smartrecruiters.com",
+  "myworkdayjobs.com",
+  "myworkday.com",
+  "workday.com",
+  "totaljobs.com",
+  "icims.com",
+  "oraclecloud.com",
+  "taleo.net",
+  "adp.com",
+  "bamboohr.com",
+  "jobvite.com",
+  "ultipro.com",
+  "ukg.com",
+  "successfactors.com",
+  "dayforcehcm.com",
+  "teamtailor.com",
+  "recruitee.com",
+  "pinpointhq.com",
+  "rippling.com"
+];
+function hostMatches2(host, domain) {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+function isDiscoveryOnlyHost(host) {
+  const normalised = host.toLowerCase().replace(/^www\./, "");
+  return DISCOVERY_ONLY_DOMAINS.some(
+    (domain) => hostMatches2(normalised, domain)
+  );
+}
 function compact(value) {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -764,6 +847,58 @@ function bestDiscoveryCandidate(candidates, job) {
   const ranked = candidates.map((candidate) => ({
     candidate,
     score: discoveryCandidateScore(candidate, job)
+  })).filter((entry) => entry.score >= 75).sort((left, right) => right.score - left.score);
+  if (!ranked.length) return null;
+  if (ranked.length > 1 && ranked[0].score === ranked[1].score) return null;
+  return ranked[0].candidate;
+}
+function duckDuckGoResultTarget(href) {
+  try {
+    const parsed = new URL(href, "https://html.duckduckgo.com");
+    const target = hostMatches2(parsed.hostname.toLowerCase(), "duckduckgo.com") ? parsed.searchParams.get("uddg") : parsed.toString();
+    if (!target) return null;
+    const destination = new URL(target);
+    if (destination.protocol !== "https:" || isDiscoveryOnlyHost(destination.hostname))
+      return null;
+    return destination.toString();
+  } catch {
+    return null;
+  }
+}
+function companyHostMatched(company, hostname2) {
+  const host = compact(hostname2);
+  return compact(company).split(" ").filter(
+    (token) => token.length >= 3 && !COMPANY_NOISE_WORDS.has(token)
+  ).some((token) => host.includes(token));
+}
+function directEmployerCandidateScore(candidate, job) {
+  let destination;
+  try {
+    destination = new URL(candidate.href);
+  } catch {
+    return 0;
+  }
+  if (destination.protocol !== "https:" || isDiscoveryOnlyHost(destination.hostname))
+    return 0;
+  const titleOverlap = overlap(job.title, candidate.title);
+  if (titleOverlap < 0.72) return 0;
+  const directAts = DIRECT_APPLICATION_DOMAINS.some(
+    (domain) => hostMatches2(destination.hostname.toLowerCase(), domain)
+  );
+  if (!directAts && !companyHostMatched(job.company_name, destination.hostname))
+    return 0;
+  const exactTitle = compact(candidate.title) === compact(job.title);
+  const location = job.location.split(",")[0] ?? job.location;
+  const locationMatched = overlap(location, candidate.context) >= 0.5;
+  const descriptionMatched = job.description ? overlap(job.description, candidate.context) : 0;
+  return Math.round(
+    (exactTitle ? 70 : titleOverlap * 60) + (directAts ? 20 : 25) + (locationMatched ? 5 : 0) + descriptionMatched * 20
+  );
+}
+function bestDirectEmployerCandidate(candidates, job) {
+  const ranked = candidates.map((candidate) => ({
+    candidate,
+    score: directEmployerCandidateScore(candidate, job)
   })).filter((entry) => entry.score >= 75).sort((left, right) => right.score - left.score);
   if (!ranked.length) return null;
   if (ranked.length > 1 && ranked[0].score === ranked[1].score) return null;
@@ -1508,6 +1643,76 @@ function totalJobsSearchUrl(job) {
   url.searchParams.set("keywords", job.title);
   return url.toString();
 }
+function directEmployerSearchUrl(job) {
+  const url = new URL("https://html.duckduckgo.com/html/");
+  url.searchParams.set(
+    "q",
+    `${job.company_name} ${job.title} ${job.location.split(",")[0] || job.location}`
+  );
+  return url.toString();
+}
+async function directEmployerSearchCandidates(page) {
+  const results = page.locator(".result");
+  const count = Math.min(await results.count(), 12);
+  const candidates = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (let index = 0; index < count; index += 1) {
+    const result = results.nth(index);
+    const anchor = result.locator("a.result__a").first();
+    if (!await anchor.count()) continue;
+    const href = duckDuckGoResultTarget(
+      await anchor.getAttribute("href").catch(() => null) ?? ""
+    ) ?? "";
+    if (!href || seen.has(href)) continue;
+    seen.add(href);
+    const title = clean(await anchor.innerText().catch(() => ""), 240);
+    const context = clean(
+      await result.innerText().catch(() => ""),
+      2400
+    );
+    if (title && context) candidates.push({ title, context, href });
+  }
+  return candidates;
+}
+async function resolveDirectEmployerPage(page, job) {
+  const searchPage = await page.context().newPage();
+  try {
+    await searchPage.goto(directEmployerSearchUrl(job), {
+      waitUntil: "domcontentloaded",
+      timeout: 2e4
+    });
+    const match = bestDirectEmployerCandidate(
+      await directEmployerSearchCandidates(searchPage),
+      job
+    );
+    if (!match) throw new Error("direct_source_match_unavailable");
+    await validatePublicHttpsUrl(match.href);
+    await searchPage.goto(match.href, {
+      waitUntil: "domcontentloaded",
+      timeout: 25e3
+    });
+    const [heading, body] = await Promise.all([
+      searchPage.locator("h1, h2").first().innerText().catch(() => searchPage.title()),
+      searchPage.locator("body").innerText().catch(() => "")
+    ]);
+    const verified = bestDirectEmployerCandidate(
+      [
+        {
+          title: clean(heading, 240),
+          context: clean(body, 12e3),
+          href: searchPage.url()
+        }
+      ],
+      job
+    );
+    if (!verified) throw new Error("direct_source_verification_failed");
+    await page.close().catch(() => void 0);
+    return searchPage;
+  } catch {
+    await searchPage.close().catch(() => void 0);
+    return null;
+  }
+}
 async function resolveDiscoveryApplicationPage(page, job) {
   let host = "";
   try {
@@ -1515,8 +1720,10 @@ async function resolveDiscoveryApplicationPage(page, job) {
   } catch {
     return page;
   }
-  if (!(host === "adzuna.co.uk" || host.endsWith(".adzuna.co.uk")))
-    return page;
+  if (!isDiscoveryOnlyHost(host)) return page;
+  const directEmployerPage = await resolveDirectEmployerPage(page, job);
+  if (directEmployerPage) return directEmployerPage;
+  if (!(host === "adzuna.co.uk" || host.endsWith(".adzuna.co.uk"))) return page;
   const [body, html] = await Promise.all([
     page.locator("body").innerText().catch(() => ""),
     page.content().catch(() => "")
@@ -1623,7 +1830,7 @@ async function visibleInput(page, selector) {
   }
   return null;
 }
-async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, accountState, accountAccessAttempts = 0, accountRecoveryAttempted = false) {
+async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, accountState, accountAccessAttempts = 0, accountRecoveryAttempted = false, passwordAttemptCount = 0) {
   const captcha = page.locator(
     'iframe[src*="captcha" i], [id*="captcha" i], [class*="captcha" i], iframe[src*="recaptcha" i], iframe[src*="hcaptcha" i]'
   );
@@ -1761,9 +1968,23 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
         recoveryAttempted: true
       };
     }
-    const portalPassword = await runtime?.resolvePortalPassword?.(
+    const createAccount = await actionLocatorMatching(
+      page,
+      isEmployerAccountCreationControl
+    );
+    const signIn = await actionLocator(page, /^(sign in|log in)$/i);
+    const accountMissing = isEmployerAccountMissing(bodyText);
+    const accountAlreadyExists = /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
+      bodyText
+    );
+    const resolvedPortalPassword = await runtime?.resolvePortalPassword?.(
       new URL(page.url()).hostname.toLowerCase()
-    ) ?? runtime?.portalPassword;
+    );
+    const portalPasswords = employerPortalPasswordCandidates({
+      resolvedPassword: resolvedPortalPassword,
+      destinationPassword: runtime?.portalPassword
+    });
+    const portalPassword = portalPasswords[Math.min(passwordAttemptCount, Math.max(0, portalPasswords.length - 1))];
     if (!payload.candidate.portalAccountConsent || !portalPassword) {
       return {
         handled: false,
@@ -1775,8 +1996,9 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
     }
     const authenticationFailed = isEmployerAuthenticationFailure(bodyText);
     const passwordSetupPage = isEmployerPasswordSetupPage(bodyText);
+    const triedEveryPassword = passwordAttemptCount >= Math.max(1, portalPasswords.length);
     const shouldRecoverAccount = Boolean(
-      managedAlias && payload.candidate.automaticEmailVerification && payload.candidate.employerTermsConsent && runtime?.resolveEmailActionLink && !passwordSetupPage && !accountRecoveryAttempted && (authenticationFailed || accountAccessAttempts >= 2)
+      managedAlias && payload.candidate.automaticEmailVerification && payload.candidate.employerTermsConsent && runtime?.resolveEmailActionLink && !passwordSetupPage && !accountMissing && !accountRecoveryAttempted && (authenticationFailed && triedEveryPassword || accountAccessAttempts >= Math.max(4, portalPasswords.length + 2))
     );
     if (shouldRecoverAccount) {
       const resetControl = await actionLocatorMatching(
@@ -1786,8 +2008,9 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
       if (!resetControl)
         return {
           handled: false,
+          clearSession: authenticationFailed,
           stop: {
-            message: "The employer did not accept the saved application account and did not offer guest access, a secure email link or password recovery. Your application is saved and ready to retry when the employer makes one of those options available.",
+            message: "IR35Careers tried the employer's available sign-in, account creation, email-link and password-recovery routes. The employer still requires its own account access. Your prepared application is saved.",
             action: "employer_login"
           }
         };
@@ -1868,18 +2091,10 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
         await checkbox.check();
       }
     }
-    const createAccount = await actionLocator(
-      page,
-      /^(create account|create an account|register|sign up)$/i
-    );
-    const signIn = await actionLocator(page, /^(sign in|log in)$/i);
     const resetPassword = passwordSetupPage ? await actionLocator(
       page,
       /^(reset|set|save|update|change|continue)(?: (?:my|your|new))? password$|^continue$/i
     ) : null;
-    const accountAlreadyExists = /(account|email).{0,40}(already exists|already registered|is registered)|sign in instead/i.test(
-      bodyText
-    );
     if (createAccount && !preferEmployerSignIn({ accountAlreadyExists, accountState }) && requiresEmployerTermsAcceptance(bodyText) && !payload.candidate.employerTermsConsent) {
       return {
         handled: false,
@@ -1889,7 +2104,7 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
         }
       };
     }
-    const useSignIn = preferEmployerSignIn({
+    const useSignIn = !accountMissing && preferEmployerSignIn({
       accountAlreadyExists,
       accountState
     });
@@ -1908,6 +2123,9 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
       handled: true,
       accountRecovered: Boolean(resetPassword),
       recoveryAttempted: accountRecoveryAttempted || Boolean(resetPassword),
+      passwordAttempted: Boolean(
+        signIn && accessAction === signIn && passwordCount > 0
+      ),
       accountCreationStarted: Boolean(
         createAccount && accessAction === createAccount && !useSignIn
       )
@@ -2063,6 +2281,12 @@ async function approvedResumeUpload(payload, atsKind) {
     mimeType: "application/pdf"
   };
 }
+function isApplicationMessageField(field) {
+  const text = `${field.label} ${field.name} ${field.placeholder}`;
+  return /cover\s*letter|supporting\s*(?:statement|information)|application\s*message|^\s*message\b/i.test(
+    text
+  );
+}
 async function fillField(input) {
   const { locator, field } = input;
   if (field.type === "file") {
@@ -2075,7 +2299,7 @@ async function fillField(input) {
     });
     return true;
   }
-  let value = /cover\s*letter/i.test(`${field.label} ${field.name}`) ? input.coverLetter : input.value;
+  let value = isApplicationMessageField(field) ? input.coverLetter : input.value;
   if (input.atsKind === "totaljobs" && /phone|mobile|telephone/i.test(
     `${field.label} ${field.name} ${field.placeholder}`
   )) {
@@ -2171,7 +2395,7 @@ async function fillStep(page, step, ats, facts, resume, coverLetter, employerTer
     const directAnswer = screeningAnswer(field, facts);
     const mapping = mappings.get(field.id);
     const value = directAnswer || (mapping ? valueForMapping(mapping, facts) : "");
-    const carriesApplicationMaterial = field.type === "file" || /cover\s*letter/i.test(`${field.label} ${field.name}`);
+    const carriesApplicationMaterial = field.type === "file" || isApplicationMessageField(field);
     const canUseMapping = Boolean(
       mapping && mapping.factKey !== "needs_user" && mapping.factKey !== "skip"
     );
@@ -2426,6 +2650,7 @@ async function runNativeApplication(payload, runtime) {
     approvedHosts.add(applicationDestination.hostname.toLowerCase());
     ats = detectAts(applicationDestination.toString());
     let portalAccessAttempts = 0;
+    let portalPasswordAttempts = 0;
     for (let step = 0; step < MAX_STEPS; step += 1) {
       if (Date.now() - startedAt >= budgetMs) {
         return reviewReceipt(
@@ -2443,7 +2668,8 @@ async function runNativeApplication(payload, runtime) {
         requestedAfter,
         portalAccountState,
         portalAccessAttempts,
-        accountRecoveryAttempted
+        accountRecoveryAttempted,
+        portalPasswordAttempts
       );
       if (portalAccess.accountCreated) {
         portalAccountState = "created";
@@ -2457,6 +2683,10 @@ async function runNativeApplication(payload, runtime) {
       }
       if (portalAccess.recoveryAttempted)
         accountRecoveryAttempted = true;
+      if (portalAccess.passwordAttempted)
+        portalPasswordAttempts += 1;
+      if (portalAccess.clearSession)
+        sessionDisposition = "clear";
       if (portalAccess.stop)
         return reviewReceipt(
           portalAccess.stop.message,

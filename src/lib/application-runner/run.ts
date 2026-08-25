@@ -50,8 +50,11 @@ import {
   type RunnerField,
 } from "@/lib/application-runner/types";
 import {
+  bestDirectEmployerCandidate,
   bestDiscoveryCandidate,
+  duckDuckGoResultTarget,
   discoveryProviderOrder,
+  isDiscoveryOnlyHost,
   type DiscoveryCandidate,
 } from "@/lib/application-runner/source-resolution";
 import {
@@ -579,6 +582,91 @@ function totalJobsSearchUrl(job: SubmissionProviderPayload["job"]): string {
   return url.toString();
 }
 
+function directEmployerSearchUrl(
+  job: SubmissionProviderPayload["job"],
+): string {
+  const url = new URL("https://html.duckduckgo.com/html/");
+  url.searchParams.set(
+    "q",
+    `${job.company_name} ${job.title} ${job.location.split(",")[0] || job.location}`,
+  );
+  return url.toString();
+}
+
+async function directEmployerSearchCandidates(
+  page: Page,
+): Promise<DiscoveryCandidate[]> {
+  const results = page.locator(".result");
+  const count = Math.min(await results.count(), 12);
+  const candidates: DiscoveryCandidate[] = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < count; index += 1) {
+    const result = results.nth(index);
+    const anchor = result.locator("a.result__a").first();
+    if (!(await anchor.count())) continue;
+    const href =
+      duckDuckGoResultTarget(
+        (await anchor.getAttribute("href").catch(() => null)) ?? "",
+      ) ?? "";
+    if (!href || seen.has(href)) continue;
+    seen.add(href);
+    const title = clean(await anchor.innerText().catch(() => ""), 240);
+    const context = clean(
+      await result.innerText().catch(() => ""),
+      2_400,
+    );
+    if (title && context) candidates.push({ title, context, href });
+  }
+  return candidates;
+}
+
+async function resolveDirectEmployerPage(
+  page: Page,
+  job: SubmissionProviderPayload["job"],
+): Promise<Page | null> {
+  const searchPage = await page.context().newPage();
+  try {
+    await searchPage.goto(directEmployerSearchUrl(job), {
+      waitUntil: "domcontentloaded",
+      timeout: 20_000,
+    });
+    const match = bestDirectEmployerCandidate(
+      await directEmployerSearchCandidates(searchPage),
+      job,
+    );
+    if (!match) throw new Error("direct_source_match_unavailable");
+    await validatePublicHttpsUrl(match.href);
+    await searchPage.goto(match.href, {
+      waitUntil: "domcontentloaded",
+      timeout: 25_000,
+    });
+    const [heading, body] = await Promise.all([
+      searchPage
+        .locator("h1, h2")
+        .first()
+        .innerText()
+        .catch(() => searchPage.title()),
+      searchPage.locator("body").innerText().catch(() => ""),
+    ]);
+    const verified = bestDirectEmployerCandidate(
+      [
+        {
+          title: clean(heading, 240),
+          context: clean(body, 12_000),
+          href: searchPage.url(),
+        },
+      ],
+      job,
+    );
+    if (!verified) throw new Error("direct_source_verification_failed");
+    await page.close().catch(() => undefined);
+    return searchPage;
+  } catch {
+    await searchPage.close().catch(() => undefined);
+    return null;
+  }
+}
+
 async function resolveDiscoveryApplicationPage(
   page: Page,
   job: SubmissionProviderPayload["job"],
@@ -589,8 +677,12 @@ async function resolveDiscoveryApplicationPage(
   } catch {
     return page;
   }
-  if (!(host === "adzuna.co.uk" || host.endsWith(".adzuna.co.uk")))
-    return page;
+  if (!isDiscoveryOnlyHost(host)) return page;
+
+  const directEmployerPage = await resolveDirectEmployerPage(page, job);
+  if (directEmployerPage) return directEmployerPage;
+
+  if (!(host === "adzuna.co.uk" || host.endsWith(".adzuna.co.uk"))) return page;
 
   const [body, html] = await Promise.all([
     page.locator("body").innerText().catch(() => ""),
@@ -1348,6 +1440,13 @@ async function approvedResumeUpload(
       };
 }
 
+function isApplicationMessageField(field: RunnerField): boolean {
+  const text = `${field.label} ${field.name} ${field.placeholder}`;
+  return /cover\s*letter|supporting\s*(?:statement|information)|application\s*message|^\s*message\b/i.test(
+    text,
+  );
+}
+
 async function fillField(input: {
   locator: Locator;
   field: RunnerField;
@@ -1370,7 +1469,7 @@ async function fillField(input: {
     });
     return true;
   }
-  let value = /cover\s*letter/i.test(`${field.label} ${field.name}`)
+  let value = isApplicationMessageField(field)
     ? input.coverLetter
     : input.value;
   // Totaljobs renders the calling code and subscriber number as separate
@@ -1515,7 +1614,7 @@ async function fillStep(
       directAnswer || (mapping ? valueForMapping(mapping, facts) : "");
     const carriesApplicationMaterial =
       field.type === "file" ||
-      /cover\s*letter/i.test(`${field.label} ${field.name}`);
+      isApplicationMessageField(field);
     const canUseMapping = Boolean(
       mapping && mapping.factKey !== "needs_user" && mapping.factKey !== "skip",
     );
