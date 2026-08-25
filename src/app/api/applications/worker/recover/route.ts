@@ -4,6 +4,8 @@ import {
 } from "@/lib/application-worker-request";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
+import { directEmployerCandidateScore } from "@/lib/application-runner/source-resolution";
+import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -24,6 +26,7 @@ type RecoveryRequest = {
   applicationId?: string;
   jobId?: string;
   destinationHost?: string;
+  replacementDestination?: string;
   workerVersion: string;
 };
 
@@ -41,6 +44,9 @@ function validRequest(value: unknown): value is RecoveryRequest {
     (input.destinationHost === undefined ||
       (typeof input.destinationHost === "string" &&
         /^[a-z0-9.-]{3,253}$/i.test(input.destinationHost))) &&
+    (input.replacementDestination === undefined ||
+      (typeof input.replacementDestination === "string" &&
+        input.replacementDestination.length <= 2_000)) &&
     (typeof input.applicationId === "string" ||
       typeof input.jobId === "string" ||
       typeof input.destinationHost === "string") &&
@@ -270,6 +276,45 @@ export async function POST(request: Request): Promise<Response> {
         { status: 404, headers: HEADERS },
       );
 
+    let recoveryDestination = selected.destination;
+    if (parsed.replacementDestination) {
+      const replacement = (
+        await validatePublicHttpsUrl(parsed.replacementDestination)
+      ).toString();
+      const job = selected.packet?.job_snapshot as
+        | {
+            title?: unknown;
+            company_name?: unknown;
+            location?: unknown;
+            description?: unknown;
+          }
+        | null
+        | undefined;
+      const verifiedJob = {
+        title: String(job?.title ?? "").trim(),
+        company_name: String(job?.company_name ?? "").trim(),
+        location: String(job?.location ?? "").trim(),
+        description: String(job?.description ?? "").trim(),
+      };
+      const replacementScore = directEmployerCandidateScore(
+        {
+          title: verifiedJob.title,
+          context: `${verifiedJob.title} ${verifiedJob.company_name} ${verifiedJob.location}`,
+          href: replacement,
+        },
+        verifiedJob,
+      );
+      if (replacementScore < 75)
+        return Response.json(
+          {
+            error:
+              "The replacement destination is not a verified employer or ATS page for this role.",
+          },
+          { status: 409, headers: HEADERS },
+        );
+      recoveryDestination = replacement;
+    }
+
     const packetResult = await supabase
       .from("application_packets")
       .select(
@@ -307,7 +352,7 @@ export async function POST(request: Request): Promise<Response> {
         supabase
           .from("application_worker_tasks")
           .update({
-            destination: selected.destination,
+            destination: recoveryDestination,
             status: "queued",
             attempts: 0,
             available_at: now,
@@ -350,6 +395,7 @@ export async function POST(request: Request): Promise<Response> {
               recoveredBy: "application_worker",
               reason: "portal_adapter_updated",
               workerVersion: parsed.workerVersion,
+              destinationHost: hostname(recoveryDestination),
             },
           },
           { onConflict: "user_id,idempotency_key", ignoreDuplicates: true },
