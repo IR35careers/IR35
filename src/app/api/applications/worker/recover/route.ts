@@ -5,6 +5,7 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
 import { directEmployerCandidateScore } from "@/lib/application-runner/source-resolution";
+import { clearPortalSession } from "@/lib/application-portal-session";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 
 export const runtime = "nodejs";
@@ -345,6 +346,16 @@ export async function POST(request: Request): Promise<Response> {
         { error: "The approved application packet is no longer complete." },
         { status: 409, headers: HEADERS },
       );
+
+    if (
+      parsed.replacementDestination &&
+      hostname(recoveryDestination) !== hostname(selected.destination)
+    )
+      await clearPortalSession({
+        admin: supabase,
+        userId: selected.submission.user_id,
+        applicationId: selected.submission.application_id,
+      });
 
     const now = new Date().toISOString();
     const [taskUpdate, submissionUpdate, packetUpdate, eventUpdate] =
