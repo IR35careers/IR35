@@ -28,4 +28,27 @@ describe("resolveApplicationTaskDestination", () => {
       }),
     ).toBe("https://www.adzuna.co.uk/details/123");
   });
+
+  it("keeps a verified recruiter-owned application form on the same host", () => {
+    expect(
+      resolveApplicationTaskDestination({
+        taskDestination:
+          "https://viqu.co.uk/job/platform-engineer/apply/",
+        receiptDestination:
+          "https://viqu.co.uk/job/platform-engineer/application-received/",
+      }),
+    ).toBe(
+      "https://viqu.co.uk/job/platform-engineer/application-received/",
+    );
+  });
+
+  it("does not let a recruiter-owned task hand off to an unrelated host", () => {
+    expect(
+      resolveApplicationTaskDestination({
+        taskDestination:
+          "https://viqu.co.uk/job/platform-engineer/apply/",
+        receiptDestination: "https://attacker.example/collect",
+      }),
+    ).toBe("https://viqu.co.uk/job/platform-engineer/apply/");
+  });
 });

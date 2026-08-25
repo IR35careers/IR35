@@ -1,13 +1,19 @@
 import { nativeRunnerHostAllowed } from "@/lib/application-runner/ats";
 
-function allowedHttpsDestination(value: unknown): string | undefined {
+function safeHttpsDestination(value: unknown): URL | undefined {
   const candidate = String(value ?? "").trim();
   if (!candidate) return undefined;
   try {
     const url = new URL(candidate);
-    if (url.protocol !== "https:" || !nativeRunnerHostAllowed(url.hostname))
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.hostname.toLowerCase() === "localhost"
+    )
       return undefined;
-    return url.toString();
+    return url;
   } catch {
     return undefined;
   }
@@ -22,8 +28,14 @@ export function resolveApplicationTaskDestination(input: {
   taskDestination: unknown;
   receiptDestination?: unknown;
 }): string | undefined {
-  return (
-    allowedHttpsDestination(input.receiptDestination) ??
-    allowedHttpsDestination(input.taskDestination)
-  );
+  const task = safeHttpsDestination(input.taskDestination);
+  if (!task) return undefined;
+  const receipt = safeHttpsDestination(input.receiptDestination);
+  if (
+    receipt &&
+    (nativeRunnerHostAllowed(receipt.hostname) ||
+      receipt.hostname.toLowerCase() === task.hostname.toLowerCase())
+  )
+    return receipt.toString();
+  return task.toString();
 }
