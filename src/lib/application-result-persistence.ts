@@ -144,6 +144,9 @@ export async function storeNeedsUser(input: {
     jobId: input.job.id,
     applicationId: String(input.packet.id),
     action: input.action,
+    questionLabels: incoming
+      .filter((question) => question.required && !question.answer.trim())
+      .map((question) => question.label),
     idempotencyKey: `${idempotencyKey}:needs-user:${attentionKey}`,
   }).catch(() => null);
   return questions;

@@ -4,6 +4,7 @@ import type {
 } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
 import { readJsonResponse } from "@/lib/security/response-body";
+export { providerReviewQuestions } from "@/lib/application-provider-review";
 
 export type SubmissionProviderConfig =
   | { kind: "tsenta"; endpoint: string; apiKey: string; name: string }
@@ -88,8 +89,6 @@ interface TsentaErrorEnvelope {
   error?: { code?: string; message?: string } | string;
 }
 
-type ProviderQuestion = Record<string, unknown>;
-
 export function submissionProviderConfig(): SubmissionProviderConfig | null {
   if (process.env.ENABLE_APPLICATION_SUBMISSION?.toLowerCase() !== "true")
     return null;
@@ -134,71 +133,6 @@ function clean(value: string | undefined): string {
     .replace(/[\u0000-\u001f\u007f]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function questionList(review: unknown): unknown[] {
-  if (Array.isArray(review)) return review;
-  if (!review || typeof review !== "object") return [];
-  const record = review as Record<string, unknown>;
-  for (const key of ["questions", "fields", "required_fields", "items"]) {
-    if (Array.isArray(record[key])) return record[key] as unknown[];
-  }
-  return Object.keys(record).some((key) =>
-    ["id", "key", "name", "label", "question", "prompt"].includes(key),
-  )
-    ? [record]
-    : [];
-}
-
-function questionText(record: ProviderQuestion, keys: string[]): string {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim())
-      return clean(value).slice(0, 500);
-  }
-  return "";
-}
-
-/** Converts provider review payloads into the same owner-reviewed questions used by the workspace. */
-export function providerReviewQuestions(
-  review: unknown,
-): ApplicationQuestion[] {
-  return questionList(review)
-    .map((item, index) => {
-      const record: ProviderQuestion =
-        item && typeof item === "object"
-          ? (item as ProviderQuestion)
-          : { question: String(item ?? "") };
-      const rawId = questionText(record, [
-        "id",
-        "question_id",
-        "key",
-        "name",
-        "field",
-      ]);
-      const label =
-        questionText(record, [
-          "label",
-          "question",
-          "prompt",
-          "title",
-          "name",
-        ]) || `Employer question ${index + 1}`;
-      const answer = questionText(record, ["answer", "value", "default_value"]);
-      return {
-        id: `provider:${rawId || `question_${index + 1}`}`,
-        label,
-        answer,
-        required: record.required !== false,
-        source: "user" as const,
-        reviewed: Boolean(answer),
-      };
-    })
-    .filter(
-      (question, index, questions) =>
-        question.label.length > 0 &&
-        questions.findIndex((item) => item.id === question.id) === index,
-    );
 }
 
 function requiredCandidateFields(

@@ -41,6 +41,40 @@ describe("workspace submission attention", () => {
     });
   });
 
+  it("restores missing question highlights from the stored provider review", () => {
+    const attention = submissionAttentionFromRow({
+      status: "processing",
+      error_code: "needs_user",
+      receipt: {
+        action: "browser_continue",
+        message: "The employer needs one answer.",
+        attention: {
+          kind: "employer_form",
+          title: "Application paused before confirmation",
+          message: "The employer needs one answer.",
+          action: "#needs-attention",
+          actionLabel: "Retry application",
+          questionIds: [],
+        },
+        review: {
+          questions: [
+            {
+              id: "security-clearance",
+              label: "What security clearance do you hold?",
+              required: true,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(attention).toMatchObject({
+      kind: "employer_form",
+      actionLabel: "Answer question",
+      questionIds: ["provider:security-clearance"],
+    });
+  });
+
   it("does not turn successful or cancelled submissions into attention", () => {
     expect(
       submissionAttentionFromRow({

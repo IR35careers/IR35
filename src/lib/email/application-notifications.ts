@@ -31,6 +31,7 @@ export interface ApplicationNotificationInput {
   inboxAlias?: string;
   occurredAt?: string;
   action?: string;
+  questionLabels?: string[];
 }
 
 export interface ApplicationInboxRecord {
@@ -85,6 +86,11 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
   actionPath: string;
 } {
   const role = `${input.jobTitle} at ${input.companyName}`;
+  const questionLabels = [...new Set(
+    (input.questionLabels ?? [])
+      .map((label) => label.replace(/\s+/g, " ").trim().slice(0, 240))
+      .filter(Boolean),
+  )].slice(0, 3);
   const applicationPath = `/applications/new/${encodeURIComponent(
     input.jobId || input.applicationId,
   )}?applicationId=${encodeURIComponent(input.applicationId)}`;
@@ -112,13 +118,31 @@ export function applicationNotificationPresentation(input: ApplicationNotificati
             input.jobId || input.applicationId,
           ),
         };
+      if (questionLabels.length > 0) {
+        const questionSummary = questionLabels
+          .map((label, index) => `${index + 1}. ${label}`)
+          .join("\n");
+        return {
+          subject: `Your answer is needed: ${role}`,
+          eyebrow: "Needs your attention",
+          title:
+            questionLabels.length === 1
+              ? "The employer needs one answer"
+              : `The employer needs ${questionLabels.length} answers`,
+          body: `The application for ${role} is paused until you confirm the following employer ${questionLabels.length === 1 ? "question" : "questions"}:\n\n${questionSummary}\n\nOpen the application to go directly to the highlighted ${questionLabels.length === 1 ? "field" : "fields"}.`,
+          accent: "#b45309",
+          actionLabel:
+            questionLabels.length === 1 ? "Answer the question" : "Answer the questions",
+          actionPath: `${applicationPath}#needs-attention`,
+        };
+      }
       return {
-        subject: `Your answer is needed: ${role}`,
+        subject: `Application action needed: ${role}`,
         eyebrow: "Needs your attention",
-        title: "The application needs information from you",
-        body: `The application for ${role} is paused because an employer question could not be answered safely from your saved profile. Review the highlighted question and the application will continue after you confirm it.`,
+        title: "The employer application needs your attention",
+        body: `The application for ${role} is paused at an employer step that could not be completed automatically. Open the application to see the exact next action. Your approved Resume and answers are saved.`,
         accent: "#b45309",
-        actionLabel: "Answer the question",
+        actionLabel: "Review application",
         actionPath: `${applicationPath}#needs-attention`,
       };
     case "submission_issue":
@@ -259,7 +283,7 @@ export async function sendApplicationNotification(input: ApplicationNotification
   const messageBlock = input.originalMessage?.trim()
     ? `<div style="margin-top:24px;border:1px solid #dbe5e1;border-radius:14px;background:#f8fafc;padding:18px"><p style="margin:0 0 8px;color:#475569;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Original message${input.originalSubject ? `: ${escapeHtml(input.originalSubject)}` : ""}</p><p style="margin:0;white-space:pre-line;color:#334155;font-size:13px;line-height:21px">${escapeHtml(input.originalMessage).slice(0, 12_000)}</p></div>`
     : "";
-  const html = `<!doctype html><html lang="en"><body style="margin:0;background:#f3f7f5;font-family:Arial,sans-serif;color:#07111f"><div style="display:none;max-height:0;overflow:hidden">${escapeHtml(view.title)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f7f5"><tr><td align="center" style="padding:28px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;overflow:hidden;border:1px solid #dbe5e1;border-radius:22px;background:#ffffff"><tr><td style="background:#07111f;padding:22px 28px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:12px;background:#effaf5;padding:3px"><img src="${LOGO_URL}" width="38" height="38" alt="IR35Careers" style="display:block;border:0;border-radius:9px"></td><td style="padding-left:12px;color:#ffffff;font-size:19px;font-weight:700">IR35<span style="color:#a9b8c8;font-weight:600">Careers</span></td></tr></table></td></tr><tr><td style="padding:34px 28px"><p style="margin:0 0 12px;color:${view.accent};font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase">${escapeHtml(view.eyebrow)}</p><h1 style="margin:0;font-size:27px;line-height:35px">${escapeHtml(view.title)}</h1><p style="margin:18px 0 0;color:#334155;font-size:15px;line-height:24px">${escapeHtml(greeting)}</p><p style="margin:12px 0 0;color:#4b5d73;font-size:15px;line-height:24px">${escapeHtml(view.body)}</p>${messageBlock}<a href="${SITE_URL}${view.actionPath}" style="display:inline-block;margin-top:26px;border-radius:11px;background:${view.accent};padding:13px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700">${escapeHtml(view.actionLabel)}</a><p style="margin:24px 0 0;color:#64748b;font-size:12px;line-height:19px">Application reference: ${escapeHtml(input.applicationId)}</p></td></tr><tr><td style="border-top:1px solid #e2e8f0;background:#f8fafc;padding:18px 28px;color:#64748b;font-size:11px;line-height:18px">IR35Careers keeps application messages linked to the correct role. Review the original employer message before responding.</td></tr></table></td></tr></table></body></html>`;
+  const html = `<!doctype html><html lang="en"><body style="margin:0;background:#f3f7f5;font-family:Arial,sans-serif;color:#07111f"><div style="display:none;max-height:0;overflow:hidden">${escapeHtml(view.title)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f7f5"><tr><td align="center" style="padding:28px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;overflow:hidden;border:1px solid #dbe5e1;border-radius:22px;background:#ffffff"><tr><td style="background:#07111f;padding:22px 28px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:12px;background:#effaf5;padding:3px"><img src="${LOGO_URL}" width="38" height="38" alt="IR35Careers" style="display:block;border:0;border-radius:9px"></td><td style="padding-left:12px;color:#ffffff;font-size:19px;font-weight:700">IR35<span style="color:#a9b8c8;font-weight:600">Careers</span></td></tr></table></td></tr><tr><td style="padding:34px 28px"><p style="margin:0 0 12px;color:${view.accent};font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase">${escapeHtml(view.eyebrow)}</p><h1 style="margin:0;font-size:27px;line-height:35px">${escapeHtml(view.title)}</h1><p style="margin:18px 0 0;color:#334155;font-size:15px;line-height:24px">${escapeHtml(greeting)}</p><p style="margin:12px 0 0;white-space:pre-line;color:#4b5d73;font-size:15px;line-height:24px">${escapeHtml(view.body)}</p>${messageBlock}<a href="${SITE_URL}${view.actionPath}" style="display:inline-block;margin-top:26px;border-radius:11px;background:${view.accent};padding:13px 20px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700">${escapeHtml(view.actionLabel)}</a><p style="margin:24px 0 0;color:#64748b;font-size:12px;line-height:19px">Application reference: ${escapeHtml(input.applicationId)}</p></td></tr><tr><td style="border-top:1px solid #e2e8f0;background:#f8fafc;padding:18px 28px;color:#64748b;font-size:11px;line-height:18px">IR35Careers keeps application messages linked to the correct role. Review the original employer message before responding.</td></tr></table></td></tr></table></body></html>`;
   const text = [view.eyebrow, "", view.title, "", greeting, view.body, input.originalSubject ? `Original subject: ${input.originalSubject}` : "", input.originalMessage ?? "", "", `${view.actionLabel}: ${SITE_URL}${view.actionPath}`, `Application reference: ${input.applicationId}`].filter(Boolean).join("\n");
   const delivery = await getTransactionalResend(config).emails.send({
     from: config.from,

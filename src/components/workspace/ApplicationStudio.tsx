@@ -1426,14 +1426,19 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     {attention.questionIds.length > 0 ? (
                       <button
                         type="button"
-                        onClick={() =>
-                          document
-                            .getElementById("employer-questions")
-                            ?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            })
-                        }
+                        onClick={() => {
+                          const questionId = attention.questionIds[0];
+                          const field = document.getElementById(
+                            questionId
+                              ? `question-${questionId}`
+                              : "employer-questions",
+                          );
+                          field?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                          if (field instanceof HTMLInputElement) field.focus();
+                        }}
                         className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
                       >
                         {attention.actionLabel} <ArrowRight size={15} />
@@ -1925,6 +1930,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     {requiredQuestions.map((question) => (
                       <div
                         key={question.id}
+                        id={`question-card-${question.id}`}
                         className={`rounded-2xl border p-4 ${attention?.questionIds.includes(question.id) ? "border-amber-400 bg-amber-100 ring-2 ring-amber-200" : question.reviewed ? "border-emerald-200 bg-emerald-50/40" : "border-amber-200 bg-amber-50/40"}`}
                       >
                         <label
@@ -1933,6 +1939,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                         >
                           {question.label}
                         </label>
+                        {attention?.questionIds.includes(question.id) && (
+                          <p className="mt-2 inline-flex rounded-full bg-amber-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900">
+                            Employer answer needed
+                          </p>
+                        )}
                         <input
                           id={`question-${question.id}`}
                           value={question.answer}

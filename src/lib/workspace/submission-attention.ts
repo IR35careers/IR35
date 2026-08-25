@@ -1,4 +1,5 @@
 import { buildApplicationAttention } from "@/lib/application-attention";
+import { providerReviewQuestions } from "@/lib/application-provider-review";
 import type { ApplicationAttention } from "@/lib/workspace/types";
 
 type SubmissionRow = Record<string, unknown> | null | undefined;
@@ -38,7 +39,26 @@ export function submissionAttentionFromRow(
   if (!receipt) return null;
 
   const exact = storedAttention(receipt.attention);
-  if (exact) return exact;
+  const receiptQuestions = providerReviewQuestions(receipt.review);
+  if (exact) {
+    if (
+      exact.questionIds.length === 0 &&
+      receiptQuestions.some(
+        (question) => question.required && !question.answer.trim(),
+      )
+    )
+      return buildApplicationAttention({
+        action:
+          typeof receipt.action === "string"
+            ? receipt.action
+            : exact.kind === "employer_form"
+              ? "browser_continue"
+              : undefined,
+        message: exact.message,
+        questions: receiptQuestions,
+      });
+    return exact;
+  }
 
   const status = String(submission.status ?? "");
   const errorCode = String(submission.error_code ?? "");
@@ -52,5 +72,9 @@ export function submissionAttentionFromRow(
   )
     return null;
 
-  return buildApplicationAttention({ action, message });
+  return buildApplicationAttention({
+    action,
+    message,
+    questions: receiptQuestions,
+  });
 }

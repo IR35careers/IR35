@@ -491,6 +491,10 @@ export async function GET(request: Request): Promise<Response> {
           companyName: job.company_name,
           jobId: job.id,
           applicationId,
+          action: providerAction,
+          questionLabels: incomingQuestions
+            .filter((question) => question.required && !question.answer.trim())
+            .map((question) => question.label),
           idempotencyKey: `submit:${applicationId}:needs-user:${providerReceipt.providerSubmissionId}`,
         }).catch(() => null);
       return Response.json(

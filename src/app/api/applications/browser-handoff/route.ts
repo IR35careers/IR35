@@ -508,7 +508,9 @@ async function reportResult(request: Request, body: DbRow): Promise<Response> {
 
   if (status === "needs_user") {
     await saveBrowserAnswers({ admin, handoff, questions });
-    const action = clean(body.action, 80) || (questions.length ? "/profile" : "unsupported_form");
+    const action =
+      clean(body.action, 80) ||
+      (questions.length ? "browser_continue" : "unsupported_form");
     const message = clean(body.message, 1_000) || "The employer needs one more item before the application can continue.";
     const current = (context.packet.screening_answers as ApplicationQuestion[]) ?? [];
     const merged = mergeQuestions(current, questions);
@@ -563,6 +565,10 @@ async function reportResult(request: Request, body: DbRow): Promise<Response> {
         companyName: context.job.company_name,
         jobId: context.job.id,
         applicationId: handoff.applicationId,
+        action,
+        questionLabels: questions
+          .filter((question) => question.required && !question.answer.trim())
+          .map((question) => question.label),
         idempotencyKey: `${idempotencyKey}:browser-needs-user:${action}`,
       }).catch(() => null);
     return Response.json({ ok: true, state: "needs_user", attention }, { headers: headers(request) });

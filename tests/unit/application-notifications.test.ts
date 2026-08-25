@@ -16,6 +16,7 @@ const base: ApplicationNotificationInput = {
   applicationId: "22222222-2222-4222-8222-222222222222",
   idempotencyKey: "submit:test:needs-user",
   occurredAt: "2026-08-21T22:44:00.000Z",
+  questionLabels: ["What security clearance do you currently hold?"],
 };
 
 describe("application notifications", () => {
@@ -52,6 +53,27 @@ describe("application notifications", () => {
 
   it("uses a deterministic provider id so retries cannot duplicate a message", () => {
     expect(buildApplicationInboxRecord(base)?.provider_message_id).toBe(buildApplicationInboxRecord(base)?.provider_message_id);
+  });
+
+  it("names the exact employer question in the candidate message", () => {
+    const view = applicationNotificationPresentation(base);
+    expect(view.title).toBe("The employer needs one answer");
+    expect(view.body).toContain(
+      "1. What security clearance do you currently hold?",
+    );
+    expect(view.actionLabel).toBe("Answer the question");
+  });
+
+  it("does not promise a highlighted question when none was returned", () => {
+    const view = applicationNotificationPresentation({
+      ...base,
+      questionLabels: [],
+    });
+    expect(view.subject).toBe(
+      "Application action needed: Senior Data Scientist at Michael Page Technology",
+    );
+    expect(view.body).not.toContain("highlighted question");
+    expect(view.actionLabel).toBe("Review application");
   });
 
   it("sends action links to the exact job workspace", () => {

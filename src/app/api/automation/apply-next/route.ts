@@ -356,6 +356,7 @@ export async function POST(request: Request): Promise<Response> {
         companyName: application.job.company_name,
         jobId: application.job.id,
         applicationId: application.id,
+        questionLabels: missing.map((question) => question.label),
         idempotencyKey: `auto:${application.job.id}:needs-user`,
       }).catch(() => null);
       return Response.json({ state: "needs_user", application, questions: missing, message: `${missing.length} employer answer${missing.length === 1 ? " is" : "s are"} needed before this application can be sent.` }, { status: 202, headers: NO_STORE });

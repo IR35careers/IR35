@@ -170,6 +170,18 @@ export function ApplicationRecordWorkspace({
     application.attention && application.status === "needs_review",
   );
 
+  const focusFirstEmployerQuestion = () => {
+    const questionId = application.attention?.questionIds[0];
+    setTab("form");
+    window.setTimeout(() => {
+      const field = questionId
+        ? document.getElementById(`question-${questionId}`)
+        : document.getElementById("employer-questions");
+      field?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (field instanceof HTMLInputElement) field.focus();
+    }, 0);
+  };
+
   const downloadResume = async (format: "pdf" | "docx") => {
     const parsed = parseResumeText(
       application.tailoredCvText,
@@ -337,7 +349,7 @@ export function ApplicationRecordWorkspace({
                     {application.attention.questionIds.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => setTab("form")}
+                        onClick={focusFirstEmployerQuestion}
                         className="ir35-focus mt-3 min-h-10 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white"
                       >
                         Answer now
@@ -452,13 +464,21 @@ export function ApplicationRecordWorkspace({
                         return (
                           <label
                             key={question.id}
+                            id={`question-card-${question.id}`}
                             className={`block rounded-2xl border p-4 ${highlighted ? "border-amber-400 bg-amber-50 ring-2 ring-amber-100" : "border-slate-200 bg-white"}`}
                           >
                             <span className="flex items-start justify-between gap-3 text-sm font-semibold text-slate-900">
                               {question.label}
-                              {question.required && <span className="text-xs text-rose-600">Required</span>}
+                              {highlighted ? (
+                                <span className="rounded-full bg-amber-200 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900">
+                                  Answer needed
+                                </span>
+                              ) : question.required ? (
+                                <span className="text-xs text-rose-600">Required</span>
+                              ) : null}
                             </span>
                             <input
+                              id={`question-${question.id}`}
                               value={question.answer}
                               readOnly={locked}
                               onChange={(event) => updateQuestion(question.id, event.target.value)}
