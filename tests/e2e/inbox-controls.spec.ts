@@ -9,6 +9,8 @@ test("inbox connection state and message filters stay clear", async ({ page }) =
   await page.goto("/inbox");
   await dismissPrivacyNotice(page);
   await expect(page.getByRole("heading", { name: "Your application messages" })).toBeVisible();
+  await expect(page.getByText("Account Overview", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Email integration", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Application email", { exact: true })).toBeVisible();
   await expect(page.getByText("alex.morgan@inbox.ir35careers.local", { exact: true })).toBeVisible();
   await expect(page.getByText("Your account email", { exact: true })).toHaveCount(0);
