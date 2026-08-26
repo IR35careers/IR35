@@ -75,15 +75,15 @@ function TrackerPreview() {
 
 export function HomeExperience() {
   return (
-    <div className="min-h-screen bg-white text-slate-950">
+    <div className="ir35-public-canvas min-h-screen text-slate-950">
       <AuthenticatedHomeRedirect /><HomeScrollProgress /><PublicHeader />
       <main>
         <section className="ir35-home-hero relative isolate overflow-hidden border-b border-emerald-100/80">
           <div className="ir35-home-orb ir35-home-orb-one" aria-hidden="true" /><div className="ir35-home-orb ir35-home-orb-two" aria-hidden="true" />
-          <div className="ir35-container relative grid min-h-[690px] grid-cols-[minmax(0,1fr)] items-center gap-12 py-14 sm:py-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-20">
+          <div className="ir35-container relative grid min-h-[620px] grid-cols-[minmax(0,1fr)] items-center gap-12 py-12 sm:py-14 lg:min-h-[650px] lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-16">
             <Reveal className="min-w-0 max-w-3xl">
               <span className="ir35-home-pill"><span className="h-2 w-2 rounded-full bg-emerald-500" />Built for UK contractors</span>
-              <h1 className="mt-7 text-[clamp(3.4rem,7.2vw,6.9rem)] font-black leading-[0.86] tracking-[-0.075em] text-slate-950">One profile.<br /><span className="ir35-home-gradient-text">Better contracts.</span><br />Every reply connected.</h1>
+              <h1 className="mt-6 max-w-[12ch] text-[clamp(2.35rem,4.2vw,4.35rem)] font-black leading-[0.95] tracking-[-0.052em] text-slate-950">One profile.<br /><span className="ir35-home-gradient-text">Better contracts.</span><br />Every reply connected.</h1>
               <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">Find UK contract roles, prepare a focused Resume and keep applications, confirmations and recruiter messages in one place.</p>
               <div id="home-primary-actions" className="mt-8"><SearchPanel /></div>
               <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-600"><span>Popular:</span><Link href="/jobs?ir35=outside" className="ir35-focus rounded text-brand-700">Outside IR35</Link><Link href="/jobs?remote=true" className="ir35-focus rounded text-brand-700">Remote</Link><Link href="/jobs?min_rate=600" className="ir35-focus rounded text-brand-700">£600+/day</Link></div>

@@ -12,6 +12,12 @@
     --ir35-border: 224 228 223;
     --ir35-brand: 8 122 91;
     --ir35-focus: 8 122 91;
+    --ir35-emerald: 16 185 129;
+    --ir35-teal: 20 184 166;
+    --ir35-cyan: 6 182 212;
+    --ir35-sky: 14 165 233;
+    --ir35-violet: 139 92 246;
+    --ir35-amber: 245 158 11;
     --ir35-radius-sm: 0.75rem;
     --ir35-radius-md: 1rem;
     --ir35-radius-lg: 1.5rem;
@@ -104,7 +110,8 @@
   }
 
   .ir35-card {
-    @apply border border-slate-200/90 bg-white;
+    @apply border border-slate-200/90;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 250, 0.94));
     border-radius: var(--ir35-radius-lg);
     box-shadow: var(--ir35-shadow-card);
     transition:
@@ -115,7 +122,8 @@
   }
 
   .ir35-card-flat {
-    @apply border border-slate-200/90 bg-white;
+    @apply border border-slate-200/90;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(249, 252, 251, 0.94));
     border-radius: var(--ir35-radius-md);
     transition:
       border-color var(--ir35-standard) var(--ir35-ease),
@@ -132,6 +140,14 @@
     background: linear-gradient(110deg, rgba(255,255,255,0.9), rgba(247,255,251,0.88), rgba(241,253,252,0.86));
     box-shadow: 0 1px 0 rgba(255,255,255,0.72), 0 18px 45px -42px rgba(6, 78, 59, 0.5);
     backdrop-filter: blur(20px) saturate(145%);
+  }
+
+  .ir35-public-canvas {
+    background:
+      radial-gradient(circle at 6% 4%, rgba(52, 211, 153, 0.13), transparent 28rem),
+      radial-gradient(circle at 92% 9%, rgba(34, 211, 238, 0.11), transparent 30rem),
+      radial-gradient(circle at 70% 54%, rgba(196, 181, 253, 0.08), transparent 34rem),
+      #fbfdfc;
   }
 
   .ir35-dialog-backdrop {
@@ -176,7 +192,45 @@
     background:
       radial-gradient(circle at 4% 2%, rgba(52, 211, 153, 0.13), transparent 25rem),
       radial-gradient(circle at 94% 8%, rgba(45, 212, 191, 0.1), transparent 28rem),
+      radial-gradient(circle at 78% 42%, rgba(186, 230, 253, 0.1), transparent 32rem),
+      radial-gradient(circle at 20% 72%, rgba(221, 214, 254, 0.08), transparent 30rem),
       linear-gradient(180deg, #fbfffd 0%, #f7f8f6 34rem, #f7f8f6 100%);
+  }
+
+  .ir35-admin-canvas {
+    background:
+      radial-gradient(circle at 8% 0%, rgba(167, 243, 208, 0.19), transparent 27rem),
+      radial-gradient(circle at 92% 5%, rgba(165, 243, 252, 0.15), transparent 30rem),
+      radial-gradient(circle at 74% 58%, rgba(221, 214, 254, 0.1), transparent 34rem),
+      linear-gradient(180deg, #f8fcfa 0%, #f5f7f9 34rem, #f5f7f9 100%);
+  }
+
+  .ir35-admin-topbar {
+    background: linear-gradient(110deg, rgba(255, 255, 255, 0.93), rgba(247, 255, 251, 0.91), rgba(241, 253, 252, 0.89));
+    box-shadow: 0 14px 42px -38px rgba(6, 78, 59, 0.62);
+  }
+
+  .ir35-admin-panel {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.06), transparent 18rem),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(249, 252, 251, 0.95));
+    box-shadow: 0 18px 48px -44px rgba(6, 95, 70, 0.45);
+  }
+
+  .ir35-admin-colour-grid > article {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(236, 253, 245, 0.72));
+  }
+
+  .ir35-admin-colour-grid > article:nth-child(4n + 2) {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(236, 254, 255, 0.74));
+  }
+
+  .ir35-admin-colour-grid > article:nth-child(4n + 3) {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 255, 0.78));
+  }
+
+  .ir35-admin-colour-grid > article:nth-child(4n + 4) {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 235, 0.76));
   }
 
   .ir35-aurora-hero {
@@ -224,6 +278,22 @@
   .ir35-stat-grid {
     @apply border-emerald-200/70;
     background: linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(236, 253, 245, 0.74), rgba(236, 254, 255, 0.72));
+  }
+
+  .ir35-stat-grid > *:nth-child(4n + 1) {
+    background: rgba(236, 253, 245, 0.56);
+  }
+
+  .ir35-stat-grid > *:nth-child(4n + 2) {
+    background: rgba(236, 254, 255, 0.54);
+  }
+
+  .ir35-stat-grid > *:nth-child(4n + 3) {
+    background: rgba(245, 243, 255, 0.5);
+  }
+
+  .ir35-stat-grid > *:nth-child(4n + 4) {
+    background: rgba(255, 251, 235, 0.52);
   }
 
   .ir35-job-card {

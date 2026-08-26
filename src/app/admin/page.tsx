@@ -388,7 +388,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${className}`}>
+    <section className={`ir35-admin-panel overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${className}`}>
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
         <div>
           <h2 className="text-[15px] font-semibold text-slate-950">{title}</h2>
@@ -1161,12 +1161,12 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f7f9] text-slate-950">
+    <div className="ir35-admin-canvas min-h-screen text-slate-950">
       {mobileOpen && <button type="button" className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />}
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col border-r border-white/[0.06] bg-[#0b0f17] transition-transform duration-200 lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
       <div className="lg:pl-[272px]">
-        <header className="sticky top-0 z-30 flex h-20 items-center gap-3 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-xl sm:px-6 xl:px-8">
+        <header className="ir35-admin-topbar sticky top-0 z-30 flex h-20 items-center gap-3 border-b border-slate-200/80 px-4 backdrop-blur-xl sm:px-6 xl:px-8">
           <button type="button" onClick={() => setMobileOpen(true)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden" aria-label="Open admin navigation"><Menu size={18} /></button>
           <div className="relative max-w-xl flex-1">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1295,7 +1295,7 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
 
   return (
     <div className="mt-7 space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
           <article key={card.label} className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/40">
             <div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-semibold text-slate-500">{card.badge}</span></div>
@@ -1415,7 +1415,7 @@ function VisitorAnalyticsPanel({ analytics }: { analytics: GoogleAnalyticsSnapsh
         <div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-700">Google Analytics 4</p><h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Website visitors</h2><p className="mt-1 text-xs text-slate-500">Aggregated, consented traffic. No Resume content, application answers or individual account identity is sent.</p></div>
         <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:border-slate-300">Open Google Analytics <ExternalLink size={13} /></a>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{formatNumber(card.value)}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.45fr_0.85fr]">
@@ -1465,7 +1465,7 @@ function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: Analy
   return (
     <div className="mt-7 space-y-5">
       <VisitorAnalyticsPanel analytics={analytics.visitorAnalytics} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"><div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><TrendingUp size={16} className="text-slate-300" /></div><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{typeof card.value === "number" ? formatNumber(card.value) : card.value}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
       </div>
 
@@ -1598,7 +1598,7 @@ function JobSourcesPanel({
 
   return (
     <div className="mt-7 space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Configured sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{total}</p><p className="mt-2 text-xs text-slate-500">{enabled} currently enabled</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Custom sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{custom}</p><p className="mt-2 text-xs text-slate-500">Admin or employer verified boards</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last fetch</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{formatNumber(fetched)}</p><p className="mt-2 text-xs text-slate-500">{lastRun ? formatDate(lastRun.created_at, true) : "No run recorded"}</p></article>

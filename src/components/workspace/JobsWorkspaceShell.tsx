@@ -13,7 +13,7 @@ export function JobsWorkspaceShell({ children }: { children: ReactNode }) {
   if (!memberView) return children;
 
   return (
-    <div>
+    <div className="ir35-workspace-canvas min-h-screen">
       <AppNav />
       {children}
     </div>
