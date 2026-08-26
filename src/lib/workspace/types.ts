@@ -107,6 +107,18 @@ export interface ContractorProfile {
   professionalSummary?: string;
   targetRole?: string;
   githubUrl?: string;
+  githubProfile?: {
+    username: string;
+    avatarUrl: string;
+    profileUrl: string;
+    company: string;
+    publicRepos: number;
+    followers: number;
+    languages: string[];
+    importedProjects: number;
+    connectedAt: string;
+    syncedAt: string;
+  };
   skills?: string[];
   certifications?: string[];
   experienceText?: string;

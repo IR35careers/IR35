@@ -29,6 +29,8 @@ interface AuthContextValue {
   signUpWithPassword: (email: string, password: string, next?: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   signInWithGoogle: (next?: string, selectAccount?: boolean) => Promise<AuthResult>;
+  signInWithGithub: (next?: string) => Promise<AuthResult>;
+  linkGithubIdentity: (next?: string) => Promise<AuthResult>;
   signInWithGoogleAdmin: () => Promise<AuthResult>;
   signInWithGoogleIdToken: (token: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
@@ -206,6 +208,38 @@ async function signInWithGoogle(
   return { error: null };
 }
 
+function githubCallbackUrl(next: string): string {
+  const callback = new URL("/account/github", window.location.origin);
+  callback.searchParams.set("next", resolvePostAuthPath(next));
+  return callback.toString();
+}
+
+async function signInWithGithub(next = "/dashboard"): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { error } = await getSupabase().auth.signInWithOAuth({
+    provider: "github",
+    options: {
+      redirectTo: githubCallbackUrl(next),
+      scopes: "read:user user:email",
+    },
+  });
+  return { error: error ? error.message : null };
+}
+
+async function linkGithubIdentity(next = "/profile#profile-professional-details"): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { error } = await getSupabase().auth.linkIdentity({
+    provider: "github",
+    options: {
+      redirectTo: githubCallbackUrl(next),
+      scopes: "read:user user:email",
+    },
+  });
+  return { error: error ? error.message : null };
+}
+
 async function signInWithGoogleAdmin(): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   window.open("/api/auth/google?next=%2F&select_account=1", "_self");
@@ -260,6 +294,8 @@ export function useAuth(): AuthContextValue {
     signUpWithPassword,
     requestPasswordReset,
     signInWithGoogle,
+    signInWithGithub,
+    linkGithubIdentity,
     signInWithGoogleAdmin,
     signInWithGoogleIdToken,
     updatePassword,

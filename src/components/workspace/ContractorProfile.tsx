@@ -13,6 +13,7 @@ import {
   IdCard,
   ListChecks,
   Plus,
+  RefreshCw,
   Save,
   ShieldCheck,
   Sparkles,
@@ -151,7 +152,7 @@ function startingProfiles(
 }
 
 export function ContractorProfile({ returnTo }: { returnTo?: string }) {
-  const { user } = useAuth();
+  const { user, linkGithubIdentity } = useAuth();
   const workspace = useWorkspaceState();
   const latestApplication = workspace.applications[0];
   const [profile, setProfile] = useState<ContractorProfileType>(() => {
@@ -181,6 +182,8 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
   const [skillSuggestionDetails, setSkillSuggestionDetails] = useState<ResumeSkillSuggestion[]>([]);
   const [cvDetectedFields, setCvDetectedFields] = useState<string[]>([]);
+  const [githubSyncing, setGithubSyncing] = useState(false);
+  const [githubNotice, setGithubNotice] = useState<string | null>(null);
   const activeNavigationId: ProfileNavigationId =
     tab === "details" ? detailsSection : tab;
   const selectProfileSection = (id: ProfileNavigationId) => {
@@ -278,6 +281,57 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     }
   };
   const save = async () => persistProfile(profile);
+
+  const githubIdentity = user?.identities?.find((identity) => identity.provider === "github");
+  const githubConnected = Boolean(githubIdentity || profile.githubProfile?.username);
+  const connectGithub = async () => {
+    setGithubNotice(null);
+    setGithubSyncing(true);
+    const result = await linkGithubIdentity("/profile#profile-professional-details");
+    if (result.error) {
+      setGithubNotice(
+        /manual linking is disabled|provider is not enabled|unsupported provider/i.test(result.error)
+          ? "GitHub connection is not enabled for this environment yet. You can still add your GitHub URL manually."
+          : result.error,
+      );
+      setGithubSyncing(false);
+    }
+  };
+  const refreshGithub = async () => {
+    setGithubNotice(null);
+    setGithubSyncing(true);
+    try {
+      const { getSupabase } = await import("@/lib/supabase");
+      const { data } = await getSupabase().auth.getSession();
+      if (!data.session) throw new Error("Sign in again before refreshing GitHub.");
+      const response = await fetch("/api/integrations/github/profile", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${data.session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        updatedFields?: string[];
+        profile?: ContractorProfileType;
+      };
+      if (!response.ok || !payload.profile) throw new Error(payload.error ?? "GitHub could not be refreshed.");
+      setProfile(payload.profile);
+      updateWorkspace((current) => ({ ...current, profile: payload.profile as ContractorProfileType }));
+      setSaved(true);
+      setGithubNotice(
+        payload.updatedFields?.length
+          ? `Updated ${payload.updatedFields.join(", ")} from GitHub. Review the details below.`
+          : "GitHub is up to date. Your existing profile information was preserved.",
+      );
+    } catch (error) {
+      setGithubNotice(error instanceof Error ? error.message : "GitHub could not be refreshed.");
+    } finally {
+      setGithubSyncing(false);
+    }
+  };
 
   const completeness = readiness.percentage;
   const skills = profile.skills ?? [];
@@ -834,6 +888,53 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   </p>
                 </div>
               )}
+              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white">
+                      <Github size={21} />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-slate-950">GitHub professional profile</p>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${githubConnected ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
+                          {githubConnected ? "Connected" : "Optional"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        {githubConnected
+                          ? `Connected as ${profile.githubProfile?.username ?? String((githubIdentity?.identity_data as Record<string, unknown> | undefined)?.user_name ?? "your GitHub account")}. Public project evidence can fill missing profile details.`
+                          : "Connect once to import your public name, location, portfolio, repository languages and selected projects."}
+                      </p>
+                    </div>
+                  </div>
+                  {githubConnected ? (
+                    <button type="button" onClick={() => void refreshGithub()} disabled={githubSyncing} className="ir35-focus inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60">
+                      <RefreshCw size={14} className={githubSyncing ? "animate-spin" : ""} /> {githubSyncing ? "Refreshing" : "Refresh from GitHub"}
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => void connectGithub()} disabled={githubSyncing} className="ir35-focus inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-bold text-white hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">
+                      {githubSyncing ? <RefreshCw size={14} className="animate-spin" /> : <Github size={14} />} {githubSyncing ? "Opening GitHub" : "Connect GitHub"}
+                    </button>
+                  )}
+                </div>
+                {profile.githubProfile && (
+                  <div className="grid grid-cols-2 border-t border-slate-200 bg-white sm:grid-cols-4">
+                    {[
+                      ["Repositories", String(profile.githubProfile.publicRepos)],
+                      ["Languages", String(profile.githubProfile.languages.length)],
+                      ["Projects added", String(profile.githubProfile.importedProjects)],
+                      ["Last synced", new Date(profile.githubProfile.syncedAt).toLocaleDateString("en-GB")],
+                    ].map(([label, value]) => (
+                      <div key={label} className="border-r border-slate-100 px-3 py-3 last:border-r-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">{label}</p>
+                        <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {githubNotice && <p role="status" className="border-t border-slate-200 bg-white px-4 py-3 text-xs font-semibold leading-5 text-slate-600">{githubNotice}</p>}
+              </div>
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <Field
                   label="Full name"
