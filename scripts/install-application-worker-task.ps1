@@ -3,8 +3,10 @@ $ErrorActionPreference = "Stop"
 $taskName = "IR35Careers Application Worker"
 $workspace = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $node = Join-Path $env:ProgramFiles "nodejs\node.exe"
+$powershell = (Get-Command powershell.exe -ErrorAction Stop).Source
 $environment = Join-Path $workspace "services\application-worker\.env"
 $worker = Join-Path $workspace "services\application-worker\dist\server.mjs"
+$supervisor = Join-Path $workspace "scripts\run-application-worker.ps1"
 $userId = if ($env:USERDOMAIN) {
   "$env:USERDOMAIN\$env:USERNAME"
 } else {
@@ -19,6 +21,9 @@ if (-not (Test-Path -LiteralPath $environment -PathType Leaf)) {
 }
 if (-not (Test-Path -LiteralPath $worker -PathType Leaf)) {
   throw "Build the application worker before installing the task."
+}
+if (-not (Test-Path -LiteralPath $supervisor -PathType Leaf)) {
+  throw "The application worker supervisor was not found."
 }
 
 $workerVersion = (& git -C $workspace rev-parse --short=12 HEAD 2>$null)
@@ -43,10 +48,19 @@ if ($LASTEXITCODE -eq 0 -and $workerVersion) {
 }
 
 $action = New-ScheduledTaskAction `
-  -Execute $node `
-  -Argument "--env-file=`"$environment`" `"$worker`"" `
+  -Execute $powershell `
+  -Argument "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$supervisor`"" `
   -WorkingDirectory $workspace
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $userId
+$logonTrigger = New-ScheduledTaskTrigger -AtLogOn -User $userId
+# A logon-only task remains stopped after an unexpected termination. This
+# lightweight recovery trigger is ignored while the supervisor is healthy and
+# restarts it within five minutes if Windows, an update or a browser crash ends
+# the process.
+$recoveryTrigger = New-ScheduledTaskTrigger `
+  -Once `
+  -At ((Get-Date).AddMinutes(1)) `
+  -RepetitionInterval (New-TimeSpan -Minutes 5) `
+  -RepetitionDuration (New-TimeSpan -Days 3650)
 $principal = New-ScheduledTaskPrincipal `
   -UserId $userId `
   -LogonType Interactive `
@@ -63,7 +77,7 @@ $settings = New-ScheduledTaskSettingsSet `
 
 $task = New-ScheduledTask `
   -Action $action `
-  -Trigger $trigger `
+  -Trigger @($logonTrigger, $recoveryTrigger) `
   -Principal $principal `
   -Settings $settings
 

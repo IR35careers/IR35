@@ -18,9 +18,11 @@ import type { JobListing } from "@/lib/job-types";
 type AutomationSection = "matches" | "materials" | "permission";
 
 const DEFAULT_PREFERENCES: ApplicationPreferences = {
+  applicationMode: "automatic",
+  guidedReviewThreshold: 80,
   resumeOptimisation: "honest",
   autoApproveSafeEdits: true,
-  reviewBeforeSubmit: true,
+  reviewBeforeSubmit: false,
   generateCoverLetter: true,
   usePrivateApplicationEmail: true,
 };
@@ -43,6 +45,8 @@ export function AutomationSettings() {
   const [workflowPreferences, setWorkflowPreferences] = useState<
     Pick<
       ApplicationPreferences,
+      | "applicationMode"
+      | "guidedReviewThreshold"
       | "resumeOptimisation"
       | "autoApproveSafeEdits"
       | "reviewBeforeSubmit"
@@ -50,9 +54,11 @@ export function AutomationSettings() {
       | "usePrivateApplicationEmail"
     >
   >({
+    applicationMode: storedPreferences.applicationMode ?? "automatic",
+    guidedReviewThreshold: storedPreferences.guidedReviewThreshold ?? 80,
     resumeOptimisation: storedPreferences.resumeOptimisation ?? "honest",
     autoApproveSafeEdits: storedPreferences.autoApproveSafeEdits ?? true,
-    reviewBeforeSubmit: storedPreferences.reviewBeforeSubmit ?? true,
+    reviewBeforeSubmit: (storedPreferences.applicationMode ?? "automatic") === "review",
     generateCoverLetter: storedPreferences.generateCoverLetter ?? true,
     usePrivateApplicationEmail:
       storedPreferences.usePrivateApplicationEmail ?? true,
@@ -92,6 +98,8 @@ export function AutomationSettings() {
   const preferencesForSave = (): ApplicationPreferences => ({
     ...storedPreferences,
     ...workflowPreferences,
+    autoApproveSafeEdits: true,
+    reviewBeforeSubmit: workflowPreferences.applicationMode === "review",
     autoApplyEnabled: autoApplyEnabled && consentAccepted,
     autoApplyConsentAt: autoApplyEnabled && consentAccepted
       ? storedPreferences.autoApplyConsentAt || new Date().toISOString()
@@ -134,7 +142,7 @@ export function AutomationSettings() {
     setRunError(null);
     setNotice(
       safeRules.enabled
-        ? "Auto Apply is on. Matching applications will run each morning."
+        ? `${workflowPreferences.applicationMode === "automatic" ? "Automatic" : workflowPreferences.applicationMode === "guided" ? "Guided" : "Review"} mode is on. Matching applications will run each morning.`
         : "Auto Apply is paused.",
     );
     return preferences;
@@ -337,6 +345,61 @@ export function AutomationSettings() {
             </ol>
 
             <div className="mt-6 border-t border-slate-200 pt-6">
+              <h3 className="text-sm font-bold text-slate-950">Choose how applications move</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                You can change mode at any time. Login, security and unanswered employer questions still pause safely.
+              </p>
+              <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                {(
+                  [
+                    ["automatic", "Automatic", "Tailor and submit compatible applications without a final review."],
+                    ["guided", "Guided", "Submit stronger matches automatically and hold lower matches for review."],
+                    ["review", "Review", "Prepare every application and wait for your approval before submitting."],
+                  ] as const
+                ).map(([value, label, help]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={workflowPreferences.applicationMode === value}
+                    onClick={() => {
+                      setWorkflowPreferences((current) => ({
+                        ...current,
+                        applicationMode: value,
+                        reviewBeforeSubmit: value === "review",
+                        autoApproveSafeEdits: true,
+                      }));
+                      setSaved(false);
+                    }}
+                    className={`ir35-focus rounded-2xl border p-4 text-left transition ${workflowPreferences.applicationMode === value ? "border-brand-500 bg-brand-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-950">{label}</strong>
+                      <span className={`h-3 w-3 rounded-full border-2 ${workflowPreferences.applicationMode === value ? "border-brand-700 bg-brand-700" : "border-slate-300"}`} />
+                    </span>
+                    <span className="mt-2 block text-xs leading-5 text-slate-600">{help}</span>
+                  </button>
+                ))}
+              </div>
+              {workflowPreferences.applicationMode === "guided" && (
+                <label className="mt-4 block rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm font-semibold text-slate-800">
+                  Review applications below {workflowPreferences.guidedReviewThreshold ?? 80}% match
+                  <input
+                    type="range"
+                    min="60"
+                    max="90"
+                    step="5"
+                    value={workflowPreferences.guidedReviewThreshold ?? 80}
+                    onChange={(event) => {
+                      setWorkflowPreferences((current) => ({ ...current, guidedReviewThreshold: Number(event.target.value) }));
+                      setSaved(false);
+                    }}
+                    className="mt-3 w-full accent-emerald-700"
+                  />
+                </label>
+              )}
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-6">
               <h3 className="text-sm font-bold text-slate-950">Resume preparation</h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {(
@@ -366,8 +429,6 @@ export function AutomationSettings() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  ["autoApproveSafeEdits", "Auto-approve safe Resume edits", "Apply only evidence-backed edits without pausing."],
-                  ["reviewBeforeSubmit", "Review before submit", "Prepare the form, then wait for your final approval."],
                   ["generateCoverLetter", "Generate a cover letter", "Create a concise letter from verified Resume evidence."],
                   ["usePrivateApplicationEmail", "Use my IR35Careers application email", "Link employer replies to the correct contract and forward them."],
                 ] as const
@@ -390,9 +451,11 @@ export function AutomationSettings() {
               ))}
             </div>
             <p className="mt-4 rounded-2xl bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-200">
-              {workflowPreferences.reviewBeforeSubmit
-                ? "Current mode: matching contracts are prepared automatically and wait for your approval before submission."
-                : "Current mode: eligible contracts are submitted automatically after required answers and safe Resume changes are approved."}
+              {workflowPreferences.applicationMode === "automatic"
+                ? "Automatic mode: compatible contracts are tailored and submitted in the background. Only a genuine employer restriction pauses the application."
+                : workflowPreferences.applicationMode === "guided"
+                  ? `Guided mode: matches at ${workflowPreferences.guidedReviewThreshold ?? 80}% or above submit automatically. Lower matches wait for your review.`
+                  : "Review mode: contracts are prepared automatically and wait for your approval before submission."}
             </p>
           </section>}
 

@@ -38,6 +38,8 @@ export interface ResumeProfile {
 }
 
 export interface ApplicationPreferences {
+  applicationMode?: "automatic" | "guided" | "review";
+  guidedReviewThreshold?: number;
   resumeOptimisation: "off" | "honest" | "strong";
   autoApproveSafeEdits: boolean;
   reviewBeforeSubmit: boolean;

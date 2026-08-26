@@ -45,9 +45,11 @@ export const SAMPLE_CONTRACTOR_PROFILE: ContractorProfile = {
   experienceText: "Senior Platform Engineer at Example Consultancy, 2022 to present\nDevOps Engineer at Example Digital, 2019 to 2022",
   projectsText: "Reusable Terraform modules and Kubernetes delivery controls for UK product teams.",
   applicationPreferences: {
+    applicationMode: "automatic",
+    guidedReviewThreshold: 80,
     resumeOptimisation: "honest",
     autoApproveSafeEdits: true,
-    reviewBeforeSubmit: true,
+    reviewBeforeSubmit: false,
     generateCoverLetter: true,
     usePrivateApplicationEmail: true,
   },

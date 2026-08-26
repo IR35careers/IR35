@@ -182,6 +182,14 @@ export async function POST(request: Request): Promise<Response> {
         }))
       : storedPreferences.autoApplyLanes;
     const preferences: ApplicationPreferences = {
+      applicationMode:
+        body.preferences?.applicationMode ??
+        storedPreferences.applicationMode ??
+        "automatic",
+      guidedReviewThreshold:
+        body.preferences?.guidedReviewThreshold ??
+        storedPreferences.guidedReviewThreshold ??
+        80,
       resumeOptimisation:
         body.preferences?.resumeOptimisation ??
         storedPreferences.resumeOptimisation ??
@@ -191,9 +199,9 @@ export async function POST(request: Request): Promise<Response> {
         storedPreferences.autoApproveSafeEdits ??
         true,
       reviewBeforeSubmit:
-        body.preferences?.reviewBeforeSubmit ??
-        storedPreferences.reviewBeforeSubmit ??
-        true,
+        (body.preferences?.applicationMode ??
+          storedPreferences.applicationMode ??
+          "automatic") === "review",
       generateCoverLetter:
         body.preferences?.generateCoverLetter ??
         storedPreferences.generateCoverLetter ??
@@ -362,8 +370,8 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ state: "needs_user", application, questions: missing, message: `${missing.length} employer answer${missing.length === 1 ? " is" : "s are"} needed before this application can be sent.` }, { status: 202, headers: NO_STORE });
     }
 
-    if (autoApplyNeedsReview(preferences)) {
-      const reviewReason = autoApplyReviewReason(preferences);
+    if (autoApplyNeedsReview(preferences, application.matchScore)) {
+      const reviewReason = autoApplyReviewReason(preferences, application.matchScore);
       const materialsApproved = Boolean(
         preferences.autoApproveSafeEdits ||
           preferences.resumeOptimisation === "off",

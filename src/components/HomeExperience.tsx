@@ -6,21 +6,22 @@ import {
   BriefcaseBusiness,
   Calculator,
   Check,
-  ClipboardCheck,
+  CircleCheckBig,
   FileCheck2,
   Gauge,
-  Inbox,
-  ListChecks,
   MapPin,
+  MessageSquareText,
   Search,
+  Send,
   ShieldCheck,
+  WandSparkles,
 } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { FeaturedJobs } from "@/components/FeaturedJobs";
 import { buttonClassName } from "@/components/ui/button";
 import { AuthenticatedHomeRedirect } from "@/components/AuthenticatedHomeRedirect";
-import { HomeScrollProgress, Reveal } from "@/components/HomeMotion";
+import { HomeScrollProgress, HomeStickyCta, Reveal } from "@/components/HomeMotion";
 
 const PRINCIPLES = [
   {
@@ -48,7 +49,7 @@ const PRINCIPLES = [
 
 const GUIDE_CARDS = [
   {
-    href: "/resources",
+    href: "/blog/inside-vs-outside-ir35-contract-checks",
     eyebrow: "IR35 essentials",
     title: "Inside or outside: what actually changes?",
     body: "A plain-English guide to status, working practices and the practical questions to ask.",
@@ -67,12 +68,16 @@ const GUIDE_CARDS = [
   },
 ] as const;
 
-const WORKFLOW = [
-  { icon: Search, title: "Discover", body: "Filter UK contracts by IR35 status, rate, skill and working pattern.", href: "/jobs" },
-  { icon: FileCheck2, title: "Understand", body: "Review status evidence, match factors and gaps before investing time.", href: "/analyse-job" },
-  { icon: ClipboardCheck, title: "Prepare", body: "Tailor the Resume, draft a grounded letter and approve every screening answer.", href: "/applications" },
-  { icon: ListChecks, title: "Track", body: "Move applications through a readable pipeline without drag-and-drop.", href: "/applications" },
-  { icon: Inbox, title: "Respond", body: "Keep recruiter messages linked to the contract that generated them.", href: "/inbox" },
+const JOURNEY = [
+  { icon: WandSparkles, eyebrow: "Prepare", title: "Build one contractor profile", body: "Import your Resume once. IR35Careers extracts your evidence, reusable answers, work preferences and contract details." },
+  { icon: Send, eyebrow: "Apply", title: "Choose how much control you want", body: "Automatic, Guided and Review modes tailor your materials and handle compatible employer forms using your saved facts." },
+  { icon: MessageSquareText, eyebrow: "Progress", title: "Keep every outcome together", body: "Employer confirmation, recruiter messages and any genuine action needed stay linked to the original contract." },
+] as const;
+
+const APPLICATION_MODES = [
+  { title: "Automatic", body: "Submit compatible forms in the background.", tone: "border-emerald-300/30 bg-emerald-300/10 text-emerald-100" },
+  { title: "Guided", body: "Submit strong matches and review the rest.", tone: "border-sky-300/30 bg-sky-300/10 text-sky-100" },
+  { title: "Review", body: "Approve every employer submission yourself.", tone: "border-violet-300/30 bg-violet-300/10 text-violet-100" },
 ] as const;
 
 const FAQS = [
@@ -89,7 +94,7 @@ export function HomeExperience() {
     <div className="min-h-screen overflow-x-hidden bg-[#f6f8f7] text-slate-950">
       <AuthenticatedHomeRedirect />
       <HomeScrollProgress />
-      <PublicHeader />
+      <PublicHeader variant="floating" />
 
       <main>
         <section className="ir35-home-hero relative isolate overflow-hidden border-b border-emerald-100/80">
@@ -100,19 +105,29 @@ export function HomeExperience() {
             <div className="absolute left-[44%] top-8 h-48 w-48 rounded-full bg-cyan-100/40 blur-3xl" />
           </div>
 
-          <div className="ir35-container grid items-center gap-9 py-10 sm:py-14 lg:min-h-[590px] lg:grid-cols-[1.04fr_0.96fr] lg:gap-14 lg:py-16">
+          <div className="ir35-container grid items-center gap-9 pb-12 pt-28 sm:pb-16 sm:pt-32 lg:min-h-[720px] lg:grid-cols-[1.04fr_0.96fr] lg:gap-14 lg:pb-20 lg:pt-36">
             <Reveal className="min-w-0" distance={16}>
               <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-emerald-200 bg-white/90 px-3 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur">
-                <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden="true" /> Open public beta for UK contractors
+                <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden="true" /> Built around UK contract work
               </span>
               <h1 className="mt-6 max-w-[760px] text-[2.55rem] font-semibold leading-[0.99] tracking-[-0.06em] text-slate-950 sm:text-[3.7rem] lg:text-[4.35rem]">
-                Contract work, without the <span className="text-brand-600">IR35 guesswork.</span>
+                Stop piecing contract work together.
+                <span className="ir35-home-wordmark-gradient mt-2 block">Search, tailor and track in one place.</span>
               </h1>
               <p className="ir35-reading-measure mt-5 max-w-[600px] text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                Find UK contracts, tailor your Resume for each role and keep every application in one clear workspace.
+                Find Inside and Outside IR35 roles, build one evidence-based Resume profile and keep every employer outcome connected to the contract that started it.
               </p>
 
-              <form action="/jobs" method="get" className="mt-7 rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_20px_60px_-38px_rgba(6,95,70,0.42)] backdrop-blur" role="search">
+              <div id="home-primary-actions" className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link href="/jobs" className={buttonClassName({ size: "lg", className: "ir35-gel-button sm:min-w-44" })}>
+                  Browse contracts <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <Link href="/account?mode=create&next=%2Fprofile" prefetch={false} className={buttonClassName({ variant: "secondary", size: "lg", className: "sm:min-w-44" })}>
+                  Build your profile
+                </Link>
+              </div>
+
+              <form action="/jobs" method="get" className="mt-5 rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_20px_60px_-38px_rgba(6,95,70,0.42)] backdrop-blur" role="search">
                 <div className="grid gap-2 sm:grid-cols-[1fr_0.75fr_auto]">
                   <label className="relative block">
                     <span className="sr-only">Role, skill or company</span>
@@ -135,7 +150,7 @@ export function HomeExperience() {
                     />
                   </label>
                   <button type="submit" className={buttonClassName({ size: "lg", className: "w-full sm:w-auto" })}>
-                    Search contracts <ArrowRight size={16} aria-hidden="true" />
+                    Search <ArrowRight size={16} aria-hidden="true" />
                   </button>
                 </div>
               </form>
@@ -174,6 +189,19 @@ export function HomeExperience() {
           </div>
         </section>
 
+        <section className="border-b border-emerald-100/80 bg-[#f2faf6] py-5" aria-label="Contract disciplines">
+          <div className="ir35-container">
+            <p className="text-center text-[11px] font-bold uppercase tracking-[0.17em] text-brand-700">Contract disciplines moving through IR35Careers</p>
+            <div className="ir35-marquee-mask mt-3">
+              <div className="ir35-marquee-track" aria-hidden="true">
+                {[...Array(2)].flatMap((_, group) => ["DevOps", "Cloud", "Data", "Cyber Security", "Product", "Project Delivery", "Engineering", "Finance"].map((role) => (
+                  <span key={`${group}-${role}`} className="whitespace-nowrap rounded-full border border-emerald-200/80 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm">{role}</span>
+                )))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="ir35-home-surface py-12 sm:py-14 lg:py-16">
           <div className="ir35-container">
             <div className="grid items-end gap-5 lg:grid-cols-[1fr_auto]">
@@ -209,27 +237,72 @@ export function HomeExperience() {
             <div className="absolute -right-32 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full border-[80px] border-emerald-400/[0.05]" />
           </div>
           <div className="ir35-container relative">
-            <div className="grid items-end gap-5 lg:grid-cols-[1fr_0.7fr]">
+            <div className="grid items-end gap-5 lg:grid-cols-[1fr_0.72fr]">
               <Reveal className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">One connected workspace</p>
-                <h2 className="mt-3 text-3xl font-bold tracking-[-0.045em] sm:text-4xl">From discovery to recruiter reply.</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">One reusable contractor profile</p>
+                <h2 className="mt-3 text-3xl font-bold tracking-[-0.045em] sm:text-4xl">Prepare once. Apply your way. See every outcome.</h2>
               </Reveal>
               <Reveal delay={0.06}>
-                <p className="text-sm leading-6 text-slate-300 lg:text-right">Prepare reviewed application materials, keep confirmations and follow every response without losing the original role.</p>
+                <p className="text-sm leading-6 text-slate-300 lg:text-right">IR35Careers adapts the application workflow to UK contract work, including status, day rate, availability, clearance and working pattern.</p>
               </Reveal>
             </div>
-            <div className="relative mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {WORKFLOW.map((step, index) => (
-                <Reveal key={step.title} delay={index * 0.055} distance={16}>
-                  <Link href={step.href} className="ir35-focus group flex min-h-[200px] flex-col rounded-2xl border border-white/10 bg-white/[0.045] p-5 transition-[border-color,background-color,transform] hover:-translate-y-1 hover:border-emerald-300/40 hover:bg-white/[0.08]">
-                    <div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={19} /></span><span className="text-xs font-bold text-slate-400">0{index + 1}</span></div>
-                    <h3 className="mt-5 font-semibold">{step.title}</h3>
+            <div className="relative mt-7 grid gap-3 lg:grid-cols-3">
+              {JOURNEY.map((step, index) => (
+                <Reveal key={step.title} delay={index * 0.07} distance={16}>
+                  <article className="flex min-h-[218px] flex-col rounded-2xl border border-white/10 bg-white/[0.045] p-6 transition-[border-color,background-color,transform] hover:-translate-y-1 hover:border-emerald-300/40 hover:bg-white/[0.08]">
+                    <div className="flex items-center justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={20} /></span><span className="text-xs font-bold text-slate-400">0{index + 1}</span></div>
+                    <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300">{step.eyebrow}</p>
+                    <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-slate-300">{step.body}</p>
-                    <span className="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-semibold text-emerald-300">Open <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" /></span>
-                  </Link>
+                  </article>
                 </Reveal>
               ))}
             </div>
+            <div className="mt-4 grid gap-4 rounded-3xl border border-white/10 bg-slate-950/45 p-4 sm:p-5 lg:grid-cols-[1fr_0.9fr]">
+              <Reveal>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {APPLICATION_MODES.map((mode) => (
+                    <div key={mode.title} className={`rounded-2xl border p-4 ${mode.tone}`}>
+                      <p className="font-semibold text-white">{mode.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">{mode.body}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xs leading-5 text-slate-400">Employer login, CAPTCHA or identity checks pause safely. IR35Careers never bypasses employer security controls.</p>
+              </Reveal>
+              <Reveal delay={0.08}>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
+                  <div className="flex items-center justify-between"><p className="text-sm font-semibold">Example application progress</p><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Live in your tracker</span></div>
+                  <div className="mt-4 space-y-2">
+                    {[
+                      [CircleCheckBig, "Platform Engineer", "Submitted", "text-emerald-300"],
+                      [WandSparkles, "Cloud Consultant", "Tailoring Resume", "text-sky-300"],
+                      [MessageSquareText, "DevOps Contractor", "Recruiter replied", "text-violet-300"],
+                    ].map(([Icon, role, status, colour]) => {
+                      const StatusIcon = Icon as typeof CircleCheckBig;
+                      return <div key={String(role)} className="flex items-center gap-3 rounded-xl bg-slate-900/75 px-3 py-2.5"><StatusIcon size={16} className={String(colour)} /><span className="min-w-0 flex-1 truncate text-sm text-slate-100">{String(role)}</span><span className="text-xs text-slate-400">{String(status)}</span></div>;
+                    })}
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={0.1} className="mt-5 flex flex-wrap gap-3">
+              <Link href="/account?mode=create&next=%2Fprofile" prefetch={false} className={buttonClassName({ variant: "accent" })}>Build your contractor profile <ArrowRight size={15} /></Link>
+              <Link href="/automation" className={buttonClassName({ variant: "secondary", className: "border-white/20 bg-white/5 text-white hover:bg-white/10" })}>Explore Auto Apply</Link>
+            </Reveal>
+          </div>
+        </section>
+
+        <section className="ir35-home-celebration overflow-hidden border-y border-emerald-200/70 py-12 sm:py-14">
+          <div className="ir35-container grid items-center gap-8 lg:grid-cols-[1fr_auto]">
+            <Reveal>
+              <p className="text-xs font-bold uppercase tracking-[0.17em] text-emerald-800">One joined-up contractor journey</p>
+              <h2 className="mt-3 max-w-4xl text-3xl font-semibold tracking-[-0.045em] text-slate-950 sm:text-5xl">A contract search should end with clarity, not another spreadsheet.</h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">Keep the role, tailored Resume, approved answers, submission confirmation and recruiter reply in one private workspace.</p>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ size: "lg", className: "ir35-gel-button min-w-52" })}>Create free account <ArrowRight size={16} /></Link>
+            </Reveal>
           </div>
         </section>
 
@@ -242,7 +315,7 @@ export function HomeExperience() {
                 <p className="mt-3 text-sm leading-6 text-slate-600">Use clear educational tools to ask better questions, then seek professional advice when the engagement needs it.</p>
               </Reveal>
               <Reveal delay={0.06}>
-                <Link href="/resources" className={buttonClassName({ variant: "secondary", className: "hidden lg:inline-flex" })}>Browse all resources <ArrowRight size={15} aria-hidden="true" /></Link>
+                <Link href="/blog" className={buttonClassName({ variant: "secondary", className: "hidden lg:inline-flex" })}>Browse contractor guides <ArrowRight size={15} aria-hidden="true" /></Link>
               </Reveal>
             </div>
             <div className="mt-7 grid gap-4 md:grid-cols-3">
@@ -257,7 +330,7 @@ export function HomeExperience() {
                 </Reveal>
               ))}
             </div>
-            <Link href="/resources" className={buttonClassName({ variant: "secondary", className: "mt-6 w-full lg:hidden" })}>Browse all resources <ArrowRight size={15} aria-hidden="true" /></Link>
+            <Link href="/blog" className={buttonClassName({ variant: "secondary", className: "mt-6 w-full lg:hidden" })}>Browse contractor guides <ArrowRight size={15} aria-hidden="true" /></Link>
           </div>
         </section>
 
@@ -288,7 +361,7 @@ export function HomeExperience() {
               <p className="text-sm font-semibold text-emerald-300">Your next contract, with the important details visible.</p>
               <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Start with the role. Create an account only when you want to save the search.</h2>
               <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
-                {["Free to browse", "Original source links", "No application submitted without you"].map((item) => <li key={item} className="flex items-center gap-2"><Check size={15} className="text-emerald-300" aria-hidden="true" />{item}</li>)}
+                {["Free to browse", "Original source links", "Automatic, Guided or Review mode"].map((item) => <li key={item} className="flex items-center gap-2"><Check size={15} className="text-emerald-300" aria-hidden="true" />{item}</li>)}
               </ul>
             </Reveal>
             <Reveal delay={0.1} className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
@@ -300,6 +373,7 @@ export function HomeExperience() {
       </main>
 
       <PublicFooter />
+      <HomeStickyCta />
     </div>
   );
 }

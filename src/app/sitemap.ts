@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { allSeoSlugs } from "@/lib/seo-pages";
 import { SITE_ORIGIN } from "@/lib/seo";
+import { BLOG_POSTS } from "@/lib/blog-posts";
 
 // Refresh the sitemap hourly.
 export const revalidate = 3600;
@@ -22,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/resources`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/ir35-careers`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    ...BLOG_POSTS.map((post) => ({
+      url: `${BASE}/blog/${post.slug}`,
+      lastModified: new Date(`${post.updatedAt}T12:00:00Z`),
+      changeFrequency: "monthly" as const,
+      priority: 0.65,
+    })),
     { url: `${BASE}/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/beta`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/employers`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },

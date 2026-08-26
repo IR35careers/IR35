@@ -29,27 +29,54 @@ export function unresolvedRequiredQuestions(questions: ApplicationQuestion[]): A
 export function autoApplyNeedsReview(
   preferences: Pick<
     ApplicationPreferences,
-    "resumeOptimisation" | "autoApproveSafeEdits" | "reviewBeforeSubmit"
+    | "applicationMode"
+    | "guidedReviewThreshold"
+    | "resumeOptimisation"
+    | "autoApproveSafeEdits"
+    | "reviewBeforeSubmit"
   >,
+  matchScore?: number,
 ): boolean {
+  const mode = preferences.applicationMode ??
+    (preferences.reviewBeforeSubmit ? "review" : "automatic");
+  if (mode === "review") return true;
+  if (
+    preferences.resumeOptimisation !== "off" &&
+    !preferences.autoApproveSafeEdits
+  ) return true;
+  if (mode === "guided") {
+    const threshold = Math.max(
+      40,
+      Math.min(preferences.guidedReviewThreshold ?? 80, 95),
+    );
+    return typeof matchScore !== "number" || matchScore < threshold;
+  }
   return Boolean(
-    preferences.reviewBeforeSubmit ||
-      (preferences.resumeOptimisation !== "off" &&
-        !preferences.autoApproveSafeEdits),
+    preferences.resumeOptimisation !== "off" &&
+      !preferences.autoApproveSafeEdits,
   );
 }
 
 export function autoApplyReviewReason(
   preferences: Pick<
     ApplicationPreferences,
-    "resumeOptimisation" | "autoApproveSafeEdits" | "reviewBeforeSubmit"
+    | "applicationMode"
+    | "guidedReviewThreshold"
+    | "resumeOptimisation"
+    | "autoApproveSafeEdits"
+    | "reviewBeforeSubmit"
   >,
+  matchScore?: number,
 ): string {
   if (
     preferences.resumeOptimisation !== "off" &&
     !preferences.autoApproveSafeEdits
   )
     return "Your role-specific Resume changes are ready for review.";
+  if (preferences.applicationMode === "guided") {
+    const threshold = preferences.guidedReviewThreshold ?? 80;
+    return `This contract scored ${Math.round(matchScore ?? 0)}%, below your ${threshold}% automatic submission threshold.`;
+  }
   return "Your application is prepared and waiting for your final review.";
 }
 

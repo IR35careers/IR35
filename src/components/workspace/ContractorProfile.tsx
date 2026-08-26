@@ -58,9 +58,11 @@ const PROFILE_NAVIGATION: Array<{ id: ProfileNavigationId; label: string }> = [
 ];
 
 const DEFAULT_PREFERENCES: ApplicationPreferences = {
+  applicationMode: "automatic",
+  guidedReviewThreshold: 80,
   resumeOptimisation: "honest",
   autoApproveSafeEdits: true,
-  reviewBeforeSubmit: true,
+  reviewBeforeSubmit: false,
   generateCoverLetter: true,
   usePrivateApplicationEmail: true,
 };
@@ -1752,6 +1754,53 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
       {tab === "settings" && (
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <section className="ir35-card p-5 lg:col-span-2">
+            <h2 className="font-semibold">Application mode</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Decide when IR35Careers submits a compatible contract application and when it should pause for you.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {(
+                [
+                  ["automatic", "Automatic", "Tailor and submit compatible applications in the background."],
+                  ["guided", "Guided", "Submit stronger matches and hold lower matches for review."],
+                  ["review", "Review", "Wait for your approval before every employer submission."],
+                ] as const
+              ).map(([id, label, help]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={(preferences.applicationMode ?? "automatic") === id}
+                  onClick={() => set("applicationPreferences", {
+                    ...preferences,
+                    applicationMode: id,
+                    reviewBeforeSubmit: id === "review",
+                    autoApproveSafeEdits: true,
+                  })}
+                  className={`ir35-focus rounded-2xl border p-4 text-left ${(preferences.applicationMode ?? "automatic") === id ? "border-brand-500 bg-brand-50" : "border-slate-200"}`}
+                >
+                  <strong className="block text-sm text-slate-950">{label}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                </button>
+              ))}
+            </div>
+            {(preferences.applicationMode ?? "automatic") === "guided" && (
+              <label className="mt-4 block rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm font-semibold text-slate-800">
+                Review applications below {preferences.guidedReviewThreshold ?? 80}% match
+                <input
+                  type="range"
+                  min="60"
+                  max="90"
+                  step="5"
+                  value={preferences.guidedReviewThreshold ?? 80}
+                  onChange={(event) => set("applicationPreferences", {
+                    ...preferences,
+                    guidedReviewThreshold: Number(event.target.value),
+                  })}
+                  className="mt-3 w-full accent-emerald-700"
+                />
+              </label>
+            )}
+            <div className="mt-7 border-t border-slate-200 pt-6">
             <h2 className="font-semibold">Resume optimisation</h2>
             <p className="mt-1 text-sm text-slate-600">
               Choose how role-specific wording is prepared from evidence already
@@ -1802,19 +1851,10 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 </label>
               ))}
             </div>
+            </div>
             <div className="mt-6 space-y-3">
               {(
                 [
-                  {
-                    key: "autoApproveSafeEdits",
-                    label: "Auto-approve safe resume edits",
-                    help: "Apply truth-preserving changes during preparation.",
-                  },
-                  {
-                    key: "reviewBeforeSubmit",
-                    label: "Review before submit",
-                    help: "Keep the final application approval step visible.",
-                  },
                   {
                     key: "generateCoverLetter",
                     label: "Generate a cover letter",

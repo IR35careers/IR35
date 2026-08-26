@@ -31,7 +31,7 @@ const GROUPS = [
       ["Public beta", "/beta"],
       ["For employers", "/employers"],
       ["Pricing", "/pricing"],
-      ["Product updates", "/blog"],
+      ["Contractor guides", "/blog"],
       ["Contractor stories", "/stories"],
       ["Contact", "/contact"],
     ],

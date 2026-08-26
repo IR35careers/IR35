@@ -60,4 +60,17 @@ describe("auto apply", () => {
       }),
     ).toContain("Resume changes");
   });
+
+  it("supports automatic, guided and review application modes", () => {
+    const base = {
+      resumeOptimisation: "honest" as const,
+      autoApproveSafeEdits: true,
+      reviewBeforeSubmit: false,
+      guidedReviewThreshold: 80,
+    };
+    expect(autoApplyNeedsReview({ ...base, applicationMode: "automatic" }, 62)).toBe(false);
+    expect(autoApplyNeedsReview({ ...base, applicationMode: "guided" }, 79)).toBe(true);
+    expect(autoApplyNeedsReview({ ...base, applicationMode: "guided" }, 84)).toBe(false);
+    expect(autoApplyNeedsReview({ ...base, applicationMode: "review" }, 92)).toBe(true);
+  });
 });
