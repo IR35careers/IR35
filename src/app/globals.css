@@ -34,6 +34,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
   }
 
   body {
@@ -272,6 +273,60 @@
   .ir35-section-title {
     @apply text-2xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 sm:text-3xl;
   }
+
+  .ir35-home-hero {
+    background:
+      radial-gradient(circle at 76% 18%, rgba(45, 212, 191, 0.13), transparent 24rem),
+      radial-gradient(circle at 8% 92%, rgba(52, 211, 153, 0.12), transparent 22rem),
+      linear-gradient(135deg, #fbfdfb 0%, #f5fbf8 48%, #f3fbfa 100%);
+  }
+
+  .ir35-home-surface {
+    background:
+      radial-gradient(circle at 92% 12%, rgba(167, 243, 208, 0.2), transparent 20rem),
+      linear-gradient(180deg, #f8faf8 0%, #f5f8f6 100%);
+  }
+
+  .ir35-home-principle {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(167, 243, 208, 0.26), transparent 13rem),
+      #ffffff;
+  }
+
+  .ir35-home-principle::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, #18a56f, #2dd4bf);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 320ms var(--ir35-ease);
+  }
+
+  .ir35-home-principle:hover::after {
+    transform: scaleX(1);
+  }
+
+  .ir35-home-dark {
+    background:
+      radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.12), transparent 24rem),
+      radial-gradient(circle at 82% 92%, rgba(13, 148, 136, 0.1), transparent 28rem),
+      linear-gradient(135deg, #09121d 0%, #0d1722 55%, #0b1620 100%);
+  }
+
+  .ir35-home-cta {
+    background:
+      radial-gradient(circle at 88% 20%, rgba(45, 212, 191, 0.16), transparent 22rem),
+      radial-gradient(circle at 16% 120%, rgba(52, 211, 153, 0.13), transparent 24rem),
+      linear-gradient(120deg, #07111d 0%, #0a1720 52%, #092019 100%);
+  }
+
+  .ir35-home-orbit {
+    animation: ir35-orbit-drift 14s ease-in-out infinite alternate;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -329,6 +384,11 @@ details[open] > :not(summary) {
   to { background-position: -120% 0; }
 }
 
+@keyframes ir35-orbit-drift {
+  from { transform: translate3d(0, 0, 0) rotate(0deg); }
+  to { transform: translate3d(-18px, 14px, 0) rotate(5deg); }
+}
+
 @supports selector(body:has(*)) {
   @media (max-width: 1279px) {
     body:has(#workspace-quick-nav) {
@@ -358,6 +418,10 @@ details[open] > :not(summary) {
   .ir35-live-dot::after,
   .ir35-skeleton,
   details[open] > :not(summary) {
+    animation: none !important;
+  }
+
+  .ir35-home-orbit {
     animation: none !important;
   }
 }

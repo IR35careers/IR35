@@ -20,6 +20,7 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { FeaturedJobs } from "@/components/FeaturedJobs";
 import { buttonClassName } from "@/components/ui/button";
 import { AuthenticatedHomeRedirect } from "@/components/AuthenticatedHomeRedirect";
+import { HomeScrollProgress, Reveal } from "@/components/HomeMotion";
 
 const PRINCIPLES = [
   {
@@ -79,23 +80,25 @@ const FAQS = [
 
 export function HomeExperience() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#f7f8f6] text-slate-950">
+    <div className="min-h-screen overflow-x-hidden bg-[#f6f8f7] text-slate-950">
       <AuthenticatedHomeRedirect />
+      <HomeScrollProgress />
       <PublicHeader />
 
       <main>
-        <section className="relative isolate overflow-hidden border-b border-slate-200/80 bg-[#fbfcfa]">
+        <section className="ir35-home-hero relative isolate overflow-hidden border-b border-emerald-100/80">
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-            <div className="absolute -right-28 -top-36 h-[560px] w-[560px] rounded-full border-[110px] border-emerald-50/90" />
-            <div className="absolute -left-44 bottom-[-320px] h-[520px] w-[520px] rounded-full bg-emerald-50/70" />
+            <div className="ir35-home-orbit absolute -right-28 -top-40 h-[560px] w-[560px] rounded-full border-[108px] border-emerald-100/55" />
+            <div className="absolute -left-40 bottom-[-355px] h-[520px] w-[520px] rounded-full bg-emerald-100/45 blur-sm" />
+            <div className="absolute left-[42%] top-16 h-48 w-48 rounded-full bg-cyan-100/40 blur-3xl" />
           </div>
 
-          <div className="ir35-container grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.04fr_0.96fr] lg:gap-20 lg:py-24 xl:py-28">
-            <div className="min-w-0">
+          <div className="ir35-container grid items-center gap-10 py-12 sm:py-16 lg:min-h-[650px] lg:grid-cols-[1.02fr_0.98fr] lg:gap-14 lg:py-20">
+            <Reveal className="min-w-0" distance={16}>
               <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm">
                 <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden="true" /> Open public beta for UK contractors
               </span>
-              <h1 className="mt-7 max-w-[760px] text-[2.65rem] font-semibold leading-[0.99] tracking-[-0.06em] text-slate-950 sm:text-[3.6rem] lg:text-[4.25rem]">
+              <h1 className="mt-7 max-w-[760px] text-[2.4rem] font-semibold leading-[1.01] tracking-[-0.055em] text-slate-950 sm:text-[3.6rem] sm:leading-[0.99] sm:tracking-[-0.06em] lg:text-[4.25rem]">
                 Contract work, without the <span className="text-brand-600">IR35 guesswork.</span>
               </h1>
               <p className="ir35-reading-measure mt-6 max-w-[610px] text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
@@ -136,17 +139,19 @@ export function HomeExperience() {
                 <Link href="/jobs?remote=remote" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">Remote</Link>
                 <Link href="/jobs?min_rate=600" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">£600+/day</Link>
               </div>
-            </div>
+            </Reveal>
 
-            <FeaturedJobs />
+            <Reveal className="min-w-0" delay={0.12} distance={24}>
+              <FeaturedJobs />
+            </Reveal>
           </div>
         </section>
 
-        <section className="border-b border-slate-200 bg-white">
+        <section className="relative z-10 border-b border-slate-200/80 bg-white/90">
           <div className="ir35-container grid gap-px overflow-hidden border-x border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-4">
             {[
               [FileCheck2, "Status evidence", "Know what the listing states"],
-              [BriefcaseBusiness, "Contract-only focus", "Inside, Outside and TBC"],
+              [BriefcaseBusiness, "Contract-only focus", "Confirmed Inside and Outside roles"],
               [Calculator, "Free contractor tools", "Model status and take-home"],
               [BookOpen, "Plain-English guidance", "Primary sources, clear caveats"],
             ].map(([Icon, title, body]) => {
@@ -161,67 +166,87 @@ export function HomeExperience() {
           </div>
         </section>
 
-        <section className="bg-[#f7f8f6] py-16 [contain-intrinsic-size:900px] [content-visibility:auto] sm:py-24">
+        <section className="ir35-home-surface py-12 sm:py-16 lg:py-20">
           <div className="ir35-container">
-            <div className="max-w-2xl">
+            <Reveal className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">A better contractor search</p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Make the right move, not just the fastest one.</h2>
               <p className="mt-4 text-base leading-7 text-slate-600">Discovery is only useful when the important contract details are easy to compare and honest about uncertainty.</p>
-            </div>
-            <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            </Reveal>
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
               {PRINCIPLES.map((item, index) => (
-                <article key={item.title} className="ir35-card p-6 sm:p-7">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-100 text-brand-800"><item.icon size={21} aria-hidden="true" /></span>
-                    <span className="text-xs font-bold tabular-nums text-slate-600">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-5 text-lg font-semibold text-slate-950">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
-                </article>
+                <Reveal key={item.title} delay={index * 0.07} distance={18}>
+                  <article className="ir35-home-principle ir35-card min-h-[220px] p-6 sm:p-7">
+                    <div className="flex items-center justify-between">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-100 text-brand-800"><item.icon size={21} aria-hidden="true" /></span>
+                      <span className="text-xs font-bold tabular-nums text-slate-500">0{index + 1}</span>
+                    </div>
+                    <h3 className="mt-5 text-lg font-semibold text-slate-950">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+                  </article>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="border-y border-slate-800 bg-[#0d141e] py-16 text-white sm:py-24">
-          <div className="ir35-container">
-            <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">The contractor workspace</p><h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Discover, prepare and track while staying in control.</h2><p className="mt-4 text-base leading-7 text-slate-300">The review workflow stays inside IR35Careers. After your approval, the application runner completes supported public employer forms and saves the confirmation.</p></div>
-            <div className="mt-10 grid gap-3 md:grid-cols-5">
-              {WORKFLOW.map((step, index) => <Link key={step.title} href={step.href} className="ir35-focus group rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition-colors hover:border-emerald-300/40 hover:bg-white/[0.07]"><div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={19} /></span><span className="text-xs font-bold text-slate-400">0{index + 1}</span></div><h3 className="mt-5 font-semibold">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-300">{step.body}</p><span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-emerald-300">Open <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span></Link>)}
+        <section className="ir35-home-dark relative overflow-hidden border-y border-slate-800 py-12 text-white sm:py-16 lg:py-20">
+          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div className="absolute -right-32 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full border-[80px] border-emerald-400/[0.05]" />
+          </div>
+          <div className="ir35-container relative">
+            <Reveal className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">The contractor workspace</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Discover, prepare and track while staying in control.</h2>
+              <p className="mt-4 text-base leading-7 text-slate-300">The review workflow stays inside IR35Careers. After your approval, the application runner completes supported public employer forms and saves the confirmation.</p>
+            </Reveal>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {WORKFLOW.map((step, index) => (
+                <Reveal key={step.title} delay={index * 0.055} distance={16}>
+                  <Link href={step.href} className="ir35-focus group flex min-h-[230px] flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition-[border-color,background-color,transform] hover:-translate-y-1 hover:border-emerald-300/40 hover:bg-white/[0.075]">
+                    <div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={19} /></span><span className="text-xs font-bold text-slate-400">0{index + 1}</span></div>
+                    <h3 className="mt-5 font-semibold">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{step.body}</p>
+                    <span className="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-semibold text-emerald-300">Open <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" /></span>
+                  </Link>
+                </Reveal>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-[#eef5f1] py-16 [contain-intrinsic-size:900px] [content-visibility:auto] sm:py-20">
+        <section className="border-y border-emerald-100 bg-[#edf6f1] py-12 sm:py-16 lg:py-20">
           <div className="ir35-container grid items-start gap-10 lg:grid-cols-[0.72fr_1.28fr]">
-            <div className="lg:sticky lg:top-28">
+            <Reveal className="lg:sticky lg:top-28">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">Understand before you apply</p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950">Practical IR35 guidance, alongside the work.</h2>
               <p className="mt-4 text-sm leading-6 text-slate-600">Tools are indicative and educational. They help you ask better questions; they do not replace a professional status review.</p>
               <Link href="/resources" className={buttonClassName({ variant: "secondary", className: "mt-6" })}>Browse all resources <ArrowRight size={15} aria-hidden="true" /></Link>
-            </div>
+            </Reveal>
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              {GUIDE_CARDS.map((guide) => (
-                <Link key={guide.href} href={guide.href} className="ir35-focus group flex min-h-[250px] flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition-transform hover:-translate-y-0.5">
-                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-700">{guide.eyebrow}</span>
-                  <h3 className="mt-4 text-lg font-semibold leading-6 text-slate-950">{guide.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{guide.body}</p>
-                  <span className="mt-auto pt-6 text-sm font-semibold text-brand-700">Open <ArrowRight className="inline transition-transform group-hover:translate-x-0.5" size={14} aria-hidden="true" /></span>
-                </Link>
+              {GUIDE_CARDS.map((guide, index) => (
+                <Reveal key={guide.href} delay={index * 0.07} distance={16}>
+                  <Link href={guide.href} className="ir35-focus group flex min-h-[240px] flex-col rounded-2xl border border-white/90 bg-white/90 p-6 shadow-card backdrop-blur-sm transition-[transform,box-shadow,border-color] hover:-translate-y-1 hover:border-emerald-200 hover:shadow-floating">
+                    <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-700">{guide.eyebrow}</span>
+                    <h3 className="mt-4 text-lg font-semibold leading-6 text-slate-950">{guide.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{guide.body}</p>
+                    <span className="mt-auto pt-6 text-sm font-semibold text-brand-700">Open <ArrowRight className="inline transition-transform group-hover:translate-x-1" size={14} aria-hidden="true" /></span>
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="border-t border-slate-200 bg-white py-16 [contain-intrinsic-size:900px] [content-visibility:auto] sm:py-20">
+        <section className="border-t border-slate-200 bg-white py-12 sm:py-16 lg:py-20">
           <div className="ir35-container grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
-            <div>
+            <Reveal>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">Frequently asked</p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">The important questions, answered plainly.</h2>
               <p className="mt-4 text-sm leading-6 text-slate-600">Product state and safety gates are published so a contractor never has to guess what happened.</p>
               <Link href="/pricing" className={buttonClassName({ variant: "secondary", className: "mt-6" })}>View current access <ArrowRight size={15} /></Link>
-            </div>
-            <div className="divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-slate-50 px-5 sm:px-7">
+            </Reveal>
+            <Reveal delay={0.08} className="divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-slate-50/80 px-5 shadow-card sm:px-7">
               {FAQS.map(([question, answer], index) => (
                 <details key={question} className="group py-5" open={index === 0}>
                   <summary className="ir35-focus flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-bold text-slate-950 marker:content-none">
@@ -230,23 +255,23 @@ export function HomeExperience() {
                   <p className="pb-1 pr-8 text-sm leading-6 text-slate-600">{answer}</p>
                 </details>
               ))}
-            </div>
+            </Reveal>
           </div>
         </section>
 
-        <section className="bg-slate-950 py-16 text-white [contain-intrinsic-size:700px] [content-visibility:auto] sm:py-20">
-          <div className="ir35-container grid items-center gap-8 lg:grid-cols-[1fr_auto]">
-            <div>
+        <section className="ir35-home-cta relative overflow-hidden py-12 text-white sm:py-16">
+          <div className="ir35-container relative grid items-center gap-8 lg:grid-cols-[1fr_auto]">
+            <Reveal>
               <p className="text-sm font-semibold text-emerald-300">Your next contract, with the important details visible.</p>
               <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Start with the role. Create an account only when you want to save the search.</h2>
               <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
                 {["Free to browse", "Original source links", "No application submitted without you"].map((item) => <li key={item} className="flex items-center gap-2"><Check size={15} className="text-emerald-300" aria-hidden="true" />{item}</li>)}
               </ul>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+            </Reveal>
+            <Reveal delay={0.1} className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
               <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "lg", className: "border-white bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} aria-hidden="true" /></Link>
               <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ variant: "accent", size: "lg" })}>Join the public beta</Link>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>
