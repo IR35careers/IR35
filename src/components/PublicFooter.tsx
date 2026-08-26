@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Instagram } from "lucide-react";
 import { Brand } from "@/components/ui/brand";
 import { legalOperatorConfig } from "@/lib/legal/operator";
 
@@ -23,6 +24,7 @@ const GROUPS = [
   {
     title: "IR35Careers",
     links: [
+      ["About IR35Careers", "/about"],
       ["Contractor workspace", "/dashboard"],
       ["Contractor tools", "/tools"],
       ["Public beta", "/beta"],
@@ -60,6 +62,15 @@ export function PublicFooter() {
           <p className="mt-3 text-xs leading-5 text-slate-500">
             Educational information only. IR35 status depends on the facts of each engagement.
           </p>
+          <a
+            href="https://www.instagram.com/ir35careers/"
+            target="_blank"
+            rel="noreferrer"
+            className="ir35-focus mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-600 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800"
+            aria-label="IR35Careers on Instagram"
+          >
+            <Instagram size={16} aria-hidden="true" /> Instagram
+          </a>
         </div>
         {GROUPS.map((group) => (
           <div key={group.title}>

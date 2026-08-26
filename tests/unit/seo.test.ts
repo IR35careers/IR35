@@ -7,7 +7,7 @@ describe("search identity", () => {
   });
 
   it("provides Google with a consistent website and organisation identity", () => {
-    const [website, organisation] = buildHomeStructuredData();
+    const [website, organisation, homepage] = buildHomeStructuredData();
 
     expect(website).toMatchObject({
       "@type": "WebSite",
@@ -19,6 +19,16 @@ describe("search identity", () => {
       "@type": "Organization",
       name: SITE_NAME,
       url: `${SITE_ORIGIN}/`,
+      sameAs: ["https://www.instagram.com/ir35careers/"],
+      contactPoint: {
+        contactType: "customer support",
+        url: `${SITE_ORIGIN}/contact`,
+      },
+    });
+    expect(homepage).toMatchObject({
+      "@type": "WebPage",
+      url: `${SITE_ORIGIN}/`,
+      about: { "@id": `${SITE_ORIGIN}/#organisation` },
     });
     expect(JSON.stringify([website, organisation])).not.toContain("kxcbgflleqnjzjbkevwd");
   });
