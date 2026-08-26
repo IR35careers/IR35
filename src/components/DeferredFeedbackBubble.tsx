@@ -36,8 +36,27 @@ export function DeferredFeedbackBubble() {
       return;
     }
 
-    const timer = window.setTimeout(() => setReady(true), 700);
-    return () => window.clearTimeout(timer);
+    let timer: number | undefined;
+    let idleCallback: number | undefined;
+    const showFeedback = () => setReady(true);
+
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+
+    if (idleWindow.requestIdleCallback) {
+      idleCallback = idleWindow.requestIdleCallback(showFeedback, { timeout: 3_000 });
+    } else {
+      timer = window.setTimeout(showFeedback, 2_000);
+    }
+
+    return () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      if (idleCallback !== undefined && idleWindow.cancelIdleCallback) {
+        idleWindow.cancelIdleCallback(idleCallback);
+      }
+    };
   }, [isWorkspaceRoute]);
 
   return ready ? <FeedbackBubble /> : null;

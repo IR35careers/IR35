@@ -26,6 +26,11 @@ import {
 
 type DbRow = Record<string, unknown>;
 
+const CLOUD_APPLICATION_LIMIT = 100;
+const CLOUD_EVENT_LIMIT = 1_000;
+const CLOUD_MESSAGE_LIMIT = 250;
+const CLOUD_SUBMISSION_LIMIT = 200;
+
 export function createBlankCloudWorkspaceState(email: string): WorkspaceState {
   const seed = createSeedWorkspaceState();
   return {
@@ -248,14 +253,16 @@ export async function loadCloudWorkspace(
       .maybeSingle(),
     supabase
       .from("application_packets")
-      .select("*")
+      .select("id, job_snapshot, status, match_score, matched_keywords, missing_keywords, source_cv_text, tailored_cv_text, resume_version_label, cover_letter, screening_answers, truth_approved, materials_approved, submission_approved, mode, receipt, created_at, updated_at")
       .eq("user_id", userId)
-      .order("updated_at", { ascending: false }),
+      .order("updated_at", { ascending: false })
+      .limit(CLOUD_APPLICATION_LIMIT),
     supabase
       .from("application_events")
-      .select("*")
+      .select("id, application_id, event_type, label, metadata, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true }),
+      .order("created_at", { ascending: false })
+      .limit(CLOUD_EVENT_LIMIT),
     supabase
       .from("inbox_aliases")
       .select("*")
@@ -263,9 +270,10 @@ export async function loadCloudWorkspace(
       .maybeSingle(),
     supabase
       .from("inbox_messages")
-      .select("*")
+      .select("id, application_id, sender, subject, preview, body_text, classification, received_at, is_read")
       .eq("user_id", userId)
-      .order("received_at", { ascending: false }),
+      .order("received_at", { ascending: false })
+      .limit(CLOUD_MESSAGE_LIMIT),
     supabase
       .from("automation_rules")
       .select("*")
@@ -286,7 +294,8 @@ export async function loadCloudWorkspace(
       .from("application_submissions")
       .select("application_id, status, error_code, receipt, updated_at")
       .eq("user_id", userId)
-      .order("updated_at", { ascending: false }),
+      .order("updated_at", { ascending: false })
+      .limit(CLOUD_SUBMISSION_LIMIT),
   ]);
 
   const failure = [
@@ -303,7 +312,9 @@ export async function loadCloudWorkspace(
   if (failure?.error) throw new Error(failure.error.message);
 
   const state = createBlankCloudWorkspaceState(email);
-  const events = ((eventsResult.data ?? []) as DbRow[]).map(mapEvent);
+  const events = ((eventsResult.data ?? []) as DbRow[])
+    .map(mapEvent)
+    .reverse();
   const profileRow = profileResult.data as DbRow | null;
   const aliasRow = aliasResult.data as DbRow | null;
   const rulesRow = rulesResult.data as DbRow | null;

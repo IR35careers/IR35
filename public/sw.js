@@ -1,4 +1,4 @@
-const CACHE_NAME = "ir35careers-shell-v5";
+const CACHE_NAME = "ir35careers-shell-v6";
 const OFFLINE_URL = "/offline";
 const STATIC_URLS = [
   OFFLINE_URL,
@@ -31,17 +31,37 @@ self.addEventListener("fetch", (event) => {
 
   const isVersionedAsset = url.pathname.startsWith("/_next/static/");
   const isPublicBrandAsset = url.pathname.startsWith("/images/");
-  if ((isVersionedAsset || isPublicBrandAsset) && ["style", "script", "font", "image"].includes(request.destination)) {
+
+  if (isVersionedAsset && ["style", "script", "font", "image"].includes(request.destination)) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
           if (response.ok) {
             const copy = response.clone();
             void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
           return response;
-        })
-        .catch(() => caches.match(request))
+        });
+      })
+    );
+    return;
+  }
+
+  if (isPublicBrandAsset && request.destination === "image") {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              const copy = response.clone();
+              void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => cached);
+        return cached ?? network;
+      })
     );
   }
 });
