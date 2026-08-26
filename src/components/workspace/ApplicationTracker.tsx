@@ -445,7 +445,7 @@ export function ApplicationTracker() {
         </Link>
       }
     >
-      <section className="ir35-card p-4 sm:p-5">
+      <section className="ir35-card ir35-pipeline-toolbar p-4 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block min-w-0 flex-1">
             <span className="sr-only">Search applications</span>
@@ -492,7 +492,7 @@ export function ApplicationTracker() {
       </section>
 
       <section
-        className="ir35-card mt-5 flex snap-x snap-mandatory overflow-x-auto lg:grid lg:grid-cols-6 lg:overflow-hidden"
+        className="ir35-card ir35-pipeline-summary mt-5 flex snap-x snap-mandatory overflow-x-auto lg:grid lg:grid-cols-6 lg:overflow-hidden"
         aria-label="Application pipeline summary"
       >
         {PIPELINE.map((stage, index) => {
@@ -548,7 +548,7 @@ export function ApplicationTracker() {
           </p>
         </div>
       ) : (
-        <section className="ir35-card mt-6 overflow-hidden">
+        <section className="ir35-card ir35-pipeline-list mt-6 overflow-hidden">
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[900px] border-collapse text-left">
               <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">

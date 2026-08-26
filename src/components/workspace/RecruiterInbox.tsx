@@ -327,7 +327,7 @@ export function RecruiterInbox() {
       description="Recruiter replies, interviews and application updates, linked to the right contract."
     >
       <section
-        className="ir35-card p-3 sm:p-4"
+        className="ir35-card ir35-inbox-identity p-3 sm:p-4"
         aria-labelledby="inbox-connection-title"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -429,7 +429,7 @@ export function RecruiterInbox() {
         )}
       </section>
 
-      <section className="ir35-card mt-5 p-3 sm:p-4">
+      <section className="ir35-card ir35-inbox-toolbar mt-5 p-3 sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block min-w-0 flex-1">
             <span className="sr-only">Search messages</span>
@@ -488,7 +488,7 @@ export function RecruiterInbox() {
         </div>
       </section>
 
-      <section className="ir35-card mt-4 grid overflow-hidden lg:min-h-[560px] lg:grid-cols-[360px_1fr]">
+      <section className="ir35-card ir35-inbox-reader mt-4 grid overflow-hidden lg:min-h-[560px] lg:grid-cols-[360px_1fr]">
         <div className={`${mobileReading ? "hidden" : "block"} border-b border-slate-200 lg:block lg:border-b-0 lg:border-r`}>
           {visible.length === 0 ? (
             <div className="p-8 text-center">

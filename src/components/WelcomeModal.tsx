@@ -193,6 +193,12 @@ export function WelcomeModal({ userId }: { userId: string }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [finishTour, mode]);
 
+  useEffect(() => {
+    if (mode !== "tour") return;
+    document.body.classList.add("ir35-tour-active");
+    return () => document.body.classList.remove("ir35-tour-active");
+  }, [mode]);
+
   if (mode === "closed") return null;
 
   if (mode === "returning") {

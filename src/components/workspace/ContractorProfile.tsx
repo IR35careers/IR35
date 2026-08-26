@@ -702,7 +702,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     >
       <section
         id="application-readiness"
-        className={`scroll-mt-24 rounded-2xl border bg-white p-3 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5 ${readiness.complete ? "border-emerald-200" : "border-amber-200"}`}
+        className={`ir35-readiness-card scroll-mt-24 rounded-2xl border bg-white p-3 shadow-[0_16px_45px_-36px_rgba(15,23,42,0.45)] sm:p-5 ${readiness.complete ? "border-emerald-200" : "border-amber-200"}`}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 gap-3">

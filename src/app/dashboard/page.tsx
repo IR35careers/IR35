@@ -213,7 +213,7 @@ export default function DashboardPage() {
   ] as const;
 
   return (
-    <div className="ir35-workspace-canvas min-h-screen text-slate-900">
+    <div className="ir35-workspace-canvas min-h-screen text-slate-900" data-workspace-surface="dashboard">
       <WelcomeModal userId={user?.id ?? PREVIEW_PROFILE.id} />
       <AppNav />
       <main className="mx-auto max-w-[1400px] px-4 py-7 sm:px-6 lg:px-8 lg:py-10">

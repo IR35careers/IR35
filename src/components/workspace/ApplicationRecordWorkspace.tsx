@@ -252,7 +252,7 @@ export function ApplicationRecordWorkspace({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="ir35-workspace-canvas ir35-application-workspace min-h-screen text-slate-950">
       <AppNav />
       <main className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:py-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -294,9 +294,9 @@ export function ApplicationRecordWorkspace({
           </div>
         </div>
 
-        <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+        <section className="ir35-application-record-card mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
           <div className="grid lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[270px_minmax(0,1fr)]">
-            <aside className="border-b border-slate-200 bg-[#fbfaf7] p-5 lg:border-b-0 lg:border-r">
+            <aside className="ir35-application-record-sidebar border-b border-slate-200 bg-[#fbfaf7] p-5 lg:border-b-0 lg:border-r">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
                 Application status
               </p>

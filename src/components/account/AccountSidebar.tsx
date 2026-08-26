@@ -62,7 +62,7 @@ export function AccountSidebar({ active }: { active: AccountSection }) {
       : active;
 
   return (
-    <aside className="h-max rounded-2xl border border-slate-200/90 bg-white p-2 shadow-[0_18px_50px_-44px_rgba(15,23,42,0.3)] lg:sticky lg:top-24">
+    <aside className="ir35-account-sidebar h-max rounded-2xl border border-slate-200/90 bg-white p-2 shadow-[0_18px_50px_-44px_rgba(15,23,42,0.3)] lg:sticky lg:top-24">
       <p className="hidden px-3 pb-2 pt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600 lg:block">Account</p>
       <nav aria-label="Account" className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-1">
         {ACCOUNT_LINKS.map((item) => {
