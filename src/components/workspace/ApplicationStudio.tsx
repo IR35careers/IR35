@@ -34,6 +34,7 @@ import {
   StatusPill,
 } from "@/components/workspace/WorkspacePage";
 import { ApplicationRecordWorkspace } from "@/components/workspace/ApplicationRecordWorkspace";
+import { ApplicationProgressDialog } from "@/components/ui/application-progress-dialog";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
@@ -43,6 +44,7 @@ import {
   hasActiveSubmission,
   latestSubmissionLifecycleEvent,
 } from "@/lib/application-submission-state";
+import { resolveApplicationProgressPhase } from "@/lib/application-progress";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import {
   normaliseCoverLetterSignoff,
@@ -172,6 +174,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [profilePrompt, setProfilePrompt] = useState(false);
+  const [submissionProgressOpen, setSubmissionProgressOpen] = useState(false);
   const submissionStatusFailures = useRef(0);
   const profileResumeAttempted = useRef(false);
   const profileCompletionHref = applicationProfileHref(job.id);
@@ -208,6 +211,14 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         application.attention,
       ),
   );
+  const submissionProgressPhase = resolveApplicationProgressPhase({
+    submitted,
+    busy: busy === "submit",
+    submissionInProgress,
+    hasAttention: Boolean(application?.attention),
+    hasError: Boolean(error),
+    elapsedSeconds: submitElapsedSeconds,
+  });
   const selectedSuggestions =
     aiResult?.suggestions.filter((item) =>
       selectedSuggestionIds.includes(item.id),
@@ -846,7 +857,14 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   };
 
   const submitApprovedApplication = async () => {
-    if (!application || submissionConnection !== "connected") return;
+    if (!application) return;
+    setSubmissionProgressOpen(true);
+    if (submissionConnection !== "connected") {
+      setError(
+        "The application service is temporarily unavailable. Your approved application is saved and has not been submitted.",
+      );
+      return;
+    }
     if (!answersReviewed) {
       setError("Review every required answer before applying.");
       return;
@@ -1153,6 +1171,35 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     submissionInProgress,
   ]);
 
+  const applicationProgressDialog = (
+    <ApplicationProgressDialog
+      open={submissionProgressOpen && !profilePrompt}
+      phase={submissionProgressPhase}
+      roleTitle={job.title}
+      companyName={job.company_name}
+      elapsedSeconds={submitElapsedSeconds}
+      message={
+        submissionProgressPhase === "attention"
+          ? application?.attention?.message
+          : submissionProgressPhase === "error"
+            ? error
+            : submissionProgressPhase === "success"
+              ? application?.receipt?.message
+              : notice
+      }
+      onClose={() => setSubmissionProgressOpen(false)}
+      onReview={() => {
+        setSubmissionProgressOpen(false);
+        window.setTimeout(() => {
+          document
+            .getElementById("needs-attention")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 0);
+      }}
+      onRetry={() => void submitApprovedApplication()}
+    />
+  );
+
   let recordWorkspace: ReactNode = null;
   if (application) {
     recordWorkspace = (
@@ -1176,7 +1223,14 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       />
     );
   }
-  if (recordWorkspace) return recordWorkspace;
+  if (recordWorkspace) {
+    return (
+      <>
+        {recordWorkspace}
+        {applicationProgressDialog}
+      </>
+    );
+  }
 
   return (
     <WorkspacePage
@@ -2290,6 +2344,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           </section>
         </div>
       )}
+      {applicationProgressDialog}
     </WorkspacePage>
   );
 }

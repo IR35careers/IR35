@@ -528,7 +528,25 @@ test("application workspace presents a clean review flow and never claims an unc
   await page.getByRole("button", { name: "Contract", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contract description" })).toBeVisible();
   await page.getByRole("button", { name: "Form", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Submit application" })).toBeVisible();
+  const applicationAnswers = page.locator("textarea");
+  for (let index = 0; index < (await applicationAnswers.count()); index += 1) {
+    const answer = applicationAnswers.nth(index);
+    const savedAnswer = await answer.inputValue();
+    await answer.fill(savedAnswer || "Confirmed from my saved contractor profile");
+  }
+  await page.getByRole("checkbox", { name: /Approve this application/i }).check();
+  const submitApplication = page.getByRole("button", { name: "Submit application" });
+  await expect(submitApplication).toBeEnabled();
+  await submitApplication.click();
+  const progressDialog = page.getByRole("dialog").filter({
+    has: page.getByRole("list", { name: "Application submission progress" }),
+  });
+  await expect(progressDialog).toBeVisible();
+  await expect(
+    progressDialog.getByRole("list", { name: "Application submission progress" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(progressDialog).toBeHidden();
   await expect(page.getByText("Employer confirmation received")).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
 
