@@ -14,15 +14,17 @@ const GROUPS = [
   {
     title: "Understand IR35",
     links: [
-      ["IR35 resources", "/resources"],
-      ["Status checker", "/tools/ir35-status"],
-      ["Take-home calculator", "/tools/take-home"],
+      ["IR35 guides", "/resources"],
+      ["What IR35 means", "/resources#what-is-ir35"],
+      ["Inside and outside", "/resources#inside-outside"],
+      ["How status is decided", "/resources#status-decision"],
     ],
   },
   {
     title: "IR35Careers",
     links: [
       ["Contractor workspace", "/dashboard"],
+      ["Contractor tools", "/tools"],
       ["Public beta", "/beta"],
       ["For employers", "/employers"],
       ["Pricing", "/pricing"],
