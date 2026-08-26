@@ -42,6 +42,13 @@ test("mobile workspace keeps core destinations one tap away", async ({ page }, t
         .getByRole("link", { name: new RegExp(destination.name) }),
     ).toHaveAttribute("aria-current", "page");
   }
+
+  const feedbackLauncher = page.getByRole("button", { name: "Open support" });
+  const dockBox = await quickNavigation.boundingBox();
+  const launcherBox = await feedbackLauncher.boundingBox();
+  expect(dockBox).not.toBeNull();
+  expect(launcherBox).not.toBeNull();
+  expect(launcherBox!.y + launcherBox!.height).toBeLessThanOrEqual(dockBox!.y - 8);
 });
 
 test("profile keeps reusable identity, resume, cover letter and application controls together", async ({ page }) => {

@@ -317,7 +317,7 @@ export function FeedbackBubble() {
         type="button"
         data-feedback-capture-ui="true"
         onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }}
-        className={`ir35-focus group fixed bottom-4 right-3 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-slate-950 text-white shadow-[0_12px_32px_rgba(2,6,23,0.24)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-[0_16px_36px_rgba(5,46,43,0.3)] sm:bottom-6 sm:right-6 ${bubbleSuppressed && !open ? "pointer-events-none translate-y-3 opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100" : "opacity-100"}`}
+        className={`ir35-focus group fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-3 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-slate-950 text-white shadow-[0_12px_32px_rgba(2,6,23,0.24)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-[0_16px_36px_rgba(5,46,43,0.3)] sm:bottom-6 sm:right-6 ${bubbleSuppressed && !open ? "pointer-events-none translate-y-3 opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100" : "opacity-100"}`}
         aria-label="Open support"
         aria-expanded={open}
       >
