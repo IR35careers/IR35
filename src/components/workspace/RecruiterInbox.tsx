@@ -104,9 +104,13 @@ export function RecruiterInbox() {
   const [replyRequestKey, setReplyRequestKey] = useState("");
   const [composeMessage, setComposeMessage] = useState("");
   const [sending, setSending] = useState(false);
+  // A provisioned application address is the durable source of truth. The
+  // integration status endpoint can briefly time out or lag behind alias
+  // creation, but that must not make an existing address look unavailable.
   const hasAlias =
     workspace.inbox.alias !== "Not created" &&
-    (workspace.inbox.providerState === "connected" || emailState === "preview");
+    /^[^\s@]+@mail\.ir35careers\.com$/i.test(workspace.inbox.alias.trim());
+  const emailConnected = hasAlias;
   const inboxMessages = useMemo(
     () =>
       workspace.messages.filter(
@@ -333,7 +337,7 @@ export function RecruiterInbox() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <span
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${emailConnected ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"}`}
             >
               <AtSign size={18} aria-hidden="true" />
             </span>
@@ -346,7 +350,7 @@ export function RecruiterInbox() {
                   Application email
                 </h2>
                 <span
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${emailState === "connected" && hasAlias ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${emailConnected ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
                 >
                   {emailState === "loading"
                     ? "Checking"
@@ -416,7 +420,7 @@ export function RecruiterInbox() {
             </p>
           </div>
         )}
-        {(emailState === "gated" || emailState === "error") && (
+        {!hasAlias && (emailState === "gated" || emailState === "error") && (
           <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             Application email is temporarily unavailable. Your existing messages
             and applications are safe.

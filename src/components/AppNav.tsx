@@ -22,6 +22,7 @@ import { Brand } from "@/components/ui/brand";
 import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { useWorkspaceCloudSync, useWorkspaceState } from "@/lib/workspace/store";
+import { isUnsolicitedJobMarketingMessage } from "@/lib/workspace/mail";
 
 type NavItem = {
   href: string;
@@ -69,7 +70,15 @@ export function AppNav() {
 
   const counts = useMemo(() => cloud.error ? { applications: 0, unread: 0 } : ({
     applications: workspace.applications.filter((item) => !["rejected", "withdrawn", "failed", "skipped"].includes(item.status)).length,
-    unread: workspace.messages.filter((item) => !item.read).length,
+    unread: workspace.messages.filter(
+      (item) =>
+        !item.read &&
+        !isUnsolicitedJobMarketingMessage(
+          item.subject,
+          item.body,
+          item.from,
+        ),
+    ).length,
   }), [cloud.error, workspace.applications, workspace.messages]);
 
   useEffect(() => setMobileOpen(false), [pathname]);

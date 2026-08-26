@@ -43,6 +43,13 @@ describe("inbound recruiter mail", () => {
     ).toBe(true);
     expect(
       isUnsolicitedJobMarketingMessage(
+        "Jobs to complete your next application",
+        "Your latest recommendations are ready. Start a new application today.",
+        "Totaljobs alerts <info@jobs.totaljobsmail.com>",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
         "Your latest matches",
         "New roles selected for you. Manage your job alerts or unsubscribe.",
         "alerts@example-jobs.co.uk",

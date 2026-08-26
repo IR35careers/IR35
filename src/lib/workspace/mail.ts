@@ -42,6 +42,14 @@ export function isUnsolicitedJobMarketingMessage(
   const applicationResponse = /\b(application (?:received|submitted|update|status)|thanks? for applying|thank you for applying|interview|assessment|verification code|action required|unfortunately|not progressing|offer letter|contract offer)\b/.test(
     text,
   );
+
+  // These domains are dedicated job-alert mail streams, not employer reply
+  // addresses. Treat them as marketing even when their newsletter copy uses
+  // phrases such as "apply" or "application".
+  const knownJobAlertSender =
+    senderText.includes("totaljobsmail.com") ||
+    senderText.includes("jobsite.co.uk");
+  if (knownJobAlertSender) return true;
   if (applicationResponse) return false;
 
   const recommendationSubject = /\b(?:our |your )?recommendation(?:s)?\b|\brecommended jobs?\b|\bjobs? (?:picked|selected) for you\b|\bjob alerts?\b|\bsimilar jobs?\b|\bnew jobs? for you\b|\blatest (?:job )?matches\b|^\d+ new\b.*\bjobs?\b/.test(
@@ -49,9 +57,6 @@ export function isUnsolicitedJobMarketingMessage(
   );
   const recommendationBody = /\bwe recommend this job for you\b|\btake a look and see if you want to apply\b|\bjobs? matching your (?:profile|search)\b|\bmore jobs? like this\b|\bcheck out your latest matches\b|\bwe found these new jobs\b|\bmatch your search for\b|\bmanage (?:your )?(?:job )?alerts\b/.test(
     text,
-  );
-  const knownJobAlertSender = /@(?:[a-z0-9-]+\.)*(?:totaljobsmail\.com|jobsite\.co\.uk)$|totaljobsmail\.com/.test(
-    senderText,
   );
   const genericMarketingSender = /(?:^|[.@_-])(?:job|jobs|alerts?|recommendations?|newsletter)(?:[.@_-]|$)/.test(
     senderText,
@@ -62,7 +67,6 @@ export function isUnsolicitedJobMarketingMessage(
     /\b(?:good fit|recommended|recommendation|take a look|job alert)\b/.test(text);
 
   return (
-    knownJobAlertSender ||
     recommendationSubject ||
     recommendationBody ||
     (genericMarketingSender && (newsletterControl || permanentPromotion))

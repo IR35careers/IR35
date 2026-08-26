@@ -13,6 +13,7 @@ import type {
   InboxSettings,
   WorkspaceState,
 } from "@/lib/workspace/types";
+import { isUnsolicitedJobMarketingMessage } from "@/lib/workspace/mail";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type { JobDetail } from "@/lib/job-types";
 import { submissionAttentionFromRow } from "@/lib/workspace/submission-attention";
@@ -393,7 +394,16 @@ export async function loadCloudWorkspace(
     applications: ((applicationsResult.data ?? []) as DbRow[]).map((row) =>
       mapApplication(row, events, submissionMap.get(String(row.id))),
     ),
-    messages: ((messagesResult.data ?? []) as DbRow[]).map(mapMessage),
+    messages: ((messagesResult.data ?? []) as DbRow[])
+      .map(mapMessage)
+      .filter(
+        (message) =>
+          !isUnsolicitedJobMarketingMessage(
+            message.subject,
+            message.body,
+            message.from,
+          ),
+      ),
     automation,
     automationRuns: runs,
     inbox,
