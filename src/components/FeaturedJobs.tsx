@@ -42,8 +42,8 @@ export async function FeaturedJobs() {
   const featured = await loadFeaturedJobs();
 
   return (
-    <div className="relative min-w-0 lg:translate-y-3">
-      <div className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_30px_80px_-48px_rgba(15,23,42,0.42)]">
+    <div className="relative min-w-0">
+      <div className="overflow-hidden rounded-[26px] border border-white/90 bg-white/95 shadow-[0_32px_90px_-44px_rgba(6,95,70,0.38)] ring-1 ring-slate-200/70 backdrop-blur">
         <div className="flex items-center gap-1.5 border-b border-slate-100 bg-[#fafbf9] px-5 py-3" aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
           <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />

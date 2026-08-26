@@ -276,9 +276,17 @@
 
   .ir35-home-hero {
     background:
-      radial-gradient(circle at 76% 18%, rgba(45, 212, 191, 0.13), transparent 24rem),
-      radial-gradient(circle at 8% 92%, rgba(52, 211, 153, 0.12), transparent 22rem),
-      linear-gradient(135deg, #fbfdfb 0%, #f5fbf8 48%, #f3fbfa 100%);
+      radial-gradient(circle at 80% 8%, rgba(45, 212, 191, 0.16), transparent 25rem),
+      radial-gradient(circle at 7% 92%, rgba(52, 211, 153, 0.13), transparent 22rem),
+      linear-gradient(135deg, #fbfdfb 0%, #f2faf6 48%, #effaf8 100%);
+  }
+
+  .ir35-home-grid {
+    background-image:
+      linear-gradient(rgba(15, 118, 88, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 118, 88, 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, black, transparent 88%);
   }
 
   .ir35-home-surface {
@@ -290,9 +298,6 @@
   .ir35-home-principle {
     position: relative;
     overflow: hidden;
-    background:
-      radial-gradient(circle at 100% 0%, rgba(167, 243, 208, 0.26), transparent 13rem),
-      #ffffff;
   }
 
   .ir35-home-principle::after {
