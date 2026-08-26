@@ -89,13 +89,13 @@ export function AppNav() {
         href={item.href}
         data-tour={item.tour}
         aria-current={active ? "page" : undefined}
-        className={`ir35-focus group inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors ${
+        className={`ir35-focus group inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-[background-color,color,box-shadow,transform] duration-200 ${
           active
             ? "ir35-nav-active"
             : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
         } ${mobile ? "w-full justify-start" : "justify-center"}`}
       >
-        <Icon size={16} className={active ? "text-brand-700" : "text-slate-400 group-hover:text-slate-600"} aria-hidden="true" />
+        <Icon size={16} className={`transition-[color,transform] duration-200 ${active ? "scale-105 text-brand-700" : "text-slate-400 group-hover:scale-105 group-hover:text-slate-600"}`} aria-hidden="true" />
         <span>{item.label}</span>
         {badge > 0 && (
           <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${active ? "bg-white text-brand-800" : "bg-slate-100 text-slate-600"}`}>
@@ -115,7 +115,7 @@ export function AppNav() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 border-b border-emerald-100/80 bg-[linear-gradient(110deg,rgba(255,255,255,0.97),rgba(247,255,251,0.96),rgba(241,253,252,0.95))] backdrop-blur-xl">
+      <header className="ir35-glass-nav sticky top-0 z-40 border-b border-emerald-100/80">
         <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-6 px-4 sm:px-6 lg:px-8">
           <div className="shrink-0"><Brand href="/dashboard" /></div>
 
@@ -132,7 +132,7 @@ export function AppNav() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-xs font-bold text-white">{initials(memberLabel)}</span>
                 <span className="max-w-36 truncate text-xs font-semibold text-slate-700">{memberLabel}</span>
               </summary>
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+              <div className="ir35-popover absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
                 {memberName && <p className="truncate px-3 py-2 text-xs text-slate-500">{user?.email}</p>}
                 {SECONDARY_NAV.map((item) => navLink(item, true))}
                 {user && <button type="button" onClick={() => void leaveWorkspace()} className="ir35-focus flex min-h-10 w-full items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-950"><LogOut size={16} /> Sign out</button>}
@@ -162,9 +162,9 @@ export function AppNav() {
                 href={item.href}
                 data-tour={item.tour}
                 aria-current={active ? "page" : undefined}
-                className={`ir35-focus relative flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-colors ${active ? "text-brand-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
+                className={`ir35-focus group relative flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-[background-color,color,transform] duration-200 ${active ? "text-brand-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
               >
-                <span className={`relative flex h-7 min-w-8 items-center justify-center rounded-full px-2 transition-colors ${active ? "bg-brand-50" : "bg-transparent"}`}>
+                <span className={`relative flex h-7 min-w-8 items-center justify-center rounded-full px-2 transition-[background-color,transform] duration-200 ${active ? "scale-105 bg-brand-50" : "bg-transparent group-hover:scale-105"}`}>
                   <Icon size={17} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
                   {badge > 0 && (
                     <span className="absolute -right-3 -top-2 min-w-4 rounded-full bg-slate-950 px-1 py-0.5 text-center text-[8px] leading-none text-white">
@@ -180,9 +180,9 @@ export function AppNav() {
       </nav>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 xl:hidden">
+        <div className="ir35-dialog-backdrop fixed inset-0 z-50 xl:hidden">
           <button type="button" className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />
-          <aside id="member-mobile-menu" className="absolute inset-y-0 right-0 flex w-[min(92vw,360px)] flex-col bg-white shadow-2xl" aria-label="Workspace menu">
+          <aside id="member-mobile-menu" className="ir35-sheet-panel absolute inset-y-0 right-0 flex w-[min(92vw,360px)] flex-col bg-white shadow-2xl" aria-label="Workspace menu">
             <div className="flex h-[72px] items-center justify-between border-b border-slate-200 px-5">
               <Brand href="/dashboard" />
               <button type="button" onClick={() => setMobileOpen(false)} className="ir35-focus inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600" aria-label="Close navigation"><X size={18} /></button>

@@ -16,6 +16,12 @@
     --ir35-radius-md: 1rem;
     --ir35-radius-lg: 1.5rem;
     --ir35-shadow-card: 0 1px 2px rgba(13, 20, 30, 0.03), 0 18px 50px -42px rgba(13, 20, 30, 0.3);
+    --ir35-shadow-hover: 0 2px 4px rgba(13, 20, 30, 0.035), 0 24px 58px -42px rgba(6, 95, 70, 0.4);
+    --ir35-ease: cubic-bezier(0.2, 0, 0, 1);
+    --ir35-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    --ir35-fast: 140ms;
+    --ir35-standard: 200ms;
+    --ir35-enter: 260ms;
   }
 
   * {
@@ -27,11 +33,16 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-[#f7f8f6] text-[#0d141e];
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-image:
+      radial-gradient(circle at 8% -8%, rgba(167, 243, 208, 0.15), transparent 28rem),
+      radial-gradient(circle at 96% 2%, rgba(153, 246, 228, 0.12), transparent 30rem);
+    background-attachment: fixed;
   }
 
   ::selection {
@@ -48,6 +59,33 @@
   select,
   textarea {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  summary,
+  [role="button"] {
+    transition-duration: var(--ir35-fast);
+    transition-timing-function: var(--ir35-ease);
+  }
+
+  input,
+  select,
+  textarea {
+    transition:
+      border-color var(--ir35-fast) var(--ir35-ease),
+      background-color var(--ir35-fast) var(--ir35-ease),
+      box-shadow var(--ir35-fast) var(--ir35-ease);
+  }
+
+  input:hover:not(:disabled),
+  select:hover:not(:disabled),
+  textarea:hover:not(:disabled) {
+    border-color: rgb(148 163 184);
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: translateY(1px) scale(0.995);
   }
 }
 
@@ -68,11 +106,69 @@
     @apply border border-slate-200/90 bg-white;
     border-radius: var(--ir35-radius-lg);
     box-shadow: var(--ir35-shadow-card);
+    transition:
+      border-color var(--ir35-standard) var(--ir35-ease),
+      box-shadow var(--ir35-standard) var(--ir35-ease),
+      transform var(--ir35-standard) var(--ir35-ease),
+      background-color var(--ir35-standard) var(--ir35-ease);
   }
 
   .ir35-card-flat {
     @apply border border-slate-200/90 bg-white;
     border-radius: var(--ir35-radius-md);
+    transition:
+      border-color var(--ir35-standard) var(--ir35-ease),
+      box-shadow var(--ir35-standard) var(--ir35-ease),
+      background-color var(--ir35-standard) var(--ir35-ease);
+  }
+
+  .ir35-route-frame {
+    min-height: 100vh;
+    isolation: isolate;
+  }
+
+  .ir35-glass-nav {
+    background: linear-gradient(110deg, rgba(255,255,255,0.9), rgba(247,255,251,0.88), rgba(241,253,252,0.86));
+    box-shadow: 0 1px 0 rgba(255,255,255,0.72), 0 18px 45px -42px rgba(6, 78, 59, 0.5);
+    backdrop-filter: blur(20px) saturate(145%);
+  }
+
+  .ir35-dialog-backdrop {
+    animation: ir35-backdrop-enter var(--ir35-enter) var(--ir35-ease) both;
+  }
+
+  .ir35-dialog-panel {
+    transform-origin: 50% 75%;
+    animation: ir35-dialog-enter var(--ir35-enter) var(--ir35-ease) both;
+  }
+
+  .ir35-sheet-panel {
+    animation: ir35-sheet-enter var(--ir35-enter) var(--ir35-ease) both;
+  }
+
+  .ir35-popover {
+    transform-origin: top right;
+    animation: ir35-popover-enter var(--ir35-standard) var(--ir35-ease) both;
+  }
+
+  .ir35-live-dot {
+    position: relative;
+  }
+
+  .ir35-live-dot::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 1px solid currentColor;
+    border-radius: 9999px;
+    opacity: 0;
+    animation: ir35-presence-pulse 2.4s ease-out infinite;
+  }
+
+  .ir35-skeleton {
+    background: linear-gradient(90deg, #eef2f1 20%, #f8faf9 45%, #eef2f1 70%);
+    background-size: 240% 100%;
+    animation: ir35-shimmer 1.8s linear infinite;
   }
 
   .ir35-workspace-canvas {
@@ -135,6 +231,11 @@
       radial-gradient(circle at 100% 0%, rgba(52, 211, 153, 0.13), transparent 15rem),
       linear-gradient(135deg, #ffffff 0%, #f3fdf8 100%);
     box-shadow: 0 18px 46px -42px rgba(6, 95, 70, 0.78);
+    transition:
+      transform var(--ir35-standard) var(--ir35-ease),
+      border-color var(--ir35-standard) var(--ir35-ease),
+      box-shadow var(--ir35-standard) var(--ir35-ease),
+      background var(--ir35-standard) var(--ir35-ease);
   }
 
   .ir35-job-results > li:nth-child(3n + 2) .ir35-job-card {
@@ -157,6 +258,7 @@
       radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.18), transparent 17rem),
       linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
     box-shadow: 0 24px 58px -42px rgba(4, 120, 87, 0.82);
+    transform: translateY(-2px);
   }
 
   .ir35-eyebrow {
@@ -170,6 +272,61 @@
   .ir35-section-title {
     @apply text-2xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 sm:text-3xl;
   }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  main .shadow-card {
+    transition:
+      border-color var(--ir35-standard) var(--ir35-ease),
+      box-shadow var(--ir35-standard) var(--ir35-ease),
+      transform var(--ir35-standard) var(--ir35-ease);
+  }
+
+  a.ir35-card:hover,
+  button.ir35-card:hover,
+  .ir35-card[data-interactive="true"]:hover {
+    border-color: rgba(52, 211, 153, 0.58);
+    box-shadow: var(--ir35-shadow-hover);
+    transform: translateY(-2px);
+  }
+
+  main .shadow-card:hover {
+    box-shadow: var(--ir35-shadow-hover);
+  }
+}
+
+details[open] > :not(summary) {
+  animation: ir35-popover-enter var(--ir35-standard) var(--ir35-ease) both;
+}
+
+@keyframes ir35-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ir35-dialog-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ir35-sheet-enter {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ir35-popover-enter {
+  from { opacity: 0; transform: translateY(-5px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ir35-presence-pulse {
+  0% { opacity: 0.45; transform: scale(0.8); }
+  70%, 100% { opacity: 0; transform: scale(1.65); }
+}
+
+@keyframes ir35-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
 }
 
 @supports selector(body:has(*)) {
@@ -192,5 +349,15 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .ir35-dialog-backdrop,
+  .ir35-dialog-panel,
+  .ir35-sheet-panel,
+  .ir35-popover,
+  .ir35-live-dot::after,
+  .ir35-skeleton,
+  details[open] > :not(summary) {
+    animation: none !important;
   }
 }

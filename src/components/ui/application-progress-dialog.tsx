@@ -112,7 +112,7 @@ export function ApplicationProgressDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/65 p-0 backdrop-blur-sm sm:items-center sm:p-5"
+      className="ir35-dialog-backdrop fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/65 p-0 backdrop-blur-sm sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="application-progress-title"
@@ -120,7 +120,7 @@ export function ApplicationProgressDialog({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className="relative w-full overflow-hidden rounded-t-[2rem] border border-white/10 bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
+      <section className="ir35-dialog-panel relative w-full overflow-hidden rounded-t-[2rem] border border-white/10 bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
         <header className="relative overflow-hidden bg-slate-950 px-5 pb-7 pt-5 text-white sm:px-7 sm:pb-8 sm:pt-6">
           <div className="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full bg-emerald-400/15 blur-3xl" />
           <div className="relative flex items-start justify-between gap-4">

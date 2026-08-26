@@ -314,16 +314,16 @@ export function FeedbackBubble() {
   return (
     <>
       <button type="button" data-feedback-capture-ui="true" onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }} className={`ir35-focus fixed bottom-4 right-3 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white shadow-[0_16px_40px_rgba(2,6,23,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-800 sm:bottom-6 sm:right-6 sm:w-auto sm:gap-2.5 sm:px-4 ${bubbleSuppressed && !open ? "pointer-events-none translate-y-3 opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100" : "opacity-100"}`} aria-label="Open support chat">
-        <span className="relative"><MessageCircle size={19} aria-hidden="true" /><span className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${presence?.online ? "bg-emerald-400" : "bg-slate-400"}`} /></span>
+        <span className="relative"><MessageCircle size={19} aria-hidden="true" /><span className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${presence?.online ? "ir35-live-dot bg-emerald-400 text-emerald-400" : "bg-slate-400"}`} /></span>
         <span className="hidden sm:inline">Support</span>
         {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-brand-800">{unread > 9 ? "9+" : unread}</span>}
       </button>
 
-      {open && <div data-feedback-capture-ui="true" className="fixed inset-0 z-[70] flex items-end justify-end bg-slate-950/35 p-0 backdrop-blur-[2px] sm:p-5" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
-        <section className="flex max-h-[min(760px,94vh)] w-full flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:w-[430px] sm:rounded-3xl">
+      {open && <div data-feedback-capture-ui="true" className="ir35-dialog-backdrop fixed inset-0 z-[70] flex items-end justify-end bg-slate-950/35 p-0 backdrop-blur-[2px] sm:p-5" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+        <section className="ir35-dialog-panel flex max-h-[min(760px,94vh)] w-full flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:w-[430px] sm:rounded-3xl">
           <header className="flex items-start justify-between gap-4 border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.24),transparent_42%),linear-gradient(145deg,#020617_0%,#052e2b_100%)] px-5 py-5 text-white">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="relative"><SupportAvatar size="h-11 w-11" />{presence?.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#052e2b] bg-emerald-400" />}</span>
+              <span className="relative"><SupportAvatar size="h-11 w-11" />{presence?.online && <span className="ir35-live-dot absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#052e2b] bg-emerald-400 text-emerald-400" />}</span>
               <div className="min-w-0">
                 <h2 id="feedback-title" className="truncate text-base font-semibold">IR35Careers Support</h2>
                 <p className={`mt-0.5 flex items-center gap-1.5 text-xs ${presence?.online ? "text-emerald-300" : "text-slate-300"}`}><span className={`h-1.5 w-1.5 rounded-full ${presence?.online ? "bg-emerald-400" : "bg-slate-400"}`} />{supportActivityLabel(presence)}</p>

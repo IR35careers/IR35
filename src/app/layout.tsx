@@ -6,6 +6,7 @@ import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
 import { FeedbackBubble } from "@/components/FeedbackBubble";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { AppMotion } from "@/components/AppMotion";
 import { SITE_ORIGIN } from "@/lib/seo";
 
 const inter = Inter({
@@ -87,7 +88,7 @@ export default async function RootLayout({
   return (
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <AppMotion>{children}</AppMotion>
         <GoogleAnalytics nonce={nonce} />
         <FeedbackBubble />
         <CookieNotice />
