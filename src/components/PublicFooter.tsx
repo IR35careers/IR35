@@ -15,6 +15,7 @@ const GROUPS = [
   {
     title: "Understand IR35",
     links: [
+      ["IR35 careers guide", "/ir35-careers"],
       ["IR35 guides", "/resources"],
       ["What IR35 means", "/resources#what-is-ir35"],
       ["Inside and outside", "/resources#inside-outside"],

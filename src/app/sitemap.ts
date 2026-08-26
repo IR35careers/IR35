@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/tools/take-home`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tools/ir35-status`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/resources`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/ir35-careers`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE}/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/beta`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },

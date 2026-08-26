@@ -142,6 +142,7 @@ export function HomeExperience() {
 
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 <span className="text-slate-500">Explore</span>
+                <Link href="/ir35-careers" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">IR35 careers</Link>
                 <Link href="/jobs?ir35=outside" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">Outside IR35</Link>
                 <Link href="/jobs?remote=remote" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">Remote</Link>
                 <Link href="/jobs?min_rate=600" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">£600+/day</Link>
