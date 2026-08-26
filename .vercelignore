@@ -1,4 +1,5 @@
 output/
+.codex-tmp/
 playwright-report/
 test-results/
 coverage/

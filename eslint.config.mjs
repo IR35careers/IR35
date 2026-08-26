@@ -24,5 +24,7 @@ export default defineConfig([
     "playwright-report/**",
     "test-results/**",
     "tmp/**",
+    ".codex-tmp/**",
+    "output/**",
   ]),
 ]);
