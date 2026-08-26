@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Pause, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 
@@ -86,5 +86,56 @@ export function HomeStickyCta() {
         </Link>
       </div>
     </motion.div>
+  );
+}
+
+const SOURCE_NAMES = [
+  "Adzuna",
+  "Greenhouse",
+  "Workable",
+  "Ashby",
+  "SmartRecruiters",
+  "Reed",
+  "Totaljobs",
+] as const;
+
+export function HomeSourceRail() {
+  const [paused, setPaused] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const isPaused = paused || Boolean(reduceMotion);
+
+  return (
+    <div className="ir35-source-rail">
+      <div className="ir35-source-rail-heading">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-brand-700">Public contract sources</p>
+          <p className="mt-1 text-xs text-slate-500">Fresh roles from job boards and employer application systems</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setPaused((current) => !current)}
+          className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-brand-700"
+          aria-pressed={isPaused}
+          aria-label={isPaused ? "Resume source list movement" : "Pause source list movement"}
+        >
+          {isPaused ? <Play size={13} aria-hidden="true" /> : <Pause size={13} aria-hidden="true" />}
+          {isPaused ? "Play" : "Pause"}
+        </button>
+      </div>
+      <div className="ir35-source-marquee-mask mt-4">
+        <div className={`ir35-source-marquee-track ${isPaused ? "is-paused" : ""}`}>
+          {[...Array(2)].flatMap((_, group) => SOURCE_NAMES.map((source, index) => (
+            <span key={`${group}-${source}`} className="ir35-source-mark" aria-hidden={group === 1}>
+              <span className={`ir35-source-mark-symbol ir35-source-mark-symbol-${(index % 4) + 1}`} aria-hidden="true">
+                {source.slice(0, 1)}
+              </span>
+              <span>{source}</span>
+            </span>
+          )))}
+        </div>
+      </div>
+      <p className="sr-only">Sources include {SOURCE_NAMES.join(", ")}.</p>
+      <p className="mt-3 text-[11px] leading-5 text-slate-500">Source names identify listing technology or job boards. No partnership or endorsement is implied.</p>
+    </div>
   );
 }

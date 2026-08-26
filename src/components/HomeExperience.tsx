@@ -1,379 +1,126 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BellRing,
-  BookOpen,
-  BriefcaseBusiness,
-  Calculator,
-  Check,
-  CircleCheckBig,
-  FileCheck2,
-  Gauge,
-  MapPin,
-  MessageSquareText,
-  Search,
-  Send,
-  ShieldCheck,
-  WandSparkles,
-} from "lucide-react";
-import { PublicHeader } from "@/components/PublicHeader";
-import { PublicFooter } from "@/components/PublicFooter";
-import { FeaturedJobs } from "@/components/FeaturedJobs";
-import { buttonClassName } from "@/components/ui/button";
+import { ArrowRight, Check, CircleCheckBig, FileCheck2, MapPin, Search, Sparkles, WandSparkles } from "lucide-react";
 import { AuthenticatedHomeRedirect } from "@/components/AuthenticatedHomeRedirect";
-import { HomeScrollProgress, HomeStickyCta, Reveal } from "@/components/HomeMotion";
-
-const PRINCIPLES = [
-  {
-    icon: ShieldCheck,
-    title: "IR35 evidence, not guesswork",
-    body: "See whether a status was stated in the title or listing, or whether it still needs confirmation.",
-    tone: "border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-teal-50",
-    iconTone: "bg-emerald-600 text-white shadow-emerald-900/15",
-  },
-  {
-    icon: Gauge,
-    title: "Rates and working pattern up front",
-    body: "Compare day rates, location and remote, hybrid or on-site expectations before opening a role.",
-    tone: "border-amber-200/80 bg-gradient-to-br from-amber-50 via-white to-orange-50",
-    iconTone: "bg-amber-500 text-slate-950 shadow-amber-900/15",
-  },
-  {
-    icon: BellRing,
-    title: "Save the search, not the admin",
-    body: "Create focused alerts and keep promising contracts together once you sign in.",
-    tone: "border-sky-200/80 bg-gradient-to-br from-sky-50 via-white to-cyan-50",
-    iconTone: "bg-sky-600 text-white shadow-sky-900/15",
-  },
-] as const;
-
-const GUIDE_CARDS = [
-  {
-    href: "/blog/inside-vs-outside-ir35-contract-checks",
-    eyebrow: "IR35 essentials",
-    title: "Inside or outside: what actually changes?",
-    body: "A plain-English guide to status, working practices and the practical questions to ask.",
-  },
-  {
-    href: "/tools/take-home",
-    eyebrow: "Free calculator",
-    title: "Compare estimated take-home pay",
-    body: "Model an Inside and Outside IR35 engagement using current 2026/27 assumptions.",
-  },
-  {
-    href: "/tools/ir35-status",
-    eyebrow: "Indicative checker",
-    title: "Review the shape of an engagement",
-    body: "Work through control, substitution and other signals before seeking a professional view.",
-  },
-] as const;
+import { FeaturedJobs } from "@/components/FeaturedJobs";
+import { HomeScrollProgress, HomeSourceRail, HomeStickyCta, Reveal } from "@/components/HomeMotion";
+import { PublicFooter } from "@/components/PublicFooter";
+import { PublicHeader } from "@/components/PublicHeader";
+import { buttonClassName } from "@/components/ui/button";
 
 const JOURNEY = [
-  { icon: WandSparkles, eyebrow: "Prepare", title: "Build one contractor profile", body: "Import your Resume once. IR35Careers extracts your evidence, reusable answers, work preferences and contract details." },
-  { icon: Send, eyebrow: "Apply", title: "Choose how much control you want", body: "Automatic, Guided and Review modes tailor your materials and handle compatible employer forms using your saved facts." },
-  { icon: MessageSquareText, eyebrow: "Progress", title: "Keep every outcome together", body: "Employer confirmation, recruiter messages and any genuine action needed stay linked to the original contract." },
+  ["01", "Discover", "Start with the contract, not the admin", "Compare IR35 evidence, rate, location and working pattern across fresh UK opportunities."],
+  ["02", "Prepare", "Turn one Resume into a focused application", "Use verified experience to tailor the Resume, cover letter and reusable employer answers."],
+  ["03", "Track", "Keep the receipt and every recruiter reply", "See exactly what was submitted and keep later employer messages connected to the role."],
 ] as const;
 
-const APPLICATION_MODES = [
-  { title: "Automatic", body: "Submit compatible forms in the background.", tone: "border-emerald-300/30 bg-emerald-300/10 text-emerald-100" },
-  { title: "Guided", body: "Submit strong matches and review the rest.", tone: "border-sky-300/30 bg-sky-300/10 text-sky-100" },
-  { title: "Review", body: "Approve every employer submission yourself.", tone: "border-violet-300/30 bg-violet-300/10 text-violet-100" },
+const GUIDES = [
+  ["/blog/inside-vs-outside-ir35-contract-checks", "IR35 essentials", "Inside or outside: what changes?", "Understand status evidence, working practices and the questions worth asking before you apply."],
+  ["/tools/take-home", "Free calculator", "Compare estimated take-home pay", "Model annual and monthly estimates for Inside and Outside IR35 engagements."],
+  ["/tools/ir35-status", "Indicative checker", "Review the shape of an engagement", "Work through control, substitution and other important status signals in plain English."],
 ] as const;
 
 const FAQS = [
-  ["How does IR35Careers find contracts?", "Authorised job-board APIs and public employer ATS feeds are normalised, deduplicated and refreshed. Every result keeps its original source link and last-seen evidence."],
-  ["Does an Outside IR35 label guarantee the status?", "No. The label reports what the advert explicitly says. The client determination and the real working practices still matter, so TBC is shown when no clear status was found."],
-  ["Will Resume Studio invent skills or achievements?", "No. Missing terms remain gaps. A new skill is added only after you confirm that you genuinely have it, and every suggested edit remains visible and editable."],
-  ["Can I apply without leaving IR35Careers?", "Yes for supported public employer forms. Review the tailored application once and choose Apply now. If an employer asks for a sign-in, verification or a new personal answer, the application pauses and tells you what needs attention."],
-  ["Can I export or delete my information?", "Yes. Signed-in users can download a portable account export and permanently delete their account and private Resume files from Settings."],
-  ["Is there a paid plan?", "The current public beta is free. Any future paid plan will show its benefits, full price and renewal terms before you choose it."],
+  ["Can I browse before creating an account?", "Yes. Contract search and public guidance stay open. Create an account when you want to save, prepare or track an application."],
+  ["Does IR35Careers invent Resume experience?", "No. Tailoring stays grounded in the experience and facts you approve in your contractor profile."],
+  ["Will every employer form submit automatically?", "Compatible forms can be handled after approval. Security checks, employer-only accounts or missing facts pause with one clear action instead of hiding the problem."],
+  ["How is IR35 status shown?", "Explicit Inside or Outside wording is shown as evidence. If a listing does not state a status, it remains unconfirmed rather than being guessed."],
 ] as const;
+
+function SearchPanel() {
+  return (
+    <form action="/jobs" method="get" className="ir35-hero-search" aria-label="Search UK contracts">
+      <label className="ir35-hero-search-field"><Search size={20} aria-hidden="true" /><span className="sr-only">Role, skill or company</span><input name="q" type="search" placeholder="Role, skill or company" /></label>
+      <label className="ir35-hero-search-field"><MapPin size={20} aria-hidden="true" /><span className="sr-only">Town, city or UK</span><input name="location" type="search" placeholder="Town, city or UK" /></label>
+      <button type="submit" className="ir35-focus inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-brand-700 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-brand-800">Search contracts <ArrowRight size={17} aria-hidden="true" /></button>
+    </form>
+  );
+}
+
+function ContractJourneyPreview() {
+  return (
+    <div className="ir35-product-browser ir35-product-browser-dark" aria-hidden="true">
+      <div className="ir35-product-browser-bar"><span /><span /><span /><b>IR35Careers</b></div>
+      <div className="ir35-product-dark-content">
+        <p className="ir35-product-browser-label">Application progress</p><h3>DevOps Engineer</h3><p className="text-sm text-slate-400">Outside IR35 · Remote · £650/day</p>
+        <div className="mt-7 space-y-3">
+          {["Profile complete", "Resume tailored", "Application approved", "Employer confirmation"].map((label, index) => <div key={label} className={`ir35-product-step ${index < 3 ? "is-complete" : "is-active"}`}><span>{index < 3 ? <Check size={13} /> : <span className="ir35-pulse-dot" />}</span><p>{label}</p><small>{index < 3 ? "Done" : "Tracking"}</small></div>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResumePreview() {
+  return (
+    <div className="ir35-product-browser" aria-hidden="true">
+      <div className="ir35-product-browser-bar"><span /><span /><span /><b>Resume workspace</b></div>
+      <div className="ir35-resume-preview">
+        <div className="ir35-resume-score"><strong>84%</strong><span>role match</span></div><p className="ir35-product-browser-label">Verified evidence</p><h3>Platform Engineer</h3>
+        <div className="mt-5 flex flex-wrap gap-2">{["AWS", "Terraform", "Kubernetes", "CI/CD"].map((skill) => <span key={skill}>{skill}</span>)}</div>
+        <div className="mt-6 space-y-2"><i className="w-full" /><i className="w-11/12" /><i className="w-4/5" /><i className="w-10/12" /></div>
+      </div>
+    </div>
+  );
+}
+
+function TrackerPreview() {
+  const rows = [["Cloud Engineer", "Submitted", "Today"], ["DevOps Consultant", "Interview", "Tomorrow"], ["Platform Engineer", "Needs you", "1 answer"]] as const;
+  return (
+    <div className="ir35-product-browser" aria-hidden="true">
+      <div className="ir35-product-browser-bar"><span /><span /><span /><b>Application tracker</b></div>
+      <div className="ir35-tracker-preview">{rows.map(([role, status, note], index) => <div key={role}><span className={`ir35-tracker-logo ir35-tracker-logo-${index + 1}`}>{role.slice(0, 1)}</span><p><strong>{role}</strong><small>{note}</small></p><em>{status}</em></div>)}</div>
+    </div>
+  );
+}
 
 export function HomeExperience() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#f6f8f7] text-slate-950">
-      <AuthenticatedHomeRedirect />
-      <HomeScrollProgress />
-      <PublicHeader variant="floating" />
-
+    <div className="min-h-screen bg-white text-slate-950">
+      <AuthenticatedHomeRedirect /><HomeScrollProgress /><PublicHeader />
       <main>
         <section className="ir35-home-hero relative isolate overflow-hidden border-b border-emerald-100/80">
-          <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-            <div className="ir35-home-grid absolute inset-0 opacity-55" />
-            <div className="ir35-home-orbit absolute -right-24 -top-56 h-[560px] w-[560px] rounded-full border-[94px] border-emerald-100/50" />
-            <div className="absolute -left-40 bottom-[-400px] h-[520px] w-[520px] rounded-full bg-emerald-100/40 blur-2xl" />
-            <div className="absolute left-[44%] top-8 h-48 w-48 rounded-full bg-cyan-100/40 blur-3xl" />
-          </div>
-
-          <div className="ir35-container grid items-center gap-9 pb-12 pt-28 sm:pb-16 sm:pt-32 lg:min-h-[720px] lg:grid-cols-[1.04fr_0.96fr] lg:gap-14 lg:pb-20 lg:pt-36">
-            <Reveal className="min-w-0" distance={16}>
-              <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-emerald-200 bg-white/90 px-3 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur">
-                <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden="true" /> Built around UK contract work
-              </span>
-              <h1 className="mt-6 max-w-[760px] text-[2.55rem] font-semibold leading-[0.99] tracking-[-0.06em] text-slate-950 sm:text-[3.7rem] lg:text-[4.35rem]">
-                Stop piecing contract work together.
-                <span className="ir35-home-wordmark-gradient mt-2 block">Search, tailor and track in one place.</span>
-              </h1>
-              <p className="ir35-reading-measure mt-5 max-w-[600px] text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                Find Inside and Outside IR35 roles, build one evidence-based Resume profile and keep every employer outcome connected to the contract that started it.
-              </p>
-
-              <div id="home-primary-actions" className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link href="/jobs" className={buttonClassName({ size: "lg", className: "ir35-gel-button sm:min-w-44" })}>
-                  Browse contracts <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-                <Link href="/account?mode=create&next=%2Fprofile" prefetch={false} className={buttonClassName({ variant: "secondary", size: "lg", className: "sm:min-w-44" })}>
-                  Build your profile
-                </Link>
-              </div>
-
-              <form action="/jobs" method="get" className="mt-5 rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_20px_60px_-38px_rgba(6,95,70,0.42)] backdrop-blur" role="search">
-                <div className="grid gap-2 sm:grid-cols-[1fr_0.75fr_auto]">
-                  <label className="relative block">
-                    <span className="sr-only">Role, skill or company</span>
-                    <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
-                    <input
-                      type="search"
-                      name="q"
-                      placeholder="Role, skill or company"
-                      className="ir35-focus min-h-12 w-full rounded-xl border border-transparent bg-[#f7f8f6] pl-11 pr-4 text-sm text-slate-950 placeholder:text-slate-500 hover:bg-slate-100"
-                    />
-                  </label>
-                  <label className="relative block sm:border-l sm:border-slate-200 sm:pl-2">
-                    <span className="sr-only">Location</span>
-                    <MapPin className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 sm:left-5" size={18} aria-hidden="true" />
-                    <input
-                      type="search"
-                      name="location"
-                      placeholder="Town, city or UK"
-                      className="ir35-focus min-h-12 w-full rounded-xl border border-transparent bg-[#f7f8f6] pl-11 pr-4 text-sm text-slate-950 placeholder:text-slate-500 hover:bg-slate-100 sm:pl-12"
-                    />
-                  </label>
-                  <button type="submit" className={buttonClassName({ size: "lg", className: "w-full sm:w-auto" })}>
-                    Search <ArrowRight size={16} aria-hidden="true" />
-                  </button>
-                </div>
-              </form>
-
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                <span className="text-slate-500">Explore</span>
-                <Link href="/ir35-careers" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">IR35 careers</Link>
-                <Link href="/jobs?ir35=outside" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">Outside IR35</Link>
-                <Link href="/jobs?remote=remote" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">Remote</Link>
-                <Link href="/jobs?min_rate=600" className="ir35-focus rounded font-semibold text-brand-700 hover:text-brand-800">£600+/day</Link>
+          <div className="ir35-home-orb ir35-home-orb-one" aria-hidden="true" /><div className="ir35-home-orb ir35-home-orb-two" aria-hidden="true" />
+          <div className="ir35-container relative grid min-h-[690px] grid-cols-[minmax(0,1fr)] items-center gap-12 py-14 sm:py-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:py-20">
+            <Reveal className="min-w-0 max-w-3xl">
+              <span className="ir35-home-pill"><span className="h-2 w-2 rounded-full bg-emerald-500" />Built for UK contractors</span>
+              <h1 className="mt-7 text-[clamp(3.4rem,7.2vw,6.9rem)] font-black leading-[0.86] tracking-[-0.075em] text-slate-950">One profile.<br /><span className="ir35-home-gradient-text">Better contracts.</span><br />Every reply connected.</h1>
+              <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">Find UK contract roles, prepare a focused Resume and keep applications, confirmations and recruiter messages in one place.</p>
+              <div id="home-primary-actions" className="mt-8"><SearchPanel /></div>
+              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-600"><span>Popular:</span><Link href="/jobs?ir35=outside" className="ir35-focus rounded text-brand-700">Outside IR35</Link><Link href="/jobs?remote=true" className="ir35-focus rounded text-brand-700">Remote</Link><Link href="/jobs?min_rate=600" className="ir35-focus rounded text-brand-700">£600+/day</Link></div>
+            </Reveal>
+            <Reveal delay={0.1} distance={24} className="min-w-0">
+              <div className="ir35-hero-proof">
+                <div className="mb-4 flex items-center justify-between px-1"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Live product view</p><p className="mt-1 text-sm text-slate-600">Fresh roles with visible contract evidence</p></div><span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800"><span className="h-2 w-2 rounded-full bg-emerald-500" />Live</span></div>
+                <FeaturedJobs />
+                <div className="mt-4 grid grid-cols-3 gap-3">{[["2,500+", "live roles"], ["3", "apply modes"], ["1", "clear tracker"]].map(([value, label]) => <div key={label} className="rounded-2xl border border-white/70 bg-white/70 px-3 py-4 text-center backdrop-blur"><strong className="block text-xl text-slate-950">{value}</strong><span className="text-[11px] font-semibold text-slate-500">{label}</span></div>)}</div>
               </div>
             </Reveal>
-
-            <Reveal className="min-w-0" delay={0.12} distance={24}>
-              <FeaturedJobs />
-            </Reveal>
           </div>
         </section>
 
-        <section className="relative z-10 border-b border-slate-200/80 bg-white/90">
-          <div className="ir35-container grid gap-px overflow-hidden bg-slate-200 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              [FileCheck2, "Status evidence", "Know what the listing states"],
-              [BriefcaseBusiness, "Contract-only focus", "Confirmed Inside and Outside roles"],
-              [Calculator, "Free contractor tools", "Model status and take-home"],
-              [BookOpen, "Plain-English guidance", "Primary sources, clear caveats"],
-            ].map(([Icon, title, body]) => {
-              const Visual = Icon as typeof ShieldCheck;
-              return (
-                <div key={String(title)} className="flex items-start gap-3 bg-white px-5 py-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><Visual size={17} aria-hidden="true" /></span>
-                  <div><p className="text-sm font-semibold text-slate-950">{String(title)}</p><p className="mt-0.5 text-xs text-slate-600">{String(body)}</p></div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <section className="border-b border-slate-200 bg-white py-7"><div className="ir35-container"><HomeSourceRail /></div></section>
 
-        <section className="border-b border-emerald-100/80 bg-[#f2faf6] py-5" aria-label="Contract disciplines">
+        <section className="ir35-product-story py-14 sm:py-16 lg:py-20">
           <div className="ir35-container">
-            <p className="text-center text-[11px] font-bold uppercase tracking-[0.17em] text-brand-700">Contract disciplines moving through IR35Careers</p>
-            <div className="ir35-marquee-mask mt-3">
-              <div className="ir35-marquee-track" aria-hidden="true">
-                {[...Array(2)].flatMap((_, group) => ["DevOps", "Cloud", "Data", "Cyber Security", "Product", "Project Delivery", "Engineering", "Finance"].map((role) => (
-                  <span key={`${group}-${role}`} className="whitespace-nowrap rounded-full border border-emerald-200/80 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm">{role}</span>
-                )))}
-              </div>
+            <Reveal className="mx-auto max-w-4xl text-center"><p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-700">See the whole journey</p><h2 className="mt-4 text-4xl font-black tracking-[-0.055em] text-slate-950 sm:text-6xl">From the first match to the recruiter reply.</h2><p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">A connected contractor workspace that shows the product working before asking you to create an account.</p></Reveal>
+            <div className="mt-12 grid gap-5 lg:grid-cols-12">
+              <Reveal className="lg:col-span-7" distance={18}><article className="ir35-showcase-card ir35-showcase-card-mint"><span className="ir35-showcase-number">01</span><div className="max-w-lg"><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-900/70">Live opportunity proof</p><h3 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">Find the right contract while the important details stay visible.</h3><p className="mt-4 leading-7 text-slate-700">Search by role, IR35 evidence, rate and working pattern. Unconfirmed status stays unconfirmed.</p></div><div className="mt-8"><ContractJourneyPreview /></div></article></Reveal>
+              <Reveal className="lg:col-span-5" delay={0.08} distance={18}><article className="ir35-showcase-card ir35-showcase-card-violet"><span className="ir35-showcase-number">02</span><p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-900/70">Evidence-led preparation</p><h3 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">Tailor the Resume without inventing experience.</h3><p className="mt-4 leading-7 text-slate-700">Role keywords strengthen structure and relevance while your approved evidence remains the source of truth.</p><div className="mt-8"><ResumePreview /></div></article></Reveal>
+              <Reveal className="lg:col-span-5" distance={18}><article className="ir35-showcase-card ir35-showcase-card-sky"><span className="ir35-showcase-number">03</span><p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-900/70">One readable tracker</p><h3 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">Know what happened after Apply.</h3><p className="mt-4 leading-7 text-slate-700">Confirmation, interview, action needed and rejection messages stay linked to the contract that created them.</p><div className="mt-8"><TrackerPreview /></div></article></Reveal>
+              <Reveal className="lg:col-span-7" delay={0.08} distance={18}><article className="ir35-showcase-card bg-[#071426] text-white"><span className="ir35-showcase-number border-white/15 bg-white/10 text-white">04</span><div className="grid h-full gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Control stays with you</p><h3 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Automatic when compatible. Clear when attention is genuinely needed.</h3><p className="mt-4 leading-7 text-slate-300">Choose Automatic, Guided or Review mode. Security controls are never hidden or bypassed.</p></div><div className="grid gap-3">{[[Sparkles, "Automatic", "Compatible forms run after approval"], [WandSparkles, "Guided", "Strong matches move first"], [FileCheck2, "Review", "Approve each final packet"]].map(([Icon, title, body]) => { const ModeIcon = Icon as typeof Sparkles; return <div key={String(title)} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"><span className="rounded-xl bg-emerald-300/15 p-2 text-emerald-300"><ModeIcon size={18} /></span><p><strong className="block text-sm">{String(title)}</strong><span className="text-xs leading-5 text-slate-400">{String(body)}</span></p></div>; })}</div></div></article></Reveal>
             </div>
           </div>
         </section>
 
-        <section className="ir35-home-surface py-12 sm:py-14 lg:py-16">
-          <div className="ir35-container">
-            <div className="grid items-end gap-5 lg:grid-cols-[1fr_auto]">
-              <Reveal className="max-w-2xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">A clearer contractor search</p>
-                <h2 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">Compare what matters before you apply.</h2>
-                <p className="mt-3 text-base leading-7 text-slate-600">Status, rate and working pattern stay visible, so promising contracts are easier to recognise.</p>
-              </Reveal>
-              <Reveal delay={0.06}>
-                <Link href="/jobs" className={buttonClassName({ variant: "secondary", className: "hidden lg:inline-flex" })}>Explore contracts <ArrowRight size={15} /></Link>
-              </Reveal>
-            </div>
-            <div className="mt-7 grid gap-4 lg:grid-cols-3">
-              {PRINCIPLES.map((item, index) => (
-                <Reveal key={item.title} delay={index * 0.07} distance={18}>
-                  <article className={`ir35-home-principle ir35-card min-h-[205px] border p-6 sm:p-7 ${item.tone}`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-lg ${item.iconTone}`}><item.icon size={20} aria-hidden="true" /></span>
-                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">0{index + 1}</span>
-                    </div>
-                    <h3 className="mt-5 text-xl font-semibold tracking-[-0.025em] text-slate-950">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
-            <Link href="/jobs" className={buttonClassName({ variant: "secondary", className: "mt-6 w-full lg:hidden" })}>Explore contracts <ArrowRight size={15} /></Link>
-          </div>
-        </section>
+        <section className="border-y border-slate-200 bg-white py-14 sm:py-16 lg:py-20"><div className="ir35-container"><Reveal className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-700">A simple contractor workflow</p><h2 className="mt-4 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl">Prepare once. Keep every application connected.</h2></Reveal><div className="mt-9 grid gap-4 lg:grid-cols-3">{JOURNEY.map(([number, label, title, body], index) => <Reveal key={number} delay={index * 0.07} distance={16}><article className="group h-full rounded-3xl border border-slate-200 bg-slate-50 p-6 transition-[transform,box-shadow,border-color] hover:-translate-y-1 hover:border-emerald-200 hover:shadow-floating sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">{label}</span><span className="text-sm font-black text-slate-300">{number}</span></div><h3 className="mt-8 text-2xl font-black tracking-[-0.03em] text-slate-950">{title}</h3><p className="mt-4 text-sm leading-6 text-slate-600">{body}</p></article></Reveal>)}</div></div></section>
 
-        <section className="ir35-home-dark relative overflow-hidden border-y border-slate-800 py-12 text-white sm:py-14 lg:py-16">
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="absolute -right-32 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full border-[80px] border-emerald-400/[0.05]" />
-          </div>
-          <div className="ir35-container relative">
-            <div className="grid items-end gap-5 lg:grid-cols-[1fr_0.72fr]">
-              <Reveal className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">One reusable contractor profile</p>
-                <h2 className="mt-3 text-3xl font-bold tracking-[-0.045em] sm:text-4xl">Prepare once. Apply your way. See every outcome.</h2>
-              </Reveal>
-              <Reveal delay={0.06}>
-                <p className="text-sm leading-6 text-slate-300 lg:text-right">IR35Careers adapts the application workflow to UK contract work, including status, day rate, availability, clearance and working pattern.</p>
-              </Reveal>
-            </div>
-            <div className="relative mt-7 grid gap-3 lg:grid-cols-3">
-              {JOURNEY.map((step, index) => (
-                <Reveal key={step.title} delay={index * 0.07} distance={16}>
-                  <article className="flex min-h-[218px] flex-col rounded-2xl border border-white/10 bg-white/[0.045] p-6 transition-[border-color,background-color,transform] hover:-translate-y-1 hover:border-emerald-300/40 hover:bg-white/[0.08]">
-                    <div className="flex items-center justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-300"><step.icon size={20} /></span><span className="text-xs font-bold text-slate-400">0{index + 1}</span></div>
-                    <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300">{step.eyebrow}</p>
-                    <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">{step.body}</p>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
-            <div className="mt-4 grid gap-4 rounded-3xl border border-white/10 bg-slate-950/45 p-4 sm:p-5 lg:grid-cols-[1fr_0.9fr]">
-              <Reveal>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {APPLICATION_MODES.map((mode) => (
-                    <div key={mode.title} className={`rounded-2xl border p-4 ${mode.tone}`}>
-                      <p className="font-semibold text-white">{mode.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-300">{mode.body}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-4 text-xs leading-5 text-slate-400">Employer login, CAPTCHA or identity checks pause safely. IR35Careers never bypasses employer security controls.</p>
-              </Reveal>
-              <Reveal delay={0.08}>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
-                  <div className="flex items-center justify-between"><p className="text-sm font-semibold">Example application progress</p><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Live in your tracker</span></div>
-                  <div className="mt-4 space-y-2">
-                    {[
-                      [CircleCheckBig, "Platform Engineer", "Submitted", "text-emerald-300"],
-                      [WandSparkles, "Cloud Consultant", "Tailoring Resume", "text-sky-300"],
-                      [MessageSquareText, "DevOps Contractor", "Recruiter replied", "text-violet-300"],
-                    ].map(([Icon, role, status, colour]) => {
-                      const StatusIcon = Icon as typeof CircleCheckBig;
-                      return <div key={String(role)} className="flex items-center gap-3 rounded-xl bg-slate-900/75 px-3 py-2.5"><StatusIcon size={16} className={String(colour)} /><span className="min-w-0 flex-1 truncate text-sm text-slate-100">{String(role)}</span><span className="text-xs text-slate-400">{String(status)}</span></div>;
-                    })}
-                  </div>
-                </div>
-              </Reveal>
-            </div>
-            <Reveal delay={0.1} className="mt-5 flex flex-wrap gap-3">
-              <Link href="/account?mode=create&next=%2Fprofile" prefetch={false} className={buttonClassName({ variant: "accent" })}>Build your contractor profile <ArrowRight size={15} /></Link>
-              <Link href="/automation" className={buttonClassName({ variant: "secondary", className: "border-white/20 bg-white/5 text-white hover:bg-white/10" })}>Explore Auto Apply</Link>
-            </Reveal>
-          </div>
-        </section>
+        <section className="border-b border-emerald-100 bg-[#eef7f3] py-14 sm:py-16"><div className="ir35-container"><div className="grid items-end gap-5 lg:grid-cols-[1fr_auto]"><Reveal className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-700">Understand before you apply</p><h2 className="mt-3 text-3xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">Practical guidance beside the work.</h2></Reveal><Reveal delay={0.06}><Link href="/blog" className={buttonClassName({ variant: "secondary", className: "hidden lg:inline-flex" })}>Browse contractor guides <ArrowRight size={15} /></Link></Reveal></div><div className="mt-8 grid gap-4 md:grid-cols-3">{GUIDES.map(([href, eyebrow, title, body], index) => <Reveal key={href} delay={index * 0.07} distance={16}><Link href={href} className="ir35-focus group flex min-h-[220px] flex-col rounded-3xl border border-white bg-white/90 p-6 shadow-card transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-floating"><span className="text-xs font-bold uppercase tracking-[0.14em] text-brand-700">{eyebrow}</span><h3 className="mt-4 text-xl font-black tracking-[-0.025em] text-slate-950">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{body}</p><span className="mt-auto pt-6 text-sm font-bold text-brand-700">Open <ArrowRight className="inline transition-transform group-hover:translate-x-1" size={14} /></span></Link></Reveal>)}</div></div></section>
 
-        <section className="ir35-home-celebration overflow-hidden border-y border-emerald-200/70 py-12 sm:py-14">
-          <div className="ir35-container grid items-center gap-8 lg:grid-cols-[1fr_auto]">
-            <Reveal>
-              <p className="text-xs font-bold uppercase tracking-[0.17em] text-emerald-800">One joined-up contractor journey</p>
-              <h2 className="mt-3 max-w-4xl text-3xl font-semibold tracking-[-0.045em] text-slate-950 sm:text-5xl">A contract search should end with clarity, not another spreadsheet.</h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">Keep the role, tailored Resume, approved answers, submission confirmation and recruiter reply in one private workspace.</p>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ size: "lg", className: "ir35-gel-button min-w-52" })}>Create free account <ArrowRight size={16} /></Link>
-            </Reveal>
-          </div>
-        </section>
+        <section className="bg-white py-14 sm:py-16 lg:py-20"><div className="ir35-container grid gap-8 lg:grid-cols-[0.72fr_1.28fr]"><Reveal><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-700">Frequently asked</p><h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">The important questions, answered plainly.</h2><p className="mt-4 text-sm leading-6 text-slate-600">Clear product states mean you can see what happened and what comes next.</p></Reveal><Reveal delay={0.08} className="divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-slate-50/80 px-5 shadow-card sm:px-7">{FAQS.map(([question, answer], index) => <details key={question} className="group py-5" open={index === 0}><summary className="ir35-focus flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-bold text-slate-950 marker:content-none"><span>{question}</span><span className="text-xl text-brand-700 transition-transform group-open:rotate-45">+</span></summary><p className="pb-1 pr-8 text-sm leading-6 text-slate-600">{answer}</p></details>)}</Reveal></div></section>
 
-        <section className="border-y border-emerald-100 bg-[#eef7f3] py-12 sm:py-14 lg:py-16">
-          <div className="ir35-container">
-            <div className="grid items-end gap-5 lg:grid-cols-[1fr_auto]">
-              <Reveal className="max-w-2xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">Understand before you apply</p>
-                <h2 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">Practical guidance beside the work.</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Use clear educational tools to ask better questions, then seek professional advice when the engagement needs it.</p>
-              </Reveal>
-              <Reveal delay={0.06}>
-                <Link href="/blog" className={buttonClassName({ variant: "secondary", className: "hidden lg:inline-flex" })}>Browse contractor guides <ArrowRight size={15} aria-hidden="true" /></Link>
-              </Reveal>
-            </div>
-            <div className="mt-7 grid gap-4 md:grid-cols-3">
-              {GUIDE_CARDS.map((guide, index) => (
-                <Reveal key={guide.href} delay={index * 0.07} distance={16}>
-                  <Link href={guide.href} className="ir35-focus group flex min-h-[220px] flex-col rounded-2xl border border-white bg-white/90 p-6 shadow-card backdrop-blur-sm transition-[transform,box-shadow,border-color] hover:-translate-y-1 hover:border-emerald-200 hover:shadow-floating">
-                    <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-700">{guide.eyebrow}</span>
-                    <h3 className="mt-4 text-lg font-semibold leading-6 text-slate-950">{guide.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">{guide.body}</p>
-                    <span className="mt-auto pt-6 text-sm font-semibold text-brand-700">Open <ArrowRight className="inline transition-transform group-hover:translate-x-1" size={14} aria-hidden="true" /></span>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-            <Link href="/blog" className={buttonClassName({ variant: "secondary", className: "mt-6 w-full lg:hidden" })}>Browse contractor guides <ArrowRight size={15} aria-hidden="true" /></Link>
-          </div>
-        </section>
-
-        <section className="border-t border-slate-200 bg-white py-12 sm:py-14 lg:py-16">
-          <div className="ir35-container grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
-            <Reveal>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">Frequently asked</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">The important questions, answered plainly.</h2>
-              <p className="mt-4 text-sm leading-6 text-slate-600">Product state and safety gates are published so a contractor never has to guess what happened.</p>
-              <Link href="/pricing" className={buttonClassName({ variant: "secondary", className: "mt-6" })}>View current access <ArrowRight size={15} /></Link>
-            </Reveal>
-            <Reveal delay={0.08} className="divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-slate-50/80 px-5 shadow-card sm:px-7">
-              {FAQS.map(([question, answer], index) => (
-                <details key={question} className="group py-5" open={index === 0}>
-                  <summary className="ir35-focus flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-bold text-slate-950 marker:content-none">
-                    <span>{question}</span><span className="text-xl text-brand-700 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
-                  </summary>
-                  <p className="pb-1 pr-8 text-sm leading-6 text-slate-600">{answer}</p>
-                </details>
-              ))}
-            </Reveal>
-          </div>
-        </section>
-
-        <section className="ir35-home-cta relative overflow-hidden py-10 text-white sm:py-12">
-          <div className="ir35-container relative grid items-center gap-8 lg:grid-cols-[1fr_auto]">
-            <Reveal>
-              <p className="text-sm font-semibold text-emerald-300">Your next contract, with the important details visible.</p>
-              <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Start with the role. Create an account only when you want to save the search.</h2>
-              <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
-                {["Free to browse", "Original source links", "Automatic, Guided or Review mode"].map((item) => <li key={item} className="flex items-center gap-2"><Check size={15} className="text-emerald-300" aria-hidden="true" />{item}</li>)}
-              </ul>
-            </Reveal>
-            <Reveal delay={0.1} className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
-              <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "lg", className: "border-white bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} aria-hidden="true" /></Link>
-              <Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ variant: "accent", size: "lg" })}>Join the public beta</Link>
-            </Reveal>
-          </div>
-        </section>
+        <section className="ir35-home-cta relative overflow-hidden py-12 text-white sm:py-14"><div className="ir35-container relative grid items-center gap-8 lg:grid-cols-[1fr_auto]"><Reveal><p className="text-sm font-bold text-emerald-300">Your next contract, with the important details visible.</p><h2 className="mt-3 max-w-3xl text-3xl font-black tracking-[-0.04em] sm:text-5xl">Browse first. Build your profile when you are ready to apply.</h2><ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">{["Free to browse", "Original source retained", "One connected tracker"].map((item) => <li key={item} className="flex items-center gap-2"><CircleCheckBig size={15} className="text-emerald-300" />{item}</li>)}</ul></Reveal><Reveal delay={0.1} className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row"><Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "lg", className: "border-white bg-white text-slate-950 hover:bg-emerald-50" })}>Browse contracts <ArrowRight size={16} /></Link><Link href="/account?mode=create&next=%2Fdashboard" prefetch={false} className={buttonClassName({ variant: "accent", size: "lg" })}>Create free account</Link></Reveal></div></section>
       </main>
-
-      <PublicFooter />
-      <HomeStickyCta />
+      <PublicFooter /><HomeStickyCta />
     </div>
   );
 }
