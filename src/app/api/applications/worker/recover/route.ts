@@ -20,6 +20,7 @@ const RECOVERABLE_ACTIONS = new Set([
   "unsupported_form",
   "runner_timeout",
   "employer_login",
+  "validation_failed",
 ]);
 
 type RecoveryRequest = {

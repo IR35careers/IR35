@@ -364,7 +364,13 @@ async function uploadApprovedResumeForKnownPortal(input: {
   ats: AtsDefinition;
   resume: ApprovedResumeUpload | null;
 }): Promise<boolean> {
-  if (input.ats.kind !== "totaljobs" || !input.resume) return false;
+  if (!input.resume) return false;
+  const wpJobBoardUpload = input.page.locator(".wpjb-upload").first();
+  const hasWpJobBoardUpload = await wpJobBoardUpload
+    .count()
+    .then((count) => count > 0)
+    .catch(() => false);
+  if (input.ats.kind !== "totaljobs" && !hasWpJobBoardUpload) return false;
   const payload = {
     name: input.resume.name,
     mimeType: input.resume.mimeType,
@@ -381,6 +387,32 @@ async function uploadApprovedResumeForKnownPortal(input: {
         ),
       )
       .catch(() => false);
+    if (attached && hasWpJobBoardUpload) {
+      // WPJobBoard uses Plupload to transfer the selected Resume before the
+      // form itself is submitted. Clicking the final action while that upload
+      // is still running makes the employer report a missing attachment even
+      // though the browser accepted the file selection.
+      const deadline = Date.now() + 25_000;
+      while (Date.now() < deadline) {
+        const accepted = await wpJobBoardUpload
+          .evaluate((node) => {
+            const uploads = node.querySelector(".wpjb-uploads");
+            if (!uploads) return false;
+            const hidden = uploads.querySelector(
+              'input[type="hidden"][name], input[name*="file" i], input[name*="upload" i]',
+            );
+            const text = (uploads.textContent || "").trim();
+            const busy = /uploading|processing|please wait/i.test(text);
+            return Boolean(hidden || (text && !busy));
+          })
+          .catch(() => false);
+        if (accepted) return true;
+        await input.page.waitForTimeout(350);
+      }
+      // Preserve the consumed upload state. A second setInputFiles call would
+      // restart the widget and is more likely to race the final submission.
+      return true;
+    }
     if (attached) return true;
   }
 
@@ -1376,7 +1408,12 @@ async function snapshotFields(
         placeholder: element.getAttribute("placeholder") || "",
         required:
           element.hasAttribute("required") ||
-          element.getAttribute("aria-required") === "true",
+          element.getAttribute("aria-required") === "true" ||
+          Boolean(
+            element
+              .closest('[class*="element-name-"]')
+              ?.querySelector(".wpjb-required"),
+          ),
         options,
         optionValue: element instanceof HTMLInputElement ? element.value : "",
         optionLabel: ownLabel,
@@ -2153,6 +2190,7 @@ export async function runNativeApplication(
           fields,
           "validation_failed",
           currentDestination(page, startUrl.toString()),
+          await pageDiagnostic(page, blockedHosts, networkFailures),
         );
       }
     }
