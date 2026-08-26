@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
+import { EmailMessageBody } from "@/components/workspace/EmailMessageBody";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { getSupabase } from "@/lib/supabase";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
@@ -29,6 +30,7 @@ import {
   isUnsolicitedJobMarketingMessage,
   type InboxViewCategory,
 } from "@/lib/workspace/mail";
+import { emailMessagePreview } from "@/lib/email/message-display";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { InboxMessage } from "@/lib/workspace/types";
 
@@ -545,7 +547,7 @@ export function RecruiterInbox() {
                   {message.subject}
                 </p>
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                  {message.preview}
+                  {emailMessagePreview(message.preview || message.body)}
                 </p>
                 <div className="mt-2">
                   <CategoryPill message={message} />
@@ -587,8 +589,8 @@ export function RecruiterInbox() {
                   )}
                 </div>
               </div>
-              <div className="mt-6 whitespace-pre-line text-sm leading-7 text-slate-700">
-                {selected.body}
+              <div className="mt-6">
+                <EmailMessageBody body={selected.body} />
               </div>
               {selected.applicationId && (
                 <div className="mt-8 rounded-2xl border border-brand-200 bg-brand-50 p-4">
