@@ -14,6 +14,13 @@ function GithubCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const destination = resolvePostAuthPath(searchParams.get("next"));
+  const oauthError = searchParams.get("error");
+  const oauthErrorDetails = [
+    searchParams.get("error_code"),
+    searchParams.get("error_description"),
+    oauthError,
+  ].filter(Boolean).join(" ");
+  const providerUnavailable = /provider is not enabled|unsupported provider|not enabled/i.test(oauthErrorDetails);
   const [status, setStatus] = useState<ImportState>("waiting");
   const [message, setMessage] = useState("Securing your GitHub connection.");
   const started = useRef(false);
@@ -55,9 +62,16 @@ function GithubCallbackContent() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
+    if (oauthError) {
+      setStatus("error");
+      setMessage(providerUnavailable
+        ? "GitHub sign-in is temporarily unavailable. Use Google or email while the connection is restored."
+        : "GitHub did not complete the secure connection. Return to sign in and try again.");
+      return;
+    }
     const timer = window.setTimeout(() => void importProfile(), 250);
     return () => window.clearTimeout(timer);
-  }, [importProfile]);
+  }, [importProfile, oauthError, providerUnavailable]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07131d] px-4 py-10 [color-scheme:light]">
@@ -77,9 +91,15 @@ function GithubCallbackContent() {
         <p className="mt-3 text-sm leading-6 text-slate-600" role="status">{message}</p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           {status === "error" ? (
-            <button type="button" onClick={() => void importProfile()} className="ir35-focus inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800">
-              <RefreshCw size={16} /> Try again
-            </button>
+            oauthError ? (
+              <Link href={`/account?next=${encodeURIComponent(destination)}`} className="ir35-focus inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800">
+                <RefreshCw size={16} /> Return to sign in
+              </Link>
+            ) : (
+              <button type="button" onClick={() => void importProfile()} className="ir35-focus inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800">
+                <RefreshCw size={16} /> Try again
+              </button>
+            )
           ) : (
             <div className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-5 text-sm font-semibold text-emerald-900">
               {status === "success" ? <CheckCircle2 size={16} /> : <Loader2 className="animate-spin" size={16} />}

@@ -10,7 +10,10 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { isSupabaseConfigured } from "@/lib/supabase-config";
+import {
+  isSupabaseConfigured,
+  isSupabaseOAuthProviderEnabled,
+} from "@/lib/supabase-config";
 import { resolvePostAuthPath } from "@/lib/auth-routing";
 import { isAdministratorEmail } from "@/lib/portal-access";
 import { clearWorkspaceForSignOut } from "@/lib/workspace/store";
@@ -216,6 +219,9 @@ function githubCallbackUrl(next: string): string {
 
 async function signInWithGithub(next = "/dashboard"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  if (!(await isSupabaseOAuthProviderEnabled("github"))) {
+    return { error: "GitHub sign-in is temporarily unavailable. Use Google or email while it is being connected." };
+  }
   const { getSupabase } = await import("@/lib/supabase");
   const { error } = await getSupabase().auth.signInWithOAuth({
     provider: "github",
@@ -229,6 +235,9 @@ async function signInWithGithub(next = "/dashboard"): Promise<AuthResult> {
 
 async function linkGithubIdentity(next = "/profile#profile-professional-details"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  if (!(await isSupabaseOAuthProviderEnabled("github"))) {
+    return { error: "GitHub connection is temporarily unavailable. Your existing profile remains unchanged." };
+  }
   const { getSupabase } = await import("@/lib/supabase");
   const { error } = await getSupabase().auth.linkIdentity({
     provider: "github",
