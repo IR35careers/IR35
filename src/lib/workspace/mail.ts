@@ -37,29 +37,35 @@ export function isUnsolicitedJobMarketingMessage(
 ): boolean {
   const subjectText = normalise(subject);
   const text = normalise(`${subject} ${body}`);
+  const senderText = sender.toLowerCase();
 
   const applicationResponse = /\b(application (?:received|submitted|update|status)|thanks? for applying|thank you for applying|interview|assessment|verification code|action required|unfortunately|not progressing|offer letter|contract offer)\b/.test(
     text,
   );
   if (applicationResponse) return false;
 
-  const recommendationSubject = /\b(?:our |your )?recommendation(?:s)?\b|\brecommended jobs?\b|\bjobs? (?:picked|selected) for you\b|\bjob alerts?\b|\bsimilar jobs?\b|\bnew jobs? for you\b/.test(
+  const recommendationSubject = /\b(?:our |your )?recommendation(?:s)?\b|\brecommended jobs?\b|\bjobs? (?:picked|selected) for you\b|\bjob alerts?\b|\bsimilar jobs?\b|\bnew jobs? for you\b|\blatest (?:job )?matches\b|^\d+ new\b.*\bjobs?\b/.test(
     subjectText,
   );
-  const recommendationBody = /\bwe recommend this job for you\b|\btake a look and see if you want to apply\b|\bjobs? matching your (?:profile|search)\b|\bmore jobs? like this\b/.test(
+  const recommendationBody = /\bwe recommend this job for you\b|\btake a look and see if you want to apply\b|\bjobs? matching your (?:profile|search)\b|\bmore jobs? like this\b|\bcheck out your latest matches\b|\bwe found these new jobs\b|\bmatch your search for\b|\bmanage (?:your )?(?:job )?alerts\b/.test(
     text,
   );
-  const marketingSender = /(?:^|[.@_-])(?:job|jobs|alerts?|recommendations?)(?:[.@_-]|$)|totaljobsmail/i.test(
-    sender,
+  const knownJobAlertSender = /@(?:[a-z0-9-]+\.)*(?:totaljobsmail\.com|jobsite\.co\.uk)$|totaljobsmail\.com/.test(
+    senderText,
   );
+  const genericMarketingSender = /(?:^|[.@_-])(?:job|jobs|alerts?|recommendations?|newsletter)(?:[.@_-]|$)/.test(
+    senderText,
+  );
+  const newsletterControl = /\b(?:unsubscribe|email preferences|manage (?:your )?(?:emails|alerts|preferences))\b/.test(text);
   const permanentPromotion =
     /\bpermanent\b/.test(text) &&
     /\b(?:good fit|recommended|recommendation|take a look|job alert)\b/.test(text);
 
   return (
+    knownJobAlertSender ||
     recommendationSubject ||
     recommendationBody ||
-    (marketingSender && permanentPromotion)
+    (genericMarketingSender && (newsletterControl || permanentPromotion))
   );
 }
 

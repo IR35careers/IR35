@@ -36,9 +36,37 @@ describe("inbound recruiter mail", () => {
     ).toBe(true);
     expect(
       isUnsolicitedJobMarketingMessage(
+        '10 new "DevOps Engineer" jobs',
+        "Check out your latest matches. We found these new jobs that match your search.",
+        "info@jobs.totaljobsmail.com",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Your latest matches",
+        "New roles selected for you. Manage your job alerts or unsubscribe.",
+        "alerts@example-jobs.co.uk",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
         "Application received: Senior DevOps Engineer",
         "Thank you for applying. We have received your application.",
         "no-reply@totaljobs.com",
+      ),
+    ).toBe(false);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Interview invitation: Senior DevOps Engineer",
+        "Please choose an interview time with the hiring team.",
+        "jobs@employer.example",
+      ),
+    ).toBe(false);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Unfortunately your application will not progress",
+        "Thank you for your time and interest in the role.",
+        "no-reply@jobs.example",
       ),
     ).toBe(false);
   });

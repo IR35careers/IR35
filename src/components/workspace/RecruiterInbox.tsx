@@ -107,17 +107,21 @@ export function RecruiterInbox() {
   const hasAlias =
     workspace.inbox.alias !== "Not created" &&
     (workspace.inbox.providerState === "connected" || emailState === "preview");
+  const inboxMessages = useMemo(
+    () =>
+      workspace.messages.filter(
+        (message) =>
+          !isUnsolicitedJobMarketingMessage(
+            message.subject,
+            message.body,
+            message.from,
+          ),
+      ),
+    [workspace.messages],
+  );
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return workspace.messages.filter((message) => {
-      if (
-        isUnsolicitedJobMarketingMessage(
-          message.subject,
-          message.body,
-          message.from,
-        )
-      )
-        return false;
+    return inboxMessages.filter((message) => {
       const category = inboxViewCategory(message);
       const categoryMatches = filter === "all" || category === filter;
       const searchMatches =
@@ -127,7 +131,7 @@ export function RecruiterInbox() {
           .includes(needle);
       return categoryMatches && searchMatches;
     });
-  }, [filter, query, workspace.messages]);
+  }, [filter, inboxMessages, query]);
   const selected =
     visible.find((message) => message.id === selectedId) ?? visible[0] ?? null;
   const linkedApplication = selected?.applicationId
@@ -135,15 +139,7 @@ export function RecruiterInbox() {
         (item) => item.id === selected.applicationId,
       ) ?? null
     : null;
-  const unread = workspace.messages.filter(
-    (message) =>
-      !message.read &&
-      !isUnsolicitedJobMarketingMessage(
-        message.subject,
-        message.body,
-        message.from,
-      ),
-  ).length;
+  const unread = inboxMessages.filter((message) => !message.read).length;
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -466,8 +462,8 @@ export function RecruiterInbox() {
           {FILTERS.map((item) => {
             const count =
               item.id === "all"
-                ? workspace.messages.length
-                : workspace.messages.filter(
+                ? inboxMessages.length
+                : inboxMessages.filter(
                     (message) => inboxViewCategory(message) === item.id,
                   ).length;
             return (
@@ -503,7 +499,7 @@ export function RecruiterInbox() {
                   : `No ${FILTERS.find((item) => item.id === filter)?.label ?? "matching"} messages`}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                {workspace.messages.length > 0
+                {inboxMessages.length > 0
                   ? "Your messages are available in another category."
                   : "Application updates and recruiter replies will appear here automatically."}
               </p>
