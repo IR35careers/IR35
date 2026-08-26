@@ -230,7 +230,9 @@ export async function GET(request: Request): Promise<Response> {
   if (admin instanceof Response) return admin;
 
   const supabase = getSupabaseAdmin();
-  const section = new URL(request.url).searchParams.get("section") ?? "stats";
+  const requestUrl = new URL(request.url);
+  const section = requestUrl.searchParams.get("section") ?? "stats";
+  const requestedUserId = requestUrl.searchParams.get("userId")?.trim() ?? "";
 
   try {
     if (section === "stats") {
@@ -375,6 +377,103 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (section === "users") {
+      if (requestedUserId) {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedUserId)) {
+          return Response.json({ error: "Invalid contractor account identifier." }, { status: 400 });
+        }
+
+        const authResult = await supabase.auth.admin.getUserById(requestedUserId);
+        if (authResult.error) throw authResult.error;
+        if (!authResult.data.user) return Response.json({ error: "Contractor account not found." }, { status: 404 });
+
+        const [profileResult, versionsResult, packetsResult, eventsResult, messagesResult, aliasResult, automationResult, entitlementResult] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", requestedUserId).maybeSingle(),
+          supabase
+            .from("resume_versions")
+            .select("id, job_id, job_title, company_name, source_filename, label, status, source_text, tailored_text, accepted_suggestion_ids, confirmed_keyword_ids, score, created_at, approved_at")
+            .eq("user_id", requestedUserId)
+            .order("created_at", { ascending: false })
+            .limit(20),
+          supabase
+            .from("application_packets")
+            .select("id, job_id, job_snapshot, status, mode, match_score, resume_version_id, resume_version_label, materials_approved, submission_approved, receipt, created_at, updated_at")
+            .eq("user_id", requestedUserId)
+            .order("updated_at", { ascending: false })
+            .limit(50),
+          supabase
+            .from("application_events")
+            .select("id, application_id, event_type, label, metadata, created_at")
+            .eq("user_id", requestedUserId)
+            .order("created_at", { ascending: false })
+            .limit(100),
+          supabase
+            .from("inbox_messages")
+            .select("id, application_id, sender, recipient, subject, preview, classification, is_read, received_at")
+            .eq("user_id", requestedUserId)
+            .order("received_at", { ascending: false })
+            .limit(40),
+          supabase
+            .from("inbox_aliases")
+            .select("alias, forwarding_email, forwarding_enabled, provider_state, created_at, updated_at")
+            .eq("user_id", requestedUserId)
+            .maybeSingle(),
+          supabase
+            .from("automation_rules")
+            .select("enabled, dry_run_only, minimum_match, minimum_day_rate, ir35_statuses, workplaces, daily_limit, prepare_cover_letter, require_human_approval, excluded_companies, updated_at")
+            .eq("user_id", requestedUserId)
+            .maybeSingle(),
+          supabase
+            .from("user_entitlements")
+            .select("plan, preparation_credits, billing_state, updated_at")
+            .eq("user_id", requestedUserId)
+            .maybeSingle(),
+        ]);
+
+        for (const result of [profileResult, versionsResult, packetsResult, eventsResult, messagesResult, aliasResult, automationResult, entitlementResult]) {
+          if (result.error) throw result.error;
+        }
+
+        const profile = profileResult.data;
+        let resumeUrl: string | null = null;
+        let resumeLinkExpiresAt: string | null = null;
+        if (profile?.cv_path) {
+          const expiresInSeconds = 10 * 60;
+          const signed = await supabase.storage.from("cvs").createSignedUrl(String(profile.cv_path), expiresInSeconds);
+          if (signed.error) throw signed.error;
+          resumeUrl = signed.data.signedUrl;
+          resumeLinkExpiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
+        }
+
+        const authUser = authResult.data.user;
+        return Response.json({
+          contractor: {
+            account: {
+              id: authUser.id,
+              email: authUser.email,
+              created_at: authUser.created_at,
+              last_sign_in_at: authUser.last_sign_in_at,
+              email_confirmed_at: authUser.email_confirmed_at,
+              updated_at: authUser.updated_at,
+              banned_until: authUser.banned_until,
+              provider: authUser.app_metadata?.provider ?? "email",
+            },
+            profile: profile ?? null,
+            resume: profile?.cv_filename ? {
+              filename: profile.cv_filename,
+              url: resumeUrl,
+              expires_at: resumeLinkExpiresAt,
+            } : null,
+            resumeVersions: versionsResult.data ?? [],
+            applications: packetsResult.data ?? [],
+            events: eventsResult.data ?? [],
+            inboxMessages: messagesResult.data ?? [],
+            inboxAlias: aliasResult.data ?? null,
+            automation: automationResult.data ?? null,
+            entitlement: entitlementResult.data ?? null,
+          },
+        });
+      }
+
       const authUsers = await listAllUsers(supabase);
       const ids = authUsers.map((user) => user.id);
       const safeIds = ids.length ? ids : ["00000000-0000-0000-0000-000000000000"];

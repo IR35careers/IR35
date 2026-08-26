@@ -9,12 +9,11 @@ import {
   ArrowRight,
   BarChart3,
   BriefcaseBusiness,
-  CalendarDays,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   CloudDownload,
   Database,
+  Download,
   ExternalLink,
   FileCheck2,
   Gauge,
@@ -27,11 +26,9 @@ import {
   LockKeyhole,
   LogOut,
   Mail,
-  MapPin,
   Menu,
   MessageSquareText,
   Monitor,
-  Phone,
   Plus,
   Power,
   RefreshCw,
@@ -116,6 +113,101 @@ type UserRow = {
     unreadMessages: number;
     latestApplicationAt?: string | null;
   };
+};
+
+type ContractorDetail = {
+  account: {
+    id: string;
+    email?: string;
+    created_at: string;
+    last_sign_in_at?: string | null;
+    email_confirmed_at?: string | null;
+    updated_at?: string | null;
+    banned_until?: string | null;
+    provider?: string;
+  };
+  profile: (NonNullable<UserRow["profile"]> & {
+    cv_path?: string | null;
+    application_profile?: Record<string, unknown> | null;
+  }) | null;
+  resume: { filename: string; url: string | null; expires_at: string | null } | null;
+  resumeVersions: Array<{
+    id: string;
+    job_id: string | null;
+    job_title: string;
+    company_name: string;
+    source_filename: string;
+    label: string;
+    status: string;
+    source_text: string;
+    tailored_text: string;
+    accepted_suggestion_ids?: string[] | null;
+    confirmed_keyword_ids?: string[] | null;
+    score?: number | Record<string, unknown> | null;
+    created_at: string;
+    approved_at?: string | null;
+  }>;
+  applications: Array<{
+    id: string;
+    job_id: string;
+    job_snapshot: Record<string, unknown> | null;
+    status: string;
+    mode: string;
+    match_score?: number | null;
+    resume_version_id?: string | null;
+    resume_version_label?: string | null;
+    materials_approved?: boolean | null;
+    submission_approved?: boolean | null;
+    receipt?: Record<string, unknown> | null;
+    created_at: string;
+    updated_at: string;
+  }>;
+  events: Array<{
+    id: string;
+    application_id: string;
+    event_type: string;
+    label: string;
+    metadata?: Record<string, unknown> | null;
+    created_at: string;
+  }>;
+  inboxMessages: Array<{
+    id: string;
+    application_id?: string | null;
+    sender: string;
+    recipient: string;
+    subject: string;
+    preview?: string | null;
+    classification: string;
+    is_read: boolean;
+    received_at: string;
+  }>;
+  inboxAlias: {
+    alias: string;
+    forwarding_email?: string | null;
+    forwarding_enabled: boolean;
+    provider_state?: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  automation: {
+    enabled: boolean;
+    dry_run_only: boolean;
+    minimum_match: number;
+    minimum_day_rate?: number | null;
+    ir35_statuses?: string[] | null;
+    workplaces?: string[] | null;
+    daily_limit: number;
+    prepare_cover_letter: boolean;
+    require_human_approval: boolean;
+    excluded_companies?: string[] | null;
+    updated_at: string;
+  } | null;
+  entitlement: {
+    plan: string;
+    preparation_credits?: number | null;
+    billing_state?: string | null;
+    updated_at: string;
+  } | null;
 };
 
 type RunRow = {
@@ -1690,23 +1782,33 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
   const [currentTime] = useState(Date.now);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [details, setDetails] = useState<ContractorDetail | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
+  const [detailsTab, setDetailsTab] = useState<"overview" | "resume" | "applications" | "activity">("overview");
   const selected = users.find((account) => account.id === selectedId) ?? null;
   const withCv = users.filter((account) => account.profile?.cv_filename).length;
   const verified = users.filter((account) => account.email_confirmed_at).length;
   const active30d = users.filter((account) => account.last_sign_in_at && currentTime - new Date(account.last_sign_in_at).getTime() < 30 * 24 * 60 * 60 * 1000).length;
-  const profile = selected?.profile;
-  const applicationProfile = profile?.application_profile;
-  const contactPhone = profile?.phone || applicationProfile?.phone;
-  const linkedIn = profile?.linkedin_url || applicationProfile?.linkedInUrl;
-  const profileFields = selected ? [profile?.full_name, profile?.job_title || applicationProfile?.targetRole, profile?.skills?.length, profile?.cv_filename, contactPhone, linkedIn] : [];
-  const profileCompletion = profileFields.length ? Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100) : 0;
-  const restricted = Boolean(selected?.banned_until && new Date(selected.banned_until).getTime() > currentTime);
-  const accountStatus = restricted ? "Restricted" : selected?.email_confirmed_at ? "Verified" : "Email pending";
-  const activity = selected?.activity;
 
-  const openDetails = (accountId: string) => {
+  const openDetails = async (accountId: string) => {
     setSelectedId(accountId);
     setDetailsOpen(true);
+    setDetails(null);
+    setDetailsError("");
+    setDetailsTab("overview");
+    setDetailsLoading(true);
+
+    try {
+      const response = await adminFetch(`/api/admin?section=users&userId=${encodeURIComponent(accountId)}`);
+      const payload = (await response.json()) as { contractor?: ContractorDetail; error?: string };
+      if (!response.ok || !payload.contractor) throw new Error(payload.error || "Contractor record could not be loaded.");
+      setDetails(payload.contractor);
+    } catch (error) {
+      setDetailsError(error instanceof Error ? error.message : "Contractor record could not be loaded.");
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -1771,65 +1873,179 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
       </div>
 
       {selected && detailsOpen ? (
-        <div className="fixed inset-0 z-[80] flex justify-end" role="presentation">
-          <button type="button" className="absolute inset-0 cursor-default bg-slate-950/45 backdrop-blur-[2px]" onClick={() => setDetailsOpen(false)} aria-label="Close contractor details" />
-          <section role="dialog" aria-modal="true" aria-labelledby="contractor-details-title" className="relative flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-[-24px_0_60px_rgba(15,23,42,0.18)]">
-            <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Contractor account</p>
-                <h2 id="contractor-details-title" className="mt-1 text-xl font-semibold text-slate-950">Contractor details</h2>
-                <p className="mt-1 text-xs text-slate-500">Private account information for administration only.</p>
-              </div>
-              <button type="button" onClick={() => setDetailsOpen(false)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" aria-label="Close contractor details"><X size={18} /></button>
-            </header>
-            <div className="flex-1 overflow-y-auto p-5 sm:p-6">
-              <div className="flex items-start gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-base font-bold text-white">{(profile?.full_name || selected.email || "A").charAt(0).toUpperCase()}</span>
-                <div className="min-w-0 flex-1"><p className="truncate text-base font-semibold text-slate-950">{profile?.full_name || "Name not added"}</p><p className="mt-1 break-all text-xs text-slate-500">{selected.email || "No email"}</p></div>
-                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${restricted ? "bg-rose-50 text-rose-700" : selected.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{accountStatus}</span>
-              </div>
+        <ContractorDetailsDrawer
+          selected={selected}
+          detail={details}
+          loading={detailsLoading}
+          error={detailsError}
+          tab={detailsTab}
+          onTabChange={setDetailsTab}
+          onClose={() => setDetailsOpen(false)}
+          onRetry={() => void openDetails(selected.id)}
+        />
+      ) : null}
+    </div>
+  );
+}
 
-              <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-                <div className="flex items-center justify-between"><p className="text-xs font-semibold text-slate-700">Profile completeness</p><p className="text-xs font-bold text-slate-950">{profileCompletion}%</p></div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${profileCompletion}%` }} /></div>
-              </div>
+function recordText(record: Record<string, unknown> | null | undefined, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record?.[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
 
-              <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><CalendarDays size={13} /> Joined</dt><dd className="mt-1 font-semibold text-slate-900">{formatDate(selected.created_at, true)}</dd></div>
-                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><Clock3 size={13} /> Last sign-in</dt><dd className="mt-1 font-semibold text-slate-900">{formatDate(selected.last_sign_in_at, true)}</dd></div>
-                <div><dt className="text-xs text-slate-500">Sign-in method</dt><dd className="mt-1 font-semibold capitalize text-slate-900">{selected.provider || "email"}</dd></div>
-                <div><dt className="text-xs text-slate-500">Email confirmed</dt><dd className="mt-1 font-semibold text-slate-900">{formatDate(selected.email_confirmed_at, true)}</dd></div>
-                <div><dt className="text-xs text-slate-500">Current role</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.job_title || applicationProfile?.targetRole || "Not added"}</dd></div>
-                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><MapPin size={13} /> Location</dt><dd className="mt-1 font-semibold text-slate-900">{applicationProfile?.location || "Not added"}</dd></div>
-                <div><dt className="flex items-center gap-1.5 text-xs text-slate-500"><Phone size={13} /> Phone</dt><dd className="mt-1 font-semibold text-slate-900">{contactPhone || "Not added"}</dd></div>
-                <div><dt className="text-xs text-slate-500">Experience</dt><dd className="mt-1 font-semibold text-slate-900">{typeof profile?.years_experience === "number" ? `${profile.years_experience} years` : "Not added"}</dd></div>
-                <div><dt className="text-xs text-slate-500">IR35 preference</dt><dd className="mt-1 font-semibold capitalize text-slate-900">{profile?.preferred_ir35 || "Not added"}</dd></div>
-                <div><dt className="text-xs text-slate-500">Minimum rate</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.target_rate_min ? `£${formatNumber(profile.target_rate_min)} per day` : "Not added"}</dd></div>
-              </dl>
+function applicationIdentity(application: ContractorDetail["applications"][number]) {
+  const snapshot = application.job_snapshot;
+  return {
+    title: recordText(snapshot, "title", "job_title", "role") || "Contract application",
+    company: recordText(snapshot, "company_name", "company", "employer") || "Employer not recorded",
+  };
+}
 
-              <div className="mt-6 border-t border-slate-100 pt-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Product activity</p>
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {[
-                    ["Applications", activity?.applications ?? 0],
-                    ["Applied", activity?.applied ?? 0],
-                    ["Needs attention", activity?.needsAttention ?? 0],
-                    ["Saved jobs", activity?.savedJobs ?? 0],
-                    ["Resume versions", activity?.resumeVersions ?? 0],
-                    ["Inbox", activity?.inboxMessages ?? 0],
-                  ].map(([label, value]) => <div key={String(label)} className="rounded-xl border border-slate-100 bg-slate-50 p-3"><p className="text-lg font-semibold tabular-nums text-slate-950">{value}</p><p className="mt-0.5 text-[11px] text-slate-500">{label}</p></div>)}
-                </div>
-              </div>
+function ContractorDetailsDrawer({
+  selected,
+  detail,
+  loading,
+  error,
+  tab,
+  onTabChange,
+  onClose,
+  onRetry,
+}: {
+  selected: UserRow;
+  detail: ContractorDetail | null;
+  loading: boolean;
+  error: string;
+  tab: "overview" | "resume" | "applications" | "activity";
+  onTabChange: (tab: "overview" | "resume" | "applications" | "activity") => void;
+  onClose: () => void;
+  onRetry: () => void;
+}) {
+  const [currentTime] = useState(Date.now);
+  const account = detail?.account ?? selected;
+  const profile = detail?.profile ?? selected.profile;
+  const applicationProfile = (profile?.application_profile ?? {}) as Record<string, unknown>;
+  const fullName = profile?.full_name || "Name not added";
+  const email = account.email || "No email";
+  const phone = profile?.phone || recordText(applicationProfile, "phone");
+  const location = recordText(applicationProfile, "location", "preferredLocation");
+  const currentRole = profile?.job_title || recordText(applicationProfile, "targetRole", "jobTitle");
+  const linkedIn = profile?.linkedin_url || recordText(applicationProfile, "linkedInUrl", "linkedinUrl");
+  const linkedInUrl = linkedIn ? (/^https?:\/\//i.test(linkedIn) ? linkedIn : `https://${linkedIn}`) : "";
+  const profileFields = [profile?.full_name, currentRole, profile?.skills?.length, profile?.cv_filename, phone, location];
+  const profileCompletion = Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100);
+  const restricted = Boolean(account.banned_until && new Date(account.banned_until).getTime() > currentTime);
+  const accountStatus = restricted ? "Restricted" : account.email_confirmed_at ? "Verified" : "Email pending";
+  const exportRecord = () => {
+    if (!detail) return;
+    const safeName = (fullName === "Name not added" ? email.split("@")[0] : fullName).replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "contractor";
+    const blob = new Blob([JSON.stringify(detail, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${safeName}-admin-record.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
-              <div className="mt-6 border-t border-slate-100 pt-5">
-                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Resume and skills</p>{profile?.cv_filename ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Resume uploaded</span> : <span className="text-[11px] text-slate-400">No Resume</span>}</div>
-                {profile?.cv_filename && <p className="mt-2 truncate text-xs font-medium text-slate-700">{profile.cv_filename}</p>}
-                <div className="mt-3 flex flex-wrap gap-2">{profile?.skills?.length ? profile.skills.slice(0, 12).map((skill) => <span key={skill} className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">{skill}</span>) : <p className="text-xs text-slate-500">No skills added.</p>}</div>
+  return (
+    <div className="fixed inset-0 z-[90] flex justify-end" role="presentation">
+      <button type="button" className="absolute inset-0 cursor-default bg-slate-950/50 backdrop-blur-[3px]" onClick={onClose} aria-label="Close contractor details" />
+      <section role="dialog" aria-modal="true" aria-labelledby="contractor-record-title" className="relative flex h-full w-full max-w-3xl flex-col overflow-hidden bg-slate-50 shadow-[-24px_0_70px_rgba(15,23,42,0.24)]">
+        <header className="border-b border-slate-200 bg-white px-5 py-5 sm:px-7">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">Secure contractor record</p>
+              <div className="mt-2 flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">{(fullName === "Name not added" ? email : fullName).charAt(0).toUpperCase()}</span>
+                <div className="min-w-0"><h2 id="contractor-record-title" className="truncate text-xl font-semibold text-slate-950">{fullName}</h2><p className="mt-0.5 truncate text-xs text-slate-500">{email}</p></div>
+                <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold sm:inline-flex ${restricted ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{accountStatus}</span>
               </div>
             </div>
-          </section>
+            <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-950" aria-label="Close contractor details"><X size={18} /></button>
+          </div>
+          <div className="mt-5 flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Contractor record sections">
+            {(["overview", "resume", "applications", "activity"] as const).map((item) => (
+              <button key={item} type="button" role="tab" aria-selected={tab === item} onClick={() => onTabChange(item)} className={`min-h-9 flex-1 whitespace-nowrap rounded-lg px-3 text-xs font-semibold capitalize transition ${tab === item ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{item}</button>
+            ))}
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7">
+          {loading ? (
+            <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-center"><Loader2 className="animate-spin text-emerald-600" size={26} /><p className="mt-3 text-sm font-semibold text-slate-900">Loading private contractor data</p><p className="mt-1 text-xs text-slate-500">Resume access is authorised only for this admin session.</p></div>
+          ) : error ? (
+            <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"><ShieldAlert className="text-rose-600" size={28} /><p className="mt-3 text-sm font-semibold text-rose-950">Contractor record unavailable</p><p className="mt-2 max-w-md text-xs leading-5 text-rose-700">{error}</p><button type="button" onClick={onRetry} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"><RefreshCw size={14} /> Try again</button></div>
+          ) : detail ? (
+            <>
+              {tab === "overview" ? (
+                <div className="space-y-5">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Profile</p><p className="mt-2 text-2xl font-semibold text-emerald-950">{profileCompletion}%</p><p className="mt-1 text-xs text-emerald-700">Application details complete</p></article>
+                    <article className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Applications</p><p className="mt-2 text-2xl font-semibold text-slate-950">{detail.applications.length}</p><p className="mt-1 text-xs text-slate-500">Recent records loaded</p></article>
+                    <article className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Plan</p><p className="mt-2 text-lg font-semibold capitalize text-slate-950">{detail.entitlement?.plan || "Free"}</p><p className="mt-1 text-xs text-slate-500">{detail.entitlement?.billing_state || "No billing issue"}</p></article>
+                  </div>
+
+                  <Panel title="Identity and membership" description="Account and approved profile information.">
+                    <dl className="grid gap-x-8 gap-y-5 p-5 text-sm sm:grid-cols-2">
+                      {[
+                        ["Joined", formatDate(account.created_at, true)], ["Last sign-in", formatDate(account.last_sign_in_at, true)],
+                        ["Sign-in method", account.provider || "email"], ["Email confirmed", formatDate(account.email_confirmed_at, true)],
+                        ["Current role", currentRole || "Not added"], ["Location", location || "Not added"],
+                        ["Phone", phone || "Not added"], ["Experience", typeof profile?.years_experience === "number" ? `${profile.years_experience} years` : "Not added"],
+                        ["IR35 preference", profile?.preferred_ir35 || "Not added"], ["Minimum rate", profile?.target_rate_min ? `£${formatNumber(profile.target_rate_min)} per day` : "Not added"],
+                      ].map(([label, value]) => <div key={String(label)}><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 break-words font-semibold capitalize text-slate-900">{value}</dd></div>)}
+                    </dl>
+                  </Panel>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Panel title="Application email" description="Managed recruiter identity and forwarding state."><div className="space-y-3 p-5 text-sm"><p className="break-all font-semibold text-slate-900">{detail.inboxAlias?.alias || "Not created"}</p><p className="text-xs text-slate-500">Forwarding {detail.inboxAlias?.forwarding_enabled ? "enabled" : "not enabled"}{detail.inboxAlias?.forwarding_email ? ` to ${detail.inboxAlias.forwarding_email}` : ""}.</p></div></Panel>
+                    <Panel title="Automation" description="Current contractor-owned application preferences."><div className="space-y-3 p-5 text-sm"><div className="flex items-center justify-between"><span className="text-slate-500">Status</span><strong className="text-slate-900">{detail.automation?.enabled ? "Enabled" : "Off"}</strong></div><div className="flex items-center justify-between"><span className="text-slate-500">Daily limit</span><strong className="text-slate-900">{detail.automation?.daily_limit ?? 5}</strong></div><div className="flex items-center justify-between"><span className="text-slate-500">Minimum match</span><strong className="text-slate-900">{detail.automation?.minimum_match ?? 0}%</strong></div></div></Panel>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <a href={`mailto:${email}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"><Mail size={14} /> Email contractor</a>
+                    {linkedInUrl ? <a href={linkedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><ExternalLink size={14} /> LinkedIn</a> : null}
+                    <button type="button" onClick={exportRecord} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><Download size={14} /> Export support record</button>
+                  </div>
+                </div>
+              ) : null}
+
+              {tab === "resume" ? (
+                <div className="space-y-5">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                      <div><p className="text-sm font-semibold text-slate-950">Original resume</p><p className="mt-1 break-all text-xs text-slate-500">{detail.resume?.filename || "No resume uploaded"}</p></div>
+                      {detail.resume?.url ? <a href={detail.resume.url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white"><Download size={14} /> Open private file</a> : null}
+                    </div>
+                    {detail.resume?.expires_at ? <p className="mt-3 text-[11px] text-slate-400">Secure link expires {formatDate(detail.resume.expires_at, true)}.</p> : null}
+                  </div>
+                  <Panel title="Resume versions" description="Source and tailored versions retained for application review.">
+                    {detail.resumeVersions.length ? <div className="divide-y divide-slate-100">{detail.resumeVersions.map((version) => (
+                      <details key={version.id} className="group p-5"><summary className="flex cursor-pointer list-none items-start justify-between gap-4"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-950">{version.label || version.source_filename}</span><span className="mt-1 block text-xs text-slate-500">{version.job_title || "Profile resume"}{version.company_name ? ` at ${version.company_name}` : ""} · {formatDate(version.created_at, true)}</span></span><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-600">{version.status}</span></summary><div className="mt-4 grid gap-4 lg:grid-cols-2"><div><p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Source</p><pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-[11px] leading-5 text-slate-200">{version.source_text || "No source text saved."}</pre></div><div><p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Prepared version</p><pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-emerald-950 p-4 text-[11px] leading-5 text-emerald-50">{version.tailored_text || "No tailored text saved."}</pre></div></div></details>
+                    ))}</div> : <EmptyState title="No resume versions" detail="Prepared application resumes will appear here." />}
+                  </Panel>
+                </div>
+              ) : null}
+
+              {tab === "applications" ? (
+                <Panel title="Application history" description="Recent contract applications and their latest state.">
+                  {detail.applications.length ? <div className="divide-y divide-slate-100">{detail.applications.map((application) => { const identity = applicationIdentity(application); return <article key={application.id} className="p-5"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{identity.title}</p><p className="mt-1 truncate text-xs text-slate-500">{identity.company}</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold capitalize text-slate-700">{application.status.replaceAll("_", " ")}</span></div><div className="mt-4 grid gap-3 text-xs text-slate-500 sm:grid-cols-3"><span>Match <strong className="text-slate-800">{application.match_score ?? 0}%</strong></span><span>Mode <strong className="capitalize text-slate-800">{application.mode}</strong></span><span>Updated <strong className="text-slate-800">{formatDate(application.updated_at, true)}</strong></span></div></article>; })}</div> : <EmptyState title="No applications" detail="Applications prepared by this contractor will appear here." />}
+                </Panel>
+              ) : null}
+
+              {tab === "activity" ? (
+                <div className="grid gap-5 lg:grid-cols-2">
+                  <Panel title="Application events" description="Latest workflow events across this account.">{detail.events.length ? <div className="max-h-[620px] divide-y divide-slate-100 overflow-y-auto">{detail.events.map((event) => <article key={event.id} className="p-4"><div className="flex items-start gap-3"><span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" /><div><p className="text-xs font-semibold text-slate-900">{event.label || event.event_type.replaceAll("_", " ")}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(event.created_at, true)}</p></div></div></article>)}</div> : <EmptyState title="No workflow events" detail="Application events will appear here." />}</Panel>
+                  <Panel title="Recruiter inbox" description="Recent messages received for this contractor.">{detail.inboxMessages.length ? <div className="max-h-[620px] divide-y divide-slate-100 overflow-y-auto">{detail.inboxMessages.map((message) => <article key={message.id} className="p-4"><div className="flex items-center justify-between gap-3"><p className="truncate text-xs font-semibold text-slate-900">{message.subject}</p><span className={`h-2 w-2 shrink-0 rounded-full ${message.is_read ? "bg-slate-300" : "bg-blue-500"}`} /></div><p className="mt-1 truncate text-[11px] text-slate-500">{message.sender} · {formatDate(message.received_at, true)}</p>{message.preview ? <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{message.preview}</p> : null}</article>)}</div> : <EmptyState title="No recruiter messages" detail="Inbound application messages will appear here." />}</Panel>
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </div>
-        ) : null}
+      </section>
     </div>
   );
 }
