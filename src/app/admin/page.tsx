@@ -1285,20 +1285,55 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   const breakdownTotal = (breakdown.outside ?? 0) + (breakdown.inside ?? 0) + (breakdown.tbc ?? 0);
   const recentJobs = (data.recentJobs ?? []).filter((job) => !query || [job.title, job.company_name, job.location, job.source_domain].some((value) => value?.toLowerCase().includes(query)));
   const latestRun = data.lastPipelineRun;
+  const feedback = data.feedbackSummary ?? summariseFeedback(data.feedback ?? []);
+  const pendingConnections = data.pendingEmployerConnections?.length ?? 0;
+  const needsUser = data.workerQueue?.needsUser ?? 0;
+  const attentionTotal = feedback.new + pendingConnections + needsUser;
 
   const cards = [
-    { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-50 text-emerald-700", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
-    { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-blue-50 text-blue-700", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
-    { label: "Resume readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
-    { label: "Beta audience", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Mail, tone: "bg-amber-50 text-amber-700", detail: "Former opt-ins for one beta invitation", badge: "Private" },
+    { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-600 text-white", surface: "from-[#d8fff0] to-[#f5fffb] border-emerald-100", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
+    { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-cyan-600 text-white", surface: "from-[#ddf7ff] to-[#f5fcff] border-cyan-100", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
+    { label: "Resume readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-600 text-white", surface: "from-[#eee8ff] to-[#fbf9ff] border-violet-100", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
+    { label: "Launch audience", value: typeof data.waitlist === "number" ? data.waitlist : Array.isArray(data.waitlist) ? data.waitlist.length : 0, icon: Mail, tone: "bg-amber-500 text-amber-950", surface: "from-[#fff3c7] to-[#fffbf0] border-amber-100", detail: "People previously invited to the beta", badge: "Audience" },
   ];
 
   return (
     <div className="mt-7 space-y-5">
+      <section className="relative overflow-hidden rounded-[28px] border border-emerald-950/10 bg-[#071f28] text-white shadow-[0_28px_80px_-46px_rgba(2,44,34,0.82)]">
+        <div className="pointer-events-none absolute -right-24 -top-36 h-[360px] w-[360px] rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-44 left-[28%] h-[360px] w-[360px] rounded-full bg-emerald-400/20 blur-3xl" />
+        <div className="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] lg:items-stretch lg:p-8">
+          <div className="flex min-h-[230px] flex-col justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">Today at IR35Careers</p>
+              <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-[1.08] tracking-[-0.04em] text-white sm:text-[2.6rem]">Run the platform from one clear view.</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">Monitor contractor growth, fresh contract inventory, application health and customer support without jumping between systems.</p>
+            </div>
+            <div className="mt-7 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-2 text-slate-200"><strong className="text-white">{formatNumber(data.liveJobs)}</strong> live roles</span>
+              <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-2 text-slate-200"><strong className="text-white">{formatNumber(data.totalUsers)}</strong> contractors</span>
+              <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-2 text-slate-200">Pipeline {latestRun ? "reporting" : "waiting"}</span>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/15 bg-white/[0.09] p-5 backdrop-blur-xl sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-300">Priority queue</p><p className="mt-1 text-lg font-semibold text-white">{attentionTotal ? `${attentionTotal} items need review` : "Nothing urgent"}</p></div>
+              <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${attentionTotal ? "bg-amber-300 text-amber-950" : "bg-emerald-300 text-emerald-950"}`}>{attentionTotal ? <ShieldAlert size={20} /> : <CheckCircle2 size={20} />}</span>
+            </div>
+            <div className="mt-5 space-y-2.5">
+              <button type="button" onClick={() => onNavigate("feedback")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 text-left text-xs text-slate-300 transition hover:bg-white/10"><span>New customer feedback</span><strong className="text-white">{feedback.new}</strong></button>
+              <button type="button" onClick={() => onNavigate("sources")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 text-left text-xs text-slate-300 transition hover:bg-white/10"><span>Employer connections</span><strong className="text-white">{pendingConnections}</strong></button>
+              <button type="button" onClick={() => onNavigate("system")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 text-left text-xs text-slate-300 transition hover:bg-white/10"><span>Applications waiting for users</span><strong className="text-white">{needsUser}</strong></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <article key={card.label} className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/40">
-            <div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-semibold text-slate-500">{card.badge}</span></div>
+          <article key={card.label} className={`group rounded-2xl border bg-gradient-to-br p-5 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.44)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.34)] ${card.surface}`}>
+            <div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-sm ${card.tone}`}><card.icon size={18} /></span><span className="rounded-full border border-white/80 bg-white/65 px-2 py-1 text-[10px] font-semibold text-slate-600">{card.badge}</span></div>
             <p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] text-slate-950 tabular-nums">{typeof card.value === "string" ? card.value : formatNumber(card.value)}</p>
             <p className="mt-1 text-sm font-medium text-slate-700">{card.label}</p>
             <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500"><TrendingUp size={13} className="text-emerald-600" /> {card.detail}</p>
