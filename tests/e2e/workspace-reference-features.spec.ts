@@ -142,11 +142,11 @@ test("free Auto Apply is limited to five applications per day", async ({ page })
 test("contractors can open the persistent feedback reporter and attach evidence", async ({ page }) => {
   await page.goto("/profile");
   await dismissPrivacyNotice(page);
-  const feedbackButton = page.getByRole("button", { name: "Send feedback" });
+  const feedbackButton = page.getByRole("button", { name: "Open support" });
   await expect(feedbackButton).toBeVisible();
   await expect(feedbackButton).toHaveAttribute("data-feedback-capture-ui", "true");
   await feedbackButton.click();
-  const dialog = page.getByRole("dialog", { name: "How can we help?" });
+  const dialog = page.getByRole("dialog", { name: "IR35Careers Support" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("data-feedback-capture-ui", "true");
   await expect(dialog.getByRole("button", { name: "Report an issue" })).toBeVisible();

@@ -313,10 +313,20 @@ export function FeedbackBubble() {
 
   return (
     <>
-      <button type="button" data-feedback-capture-ui="true" onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }} className={`ir35-focus fixed bottom-4 right-3 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white shadow-[0_16px_40px_rgba(2,6,23,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-800 sm:bottom-6 sm:right-6 sm:w-auto sm:gap-2.5 sm:px-4 ${bubbleSuppressed && !open ? "pointer-events-none translate-y-3 opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100" : "opacity-100"}`} aria-label="Open support chat">
-        <span className="relative"><MessageCircle size={19} aria-hidden="true" /><span className={`absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-slate-950 ${presence?.online ? "ir35-live-dot bg-emerald-400 text-emerald-400" : "bg-slate-400"}`} /></span>
-        <span className="hidden sm:inline">Support</span>
-        {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-brand-800">{unread > 9 ? "9+" : unread}</span>}
+      <button
+        type="button"
+        data-feedback-capture-ui="true"
+        onClick={() => { setOpen(true); setSuccess(null); if (!tickets.length) void loadTickets(); }}
+        className={`ir35-focus group fixed bottom-4 right-3 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-slate-950 text-white shadow-[0_12px_32px_rgba(2,6,23,0.24)] transition duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-[0_16px_36px_rgba(5,46,43,0.3)] sm:bottom-6 sm:right-6 ${bubbleSuppressed && !open ? "pointer-events-none translate-y-3 opacity-0 sm:pointer-events-auto sm:translate-y-0 sm:opacity-100" : "opacity-100"}`}
+        aria-label="Open support"
+        aria-expanded={open}
+      >
+        <MessageCircle size={21} strokeWidth={2} aria-hidden="true" />
+        {presence?.online && <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-emerald-400" aria-hidden="true" />}
+        {unread > 0 && <span className="absolute -left-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-brand-600 px-1 text-[10px] font-bold text-white" aria-label={`${unread} unread support ${unread === 1 ? "reply" : "replies"}`}>{unread > 9 ? "9+" : unread}</span>}
+        <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 sm:block" aria-hidden="true">
+          {presence?.online ? "Support is online" : "Support"}
+        </span>
       </button>
 
       {open && <div data-feedback-capture-ui="true" className="ir35-dialog-backdrop fixed inset-0 z-[70] flex items-end justify-end bg-slate-950/35 p-0 backdrop-blur-[2px] sm:p-5" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
