@@ -1,15 +1,23 @@
 import { expect, test } from "@playwright/test";
 
 test("first dashboard visit has a skippable guided tour and later visits welcome the member back", async ({ page }) => {
-  await page.goto("/dashboard");
+  await page.goto("/dashboard?tour=1");
 
   const tour = page.getByRole("dialog");
   await expect(tour.getByRole("heading", { name: "Your contractor workspace starts here" })).toBeVisible();
   await expect(tour.getByRole("button", { name: "Skip tour" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open support" })).toBeHidden();
+
+  const viewport = page.viewportSize();
+  const tourBox = await tour.boundingBox();
+  if (viewport && tourBox && viewport.width < 640) {
+    expect(tourBox.y).toBeGreaterThanOrEqual(0);
+    expect(tourBox.y + tourBox.height).toBeLessThanOrEqual(viewport.height - 64);
+  }
 
   await tour.getByRole("button", { name: "Next" }).click();
   await expect(tour.getByRole("heading", { name: "Search the roles that fit you" })).toBeVisible();
-  await expect(page.getByRole("searchbox", { name: "Search contracts" })).toBeVisible();
+  await expect(page.locator('[data-tour="dashboard-search"] input')).toBeVisible();
 
   await tour.getByRole("button", { name: "Next" }).click();
   await expect(tour.getByRole("heading", { name: "Compare UK contract opportunities" })).toBeVisible();

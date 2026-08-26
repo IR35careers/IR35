@@ -187,6 +187,31 @@
     pointer-events: none;
   }
 
+  body.ir35-tour-active {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .ir35-tour-panel {
+    max-height: calc(100dvh - 6rem - env(safe-area-inset-bottom));
+  }
+
+  .ir35-tour-active .ir35-mobile-dock {
+    pointer-events: none;
+  }
+
+  .ir35-tour-active [data-feedback-capture-ui="true"] {
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
+
+  @media (min-width: 640px) {
+    .ir35-tour-panel {
+      max-height: calc(100dvh - 3rem);
+    }
+  }
+
   .ir35-public-canvas {
     background:
       radial-gradient(circle at 6% 4%, rgba(52, 211, 153, 0.13), transparent 28rem),

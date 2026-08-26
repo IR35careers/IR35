@@ -221,7 +221,9 @@ export function WelcomeModal({ userId }: { userId: string }) {
   const step = TOUR_STEPS[stepIndex];
   const StepIcon = step.icon;
   const lastStep = stepIndex === TOUR_STEPS.length - 1;
-  const panelSide = highlight && highlight.left + highlight.width / 2 > highlight.viewportWidth / 2 ? "left-4 sm:left-6" : "right-4 sm:right-6";
+  const panelSide = highlight && highlight.left + highlight.width / 2 > highlight.viewportWidth / 2
+    ? "sm:left-6 sm:right-auto"
+    : "sm:left-auto sm:right-6";
 
   return (
     <>
@@ -242,31 +244,31 @@ export function WelcomeModal({ userId }: { userId: string }) {
       )}
 
       <section
-        className={`fixed z-[70] w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl ${highlight ? `bottom-4 sm:bottom-6 ${panelSide}` : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"}`}
+        className={`ir35-tour-panel fixed z-[70] flex w-[calc(100%-1.5rem)] max-w-md flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-2xl sm:w-[calc(100%-2rem)] sm:rounded-3xl ${highlight ? `bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 sm:bottom-6 sm:translate-x-0 ${panelSide}` : "bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2"}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dashboard-tour-title"
       >
-        <div className="border-b border-slate-100 bg-gradient-to-br from-slate-950 to-emerald-950 px-6 py-5 text-white">
-          <div className="flex items-start justify-between gap-4">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-300/15 text-emerald-300"><StepIcon size={21} aria-hidden="true" /></span>
+        <div className="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-950 to-emerald-950 px-5 py-4 text-white sm:px-6 sm:py-5">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-300/15 text-emerald-300 sm:h-11 sm:w-11"><StepIcon size={20} aria-hidden="true" /></span>
             <button type="button" onClick={finishTour} className="ir35-focus min-h-9 rounded-lg px-2 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white">Skip tour</button>
           </div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">{step.eyebrow}</p>
-          <h2 id="dashboard-tour-title" className="mt-1 text-xl font-semibold tracking-tight">{step.title}</h2>
+          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300 sm:mt-4">{step.eyebrow}</p>
+          <h2 id="dashboard-tour-title" className="mt-1 text-lg font-semibold leading-snug tracking-tight sm:text-xl">{step.title}</h2>
         </div>
 
-        <div className="px-6 py-5">
-          <p className="text-sm leading-6 text-slate-600">{step.body}</p>
-          <div className="mt-5 flex items-center justify-between gap-4">
-            <p className="text-xs font-semibold tabular-nums text-slate-500">{stepIndex + 1} of {TOUR_STEPS.length}</p>
-            <div className="flex gap-2">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 sm:py-5">
+          <p className="text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-6">{step.body}</p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 sm:mt-5 sm:gap-4">
+            <p className="shrink-0 text-xs font-semibold tabular-nums text-slate-500">{stepIndex + 1} of {TOUR_STEPS.length}</p>
+            <div className="ml-auto flex min-w-0 gap-2">
               {stepIndex > 0 && (
-                <button type="button" onClick={() => setStepIndex((current) => current - 1)} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                <button type="button" onClick={() => setStepIndex((current) => current - 1)} className="ir35-focus inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:gap-2 sm:px-4 sm:text-sm">
                   <ArrowLeft size={15} aria-hidden="true" /> Back
                 </button>
               )}
-              <button type="button" onClick={() => lastStep ? finishTour() : setStepIndex((current) => current + 1)} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">
+              <button type="button" onClick={() => lastStep ? finishTour() : setStepIndex((current) => current + 1)} className="ir35-focus inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-700 sm:gap-2 sm:px-4 sm:text-sm">
                 {lastStep ? "Explore dashboard" : "Next"} {lastStep ? <CheckCircle2 size={15} aria-hidden="true" /> : <ArrowRight size={15} aria-hidden="true" />}
               </button>
             </div>
