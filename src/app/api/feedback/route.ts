@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { classifyFeedback, type FeedbackCategory, type FeedbackMessage, type FeedbackRecord } from "@/lib/admin-feedback";
+import { classifyFeedback, supportPresence, type FeedbackCategory, type FeedbackMessage, type FeedbackRecord, type SupportPresence } from "@/lib/admin-feedback";
 import { sendFeedbackCreatedEmails, sendFeedbackEmail } from "@/lib/email/feedback-notifications";
 import { requestUser } from "@/lib/request-user";
 import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
@@ -52,6 +52,18 @@ async function presentTicket(record: FeedbackRecord): Promise<FeedbackRecord> {
   return { ...record, attachment_url: await signedUrl(record.attachment_path), messages };
 }
 
+async function loadSupportPresence(): Promise<SupportPresence> {
+  const result = await getSupabaseAdmin()
+    .from("moderation_logs")
+    .select("created_at")
+    .eq("run_type", "support_presence")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (result.error) return supportPresence(null);
+  return supportPresence(result.data?.created_at);
+}
+
 async function uploadAttachment(file: FormDataEntryValue | null, userId: string, ticketId: string): Promise<string | null> {
   if (!(file instanceof File) || !file.size) return null;
   const extension = VALID_TYPES.get(file.type);
@@ -73,6 +85,10 @@ export async function GET(request: Request) {
   const auth = await requestUser(request);
   if ("response" in auth) return auth.response;
   const admin = getSupabaseAdmin();
+  const presence = await loadSupportPresence();
+  if (new URL(request.url).searchParams.get("presence") === "1") {
+    return NextResponse.json({ presence }, { headers: NO_STORE });
+  }
   const result = await admin
     .from("contact_requests")
     .select("id, user_id, name, email, company, subject, message, status, category, page_url, browser_context, attachment_path, resolution_summary, acknowledged_at, resolved_at, created_at, updated_at, messages:feedback_messages(id, feedback_id, author_type, author_user_id, author_email, message, attachment_path, created_at, read_by_user_at)")
@@ -82,7 +98,7 @@ export async function GET(request: Request) {
   if (result.error) return NextResponse.json({ error: "Your feedback history could not be loaded." }, { status: 500, headers: NO_STORE });
 
   const tickets = await Promise.all((result.data ?? []).map((record) => presentTicket(record as FeedbackRecord)));
-  return NextResponse.json({ tickets }, { headers: NO_STORE });
+  return NextResponse.json({ tickets, presence }, { headers: NO_STORE });
 }
 
 export async function POST(request: Request) {

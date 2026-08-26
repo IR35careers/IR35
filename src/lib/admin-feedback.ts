@@ -1,6 +1,12 @@
 export type FeedbackStatus = "new" | "in_progress" | "resolved" | "spam";
 export type FeedbackCategory = "application" | "job_listing" | "account" | "billing" | "accessibility" | "general";
 export type FeedbackPriority = "high" | "normal";
+export const SUPPORT_ONLINE_WINDOW_MS = 90_000;
+
+export type SupportPresence = {
+  online: boolean;
+  lastActiveAt: string | null;
+};
 
 export type FeedbackRecord = {
   id: string;
@@ -71,5 +77,15 @@ export function feedbackSummary(records: FeedbackRecord[]) {
     inProgress: records.filter((record) => record.status === "in_progress").length,
     resolved: records.filter((record) => record.status === "resolved").length,
     highPriority: records.filter((record) => record.priority === "high").length,
+  };
+}
+
+export function supportPresence(lastActiveAt: string | null | undefined, now = Date.now()): SupportPresence {
+  if (!lastActiveAt) return { online: false, lastActiveAt: null };
+  const activeAt = new Date(lastActiveAt).getTime();
+  if (!Number.isFinite(activeAt)) return { online: false, lastActiveAt: null };
+  return {
+    online: now - activeAt <= SUPPORT_ONLINE_WINDOW_MS,
+    lastActiveAt,
   };
 }

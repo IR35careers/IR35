@@ -480,6 +480,29 @@ export default function AdminPage() {
   }, [user, loading, section, load, router, sessionReady]);
 
   useEffect(() => {
+    if (!user || !sessionReady || forbidden) return;
+
+    const publishPresence = () => {
+      if (document.visibilityState !== "visible") return;
+      void adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "support_presence", currentSection: section }),
+      }).catch(() => undefined);
+    };
+
+    publishPresence();
+    const timer = window.setInterval(publishPresence, 30_000);
+    window.addEventListener("focus", publishPresence);
+    document.addEventListener("visibilitychange", publishPresence);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", publishPresence);
+      document.removeEventListener("visibilitychange", publishPresence);
+    };
+  }, [forbidden, section, sessionReady, user]);
+
+  useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get("section");
     if (requested && ["stats", "analytics", "jobs", "sources", "users", "feedback", "campaigns", "waitlist", "runs", "system"].includes(requested)) {
       setSection(requested as Section);

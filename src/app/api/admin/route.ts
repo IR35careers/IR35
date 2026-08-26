@@ -68,6 +68,14 @@ const LAUNCH_CONFIRMATION = "SEND_BETA_ACCESS_2026_08_21";
 const CAMPAIGN_CONFIRMATION = "SEND_EMAIL_CAMPAIGN";
 const FEEDBACK_BUCKET = "feedback-attachments";
 
+function supportPresenceId(email: string): string {
+  const value = createHash("sha256").update(`ir35careers-support:${email.toLowerCase()}`).digest("hex").slice(0, 32).split("");
+  value[12] = "5";
+  value[16] = "8";
+  const hex = value.join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 async function feedbackSignedUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
   const signed = await getSupabaseAdmin().storage.from(FEEDBACK_BUCKET).createSignedUrl(path, 60 * 60);
@@ -243,6 +251,7 @@ export async function GET(request: Request): Promise<Response> {
           supabase
             .from("moderation_logs")
             .select("run_type, summary, created_at")
+            .neq("run_type", "support_presence")
             .order("created_at", { ascending: false })
             .limit(6),
         ]);
@@ -556,6 +565,7 @@ export async function GET(request: Request): Promise<Response> {
       const { data } = await supabase
         .from("moderation_logs")
         .select("run_type, summary, created_at")
+        .neq("run_type", "support_presence")
         .order("created_at", { ascending: false })
         .limit(20);
       return Response.json({ runs: data ?? [] });
@@ -724,7 +734,21 @@ export async function POST(request: Request): Promise<Response> {
       feedbackStatus?: FeedbackStatus;
       feedbackReply?: string;
       feedbackResolve?: boolean;
+      currentSection?: string;
     }>(request, 2_000_000);
+
+    if (body.action === "support_presence") {
+      const now = new Date().toISOString();
+      const currentSection = String(body.currentSection ?? "admin").replace(/[^a-z_]/gi, "").slice(0, 40) || "admin";
+      const presence = await supabase.from("moderation_logs").upsert({
+        id: supportPresenceId(admin.email),
+        run_type: "support_presence",
+        summary: { admin_email: admin.email, current_section: currentSection },
+        created_at: now,
+      }, { onConflict: "id" });
+      if (presence.error) throw presence.error;
+      return Response.json({ ok: true, activeAt: now });
+    }
 
     if (body.action === "update_feedback_status") {
       const feedbackId = body.feedbackId?.trim() ?? "";

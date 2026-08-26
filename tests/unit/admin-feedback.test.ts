@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyFeedback, enrichFeedback, feedbackSummary, prioritiseFeedback, type FeedbackRecord } from "@/lib/admin-feedback";
+import { classifyFeedback, enrichFeedback, feedbackSummary, prioritiseFeedback, supportPresence, type FeedbackRecord } from "@/lib/admin-feedback";
 
 describe("admin feedback intelligence", () => {
   it("classifies common customer requests", () => {
@@ -39,5 +39,18 @@ describe("admin feedback intelligence", () => {
     }, Date.parse("2026-08-22T10:00:00Z"));
     expect(record.category).toBe("accessibility");
     expect(record.priority).toBe("normal");
+  });
+
+  it("reports support as online only while the admin heartbeat is fresh", () => {
+    const now = Date.parse("2026-08-26T10:00:00Z");
+    expect(supportPresence("2026-08-26T09:59:15Z", now)).toEqual({
+      online: true,
+      lastActiveAt: "2026-08-26T09:59:15Z",
+    });
+    expect(supportPresence("2026-08-26T09:56:00Z", now)).toEqual({
+      online: false,
+      lastActiveAt: "2026-08-26T09:56:00Z",
+    });
+    expect(supportPresence(null, now)).toEqual({ online: false, lastActiveAt: null });
   });
 });
