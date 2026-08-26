@@ -136,6 +136,12 @@
     isolation: isolate;
   }
 
+  .ir35-public-canvas main > section:nth-of-type(n + 3),
+  .ir35-defer-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+  }
+
   .ir35-glass-nav {
     background: linear-gradient(110deg, rgba(255,255,255,0.9), rgba(247,255,251,0.88), rgba(241,253,252,0.86));
     box-shadow: 0 1px 0 rgba(255,255,255,0.72), 0 18px 45px -42px rgba(6, 78, 59, 0.5);

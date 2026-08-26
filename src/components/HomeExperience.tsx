@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowRight, Check, CircleCheckBig, FileCheck2, MapPin, Search, Sparkles, WandSparkles } from "lucide-react";
 import { AuthenticatedHomeRedirect } from "@/components/AuthenticatedHomeRedirect";
 import { FeaturedJobs } from "@/components/FeaturedJobs";
-import { HomeScrollProgress, HomeSourceRail, HomeStickyCta, Reveal } from "@/components/HomeMotion";
+import { HomeScrollProgress, HomeSourceRail, HomeStickyCta } from "@/components/HomeMotion";
+import { Reveal } from "@/components/HomeReveal";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
@@ -100,7 +101,7 @@ export function HomeExperience() {
 
         <section className="border-b border-slate-200 bg-white py-7"><div className="ir35-container"><HomeSourceRail /></div></section>
 
-        <section className="ir35-product-story py-14 sm:py-16 lg:py-20">
+        <section className="ir35-product-story ir35-defer-section py-14 sm:py-16 lg:py-20">
           <div className="ir35-container">
             <Reveal className="mx-auto max-w-4xl text-center"><p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-700">See the whole journey</p><h2 className="mt-4 text-4xl font-black tracking-[-0.055em] text-slate-950 sm:text-6xl">From the first match to the recruiter reply.</h2><p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">A connected contractor workspace that shows the product working before asking you to create an account.</p></Reveal>
             <div className="mt-12 grid gap-5 lg:grid-cols-12">

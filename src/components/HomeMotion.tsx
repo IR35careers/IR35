@@ -1,57 +1,47 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, Pause, Play } from "lucide-react";
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
-
-const EASE = [0.2, 0, 0, 1] as const;
-
-interface RevealProps {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-  distance?: number;
-}
+import { useEffect, useRef, useState } from "react";
 
 export function HomeScrollProgress() {
-  const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: reduceMotion ? 1000 : 150,
-    damping: reduceMotion ? 1000 : 28,
-    mass: 0.25,
-  });
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const root = document.documentElement;
+      const total = Math.max(root.scrollHeight - window.innerHeight, 1);
+      const progress = Math.min(Math.max(window.scrollY / total, 0), 1);
+      progressRef.current?.style.setProperty("transform", `scaleX(${progress})`);
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   return (
-    <motion.div
+    <div
+      ref={progressRef}
       aria-hidden="true"
       className="fixed inset-x-0 top-0 z-50 h-[3px] origin-left bg-gradient-to-r from-brand-500 via-emerald-400 to-teal-400"
-      style={{ scaleX }}
+      style={{ transform: "scaleX(0)", willChange: "transform" }}
     />
-  );
-}
-
-export function Reveal({ children, className = "", delay = 0, distance = 20 }: RevealProps) {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: distance, filter: "blur(4px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, amount: 0.14, margin: "0px 0px -36px" }}
-      transition={{ duration: reduceMotion ? 0 : 0.58, delay: reduceMotion ? 0 : delay, ease: EASE }}
-    >
-      {children}
-    </motion.div>
   );
 }
 
 export function HomeStickyCta() {
   const [visible, setVisible] = useState(false);
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const target = document.getElementById("home-primary-actions");
@@ -66,12 +56,9 @@ export function HomeStickyCta() {
   }, []);
 
   return (
-    <motion.div
+    <div
       aria-hidden={!visible}
-      initial={false}
-      animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: reduceMotion ? 0 : 0.2, ease: EASE }}
-      className={`fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 md:hidden ${visible ? "pointer-events-auto" : "pointer-events-none"}`}
+      className={`fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 transition-[opacity,transform] duration-200 motion-reduce:transition-none md:hidden ${visible ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-5 opacity-0"}`}
     >
       <div className="mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-white/80 bg-[#071426]/95 p-2 pl-4 text-white shadow-floating backdrop-blur-xl">
         <div className="min-w-0">
@@ -85,7 +72,7 @@ export function HomeStickyCta() {
           Browse <ArrowRight size={15} aria-hidden="true" />
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -101,8 +88,17 @@ const SOURCE_NAMES = [
 
 export function HomeSourceRail() {
   const [paused, setPaused] = useState(false);
-  const reduceMotion = useReducedMotion();
-  const isPaused = paused || Boolean(reduceMotion);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setReduceMotion(preference.matches);
+    updatePreference();
+    preference.addEventListener("change", updatePreference);
+    return () => preference.removeEventListener("change", updatePreference);
+  }, []);
+
+  const isPaused = paused || reduceMotion;
 
   return (
     <div className="ir35-source-rail">

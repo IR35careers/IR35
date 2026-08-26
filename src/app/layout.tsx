@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
-import { FeedbackBubble } from "@/components/FeedbackBubble";
+import { DeferredFeedbackBubble } from "@/components/DeferredFeedbackBubble";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AppMotion } from "@/components/AppMotion";
 import { SITE_DESCRIPTION, SITE_ORIGIN } from "@/lib/seo";
@@ -89,7 +89,7 @@ export default async function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <AppMotion>{children}</AppMotion>
         <GoogleAnalytics nonce={nonce} />
-        <FeedbackBubble />
+        <DeferredFeedbackBubble />
         <CookieNotice />
         <PwaRegister />
       </body>

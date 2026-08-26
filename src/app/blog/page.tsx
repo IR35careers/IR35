@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
-import { HomeScrollProgress, Reveal } from "@/components/HomeMotion";
+import { HomeScrollProgress } from "@/components/HomeMotion";
+import { Reveal } from "@/components/HomeReveal";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { BLOG_POSTS, formatBlogDate } from "@/lib/blog-posts";

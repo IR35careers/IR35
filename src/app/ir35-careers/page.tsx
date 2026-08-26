@@ -11,7 +11,8 @@ import {
   Search,
   ShieldCheck,
 } from "lucide-react";
-import { HomeScrollProgress, Reveal } from "@/components/HomeMotion";
+import { HomeScrollProgress } from "@/components/HomeMotion";
+import { Reveal } from "@/components/HomeReveal";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
