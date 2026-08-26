@@ -75,6 +75,90 @@
     border-radius: var(--ir35-radius-md);
   }
 
+  .ir35-workspace-canvas {
+    background:
+      radial-gradient(circle at 4% 2%, rgba(52, 211, 153, 0.13), transparent 25rem),
+      radial-gradient(circle at 94% 8%, rgba(45, 212, 191, 0.1), transparent 28rem),
+      linear-gradient(180deg, #fbfffd 0%, #f7f8f6 34rem, #f7f8f6 100%);
+  }
+
+  .ir35-aurora-hero {
+    @apply relative overflow-hidden border border-emerald-200/70;
+    border-radius: var(--ir35-radius-lg);
+    background:
+      radial-gradient(circle at 10% 0%, rgba(52, 211, 153, 0.22), transparent 18rem),
+      radial-gradient(circle at 92% 18%, rgba(45, 212, 191, 0.16), transparent 20rem),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 253, 245, 0.94) 52%, rgba(236, 254, 255, 0.92) 100%);
+    box-shadow: 0 22px 65px -48px rgba(4, 120, 87, 0.75);
+  }
+
+  .ir35-aurora-panel {
+    @apply border border-emerald-200/70;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.12), transparent 18rem),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.92));
+    box-shadow: 0 20px 55px -46px rgba(6, 95, 70, 0.65);
+  }
+
+  .ir35-search-panel {
+    @apply border border-emerald-200/80;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(167, 243, 208, 0.42), transparent 15rem),
+      linear-gradient(115deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.94), rgba(236, 254, 255, 0.9));
+    box-shadow: 0 20px 55px -44px rgba(4, 120, 87, 0.72);
+  }
+
+  .ir35-nav-active {
+    color: #064e3b;
+    background: linear-gradient(135deg, rgba(209, 250, 229, 0.9), rgba(204, 251, 241, 0.7));
+    box-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.26);
+  }
+
+  .ir35-gradient-primary {
+    color: white;
+    background: linear-gradient(135deg, #064e3b 0%, #087a5b 52%, #0f766e 100%);
+    box-shadow: 0 16px 34px -22px rgba(6, 78, 59, 0.78);
+  }
+
+  .ir35-gradient-primary:hover {
+    background: linear-gradient(135deg, #063c2f 0%, #096048 52%, #115e59 100%);
+  }
+
+  .ir35-stat-grid {
+    @apply border-emerald-200/70;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(236, 253, 245, 0.74), rgba(236, 254, 255, 0.72));
+  }
+
+  .ir35-job-card {
+    @apply border-emerald-100/90;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(52, 211, 153, 0.13), transparent 15rem),
+      linear-gradient(135deg, #ffffff 0%, #f3fdf8 100%);
+    box-shadow: 0 18px 46px -42px rgba(6, 95, 70, 0.78);
+  }
+
+  .ir35-job-results > li:nth-child(3n + 2) .ir35-job-card {
+    border-color: rgba(153, 246, 228, 0.72);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.13), transparent 15rem),
+      linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+  }
+
+  .ir35-job-results > li:nth-child(3n + 3) .ir35-job-card {
+    border-color: rgba(186, 230, 253, 0.72);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.1), transparent 15rem),
+      linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  }
+
+  .ir35-job-card:hover {
+    border-color: rgba(52, 211, 153, 0.78);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.18), transparent 17rem),
+      linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
+    box-shadow: 0 24px 58px -42px rgba(4, 120, 87, 0.82);
+  }
+
   .ir35-eyebrow {
     @apply text-[11px] font-bold uppercase tracking-[0.17em] text-brand-700;
   }

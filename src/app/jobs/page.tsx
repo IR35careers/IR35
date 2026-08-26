@@ -297,16 +297,16 @@ function JobsBoard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f7f8f7] text-slate-900">
+    <div className="ir35-workspace-canvas min-h-screen text-slate-900">
       <PublicHeader hideForWorkspaceMembers />
       <main className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 sm:py-9">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="ir35-aurora-hero mb-5 flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-700">UK contract search</p>
             <h1 className="mt-2 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-[42px] sm:leading-[1.05]">Find your next contract</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Search by role, rate, IR35 status and working pattern. Open a contract when it is worth your time.</p>
           </div>
-          <Link href={alertHref} className="ir35-focus inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:border-brand-300 hover:text-brand-800">
+          <Link href={alertHref} className="ir35-focus inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-emerald-200 bg-white/85 px-4 text-sm font-semibold text-brand-900 shadow-sm backdrop-blur hover:border-brand-300 hover:bg-white">
             <Bell size={15} /> Save this search
           </Link>
         </div>
@@ -317,22 +317,22 @@ function JobsBoard() {
           </p>
         )}
 
-        <div className="ir35-card grid overflow-hidden p-1.5 sm:grid-cols-[1fr_0.55fr]">
+        <div className="ir35-search-panel grid overflow-hidden rounded-3xl p-1.5 sm:grid-cols-[1fr_0.55fr]">
           <label className="relative block">
             <span className="sr-only">Search contracts</span>
             <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input type="search" value={q} onChange={(e) => { setQ(e.target.value); resetPage(); }} placeholder="Role, skill or company"
-              className="ir35-focus min-h-[52px] w-full rounded-xl border-0 bg-slate-50 pl-11 pr-4 text-sm placeholder:text-slate-500" aria-label="Search contracts" />
+              className="ir35-focus min-h-[52px] w-full rounded-xl border-0 bg-white/80 pl-11 pr-4 text-sm shadow-sm placeholder:text-slate-500" aria-label="Search contracts" />
           </label>
           <label className="relative mt-1 block sm:ml-1 sm:mt-0">
             <span className="sr-only">Location</span>
             <MapPin size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input type="search" value={locationLock} onChange={(e) => { setLocationLock(e.target.value); resetPage(); }} placeholder="Town, region or UK"
-              className="ir35-focus min-h-[52px] w-full rounded-xl border-0 bg-slate-50 pl-11 pr-4 text-sm placeholder:text-slate-500" aria-label="Filter by location" />
+              className="ir35-focus min-h-[52px] w-full rounded-xl border-0 bg-white/80 pl-11 pr-4 text-sm shadow-sm placeholder:text-slate-500" aria-label="Filter by location" />
           </label>
         </div>
 
-        <div className="ir35-card-flat mt-3 flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div className="ir35-aurora-panel mt-3 flex flex-col gap-3 rounded-2xl px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
           <div className="flex flex-wrap gap-2" aria-label="Popular contract filters">
             <button type="button" aria-pressed={ir35 === "outside"} onClick={() => { setIr35(ir35 === "outside" ? "" : "outside"); resetPage(); }} className={`ir35-focus min-h-9 rounded-xl px-3 text-xs font-semibold ${ir35 === "outside" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>Outside IR35</button>
             <button type="button" aria-pressed={remote === "remote"} onClick={() => { setRemote(remote === "remote" ? "" : "remote"); resetPage(); }} className={`ir35-focus min-h-9 rounded-xl px-3 text-xs font-semibold ${remote === "remote" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>Remote</button>
@@ -362,7 +362,7 @@ function JobsBoard() {
 
         <div className="mt-5 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* Sidebar (desktop) */}
-          <aside className="ir35-card hidden h-max p-5 lg:sticky lg:top-24 lg:block"><div className="mb-5 flex items-center justify-between"><h2 className="font-semibold text-slate-950">Refine results</h2>{activeFilterCount > 0 && <button type="button" onClick={clearFilters} className="text-xs font-semibold text-brand-700">Clear all</button>}</div>{Sidebar}</aside>
+          <aside className="ir35-card ir35-aurora-panel hidden h-max p-5 lg:sticky lg:top-24 lg:block"><div className="mb-5 flex items-center justify-between"><h2 className="font-semibold text-slate-950">Refine results</h2>{activeFilterCount > 0 && <button type="button" onClick={clearFilters} className="text-xs font-semibold text-brand-700">Clear all</button>}</div>{Sidebar}</aside>
           {/* Sidebar (mobile) */}
           {mobileFilters && <aside className="rounded-2xl border border-slate-200 bg-white p-5 lg:hidden">{Sidebar}</aside>}
 
@@ -375,14 +375,14 @@ function JobsBoard() {
             ) : data && data.jobs.length === 0 ? (
               <StatePanel title="No contracts match these filters" body="Try clearing a filter or broadening your search." action={<button type="button" onClick={clearFilters} className="ir35-focus inline-flex min-h-10 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:text-brand-700">Clear filters</button>} />
             ) : (
-              <ul className="space-y-2.5">
+              <ul className="ir35-job-results space-y-3">
                 {data?.jobs.map((job) => {
                   const hasRate = job.rate_min !== null || job.rate_max !== null;
                   return (
                     <li key={job.id}>
-                      <Link href={`/jobs/${job.id}`} className="ir35-card-flat group grid gap-4 p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/20 sm:p-5 lg:grid-cols-[minmax(0,1fr)_210px]">
+                      <Link href={`/jobs/${job.id}`} className="ir35-card-flat ir35-job-card group grid gap-4 p-4 transition-all duration-200 sm:p-5 lg:grid-cols-[minmax(0,1fr)_210px]">
                         <div className="flex min-w-0 gap-3.5">
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold text-slate-700">{job.company_name.trim().charAt(0).toUpperCase() || <BriefcaseBusiness size={17} />}</span>
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-white/80 text-sm font-bold text-brand-800 shadow-sm">{job.company_name.trim().charAt(0).toUpperCase() || <BriefcaseBusiness size={17} />}</span>
                           <div className="min-w-0">
                             <h2 className="text-[15px] font-semibold text-slate-950 group-hover:text-brand-800 sm:truncate">{job.title}</h2>
                             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
@@ -392,7 +392,7 @@ function JobsBoard() {
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-1.5">
                               <RemoteTag type={job.remote_type} />
-                              {job.skills.slice(0, 3).map((s) => <span key={s} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">{s}</span>)}
+                              {job.skills.slice(0, 3).map((s) => <span key={s} className="rounded-full border border-white/70 bg-white/70 px-2.5 py-1 text-xs text-slate-700 shadow-sm">{s}</span>)}
                               {job.skills.length > 3 && <span className="text-xs text-slate-500">+{job.skills.length - 3}</span>}
                             </div>
                           </div>
@@ -434,11 +434,11 @@ export default function JobsPage() {
 
 function JobsPageSkeleton() {
   return (
-    <div className="min-h-screen bg-[#f7f8f7] text-slate-900" aria-busy="true">
+    <div className="ir35-workspace-canvas min-h-screen text-slate-900" aria-busy="true">
       <PublicHeader />
       <main className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 sm:py-9">
-        <div className="mb-6 max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p><h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1><p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the full role and prepare your application.</p></div>
-        <div className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white sm:h-14" aria-hidden="true" />
+        <div className="ir35-aurora-hero mb-5 max-w-full p-5 sm:p-7"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">UK contract search</p><h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">Find your next contract</h1><p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Compare IR35 status, rate, location and working pattern before you open the full role and prepare your application.</p></div>
+        <div className="ir35-search-panel h-28 animate-pulse rounded-3xl sm:h-14" aria-hidden="true" />
         <div className="mt-16 grid gap-6 lg:grid-cols-[260px_1fr]"><div className="hidden h-[420px] animate-pulse rounded-2xl border border-slate-200 bg-white lg:block" aria-hidden="true" /><div className="space-y-3" role="status" aria-label="Loading contracts"><span className="sr-only">Loading contracts</span>{Array.from({ length: 5 }, (_, index) => <JobCardSkeleton key={index} />)}</div></div>
       </main>
       <PublicFooter />

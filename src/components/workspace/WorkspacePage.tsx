@@ -47,7 +47,7 @@ export function WorkspacePage({
   }
 
   return (
-    <div className={`min-h-screen text-slate-950 ${accountSection ? "bg-slate-50" : "bg-[#f7f8f6]"}`}>
+    <div className="ir35-workspace-canvas min-h-screen text-slate-950">
       <AppNav />
       <main
         data-account-layout={accountSection ? "true" : undefined}
@@ -62,7 +62,7 @@ export function WorkspacePage({
         <div className={accountSection ? "grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]" : undefined}>
           {accountSection && <AccountSidebar active={accountSection} />}
           <div className="min-w-0">
-            <header className={`flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between ${accountSection ? "" : `border-b border-slate-200/80 ${density === "compact" ? "pb-5" : "pb-6"}`}`}>
+            <header className={`flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between ${accountSection ? "" : `ir35-aurora-hero ${density === "compact" ? "p-5" : "p-5 sm:p-6"}`}`}>
               <div className="max-w-3xl">
                 {eyebrow && <p className={accountSection ? "sr-only" : "ir35-eyebrow"}>{eyebrow}</p>}
                 <h1 className={`font-semibold text-slate-950 ${accountSection ? "text-2xl tracking-tight" : `mt-2 leading-[1.08] tracking-[-0.04em] ${density === "compact" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-[2.5rem]"}`}`}>{title}</h1>

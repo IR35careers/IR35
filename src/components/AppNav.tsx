@@ -91,7 +91,7 @@ export function AppNav() {
         aria-current={active ? "page" : undefined}
         className={`ir35-focus group inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors ${
           active
-            ? "bg-brand-50 text-brand-900"
+            ? "ir35-nav-active"
             : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
         } ${mobile ? "w-full justify-start" : "justify-center"}`}
       >
@@ -115,7 +115,7 @@ export function AppNav() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-emerald-100/80 bg-[linear-gradient(110deg,rgba(255,255,255,0.97),rgba(247,255,251,0.96),rgba(241,253,252,0.95))] backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-6 px-4 sm:px-6 lg:px-8">
           <div className="shrink-0"><Brand href="/dashboard" /></div>
 
