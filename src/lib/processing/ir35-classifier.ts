@@ -41,6 +41,8 @@ const OUTSIDE_PATTERNS = [
   /\bdetermined\s+(?:as\s+)?outside\b[^.]{0,30}\bir\s*-?\s*35\b/i,
   /\boutside\s*-\s*ir35\b/i,
   /\boutside\s+(?:the\s+)?scope\s+of\s+ir\s*-?\s*35\b/i,
+  /\bir\s*-?\s*35\s*(?:status)?\s*[:\-–]?\s*out(?:side)?\s+(?:of\s+)?scope\b/i,
+  /\bout\s+of\s+scope\b[^.]{0,40}\bir\s*-?\s*35\b/i,
   /\bir\s*-?\s*35\s+(?:exempt|does\s+not\s+apply)\b/i,
   /\bnot\s+(?:caught|inside)\s+(?:by\s+)?ir\s*-?\s*35\b/i,
   /\b(?:sds|status\s+determination(?:\s+statement)?)\s*[:\-–]?\s*outside\b/i,
@@ -54,6 +56,8 @@ const INSIDE_PATTERNS = [
   /\bdetermined\s+(?:as\s+)?inside\b[^.]{0,30}\bir\s*-?\s*35\b/i,
   /\binside\s*-\s*ir35\b/i,
   /\bwithin\s+(?:the\s+)?scope\s+of\s+ir\s*-?\s*35\b/i,
+  /\bir\s*-?\s*35\s*(?:status)?\s*[:\-–]?\s*in(?:side)?\s+scope\b/i,
+  /\bin\s+scope\b[^.]{0,40}\bir\s*-?\s*35\b/i,
   /\bir\s*-?\s*35\s+applies\b/i,
   /(?<!not\s)caught\s+by\s+ir\s*-?\s*35\b/i,
   /\b(?:sds|status\s+determination(?:\s+statement)?)\s*[:\-–]?\s*inside\b/i,
@@ -67,6 +71,8 @@ const INSIDE_ARRANGEMENT_PATTERNS = [
   /\bumbrella\s+(?:company\s+)?only\b/i,
   /\bpaye\s+only\b/i,
   /\bpaye\s+or\s+umbrella\b/i,
+  /\bmust\s+(?:be\s+paid|work|engage|operate)\s+(?:via|through)\s+(?:an?\s+)?umbrella(?:\s+company)?\b/i,
+  /\b(?:payment|engagement)\s+(?:is\s+)?(?:via|through)\s+(?:an?\s+)?umbrella(?:\s+company)?\b/i,
 ];
 
 function matchesAny(text: string, patterns: RegExp[]): boolean {

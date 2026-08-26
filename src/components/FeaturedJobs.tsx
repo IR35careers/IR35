@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { IR35Badge } from "@/components/ui/ir35-badge";
 import { buttonClassName } from "@/components/ui/button";
 import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
+import { selectFeaturedJobs } from "@/lib/featured-jobs";
 import { formatPosted, formatRate, ir35EvidenceLabel, JOB_LIST_COLUMNS, type JobListing } from "@/lib/job-types";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { supabase } from "@/lib/supabase";
@@ -16,7 +17,8 @@ interface FeaturedResult {
 
 async function loadFeaturedJobs(): Promise<FeaturedResult> {
   if (!isSupabaseConfigured() && isDemoDataAvailable()) {
-    return { jobs: DEMO_JOBS.slice(0, 3), total: DEMO_JOBS.length, dataSource: "demo", error: false };
+    const jobs = selectFeaturedJobs(DEMO_JOBS, 3);
+    return { jobs, total: DEMO_JOBS.filter((job) => job.ir35_status !== "unknown").length, dataSource: "demo", error: false };
   }
 
   try {
@@ -24,12 +26,13 @@ async function loadFeaturedJobs(): Promise<FeaturedResult> {
       .from("jobs")
       .select(JOB_LIST_COLUMNS, { count: "exact" })
       .is("expired_at", null)
+      .in("ir35_status", ["inside", "outside"])
       .order("posted_on", { ascending: false, nullsFirst: false })
       .order("posted_at", { ascending: false, nullsFirst: false })
       .order("rate_max", { ascending: false, nullsFirst: false })
-      .limit(3);
+      .limit(24);
     if (error) throw error;
-    return { jobs: (data ?? []) as JobListing[], total: count ?? 0, dataSource: "live", error: false };
+    return { jobs: selectFeaturedJobs((data ?? []) as JobListing[], 3), total: count ?? 0, dataSource: "live", error: false };
   } catch {
     return { jobs: [], total: 0, dataSource: "live", error: true };
   }
@@ -49,9 +52,9 @@ export async function FeaturedJobs() {
         </div>
         <div className="flex items-center justify-between gap-4 px-5 pb-3 pt-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Fresh contract opportunities</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Inside and Outside IR35 contracts</p>
             <p className="mt-1 text-sm font-medium text-slate-950">
-              {featured.error ? "Live search temporarily unavailable" : `${featured.total.toLocaleString()} active roles`}
+              {featured.error ? "Live search temporarily unavailable" : `${featured.total.toLocaleString()} roles with stated status`}
             </p>
           </div>
           <Link href="/jobs" className="ir35-focus hidden min-h-10 items-center rounded-xl px-3 text-sm font-semibold text-brand-700 hover:bg-brand-50 sm:inline-flex">
@@ -70,6 +73,13 @@ export async function FeaturedJobs() {
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
               <p className="text-sm font-semibold text-slate-900">We couldn&apos;t load the preview.</p>
               <p className="mt-1 text-xs leading-5 text-slate-600">You can still open contract search and try again.</p>
+              <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-4" })}>Open search</Link>
+            </div>
+          )}
+          {!featured.error && featured.jobs.length === 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+              <p className="text-sm font-semibold text-slate-900">No confirmed-status roles are available right now.</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">Check contract search for the latest listings.</p>
               <Link href="/jobs" className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-4" })}>Open search</Link>
             </div>
           )}

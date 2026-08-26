@@ -289,6 +289,7 @@ function checkTrue(name: string, condition: boolean) {
   check("rate: £0-£0 range means unspecified", [zeroRange.min, zeroRange.max], [null, null]);
 
   checkTrue("professional: retail colleague rejected", !isProfessionalRole("Service Colleague", parseRate("£13 per hour")));
+  checkTrue("professional: retail associate rejected", !isProfessionalRole("Retail Associate", parseRate("")));
   checkTrue("professional: warehouse operative rejected", !isProfessionalRole("Warehouse Operative - 6 month contract", parseRate("")));
   checkTrue("professional: care assistant rejected", !isProfessionalRole("Care Assistant", parseRate("")));
   checkTrue("professional: low hourly rejected", !isProfessionalRole("Data Entry Clerk", parseRate("£12 per hour")));
@@ -306,6 +307,9 @@ function checkTrue(name: string, condition: boolean) {
   checkTrue("ir35: caught by IR35 → inside", classifyIR35("Developer", "This role is caught by IR35.").status === "inside");
   checkTrue("ir35: not caught by IR35 → outside", classifyIR35("Developer", "This role is not caught by IR35.").status === "outside");
   checkTrue("ir35: SDS Outside → outside", classifyIR35("Engineer", "Status Determination Statement: Outside.").status === "outside");
+  checkTrue("ir35: out of scope wording → outside", classifyIR35("Consultant", "IR35 status: out of scope.").status === "outside");
+  checkTrue("ir35: in scope wording → inside", classifyIR35("Consultant", "IR35: in scope.").status === "inside");
+  checkTrue("ir35: required umbrella payment → inside", classifyIR35("Consultant", "Payment is through an umbrella company.").status === "inside");
 }
 
 // ── Summary ──────────────────────────────────────────────────────────────────
