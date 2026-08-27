@@ -70,6 +70,7 @@ import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { enrichFeedback, feedbackSummary, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
 import { loadGoogleAnalyticsSnapshot } from "@/lib/google-analytics";
+import { buildResumePdf } from "@/lib/resume/export";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -210,6 +211,146 @@ async function correctAuthEmail(
   return "updated";
 }
 
+const accountIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+type SavedResumeDocument = {
+  name: string;
+  text: string;
+};
+
+function recordValue(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function savedResumeDocument(value: unknown): SavedResumeDocument | null {
+  const profile = recordValue(value);
+  if (!profile) return null;
+  const profiles = Array.isArray(profile.resumeProfiles) ? profile.resumeProfiles : [];
+  const activeId = typeof profile.activeResumeProfileId === "string" ? profile.activeResumeProfileId : "";
+  const candidates = profiles.map(recordValue).filter((item): item is Record<string, unknown> => Boolean(item));
+  const selected = candidates.find((item) => item.id === activeId)
+    ?? candidates.find((item) => item.isDefault === true)
+    ?? candidates[0];
+  if (!selected) return null;
+  const text = typeof selected.resumeText === "string" ? selected.resumeText.trim() : "";
+  if (!text) return null;
+  const name = typeof selected.name === "string" && selected.name.trim() ? selected.name.trim() : "Resume";
+  return { name, text };
+}
+
+function safeDocumentName(value: string, fallback = "resume.pdf"): string {
+  const cleaned = value.replace(/[\r\n"\\/:*?<>|]+/g, "-").replace(/\s+/g, " ").trim();
+  return cleaned || fallback;
+}
+
+function documentMime(filename: string, fallback?: string): string {
+  if (fallback) return fallback;
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (lower.endsWith(".doc")) return "application/msword";
+  if (lower.endsWith(".txt")) return "text/plain; charset=utf-8";
+  return "application/octet-stream";
+}
+
+function documentResponse(body: Uint8Array, filename: string, disposition: "inline" | "attachment", mime?: string): Response {
+  const safeName = safeDocumentName(filename);
+  const responseBody = new ArrayBuffer(body.byteLength);
+  new Uint8Array(responseBody).set(body);
+
+  return new Response(responseBody, {
+    headers: {
+      "Content-Type": documentMime(safeName, mime),
+      "Content-Disposition": `${disposition}; filename="${safeName}"; filename*=UTF-8''${encodeURIComponent(safeName)}`,
+      "Cache-Control": "private, no-store, max-age=0",
+      "X-Content-Type-Options": "nosniff",
+      "X-Resume-Filename": encodeURIComponent(safeName),
+    },
+  });
+}
+
+async function generatedResumeResponse({
+  text,
+  filename,
+  candidateName,
+  jobTitle,
+  companyName,
+  versionLabel,
+  disposition,
+}: {
+  text: string;
+  filename: string;
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  versionLabel: string;
+  disposition: "inline" | "attachment";
+}): Promise<Response> {
+  const pdfName = safeDocumentName(filename.replace(/\.(docx?|txt)$/i, "") || "resume", "resume")
+    .replace(/\.pdf$/i, "") + ".pdf";
+  try {
+    const pdf = await buildResumePdf({
+      format: "pdf",
+      resumeText: text,
+      candidateName,
+      jobTitle,
+      companyName,
+      versionLabel,
+    });
+    return documentResponse(new Uint8Array(pdf), pdfName, disposition, "application/pdf");
+  } catch {
+    const textName = pdfName.replace(/\.pdf$/i, ".txt");
+    return documentResponse(new TextEncoder().encode(text), textName, disposition, "text/plain; charset=utf-8");
+  }
+}
+
+async function recoverStoredResumePath(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  userId: string,
+  preferredFilename: string,
+): Promise<string | null> {
+  const listed = await supabase.storage.from("cvs").list(userId, {
+    limit: 100,
+    sortBy: { column: "created_at", order: "desc" },
+  });
+  if (listed.error) return null;
+
+  const files = (listed.data ?? []).filter((entry) => entry.name && entry.metadata);
+  if (!files.length) return null;
+
+  const preferred = safeDocumentName(preferredFilename, "resume.pdf").toLowerCase();
+  const matching = files.find((entry) => {
+    const storedName = entry.name.toLowerCase();
+    return storedName === preferred || storedName.endsWith(`-${preferred}`);
+  });
+  return `${userId}/${matching?.name ?? files[0].name}`;
+}
+
+async function latestPacketResume(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  userId: string,
+): Promise<SavedResumeDocument | null> {
+  const result = await supabase
+    .from("application_packets")
+    .select("source_cv_text, tailored_cv_text, resume_version_label")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(20);
+  if (result.error) throw result.error;
+
+  for (const packet of result.data ?? []) {
+    const text = String(packet.source_cv_text || packet.tailored_cv_text || "").trim();
+    if (!text) continue;
+    return {
+      name: String(packet.resume_version_label || "resume.pdf"),
+      text,
+    };
+  }
+  return null;
+}
+
 async function verifyAdmin(request: Request): Promise<{ id: string; email: string; role: AdminRole } | Response> {
   if (!isAdminRequestHost(request)) return Response.json({ error: "Not found." }, { status: 404 });
 
@@ -244,6 +385,79 @@ export async function GET(request: Request): Promise<Response> {
   const requestedUserId = requestUrl.searchParams.get("userId")?.trim() ?? "";
 
   try {
+    if (section === "resume") {
+      if (!accountIdPattern.test(requestedUserId)) {
+        return Response.json({ error: "Invalid contractor account identifier." }, { status: 400 });
+      }
+
+      const requestedVersionId = requestUrl.searchParams.get("versionId")?.trim() ?? "";
+      const requestedVariant = requestUrl.searchParams.get("variant") === "source" ? "source" : "tailored";
+      const disposition = requestUrl.searchParams.get("disposition") === "attachment" ? "attachment" : "inline";
+      if (requestedVersionId && !accountIdPattern.test(requestedVersionId)) {
+        return Response.json({ error: "Invalid resume version identifier." }, { status: 400 });
+      }
+
+      const profileResult = await supabase
+        .from("profiles")
+        .select("full_name, job_title, cv_path, cv_filename, application_profile")
+        .eq("id", requestedUserId)
+        .maybeSingle();
+      if (profileResult.error) throw profileResult.error;
+      const profile = profileResult.data;
+      if (!profile) return Response.json({ error: "Contractor profile not found." }, { status: 404 });
+
+      if (requestedVersionId) {
+        const versionResult = await supabase
+          .from("resume_versions")
+          .select("id, source_filename, label, source_text, tailored_text, job_title, company_name")
+          .eq("id", requestedVersionId)
+          .eq("user_id", requestedUserId)
+          .maybeSingle();
+        if (versionResult.error) throw versionResult.error;
+        const version = versionResult.data;
+        if (!version) return Response.json({ error: "Resume version not found." }, { status: 404 });
+        const resumeText = String(requestedVariant === "source" ? version.source_text ?? "" : version.tailored_text ?? "").trim();
+        if (!resumeText) return Response.json({ error: `No ${requestedVariant} resume is saved for this version.` }, { status: 404 });
+        const baseName = String(version.source_filename || version.label || "resume").replace(/\.(docx?|pdf|txt)$/i, "");
+        return generatedResumeResponse({
+          text: resumeText,
+          filename: `${baseName}-${requestedVariant}.pdf`,
+          candidateName: String(profile.full_name || "").trim(),
+          jobTitle: String(version.job_title || profile.job_title || "Contract role"),
+          companyName: String(version.company_name || ""),
+          versionLabel: String(version.label || (requestedVariant === "source" ? "Original resume" : "Prepared resume")),
+          disposition,
+        });
+      }
+
+      const storagePath = profile.cv_path
+        ? String(profile.cv_path)
+        : await recoverStoredResumePath(supabase, requestedUserId, String(profile.cv_filename || "resume.pdf"));
+      if (storagePath) {
+        if (!storagePath.startsWith(`${requestedUserId}/`)) {
+          return Response.json({ error: "Resume storage path is invalid." }, { status: 403 });
+        }
+        const downloaded = await supabase.storage.from("cvs").download(storagePath);
+        if (downloaded.error) throw downloaded.error;
+        const body = new Uint8Array(await downloaded.data.arrayBuffer());
+        const filename = String(profile.cv_filename || storagePath.split("/").pop() || "resume.pdf");
+        return documentResponse(body, filename, disposition, downloaded.data.type || undefined);
+      }
+
+      const savedResume = savedResumeDocument(profile.application_profile)
+        ?? await latestPacketResume(supabase, requestedUserId);
+      if (!savedResume) return Response.json({ error: "No resume document is saved for this contractor." }, { status: 404 });
+      return generatedResumeResponse({
+        text: savedResume.text,
+        filename: String(profile.cv_filename || savedResume.name || "resume.pdf"),
+        candidateName: String(profile.full_name || "").trim(),
+        jobTitle: String(profile.job_title || "Contractor profile"),
+        companyName: "",
+        versionLabel: "Original resume",
+        disposition,
+      });
+    }
+
     if (section === "admins") {
       const administrators = await listAdministratorMemberships();
       return Response.json({
@@ -397,7 +611,7 @@ export async function GET(request: Request): Promise<Response> {
 
     if (section === "users") {
       if (requestedUserId) {
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedUserId)) {
+        if (!accountIdPattern.test(requestedUserId)) {
           return Response.json({ error: "Invalid contractor account identifier." }, { status: 400 });
         }
 
@@ -453,15 +667,7 @@ export async function GET(request: Request): Promise<Response> {
         }
 
         const profile = profileResult.data;
-        let resumeUrl: string | null = null;
-        let resumeLinkExpiresAt: string | null = null;
-        if (profile?.cv_path) {
-          const expiresInSeconds = 10 * 60;
-          const signed = await supabase.storage.from("cvs").createSignedUrl(String(profile.cv_path), expiresInSeconds);
-          if (signed.error) throw signed.error;
-          resumeUrl = signed.data.signedUrl;
-          resumeLinkExpiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
-        }
+        const savedResume = savedResumeDocument(profile?.application_profile);
 
         const authUser = authResult.data.user;
         return Response.json({
@@ -477,10 +683,10 @@ export async function GET(request: Request): Promise<Response> {
               provider: authUser.app_metadata?.provider ?? "email",
             },
             profile: profile ?? null,
-            resume: profile?.cv_filename ? {
-              filename: profile.cv_filename,
-              url: resumeUrl,
-              expires_at: resumeLinkExpiresAt,
+            resume: profile?.cv_path || profile?.cv_filename || savedResume ? {
+              filename: String(profile?.cv_filename || savedResume?.name || "resume.pdf"),
+              available: true,
+              source: profile?.cv_path || profile?.cv_filename ? "uploaded" : "saved_text",
             } : null,
             resumeVersions: versionsResult.data ?? [],
             applications: packetsResult.data ?? [],

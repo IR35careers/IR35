@@ -146,7 +146,11 @@ type ContractorDetail = {
     cv_path?: string | null;
     application_profile?: Record<string, unknown> | null;
   }) | null;
-  resume: { filename: string; url: string | null; expires_at: string | null } | null;
+  resume: {
+    filename: string;
+    available: boolean;
+    source: "uploaded" | "saved_text";
+  } | null;
   resumeVersions: Array<{
     id: string;
     job_id: string | null;
@@ -1948,6 +1952,8 @@ function ContractorDetailsDrawer({
   onRetry: () => void;
 }) {
   const [currentTime] = useState(Date.now);
+  const [documentAction, setDocumentAction] = useState<string | null>(null);
+  const [documentError, setDocumentError] = useState("");
   const account = detail?.account ?? selected;
   const profile = detail?.profile ?? selected.profile;
   const applicationProfile = (profile?.application_profile ?? {}) as Record<string, unknown>;
@@ -1972,6 +1978,58 @@ function ContractorDetailsDrawer({
     anchor.download = `${safeName}-admin-record.json`;
     anchor.click();
     URL.revokeObjectURL(url);
+  };
+  const openResumeDocument = async ({
+    mode,
+    filename,
+    versionId,
+    variant,
+  }: {
+    mode: "view" | "download";
+    filename: string;
+    versionId?: string;
+    variant?: "source" | "tailored";
+  }) => {
+    const actionKey = `${versionId || "original"}-${variant || "original"}-${mode}`;
+    const previewWindow = mode === "view" ? window.open("about:blank", "_blank") : null;
+    if (previewWindow) previewWindow.opener = null;
+    setDocumentAction(actionKey);
+    setDocumentError("");
+    try {
+      const query = new URLSearchParams({
+        section: "resume",
+        userId: account.id,
+        disposition: mode === "download" ? "attachment" : "inline",
+      });
+      if (versionId) query.set("versionId", versionId);
+      if (variant) query.set("variant", variant);
+      const response = await adminFetch(`/api/admin?${query.toString()}`);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error || "The resume document could not be opened.");
+      }
+      const blobUrl = URL.createObjectURL(await response.blob());
+      const encodedName = response.headers.get("x-resume-filename");
+      const responseFilename = encodedName ? decodeURIComponent(encodedName) : filename;
+      if (mode === "view") {
+        if (previewWindow) previewWindow.location.href = blobUrl;
+        else window.open(blobUrl, "_blank", "noopener,noreferrer");
+        window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      } else {
+        const anchor = document.createElement("a");
+        anchor.href = blobUrl;
+        anchor.download = responseFilename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1_000);
+      }
+    } catch (requestError) {
+      previewWindow?.close();
+      setDocumentError(requestError instanceof Error ? requestError.message : "The resume document could not be opened.");
+    } finally {
+      setDocumentAction(null);
+    }
   };
 
   return (
@@ -2041,14 +2099,37 @@ function ContractorDetailsDrawer({
                 <div className="space-y-5">
                   <div className="rounded-2xl border border-slate-200 bg-white p-5">
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                      <div><p className="text-sm font-semibold text-slate-950">Original resume</p><p className="mt-1 break-all text-xs text-slate-500">{detail.resume?.filename || "No resume uploaded"}</p></div>
-                      {detail.resume?.url ? <a href={detail.resume.url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white"><Download size={14} /> Open private file</a> : null}
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">Original resume</p>
+                        <p className="mt-1 break-all text-xs text-slate-500">{detail.resume?.filename || "No resume uploaded"}</p>
+                        {detail.resume ? <p className="mt-2 text-[11px] leading-5 text-slate-400">{detail.resume.source === "uploaded" ? "Private uploaded file. Administrator access is checked for every request." : "Secure PDF generated from the contractor's saved resume data."}</p> : null}
+                      </div>
+                      {detail.resume?.available ? <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => openResumeDocument({ mode: "view", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-60">
+                          {documentAction === "original-original-view" ? <Loader2 className="animate-spin" size={14} /> : <ExternalLink size={14} />} View
+                        </button>
+                        <button type="button" onClick={() => openResumeDocument({ mode: "download", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">
+                          {documentAction === "original-original-download" ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />} Download
+                        </button>
+                      </div> : null}
                     </div>
-                    {detail.resume?.expires_at ? <p className="mt-3 text-[11px] text-slate-400">Secure link expires {formatDate(detail.resume.expires_at, true)}.</p> : null}
+                    {documentError ? <div role="alert" className="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700"><ShieldAlert className="mt-0.5 shrink-0" size={14} />{documentError}</div> : null}
                   </div>
                   <Panel title="Resume versions" description="Source and tailored versions retained for application review.">
                     {detail.resumeVersions.length ? <div className="divide-y divide-slate-100">{detail.resumeVersions.map((version) => (
-                      <details key={version.id} className="group p-5"><summary className="flex cursor-pointer list-none items-start justify-between gap-4"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-950">{version.label || version.source_filename}</span><span className="mt-1 block text-xs text-slate-500">{version.job_title || "Profile resume"}{version.company_name ? ` at ${version.company_name}` : ""} · {formatDate(version.created_at, true)}</span></span><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-600">{version.status}</span></summary><div className="mt-4 grid gap-4 lg:grid-cols-2"><div><p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Source</p><pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-[11px] leading-5 text-slate-200">{version.source_text || "No source text saved."}</pre></div><div><p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Prepared version</p><pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-emerald-950 p-4 text-[11px] leading-5 text-emerald-50">{version.tailored_text || "No tailored text saved."}</pre></div></div></details>
+                      <details key={version.id} className="group p-5">
+                        <summary className="flex cursor-pointer list-none items-start justify-between gap-4"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-950">{version.label || version.source_filename}</span><span className="mt-1 block text-xs text-slate-500">{version.job_title || "Profile resume"}{version.company_name ? ` at ${version.company_name}` : ""} · {formatDate(version.created_at, true)}</span></span><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-600">{version.status}</span></summary>
+                        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                          <div>
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Source</p>{version.source_text ? <div className="flex gap-1.5"><button type="button" onClick={() => openResumeDocument({ mode: "view", filename: `${version.source_filename || "resume"}-source.pdf`, versionId: version.id, variant: "source" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-source-view` ? <Loader2 className="animate-spin" size={12} /> : <ExternalLink size={12} />} View</button><button type="button" onClick={() => openResumeDocument({ mode: "download", filename: `${version.source_filename || "resume"}-source.pdf`, versionId: version.id, variant: "source" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-slate-950 px-2.5 text-[10px] font-semibold text-white disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-source-download` ? <Loader2 className="animate-spin" size={12} /> : <Download size={12} />} Download</button></div> : null}</div>
+                            <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-[11px] leading-5 text-slate-200">{version.source_text || "No source text saved."}</pre>
+                          </div>
+                          <div>
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Prepared version</p>{version.tailored_text ? <div className="flex gap-1.5"><button type="button" onClick={() => openResumeDocument({ mode: "view", filename: `${version.source_filename || "resume"}-prepared.pdf`, versionId: version.id, variant: "tailored" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-2.5 text-[10px] font-semibold text-emerald-800 disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-tailored-view` ? <Loader2 className="animate-spin" size={12} /> : <ExternalLink size={12} />} View</button><button type="button" onClick={() => openResumeDocument({ mode: "download", filename: `${version.source_filename || "resume"}-prepared.pdf`, versionId: version.id, variant: "tailored" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-emerald-700 px-2.5 text-[10px] font-semibold text-white disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-tailored-download` ? <Loader2 className="animate-spin" size={12} /> : <Download size={12} />} Download</button></div> : null}</div>
+                            <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-emerald-950 p-4 text-[11px] leading-5 text-emerald-50">{version.tailored_text || "No tailored text saved."}</pre>
+                          </div>
+                        </div>
+                      </details>
                     ))}</div> : <EmptyState title="No resume versions" detail="Prepared application resumes will appear here." />}
                   </Panel>
                 </div>
