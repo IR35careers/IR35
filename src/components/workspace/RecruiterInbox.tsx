@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  Archive,
   ArrowLeft,
   AtSign,
   Check,
@@ -12,11 +13,17 @@ import {
   Copy,
   Inbox,
   Loader2,
+  Mail,
   MailCheck,
+  MailOpen,
   Reply,
+  RotateCcw,
   Search,
   Send,
+  ShieldAlert,
   ShieldCheck,
+  Star,
+  Trash2,
   X,
 } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
@@ -32,10 +39,23 @@ import {
 } from "@/lib/workspace/mail";
 import { emailMessagePreview } from "@/lib/email/message-display";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
-import type { InboxMessage } from "@/lib/workspace/types";
+import type { InboxFolder, InboxMessage } from "@/lib/workspace/types";
 
 type FilterId = "all" | InboxViewCategory;
+type MailboxView = InboxFolder | "starred";
 type EmailState = "loading" | "preview" | "connected" | "gated" | "error";
+
+const MAILBOXES: Array<{
+  id: MailboxView;
+  label: string;
+  icon: typeof Inbox;
+}> = [
+  { id: "inbox", label: "Inbox", icon: Inbox },
+  { id: "starred", label: "Starred", icon: Star },
+  { id: "archive", label: "Archive", icon: Archive },
+  { id: "junk", label: "Junk", icon: ShieldAlert },
+  { id: "trash", label: "Trash", icon: Trash2 },
+];
 
 const FILTERS: Array<{ id: FilterId; label: string }> = [
   { id: "all", label: "All" },
@@ -85,8 +105,13 @@ function canReplyToMessage(message: InboxMessage): boolean {
   );
 }
 
+function messageFolder(message: InboxMessage): InboxFolder {
+  return message.folder ?? "inbox";
+}
+
 export function RecruiterInbox() {
   const workspace = useWorkspaceState();
+  const [mailbox, setMailbox] = useState<MailboxView>("inbox");
   const [filter, setFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
   const [identityOpen, setIdentityOpen] = useState(false);
@@ -123,9 +148,18 @@ export function RecruiterInbox() {
       ),
     [workspace.messages],
   );
+  const mailboxMessages = useMemo(
+    () =>
+      inboxMessages.filter((message) =>
+        mailbox === "starred"
+          ? Boolean(message.starred) && messageFolder(message) !== "trash"
+          : messageFolder(message) === mailbox,
+      ),
+    [inboxMessages, mailbox],
+  );
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return inboxMessages.filter((message) => {
+    return mailboxMessages.filter((message) => {
       const category = inboxViewCategory(message);
       const categoryMatches = filter === "all" || category === filter;
       const searchMatches =
@@ -135,7 +169,7 @@ export function RecruiterInbox() {
           .includes(needle);
       return categoryMatches && searchMatches;
     });
-  }, [filter, inboxMessages, query]);
+  }, [filter, mailboxMessages, query]);
   const selected =
     visible.find((message) => message.id === selectedId) ?? visible[0] ?? null;
   const linkedApplication = selected?.applicationId
@@ -143,7 +177,10 @@ export function RecruiterInbox() {
         (item) => item.id === selected.applicationId,
       ) ?? null
     : null;
-  const unread = inboxMessages.filter((message) => !message.read).length;
+  const unread = inboxMessages.filter(
+    (message) => messageFolder(message) === "inbox" && !message.read,
+  ).length;
+  const unreadInMailbox = mailboxMessages.filter((message) => !message.read).length;
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -195,7 +232,17 @@ export function RecruiterInbox() {
         if (!active || !Array.isArray(payload.messages)) return;
         updateWorkspace((current) => ({
           ...current,
-          messages: payload.messages as InboxMessage[],
+          messages: (payload.messages as InboxMessage[]).map((incoming) => {
+            const saved = current.profile.mailboxState?.[incoming.id];
+            const existing = current.messages.find(
+              (message) => message.id === incoming.id,
+            );
+            return {
+              ...incoming,
+              folder: saved?.folder ?? existing?.folder ?? "inbox",
+              starred: saved?.starred ?? existing?.starred ?? false,
+            };
+          }),
         }));
       } catch {
         // The current inbox remains available if a background refresh fails.
@@ -229,9 +276,52 @@ export function RecruiterInbox() {
   const markAllRead = () => {
     updateWorkspace((current) => ({
       ...current,
-      messages: current.messages.map((message) => ({ ...message, read: true })),
+      messages: current.messages.map((message) =>
+        mailboxMessages.some((visibleMessage) => visibleMessage.id === message.id)
+          ? { ...message, read: true }
+          : message,
+      ),
     }));
-    setNotice("All messages marked as read.");
+    setNotice(`All ${mailbox === "starred" ? "starred" : mailbox} messages marked as read.`);
+  };
+
+  const updateMailboxState = (
+    message: InboxMessage,
+    patch: Partial<{ folder: InboxFolder; starred: boolean }>,
+    success: string,
+  ) => {
+    updateWorkspace((current) => {
+      const existing = current.profile.mailboxState?.[message.id] ?? {
+        folder: messageFolder(message),
+        starred: Boolean(message.starred),
+      };
+      const next = { ...existing, ...patch };
+      return {
+        ...current,
+        profile: {
+          ...current.profile,
+          mailboxState: {
+            ...(current.profile.mailboxState ?? {}),
+            [message.id]: next,
+          },
+        },
+        messages: current.messages.map((item) =>
+          item.id === message.id ? { ...item, ...next } : item,
+        ),
+      };
+    });
+    setNotice(success);
+    if (patch.folder) setMobileReading(false);
+  };
+
+  const toggleRead = (message: InboxMessage) => {
+    updateWorkspace((current) => ({
+      ...current,
+      messages: current.messages.map((item) =>
+        item.id === message.id ? { ...item, read: !message.read } : item,
+      ),
+    }));
+    setNotice(message.read ? "Message marked as unread." : "Message marked as read.");
   };
 
   const activateInbox = async () => {
@@ -364,13 +454,13 @@ export function RecruiterInbox() {
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
             {emailState === "connected" && !hasAlias && (
               <button
                 type="button"
                 onClick={() => void activateInbox()}
                 disabled={activating}
-                className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50"
+                className="ir35-focus col-span-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50 sm:col-span-1 sm:w-auto"
               >
                 {activating ? (
                   <Loader2 className="animate-spin" size={16} />
@@ -384,7 +474,7 @@ export function RecruiterInbox() {
               <button
                 type="button"
                 onClick={() => void copyAlias()}
-                className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="ir35-focus inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
               >
                 {notice === "Private address copied." ? (
                   <Check size={15} />
@@ -398,7 +488,7 @@ export function RecruiterInbox() {
               type="button"
               aria-expanded={identityOpen}
               onClick={() => setIdentityOpen((current) => !current)}
-              className="ir35-focus inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="ir35-focus inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
             >
               How it works{" "}
               <ChevronDown
@@ -448,26 +538,60 @@ export function RecruiterInbox() {
               className="ir35-focus min-h-12 w-full rounded-xl border border-slate-300 bg-slate-50 pl-11 pr-4 text-sm"
             />
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-2 lg:w-auto">
             <button
               type="button"
               onClick={markAllRead}
-              disabled={unread === 0}
-              className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-40"
+              disabled={unreadInMailbox === 0}
+              className="ir35-focus inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-40 sm:w-auto"
             >
               <CheckCheck size={16} /> Mark all read
             </button>
           </div>
         </div>
+        <div className="mt-4 flex gap-2 overflow-x-auto border-b border-slate-200 pb-3" aria-label="Mailbox folders">
+          {MAILBOXES.map((item) => {
+            const Icon = item.icon;
+            const count =
+              item.id === "starred"
+                ? inboxMessages.filter(
+                    (message) => message.starred && messageFolder(message) !== "trash",
+                  ).length
+                : inboxMessages.filter(
+                    (message) => messageFolder(message) === item.id,
+                  ).length;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={mailbox === item.id}
+                onClick={() => {
+                  setMailbox(item.id);
+                  setFilter("all");
+                  setMobileReading(false);
+                }}
+                className={`ir35-focus inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-bold transition ${mailbox === item.id ? "bg-brand-800 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-brand-50 hover:text-brand-900"}`}
+              >
+                <Icon size={15} />
+                {item.label}
+                {item.id === "inbox" && unread > 0 ? (
+                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]">{unread}</span>
+                ) : count > 0 ? (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${mailbox === item.id ? "bg-white/15" : "bg-slate-100"}`}>{count}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
         <div
-          className="mt-4 flex gap-2 overflow-x-auto pb-1"
-          aria-label="Inbox filters"
+          className="mt-3 flex gap-2 overflow-x-auto pb-1"
+          aria-label="Message categories"
         >
           {FILTERS.map((item) => {
             const count =
               item.id === "all"
-                ? inboxMessages.length
-                : inboxMessages.filter(
+                ? mailboxMessages.length
+                : mailboxMessages.filter(
                     (message) => inboxViewCategory(message) === item.id,
                   ).length;
             return (
@@ -492,14 +616,14 @@ export function RecruiterInbox() {
         </div>
       </section>
 
-      <section className="ir35-card ir35-inbox-reader mt-4 grid overflow-hidden lg:min-h-[560px] lg:grid-cols-[360px_1fr]">
+      <section className="ir35-card ir35-inbox-reader mb-24 mt-4 grid min-w-0 overflow-hidden lg:mb-0 lg:min-h-[600px] lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className={`${mobileReading ? "hidden" : "block"} border-b border-slate-200 lg:block lg:border-b-0 lg:border-r`}>
           {visible.length === 0 ? (
             <div className="p-8 text-center">
               <Inbox className="mx-auto text-slate-400" />
               <p className="mt-3 text-sm font-semibold text-slate-700">
                 {filter === "all"
-                  ? "No application messages yet"
+                  ? `No messages in ${mailbox === "starred" ? "Starred" : mailbox}`
                   : `No ${FILTERS.find((item) => item.id === filter)?.label ?? "matching"} messages`}
               </p>
               <p className="mt-1 text-xs text-slate-500">
@@ -511,6 +635,7 @@ export function RecruiterInbox() {
                 <button
                   type="button"
                   onClick={() => {
+                    setMailbox("inbox");
                     setFilter("all");
                     setQuery("");
                   }}
@@ -526,7 +651,7 @@ export function RecruiterInbox() {
                 key={message.id}
                 type="button"
                 onClick={() => selectMessage(message)}
-                className={`ir35-focus block w-full border-b border-slate-100 p-4 text-left transition-colors ${selected?.id === message.id ? "bg-brand-50" : "hover:bg-slate-50"}`}
+                className={`ir35-focus block w-full border-b border-slate-100 p-4 text-left transition-colors ${selected?.id === message.id ? "bg-[linear-gradient(135deg,#ecfdf5,#ecfeff)]" : "hover:bg-slate-50"}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
@@ -534,12 +659,15 @@ export function RecruiterInbox() {
                   >
                     {message.from}
                   </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                  {message.starred && <Star size={13} className="fill-amber-400 text-amber-500" aria-label="Starred" />}
                   {!message.read && (
                     <span
                       className="h-2 w-2 shrink-0 rounded-full bg-brand-600"
                       aria-label="Unread"
                     />
                   )}
+                  </span>
                 </div>
                 <p
                   className={`mt-1 truncate text-sm ${message.read ? "font-medium text-slate-700" : "font-bold text-slate-950"}`}
@@ -556,40 +684,40 @@ export function RecruiterInbox() {
             ))
           )}
         </div>
-        <div className={`${mobileReading ? "block" : "hidden"} min-w-0 p-5 sm:p-8 lg:block`}>
+        <div className={`${mobileReading ? "block" : "hidden"} min-w-0 overflow-hidden p-4 sm:p-8 lg:block`}>
           {selected ? (
             <article>
               <button type="button" onClick={() => setMobileReading(false)} className="ir35-focus mb-5 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 lg:hidden"><ArrowLeft size={14} /> Back to messages</button>
-              <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0">
                   <CategoryPill message={selected} />
-                  <h2 className="mt-3 text-xl font-semibold text-slate-950">
+                  <h2 className="mt-3 break-words text-xl font-semibold text-slate-950 sm:text-2xl">
                     {selected.subject}
                   </h2>
-                  <p className="mt-1 break-all text-sm text-slate-500">
+                  <p className="mt-1 break-all text-xs text-slate-500 sm:text-sm">
                     From {selected.from}
                   </p>
                 </div>
-                <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                <div className="flex shrink-0 flex-col items-start gap-3 xl:items-end">
                   <p className="text-xs text-slate-500">
                     {new Date(selected.receivedAt).toLocaleString("en-GB", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
                   </p>
-                  {canReplyToMessage(selected) && (
-                    <button
-                      type="button"
-                      onClick={() => openComposer(selected)}
-                      disabled={!hasAlias}
-                      className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 disabled:opacity-40"
-                    >
-                      <Reply size={14} /> Reply
-                    </button>
-                  )}
+                  <div className="flex max-w-full flex-wrap gap-1.5" aria-label="Message actions">
+                    <button type="button" onClick={() => updateMailboxState(selected, { starred: !selected.starred }, selected.starred ? "Removed from starred." : "Message starred.")} className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700" aria-label={selected.starred ? "Remove star" : "Star message"}><Star size={15} className={selected.starred ? "fill-amber-400 text-amber-500" : ""} /></button>
+                    <button type="button" onClick={() => toggleRead(selected)} className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50" aria-label={selected.read ? "Mark unread" : "Mark read"}>{selected.read ? <Mail size={15} /> : <MailOpen size={15} />}</button>
+                    {messageFolder(selected) === "inbox" && <button type="button" onClick={() => updateMailboxState(selected, { folder: "archive" }, "Message archived.")} className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-brand-50 hover:text-brand-800" aria-label="Archive message"><Archive size={15} /></button>}
+                    {messageFolder(selected) !== "junk" && messageFolder(selected) !== "trash" && <button type="button" onClick={() => updateMailboxState(selected, { folder: "junk" }, "Message moved to junk.")} className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-800" aria-label="Move to junk"><ShieldAlert size={15} /></button>}
+                    {messageFolder(selected) === "trash" ? <button type="button" onClick={() => updateMailboxState(selected, { folder: "inbox" }, "Message restored to inbox.")} className="ir35-focus inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-brand-50" aria-label="Restore message"><RotateCcw size={15} /> Restore</button> : <button type="button" onClick={() => updateMailboxState(selected, { folder: "trash" }, "Message moved to trash.")} className="ir35-focus flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-700" aria-label="Move to trash"><Trash2 size={15} /></button>}
+                    {canReplyToMessage(selected) && messageFolder(selected) !== "trash" && (
+                      <button type="button" onClick={() => openComposer(selected)} disabled={!hasAlias} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-800 px-3 text-xs font-bold text-white hover:bg-brand-900 disabled:opacity-40"><Reply size={14} /> Reply</button>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="mt-6">
+              <div className="mt-6 min-w-0 overflow-hidden [overflow-wrap:anywhere]">
                 <EmailMessageBody body={selected.body} />
               </div>
               {selected.applicationId && (

@@ -59,6 +59,13 @@ export interface AutoApplyLane {
   enabled: boolean;
 }
 
+export type InboxFolder = "inbox" | "archive" | "junk" | "trash";
+
+export interface InboxMailboxState {
+  folder: InboxFolder;
+  starred: boolean;
+}
+
 export interface ContractorProfile {
   fullName: string;
   email: string;
@@ -134,6 +141,7 @@ export interface ContractorProfile {
   experience?: {
     dashboardTourCompletedAt?: string;
   };
+  mailboxState?: Record<string, InboxMailboxState>;
 }
 
 export interface SavedApplicationAnswer {
@@ -280,6 +288,8 @@ export interface InboxMessage {
   classification: InboxClassification;
   receivedAt: string;
   read: boolean;
+  folder?: InboxFolder;
+  starred?: boolean;
 }
 
 export interface AutomationRules {

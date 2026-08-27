@@ -388,14 +388,22 @@ export async function loadCloudWorkspace(
       }
     : state.entitlement;
 
+  const loadedProfile = profileFromRow(profileRow, state.profile);
+  const mailboxState = loadedProfile.mailboxState ?? {};
+
   return {
     ...state,
-    profile: profileFromRow(profileRow, state.profile),
+    profile: loadedProfile,
     applications: ((applicationsResult.data ?? []) as DbRow[]).map((row) =>
       mapApplication(row, events, submissionMap.get(String(row.id))),
     ),
     messages: ((messagesResult.data ?? []) as DbRow[])
       .map(mapMessage)
+      .map((message) => ({
+        ...message,
+        folder: mailboxState[message.id]?.folder ?? "inbox",
+        starred: mailboxState[message.id]?.starred ?? false,
+      }))
       .filter(
         (message) =>
           !isUnsolicitedJobMarketingMessage(
