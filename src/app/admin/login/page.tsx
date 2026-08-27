@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, KeyRound, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { isAdministratorEmail } from "@/lib/portal-access";
 import { GoogleIdentityButton } from "@/components/GoogleIdentityButton";
+import { supabase } from "@/lib/supabase";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -16,33 +16,47 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const unlocking = useRef(false);
 
   useEffect(() => {
-    if (loading || !user) return;
-    if (isAdministratorEmail(user.email)) {
-      router.replace("/");
-      return;
-    }
-    setError("This Google account is not approved for IR35Careers administration.");
-    void signOut();
+    if (loading || !user || unlocking.current) return;
+    unlocking.current = true;
+    setSubmitting(true);
+
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token ?? "";
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      if (response.ok) {
+        router.replace("/");
+        router.refresh();
+        return;
+      }
+      setError(result.error ?? "This account is not approved for IR35Careers administration.");
+      setSubmitting(false);
+      unlocking.current = false;
+      await signOut();
+    })().catch(async () => {
+      setError("We could not verify administrator access. Please try again.");
+      setSubmitting(false);
+      unlocking.current = false;
+      await signOut();
+    });
   }, [loading, router, signOut, user]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
-    if (!isAdministratorEmail(email)) {
-      setError("Use the approved IR35Careers administrator account.");
-      setSubmitting(false);
-      return;
-    }
     const result = await signInWithPassword(email, password);
     if (result.error) {
       setError(result.error);
       setSubmitting(false);
-      return;
     }
-    router.replace("/");
   };
 
   return (
@@ -67,7 +81,7 @@ export default function AdminLoginPage() {
             <h1 className="mt-7 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl lg:text-6xl">Operate IR35Careers from one secure workspace.</h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-400">Review growth, job inventory, applications, campaigns and system health. Administrator access is verified server-side and every sensitive action is recorded.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {["Allowlisted access", "20-minute sessions", "Audited actions"].map((item) => <div key={item} className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-xs font-medium text-slate-300"><CheckCircle2 size={15} className="shrink-0 text-emerald-400" />{item}</div>)}
+              {["Registry-backed access", "20-minute sessions", "Audited actions"].map((item) => <div key={item} className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-xs font-medium text-slate-300"><CheckCircle2 size={15} className="shrink-0 text-emerald-400" />{item}</div>)}
             </div>
           </section>
 
@@ -94,7 +108,7 @@ export default function AdminLoginPage() {
 
             {!user && <><div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-white/[0.08]" /><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">or</span><span className="h-px flex-1 bg-white/[0.08]" /></div><GoogleIdentityButton admin onError={setError} /></>}
 
-            <p className="mt-6 text-center text-[11px] leading-5 text-slate-600">Protected by an administrator allowlist, server verification and a short-lived HttpOnly session.</p>
+            <p className="mt-6 text-center text-[11px] leading-5 text-slate-600">Protected by the administrator registry, server verification and a short-lived HttpOnly session.</p>
             <a
               href="https://www.ir35careers.com/account?switch=1&mode=signin&next=%2Fapplications"
               className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xl text-xs font-semibold text-slate-400 transition hover:bg-white/[0.04] hover:text-white"

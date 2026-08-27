@@ -48,14 +48,30 @@ import {
 } from "lucide-react";
 import { SystemMapPanel, type ApplicationRunSummary, type ApplicationWorkerQueueSummary, type RunnerTestResult } from "@/components/admin/SystemMapPanel";
 import { useAuth } from "@/lib/auth-context";
-import { isAdministratorEmail } from "@/lib/portal-access";
 import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
 import type { IntegrationStatus } from "@/lib/integration-status";
 import { feedbackSummary as summariseFeedback, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
 import { supabase } from "@/lib/supabase";
 import type { GoogleAnalyticsSnapshot } from "@/lib/google-analytics";
 
-type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "feedback" | "campaigns" | "waitlist" | "runs" | "system";
+type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "feedback" | "campaigns" | "waitlist" | "admins" | "runs" | "system";
+
+type AdminRole = "owner" | "admin";
+type AdminStatus = "active" | "disabled";
+
+type AdministratorRow = {
+  id: string | null;
+  email: string;
+  userId: string | null;
+  role: AdminRole;
+  status: AdminStatus;
+  invitedByEmail: string | null;
+  lastLoginAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  managed: boolean;
+  source: "registry" | "bootstrap";
+};
 
 type JobRow = {
   id: string;
@@ -316,6 +332,10 @@ type AdminData = {
   systemGeneratedAt?: string;
   feedback?: FeedbackRecord[];
   feedbackSummary?: ReturnType<typeof summariseFeedback>;
+  administrators?: AdministratorRow[];
+  viewerRole?: AdminRole;
+  viewerEmail?: string;
+  canManageAdministrators?: boolean;
 };
 
 const NAV_GROUPS: Array<{
@@ -343,6 +363,7 @@ const NAV_GROUPS: Array<{
   {
     label: "System",
     items: [
+      { id: "admins", label: "Administrators", icon: ShieldCheck },
       { id: "system", label: "System map", icon: Workflow },
       { id: "runs", label: "Pipeline runs", icon: Activity },
     ],
@@ -389,6 +410,11 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     eyebrow: "Communications",
     title: "Email campaigns",
     description: "Create, preview, test and send professional branded service emails from one secure workspace.",
+  },
+  admins: {
+    eyebrow: "Access control",
+    title: "Administrators",
+    description: "Control who can open the private admin workspace and keep every access change auditable.",
   },
   runs: {
     eyebrow: "System health",
@@ -565,10 +591,6 @@ export default function AdminPage() {
       setBusy(false);
       router.replace("/login");
     }
-    if (!loading && user && !isAdministratorEmail(user.email)) {
-      setBusy(false);
-      setForbidden(true);
-    }
   }, [user, loading, section, load, router, sessionReady]);
 
   useEffect(() => {
@@ -596,7 +618,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get("section");
-    if (requested && ["stats", "analytics", "jobs", "sources", "users", "feedback", "campaigns", "waitlist", "runs", "system"].includes(requested)) {
+    if (requested && ["stats", "analytics", "jobs", "sources", "users", "feedback", "campaigns", "waitlist", "admins", "runs", "system"].includes(requested)) {
       setSection(requested as Section);
     }
   }, []);
@@ -1356,6 +1378,8 @@ export default function AdminPage() {
             />
           ) : section === "waitlist" && data ? (
             <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} sending={sendingLaunch} onSend={sendBetaLaunch} />
+          ) : section === "admins" && data ? (
+            <AdministratorsPanel data={data} onChanged={() => load("admins")} onNotice={setNotice} onError={setError} />
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
           ) : section === "system" && data ? (
@@ -2285,6 +2309,212 @@ function LaunchAudiencePanel({
         {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div>{entry.launch_notified_at ? <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Sent</span> : entry.launch_last_error ? <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">Failed</span> : <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Pending</span>}</div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No beta recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
       </Panel>
       <Panel title="Beta invitation" description={pending ? `${pending} recipients are ready` : `${notified} invitations recorded`}><div className="p-6"><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${pending ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{pending ? <Mail size={19} /> : <CheckCircle2 size={19} />}</span><p className="mt-5 text-sm font-semibold text-slate-950">Your IR35Careers beta access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">{pending ? "The approved branded invitation is ready. Sending automatically removes registered duplicates and invalid placeholder addresses, then records every provider delivery ID." : "The cleaned audience has been processed. Each accepted invitation has its provider delivery ID stored in the private ledger."}</p>{pending ? <button type="button" onClick={onSend} disabled={sending} className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">{sending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {sending ? "Sending invitations" : "Clean audience and send"}</button> : <span className="mt-5 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">Delivery recorded</span>}</div></Panel>
+    </div>
+  );
+}
+
+function AdministratorsPanel({
+  data,
+  onChanged,
+  onNotice,
+  onError,
+}: {
+  data: AdminData;
+  onChanged: () => Promise<void> | void;
+  onNotice: (message: string | null) => void;
+  onError: (message: string | null) => void;
+}) {
+  const administrators = data.administrators ?? [];
+  const canManage = Boolean(data.canManageAdministrators);
+  const viewerEmail = data.viewerEmail?.toLowerCase() ?? "";
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<AdminRole>("admin");
+  const [actionKey, setActionKey] = useState<string | null>(null);
+
+  const activeCount = administrators.filter((administrator) => administrator.status === "active").length;
+  const ownerCount = administrators.filter((administrator) => administrator.role === "owner" && administrator.status === "active").length;
+  const disabledCount = administrators.filter((administrator) => administrator.status === "disabled").length;
+
+  const runAction = async (
+    action: "add_admin" | "update_admin" | "remove_admin",
+    administratorEmail: string,
+    administratorRole?: AdminRole,
+    administratorStatus?: AdminStatus,
+  ) => {
+    const key = `${action}:${administratorEmail}`;
+    setActionKey(key);
+    onError(null);
+    onNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action,
+          adminEmail: administratorEmail,
+          adminRole: administratorRole,
+          adminStatus: administratorStatus,
+        }),
+      });
+      const json = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(json.error ?? "Unable to update administrator access");
+      if (action === "add_admin") {
+        setEmail("");
+        setRole("admin");
+        onNotice(`${administratorEmail} can now sign in to the admin workspace.`);
+      } else if (action === "remove_admin") {
+        onNotice(`${administratorEmail} no longer has administrator access.`);
+      } else {
+        onNotice(`Access settings were updated for ${administratorEmail}.`);
+      }
+      await onChanged();
+    } catch (caught) {
+      onError(caught instanceof Error ? caught.message : "Unable to update administrator access");
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const submitNewAdministrator = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const administratorEmail = email.trim().toLowerCase();
+    if (!administratorEmail) {
+      onError("Enter the administrator's email address.");
+      return;
+    }
+    void runAction("add_admin", administratorEmail, role, "active");
+  };
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Administrators", value: administrators.length, detail: "Registered access", tone: "bg-slate-950 text-white" },
+          { label: "Active", value: activeCount, detail: "Can sign in now", tone: "bg-emerald-50 text-emerald-700" },
+          { label: "Owners", value: ownerCount, detail: "Can manage access", tone: "bg-cyan-50 text-cyan-700" },
+          { label: "Disabled", value: disabledCount, detail: "Access suspended", tone: "bg-amber-50 text-amber-700" },
+        ].map((metric) => (
+          <article key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${metric.tone}`}><ShieldCheck size={17} /></span>
+            <p className="mt-5 text-3xl font-semibold tabular-nums text-slate-950">{metric.value}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-800">{metric.label}</p>
+            <p className="mt-1 text-[11px] text-slate-500">{metric.detail}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Panel title="Administrator access" description="Every sign-in is checked against this private registry. Changes are recorded in the audit timeline.">
+          {administrators.length ? (
+            <div className="divide-y divide-slate-100">
+              {administrators.map((administrator) => {
+                const isCurrentUser = administrator.email.toLowerCase() === viewerEmail;
+                const isProtected = administrator.source === "bootstrap" || isCurrentUser;
+                const isUpdating = actionKey?.endsWith(`:${administrator.email}`) ?? false;
+                return (
+                  <article key={administrator.id ?? administrator.email} className="px-5 py-5 sm:px-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${administrator.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>
+                          {administrator.role === "owner" ? <ShieldCheck size={18} /> : <UserRound size={18} />}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-slate-950">{administrator.email}</p>
+                            {isCurrentUser && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">You</span>}
+                            {administrator.source === "bootstrap" && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">Recovery owner</span>}
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Last sign-in: {administrator.lastLoginAt ? `${timeAgo(administrator.lastLoginAt)} · ${formatDate(administrator.lastLoginAt, true)}` : "Not recorded yet"}
+                          </p>
+                          <p className="mt-1 text-[11px] text-slate-400">Added {formatDate(administrator.createdAt)}{administrator.invitedByEmail ? ` by ${administrator.invitedByEmail}` : ""}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${administrator.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{administrator.status}</span>
+                        {canManage ? (
+                          <>
+                            <label className="sr-only" htmlFor={`admin-role-${administrator.id ?? administrator.email}`}>Administrator role</label>
+                            <select
+                              id={`admin-role-${administrator.id ?? administrator.email}`}
+                              value={administrator.role}
+                              disabled={isUpdating || isProtected}
+                              onChange={(event) => void runAction("update_admin", administrator.email, event.target.value as AdminRole, administrator.status)}
+                              className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold capitalize text-slate-700 outline-none transition focus:border-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="owner">Owner</option>
+                            </select>
+                            <button
+                              type="button"
+                              disabled={isUpdating || isProtected}
+                              onClick={() => void runAction("update_admin", administrator.email, administrator.role, administrator.status === "active" ? "disabled" : "active")}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              {isUpdating ? <Loader2 size={13} className="animate-spin" /> : <Power size={13} />}
+                              {administrator.status === "active" ? "Disable" : "Enable"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isUpdating || isProtected}
+                              aria-label={`Remove ${administrator.email}`}
+                              onClick={() => {
+                                if (window.confirm(`Remove administrator access for ${administrator.email}?`)) void runAction("remove_admin", administrator.email);
+                              }}
+                              className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-35"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-semibold capitalize text-slate-600">{administrator.role}</span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : <EmptyState title="No administrators found" detail="The recovery owner can add the first managed administrator." />}
+        </Panel>
+
+        <div className="space-y-5">
+          <Panel title="Add an administrator" description={canManage ? "Grant access using the exact email address they will use to sign in." : "Only an owner can grant or change administrator access."}>
+            <form onSubmit={submitNewAdministrator} className="space-y-4 p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><Plus size={18} /></span>
+              <label className="block text-xs font-semibold text-slate-700">Email address
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={!canManage || actionKey !== null}
+                  placeholder="admin@example.com"
+                  autoComplete="off"
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="block text-xs font-semibold text-slate-700">Access level
+                <select value={role} onChange={(event) => setRole(event.target.value as AdminRole)} disabled={!canManage || actionKey !== null} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 disabled:bg-slate-50">
+                  <option value="admin">Administrator</option>
+                  <option value="owner">Owner</option>
+                </select>
+              </label>
+              <button type="submit" disabled={!canManage || actionKey !== null || !email.trim()} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45">
+                {actionKey?.startsWith("add_admin:") ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                Add administrator
+              </button>
+              <p className="text-[11px] leading-5 text-slate-500">No password is shared. The new administrator signs in at admin.ir35careers.com with this email using Google or their IR35Careers password.</p>
+            </form>
+          </Panel>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm"><LockKeyhole size={17} /></span>
+            <p className="mt-4 text-sm font-semibold text-emerald-950">Protected access</p>
+            <p className="mt-2 text-xs leading-5 text-emerald-800">The recovery owner cannot be removed or disabled. Owners cannot remove, disable or demote their own account, preventing accidental lockout.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

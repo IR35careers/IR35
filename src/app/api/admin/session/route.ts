@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import {
   ADMIN_SESSION_TTL_SECONDS,
-  adminAllowlist,
   adminSessionCookieName,
   adminSessionCookieOptions,
   createAdminSession,
   isAdminRequestHost,
 } from "@/lib/admin-session";
+import { authorizeAdministrator, touchAdministratorLogin } from "@/lib/admin-access";
 import { requestUser } from "@/lib/request-user";
 
 export const runtime = "nodejs";
@@ -20,12 +20,18 @@ export async function POST(request: Request): Promise<Response> {
   if ("response" in auth) return auth.response;
 
   const email = auth.user.email?.trim().toLowerCase();
-  if (!email || !adminAllowlist().includes(email)) {
+  const membership = email ? await authorizeAdministrator(email) : null;
+  if (!email || !membership) {
     return Response.json({ error: "This account is not authorised for administration." }, { status: 403, headers: NO_STORE });
   }
 
   try {
-    const response = NextResponse.json({ unlocked: true, expiresIn: ADMIN_SESSION_TTL_SECONDS }, { headers: NO_STORE });
+    await touchAdministratorLogin(email, auth.user.id);
+    const response = NextResponse.json({
+      unlocked: true,
+      expiresIn: ADMIN_SESSION_TTL_SECONDS,
+      role: membership.role,
+    }, { headers: NO_STORE });
     response.cookies.set(
       adminSessionCookieName(),
       createAdminSession({ id: auth.user.id, email }),

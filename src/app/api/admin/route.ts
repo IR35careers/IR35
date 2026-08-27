@@ -1,5 +1,5 @@
 /**
- * Admin API: GET /api/admin?section=stats|analytics|users|feedback|waitlist|campaigns|jobs|runs|system
+ * Admin API: GET /api/admin?section=stats|analytics|users|admins|feedback|waitlist|campaigns|jobs|runs|system
  *            POST /api/admin  { action: "expire_job", jobId }
  *                              { action: "send_beta_launch", confirmation }
  *                              { action: "preview_email_campaign", draft }
@@ -8,13 +8,24 @@
  *                              { action: "update_feedback_status", feedbackId, feedbackStatus }
  *
  * Access requires two server-verified proofs: a live Supabase user token for
- * an allowlisted administrator and a short-lived, signed, HttpOnly admin
+ * an active administrator in the database registry and a short-lived, signed, HttpOnly admin
  * session cookie. Every mutating action is written to moderation_logs.
  */
 
 import type { User } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
-import { adminAllowlist, adminSessionCookieName, cookieValue, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
+import { adminSessionCookieName, cookieValue, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
+import {
+  addAdministrator,
+  authorizeAdministrator,
+  listAdministratorMemberships,
+  normalizeAdminEmail,
+  removeAdministrator,
+  updateAdministrator,
+  validAdminEmail,
+  type AdminRole,
+  type AdminStatus,
+} from "@/lib/admin-access";
 import {
   emailCampaignTemplates,
   renderCampaignEmail,
@@ -199,12 +210,8 @@ async function correctAuthEmail(
   return "updated";
 }
 
-async function verifyAdmin(request: Request): Promise<{ id: string; email: string } | Response> {
+async function verifyAdmin(request: Request): Promise<{ id: string; email: string; role: AdminRole } | Response> {
   if (!isAdminRequestHost(request)) return Response.json({ error: "Not found." }, { status: 404 });
-  const allowlist = adminAllowlist();
-  if (allowlist.length === 0) {
-    return Response.json({ error: "Secure administration is not configured." }, { status: 503 });
-  }
 
   const auth = request.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
@@ -214,15 +221,17 @@ async function verifyAdmin(request: Request): Promise<{ id: string; email: strin
   const { data, error } = await supabase.auth.getUser(token);
   const user = data?.user;
   const email = user?.email?.toLowerCase();
-  if (error || !user || !email || !allowlist.includes(email)) {
+  if (error || !user || !email) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
+  const membership = await authorizeAdministrator(email);
+  if (!membership) return Response.json({ error: "Forbidden" }, { status: 403 });
 
   const session = verifyAdminSession(cookieValue(request, adminSessionCookieName()));
   if (!session || session.sub !== user.id || session.email !== email) {
     return Response.json({ error: "Admin session expired. Unlock the admin area again." }, { status: 401 });
   }
-  return { id: user.id, email };
+  return { id: user.id, email, role: membership.role };
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -235,6 +244,16 @@ export async function GET(request: Request): Promise<Response> {
   const requestedUserId = requestUrl.searchParams.get("userId")?.trim() ?? "";
 
   try {
+    if (section === "admins") {
+      const administrators = await listAdministratorMemberships();
+      return Response.json({
+        administrators,
+        viewerRole: admin.role,
+        viewerEmail: admin.email,
+        canManageAdministrators: admin.role === "owner",
+      });
+    }
+
     if (section === "stats") {
       const [{ count: liveJobs }, { count: expiredJobs }, { count: profiles }, { count: cvs }, { count: waitlist }, usersRes, recentJobs, recentRuns] =
         await Promise.all([
@@ -834,7 +853,60 @@ export async function POST(request: Request): Promise<Response> {
       feedbackReply?: string;
       feedbackResolve?: boolean;
       currentSection?: string;
+      adminEmail?: string;
+      adminRole?: AdminRole;
+      adminStatus?: AdminStatus;
     }>(request, 2_000_000);
+
+    if (["add_admin", "update_admin", "remove_admin"].includes(body.action ?? "")) {
+      if (admin.role !== "owner") {
+        return Response.json({ error: "Only an account owner can manage administrators." }, { status: 403 });
+      }
+
+      const targetEmail = normalizeAdminEmail(body.adminEmail);
+      if (!validAdminEmail(targetEmail)) {
+        return Response.json({ error: "Enter a valid administrator email address." }, { status: 400 });
+      }
+
+      if (body.action === "add_admin") {
+        const role: AdminRole = body.adminRole === "owner" ? "owner" : "admin";
+        const administrator = await addAdministrator({
+          email: targetEmail,
+          role,
+          invitedByEmail: admin.email,
+        });
+        const audit = await supabase.from("moderation_logs").insert({
+          run_type: "admin_access_change",
+          summary: { action: "added", target_email: targetEmail, role, changed_by: admin.email },
+        });
+        if (audit.error) throw audit.error;
+        return Response.json({ ok: true, administrator });
+      }
+
+      if (targetEmail === admin.email && (body.action === "remove_admin" || body.adminStatus === "disabled" || body.adminRole === "admin")) {
+        return Response.json({ error: "You cannot remove or disable your own owner access." }, { status: 400 });
+      }
+
+      if (body.action === "update_admin") {
+        const role: AdminRole = body.adminRole === "owner" ? "owner" : "admin";
+        const status: AdminStatus = body.adminStatus === "disabled" ? "disabled" : "active";
+        const administrator = await updateAdministrator({ email: targetEmail, role, status });
+        const audit = await supabase.from("moderation_logs").insert({
+          run_type: "admin_access_change",
+          summary: { action: "updated", target_email: targetEmail, role, status, changed_by: admin.email },
+        });
+        if (audit.error) throw audit.error;
+        return Response.json({ ok: true, administrator });
+      }
+
+      await removeAdministrator(targetEmail);
+      const audit = await supabase.from("moderation_logs").insert({
+        run_type: "admin_access_change",
+        summary: { action: "removed", target_email: targetEmail, changed_by: admin.email },
+      });
+      if (audit.error) throw audit.error;
+      return Response.json({ ok: true });
+    }
 
     if (body.action === "support_presence") {
       const now = new Date().toISOString();
