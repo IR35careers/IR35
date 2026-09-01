@@ -6,6 +6,10 @@ import {
   findResendVerificationEmail,
   storeRecoveredVerificationEmail,
 } from "@/lib/email/resend-verification-sync";
+import {
+  isApplicationEmailAction,
+  isApplicationEmailLinkAction,
+} from "@/lib/application-email-action";
 
 type PendingVerificationRow = {
   user_id: string;
@@ -73,11 +77,7 @@ export async function recoverPendingVerificationEmails(input: {
 
   const pending = ((data ?? []) as PendingVerificationRow[]).filter(
     (row) =>
-      [
-        "verification_code",
-        "verification_link",
-        "account_recovery_email",
-      ].includes(String(row.receipt?.action ?? "")) &&
+      isApplicationEmailAction(String(row.receipt?.action ?? "")) &&
       verificationRecoveryDue(row.receipt?.providerSyncCheckedAt, nowMs),
   );
   const recovered: string[] = [];
@@ -106,10 +106,9 @@ export async function recoverPendingVerificationEmails(input: {
           nowMs,
         ),
       };
-      const providerEmail =
-        action === "verification_code"
-          ? await findResendVerificationEmail(providerInput)
-          : await findResendActionEmail(providerInput);
+      const providerEmail = isApplicationEmailLinkAction(action)
+        ? await findResendActionEmail(providerInput)
+        : await findResendVerificationEmail(providerInput);
 
       if (!providerEmail) {
         const retryEvents = await input.admin

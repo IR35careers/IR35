@@ -27,6 +27,19 @@ describe("application attention", () => {
     expect(buildApplicationAttention({ action: "verification_code" }).kind).toBe("email_verification");
   });
 
+  it("keeps employer recovery links subscribed to automatic email recovery", () => {
+    for (const action of ["verification_link", "account_recovery_email"]) {
+      expect(buildApplicationAttention({ action })).toMatchObject({
+        kind: "email_verification",
+        action: "#needs-attention",
+        actionLabel: "Check email status",
+      });
+    }
+    expect(
+      buildApplicationAttention({ action: "account_recovery_email" }).title,
+    ).toBe("Waiting for the employer recovery email");
+  });
+
   it("routes an employer login blocker to the dedicated account step", () => {
     const attention = buildApplicationAttention({ action: "employer_login" });
     expect(attention).toMatchObject({

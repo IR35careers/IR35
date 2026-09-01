@@ -24,6 +24,18 @@ describe("application worker retry policy", () => {
         attempts: APPLICATION_WORKER_MAX_ATTEMPTS - 1,
       }),
     ).toBe(true);
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "verification_link",
+        attempts: 1,
+      }),
+    ).toBe(true);
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "account_recovery_email",
+        attempts: 1,
+      }),
+    ).toBe(true);
   });
 
   it("retries transient portal and source interruptions without an extension", () => {
@@ -42,6 +54,12 @@ describe("application worker retry policy", () => {
     expect(
       shouldAutomaticallyRetryWorkerAttention({
         action: "verification_code",
+        attempts: APPLICATION_WORKER_MAX_ATTEMPTS,
+      }),
+    ).toBe(false);
+    expect(
+      shouldAutomaticallyRetryWorkerAttention({
+        action: "account_recovery_email",
         attempts: APPLICATION_WORKER_MAX_ATTEMPTS,
       }),
     ).toBe(false);

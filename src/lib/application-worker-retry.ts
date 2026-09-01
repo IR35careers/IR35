@@ -1,3 +1,5 @@
+import { isApplicationEmailAction } from "@/lib/application-email-action";
+
 export const APPLICATION_WORKER_MAX_ATTEMPTS = 5;
 
 // A callback error is not an employer rejection and must not be presented as
@@ -12,12 +14,10 @@ export function shouldAutomaticallyRetryWorkerAttention(input: {
   attempts: number;
 }): boolean {
   return (
-    [
-      "verification_code",
-      "browser_continue",
-      "source_access_denied",
-      "runner_timeout",
-    ].includes(input.action ?? "") &&
+    (isApplicationEmailAction(input.action) ||
+      ["browser_continue", "source_access_denied", "runner_timeout"].includes(
+        input.action ?? "",
+      )) &&
     Number.isFinite(input.attempts) &&
     input.attempts >= 1 &&
     input.attempts < APPLICATION_WORKER_MAX_ATTEMPTS

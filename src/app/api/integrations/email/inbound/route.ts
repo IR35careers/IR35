@@ -29,6 +29,7 @@ import { createHash } from "node:crypto";
 import { extractEmailVerificationCode } from "@/lib/email/verification-code";
 import { extractEmailActionLink } from "@/lib/email/action-link";
 import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
+import { isApplicationEmailAction } from "@/lib/application-email-action";
 import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
 
 export const runtime = "nodejs";
@@ -195,11 +196,7 @@ export async function POST(request: Request) {
           action?: unknown;
           attention?: { action?: unknown };
         } | null;
-        return [
-          "verification_code",
-          "verification_link",
-          "account_recovery_email",
-        ].includes(
+        return isApplicationEmailAction(
           String(receipt?.action ?? receipt?.attention?.action ?? ""),
         );
       });
@@ -269,11 +266,7 @@ export async function POST(request: Request) {
       if (
         pendingSubmission?.status === "processing" &&
         pendingSubmission.error_code === "needs_user" &&
-        [
-          "verification_code",
-          "verification_link",
-          "account_recovery_email",
-        ].includes(pendingAction)
+        isApplicationEmailAction(pendingAction)
       ) {
         const resumeAuthorization = createApplicationResumeAuthorization({
           applicationId,

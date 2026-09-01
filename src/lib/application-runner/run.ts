@@ -1189,7 +1189,17 @@ async function handlePortalAccess(
       const recoveryRequestedAfter = new Date(
         Date.now() - 30_000,
       ).toISOString();
-      if (sendRecovery) await clickAndFollow(page, sendRecovery, 800);
+      if (!sendRecovery)
+        return {
+          handled: false,
+          clearSession: authenticationFailed,
+          stop: {
+            message:
+              "The employer displayed account recovery but did not provide a usable control to request the secure link. Your prepared application is saved.",
+            action: "employer_login",
+          },
+        };
+      await clickAndFollow(page, sendRecovery, 800);
       const actionLink = await runtime?.resolveEmailActionLink?.({
         hostname: new URL(page.url()).hostname,
         requestedAfter: recoveryRequestedAfter,

@@ -18,10 +18,15 @@ import type { JobDetail } from "@/lib/job-types";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { getResend, resendInboundConfig } from "@/lib/email/resend";
 import {
+  findResendActionEmail,
   findResendVerificationEmail,
   storeRecoveredVerificationEmail,
 } from "@/lib/email/resend-verification-sync";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
+import {
+  isApplicationEmailAction,
+  isApplicationEmailLinkAction,
+} from "@/lib/application-email-action";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -149,7 +154,8 @@ export async function GET(request: Request): Promise<Response> {
       } | null;
       const questions =
         (packet.screening_answers as ApplicationQuestion[]) ?? [];
-      if (stored?.action === "verification_code") {
+      if (isApplicationEmailAction(stored?.action)) {
+        const emailAction = stored.action;
         const lastProviderCheck = new Date(
           stored.providerSyncCheckedAt ?? "",
         ).getTime();
@@ -175,13 +181,16 @@ export async function GET(request: Request): Promise<Response> {
               new Date(submission.updated_at).getTime() - 15 * 60_000,
             ),
           ).toISOString();
-          const providerEmail = await findResendVerificationEmail({
+          const providerInput = {
             resend: getResend(inbound),
             userId,
             applicationId,
             alias: inbox.alias,
             requestedAfter,
-          });
+          };
+          const providerEmail = isApplicationEmailLinkAction(emailAction)
+            ? await findResendActionEmail(providerInput)
+            : await findResendVerificationEmail(providerInput);
           const checkedAt = new Date().toISOString();
           if (providerEmail) {
             await storeRecoveredVerificationEmail({
@@ -213,9 +222,9 @@ export async function GET(request: Request): Promise<Response> {
                   error_code: null,
                   receipt: {
                     state: "processing",
-                    action: "verification_code",
+                    action: emailAction,
                     message:
-                      "Verification email received. IR35Careers is continuing the application.",
+                      "Employer account email received. IR35Careers is continuing the application.",
                   },
                   updated_at: checkedAt,
                 })
@@ -232,7 +241,7 @@ export async function GET(request: Request): Promise<Response> {
                   application_id: applicationId,
                   event_type: "status_changed",
                   label: "Employer verification email received",
-                  metadata: { action: "verification_code" },
+                  metadata: { action: emailAction },
                   idempotency_key: `submit:${applicationId}:verification-recovered:${providerEmail.providerMessageId}`,
                 },
                 { onConflict: "user_id,idempotency_key" },
@@ -258,7 +267,7 @@ export async function GET(request: Request): Promise<Response> {
               {
                 state: "processing",
                 message:
-                  "Verification email received. IR35Careers is continuing the application.",
+                  "Employer account email received. IR35Careers is continuing the application.",
                 retryAfterSeconds: 10,
               },
               { status: 202, headers: NO_STORE },

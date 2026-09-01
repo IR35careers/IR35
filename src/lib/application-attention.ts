@@ -2,6 +2,7 @@ import type {
   ApplicationAttention,
   ApplicationQuestion,
 } from "@/lib/workspace/types";
+import { isApplicationEmailAction } from "@/lib/application-email-action";
 
 function clean(value: string | undefined, max = 500): string {
   return (value ?? "")
@@ -51,13 +52,16 @@ export function buildApplicationAttention(input: {
       questionIds,
     };
   }
-  if (action === "verification_code") {
+  if (isApplicationEmailAction(action)) {
     return {
       kind: "email_verification",
-      title: "Email verification is required",
+      title:
+        action === "account_recovery_email"
+          ? "Waiting for the employer recovery email"
+          : "Waiting for employer email verification",
       message,
       action: "#needs-attention",
-      actionLabel: "Check verification",
+      actionLabel: "Check email status",
       questionIds,
     };
   }

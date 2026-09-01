@@ -1471,7 +1471,10 @@ async function publicRequestGuard(route, approvedHosts, sensitiveMode, onBlocked
   }
 }
 async function uploadApprovedResumeForKnownPortal(input) {
-  if (input.ats.kind !== "totaljobs" || !input.resume) return false;
+  if (!input.resume) return false;
+  const wpJobBoardUpload = input.page.locator(".wpjb-upload").first();
+  const hasWpJobBoardUpload = await wpJobBoardUpload.count().then((count) => count > 0).catch(() => false);
+  if (input.ats.kind !== "totaljobs" && !hasWpJobBoardUpload) return false;
   const payload = {
     name: input.resume.name,
     mimeType: input.resume.mimeType,
@@ -1485,6 +1488,24 @@ async function uploadApprovedResumeForKnownPortal(input) {
         (node) => Boolean(node.files?.length)
       )
     ).catch(() => false);
+    if (attached && hasWpJobBoardUpload) {
+      const deadline = Date.now() + 25e3;
+      while (Date.now() < deadline) {
+        const accepted = await wpJobBoardUpload.evaluate((node) => {
+          const uploads = node.querySelector(".wpjb-uploads");
+          if (!uploads) return false;
+          const hidden = uploads.querySelector(
+            'input[type="hidden"][name], input[name*="file" i], input[name*="upload" i]'
+          );
+          const text = (uploads.textContent || "").trim();
+          const busy = /uploading|processing|please wait/i.test(text);
+          return Boolean(hidden || text && !busy);
+        }).catch(() => false);
+        if (accepted) return true;
+        await input.page.waitForTimeout(350);
+      }
+      return true;
+    }
     if (attached) return true;
   }
   const chooseFile = await actionLocator(
@@ -2071,7 +2092,16 @@ async function handlePortalAccess(page, payload, runtime, ats, requestedAfter, a
       const recoveryRequestedAfter = new Date(
         Date.now() - 3e4
       ).toISOString();
-      if (sendRecovery) await clickAndFollow(page, sendRecovery, 800);
+      if (!sendRecovery)
+        return {
+          handled: false,
+          clearSession: authenticationFailed,
+          stop: {
+            message: "The employer displayed account recovery but did not provide a usable control to request the secure link. Your prepared application is saved.",
+            action: "employer_login"
+          }
+        };
+      await clickAndFollow(page, sendRecovery, 800);
       const actionLink = await runtime?.resolveEmailActionLink?.({
         hostname: new URL(page.url()).hostname,
         requestedAfter: recoveryRequestedAfter,
@@ -2225,7 +2255,9 @@ async function snapshotFields(page, step, atsKind) {
         label,
         name: element.getAttribute("name") || "",
         placeholder: element.getAttribute("placeholder") || "",
-        required: element.hasAttribute("required") || element.getAttribute("aria-required") === "true",
+        required: element.hasAttribute("required") || element.getAttribute("aria-required") === "true" || Boolean(
+          element.closest('[class*="element-name-"]')?.querySelector(".wpjb-required")
+        ),
         options,
         optionValue: element instanceof HTMLInputElement ? element.value : "",
         optionLabel: ownLabel
@@ -2830,7 +2862,8 @@ async function runNativeApplication(payload, runtime) {
           "The employer did not confirm submission. Review the highlighted fields before another attempt.",
           fields,
           "validation_failed",
-          currentDestination(page, startUrl.toString())
+          currentDestination(page, startUrl.toString()),
+          await pageDiagnostic(page, blockedHosts, networkFailures)
         );
       }
     }

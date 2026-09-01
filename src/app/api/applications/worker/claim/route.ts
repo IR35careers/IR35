@@ -133,9 +133,28 @@ export async function POST(request: Request): Promise<Response> {
       p_worker_id: parsed.workerId,
     });
     if (claimResult.error) throw new Error(claimResult.error.message);
-    const task = (Array.isArray(claimResult.data)
+    let task = (Array.isArray(claimResult.data)
       ? claimResult.data[0]
       : claimResult.data) as ApplicationWorkerTaskRow | null;
+    // An idle worker used to return here before checking paused email states.
+    // Recover those states, then claim once more so a newly queued recovery can
+    // continue in this same poll instead of waiting indefinitely for a busy
+    // heartbeat that may never happen.
+    if (!task) {
+      await recoverPendingVerificationEmails({ admin }).catch((error) =>
+        console.warn("worker_verification_recovery_failed", {
+          reason:
+            error instanceof Error ? error.message.slice(0, 240) : "unknown",
+        }),
+      );
+      const recoveredClaim = await admin.rpc("claim_application_worker_task", {
+        p_worker_id: parsed.workerId,
+      });
+      if (recoveredClaim.error) throw new Error(recoveredClaim.error.message);
+      task = (Array.isArray(recoveredClaim.data)
+        ? recoveredClaim.data[0]
+        : recoveredClaim.data) as ApplicationWorkerTaskRow | null;
+    }
     if (!task)
       return Response.json({ assignment: null }, { headers: HEADERS });
 

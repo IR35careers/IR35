@@ -6,6 +6,7 @@ import {
   submissionLockAgeMs,
   submissionRetryAfterSeconds,
 } from "@/lib/application-submission-state";
+import { buildApplicationAttention } from "@/lib/application-attention";
 
 describe("application submission processing locks", () => {
   const now = Date.parse("2026-08-21T18:30:00.000Z");
@@ -53,6 +54,20 @@ describe("application submission client state", () => {
         "needs_review",
         [{ label: "Application needs your answer" }],
         { kind: "email_verification" },
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps a recovery-link application subscribed after the worker pauses", () => {
+    const attention = buildApplicationAttention({
+      action: "account_recovery_email",
+      message: "Waiting for the employer recovery link.",
+    });
+    expect(
+      hasActiveSubmission(
+        "needs_review",
+        [{ label: "Application needs your answer" }],
+        attention,
       ),
     ).toBe(true);
   });
