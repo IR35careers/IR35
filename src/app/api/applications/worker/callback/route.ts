@@ -23,6 +23,7 @@ import {
 import {
   applicationWorkerCallbackErrorStatus,
   applicationWorkerRetryDelayMs,
+  applicationWorkerRetryProgress,
   shouldAutomaticallyRetryWorkerAttention,
 } from "@/lib/application-worker-retry";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
@@ -260,6 +261,7 @@ export async function POST(request: Request): Promise<Response> {
         })
       ) {
         const now = callback.completedAt;
+        const retryProgress = applicationWorkerRetryProgress(action);
         const availableAt = new Date(
           new Date(now).getTime() +
             applicationWorkerRetryDelayMs(workerAttempts),
@@ -273,8 +275,7 @@ export async function POST(request: Request): Promise<Response> {
               error_code: null,
               receipt: {
                 state: "processing",
-                message:
-                  "Waiting for the employer verification email. IR35Careers will check again automatically.",
+                message: retryProgress.message,
                 action,
                 destination: receipt.destination ?? null,
               },
@@ -287,8 +288,8 @@ export async function POST(request: Request): Promise<Response> {
               user_id: callback.userId,
               application_id: callback.applicationId,
               event_type: "status_changed",
-              label: "Waiting for employer verification email",
-              idempotency_key: `submit:${callback.applicationId}:verification-wait:${workerAttempts}`,
+              label: retryProgress.eventLabel,
+              idempotency_key: `submit:${callback.applicationId}:worker-retry:${workerAttempts}`,
               metadata: {
                 action,
                 nextAttemptAt: availableAt,

@@ -13,6 +13,12 @@ export const SUBMISSION_LIFECYCLE_LABELS = [
 type SubmissionLifecycleEvent = { label: string };
 type SubmissionAttention = { kind?: string } | null | undefined;
 
+export function isAutomaticWorkerTaskActive(
+  status: string | null | undefined,
+): boolean {
+  return status === "queued" || status === "running";
+}
+
 export function latestSubmissionLifecycleEvent<T extends SubmissionLifecycleEvent>(events: T[]): T | undefined {
   return [...events].reverse().find((event) => SUBMISSION_LIFECYCLE_LABELS.includes(event.label as typeof SUBMISSION_LIFECYCLE_LABELS[number]));
 }

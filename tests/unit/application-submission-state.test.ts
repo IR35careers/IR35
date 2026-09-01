@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   hasActiveSubmission,
+  isAutomaticWorkerTaskActive,
   isStaleSubmissionLock,
   latestSubmissionLifecycleEvent,
   submissionLockAgeMs,
@@ -26,6 +27,13 @@ describe("application submission processing locks", () => {
   it("treats missing or invalid timestamps as stale", () => {
     expect(submissionLockAgeMs(null, now)).toBe(Number.POSITIVE_INFINITY);
     expect(isStaleSubmissionLock("not-a-date", now)).toBe(true);
+  });
+
+  it("keeps queued and running worker tasks in automatic processing", () => {
+    expect(isAutomaticWorkerTaskActive("queued")).toBe(true);
+    expect(isAutomaticWorkerTaskActive("running")).toBe(true);
+    expect(isAutomaticWorkerTaskActive("needs_user")).toBe(false);
+    expect(isAutomaticWorkerTaskActive("failed")).toBe(false);
   });
 });
 

@@ -7,6 +7,7 @@ import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
+  isAutomaticWorkerTaskActive,
   isStaleSubmissionLock,
   submissionRetryAfterSeconds,
 } from "@/lib/application-submission-state";
@@ -91,6 +92,7 @@ export async function GET(request: Request): Promise<Response> {
     const [
       { data: submission, error: submissionError },
       { data: packet, error: packetError },
+      { data: workerTask, error: workerTaskError },
     ] = await Promise.all([
       admin
         .from("application_submissions")
@@ -106,9 +108,21 @@ export async function GET(request: Request): Promise<Response> {
         .eq("id", applicationId)
         .eq("user_id", userId)
         .maybeSingle(),
+      admin
+        .from("application_worker_tasks")
+        .select("status, available_at, updated_at")
+        .eq("application_id", applicationId)
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
-    if (submissionError || packetError)
-      throw new Error(submissionError?.message || packetError?.message);
+    if (submissionError || packetError || workerTaskError)
+      throw new Error(
+        submissionError?.message ||
+          packetError?.message ||
+          workerTaskError?.message,
+      );
     if (!submission || !packet)
       return Response.json(
         { error: "Application progress was not found." },
@@ -119,6 +133,74 @@ export async function GET(request: Request): Promise<Response> {
         { state: "submitted", receipt: submission.receipt },
         { headers: NO_STORE },
       );
+    if (isAutomaticWorkerTaskActive(workerTask?.status)) {
+      const stored = submission.receipt as {
+        state?: string;
+        message?: string;
+        action?: string;
+        destination?: string | null;
+      } | null;
+      const message =
+        workerTask?.status === "running"
+          ? "IR35Careers is completing the approved application on the employer portal."
+          : "The approved application is queued for its next automatic employer-portal attempt.";
+      if (
+        submission.error_code === "needs_user" ||
+        stored?.state === "needs_user"
+      ) {
+        const now = new Date().toISOString();
+        const [submissionUpdate, packetUpdate] = await Promise.all([
+          admin
+            .from("application_submissions")
+            .update({
+              status: "processing",
+              error_code: null,
+              receipt: {
+                state: "processing",
+                message,
+                action: stored?.action ?? null,
+                destination: stored?.destination ?? null,
+              },
+              updated_at: now,
+            })
+            .eq("application_id", applicationId)
+            .eq("user_id", userId),
+          admin
+            .from("application_packets")
+            .update({ status: "ready", updated_at: now })
+            .eq("id", applicationId)
+            .eq("user_id", userId),
+        ]);
+        if (submissionUpdate.error || packetUpdate.error)
+          throw new Error(
+            submissionUpdate.error?.message || packetUpdate.error?.message,
+          );
+      }
+      if (
+        workerTask?.status === "queued" &&
+        new Date(workerTask.available_at ?? "").getTime() <= Date.now()
+      )
+        after(() =>
+          kickApplicationWorker({
+            applicationId,
+            reason: "queued_status_refresh",
+          }).catch((error) =>
+            console.warn("queued_status_worker_kick_failed", {
+              applicationId,
+              reason:
+                error instanceof Error ? error.message.slice(0, 240) : "unknown",
+            }),
+          ),
+        );
+      return Response.json(
+        {
+          state: "processing",
+          message,
+          retryAfterSeconds: 10,
+        },
+        { status: 202, headers: NO_STORE },
+      );
+    }
     if (submission.status === "failed") {
       const stored = submission.receipt as {
         message?: string;

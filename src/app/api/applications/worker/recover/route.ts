@@ -17,6 +17,7 @@ const HEADERS = {
 };
 
 const RECOVERABLE_ACTIONS = new Set([
+  "browser_continue",
   "unsupported_form",
   "runner_timeout",
   "employer_login",

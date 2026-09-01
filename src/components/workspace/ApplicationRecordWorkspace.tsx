@@ -392,6 +392,35 @@ export function ApplicationRecordWorkspace({
                           {application.attention.actionLabel}
                         </button>
                       )}
+                    {application.attention.questionIds.length === 0 &&
+                      application.attention.kind === "security_check" && (
+                        <a
+                          href={job.apply_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                        >
+                          {application.attention.actionLabel}
+                          <ExternalLink size={15} />
+                        </a>
+                      )}
+                    {application.attention.questionIds.length === 0 &&
+                      (application.attention.kind === "employer_form" ||
+                        application.attention.kind === "retry") && (
+                        <button
+                          type="button"
+                          onClick={() => void onSubmit()}
+                          disabled={busy !== null || submissionInProgress}
+                          className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {busy === "submit" || submissionInProgress ? (
+                            <Loader2 className="animate-spin" size={16} />
+                          ) : (
+                            <RefreshCcw size={15} />
+                          )}
+                          {application.attention.actionLabel}
+                        </button>
+                      )}
                   </div>
                 </div>
               )}

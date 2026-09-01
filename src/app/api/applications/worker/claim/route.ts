@@ -46,6 +46,9 @@ function validClaim(value: unknown): value is ApplicationWorkerClaimRequest {
       typeof claim.startedAt === "string" &&
       Number.isFinite(new Date(claim.startedAt).getTime()) &&
       typeof claim.acceptTask === "boolean" &&
+      (claim.preferredApplicationId === undefined ||
+        (typeof claim.preferredApplicationId === "string" &&
+          /^[0-9a-f-]{36}$/i.test(claim.preferredApplicationId))) &&
       Number.isInteger(claim.active) &&
       Number(claim.active) >= 0 &&
       Number(claim.active) <= 20 &&
@@ -80,6 +83,57 @@ function preflight(
   action?: string,
 ): ApplicationWorkerAssignment {
   return { task, preflightError: message, preflightAction: action };
+}
+
+async function claimWorkerTask(input: {
+  admin: ReturnType<typeof getSupabaseAdmin>;
+  workerId: string;
+  preferredApplicationId?: string;
+}): Promise<ApplicationWorkerTaskRow | null> {
+  if (!input.preferredApplicationId) {
+    const claimResult = await input.admin.rpc("claim_application_worker_task", {
+      p_worker_id: input.workerId,
+    });
+    if (claimResult.error) throw new Error(claimResult.error.message);
+    return (Array.isArray(claimResult.data)
+      ? claimResult.data[0]
+      : claimResult.data) as ApplicationWorkerTaskRow | null;
+  }
+
+  // Cloud wake-ups are application-specific. Claiming an unrelated queued
+  // packet here makes a user's retry appear to do nothing and can leave the
+  // requested application stranded behind other work.
+  const now = new Date().toISOString();
+  const queuedResult = await input.admin
+    .from("application_worker_tasks")
+    .select("*")
+    .eq("application_id", input.preferredApplicationId)
+    .eq("status", "queued")
+    .lte("available_at", now)
+    .lt("attempts", 5)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (queuedResult.error) throw new Error(queuedResult.error.message);
+  if (!queuedResult.data) return null;
+
+  const attempts = Number(queuedResult.data.attempts ?? 0);
+  const claimedResult = await input.admin
+    .from("application_worker_tasks")
+    .update({
+      status: "running",
+      attempts: attempts + 1,
+      lease_owner: input.workerId.slice(0, 120),
+      lease_expires_at: new Date(Date.now() + 6 * 60_000).toISOString(),
+      updated_at: now,
+    })
+    .eq("id", queuedResult.data.id)
+    .eq("status", "queued")
+    .eq("attempts", attempts)
+    .select("*")
+    .maybeSingle();
+  if (claimedResult.error) throw new Error(claimedResult.error.message);
+  return claimedResult.data as ApplicationWorkerTaskRow | null;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -129,13 +183,11 @@ export async function POST(request: Request): Promise<Response> {
       ]);
       return Response.json({ assignment: null }, { headers: HEADERS });
     }
-    const claimResult = await admin.rpc("claim_application_worker_task", {
-      p_worker_id: parsed.workerId,
+    let task = await claimWorkerTask({
+      admin,
+      workerId: parsed.workerId,
+      preferredApplicationId: parsed.preferredApplicationId,
     });
-    if (claimResult.error) throw new Error(claimResult.error.message);
-    let task = (Array.isArray(claimResult.data)
-      ? claimResult.data[0]
-      : claimResult.data) as ApplicationWorkerTaskRow | null;
     // An idle worker used to return here before checking paused email states.
     // Recover those states, then claim once more so a newly queued recovery can
     // continue in this same poll instead of waiting indefinitely for a busy
@@ -147,13 +199,11 @@ export async function POST(request: Request): Promise<Response> {
             error instanceof Error ? error.message.slice(0, 240) : "unknown",
         }),
       );
-      const recoveredClaim = await admin.rpc("claim_application_worker_task", {
-        p_worker_id: parsed.workerId,
+      task = await claimWorkerTask({
+        admin,
+        workerId: parsed.workerId,
+        preferredApplicationId: parsed.preferredApplicationId,
       });
-      if (recoveredClaim.error) throw new Error(recoveredClaim.error.message);
-      task = (Array.isArray(recoveredClaim.data)
-        ? recoveredClaim.data[0]
-        : recoveredClaim.data) as ApplicationWorkerTaskRow | null;
     }
     if (!task)
       return Response.json({ assignment: null }, { headers: HEADERS });

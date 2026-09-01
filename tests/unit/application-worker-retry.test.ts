@@ -3,6 +3,7 @@ import {
   APPLICATION_WORKER_MAX_ATTEMPTS,
   applicationWorkerCallbackErrorStatus,
   applicationWorkerRetryDelayMs,
+  applicationWorkerRetryProgress,
   shouldAutomaticallyRetryWorkerAttention,
 } from "@/lib/application-worker-retry";
 
@@ -84,5 +85,16 @@ describe("application worker retry policy", () => {
     expect(applicationWorkerRetryDelayMs(1)).toBe(60_000);
     expect(applicationWorkerRetryDelayMs(2)).toBe(120_000);
     expect(applicationWorkerRetryDelayMs(10)).toBe(240_000);
+  });
+
+  it("describes portal retries as automatic work rather than email waiting", () => {
+    expect(applicationWorkerRetryProgress("browser_continue")).toEqual({
+      message:
+        "IR35Careers is retrying the approved employer form automatically. No action is needed while it remains queued.",
+      eventLabel: "Employer form queued for automatic retry",
+    });
+    expect(applicationWorkerRetryProgress("verification_link").message).toContain(
+      "employer account email",
+    );
   });
 });

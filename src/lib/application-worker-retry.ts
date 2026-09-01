@@ -28,3 +28,26 @@ export function applicationWorkerRetryDelayMs(attempts: number): number {
   const safeAttempt = Math.max(1, Math.min(Math.floor(attempts), 4));
   return safeAttempt * 60_000;
 }
+
+export function applicationWorkerRetryProgress(action?: string): {
+  message: string;
+  eventLabel: string;
+} {
+  if (isApplicationEmailAction(action))
+    return {
+      message:
+        "Waiting for the employer account email. IR35Careers will check again automatically.",
+      eventLabel: "Waiting for employer account email",
+    };
+  if (action === "source_access_denied")
+    return {
+      message:
+        "IR35Careers is retrying the approved application through the employer's available source.",
+      eventLabel: "Employer application source queued for retry",
+    };
+  return {
+    message:
+      "IR35Careers is retrying the approved employer form automatically. No action is needed while it remains queued.",
+    eventLabel: "Employer form queued for automatic retry",
+  };
+}

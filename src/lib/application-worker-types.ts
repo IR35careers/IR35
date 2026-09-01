@@ -42,6 +42,7 @@ export interface ApplicationWorkerClaimRequest {
   workerId: string;
   startedAt: string;
   acceptTask: boolean;
+  preferredApplicationId?: string;
   active: number;
   concurrency: number;
   completed: number;

@@ -62,6 +62,7 @@ export async function POST(request: Request): Promise<Response> {
         workerId,
         startedAt,
         acceptTask: true,
+        preferredApplicationId: parsed.applicationId || undefined,
         active: 0,
         concurrency: 1,
         completed: 0,
