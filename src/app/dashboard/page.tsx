@@ -29,6 +29,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { formatRate, type JobListing } from "@/lib/job-types";
+import { CompanyLogo } from "@/components/ui/company-logo";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 import { useWorkspaceCloudSync, useWorkspaceState } from "@/lib/workspace/store";
 import { AppNav } from "@/components/AppNav";
@@ -331,7 +332,7 @@ export default function DashboardPage() {
                     <li key={job.id}>
                       <Link href={`/jobs/${job.id}`} className={`group flex h-full min-h-[178px] flex-col rounded-2xl border border-white p-4 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.12)] transition duration-300 hover:-translate-y-0.5 hover:shadow-lg ${cardTones[index % cardTones.length]}`}>
                         <div className="flex items-start justify-between gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-bold text-slate-700 shadow-sm">{companyName.charAt(0).toUpperCase()}</span>
+                          <CompanyLogo companyName={companyName} className="h-10 w-10 rounded-xl" />
                           <ScoreRing score={score} />
                         </div>
                         <div className="mt-4 min-w-0 flex-1">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { IR35Badge } from "@/components/ui/ir35-badge";
+import { CompanyLogo } from "@/components/ui/company-logo";
 import { buttonClassName } from "@/components/ui/button";
 import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 import { selectFeaturedJobs } from "@/lib/featured-jobs";
@@ -91,9 +92,7 @@ export async function FeaturedJobs() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-950 to-emerald-700 text-xs font-black text-white shadow-sm" aria-hidden="true">
-                    {(job.company_name || job.title).slice(0, 1).toUpperCase()}
-                  </span>
+                  <CompanyLogo companyName={job.company_name || job.title} className="h-10 w-10 rounded-xl" imageClassName="p-1.5" />
                   <div className="min-w-0">
                     <p className="truncate text-[15px] font-semibold text-slate-950">{job.title}</p>
                     <p className="mt-0.5 truncate text-xs text-slate-500">{job.company_name} · {job.location}</p>

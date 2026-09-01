@@ -10,6 +10,7 @@ import { JobMatchPanel } from "@/components/JobMatchPanel";
 import { PublicHeader } from "@/components/PublicHeader";
 import { WorkspaceAwareFooter } from "@/components/WorkspaceAwareFooter";
 import { IR35Badge } from "@/components/ui/ir35-badge";
+import { CompanyLogo } from "@/components/ui/company-logo";
 import { formatPosted, formatRate, type JobDetail, type JobListing } from "@/lib/job-types";
 import { getPublicJob, getSimilarPublicJobs } from "@/lib/public-jobs";
 
@@ -84,7 +85,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-200"><Sparkles size={14} /> Contract opportunity</p>
               <h1 className="mt-4 max-w-5xl text-[clamp(2rem,4vw,3.35rem)] font-black leading-[1.02] tracking-[-0.045em] text-white">{job.title}</h1>
-              <p className="mt-3 text-base font-semibold text-slate-200 sm:text-lg">{job.company_name}</p>
+              <div className="mt-4 flex items-center gap-3"><CompanyLogo companyName={job.company_name} className="h-12 w-12 rounded-2xl" /><p className="text-base font-semibold text-slate-200 sm:text-lg">{job.company_name}</p></div>
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <IR35Badge status={job.ir35_status} />
                 {remoteLabel && (
