@@ -19,6 +19,25 @@ export function isAutomaticWorkerTaskActive(
   return status === "queued" || status === "running";
 }
 
+export function recoveredWorkerTaskStatus(input: {
+  status: string | null | undefined;
+  leaseExpiresAt?: string | null;
+  attempts?: number | null;
+  nowMs?: number;
+  maximumAttempts?: number;
+}): string | null | undefined {
+  if (input.status !== "running") return input.status;
+  const leaseExpiresAt = new Date(input.leaseExpiresAt ?? "").getTime();
+  if (
+    !Number.isFinite(leaseExpiresAt) ||
+    leaseExpiresAt > (input.nowMs ?? Date.now())
+  )
+    return input.status;
+  return Number(input.attempts ?? 0) < (input.maximumAttempts ?? 5)
+    ? "queued"
+    : "failed";
+}
+
 export function latestSubmissionLifecycleEvent<T extends SubmissionLifecycleEvent>(events: T[]): T | undefined {
   return [...events].reverse().find((event) => SUBMISSION_LIFECYCLE_LABELS.includes(event.label as typeof SUBMISSION_LIFECYCLE_LABELS[number]));
 }

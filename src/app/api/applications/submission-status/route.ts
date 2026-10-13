@@ -9,8 +9,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   isAutomaticWorkerTaskActive,
   isStaleSubmissionLock,
+  recoveredWorkerTaskStatus,
   submissionRetryAfterSeconds,
 } from "@/lib/application-submission-state";
+import { APPLICATION_WORKER_MAX_ATTEMPTS } from "@/lib/application-worker-retry";
 import type {
   ApplicationQuestion,
   ApplicationReceipt,
@@ -110,7 +112,7 @@ export async function GET(request: Request): Promise<Response> {
         .maybeSingle(),
       admin
         .from("application_worker_tasks")
-        .select("status, available_at, updated_at")
+        .select("id, status, attempts, available_at, lease_expires_at, updated_at")
         .eq("application_id", applicationId)
         .eq("user_id", userId)
         .order("updated_at", { ascending: false })
@@ -128,12 +130,46 @@ export async function GET(request: Request): Promise<Response> {
         { error: "Application progress was not found." },
         { status: 404, headers: NO_STORE },
       );
+    let effectiveWorkerTask = workerTask;
+    const recoveredStatus = recoveredWorkerTaskStatus({
+      status: workerTask?.status,
+      leaseExpiresAt: workerTask?.lease_expires_at,
+      attempts: workerTask?.attempts,
+      maximumAttempts: APPLICATION_WORKER_MAX_ATTEMPTS,
+    });
+    if (workerTask?.id && recoveredStatus !== workerTask.status) {
+      const now = new Date().toISOString();
+      const exhausted = recoveredStatus === "failed";
+      const recoveryResult = await admin
+        .from("application_worker_tasks")
+        .update({
+          status: recoveredStatus,
+          available_at: exhausted ? workerTask.available_at : now,
+          lease_owner: null,
+          lease_expires_at: null,
+          last_error: exhausted
+            ? "The browser worker stopped before confirmation after the final automatic attempt."
+            : "The previous browser worker stopped before returning a result.",
+          completed_at: exhausted ? now : null,
+          updated_at: now,
+        })
+        .eq("id", workerTask.id)
+        .eq("status", "running");
+      if (recoveryResult.error) throw new Error(recoveryResult.error.message);
+      effectiveWorkerTask = {
+        ...workerTask,
+        status: recoveredStatus,
+        available_at: exhausted ? workerTask.available_at : now,
+        lease_expires_at: null,
+        updated_at: now,
+      };
+    }
     if (submission.status === "succeeded" && submission.receipt)
       return Response.json(
         { state: "submitted", receipt: submission.receipt },
         { headers: NO_STORE },
       );
-    if (isAutomaticWorkerTaskActive(workerTask?.status)) {
+    if (isAutomaticWorkerTaskActive(effectiveWorkerTask?.status)) {
       const stored = submission.receipt as {
         state?: string;
         message?: string;
@@ -141,7 +177,7 @@ export async function GET(request: Request): Promise<Response> {
         destination?: string | null;
       } | null;
       const message =
-        workerTask?.status === "running"
+        effectiveWorkerTask?.status === "running"
           ? "IR35Careers is completing the approved application on the employer portal."
           : "The approved application is queued for its next automatic employer-portal attempt.";
       if (
@@ -177,8 +213,8 @@ export async function GET(request: Request): Promise<Response> {
           );
       }
       if (
-        workerTask?.status === "queued" &&
-        new Date(workerTask.available_at ?? "").getTime() <= Date.now()
+        effectiveWorkerTask?.status === "queued" &&
+        new Date(effectiveWorkerTask.available_at ?? "").getTime() <= Date.now()
       )
         after(() =>
           kickApplicationWorker({

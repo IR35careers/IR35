@@ -112,6 +112,8 @@ export function ApplicationRecordWorkspace({
   approvalsComplete,
   onUpdate,
   onSubmit,
+  onContinueInBrowser,
+  onConfirmManualSubmission,
   onRefreshTailoring,
   onResumeBlur,
 }: {
@@ -129,6 +131,8 @@ export function ApplicationRecordWorkspace({
   approvalsComplete: boolean;
   onUpdate: (updater: (current: ApplicationRecord) => ApplicationRecord) => void;
   onSubmit: () => Promise<void>;
+  onContinueInBrowser: () => Promise<void>;
+  onConfirmManualSubmission: () => Promise<void>;
   onRefreshTailoring: () => Promise<void>;
   onResumeBlur: () => void;
 }) {
@@ -394,32 +398,94 @@ export function ApplicationRecordWorkspace({
                       )}
                     {application.attention.questionIds.length === 0 &&
                       application.attention.kind === "security_check" && (
-                        <a
-                          href={job.apply_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
-                        >
-                          {application.attention.actionLabel}
-                          <ExternalLink size={15} />
-                        </a>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void onContinueInBrowser()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                          >
+                            {application.attention.actionLabel}
+                            <ExternalLink size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void onConfirmManualSubmission()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-50"
+                          >
+                            <CheckCircle2 size={15} /> I submitted it
+                          </button>
+                        </div>
+                      )}
+                    {application.attention.questionIds.length === 0 &&
+                      application.attention.kind === "email_verification" && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void onSubmit()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {busy === "submit" || submissionInProgress ? (
+                              <Loader2 className="animate-spin" size={16} />
+                            ) : (
+                              <RefreshCcw size={15} />
+                            )}
+                            Check and retry automatically
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void onContinueInBrowser()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Continue on employer page <ExternalLink size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void onConfirmManualSubmission()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <CheckCircle2 size={15} /> I submitted it
+                          </button>
+                        </div>
                       )}
                     {application.attention.questionIds.length === 0 &&
                       (application.attention.kind === "employer_form" ||
                         application.attention.kind === "retry") && (
-                        <button
-                          type="button"
-                          onClick={() => void onSubmit()}
-                          disabled={busy !== null || submissionInProgress}
-                          className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {busy === "submit" || submissionInProgress ? (
-                            <Loader2 className="animate-spin" size={16} />
-                          ) : (
-                            <RefreshCcw size={15} />
-                          )}
-                          {application.attention.actionLabel}
-                        </button>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void onContinueInBrowser()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Continue on employer page <ExternalLink size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void onSubmit()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {busy === "submit" || submissionInProgress ? (
+                              <Loader2 className="animate-spin" size={16} />
+                            ) : (
+                              <RefreshCcw size={15} />
+                            )}
+                            Retry automatically
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void onConfirmManualSubmission()}
+                            disabled={busy !== null || submissionInProgress}
+                            className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <CheckCircle2 size={15} /> I submitted it
+                          </button>
+                        </div>
                       )}
                   </div>
                 </div>
@@ -466,14 +532,14 @@ export function ApplicationRecordWorkspace({
                     </ol>
 
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <a
-                        href={job.apply_url}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => void onContinueInBrowser()}
+                        disabled={busy !== null || submissionInProgress}
                         className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
                       >
                         Open employer page <ExternalLink size={15} />
-                      </a>
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -499,6 +565,14 @@ export function ApplicationRecordWorkspace({
                           <RefreshCcw size={15} />
                         )}
                         Retry after account access
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void onConfirmManualSubmission()}
+                        disabled={busy !== null || submissionInProgress}
+                        className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 text-sm font-bold text-emerald-900 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <CheckCircle2 size={15} /> I submitted it on the employer page
                       </button>
                     </div>
 

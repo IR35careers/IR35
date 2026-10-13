@@ -14,11 +14,12 @@ import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candida
 import { applicationInboxAlias, ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { recoverPendingVerificationEmails } from "@/lib/email/recover-pending-verifications";
 import { recoverDiscoverySourceApplications } from "@/lib/application-worker-source-recovery";
+import { APPLICATION_WORKER_MAX_ATTEMPTS } from "@/lib/application-worker-retry";
 import type { JobDetail } from "@/lib/job-types";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
-  evaluateProfileReadiness,
+  evaluateApplicationReadiness,
   profileReadinessBlocker,
 } from "@/lib/workspace/profile-readiness";
 import type {
@@ -104,13 +105,47 @@ async function claimWorkerTask(input: {
   // packet here makes a user's retry appear to do nothing and can leave the
   // requested application stranded behind other work.
   const now = new Date().toISOString();
+  const expiredLease = await input.admin
+    .from("application_worker_tasks")
+    .update({
+      status: "queued",
+      available_at: now,
+      lease_owner: null,
+      lease_expires_at: null,
+      last_error:
+        "The previous browser worker stopped before returning a result.",
+      updated_at: now,
+    })
+    .eq("application_id", input.preferredApplicationId)
+    .eq("status", "running")
+    .lt("lease_expires_at", now)
+    .lt("attempts", APPLICATION_WORKER_MAX_ATTEMPTS);
+  if (expiredLease.error) throw new Error(expiredLease.error.message);
+
+  const exhaustedLease = await input.admin
+    .from("application_worker_tasks")
+    .update({
+      status: "failed",
+      lease_owner: null,
+      lease_expires_at: null,
+      last_error:
+        "The browser worker stopped before confirmation after the final automatic attempt.",
+      completed_at: now,
+      updated_at: now,
+    })
+    .eq("application_id", input.preferredApplicationId)
+    .eq("status", "running")
+    .lt("lease_expires_at", now)
+    .gte("attempts", APPLICATION_WORKER_MAX_ATTEMPTS);
+  if (exhaustedLease.error) throw new Error(exhaustedLease.error.message);
+
   const queuedResult = await input.admin
     .from("application_worker_tasks")
     .select("*")
     .eq("application_id", input.preferredApplicationId)
     .eq("status", "queued")
     .lte("available_at", now)
-    .lt("attempts", 5)
+    .lt("attempts", APPLICATION_WORKER_MAX_ATTEMPTS)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -250,7 +285,22 @@ export async function POST(request: Request): Promise<Response> {
     const resumeText = normaliseResumeText(
       String(packet.tailored_cv_text || packet.source_cv_text || ""),
     );
-    const readiness = evaluateProfileReadiness(candidate, resumeText);
+    const candidateName = resolveCandidateName(
+      candidate.fullName || "",
+      resumeText,
+    );
+    const readiness = evaluateApplicationReadiness(
+      {
+        ...candidate,
+        fullName: candidateName || candidate.fullName,
+        email:
+          candidate.email ||
+          candidate.forwardingEmail ||
+          authResult.data.user?.email ||
+          "",
+      },
+      resumeText,
+    );
     if (!readiness.complete) {
       const blocker = profileReadinessBlocker(readiness);
       return Response.json(
@@ -264,10 +314,6 @@ export async function POST(request: Request): Promise<Response> {
         { headers: HEADERS },
       );
     }
-    const candidateName = resolveCandidateName(
-      candidate.fullName || "",
-      resumeText,
-    );
     if (!candidateName)
       return Response.json(
         {

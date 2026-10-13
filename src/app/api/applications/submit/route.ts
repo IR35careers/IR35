@@ -41,7 +41,7 @@ import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { applicationSubmissionFailure } from "@/lib/application-submission-failure";
 import {
-  evaluateProfileReadiness,
+  evaluateApplicationReadiness,
   profileReadinessBlocker,
 } from "@/lib/workspace/profile-readiness";
 import {
@@ -325,7 +325,22 @@ export async function POST(request: Request): Promise<Response> {
     const resumeText = normaliseResumeText(
       String(packet.tailored_cv_text || packet.source_cv_text || ""),
     );
-    const readiness = evaluateProfileReadiness(candidate, resumeText);
+    const candidateName = resolveCandidateName(
+      candidate.fullName || "",
+      resumeText,
+    );
+    const readiness = evaluateApplicationReadiness(
+      {
+        ...candidate,
+        fullName: candidateName || candidate.fullName,
+        email:
+          candidate.email ||
+          candidate.forwardingEmail ||
+          authUser.email ||
+          "",
+      },
+      resumeText,
+    );
     if (!readiness.complete) {
       const blocker = profileReadinessBlocker(readiness);
       const message = blocker?.message || "Complete your Application Profile.";
@@ -344,10 +359,6 @@ export async function POST(request: Request): Promise<Response> {
         { status: 422, headers: NO_STORE },
       );
     }
-    const candidateName = resolveCandidateName(
-      candidate.fullName || "",
-      resumeText,
-    );
     if (!candidateName)
       return Response.json(
         {

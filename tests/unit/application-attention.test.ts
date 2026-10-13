@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import {
+  evaluateApplicationReadiness,
   evaluateProfileReadiness,
   profileReadinessDestination,
   profileReadinessBlocker,
 } from "@/lib/workspace/profile-readiness";
-import { createSeedWorkspaceState } from "@/lib/workspace/seed";
+import {
+  createSeedWorkspaceState,
+  SAMPLE_CV_TEXT,
+} from "@/lib/workspace/seed";
 
 describe("application attention", () => {
   it("turns unanswered employer fields into a precise action", () => {
@@ -107,6 +111,42 @@ describe("profile readiness", () => {
       "A complete Resume with enough truthful content to pass the minimum readiness length for an application profile and employer form.",
     );
     expect(result.missing.map((item) => item.id)).toEqual(expect.arrayContaining(["target-role", "skills"]));
+  });
+
+  it("does not block an application on optional reusable answers", () => {
+    const profile = createSeedWorkspaceState().profile;
+    const result = evaluateApplicationReadiness(
+      {
+        ...profile,
+        addressLine1: "",
+        city: "",
+        postcode: "",
+        targetRole: "",
+        skills: [],
+        canRelocate: null,
+        hasTransportation: null,
+        willingToTravel: null,
+        willingToWorkShifts: null,
+        hasGovernmentClearance: null,
+      },
+      SAMPLE_CV_TEXT,
+    );
+
+    expect(result.complete).toBe(true);
+    expect(result.missing).toEqual([]);
+  });
+
+  it("still requires identity, contact details and an approved Resume", () => {
+    const profile = createSeedWorkspaceState().profile;
+    const result = evaluateApplicationReadiness(
+      { ...profile, phone: "" },
+      "short",
+    );
+
+    expect(result.complete).toBe(false);
+    expect(result.missing.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["phone", "cv"]),
+    );
   });
 
   it("does not make application automation a separate profile task", () => {

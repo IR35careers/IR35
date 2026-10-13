@@ -91,7 +91,7 @@ export async function POST(request: Request): Promise<Response> {
         { error: "The application worker task was not found." },
         { status: 404, headers: HEADERS },
       );
-    if (taskResult.data.status === "completed")
+    if (["completed", "cancelled"].includes(taskResult.data.status))
       return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
 
     const callbackDestination = resolveApplicationTaskDestination({

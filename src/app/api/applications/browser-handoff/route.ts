@@ -272,6 +272,125 @@ async function createHandoff(request: Request, applicationId: string): Promise<R
   );
 }
 
+async function confirmManualSubmission(
+  request: Request,
+  applicationId: string,
+): Promise<Response> {
+  const authorization = request.headers.get("authorization") ?? "";
+  const accessToken = authorization.startsWith("Bearer ")
+    ? authorization.slice(7)
+    : "";
+  if (!accessToken)
+    return Response.json(
+      { error: "Sign in again before confirming this application." },
+      { status: 401, headers: headers(request) },
+    );
+
+  const admin = getSupabaseAdmin();
+  const authResult = await admin.auth.getUser(accessToken);
+  const authUser = authResult.data.user;
+  if (authResult.error || !authUser)
+    return Response.json(
+      { error: "Your session expired. Sign in again, then retry." },
+      { status: 401, headers: headers(request) },
+    );
+
+  const context = await applicationContext(admin, authUser.id, applicationId);
+  if (!context.packet.truth_approved || !context.packet.materials_approved)
+    return Response.json(
+      { error: "Review and approve the application materials before confirming submission." },
+      { status: 409, headers: headers(request) },
+    );
+
+  let destination: string;
+  try {
+    destination = (await validatePublicHttpsUrl(context.job.apply_url)).toString();
+  } catch {
+    return Response.json(
+      { error: "The original employer application address is no longer available." },
+      { status: 409, headers: headers(request) },
+    );
+  }
+
+  const now = new Date().toISOString();
+  const idempotencyKey = `submit:${applicationId}`;
+  const providerSubmissionId = `contractor-confirmed-${createHash("sha256")
+    .update(`${authUser.id}:${applicationId}:${destination}`)
+    .digest("hex")
+    .slice(0, 18)}`;
+  const receipt: ApplicationReceipt = {
+    receiptId: providerSubmissionId,
+    mode: "external_handoff",
+    createdAt: now,
+    destination,
+    reviewedFields: ["cv", "cover_letter", "screening_answers", "destination"],
+    skippedFields: [],
+    message: "You confirmed that this application was submitted on the employer page.",
+  };
+  const payloadHash = createHash("sha256")
+    .update(`${applicationId}:${context.packet.updated_at}:${destination}:contractor-confirmed`)
+    .digest("hex");
+
+  const results = await Promise.all([
+    admin.from("application_submissions").upsert(
+      {
+        user_id: authUser.id,
+        application_id: applicationId,
+        provider_name: "Contractor employer-page confirmation",
+        provider_submission_id: providerSubmissionId,
+        idempotency_key: idempotencyKey,
+        payload_hash: payloadHash,
+        status: "succeeded",
+        error_code: null,
+        receipt,
+        submitted_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id,idempotency_key" },
+    ),
+    admin
+      .from("application_packets")
+      .update({ status: "applied", mode: "external_handoff", receipt, updated_at: now })
+      .eq("id", applicationId)
+      .eq("user_id", authUser.id),
+    admin
+      .from("application_worker_tasks")
+      .update({
+        status: "cancelled",
+        last_error: null,
+        lease_owner: null,
+        lease_expires_at: null,
+        completed_at: now,
+        updated_at: now,
+      })
+      .eq("application_id", applicationId)
+      .eq("user_id", authUser.id)
+      .in("status", ["queued", "running", "needs_user", "failed"]),
+    admin.from("application_events").upsert(
+      {
+        user_id: authUser.id,
+        application_id: applicationId,
+        event_type: "status_changed",
+        label: "Application submitted on employer page",
+        metadata: {
+          providerSubmissionId,
+          destination,
+          confirmationSource: "contractor",
+        },
+        idempotency_key: `${idempotencyKey}:contractor-confirmed`,
+      },
+      { onConflict: "user_id,idempotency_key" },
+    ),
+  ]);
+  const failure = results.find((result) => result.error)?.error;
+  if (failure) throw new Error(failure.message);
+
+  return Response.json(
+    { ok: true, state: "submitted", receipt },
+    { headers: headers(request) },
+  );
+}
+
 async function packetResponse(request: Request, token: string): Promise<Response> {
   const admin = getSupabaseAdmin();
   const handoff = await loadApplicationBrowserHandoff({ admin, token, claim: true });
@@ -455,7 +574,12 @@ async function reportResult(request: Request, body: DbRow): Promise<Response> {
       skippedFields: [],
       message: confirmation,
     };
-    const [{ error: submissionError }, { error: packetError }, { error: eventError }] =
+    const [
+      { error: submissionError },
+      { error: packetError },
+      { error: eventError },
+      { error: workerError },
+    ] =
       await Promise.all([
         admin
           .from("application_submissions")
@@ -486,9 +610,27 @@ async function reportResult(request: Request, body: DbRow): Promise<Response> {
           },
           { onConflict: "user_id,idempotency_key" },
         ),
+        admin
+          .from("application_worker_tasks")
+          .update({
+            status: "cancelled",
+            last_error: null,
+            lease_owner: null,
+            lease_expires_at: null,
+            completed_at: now,
+            updated_at: now,
+          })
+          .eq("application_id", handoff.applicationId)
+          .eq("user_id", handoff.userId)
+          .in("status", ["queued", "running", "needs_user", "failed"]),
       ]);
-    if (submissionError || packetError || eventError)
-      throw new Error(submissionError?.message || packetError?.message || eventError?.message);
+    if (submissionError || packetError || eventError || workerError)
+      throw new Error(
+        submissionError?.message ||
+          packetError?.message ||
+          eventError?.message ||
+          workerError?.message,
+      );
     if (notificationEmail)
       await sendApplicationNotification({
         kind: "submitted",
@@ -605,6 +747,12 @@ export async function POST(request: Request): Promise<Response> {
       if (!/^[0-9a-f-]{36}$/i.test(applicationId))
         return Response.json({ error: "Application reference is invalid." }, { status: 400, headers: headers(request) });
       return await createHandoff(request, applicationId);
+    }
+    if (action === "confirm_manual") {
+      const applicationId = clean(body.applicationId, 80);
+      if (!/^[0-9a-f-]{36}$/i.test(applicationId))
+        return Response.json({ error: "Application reference is invalid." }, { status: 400, headers: headers(request) });
+      return await confirmManualSubmission(request, applicationId);
     }
     if (action === "result") return await reportResult(request, body);
     return Response.json({ error: "Unsupported browser action." }, { status: 400, headers: headers(request) });

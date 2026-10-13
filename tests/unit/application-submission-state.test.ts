@@ -4,6 +4,7 @@ import {
   isAutomaticWorkerTaskActive,
   isStaleSubmissionLock,
   latestSubmissionLifecycleEvent,
+  recoveredWorkerTaskStatus,
   submissionLockAgeMs,
   submissionRetryAfterSeconds,
 } from "@/lib/application-submission-state";
@@ -34,6 +35,28 @@ describe("application submission processing locks", () => {
     expect(isAutomaticWorkerTaskActive("running")).toBe(true);
     expect(isAutomaticWorkerTaskActive("needs_user")).toBe(false);
     expect(isAutomaticWorkerTaskActive("failed")).toBe(false);
+  });
+
+  it("requeues an expired worker lease instead of leaving it running forever", () => {
+    expect(
+      recoveredWorkerTaskStatus({
+        status: "running",
+        leaseExpiresAt: "2026-08-21T18:28:00.000Z",
+        attempts: 2,
+        nowMs: now,
+      }),
+    ).toBe("queued");
+  });
+
+  it("stops reclaiming an expired lease after the final attempt", () => {
+    expect(
+      recoveredWorkerTaskStatus({
+        status: "running",
+        leaseExpiresAt: "2026-08-21T18:28:00.000Z",
+        attempts: 5,
+        nowMs: now,
+      }),
+    ).toBe("failed");
   });
 });
 

@@ -58,7 +58,10 @@ import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { getSupabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
-import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  evaluateApplicationReadiness,
+  evaluateProfileReadiness,
+} from "@/lib/workspace/profile-readiness";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { applicationProfileHref } from "@/lib/application-profile-return";
 import { needsApplicationMaterialApproval } from "@/lib/application-material-approval";
@@ -186,9 +189,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       ),
     [cvText, preferredResume?.resumeText, workspace.profile],
   );
+  const applicationReadiness = useMemo(
+    () =>
+      evaluateApplicationReadiness(
+        workspace.profile,
+        preferredResume?.resumeText || cvText,
+      ),
+    [cvText, preferredResume?.resumeText, workspace.profile],
+  );
   const profileCompletionHref = applicationProfileHref(
     job.id,
-    profileReadiness.missing[0]?.id,
+    applicationReadiness.missing[0]?.id ?? profileReadiness.missing[0]?.id,
   );
   const cvReady = cvText.trim().length >= 120;
   const answersReviewed = Boolean(
@@ -1116,6 +1127,124 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     }
   };
 
+  const continueApprovedApplicationInBrowser = async () => {
+    if (!application) return;
+    const continuationWindow = window.open("", "_blank");
+    if (continuationWindow) continuationWindow.opener = null;
+    setBusy("submit");
+    setError(null);
+    setNotice("Preparing the approved application for your secure browser.");
+    try {
+      const response = await fetchWithFreshSession(
+        "/api/applications/browser-handoff",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create",
+            applicationId: application.id,
+          }),
+          signal: AbortSignal.timeout(30_000),
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        handoffUrl?: string;
+        error?: string;
+      };
+      if (!response.ok || !payload.handoffUrl)
+        throw new Error(
+          payload.error || "The employer application page could not be opened.",
+        );
+      if (continuationWindow) continuationWindow.location.assign(payload.handoffUrl);
+      else window.location.assign(payload.handoffUrl);
+      setNotice(
+        "The approved application is open on the employer page. Complete any employer-only security step there; your Resume and saved answers remain available here.",
+      );
+    } catch (caught) {
+      continuationWindow?.close();
+      setNotice(null);
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The employer application page could not be opened.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const confirmManualEmployerSubmission = async () => {
+    if (!application) return;
+    if (
+      !window.confirm(
+        "Only confirm this after the employer website showed that your application was submitted. Mark this application as submitted?",
+      )
+    )
+      return;
+    setBusy("submit");
+    setError(null);
+    setNotice("Saving your employer-page submission confirmation.");
+    try {
+      const response = await fetchWithFreshSession(
+        "/api/applications/browser-handoff",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "confirm_manual",
+            applicationId: application.id,
+          }),
+          signal: AbortSignal.timeout(30_000),
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        receipt?: ApplicationRecord["receipt"];
+        error?: string;
+      };
+      if (!response.ok || !payload.receipt)
+        throw new Error(
+          payload.error || "The employer-page confirmation could not be saved.",
+        );
+      const now = new Date().toISOString();
+      const submittedApplication: ApplicationRecord = {
+        ...application,
+        status: "applied",
+        attention: undefined,
+        mode: "external_handoff",
+        receipt: payload.receipt,
+        updatedAt: now,
+        events: application.events.some(
+          (event) => event.label === "Application submitted on employer page",
+        )
+          ? application.events
+          : [
+              ...application.events,
+              {
+                id: newWorkspaceId(),
+                applicationId: application.id,
+                type: "status_changed",
+                label: "Application submitted on employer page",
+                createdAt: now,
+              },
+            ],
+      };
+      setApplication(submittedApplication);
+      persistApplication(submittedApplication);
+      setNotice(
+        "Application marked as submitted from your employer-page confirmation.",
+      );
+    } catch (caught) {
+      setNotice(null);
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The employer-page confirmation could not be saved.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const resumeApprovedApplicationAfterProfile = useEffectEvent(() => {
     if (!application) return;
     if (
@@ -1154,7 +1283,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       !application ||
       application.status !== "needs_review" ||
       !application.attention?.action.startsWith("/profile") ||
-      !profileReadiness.complete ||
+      !applicationReadiness.complete ||
       !answersReviewed ||
       busy !== null ||
       submissionInProgress ||
@@ -1168,7 +1297,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     application,
     approvalsComplete,
     busy,
-    profileReadiness.complete,
+    applicationReadiness.complete,
     submissionConnection,
     submissionInProgress,
   ]);
@@ -1220,6 +1349,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         approvalsComplete={approvalsComplete}
         onUpdate={updateApplication}
         onSubmit={submitApprovedApplication}
+        onContinueInBrowser={continueApprovedApplicationInBrowser}
+        onConfirmManualSubmission={confirmManualEmployerSubmission}
         onRefreshTailoring={runAiTailoring}
         onResumeBlur={recalculateEditedCv}
       />
@@ -1348,12 +1479,16 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 id="profile-readiness-title"
                 className="font-semibold text-amber-950"
               >
-                Complete your profile before applying
+                {applicationReadiness.complete
+                  ? "Optional details can improve automatic form filling"
+                  : "Complete the essentials before applying"}
               </h2>
               <p className="mt-1 text-sm leading-6 text-amber-900">
-                {profileReadiness.missing.length === 1
-                  ? `${profileReadiness.missing[0].label} is the only answer still needed.`
-                  : `These ${profileReadiness.missing.length} details are still needed: ${profileReadiness.missing.map((item) => item.label).join(", ")}.`}
+                {applicationReadiness.complete
+                  ? "You can prepare and submit this application now. Add the remaining reusable answers whenever convenient to reduce questions on future employer forms."
+                  : applicationReadiness.missing.length === 1
+                    ? `${applicationReadiness.missing[0].label} is the only essential still needed.`
+                    : `These ${applicationReadiness.missing.length} essentials are still needed: ${applicationReadiness.missing.map((item) => item.label).join(", ")}.`}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {profileReadiness.missing.map((item) => (
@@ -1411,7 +1546,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                     Retry application
                   </button>
                 ) : attention.action.startsWith("/profile") ? (
-                  profileReadiness.complete ? (
+                  applicationReadiness.complete ? (
                     <button
                       type="button"
                       onClick={() => void submitApprovedApplication()}
@@ -1658,7 +1793,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                   <p className="text-xs leading-5 text-slate-500">
                     You will review the Resume and answers before anything is sent.
                   </p>
-                  <button type="button" onClick={() => void prepare()} disabled={!cvReady || !profileReadiness.complete || busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" onClick={() => void prepare()} disabled={!cvReady || !applicationReadiness.complete || busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
                     {busy === "prepare" ? <Loader2 className="animate-spin" size={17} /> : <ArrowRight size={17} />}
                     Prepare application
                   </button>
@@ -2362,9 +2497,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               Complete your profile
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              {profileReadiness.missing.length === 1
-                ? `${profileReadiness.missing[0].label} is the only answer left. We will open that exact field, then return you to this saved application.`
-                : `Complete the ${profileReadiness.missing.length} highlighted details, then return to this saved application.`}
+              {applicationReadiness.missing.length === 1
+                ? `${applicationReadiness.missing[0].label} is the only essential left. We will open that exact field, then return you to this saved application.`
+                : `Complete the ${applicationReadiness.missing.length} highlighted essentials, then return to this saved application.`}
             </p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <button

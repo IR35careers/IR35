@@ -26,6 +26,25 @@ export interface ProfileReadinessResult {
   percentage: number;
 }
 
+/**
+ * Only facts that are required to create a truthful application packet belong
+ * in this set. Employer-specific facts (address, travel, background checks,
+ * shifts, relocation, and similar answers) are deliberately collected by the
+ * runner only when a particular employer asks for them. Requiring every
+ * possible answer before a contractor can even start made otherwise valid
+ * profiles stall at 92% completion.
+ */
+export const APPLICATION_READINESS_ITEM_IDS = [
+  "full-name",
+  "phone",
+  "email",
+  "cv",
+] as const;
+
+const APPLICATION_READINESS_ITEMS = new Set<string>(
+  APPLICATION_READINESS_ITEM_IDS,
+);
+
 export interface ProfileReadinessBlocker {
   action: "/profile";
   message: string;
@@ -140,6 +159,25 @@ export function evaluateProfileReadiness(
       complete: resumeText.trim().length >= 120,
     },
   ];
+  const missing = items.filter((item) => !item.complete);
+  return {
+    items,
+    missing,
+    complete: missing.length === 0,
+    percentage: Math.round(
+      ((items.length - missing.length) / items.length) * 100,
+    ),
+  };
+}
+
+export function evaluateApplicationReadiness(
+  profile: ContractorProfile,
+  resumeText = "",
+): ProfileReadinessResult {
+  const profileReadiness = evaluateProfileReadiness(profile, resumeText);
+  const items = profileReadiness.items.filter((item) =>
+    APPLICATION_READINESS_ITEMS.has(item.id),
+  );
   const missing = items.filter((item) => !item.complete);
   return {
     items,

@@ -117,19 +117,15 @@ test("research library ranks practical topics and identifies every source", asyn
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
 });
 
-test("incomplete application profiles show the exact next action", async ({ page }) => {
+test("optional profile answers do not block a contractor from applying", async ({ page }) => {
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
   await expect(
     page.getByRole("heading", {
-      name: "Complete your profile before applying",
+      name: "Optional details can improve automatic form filling",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Complete profile" })).toHaveAttribute(
-    "href",
-    /^\/profile\?returnTo=.+#application-readiness$/,
-  );
-  await expect(page.getByRole("button", { name: "Prepare application" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Prepare application" })).toBeEnabled();
 });
 
 test("free Auto Apply is limited to five applications per day", async ({ page }) => {
