@@ -32,7 +32,10 @@ import type {
   ContractorProfile as ContractorProfileType,
   ResumeProfile,
 } from "@/lib/workspace/types";
-import { evaluateProfileReadiness } from "@/lib/workspace/profile-readiness";
+import {
+  evaluateProfileReadiness,
+  profileReadinessDestination,
+} from "@/lib/workspace/profile-readiness";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSuggestion } from "@/lib/resume/profile-extraction";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
@@ -77,12 +80,14 @@ const DEFAULT_RESUME_FORMAT: NonNullable<ResumeProfile["format"]> = {
 };
 
 function Field({
+  id,
   label,
   value,
   onChange,
   type = "text",
   placeholder,
 }: {
+  id?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -93,6 +98,7 @@ function Field({
     <label className="text-sm font-semibold text-slate-800">
       {label}
       <input
+        id={id}
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -104,10 +110,12 @@ function Field({
 }
 
 function YesNoField({
+  id,
   label,
   value,
   onChange,
 }: {
+  id?: string;
   label: string;
   value: boolean | null | undefined;
   onChange: (value: boolean | null) => void;
@@ -116,6 +124,7 @@ function YesNoField({
     <label className="text-sm font-semibold text-slate-800">
       {label}
       <select
+        id={id}
         value={value === true ? "yes" : value === false ? "no" : ""}
         onChange={(event) =>
           onChange(
@@ -153,7 +162,13 @@ function startingProfiles(
   ];
 }
 
-export function ContractorProfile({ returnTo }: { returnTo?: string }) {
+export function ContractorProfile({
+  returnTo,
+  focusItemId,
+}: {
+  returnTo?: string;
+  focusItemId?: string;
+}) {
   const { user, linkGithubIdentity } = useAuth();
   const workspace = useWorkspaceState();
   const latestApplication = workspace.applications[0];
@@ -196,6 +211,28 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     }
     setTab(id as Exclude<ProfileTab, "details">);
   };
+
+  const openReadinessItem = (itemId: string) => {
+    const destination = profileReadinessDestination(itemId);
+    if (!destination) return;
+    if (destination.navigation === "resume") {
+      setTab("resume");
+    } else {
+      setTab("details");
+      setDetailsSection(destination.navigation);
+    }
+    window.setTimeout(() => {
+      const target = document.getElementById(destination.targetId);
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLSelectElement ||
+        target instanceof HTMLTextAreaElement
+      ) {
+        target.focus({ preventScroll: true });
+      }
+    }, 80);
+  };
   const resumeProfiles = profile.resumeProfiles ?? [];
   const activeProfile =
     resumeProfiles.find((item) => item.id === profile.activeResumeProfileId) ??
@@ -222,6 +259,13 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
     () => evaluateProfileReadiness(profile, activeProfile?.resumeText ?? ""),
     [activeProfile?.resumeText, profile],
   );
+
+  useEffect(() => {
+    if (!focusItemId || !profileReadinessDestination(focusItemId)) return;
+    const timer = window.setTimeout(() => openReadinessItem(focusItemId), 120);
+    return () => window.clearTimeout(timer);
+    // The URL focus is a one-shot navigation instruction.
+  }, [focusItemId]);
   const persistProfile = async (candidate: ContractorProfileType) => {
     setSaving(true);
     setSaveError(null);
@@ -722,10 +766,12 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               <h2 className="mt-0.5 text-lg font-semibold text-slate-950 sm:mt-1 sm:text-xl">
                 {readiness.complete
                   ? "Ready for applications"
-                  : `${readiness.missing.length} detail${readiness.missing.length === 1 ? "" : "s"} to complete`}
+                  : readiness.missing.length === 1
+                    ? `One answer left: ${readiness.missing[0].label}`
+                    : `${readiness.missing.length} details to complete`}
               </h2>
               <p className="mt-1 hidden max-w-3xl text-sm leading-6 text-slate-600 sm:block">
-                Finish these details once so future application forms need less input.
+                Choose a missing item below and we will take you to the exact unanswered field.
               </p>
             </div>
           </div>
@@ -743,56 +789,17 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
         </div>
         {!readiness.complete && (
           <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3 sm:mt-4 sm:pt-4">
-            {readiness.missing.slice(0, 4).map((item) => (
+            {readiness.missing.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  setTab(
-                    item.section === "cv"
-                      ? "resume"
-                      : "details",
-                  );
-                  if (item.section !== "cv") {
-                    setDetailsSection(
-                      item.section === "professional" || ["full-name", "phone", "email"].includes(item.id)
-                        ? "identity"
-                        : item.section === "eligibility" || item.id === "availability"
-                          ? "experience"
-                          : "answers",
-                    );
-                  }
-                  const targetId =
-                    item.section === "cv"
-                      ? "profile-resume"
-                      : item.section === "professional" ||
-                            ["full-name", "phone", "email"].includes(item.id)
-                          ? "profile-professional-details"
-                          : item.section === "eligibility" || item.id === "availability"
-                            ? "work-authorisation"
-                            : "reusable-answers";
-                  window.setTimeout(
-                    () =>
-                      document
-                        .getElementById(targetId)
-                        ?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        }),
-                    50,
-                  );
-                }}
+                onClick={() => openReadinessItem(item.id)}
                 className="ir35-focus inline-flex min-h-9 items-center gap-2 rounded-full border border-amber-200 bg-amber-50/60 px-3 text-left text-[11px] font-semibold text-slate-800 hover:bg-amber-50 sm:text-xs"
               >
                 <AlertCircle size={14} className="shrink-0 text-amber-600" />{" "}
                 {item.label}
               </button>
             ))}
-            {readiness.missing.length > 4 && (
-              <p className="flex min-h-9 items-center px-2 text-xs font-semibold text-slate-600">
-                Complete these first, then review {readiness.missing.length - 4} more detail{readiness.missing.length - 4 === 1 ? "" : "s"}.
-              </p>
-            )}
           </div>
         )}
       </section>
@@ -939,22 +946,26 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </div>
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <Field
+                  id="profile-field-full-name"
                   label="Full name"
                   value={profile.fullName}
                   onChange={(value) => set("fullName", value)}
                 />
                 <Field
+                  id="profile-field-target-role"
                   label="Target role"
                   value={profile.targetRole ?? ""}
                   onChange={(value) => set("targetRole", value)}
                 />
                 <Field
+                  id="profile-field-email"
                   label="Email"
                   type="email"
                   value={profile.email}
                   onChange={(value) => set("email", value)}
                 />
                 <Field
+                  id="profile-field-phone"
                   label="Phone"
                   value={profile.phone}
                   onChange={(value) => set("phone", value)}
@@ -996,7 +1007,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </label>
             </section>
             <section className="grid gap-6 lg:grid-cols-2">
-              <div className="ir35-card p-5">
+              <div id="profile-field-skills" className="ir35-card scroll-mt-24 p-5">
                 <h2 className="font-semibold">Skills</h2>
                 <p className="mt-1 text-xs text-slate-500">
                   Skills explicitly found in your resume are added. Related skills stay as suggestions until you confirm them.
@@ -1110,7 +1121,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
             )}
             {detailsSection === "experience" && (
               <>
-            <section id="work-authorisation" className="ir35-card scroll-mt-24 p-5 sm:p-6">
+            <section id="profile-experience" className="ir35-card scroll-mt-24 p-5 sm:p-6">
               <h2 className="font-semibold">Experience and projects</h2>
               <div className="mt-5 grid gap-5 lg:grid-cols-2">
                 <label className="text-sm font-semibold text-slate-800">
@@ -1137,7 +1148,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 </label>
               </div>
             </section>
-            <section className="ir35-card p-5 sm:p-6">
+            <section id="work-authorisation" className="ir35-card scroll-mt-24 p-5 sm:p-6">
               <div className="flex items-center gap-3">
                 <IdCard className="text-blue-700" />
                 <div>
@@ -1153,6 +1164,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                 <label className="text-sm font-semibold text-slate-800">
                   Right to work in the UK
                   <select
+                    id="profile-field-right-to-work"
                     value={profile.rightToWork}
                     onChange={(event) =>
                       set(
@@ -1172,6 +1184,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   </select>
                 </label>
                 <Field
+                  id="profile-field-availability"
                   label="Availability"
                   value={profile.availability}
                   onChange={(value) => set("availability", value)}
@@ -1208,6 +1221,7 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
               </div>
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <Field
+                  id="profile-field-address"
                   label="Address line 1"
                   value={profile.addressLine1 ?? ""}
                   onChange={(value) => set("addressLine1", value)}
@@ -1233,11 +1247,13 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   onChange={(value) => set("country", value)}
                 />
                 <YesNoField
+                  id="profile-field-over-18"
                   label="Are you 18 or over?"
                   value={profile.isOver18}
                   onChange={(value) => set("isOver18", value)}
                 />
                 <YesNoField
+                  id="profile-field-working-preferences"
                   label="Can you work in person?"
                   value={profile.canWorkInPerson}
                   onChange={(value) => set("canWorkInPerson", value)}
@@ -1273,11 +1289,13 @@ export function ContractorProfile({ returnTo }: { returnTo?: string }) {
                   onChange={(value) => set("willingToWorkWeekends", value)}
                 />
                 <YesNoField
+                  id="profile-field-workplace-needs"
                   label="Do you need a workplace accommodation?"
                   value={profile.needsAccommodation}
                   onChange={(value) => set("needsAccommodation", value)}
                 />
                 <YesNoField
+                  id="profile-field-background"
                   label="Have you worked for this company before?"
                   value={profile.workedForCompanyBefore}
                   onChange={(value) => set("workedForCompanyBefore", value)}

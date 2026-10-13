@@ -7,12 +7,13 @@ export const metadata: Metadata = { title: "Contractor profile", robots: { index
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string | string[] }>;
+  searchParams: Promise<{ returnTo?: string | string[]; focus?: string | string[] }>;
 }) {
   const params = await searchParams;
   return (
     <ContractorProfile
       returnTo={safeApplicationReturnPath(params.returnTo)}
+      focusItemId={Array.isArray(params.focus) ? params.focus[0] : params.focus}
     />
   );
 }

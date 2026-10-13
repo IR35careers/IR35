@@ -8,6 +8,17 @@ export interface ProfileReadinessItem {
   complete: boolean;
 }
 
+export type ProfileReadinessNavigation =
+  | "identity"
+  | "experience"
+  | "answers"
+  | "resume";
+
+export interface ProfileReadinessDestination {
+  navigation: ProfileReadinessNavigation;
+  targetId: string;
+}
+
 export interface ProfileReadinessResult {
   items: ProfileReadinessItem[];
   missing: ProfileReadinessItem[];
@@ -148,4 +159,31 @@ export function profileReadinessBlocker(
     action: "/profile",
     message: `Complete your Application Profile: ${readiness.missing.map((item) => item.label).join(", ")}.`,
   };
+}
+
+/**
+ * Route a missing readiness answer to the exact control that can resolve it.
+ * Keep this mapping explicit: broad section-based routing previously sent the
+ * age-eligibility task to Experience even though the answer lives in the
+ * reusable application-answer section.
+ */
+export function profileReadinessDestination(
+  itemId: string,
+): ProfileReadinessDestination | null {
+  const destinations: Record<string, ProfileReadinessDestination> = {
+    "full-name": { navigation: "identity", targetId: "profile-field-full-name" },
+    phone: { navigation: "identity", targetId: "profile-field-phone" },
+    email: { navigation: "identity", targetId: "profile-field-email" },
+    address: { navigation: "answers", targetId: "profile-field-address" },
+    "target-role": { navigation: "identity", targetId: "profile-field-target-role" },
+    skills: { navigation: "identity", targetId: "profile-field-skills" },
+    "right-to-work": { navigation: "experience", targetId: "profile-field-right-to-work" },
+    "over-18": { navigation: "answers", targetId: "profile-field-over-18" },
+    availability: { navigation: "experience", targetId: "profile-field-availability" },
+    "working-preferences": { navigation: "answers", targetId: "profile-field-working-preferences" },
+    "workplace-needs": { navigation: "answers", targetId: "profile-field-workplace-needs" },
+    background: { navigation: "answers", targetId: "profile-field-background" },
+    cv: { navigation: "resume", targetId: "profile-resume" },
+  };
+  return destinations[itemId] ?? null;
 }

@@ -1,8 +1,11 @@
 const SITE_ORIGIN = "https://www.ir35careers.com";
 
-export function applicationProfileHref(jobId: string): string {
+export function applicationProfileHref(jobId: string, focusItemId?: string): string {
   const applicationPath = `/applications/new/${encodeURIComponent(jobId)}?resume=profile#needs-attention`;
-  return `/profile?returnTo=${encodeURIComponent(applicationPath)}#application-readiness`;
+  const focus = focusItemId?.trim()
+    ? `&focus=${encodeURIComponent(focusItemId.trim())}`
+    : "";
+  return `/profile?returnTo=${encodeURIComponent(applicationPath)}${focus}#application-readiness`;
 }
 
 export function safeApplicationReturnPath(

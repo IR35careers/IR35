@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import {
   evaluateProfileReadiness,
+  profileReadinessDestination,
   profileReadinessBlocker,
 } from "@/lib/workspace/profile-readiness";
 import { createSeedWorkspaceState } from "@/lib/workspace/seed";
@@ -123,5 +124,20 @@ describe("profile readiness", () => {
       "portal-consent",
     );
     expect(profileReadinessBlocker(readiness)?.action).toBe("/profile");
+  });
+
+  it("routes every visible blocker to the control that can resolve it", () => {
+    expect(profileReadinessDestination("over-18")).toEqual({
+      navigation: "answers",
+      targetId: "profile-field-over-18",
+    });
+    expect(profileReadinessDestination("right-to-work")).toEqual({
+      navigation: "experience",
+      targetId: "profile-field-right-to-work",
+    });
+    expect(profileReadinessDestination("cv")).toEqual({
+      navigation: "resume",
+      targetId: "profile-resume",
+    });
   });
 });

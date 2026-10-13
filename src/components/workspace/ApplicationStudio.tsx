@@ -177,8 +177,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [submissionProgressOpen, setSubmissionProgressOpen] = useState(false);
   const submissionStatusFailures = useRef(0);
   const profileResumeAttempted = useRef(false);
-  const profileCompletionHref = applicationProfileHref(job.id);
-
   const engagementWarning = useMemo(() => roleTypeWarning(job), [job]);
   const profileReadiness = useMemo(
     () =>
@@ -187,6 +185,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         preferredResume?.resumeText || cvText,
       ),
     [cvText, preferredResume?.resumeText, workspace.profile],
+  );
+  const profileCompletionHref = applicationProfileHref(
+    job.id,
+    profileReadiness.missing[0]?.id,
   );
   const cvReady = cvText.trim().length >= 120;
   const answersReviewed = Boolean(
@@ -1349,14 +1351,21 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 Complete your profile before applying
               </h2>
               <p className="mt-1 text-sm leading-6 text-amber-900">
-                {profileReadiness.missing.map((item) => item.label).join(", ")}
+                {profileReadiness.missing.length === 1
+                  ? `${profileReadiness.missing[0].label} is the only answer still needed.`
+                  : `These ${profileReadiness.missing.length} details are still needed: ${profileReadiness.missing.map((item) => item.label).join(", ")}.`}
               </p>
-              <Link
-                href={profileCompletionHref}
-                className="ir35-focus mt-3 inline-flex min-h-10 items-center rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
-              >
-                Complete profile
-              </Link>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {profileReadiness.missing.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={applicationProfileHref(job.id, item.id)}
+                    className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white hover:bg-amber-800"
+                  >
+                    Fix {item.label} <ArrowRight size={14} />
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -1548,6 +1557,36 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           </div>
         </div>
       )}
+
+      <details
+        open
+        className="group mt-4 rounded-2xl border border-slate-200 bg-white shadow-sm"
+      >
+        <summary className="ir35-focus flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-slate-900 sm:px-5">
+          <span>
+            Full contract description
+            <span className="ml-2 text-xs font-normal text-slate-500">
+              shown in full
+            </span>
+          </span>
+          <ChevronDown
+            size={17}
+            className="shrink-0 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <div className="border-t border-slate-200 px-4 py-4 sm:px-5">
+          <div className="whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">
+            {job.description ||
+              "The source did not provide a readable description. Open Role details to review the original listing."}
+          </div>
+          <Link
+            href={`/jobs/${job.id}`}
+            className="ir35-focus mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+          >
+            Open role details <ArrowRight size={14} />
+          </Link>
+        </div>
+      </details>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <main className="min-w-0 space-y-5">
@@ -2323,8 +2362,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
               Complete your profile
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Complete the highlighted reusable answers, then return here and
-              apply again. Your Resume and application are already saved.
+              {profileReadiness.missing.length === 1
+                ? `${profileReadiness.missing[0].label} is the only answer left. We will open that exact field, then return you to this saved application.`
+                : `Complete the ${profileReadiness.missing.length} highlighted details, then return to this saved application.`}
             </p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <button
