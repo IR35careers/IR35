@@ -52,6 +52,9 @@ function matchesApplicationAction(pattern, labels) {
     return pattern.test(label);
   });
 }
+function isScopedApplicationSubmitAction(input) {
+  return input.hasResumeUpload && input.hasContactField && /^(send|apply|send cv|send resume)$/i.test(input.label.trim());
+}
 var COMMON = {
   applyPattern: /^(apply|apply now|apply online|apply manually|apply for this (?:job|position|role)|start application|continue application|begin application|i(?:'|’)?m interested)$/i,
   nextPattern: /^(next|continue|proceed|save (?:&|and) (?:continue|next)|continue application|continue to review|review|review application|review and submit)$/i,
@@ -1555,6 +1558,26 @@ async function actionLocatorMatching(page, matches) {
   }
   return null;
 }
+async function finalApplicationAction(page, ats) {
+  const namedAction = await actionLocator(page, ats.submitPattern);
+  if (namedAction) return namedAction;
+  if (ats.kind !== "generic") return null;
+  const controls = page.locator('form input[type="submit"], form button[type="submit"]');
+  for (let index = 0; index < Math.min(await controls.count(), 30); index += 1) {
+    const control = controls.nth(index);
+    if (!await control.isVisible() || !await control.isEnabled()) continue;
+    const evidence = await control.evaluate((node) => {
+      const form = node.closest("form");
+      return {
+        label: node.getAttribute("value") || node.textContent || "",
+        hasResumeUpload: Boolean(form?.querySelector('input[type="file"]')),
+        hasContactField: Boolean(form?.querySelector('input[type="email"], input[name*="email" i]'))
+      };
+    });
+    if (isScopedApplicationSubmitAction(evidence)) return control;
+  }
+  return null;
+}
 async function hasApplicationForm(page) {
   const controls = page.locator(
     'input:not([type="hidden"]):not([type="search"]), select, textarea'
@@ -2236,10 +2259,12 @@ async function snapshotFields(page, step, atsKind) {
       const element = node;
       const type = element instanceof HTMLInputElement ? element.type.toLowerCase() : element.tagName.toLowerCase();
       const ownLabel = "labels" in element ? Array.from(element.labels ?? []).map((label2) => label2.textContent ?? "").join(" ") : "";
+      const previousElement = element.previousElementSibling;
+      const adjacentLabel = previousElement?.tagName === "LABEL" && !previousElement.getAttribute("for") ? previousElement.textContent ?? "" : "";
       const fieldset = element.closest("fieldset");
       const legend = fieldset?.querySelector("legend")?.textContent ?? "";
       const described = (element.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? "").join(" ");
-      const label = legend || described || element.getAttribute("aria-label") || ownLabel || element.getAttribute("placeholder") || element.getAttribute("name") || "";
+      const label = legend || described || element.getAttribute("aria-label") || ownLabel || adjacentLabel || element.getAttribute("placeholder") || element.getAttribute("name") || "";
       let options = [];
       if (element instanceof HTMLSelectElement)
         options = Array.from(element.options).map((option) => option.textContent || option.value).filter(Boolean);
@@ -2255,7 +2280,7 @@ async function snapshotFields(page, step, atsKind) {
         label,
         name: element.getAttribute("name") || "",
         placeholder: element.getAttribute("placeholder") || "",
-        required: element.hasAttribute("required") || element.getAttribute("aria-required") === "true" || Boolean(
+        required: element.hasAttribute("required") || element.getAttribute("aria-required") === "true" || type === "checkbox" && /^(?:please\s+)?(?:agree|accept)\b/i.test(label.trim()) || Boolean(
           element.closest('[class*="element-name-"]')?.querySelector(".wpjb-required")
         ),
         options,
@@ -2435,7 +2460,7 @@ async function fillStep(page, step, ats, facts, resume, coverLetter, employerTer
   }
   const aiMappings = await mapUnknownFields(unknown);
   for (const mapping of aiMappings) mappings.set(mapping.fieldId, mapping);
-  const needsUser = [];
+  const needsUser2 = [];
   const requiredRadioGroups = /* @__PURE__ */ new Map();
   for (const control of controls) {
     const { field } = control;
@@ -2487,7 +2512,7 @@ async function fillStep(page, step, ats, facts, resume, coverLetter, employerTer
       atsKind: ats.kind
     }).catch(() => false) : false;
     if (!filled && field.required && field.type !== "radio")
-      needsUser.push(field);
+      needsUser2.push(field);
   }
   for (const control of requiredRadioGroups.values()) {
     const groupChecked = await control.locator.evaluate((node) => {
@@ -2497,9 +2522,9 @@ async function fillStep(page, step, ats, facts, resume, coverLetter, employerTer
         (item) => item instanceof HTMLInputElement && item.checked
       );
     }).catch(() => false);
-    if (!groupChecked) needsUser.push(control.field);
+    if (!groupChecked) needsUser2.push(control.field);
   }
-  return needsUser.filter(
+  return needsUser2.filter(
     (field, index, all) => all.findIndex(
       (item) => item.label === field.label && item.name === field.name
     ) === index
@@ -2790,7 +2815,7 @@ async function runNativeApplication(payload, runtime) {
       }
       await waitForFillableControls(page);
       sensitive = true;
-      const needsUser = await fillStep(
+      const needsUser2 = await fillStep(
         page,
         step,
         ats,
@@ -2801,19 +2826,19 @@ async function runNativeApplication(payload, runtime) {
       );
       await page.keyboard.press("Tab").catch(() => void 0);
       await page.waitForTimeout(350);
-      if (needsUser.length)
+      if (needsUser2.length)
         return reviewReceipt(
           "The employer requires information that is not in your saved profile. Continue on the prepared employer form to answer only the highlighted questions.",
-          needsUser,
+          needsUser2,
           "browser_continue",
           currentDestination(page, startUrl.toString())
         );
-      let submit = await actionLocator(page, ats.submitPattern);
+      let submit = await finalApplicationAction(page, ats);
       let next = await actionLocator(page, ats.nextPattern);
       for (let renderAttempt = 0; !submit && !next && renderAttempt < 20; renderAttempt += 1) {
         if (await successMessage(page, ats)) break;
         await page.waitForTimeout(500);
-        submit = await actionLocator(page, ats.submitPattern);
+        submit = await finalApplicationAction(page, ats);
         next = await actionLocator(page, ats.nextPattern);
       }
       const action = submit ?? next;
@@ -3066,7 +3091,7 @@ async function executeApplicationWorkerAssignment(input) {
   }
 }
 async function postApplicationWorkerCallback(input) {
-  await signedPost(
+  return signedPost(
     callbackUrl(input.task, input.appOrigin),
     input.callback,
     6e4
@@ -3094,6 +3119,11 @@ var APP_ORIGIN = applicationWorkerAppOrigin(process.env.IR35CAREERS_APP_URL);
 var active = 0;
 var completed = 0;
 var failed = 0;
+var submitted = 0;
+var needsUser = 0;
+var cancelled = 0;
+var processing = 0;
+var duplicateCallbacks = 0;
 var stopping = false;
 var claiming = false;
 var lastControlPlaneAt = null;
@@ -3138,12 +3168,17 @@ async function executeTask(assignment) {
     });
   }
   try {
-    await postApplicationWorkerCallback({
+    const saved = await postApplicationWorkerCallback({
       task,
       callback,
       appOrigin: APP_ORIGIN
     });
     completed += 1;
+    if (saved.duplicate) duplicateCallbacks += 1;
+    else if (saved.state === "submitted") submitted += 1;
+    else if (saved.state === "needs_user") needsUser += 1;
+    else if (saved.state === "cancelled") cancelled += 1;
+    else if (saved.state === "processing") processing += 1;
   } catch (error) {
     failed += 1;
     console.error("worker_callback_failed", {
@@ -3234,9 +3269,16 @@ var server = createServer((request, response) => {
         concurrency: CONCURRENCY,
         completed,
         failed,
+        tasksProcessed: completed,
+        submitted,
+        needsUser,
+        cancelled,
+        processing,
+        duplicateCallbacks,
+        callbackDeliveryFailures: failed,
         version: WORKER_VERSION,
         controlPlane: {
-          connected: Boolean(lastControlPlaneAt),
+          connected: Boolean(lastControlPlaneAt) && Date.now() - new Date(lastControlPlaneAt).getTime() < 9e4 && consecutiveControlPlaneFailures === 0,
           lastConnectedAt: lastControlPlaneAt,
           consecutiveFailures: consecutiveControlPlaneFailures,
           error: lastControlPlaneError

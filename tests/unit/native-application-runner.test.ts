@@ -20,6 +20,7 @@ import {
   isClosedListingPage,
   isVerificationResendControl,
   isSafeApplicationHandoffNavigation,
+  isScopedApplicationSubmitAction,
   isSourceAccessDeniedPage,
   isTrustedApplicationPortalSender,
   nativeRunnerHostAllowed,
@@ -49,6 +50,12 @@ function field(overrides: Partial<RunnerField>): RunnerField {
 }
 
 describe("native application runner", () => {
+  it("recognises a legacy Send action only inside a Resume application form", () => {
+    expect(isScopedApplicationSubmitAction({ label: "Send", hasResumeUpload: true, hasContactField: true })).toBe(true);
+    expect(isScopedApplicationSubmitAction({ label: "Send", hasResumeUpload: false, hasContactField: true })).toBe(false);
+    expect(isScopedApplicationSubmitAction({ label: "Apply", hasResumeUpload: true, hasContactField: false })).toBe(false);
+    expect(isScopedApplicationSubmitAction({ label: "Subscribe", hasResumeUpload: true, hasContactField: true })).toBe(false);
+  });
   it("recognises email-first employer account screens before a password appears", () => {
     expect(
       isEmployerAccountAccessPage({

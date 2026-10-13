@@ -35,7 +35,7 @@ import { fetchLever } from "./lever-fetcher";
 import { fetchAshby } from "./ashby-fetcher";
 import { fetchWorkable } from "./workable-fetcher";
 import { fetchSmartRecruiters } from "./smartrecruiters-fetcher";
-import type { CompanyConfig, FetchResult } from "./types";
+import type { CompanyConfig, FetchResult, RawATSJob } from "./types";
 
 /**
  * Starter registry: well-known UK tech companies with public boards on the
@@ -58,6 +58,9 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
 
   // Lever (verified working)
   { name: "Octopus Energy", type: "lever", slug: "octoenergy" },
+  { name: "SQA Services", type: "lever", slug: "sqaservices" },
+  { name: "Sofar Sounds", type: "lever", slug: "sofarsounds" },
+  { name: "Contentsquare", type: "lever", slug: "contentsquare" },
 
   // Ashby (verified working)
   { name: "Multiverse", type: "ashby", slug: "multiverse" },
@@ -72,13 +75,27 @@ export const COMPANY_CONFIGS: CompanyConfig[] = [
   { name: "Safran Engineering Services UK", type: "workable", slug: "safrangroup" },
   { name: "Mindera", type: "workable", slug: "minderacraft" },
   { name: "Sword Group", type: "workable", slug: "sword-group" },
+  // Verified public boards with live UK contract engagements. Retain the
+  // advertiser's IR35 evidence; contract employment alone never means outside.
+  { name: "AND Digital", type: "workable", slug: "and-digital" },
+  { name: "e-ppl", type: "workable", slug: "epplautoscan" },
+  { name: "People Puzzles", type: "workable", slug: "people-puzzles-ltd" },
+  { name: "Indra Group UK & Ireland", type: "workable", slug: "indra-uk" },
+  { name: "Peopleworth", type: "workable", slug: "peopleworth" },
+  { name: "Second Nature", type: "workable", slug: "secondnature" },
+  { name: "Worldwide Events Group", type: "workable", slug: "mi-forums" },
 
   // SmartRecruiters official public Posting API
   { name: "General Dynamics Mission Systems", type: "smartrecruiters", slug: "gdmsi" },
   { name: "Telefonica Tech", type: "smartrecruiters", slug: "telefonicatech" },
+  { name: "Scalian", type: "smartrecruiters", slug: "scalian" },
+  { name: "Version 1", type: "smartrecruiters", slug: "version1" },
+  { name: "Jobs for Humanity", type: "smartrecruiters", slug: "jobsforhumanity" },
 ];
 
-const FETCHERS = {
+const FETCHERS: Partial<Record<CompanyConfig["type"], (
+  client: HttpClient, company: CompanyConfig, deadlineMs?: number
+) => Promise<RawATSJob[]>>> = {
   greenhouse: fetchGreenhouse,
   lever: fetchLever,
   ashby: fetchAshby,
@@ -86,13 +103,13 @@ const FETCHERS = {
   smartrecruiters: fetchSmartRecruiters,
 } as const;
 
-export async function fetchCompany(client: HttpClient, company: CompanyConfig): Promise<FetchResult> {
+export async function fetchCompany(client: HttpClient, company: CompanyConfig, deadlineMs?: number): Promise<FetchResult> {
   const fetcher = FETCHERS[company.type as keyof typeof FETCHERS];
   if (!fetcher) {
     return { company, jobs: [], error: `Unsupported ATS type: ${company.type}` };
   }
   try {
-    const jobs = await fetcher(client, company);
+    const jobs = await fetcher(client, company, deadlineMs);
     return { company, jobs, error: null };
   } catch (err) {
     return { company, jobs: [], error: err instanceof Error ? err.message : String(err) };
@@ -129,7 +146,7 @@ export async function fetchAllCompanies(
         continue;
       }
       const client = typeof clientOrFactory === "function" ? clientOrFactory() : clientOrFactory;
-      results[index] = await fetchCompany(client, company);
+      results[index] = await fetchCompany(client, company, deadlineMs);
     }
   }
   await Promise.all(Array.from({ length: workerCount }, () => worker()));

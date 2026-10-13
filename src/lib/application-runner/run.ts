@@ -28,6 +28,7 @@ import {
   isEmployerTermsCheckbox,
   isVerificationResendControl,
   isSafeApplicationHandoffNavigation,
+  isScopedApplicationSubmitAction,
   isSourceAccessDeniedPage,
   nativeRunnerHostAllowed,
   preferEmployerSignIn,
@@ -478,6 +479,34 @@ async function actionLocatorMatching(
       220,
     );
     if (label && matches(label)) return item;
+  }
+  return null;
+}
+
+async function finalApplicationAction(
+  page: Page,
+  ats: AtsDefinition,
+): Promise<Locator | null> {
+  const namedAction = await actionLocator(page, ats.submitPattern);
+  if (namedAction) return namedAction;
+  if (ats.kind !== "generic") return null;
+
+  // Older recruiter forms label their real submit control simply "Send".
+  // Require it to belong to the form that accepts a Resume and contact data;
+  // newsletter, site-search and general contact forms do not qualify.
+  const controls = page.locator('form input[type="submit"], form button[type="submit"]');
+  for (let index = 0; index < Math.min(await controls.count(), 30); index += 1) {
+    const control = controls.nth(index);
+    if (!(await control.isVisible()) || !(await control.isEnabled())) continue;
+    const evidence = await control.evaluate((node) => {
+      const form = node.closest("form");
+      return {
+        label: node.getAttribute("value") || node.textContent || "",
+        hasResumeUpload: Boolean(form?.querySelector('input[type="file"]')),
+        hasContactField: Boolean(form?.querySelector('input[type="email"], input[name*="email" i]')),
+      };
+    });
+    if (isScopedApplicationSubmitAction(evidence)) return control;
   }
   return null;
 }
@@ -1378,6 +1407,14 @@ async function snapshotFields(
               .map((label) => label.textContent ?? "")
               .join(" ")
           : "";
+      // Some recruiter forms use <label>Telephone</label><input ...> without
+      // a for/id relationship. Read only the immediately preceding label so
+      // one field cannot accidentally inherit another field's question.
+      const previousElement = element.previousElementSibling;
+      const adjacentLabel = previousElement?.tagName === "LABEL" &&
+        !previousElement.getAttribute("for")
+          ? previousElement.textContent ?? ""
+          : "";
       const fieldset = element.closest("fieldset");
       const legend = fieldset?.querySelector("legend")?.textContent ?? "";
       const described = (element.getAttribute("aria-labelledby") ?? "")
@@ -1390,6 +1427,7 @@ async function snapshotFields(
         described ||
         element.getAttribute("aria-label") ||
         ownLabel ||
+        adjacentLabel ||
         element.getAttribute("placeholder") ||
         element.getAttribute("name") ||
         "";
@@ -1419,6 +1457,7 @@ async function snapshotFields(
         required:
           element.hasAttribute("required") ||
           element.getAttribute("aria-required") === "true" ||
+          (type === "checkbox" && /^(?:please\s+)?(?:agree|accept)\b/i.test(label.trim())) ||
           Boolean(
             element
               .closest('[class*="element-name-"]')
@@ -2135,7 +2174,7 @@ export async function runNativeApplication(
           currentDestination(page, startUrl.toString()),
         );
 
-      let submit = await actionLocator(page, ats.submitPattern);
+      let submit = await finalApplicationAction(page, ats);
       let next = await actionLocator(page, ats.nextPattern);
       // Client-rendered employer forms can briefly expose only their header
       // after account creation. Give the approved page a bounded opportunity
@@ -2147,7 +2186,7 @@ export async function runNativeApplication(
       ) {
         if (await successMessage(page, ats)) break;
         await page.waitForTimeout(500);
-        submit = await actionLocator(page, ats.submitPattern);
+        submit = await finalApplicationAction(page, ats);
         next = await actionLocator(page, ats.nextPattern);
       }
       const action = submit ?? next;

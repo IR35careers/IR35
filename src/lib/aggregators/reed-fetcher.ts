@@ -22,7 +22,7 @@
  *   the rate parser's magnitude inference reads "£450 - £550" correctly.
  */
 
-import { HttpClient } from "../ats/http-client";
+import { HttpClient, HttpError } from "../ats/http-client";
 import type { RawATSJob } from "../ats/types";
 
 export interface ReedJob {
@@ -86,10 +86,17 @@ export interface ReedFetchOptions {
   pages?: number;
   /** High-value searches fetched in addition to the general contract pages. */
   keywordQueries?: string[];
+  /** Search beyond page one of each profession/IR35 partition. */
+  keywordPages?: number;
+  /** Stop starting requests before the shared database-write window. */
+  deadlineMs?: number;
+  onPageError?: (query: string, page: number, message: string) => void;
 }
 
 export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Promise<RawATSJob[]> {
-  const pages = opts.pages ?? 2;
+  const pages = Math.max(1, Math.min(10, opts.pages ?? 2));
+  const keywordPages = Math.max(1, Math.min(5, opts.keywordPages ?? 1));
+  const deadline = opts.deadlineMs ?? Number.POSITIVE_INFINITY;
   const auth = "Basic " + Buffer.from(`${opts.apiKey}:`).toString("base64");
   const jobs: RawATSJob[] = [];
   const seen = new Set<string>();
@@ -113,12 +120,26 @@ export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Pro
     return results.length;
   };
 
-  for (let page = 0; page < pages; page++) {
-    if ((await fetchPage(page)) < 100) break;
+  let completedPages = 0;
+  let lastError = "";
+  const queries = [undefined, ...new Set(opts.keywordQueries ?? [])];
+  for (const keywords of queries) {
+    const pageCount = keywords === undefined ? pages : keywordPages;
+    for (let page = 0; page < pageCount; page++) {
+      if (Date.now() >= deadline) return jobs;
+      try {
+        const count = await fetchPage(page, keywords);
+        completedPages++;
+        if (count < 100) break;
+      } catch (error) {
+        lastError = error instanceof HttpError ? `HTTP ${error.status}` : "request failed or timed out";
+        opts.onPageError?.(keywords ?? "All UK contracts", page + 1, lastError);
+        // Preserve successful partitions and continue with another search.
+        break;
+      }
+    }
   }
-  for (const keywords of opts.keywordQueries ?? []) {
-    await fetchPage(0, keywords);
-  }
+  if (completedPages === 0 && lastError) throw new Error(`Reed searches failed: ${lastError}`);
   return jobs;
 }
 

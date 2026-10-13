@@ -60,6 +60,53 @@ Linux computer without a public URL. It polls Supabase and records a heartbeat
 that appears in the admin system map. A public `APPLICATION_WORKER_URL` is only
 needed for an external host health check and wake-up support.
 
+## Persistent Windows installation
+
+Build the worker and validate its browser and environment before registering
+the watchdog. Run these commands from the repository root in PowerShell:
+
+```powershell
+npm run worker:build
+powershell -NoProfile -File scripts/run-application-worker.ps1 -ValidateOnly
+powershell -NoProfile -File scripts/install-application-worker-task.ps1
+Start-ScheduledTask -TaskName "IR35Careers Application Worker"
+powershell -NoProfile -File scripts/status-application-worker.ps1 -Json
+```
+
+Run the installer again after changing the task setup. Updating source files
+does not update a previously registered Windows task. An old registration
+may still launch Node directly with only a logon trigger; if it stops, it has
+no periodic trigger to restart it. The current registration launches the
+watchdog at logon and has a five-minute recovery trigger. It runs under the
+current user's interactive session, so the machine must remain powered on
+with that user signed in. A container host with automatic restart is the
+appropriate deployment for uninterrupted service across desktop shutdowns.
+
+The watchdog uses the installed Chrome or Edge and the configured health
+port. `-ValidateOnly` checks the configuration without starting or stopping
+any processes. The status script reports whether Windows has the current
+watchdog registration, whether the health endpoint responds, and whether
+the last successful production API connection is recent.
+
+## Reading submission outcomes
+
+The local `/health` `completed` counter means the production API accepted a
+worker callback. A callback may have paused for contractor action, cancelled
+an expired vacancy, queued another attempt, or submitted the application.
+The `failed` counter reports callback delivery failures. Neither counter is
+an employer-delivery total.
+
+The additional `tasksProcessed`, `submitted`, `needsUser`, `cancelled`,
+`processing`, and `duplicateCallbacks` health fields separate the outcomes
+returned by the production API. They are per-process counters, reset on a
+restart, and may include repeated attempts of the same application.
+
+Use persisted `application_submissions` outcomes to report delivery:
+`succeeded` with a submitted provider receipt is confirmed by the employer
+workflow. Contractor-attested completion must be shown separately. A
+`processing` submission or a worker task marked `needs_user` is still pending
+and must never be included in the employer-confirmed total.
+
 ## Operational guarantees
 
 - Each user and application has one idempotent queue item.

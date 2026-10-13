@@ -11,6 +11,10 @@
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
 import { timingSafeEqual } from "node:crypto";
+import {
+  ApplicationWorkerRequestError,
+  readSignedApplicationWorkerJson,
+} from "@/lib/application-worker-request";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -46,6 +50,39 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json(
       { ok: false, error: err instanceof Error ? err.message : String(err) },
       { status: 500, headers: NO_STORE }
+    );
+  }
+}
+
+/** Manual operations use the existing worker credential; credentials never
+ * enter a URL, browser bundle or log. The daily Vercel cron retains its GET
+ * authentication independently. */
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body = await readSignedApplicationWorkerJson(request, 2_000);
+    if (
+      !body ||
+      typeof body !== "object" ||
+      (body as Record<string, unknown>).action !== "fetch_contract_jobs"
+    )
+      return Response.json(
+        { error: "The contract refresh request is invalid." },
+        { status: 400, headers: NO_STORE },
+      );
+    const summary = await runFetchPipeline();
+    return Response.json({ ok: true, summary }, { headers: NO_STORE });
+  } catch (error) {
+    if (error instanceof ApplicationWorkerRequestError)
+      return Response.json(
+        { error: error.message },
+        { status: error.status, headers: NO_STORE },
+      );
+    console.error("contract_job_refresh_failed", {
+      reason: error instanceof Error ? error.message.slice(0, 240) : "unknown",
+    });
+    return Response.json(
+      { ok: false, error: "The contract refresh could not complete." },
+      { status: 500, headers: NO_STORE },
     );
   }
 }

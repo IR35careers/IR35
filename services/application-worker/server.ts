@@ -33,6 +33,11 @@ const APP_ORIGIN = applicationWorkerAppOrigin(process.env.IR35CAREERS_APP_URL);
 let active = 0;
 let completed = 0;
 let failed = 0;
+let submitted = 0;
+let needsUser = 0;
+let cancelled = 0;
+let processing = 0;
+let duplicateCallbacks = 0;
 let stopping = false;
 let claiming = false;
 let lastControlPlaneAt: string | null = null;
@@ -103,12 +108,20 @@ async function executeTask(
   }
 
   try {
-    await postApplicationWorkerCallback({
+    const saved = await postApplicationWorkerCallback({
       task,
       callback,
       appOrigin: APP_ORIGIN,
     });
     completed += 1;
+    // The callback API may convert an attention receipt into an automatic
+    // retry or expire a listing. Count the persisted outcome it returned,
+    // rather than treating every accepted callback as an application sent.
+    if (saved.duplicate) duplicateCallbacks += 1;
+    else if (saved.state === "submitted") submitted += 1;
+    else if (saved.state === "needs_user") needsUser += 1;
+    else if (saved.state === "cancelled") cancelled += 1;
+    else if (saved.state === "processing") processing += 1;
   } catch (error) {
     failed += 1;
     console.error("worker_callback_failed", {
@@ -206,9 +219,19 @@ const server = createServer((request, response) => {
         concurrency: CONCURRENCY,
         completed,
         failed,
+        tasksProcessed: completed,
+        submitted,
+        needsUser,
+        cancelled,
+        processing,
+        duplicateCallbacks,
+        callbackDeliveryFailures: failed,
         version: WORKER_VERSION,
         controlPlane: {
-          connected: Boolean(lastControlPlaneAt),
+          connected:
+            Boolean(lastControlPlaneAt) &&
+            Date.now() - new Date(lastControlPlaneAt!).getTime() < 90_000 &&
+            consecutiveControlPlaneFailures === 0,
           lastConnectedAt: lastControlPlaneAt,
           consecutiveFailures: consecutiveControlPlaneFailures,
           error: lastControlPlaneError,

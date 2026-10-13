@@ -41,7 +41,8 @@ export function mapLeverJob(job: LeverPosting, company: CompanyConfig): RawATSJo
   // Surface useful structured fields as text so the processing engine's
   // contract gate and remote detector can see them.
   const commitment = job.categories?.commitment ? `Commitment: ${job.categories.commitment}.` : "";
-  const description = [commitment, job.descriptionPlain ?? "", listText, job.additionalPlain ?? ""]
+  const employment = /\bpermanent\b/i.test(job.categories?.commitment ?? "") ? "Employment type: Permanent." : "";
+  const description = [employment, commitment, job.descriptionPlain ?? "", listText, job.additionalPlain ?? ""]
     .filter(Boolean)
     .join("\n\n");
 
@@ -66,6 +67,9 @@ export function mapLeverJob(job: LeverPosting, company: CompanyConfig): RawATSJo
     applyUrl: job.hostedUrl ?? job.applyUrl ?? "",
     postedAt: job.createdAt ? new Date(job.createdAt).toISOString() : null,
     rawPayload: job,
+    contractHint: /\bcontract(?:or)?\b|\bfreelance\b/i.test(job.categories?.commitment ?? "")
+      && !/\bpermanent\b/i.test(job.categories?.commitment ?? "") ? true : undefined,
+    ukHint: /^(?:gb|uk)$/i.test(job.country ?? ""),
   };
 }
 

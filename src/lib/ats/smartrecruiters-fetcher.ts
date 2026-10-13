@@ -56,13 +56,22 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 5;
 const DETAIL_CONCURRENCY = 8;
 const MAX_POSTING_AGE_MS = 400 * 24 * 60 * 60 * 1000;
-const CONTRACT_SIGNAL = /\b(?:contract(?:or|ing)?|freelance|interim|temporary|day[ -]?rate|fixed[ -]?term|locum)\b/i;
+const CONTRACT_SIGNAL = /\b(?:contract(?:or|ing)?|freelance|interim|temporary|day[ -]?rate|fixed[ -]?term|locum|ir\s*-?\s*35)\b/i;
+const PERMANENT_EMPLOYMENT = /\b(?:permanent|full[ -]?time|part[ -]?time)\b/i;
+const CONTRACTOR_EVIDENCE = /\b(?:ir\s*-?\s*35|day[ -]?rate|per\s+(?:day|hour)|freelance|sub[ -]?contractor)\b/i;
 
 function hasContractSignal(posting: SmartRecruitersPosting): boolean {
   const customFields = (posting.customField ?? [])
-    .map((field) => `${field.fieldLabel ?? ""} ${field.valueLabel ?? ""}`)
+    // A field named "Contract type" occurs on permanent roles too. Only
+    // its VALUE is evidence of a contract engagement.
+    .map((field) => field.valueLabel ?? "")
     .join(" ");
-  return CONTRACT_SIGNAL.test(`${posting.name ?? ""} ${posting.typeOfEmployment?.id ?? ""} ${posting.typeOfEmployment?.label ?? ""} ${customFields}`);
+  const employment = `${posting.typeOfEmployment?.id ?? ""} ${posting.typeOfEmployment?.label ?? ""}`;
+  if (PERMANENT_EMPLOYMENT.test(employment)) {
+    return CONTRACTOR_EVIDENCE.test(`${posting.name ?? ""} ${customFields}`)
+      || /\bcontract(?:or)?\b|\binterim\b|\bfreelance\b/i.test(posting.name ?? "");
+  }
+  return CONTRACT_SIGNAL.test(`${posting.name ?? ""} ${employment} ${customFields}`);
 }
 
 function isUkPosting(posting: SmartRecruitersPosting): boolean {
@@ -92,6 +101,9 @@ export function mapSmartRecruitersJob(
     job.location?.country,
   ].filter(Boolean).join(", ");
   const workplace = job.location?.remote ? "Remote" : job.location?.hybrid ? "Hybrid" : "";
+  const employment = `${job.typeOfEmployment?.id ?? ""} ${job.typeOfEmployment?.label ?? ""}`;
+  const explicitContract = /\bcontract\b/i.test(employment) && !PERMANENT_EMPLOYMENT.test(employment);
+  const roleEvidence = `${job.name ?? ""} ${description}`;
 
   return {
     sourceDomain: "jobs.smartrecruiters.com",
@@ -105,22 +117,31 @@ export function mapSmartRecruitersJob(
     applyUrl: job.applyUrl ?? job.postingUrl ?? "",
     postedAt: job.releasedDate ?? null,
     rawPayload: job,
-    contractHint: true,
+    // Full-time Contract Managers are employees; do not let a title or a
+    // custom field label bypass the processor's employment gate. Some
+    // advertisers label genuine day-rate work Full-time, so retain explicit
+    // IR35/rate evidence and let the processor assess it normally.
+    contractHint: explicitContract ? true
+      : PERMANENT_EMPLOYMENT.test(employment) && !CONTRACTOR_EVIDENCE.test(roleEvidence) ? false
+        : undefined,
+    ukHint: isUkPosting(job),
   };
 }
 
 export async function fetchSmartRecruiters(
   client: HttpClient,
-  company: CompanyConfig
+  company: CompanyConfig,
+  deadlineMs = Number.POSITIVE_INFINITY
 ): Promise<RawATSJob[]> {
   const base = `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(company.slug)}/postings`;
   const summaries: SmartRecruitersPosting[] = [];
   let totalFound = Number.POSITIVE_INFINITY;
 
   for (let page = 0; page < MAX_PAGES && summaries.length < totalFound; page++) {
+    if (Date.now() >= deadlineMs) break;
     const offset = page * PAGE_SIZE;
     const data = await client.getJson<SmartRecruitersListResponse>(
-      `${base}?limit=${PAGE_SIZE}&offset=${offset}`
+      `${base}?limit=${PAGE_SIZE}&offset=${offset}&country=gb`
     );
     const rows = Array.isArray(data?.content) ? data.content : [];
     totalFound = typeof data?.totalFound === "number" ? data.totalFound : summaries.length + rows.length;
@@ -133,20 +154,17 @@ export async function fetchSmartRecruiters(
   );
   const detailed: SmartRecruitersPosting[] = [];
   for (let index = 0; index < candidates.length; index += DETAIL_CONCURRENCY) {
+    if (Date.now() >= deadlineMs) break;
     const chunk = candidates.slice(index, index + DETAIL_CONCURRENCY);
-    const rows = await Promise.all(chunk.map(async (summary) => {
-      const detail = await client.getJson<SmartRecruitersPosting>(
-        `${base}/${encodeURIComponent(summary.id)}`
-      );
-      return {
-        ...summary,
-        ...detail,
+    const rows = await Promise.allSettled(chunk.map(async (summary) => {
+      const detail = await client.getJson<SmartRecruitersPosting>(`${base}/${encodeURIComponent(summary.id)}`);
+      return { ...summary, ...detail,
         location: detail.location ?? summary.location,
         typeOfEmployment: detail.typeOfEmployment ?? summary.typeOfEmployment,
-        customField: detail.customField ?? summary.customField,
-      };
+        customField: detail.customField ?? summary.customField };
     }));
-    detailed.push(...rows);
+    // A withdrawn posting's 404 must not discard all other live vacancies.
+    for (const row of rows) if (row.status === "fulfilled") detailed.push(row.value);
   }
 
   return detailed.map((posting) => mapSmartRecruitersJob(posting, company));

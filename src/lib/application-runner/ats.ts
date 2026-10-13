@@ -56,6 +56,18 @@ export function matchesApplicationAction(
   });
 }
 
+export function isScopedApplicationSubmitAction(input: {
+  label: string;
+  hasResumeUpload: boolean;
+  hasContactField: boolean;
+}): boolean {
+  return (
+    input.hasResumeUpload &&
+    input.hasContactField &&
+    /^(send|apply|send cv|send resume)$/i.test(input.label.trim())
+  );
+}
+
 export interface AtsDefinition {
   kind: AtsKind;
   label: string;

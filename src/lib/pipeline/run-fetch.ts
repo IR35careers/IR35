@@ -56,6 +56,16 @@ export interface SourceRunSummary {
 /** Leave headroom inside Vercel's 60-second function limit for DB writes. */
 const FETCH_TIME_BUDGET_MS = 48000;
 const REED_ENRICHMENT_BUDGET_MS = 8000;
+const BASE_SOURCE_BUDGET_MS = 36_000;
+
+// The first few "all contract" pages are dominated by temp retail/care jobs.
+// Independent profession searches reach technical, change, engineering and
+// finance contracts that those pages never expose. Every search remains
+// contract-only at the provider and goes through the same UK/role/IR35 gates.
+export const UK_CONTRACT_SEARCH_PARTITIONS = [
+  "outside IR35", "inside IR35", "DevOps", "software engineer",
+  "data engineer", "business analyst", "project manager", "finance", "engineering",
+];
 
 const STALE_DAYS = 10;
 const UPSERT_CHUNK = 100;
@@ -106,7 +116,7 @@ export async function runFetchPipeline(
           maxRetries: 0,
         }),
         10,
-        started + 40_000
+        started + BASE_SOURCE_BUDGET_MS
       );
       return {
         results,
@@ -151,14 +161,17 @@ export async function runFetchPipeline(
     try {
       const client = new HttpClient({
         minDelayMs: 300,
-        timeoutMs: 8000,
-        maxRetries: 1,
+        timeoutMs: 5000,
+        maxRetries: 0,
         baseBackoffMs: 500,
       });
       const jobs = await fetchReed(client, {
         apiKey: reedKey,
-        pages: 4,
-        keywordQueries: ["outside IR35", "inside IR35", "IR35 contract"],
+        pages: 6,
+        keywordPages: 2,
+        keywordQueries: UK_CONTRACT_SEARCH_PARTITIONS,
+        deadlineMs: started + BASE_SOURCE_BUDGET_MS,
+        onPageError: (query, page, message) => notes.push(`Reed ${query} page ${page}: ${message}`),
       });
       return {
         jobs,
@@ -201,15 +214,19 @@ export async function runFetchPipeline(
     try {
       const client = new HttpClient({
         minDelayMs: 300,
-        timeoutMs: 8000,
-        maxRetries: 1,
+        timeoutMs: 5000,
+        maxRetries: 0,
         baseBackoffMs: 500,
       });
       const jobs = await fetchAdzuna(client, {
         appId: adzunaId,
         appKey: adzunaKey,
-        pages: 3,
-        keywordQueries: ["outside IR35", "inside IR35"],
+        pages: 4,
+        keywordPages: 2,
+        keywordQueries: UK_CONTRACT_SEARCH_PARTITIONS,
+        maxDaysOld: 30,
+        deadlineMs: started + BASE_SOURCE_BUDGET_MS,
+        onPageError: (query, page, message) => notes.push(`Adzuna ${query} page ${page}: ${message}`),
       });
       return {
         jobs,

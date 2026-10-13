@@ -233,8 +233,12 @@ export async function postApplicationWorkerCallback(input: {
   task: ApplicationWorkerTaskRow;
   callback: ApplicationWorkerCallback;
   appOrigin: string;
-}): Promise<void> {
-  await signedPost(
+}): Promise<{
+  ok: boolean;
+  state?: "submitted" | "needs_user" | "cancelled" | "processing";
+  duplicate?: boolean;
+}> {
+  return signedPost(
     callbackUrl(input.task, input.appOrigin),
     input.callback,
     60_000,
