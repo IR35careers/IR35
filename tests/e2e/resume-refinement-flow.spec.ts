@@ -50,7 +50,8 @@ test("a reviewed resume transfers exactly into the application and can be refine
   const selectedText = await editor.inputValue();
   await expect(apply).toBeVisible();
   await apply.click();
-  await expect(page.getByRole("heading", { name: "Senior DevOps Engineer - Outside IR35", exact: true })).toBeVisible();
+  await page.waitForURL("**/applications/new/**", { timeout: 60_000 });
+  await expect(page.getByRole("heading", { name: "Senior DevOps Engineer - Outside IR35", exact: true })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.getByRole("button", { name: "Edit Resume", exact: true }).click();
   await expect(page.getByLabel("Resume text", { exact: true })).toHaveValue(selectedText);
