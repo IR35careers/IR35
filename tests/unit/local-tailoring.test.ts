@@ -46,7 +46,8 @@ Senior Platform Engineer
 Ten years delivering AWS and Terraform platforms.`;
     const result = buildLocalTailoringResult(cv, DEMO_JOBS[0]);
     const tailored = applyAiTailoringSuggestions(cv, result.suggestions);
-    expect(tailored).toMatch(/Resume\.\n\nAlex Morgan/);
-    expect(tailored).not.toContain("Resume.Alex Morgan");
+    expect(tailored.startsWith("Alex Morgan\nSenior Platform Engineer")).toBe(true);
+    expect(tailored).toContain("PROFILE\nCore skills:");
+    expect(tailored).not.toContain("this Resume");
   });
 });

@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Clock3,
   Download,
-  FileCheck2,
   FileText,
   History,
   Loader2,
@@ -20,14 +19,12 @@ import {
   Sparkles,
   Trash2,
   UploadCloud,
-  WandSparkles,
   X,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { JobDetail } from "@/lib/job-types";
 import {
   analyseResumeForRole,
-  applyResumeSuggestions,
   parseResumeText,
   scoreResumeForRole,
 } from "@/lib/resume/analysis";
@@ -41,11 +38,13 @@ import type {
   ResumeAnalysis,
   ResumeExportRequest,
   ResumeScore,
-  ResumeSuggestion,
   ResumeVersion,
   ResumeVersionStatus,
 } from "@/lib/resume/types";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
+import { ResumeRefiner } from "@/components/resume/ResumeRefiner";
+import { ResumeDocumentPreview } from "@/components/resume/ResumeDocumentPreview";
+import { useWorkspaceState } from "@/lib/workspace/store";
 
 type StudioPhase = "source" | "review" | "final";
 
@@ -132,7 +131,7 @@ function ScoreBreakdown({ score }: { score: ResumeScore }) {
 
 function StepRail({ phase }: { phase: StudioPhase }) {
   const active = phase === "source" ? 1 : phase === "review" ? 2 : 3;
-  const steps = ["Add Resume", "Review evidence", "Approve & export"];
+  const steps = ["Your resume", "Refine for the role", "Review & apply"];
   return (
     <ol className="grid grid-cols-3 gap-2" aria-label="Resume tailoring progress">
       {steps.map((label, index) => {
@@ -152,76 +151,13 @@ function StepRail({ phase }: { phase: StudioPhase }) {
   );
 }
 
-function SuggestionCard({
-  suggestion,
-  accepted,
-  confirmed,
-  onToggle,
-}: {
-  suggestion: ResumeSuggestion;
-  accepted: boolean;
-  confirmed: boolean;
-  onToggle: (suggestion: ResumeSuggestion) => void;
-}) {
-  const active = suggestion.requiresConfirmation ? confirmed : accepted;
-  return (
-    <article className={`rounded-2xl border p-4 transition-colors ${active ? "border-brand-200 bg-brand-50/40" : "border-slate-200 bg-white"}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            {suggestion.kind === "verified-keyword" ? <ShieldCheck size={15} className="text-amber-600" /> : <WandSparkles size={15} className="text-brand-600" />}
-            {suggestion.title}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-slate-600">{suggestion.rationale}</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => onToggle(suggestion)}
-          aria-pressed={active}
-          className={`ir35-focus inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold ${
-            active
-              ? "border-brand-600 bg-brand-600 text-white"
-              : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-          }`}
-        >
-          {active ? <CheckCircle2 size={14} /> : null}
-          {suggestion.requiresConfirmation ? (active ? "Experience confirmed" : "I genuinely have this") : active ? "Approved" : "Use suggestion"}
-        </button>
-      </div>
-
-      {suggestion.kind === "verified-keyword" ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Resume evidence</p>
-            <p className="mt-1 text-sm text-slate-600">{suggestion.original}</p>
-          </div>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700">Add only after confirmation</p>
-            <p className="mt-1 text-sm font-semibold text-amber-950">{suggestion.replacement}</p>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-3 grid gap-2 lg:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Original</p>
-            <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{suggestion.original || "No profile section found."}</p>
-          </div>
-          <div className="rounded-xl border border-brand-200 bg-white p-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700">Suggested</p>
-            <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-800">{suggestion.replacement}</p>
-          </div>
-        </div>
-      )}
-    </article>
-  );
-}
-
 function formatVersionDate(value: string): string {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
 export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job: JobDetail; backHref?: string; forceLocalHistory?: boolean }) {
   const { user } = useAuth();
+  const workspace = useWorkspaceState();
   const historyUserId = forceLocalHistory ? null : user?.id ?? null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<StudioPhase>("source");
@@ -237,10 +173,14 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [approvedVersion, setApprovedVersion] = useState<ResumeVersion | null>(null);
+  const [documentPreview, setDocumentPreview] = useState(false);
+  const savedResume = workspace.profile.resumeProfiles?.find((item) => item.id === workspace.profile.activeResumeProfileId)
+    ?? workspace.profile.resumeProfiles?.find((item) => item.isDefault);
 
   const refreshVersions = async () => {
     try {
-      setVersions(await loadResumeVersions(job.id, historyUserId));
+      setVersions(await loadResumeVersions(job.id, historyUserId, forceLocalHistory));
     } catch (versionError) {
       setError(versionError instanceof Error ? versionError.message : "Version history is unavailable.");
     }
@@ -251,16 +191,6 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     // job and signed-in user determine the private history scope.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.id, historyUserId]);
-
-  const previewText = useMemo(() => {
-    if (!analysis) return sourceText;
-    return applyResumeSuggestions(sourceText, analysis.suggestions, acceptedIds, confirmedIds);
-  }, [acceptedIds, analysis, confirmedIds, sourceText]);
-
-  const previewScore = useMemo(
-    () => (analysis ? scoreResumeForRole(previewText, job, sourceFilename) : null),
-    [analysis, job, previewText, sourceFilename]
-  );
 
   const finalScore = useMemo(
     () => (tailoredText.trim() ? scoreResumeForRole(tailoredText, job, sourceFilename) : null),
@@ -300,31 +230,10 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     }
     const next = analyseResumeForRole(sourceText, sourceFilename, job);
     setAnalysis(next);
-    setAcceptedIds(next.defaultAcceptedIds);
+    setAcceptedIds([]);
     setConfirmedIds([]);
+    setApprovedVersion(null);
     setPhase("review");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const toggleSuggestion = (suggestion: ResumeSuggestion) => {
-    if (suggestion.requiresConfirmation) {
-      setConfirmedIds((current) =>
-        current.includes(suggestion.id) ? current.filter((id) => id !== suggestion.id) : [...current, suggestion.id]
-      );
-      setAcceptedIds((current) =>
-        current.includes(suggestion.id) ? current.filter((id) => id !== suggestion.id) : [...current, suggestion.id]
-      );
-      return;
-    }
-    setAcceptedIds((current) =>
-      current.includes(suggestion.id) ? current.filter((id) => id !== suggestion.id) : [...current, suggestion.id]
-    );
-  };
-
-  const buildApprovedDraft = () => {
-    setTailoredText(previewText);
-    setPhase("final");
-    setNotice("Approved suggestions applied. You can still edit every line before saving or exporting.");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -356,9 +265,10 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     setBusy(status === "approved" ? "approve" : "save");
     setError("");
     try {
-      await saveResumeVersion(version, historyUserId);
+      const saved = await saveResumeVersion(version, historyUserId, forceLocalHistory);
+      setApprovedVersion(status === "approved" ? saved : null);
       await refreshVersions();
-      setNotice(status === "approved" ? "Version approved and saved. It is ready to export." : "Draft version saved.");
+      setNotice(status === "approved" ? "Version approved and saved. Review the application to apply with this exact resume." : "Draft version saved.");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Version could not be saved.");
     } finally {
@@ -416,6 +326,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     setConfirmedIds(version.confirmedKeywordIds);
     setTailoredText(version.tailoredText);
     setVersionLabel(version.label);
+    setApprovedVersion(version.status === "approved" ? version : null);
     setPhase("final");
     setNotice(`Restored ${version.label}. Saving creates a new version; the original remains unchanged.`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -424,7 +335,8 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   const removeVersion = async (version: ResumeVersion) => {
     setError("");
     try {
-      await deleteResumeVersion(version.id, historyUserId);
+      await deleteResumeVersion(version.id, historyUserId, forceLocalHistory);
+      if (approvedVersion?.id === version.id) setApprovedVersion(null);
       await refreshVersions();
       setNotice(`Deleted ${version.label}.`);
     } catch (deleteError) {
@@ -433,7 +345,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   };
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-slate-50 pb-16 text-slate-950">
+    <main className="ir35-workspace-canvas min-h-[calc(100vh-4rem)] pb-24 text-slate-950">
       <div className="ir35-container py-6 sm:py-8">
         <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -441,7 +353,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               <ArrowLeft size={15} /> Back to role
             </Link>
             <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-brand-700">Resume Studio</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Tailor your Resume with evidence you control</h1>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Your experience. Refined for this contract.</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
               {job.title} at {job.company_name}. Scores are transparent, missing keywords are never treated as experience, and every edit needs your approval.
             </p>
@@ -462,6 +374,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
         {phase === "source" && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-7" aria-labelledby="add-cv-title">
+              {savedResume?.resumeText.trim() && (user || !isSupabaseConfigured()) && <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><div><p className="text-sm font-semibold text-emerald-950">Your saved resume is available</p><p className="mt-1 text-xs text-emerald-800">{savedResume.name} · your master stays unchanged</p></div><button type="button" onClick={() => { setSourceText(savedResume.resumeText); setSourceFilename(savedResume.name); }} className="ir35-focus min-h-11 rounded-xl bg-emerald-800 px-4 text-xs font-semibold text-white">Use my saved resume</button></div>}
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><FileText size={19} /></span>
                 <div>
@@ -528,9 +441,11 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               <section className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
                 <p className="flex items-center gap-2 text-sm font-bold text-brand-900"><LockKeyhole size={16} /> Privacy by default</p>
                 <p className="mt-2 text-sm leading-6 text-brand-900/80">
-                  {user && isSupabaseConfigured()
+                  {!forceLocalHistory && user && isSupabaseConfigured()
                     ? "Versions you choose to save are stored in your private, row-protected account history."
-                    : "You are using local mode. Versions are saved in this browser only when you press Save; you can delete them at any time."}
+                    : forceLocalHistory || !isSupabaseConfigured()
+                      ? "You are using local mode. Versions are saved in this browser only when you press Save; you can delete them at any time."
+                      : "You can review and export without signing in. Sign in before saving private versions or applying. Unsaved text stays in this page only."}
                 </p>
               </section>
               {versions.length > 0 && (
@@ -555,47 +470,16 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
           </div>
         )}
 
-        {phase === "review" && analysis && previewScore && (
+        {phase === "review" && analysis && (
           <div className="mt-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-                <div className="flex items-center gap-4"><ScoreRing score={analysis.baseline.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Current Resume</p><h2 className="mt-1 text-lg font-bold">Role-specific score</h2><p className="mt-1 text-sm text-slate-600">Before approved changes</p></div></div>
-              </section>
-              <section className="rounded-2xl border border-brand-200 bg-brand-50/60 p-5 shadow-card">
-                <div className="flex items-center gap-4"><ScoreRing score={previewScore.overall} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Live projection</p><h2 className="mt-1 text-lg font-bold">{previewScore.overall - analysis.baseline.overall >= 0 ? "+" : ""}{previewScore.overall - analysis.baseline.overall} points</h2><p className="mt-1 text-sm text-slate-600">Based only on approved or confirmed edits</p></div></div>
-              </section>
-            </div>
-
-            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <section>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Side-by-side approval</p><h2 className="mt-1 text-xl font-bold">Review every suggested change</h2><p className="mt-1 text-sm text-slate-600">Green edits use evidence already in the Resume. Amber skills require your explicit confirmation.</p></div>
-                  <button type="button" onClick={() => setPhase("source")} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><RotateCcw size={15} /> Change source Resume</button>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {analysis.suggestions.length ? analysis.suggestions.map((suggestion) => (
-                    <SuggestionCard key={suggestion.id} suggestion={suggestion} accepted={acceptedIds.includes(suggestion.id)} confirmed={confirmedIds.includes(suggestion.id)} onToggle={toggleSuggestion} />
-                  )) : <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">No safe changes were identified. You can still edit the final version manually.</div>}
-                </div>
-                <div className="sticky bottom-4 mt-5 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-floating backdrop-blur">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm text-slate-600"><span className="font-bold text-slate-900">{acceptedIds.length}</span> suggestions selected; <span className="font-bold text-slate-900">{confirmedIds.length}</span> new skills personally confirmed.</p>
-                    <button type="button" onClick={buildApprovedDraft} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700"><FileCheck2 size={17} /> Build approved version</button>
-                  </div>
-                </div>
-              </section>
-
-              <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-sm font-bold">Projected score details</p><div className="mt-4"><ScoreBreakdown score={previewScore} /></div></section>
-                <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <p className="text-sm font-bold text-slate-900">Keyword evidence</p>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-brand-700">Found in Resume</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">{analysis.baseline.matchedKeywords.length ? analysis.baseline.matchedKeywords.map((keyword) => <span key={keyword} className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-800">{keyword}</span>) : <span className="text-xs text-slate-500">No role keywords found yet.</span>}</div>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-amber-700">Missing - not assumed</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">{analysis.baseline.missingKeywords.length ? analysis.baseline.missingKeywords.map((keyword) => <span key={keyword} className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{keyword}</span>) : <span className="text-xs text-slate-500">No priority gaps found.</span>}</div>
-                </section>
-              </aside>
-            </div>
+            <button type="button" onClick={() => setPhase("source")} className="ir35-focus mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><RotateCcw size={15} /> Change source resume</button>
+            <ResumeRefiner job={job} resumeText={sourceText} autoStart actionLabel="Use selected draft" onUseDraft={async (draft) => {
+              setTailoredText(draft.tailoredText); setAcceptedIds(draft.acceptedSuggestionIds);
+              setConfirmedIds(draft.confirmedEvidence ? ["contractor-provided-evidence"] : []);
+              setApprovedVersion(null); setPhase("final");
+              setNotice("Your selected changes are in the editor. Review, save and approve this version before applying.");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }} />
           </div>
         )}
 
@@ -607,13 +491,20 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
                 <button type="button" onClick={() => setPhase("review")} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><ArrowLeft size={15} /> Review suggestions</button>
               </div>
               <label htmlFor="version-label" className="mt-6 block text-sm font-semibold text-slate-800">Version name</label>
-              <input id="version-label" value={versionLabel} onChange={(event) => setVersionLabel(event.target.value)} maxLength={80} className="ir35-focus mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900" />
+              <input id="version-label" value={versionLabel} onChange={(event) => { setVersionLabel(event.target.value); setApprovedVersion(null); }} maxLength={80} className="ir35-focus mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900" />
               <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">Resume text</label>
-              <textarea id="tailored-cv" value={tailoredText} onChange={(event) => setTailoredText(event.target.value)} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-sm leading-6 text-slate-800" />
+              <textarea id="tailored-cv" value={tailoredText} onChange={(event) => { setTailoredText(event.target.value); setApprovedVersion(null); }} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-sm leading-6 text-slate-800" />
+              <button type="button" onClick={() => setDocumentPreview((value) => !value)} className="ir35-focus mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700"><FileText size={15} />{documentPreview ? "Hide document preview" : "Preview resume document"}</button>
+              {documentPreview && <div className="mt-4 max-w-full overflow-auto rounded-2xl bg-slate-100 p-3"><ResumeDocumentPreview resumeText={tailoredText} filename={sourceFilename} /></div>}
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => void persistVersion("draft")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 hover:border-slate-400 disabled:opacity-50">{busy === "save" ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save new version</button>
                 <button type="button" onClick={() => void persistVersion("approved")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50">{busy === "approve" ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={17} />} Approve & save version</button>
               </div>
+              {!forceLocalHistory && approvedVersion && <Link href={`/applications/new/${job.id}?resumeVersionId=${encodeURIComponent(approvedVersion.id)}`} className="ir35-focus mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white"><FileText size={16} />Review &amp; apply with this resume</Link>}
+              {!forceLocalHistory && !approvedVersion && <p className="mt-3 text-xs leading-5 text-slate-500">Approve and save the current text to use this exact version in your application. Editing it requires a new approval.</p>}
+              {!user && isSupabaseConfigured() && !forceLocalHistory && <Link href={`/account?next=${encodeURIComponent(`/jobs/${job.id}/resume`)}`} prefetch={false} className="ir35-focus mt-3 inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-emerald-800 underline">Sign in to save versions and apply</Link>}
+              {forceLocalHistory && approvedVersion && /^https:\/\//i.test(job.apply_url) && <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="ir35-focus mt-4 flex min-h-12 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white">Open employer application</a>}
+              {forceLocalHistory && approvedVersion && <p className="mt-2 text-xs leading-5 text-slate-500">This imported role is not in your application tracker. Download this version and use it on the employer page; opening the link does not submit anything.</p>}
             </section>
 
             <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">

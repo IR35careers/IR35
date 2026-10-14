@@ -40,7 +40,7 @@ export function buildLocalTailoringResult(cvText: string, job: JobDetail): AiTai
       original: suggestion.original,
       replacement: suggestion.replacement,
       rationale: suggestion.rationale,
-      evidenceQuote: suggestion.original,
+      evidenceQuote: suggestion.original || cvText.split("\n").filter((line) => suggestion.evidenceTerms.some((term) => resumeContainsTerm(line, term))).slice(0, 6).join("\n"),
       keywords: suggestion.evidenceTerms,
       impact: index === 0 ? "high" as const : "medium" as const,
     })),

@@ -22,6 +22,11 @@ import {
 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { ResumeDocumentPreview } from "@/components/resume/ResumeDocumentPreview";
+import { ResumeRefiner } from "@/components/resume/ResumeRefiner";
+import { useAuth } from "@/lib/auth-context";
+import { createResumeVersionId, saveResumeVersion } from "@/lib/resume/store";
+import { applyRefinedResume, type RefinedResumeDraft } from "@/lib/resume/refinement";
+import { scoreResumeForRole } from "@/lib/resume/analysis";
 import { StatusPill } from "@/components/workspace/WorkspacePage";
 import { formatRate, type JobDetail } from "@/lib/job-types";
 import { parseResumeText } from "@/lib/resume/analysis";
@@ -114,7 +119,6 @@ export function ApplicationRecordWorkspace({
   onSubmit,
   onContinueInBrowser,
   onConfirmManualSubmission,
-  onRefreshTailoring,
   onResumeBlur,
 }: {
   job: JobDetail;
@@ -133,9 +137,9 @@ export function ApplicationRecordWorkspace({
   onSubmit: () => Promise<void>;
   onContinueInBrowser: () => Promise<void>;
   onConfirmManualSubmission: () => Promise<void>;
-  onRefreshTailoring: () => Promise<void>;
   onResumeBlur: () => void;
 }) {
+  const { user } = useAuth();
   const [tab, setTab] = useState<ApplicationTab>(() =>
     applicationHasBeenSubmitted(application) ? "resume" : "form",
   );
@@ -144,6 +148,21 @@ export function ApplicationRecordWorkspace({
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const [emailCopied, setEmailCopied] = useState(false);
   const locked = submitted || applicationHasBeenSubmitted(application) || submissionInProgress;
+  const saveRefinement = async (draft: RefinedResumeDraft) => {
+    if (locked || draft.sourceText !== application.tailoredCvText) throw new Error("This resume changed or was submitted. Review the current version again.");
+    applyRefinedResume(application, draft, job);
+    const now = new Date().toISOString();
+    await saveResumeVersion({ id: createResumeVersionId(), userId: user?.id ?? null, jobId: job.id,
+      jobTitle: job.title, companyName: job.company_name, sourceFilename: application.resumeVersionLabel,
+      label: `${job.title} · refined`.slice(0, 80), status: "draft", sourceText: draft.sourceText,
+      tailoredText: draft.tailoredText, acceptedSuggestionIds: draft.acceptedSuggestionIds,
+      confirmedKeywordIds: draft.confirmedEvidence ? ["contractor-provided-evidence"] : [],
+      score: scoreResumeForRole(draft.tailoredText, job), createdAt: now, approvedAt: null }, user?.id ?? null);
+    onUpdate((current) => applyRefinedResume(current, draft, job));
+    setResumeEditing(false);
+    setTab("form");
+    // The normal application approvals still control the actual cloud submit.
+  };
   const requiredQuestions = application.questions.filter((item) => item.required);
   const optionalQuestions = application.questions.filter((item) => !item.required);
   const receivedEmail = inbox.alias.trim() || profile.email;
@@ -745,16 +764,12 @@ export function ApplicationRecordWorkspace({
                           {resumeEditing ? "Close editor" : "Edit Resume"}
                         </button>
                       )}
-                      {!locked && (
-                        <button type="button" onClick={() => void onRefreshTailoring()} disabled={busy !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800 disabled:opacity-50">
-                          {busy === "ai" ? <Loader2 className="animate-spin" size={16} /> : <RefreshCcw size={15} />} Improve Resume
-                        </button>
-                      )}
                       <button type="button" onClick={() => void downloadResume("pdf")} disabled={downloading !== null} className="ir35-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 disabled:opacity-50">
                         {downloading === "pdf" ? <Loader2 className="animate-spin" size={15} /> : <Download size={15} />} Download PDF
                       </button>
                     </div>
                   </div>
+                  <div className="mx-5 mt-4 sm:mx-6"><ResumeRefiner job={job} resumeText={application.tailoredCvText} disabled={locked || busy !== null} onUseDraft={saveRefinement} /></div>
                   <details className="mx-5 mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm sm:mx-6">
                     <summary className="cursor-pointer font-semibold text-slate-700">Match details: {application.matchScore}%</summary>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">

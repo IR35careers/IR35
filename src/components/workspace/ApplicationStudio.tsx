@@ -39,6 +39,10 @@ import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import type { AiTailoringResult } from "@/lib/ai/tailoring-types";
 import type { TailoringMode } from "@/lib/ai/openrouter-tailoring";
+import { useAuth } from "@/lib/auth-context";
+import { loadResumeVersions } from "@/lib/resume/store";
+import type { ResumeVersion } from "@/lib/resume/types";
+import { applyRefinedResume } from "@/lib/resume/refinement";
 import { roleTypeWarning } from "@/lib/ats/submission-route";
 import {
   hasActiveSubmission,
@@ -126,6 +130,7 @@ function cleanExisting(
 }
 
 export function ApplicationStudio({ job }: { job: JobDetail }) {
+  const { user } = useAuth();
   const workspace = useWorkspaceState();
   const existing = workspace.applications.find(
     (item) => item.job.id === job.id && item.id !== "app-demo-northstar",
@@ -163,6 +168,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [application, setApplication] = useState<ApplicationRecord | null>(
     initialApplication,
   );
+  const applicationRef = useRef<ApplicationRecord | null>(initialApplication);
+  useEffect(() => { applicationRef.current = application; }, [application]);
   const [busy, setBusy] = useState<BusyState>(null);
   const [submissionConnection] = useState<ConnectionState>(
     isSupabaseConfigured() ? "connected" : "gated",
@@ -480,15 +487,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const updateApplication = (
     updater: (current: ApplicationRecord) => ApplicationRecord,
   ) => {
-    if (!application || submitted) return;
+    const current = applicationRef.current;
+    if (!current || submitted || ["applied", "viewed", "replied", "interview", "offer", "rejected", "withdrawn"].includes(current.status)) return;
     const next: ApplicationRecord = {
-      ...updater(application),
+      ...updater(current),
       receipt:
-        application.receipt?.mode === "external_handoff"
-          ? application.receipt
+        current.receipt?.mode === "external_handoff"
+          ? current.receipt
           : null,
       updatedAt: new Date().toISOString(),
     };
+    applicationRef.current = next;
     setApplication(next);
     persistApplication(next);
   };
@@ -579,7 +588,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     };
   };
 
-  const prepare = async (inputCv = cvText, inputFilename = cvFilename) => {
+  const prepare = async (inputCv = cvText, inputFilename = cvFilename, reviewedVersion?: ResumeVersion) => {
     setBusy("prepare");
     setError(null);
     setNotice(null);
@@ -613,7 +622,14 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           };
       let tailoringNotice =
         "Your role match is ready. Review the application details before submitting.";
-      if (applicationPreferences.resumeOptimisation !== "off") {
+      if (reviewedVersion) {
+        const score = scoreResumeForRole(reviewedVersion.tailoredText, job, reviewedVersion.label);
+        prepared = { ...prepared, sourceCvText: reviewedVersion.sourceText, tailoredCvText: reviewedVersion.tailoredText,
+          resumeVersionLabel: reviewedVersion.label, matchScore: score.overall,
+          matchedKeywords: score.matchedKeywords, missingKeywords: score.missingKeywords,
+          truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" };
+        tailoringNotice = "Your approved resume version is selected exactly as saved. Review the application answers and confirm before sending.";
+      } else if (applicationPreferences.resumeOptimisation !== "off") {
         const immediateResult = buildLocalTailoringResult(
           prepared.sourceCvText,
           job,
@@ -672,6 +688,37 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setBusy(null);
     }
   };
+
+  const versionImportAttempted = useRef("");
+  const importReviewedVersion = useEffectEvent(async (versionId: string) => {
+    setError(null);
+    setBusy("prepare");
+    try {
+      const version = (await loadResumeVersions(job.id, user?.id ?? null)).find((item) => item.id === versionId);
+      if (!version || version.status !== "approved") throw new Error("This approved resume version is unavailable in your account for this role. Open the resume studio and save it again.");
+      const current = applicationRef.current;
+      if (current) {
+        const imported = { ...applyRefinedResume(current, {
+          sourceText: current.tailoredCvText, tailoredText: version.tailoredText,
+          acceptedSuggestionIds: version.acceptedSuggestionIds, confirmedEvidence: "",
+        }, job), resumeVersionLabel: version.label };
+        updateApplication(() => imported);
+        setNotice("Your saved resume version is selected. Review the application before sending.");
+      } else {
+        setCvText(version.tailoredText); setCvFilename(version.label);
+        await prepare(version.tailoredText, version.label, version);
+      }
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "The saved resume could not be loaded."); }
+    finally { setBusy((current) => current === "prepare" ? null : current); }
+  });
+  useEffect(() => {
+    const versionId = new URLSearchParams(window.location.search).get("resumeVersionId");
+    if (!versionId || (isSupabaseConfigured() && !user)) return;
+    const key = `${user?.id ?? "local"}:${job.id}:${versionId}`;
+    if (versionImportAttempted.current === key) return;
+    versionImportAttempted.current = key;
+    void importReviewedVersion(versionId);
+  }, [job.id, user]);
 
   const runAiTailoring = async () => {
     if (!application) return;
@@ -1351,7 +1398,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         onSubmit={submitApprovedApplication}
         onContinueInBrowser={continueApprovedApplicationInBrowser}
         onConfirmManualSubmission={confirmManualEmployerSubmission}
-        onRefreshTailoring={runAiTailoring}
         onResumeBlur={recalculateEditedCv}
       />
     );

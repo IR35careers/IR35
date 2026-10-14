@@ -23,8 +23,13 @@ export async function POST(request: Request): Promise<Response> {
     const rate = await consumeRateLimitKey("ai_tailoring", data.user.id, tailoringLimit(), 60 * 60_000);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
     const body = await readJsonBody<{ cvText?: string; job?: JobDetail }>(request, 180_000);
-    if (!body.job?.id || !body.job.title || !body.job.company_name || typeof body.cvText !== "string") {
+    if (!body.job || typeof body.job.id !== "string" || typeof body.job.title !== "string" || typeof body.job.company_name !== "string" ||
+      typeof body.job.description !== "string" || !Array.isArray(body.job.skills) || !body.job.skills.every((skill) => typeof skill === "string" && skill.length <= 100) ||
+      body.job.skills.length > 100 || !body.job.id || !body.job.title || !body.job.company_name || typeof body.cvText !== "string") {
       return Response.json({ error: "A Resume and complete role are required." }, { status: 400, headers: NO_STORE });
+    }
+    if (body.cvText.trim().length < 120 || body.cvText.length > 80_000 || body.job.description.length > 40_000 || body.job.title.length > 500 || body.job.company_name.length > 300) {
+      return Response.json({ error: "Use 120–80,000 resume characters and a job description of at most 40,000 characters." }, { status: 400, headers: NO_STORE });
     }
     const outcome = await tailorResumeWithFastFallback({ cvText: body.cvText, job: body.job });
     return Response.json(outcome, {

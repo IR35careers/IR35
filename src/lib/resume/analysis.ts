@@ -346,10 +346,10 @@ function makeSuggestions(
   const focusTerms = baseline.matchedKeywords.slice(0, 5);
 
   if (focusTerms.length > 0) {
-    const evidenceLine = `Experience includes ${focusTerms.join(", ")}, supported by the delivery examples in this Resume.`;
+    const evidenceLine = `Core skills: ${focusTerms.join(", ")}.`;
     const original = summary?.content.trim() ?? "";
     const replacement = original ? `${original.replace(/\s+$/g, "")}\n${evidenceLine}` : `PROFILE\n${evidenceLine}`;
-    if (!resumeContainsTerm(original, job.title) || focusTerms.some((term) => !resumeContainsTerm(original, term))) {
+    if (!original || focusTerms.some((term) => !resumeContainsTerm(original, term))) {
       suggestions.push({
         id: "summary-role-focus",
         kind: "summary",

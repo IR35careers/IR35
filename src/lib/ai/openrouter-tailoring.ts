@@ -66,7 +66,7 @@ export async function tailorResumeWithFastFallback(input: {
     const result = enhanced.suggestions.length === 0 && local.suggestions.length > 0
       ? {
           ...enhanced,
-          summary: "The enhanced review completed and IR35Careers applied its verified evidence edits as a safe fallback.",
+          summary: "The enhanced review completed. Local evidence-based suggestions are available for your review.",
           suggestions: local.suggestions,
           projected: local.projected,
         }

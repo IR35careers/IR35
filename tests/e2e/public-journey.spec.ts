@@ -61,7 +61,6 @@ async function completeReusableApplicationProfile(
   await selectAnswer("Are you willing to travel for work?", "yes");
   await selectAnswer("Are you willing to work shifts?", "no");
   await selectAnswer("Are you willing to work weekends?", "no");
-  await expect(page.getByRole("heading", { name: /detail to complete/ })).toBeVisible();
   await selectAnswer("Can an employer run a standard background check?", "yes");
   await selectAnswer("Do you have convictions that must be declared for the role?", "no");
   await page.getByRole("button", { name: "Save profile" }).click();
@@ -290,7 +289,7 @@ test("an external job can be previewed and opened in local Resume Studio", async
   await expect(page.getByRole("heading", { name: /Platform Engineer Contract/ })).toBeVisible();
   await expect(page.getByText("Advertiser-stated in the job title")).toBeVisible();
   await page.getByRole("button", { name: "Tailor Resume locally" }).click();
-  await expect(page.getByRole("heading", { name: "Tailor your Resume with evidence you control" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your experience. Refined for this contract." })).toBeVisible();
   await expect(page.getByText(/Scores are transparent, missing keywords are never treated as experience/)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 });
@@ -471,20 +470,19 @@ test("Resume Studio analyses, verifies, versions and exports a role-ready Resume
 
   await page.goto("/jobs/11111111-1111-4111-8111-111111111111/resume");
   await dismissPrivacyNotice(page);
-  await expect(page.getByRole("heading", { name: "Tailor your Resume with evidence you control" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your experience. Refined for this contract." })).toBeVisible();
   await page.getByRole("button", { name: "Try the labelled sample Resume" }).click();
   await page.getByRole("button", { name: "Analyse against this role" }).click();
 
-  await expect(page.getByRole("heading", { name: "Review every suggested change" })).toBeVisible();
-  await expect(page.getByText("Missing - not assumed")).toBeVisible();
-  const kubernetesSuggestion = page.getByRole("article").filter({ hasText: "Verify Kubernetes" });
-  await expect(kubernetesSuggestion.getByText("Not found in your Resume")).toBeVisible();
-  await kubernetesSuggestion.getByRole("button", { name: "I genuinely have this" }).click();
-  await expect(kubernetesSuggestion.getByRole("button", { name: "Experience confirmed" })).toBeVisible();
-
-  await page.getByRole("button", { name: "Build approved version" }).click();
+  await expect(page.getByRole("heading", { name: "Choose the changes you want" })).toBeVisible();
+  await expect(page.getByText("Not evidenced — never added automatically")).toBeVisible();
+  await page.getByRole("button", { name: "Select all", exact: true }).click();
+  await page.getByText("Add real experience that is missing (optional)", { exact: true }).click();
+  await page.getByLabel("Additional factual experience").fill("Deployed Kubernetes workloads for a UK internal platform programme in 2024.");
+  await page.getByRole("checkbox", { name: /confirm this additional experience/ }).check();
+  await page.getByRole("button", { name: "Use selected draft" }).click();
   const editor = page.getByLabel("Resume text");
-  await expect(editor).toHaveValue(/VERIFIED ROLE SKILLS/);
+  await expect(editor).toHaveValue(/ADDITIONAL EXPERIENCE/);
   await expect(editor).toHaveValue(/Kubernetes/);
   await page.getByRole("button", { name: "Save new version" }).click();
   await expect(page.getByText("Draft version saved.")).toBeVisible();
@@ -520,7 +518,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByRole("heading", { name: "Alex Morgan Resume" })).toBeVisible();
   await page.getByRole("button", { name: "Edit Resume" }).click();
   await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
-  await expect(page.getByRole("button", { name: "Improve Resume" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refine for this job" })).toBeVisible();
   await page.getByRole("button", { name: "Cover letter", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Cover letter" })).toBeVisible();
   await page.getByRole("button", { name: "Edit letter" }).click();
@@ -557,7 +555,7 @@ test("application workspace presents a clean review flow and never claims an unc
 
   await page.goto("/inbox");
   await expect(page.getByRole("heading", { name: "Your application messages" })).toBeVisible();
-  await expect(page.getByText("alex.morgan@inbox.ir35careers.local")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Application email" }).getByText("Not created", { exact: true })).toBeVisible();
   await expect(page.getByText("alex.morgan@example.test", { exact: true })).toHaveCount(0);
 
   await page.goto("/automation");

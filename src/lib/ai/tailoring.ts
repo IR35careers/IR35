@@ -11,7 +11,12 @@ export function applyAiTailoringSuggestions(
     if (!suggestion.original.trim()) {
       const replacement = normaliseResumeText(suggestion.replacement);
       if (replacement && !result.includes(replacement)) {
-        result = `${replacement}\n\n${result}`;
+        if (/^(?:PROFILE|PROFESSIONAL SUMMARY)\n/i.test(replacement)) {
+          const bodyStart = result.search(/^(?:TECHNICAL SKILLS|SKILLS|PROFESSIONAL EXPERIENCE|WORK EXPERIENCE|EXPERIENCE|EDUCATION|CERTIFICATIONS|PROJECTS)\s*$/im);
+          result = bodyStart >= 0
+            ? `${result.slice(0, bodyStart).trimEnd()}\n\n${replacement}\n\n${result.slice(bodyStart)}`
+            : `${result.trimEnd()}\n\n${replacement}`;
+        } else result = `${replacement}\n\n${result}`;
       }
       continue;
     }

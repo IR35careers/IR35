@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase, Sparkles, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
 import { IR35EvidencePanel } from "@/components/IR35EvidencePanel";
 import { SaveJobButton } from "@/components/SaveJobButton";
@@ -98,6 +98,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             <div className="rounded-[1.45rem] border border-white/15 bg-slate-950/25 p-3.5 shadow-inner backdrop-blur-md sm:p-4">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">Ready when you are</p>
               <ApplyButton jobId={job.id} sourceDomain={job.source_domain} />
+              <Link href={`/jobs/${job.id}/resume`} className="ir35-focus mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-200/30 bg-emerald-200/10 px-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/20"><WandSparkles size={16} />Refine resume for this job</Link>
               <div className="mt-2 [&_button]:border-white/20 [&_button]:bg-white/95">
                 <SaveJobButton jobId={job.id} />
               </div>

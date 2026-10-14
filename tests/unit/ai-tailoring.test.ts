@@ -94,10 +94,11 @@ describe("OpenRouter Resume tailoring", () => {
     vi.stubEnv("OPENROUTER_API_KEY", "test-key");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ summary: "No changes.", must_have_requirements: ["AWS"], nice_to_have_requirements: [], suggestions: [], cover_letter: "" }) } }] }), { status: 200, headers: { "content-type": "application/json" } })));
 
-    const outcome = await tailorResumeWithFastFallback({ cvText: cv, job: DEMO_JOBS[0] });
+    const sourceWithSafeEdit = `${cv}\n- I was responsible for AWS support.`;
+    const outcome = await tailorResumeWithFastFallback({ cvText: sourceWithSafeEdit, job: DEMO_JOBS[0] });
     expect(outcome.mode).toBe("enhanced");
     expect(outcome.result.suggestions.length).toBeGreaterThan(0);
-    expect(outcome.result.suggestions.every((suggestion) => cv.includes(suggestion.original))).toBe(true);
+    expect(outcome.result.suggestions.every((suggestion) => sourceWithSafeEdit.includes(suggestion.original))).toBe(true);
   });
 
   it("returns the owned evidence result when the enhanced provider fails", async () => {
