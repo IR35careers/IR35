@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { shouldDismissApplicationOpeningAction } from "@/lib/application-runner/ats";
+import { applicationOpeningDismissPattern, matchesApplicationAction, shouldDismissApplicationOpeningAction } from "@/lib/application-runner/ats";
 
 describe("ready employer form navigation", () => {
+  it("matches cookie text, value and accessible name separately", () => {
+    expect(matchesApplicationAction(applicationOpeningDismissPattern(true), ["Reject all", "deny", "Reject optional cookies"])).toBe(true);
+    expect(matchesApplicationAction(applicationOpeningDismissPattern(true), ["No thanks", "cancel", "No thanks"])).toBe(false);
+  });
   it("does not abandon a ready application using No thanks", () => {
     for (const label of ["No thanks", "No, thanks", "No thanks, take me to the job", "Continue to job"]) {
       expect(shouldDismissApplicationOpeningAction({ label, hasApplicationForm: true })).toBe(false);

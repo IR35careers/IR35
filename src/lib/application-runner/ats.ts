@@ -68,13 +68,16 @@ export function isScopedApplicationSubmitAction(input: {
   );
 }
 
-export function shouldDismissApplicationOpeningAction(input: { label: string; hasApplicationForm: boolean }): boolean {
-  const label = input.label.trim();
-  if (/^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary)$/i.test(label)) return true;
+export function applicationOpeningDismissPattern(hasApplicationForm: boolean): RegExp {
   // "No thanks" on a ready employer form may mean abandon the application,
   // not close a newsletter. Never activate that navigation automatically.
-  if (input.hasApplicationForm) return false;
-  return /^(no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i.test(label);
+  return hasApplicationForm
+    ? /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary)$/i
+    : /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary|no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i;
+}
+
+export function shouldDismissApplicationOpeningAction(input: { label: string; hasApplicationForm: boolean }): boolean {
+  return applicationOpeningDismissPattern(input.hasApplicationForm).test(input.label.trim());
 }
 
 export interface AtsDefinition {
