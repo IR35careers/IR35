@@ -1019,6 +1019,20 @@ async function validatePublicHttpsUrl(value) {
   return (await resolvePublicHttpsUrl(value)).url;
 }
 
+// src/lib/application-continuation-destination.ts
+function canResumeSavedApplicationStep(savedSessionUrl, approvedJobUrl) {
+  try {
+    const saved = new URL(savedSessionUrl);
+    const approved = new URL(approvedJobUrl);
+    if (saved.protocol !== "https:") return false;
+    const savedHomepage = saved.pathname === "/" && !saved.search && !saved.hash;
+    const approvedHomepage = approved.pathname === "/" && !approved.search && !approved.hash;
+    return !savedHomepage || approvedHomepage;
+  } catch {
+    return false;
+  }
+}
+
 // src/lib/security/pinned-https.ts
 import https from "node:https";
 import { isIP as isIP2 } from "node:net";
@@ -2586,7 +2600,7 @@ async function runNativeApplication(payload, runtime) {
     const savedSession = payload.candidate.portalAccountConsent ? await runtime?.loadPortalSession?.().catch(() => null) : null;
     portalAccountState = savedSession?.accountState;
     let startUrl = destination;
-    if (savedSession?.currentUrl) {
+    if (savedSession?.currentUrl && canResumeSavedApplicationStep(savedSession.currentUrl, destination.toString())) {
       try {
         startUrl = await validatePublicHttpsUrl(savedSession.currentUrl);
       } catch {
