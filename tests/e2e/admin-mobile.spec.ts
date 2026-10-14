@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ serviceWorkers: "block" });
+
 for (const width of [320, 390, 430]) {
 test(`mobile admin navigation and support details stay within ${width}px`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome", "Phone-specific admin interactions");
@@ -16,6 +18,7 @@ test(`mobile admin navigation and support details stay within ${width}px`, async
     window.localStorage.setItem(`sb-${project}-auth-token`, JSON.stringify({ access_token: `${encoded({ alg: "HS256" })}.${encoded({ sub: user.id, exp: expiry })}.test-signature`, refresh_token: "controlled-browser-only", token_type: "bearer", expires_at: expiry, expires_in: 3600, user }));
     window.localStorage.setItem("ir35careers:cookie-consent:v1", "essential");
   }, { project, user });
+  await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: { error: "Isolated layout fixture: backend disabled" } }));
   await page.route("**/auth/v1/**", (route) => route.fulfill({ json: user }));
   await page.route("**/api/admin/session", (route) => route.fulfill({ json: { unlocked: true, role: "admin", expiresIn: 1200 } }));
   const contractor = {
@@ -32,7 +35,8 @@ test(`mobile admin navigation and support details stay within ${width}px`, async
     feedbackSummary: { total: 1, new: 1, inProgress: 0, resolved: 0, highPriority: 0, spam: 0 },
   } }));
   await page.route("**/api/admin", (route) => route.fulfill({ json: { ok: true } }));
-  await page.goto("/admin?section=feedback");
+  const adminPath = new URL(testInfo.project.use.baseURL ?? "http://localhost").hostname === "admin.ir35careers.com" ? "/" : "/admin";
+  await page.goto(`${adminPath}?section=feedback`);
   await page.getByRole("button", { name: "Unlock for 20 minutes" }).click();
   await expect(page.getByRole("heading", { name: "Customer feedback queue" })).toBeVisible();
   const essentialOnly = page.getByRole("button", { name: "Essential only", exact: true });
