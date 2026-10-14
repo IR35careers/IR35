@@ -92,6 +92,7 @@ export async function POST(request: Request): Promise<Response> {
         active: heartbeats.reduce((sum, worker) => sum + Number(worker.active || 0), 0),
         concurrency: heartbeats.reduce((sum, worker) => sum + Number(worker.concurrency || 0), 0),
         latestHeartbeatAt: heartbeats.map((worker) => String(worker.last_seen_at)).sort().at(-1) ?? null,
+        recentConsumerVersions: heartbeats.map((worker) => ({ version: worker.version, lastSeenAt: worker.last_seen_at })),
       },
       inventory: jobs ? { active: jobs.length, bySource, byIr35, scanComplete: true } : null,
     }, { headers: HEADERS });

@@ -585,6 +585,7 @@ async function clickAndFollow(
 async function openApplicationForm(
   initialPage: Page,
   ats: AtsDefinition,
+  navigationStages: string[] = [],
 ): Promise<Page> {
   let page = initialPage;
   for (let attempt = 0; attempt < 6; attempt += 1) {
@@ -593,6 +594,7 @@ async function openApplicationForm(
       page,
       applicationOpeningDismissPattern(applicationFormReady),
     );
+    navigationStages.push(`Opening: form ${applicationFormReady}; dismissal ${dismiss ? clean(await dismiss.innerText().catch(() => ""), 70) : "none"}`);
     if (dismiss) {
       page = await clickAndFollow(page, dismiss, 300);
       continue;
@@ -1897,7 +1899,7 @@ export async function runNativeApplication(
     timedOut = true;
     void browser?.close().catch(() => null);
   }, budgetMs);
-  const navigationStages: string[] = [];
+  const navigationStages: string[] = ["Adapter no-decline-v3"];
   try {
     const destination = await validatePublicHttpsUrl(payload.destination);
     // The packet reaches this function only after the signed-in contractor has
@@ -2059,7 +2061,7 @@ export async function runNativeApplication(
     }
     await validatePublicHttpsUrl(page.url());
     ats = detectAts(page.url());
-    page = await openApplicationForm(page, ats);
+    page = await openApplicationForm(page, ats, navigationStages);
     navigationStages.push(`Opened form ${new URL(page.url()).pathname}; application form ${await hasApplicationForm(page)}`);
     const handoffBody = clean(
       await page

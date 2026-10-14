@@ -17,6 +17,7 @@ describe("ready employer form navigation", () => {
     }
   });
   it("can reach a job when an actual application form is not open", () => {
+    expect(shouldDismissApplicationOpeningAction({ label: "No thanks", hasApplicationForm: false })).toBe(false);
     expect(shouldDismissApplicationOpeningAction({ label: "Take me to the job", hasApplicationForm: false })).toBe(true);
     expect(shouldDismissApplicationOpeningAction({ label: "Submit application", hasApplicationForm: false })).toBe(false);
   });

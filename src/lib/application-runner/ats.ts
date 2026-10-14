@@ -73,7 +73,7 @@ export function applicationOpeningDismissPattern(hasApplicationForm: boolean): R
   // not close a newsletter. Never activate that navigation automatically.
   return hasApplicationForm
     ? /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary)$/i
-    : /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary|no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i;
+    : /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary|no,? thanks,? take me to the job|continue to job|take me to the job)$/i;
 }
 
 export function shouldDismissApplicationOpeningAction(input: { label: string; hasApplicationForm: boolean }): boolean {

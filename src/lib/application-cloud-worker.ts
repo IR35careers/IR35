@@ -14,7 +14,7 @@ export async function executeCloudApplication(kick: ApplicationCloudKick) {
       acceptTask: true,
       preferredApplicationId: kick.applicationId || undefined,
       active: 0, concurrency: 1, completed: 0, failed: 0,
-      version: `cloud-${String(process.env.VERCEL_GIT_COMMIT_SHA || "production").slice(0, 12)}`,
+      version: `cloud-${String(process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || "production").slice(0, 60)}`,
     },
   });
   if (!assignment) {
