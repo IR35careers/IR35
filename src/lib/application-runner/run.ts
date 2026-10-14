@@ -64,6 +64,7 @@ import {
   applicationRunnerWindowArgs,
 } from "@/lib/application-runner/runtime-config";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
+import { canResumeSavedApplicationStep } from "@/lib/application-continuation-destination";
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
 import { buildResumeDocx, buildResumePdf } from "@/lib/resume/export";
 import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
@@ -1904,7 +1905,10 @@ export async function runNativeApplication(
       : null;
     portalAccountState = savedSession?.accountState;
     let startUrl = destination;
-    if (savedSession?.currentUrl) {
+    if (
+      savedSession?.currentUrl &&
+      canResumeSavedApplicationStep(savedSession.currentUrl, destination.toString())
+    ) {
       try {
         startUrl = await validatePublicHttpsUrl(savedSession.currentUrl);
       } catch {

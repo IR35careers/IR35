@@ -1,10 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
+  canResumeSavedApplicationStep,
   continuationDestinationCandidates,
   submissionReceiptDestination,
 } from "@/lib/application-continuation-destination";
 
 describe("application continuation destinations", () => {
+  it("does not let an old employer homepage override the specific approved vacancy", () => {
+    const approvedJobUrl = "https://employer.example/job.asp?VID=8785";
+    expect(canResumeSavedApplicationStep("https://employer.example/", approvedJobUrl)).toBe(false);
+    expect(canResumeSavedApplicationStep("https://employer.example/account/sign-in", approvedJobUrl)).toBe(true);
+    expect(canResumeSavedApplicationStep("https://employer.example/?application=8785", approvedJobUrl)).toBe(true);
+    expect(continuationDestinationCandidates({
+      savedSessionUrl: "https://employer.example/",
+      receipt: { destination: approvedJobUrl },
+      approvedJobUrl,
+    })).toEqual([approvedJobUrl]);
+  });
   it("prefers the saved employer step over the durable receipt and listing", () => {
     expect(
       continuationDestinationCandidates({

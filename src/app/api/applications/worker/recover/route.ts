@@ -380,10 +380,10 @@ export async function POST(request: Request): Promise<Response> {
         { status: 409, headers: HEADERS },
       );
 
-    if (
-      parsed.replacementDestination &&
-      hostname(recoveryDestination) !== hostname(selected.destination)
-    )
+    // An explicit verified replacement must open that exact vacancy. A stale
+    // saved currentUrl on the same employer host can otherwise send the retry
+    // straight back to its homepage and override the replacement entirely.
+    if (parsed.replacementDestination)
       await clearPortalSession({
         admin: supabase,
         userId: selected.submission.user_id,
