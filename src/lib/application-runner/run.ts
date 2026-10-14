@@ -302,7 +302,7 @@ function currentDestination(page: Page | null, fallback: string): string {
   return fallback;
 }
 
-async function publicRequestGuard(
+export async function publicRequestGuard(
   route: import("playwright-core").Route,
   approvedHosts: Set<string>,
   sensitiveMode: () => boolean,

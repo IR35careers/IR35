@@ -5,7 +5,7 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
 import { directEmployerCandidateScore } from "@/lib/application-runner/source-resolution";
-import { clearPortalSession } from "@/lib/application-portal-session";
+import { clearPortalSession, loadPortalSession } from "@/lib/application-portal-session";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 
@@ -384,12 +384,15 @@ export async function POST(request: Request): Promise<Response> {
     // An explicit verified replacement must open that exact vacancy. A stale
     // saved currentUrl on the same employer host can otherwise send the retry
     // straight back to its homepage and override the replacement entirely.
-    if (parsed.replacementDestination)
+    if (parsed.replacementDestination) {
       await clearPortalSession({
         admin: supabase,
         userId: selected.submission.user_id,
         applicationId: selected.submission.application_id,
       });
+      const remainingSession = await loadPortalSession({ admin: supabase, userId: selected.submission.user_id, applicationId: selected.submission.application_id });
+      if (remainingSession) throw new Error("The previous employer browser session could not be cleared safely.");
+    }
 
     const now = new Date().toISOString();
     const [taskUpdate, submissionUpdate, packetUpdate, eventUpdate] =

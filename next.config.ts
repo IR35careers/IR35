@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
   // wider home directory.
   outputFileTracingRoot: process.cwd(),
   outputFileTracingIncludes: {
+    "/api/applications/worker/portal-probe": [
+      "./node_modules/@sparticuz/chromium/bin/**/*",
+      "./node_modules/playwright-core/browsers.json",
+    ],
     "/api/queues/applications": [
       "./node_modules/@sparticuz/chromium/bin/**/*",
       "./node_modules/playwright-core/browsers.json",
