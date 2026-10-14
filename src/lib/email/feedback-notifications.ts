@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { getTransactionalResend, transactionalEmailConfig } from "@/lib/email/transactional";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const SITE_URL = "https://www.ir35careers.com";
 const LOGO_URL = `${SITE_URL}/images/generated/brand/ir35careers-mark-256.png`;
-const ADMIN_EMAIL = "ir35careers@gmail.com";
 
 type FeedbackEmailKind = "acknowledgement" | "admin_alert" | "admin_reply" | "resolved";
 
@@ -86,6 +86,6 @@ export async function sendFeedbackEmail(input: FeedbackEmailInput): Promise<stri
 export async function sendFeedbackCreatedEmails(input: Omit<FeedbackEmailInput, "kind" | "recipient"> & { customerEmail: string }) {
   await Promise.allSettled([
     sendFeedbackEmail({ ...input, kind: "acknowledgement", recipient: input.customerEmail }),
-    sendFeedbackEmail({ ...input, kind: "admin_alert", recipient: ADMIN_EMAIL }),
+    sendFeedbackEmail({ ...input, kind: "admin_alert", recipient: CONTACT_EMAIL }),
   ]);
 }

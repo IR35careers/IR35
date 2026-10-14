@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from "@/lib/contact";
+
 export const SITE_ORIGIN = "https://www.ir35careers.com";
 export const SITE_NAME = "IR35Careers";
 export const SITE_DESCRIPTION =
@@ -47,12 +49,12 @@ export function buildHomeStructuredData() {
         caption: SITE_NAME,
       },
       image: { "@id": `${SITE_ORIGIN}/#logo` },
-      email: "ir35careers@gmail.com",
+      email: CONTACT_EMAIL,
       sameAs: [...SOCIAL_PROFILES],
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "ir35careers@gmail.com",
+        email: CONTACT_EMAIL,
         url: `${SITE_ORIGIN}/contact`,
         areaServed: "GB",
         availableLanguage: ["en-GB"],

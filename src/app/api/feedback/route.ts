@@ -5,6 +5,7 @@ import { sendFeedbackCreatedEmails, sendFeedbackEmail } from "@/lib/email/feedba
 import { requestUser } from "@/lib/request-user";
 import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
       await sendFeedbackEmail({
         kind: "admin_alert",
         ticketId: feedbackId,
-        recipient: "ir35careers@gmail.com",
+        recipient: CONTACT_EMAIL,
         customerName: ticket.data.name,
         subject: `Customer reply: ${ticket.data.subject || "IR35Careers feedback"}`,
         message,

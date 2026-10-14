@@ -1,9 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ADMIN_SESSION_TTL_SECONDS, createAdminSession, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
+import { ADMIN_SESSION_TTL_SECONDS, adminAllowlist, createAdminSession, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
 
 afterEach(() => vi.unstubAllEnvs());
 
 describe("short-lived admin sessions", () => {
+  it("reads the additional administrator from explicit server configuration", () => {
+    vi.stubEnv("ADMIN_EMAILS", " INFO@IR35CAREERS.COM ,another-admin@example.com");
+    expect(adminAllowlist()).toEqual(["info@ir35careers.com", "another-admin@example.com"]);
+    vi.stubEnv("ADMIN_EMAILS", "");
+    expect(adminAllowlist()).toEqual([]);
+  });
   it("accepts a valid signed session and normalises its email", () => {
     vi.stubEnv("ADMIN_SESSION_SECRET", "a-strong-admin-session-secret-with-more-than-32-characters");
     const now = Date.UTC(2026, 7, 20, 12, 0, 0);

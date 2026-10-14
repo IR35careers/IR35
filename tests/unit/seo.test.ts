@@ -19,9 +19,11 @@ describe("search identity", () => {
       "@type": "Organization",
       name: SITE_NAME,
       url: `${SITE_ORIGIN}/`,
+      email: "info@ir35careers.com",
       sameAs: ["https://www.instagram.com/ir35careers/"],
       contactPoint: {
         contactType: "customer support",
+        email: "info@ir35careers.com",
         url: `${SITE_ORIGIN}/contact`,
       },
     });

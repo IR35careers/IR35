@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Instagram } from "lucide-react";
+import { Instagram, Mail } from "lucide-react";
 import { Brand } from "@/components/ui/brand";
 import { legalOperatorConfig } from "@/lib/legal/operator";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const GROUPS = [
   {
@@ -63,6 +64,9 @@ export function PublicFooter() {
           <p className="mt-3 text-xs leading-5 text-slate-500">
             Educational information only. IR35 status depends on the facts of each engagement.
           </p>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-semibold text-brand-800 hover:text-brand-600">
+            <Mail size={16} aria-hidden="true" /> {CONTACT_EMAIL}
+          </a>
           <a
             href="https://www.instagram.com/ir35careers/"
             target="_blank"
