@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { JobDetail } from "@/lib/job-types";
 import {
   analyseResumeForRole,
+  extractRoleKeywords,
   parseResumeText,
   scoreResumeForRole,
 } from "@/lib/resume/analysis";
@@ -105,7 +106,7 @@ function ScoreRing({ score, size = 92 }: { score: number; size?: number }) {
   );
 }
 
-function ScoreBreakdown({ score }: { score: ResumeScore }) {
+function ScoreBreakdown({ score, layoutOnly = false }: { score: ResumeScore; layoutOnly?: boolean }) {
   const rows = [
     ["Role keywords", score.breakdown.keywordCoverage, "45%"],
     ["Evidence strength", score.breakdown.evidenceStrength, "25%"],
@@ -114,10 +115,10 @@ function ScoreBreakdown({ score }: { score: ResumeScore }) {
   ] as const;
   return (
     <div className="space-y-3">
-      {rows.map(([label, value, weight]) => (
+      {rows.filter(([label]) => !layoutOnly || label === "ATS readability").map(([label, value, weight]) => (
         <div key={label}>
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="font-medium text-slate-700">{label} <span className="font-normal text-slate-600">({weight})</span></span>
+            <span className="font-medium text-slate-700">{label} {!layoutOnly && <span className="font-normal text-slate-600">({weight})</span>}</span>
             <span className="font-semibold tabular-nums text-slate-900">{value}%</span>
           </div>
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
@@ -176,6 +177,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   const [approvedVersion, setApprovedVersion] = useState<ResumeVersion | null>(null);
   const [documentPreview, setDocumentPreview] = useState(false);
   const sampleVersion = sourceFilename === "Alex-Morgan-sample-Resume.txt";
+  const hasRoleKeywords = extractRoleKeywords(job).length > 0;
   const savedResume = workspace.profile.resumeProfiles?.find((item) => item.id === workspace.profile.activeResumeProfileId)
     ?? workspace.profile.resumeProfiles?.find((item) => item.isDefault);
 
@@ -417,7 +419,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
                 onChange={(event) => { setSourceText(event.target.value); setSourceFilename("Pasted Resume"); }}
                 rows={14}
                 placeholder="Paste your Resume here. Keep the headings and bullet points so the readability check can assess the structure."
-                className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-3 font-mono text-sm leading-6 text-slate-800 placeholder:font-sans placeholder:text-slate-400"
+                className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-3 font-mono text-base leading-6 text-slate-800 placeholder:font-sans placeholder:text-slate-400 sm:text-sm"
               />
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <button type="button" onClick={() => { setSourceText(sampleResume(job)); setSourceFilename("Alex-Morgan-sample-Resume.txt"); setNotice("Sample Resume loaded. It is fictional and labelled for preview testing."); }} className="ir35-focus min-h-11 rounded-xl text-left text-sm font-semibold text-brand-700 hover:text-brand-800">
@@ -493,9 +495,9 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
                 <button type="button" onClick={() => setPhase("review")} className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700"><ArrowLeft size={15} /> Review suggestions</button>
               </div>
               <label htmlFor="version-label" className="mt-6 block text-sm font-semibold text-slate-800">Version name</label>
-              <input id="version-label" value={versionLabel} onChange={(event) => { setVersionLabel(event.target.value); setApprovedVersion(null); }} maxLength={80} className="ir35-focus mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900" />
+              <input id="version-label" value={versionLabel} onChange={(event) => { setVersionLabel(event.target.value); setApprovedVersion(null); }} maxLength={80} className="ir35-focus mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-base text-slate-900 sm:text-sm" />
               <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">Resume text</label>
-              <textarea id="tailored-cv" value={tailoredText} onChange={(event) => { setTailoredText(event.target.value); setApprovedVersion(null); }} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-sm leading-6 text-slate-800" />
+              <textarea id="tailored-cv" value={tailoredText} onChange={(event) => { setTailoredText(event.target.value); setApprovedVersion(null); }} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-base leading-6 text-slate-800 sm:text-sm" />
               <button type="button" onClick={() => setDocumentPreview((value) => !value)} className="ir35-focus mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700"><FileText size={15} />{documentPreview ? "Hide document preview" : "Preview resume document"}</button>
               {documentPreview && <div className="mt-4 max-w-full overflow-auto rounded-2xl bg-slate-100 p-3"><ResumeDocumentPreview resumeText={tailoredText} filename={sourceFilename} /></div>}
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -512,8 +514,8 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
 
             <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
               <section className="rounded-2xl border border-brand-200 bg-brand-50/50 p-5 shadow-card">
-                <div className="flex items-center gap-4"><ScoreRing score={finalScore.overall} size={82} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Current editor score</p><p className="mt-1 text-lg font-bold">Role-specific rating</p><p className="text-xs text-slate-600">Updates as you edit</p></div></div>
-                <div className="mt-5"><ScoreBreakdown score={finalScore} /></div>
+                {hasRoleKeywords ? <div className="flex items-center gap-4"><ScoreRing score={finalScore.overall} size={82} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Current editor score</p><p className="mt-1 text-lg font-bold">Role-specific rating</p><p className="text-xs text-slate-600">Updates as you edit</p></div></div> : <div><p className="font-semibold text-slate-950">Match score withheld</p><p className="mt-2 text-xs leading-5 text-slate-600">Requirement tags were unavailable. These are document-format checks, not an assessment of your suitability.</p></div>}
+                <div className="mt-5"><ScoreBreakdown score={finalScore} layoutOnly={!hasRoleKeywords} /></div>
               </section>
 
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">

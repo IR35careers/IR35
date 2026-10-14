@@ -6,10 +6,10 @@ IR35Careers is a UK contract-discovery product that puts advertised IR35 status,
 
 - Responsive public landing page, search, filters and contract detail
 - Explicit Inside, Outside and TBC status with an evidence label
-- Direct links to original live listings; no silent or automated submission
+- Direct links to original live listings; no silent or unapproved submission
 - Signed-in profile, CV storage, saved jobs, applied state and alerts
 - Role-specific CV Studio with PDF/DOCX extraction, transparent scoring, keyword gaps, truth-preserving suggestions, side-by-side approval, version history and PDF/DOCX export
-- Truth-first application workspace with editable cover letters, reviewed screening answers, three explicit approval gates and non-submitting receipts
+- Truth-first application workspace with editable cover letters, reviewed screening answers, three explicit approval gates and dated submission receipts
 - Responsive application tracker, linked recruiter inbox, contractor profile and controlled automation-rule preview
 - Owner-only Supabase application/event/inbox/rule schema plus a signed, idempotent inbound-mail boundary
 - Product updates, private contact-request storage and consent-only contractor-story publishing
@@ -22,7 +22,9 @@ IR35Careers is a UK contract-discovery product that puts advertised IR35 status,
 - Provider-ready Stripe Checkout, customer portal, signed webhook ledger and fail-safe account cancellation behind an off-by-default billing gate
 - Clearly labelled local preview data when Supabase is not configured
 
-Generative resume writing is intentionally not required or presented as live. CV Studio and application preparation use deterministic evidence checks and user-approved edits. Local preview can exercise the complete prepare/approve/receipt/track/inbox flow; ATS submission and mail forwarding remain behind provider and approval gates. Billing has a production-shaped Stripe adapter but remains unavailable until migration 011, approved pricing, provider configuration and live acceptance checks are complete.
+Resume refinement is available from contract details and the application's Resume tab. Enhanced review uses the configured server-side provider with contact redaction and a deterministic local fallback. Customers select or edit suggestions, confirm any additional factual experience, and save a job-specific version without changing their master resume. An approved saved version transfers unchanged into the application; final application approval is still required. Fictional samples cannot be approved or imported for a real application. Denied or prospective qualifications are not positive evidence, and numerical match/gap claims are withheld when requirement tags are unavailable.
+
+Local preview can exercise the complete prepare/approve/receipt/track/inbox flow; live submission and mail forwarding remain behind provider and approval gates. Billing remains configuration-gated.
 
 ## Stack
 

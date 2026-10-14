@@ -1,6 +1,25 @@
 import { expect, test } from "@playwright/test";
+import { DEMO_JOBS } from "../../src/lib/demo-jobs";
 
 const jobId = "11111111-1111-4111-8111-111111111111";
+test("unrecognised requirements do not become a made-up score or zero evidence gaps", async ({ page }) => {
+  await page.route("**/api/jobs/preview", (route) => route.fulfill({ json: { job: {
+    ...DEMO_JOBS[0], title: "Interim Financial Controller", skills: [],
+    description: "Produce statutory accounts and balance sheet reconciliations for the business.",
+    apply_url: "https://employer.example.test/controller",
+  } } }));
+  await page.goto("/analyse-job");
+  await page.getByLabel("Public job URL").fill("https://employer.example.test/controller");
+  await page.getByRole("button", { name: "Analyse job", exact: true }).click();
+  await page.getByRole("button", { name: "Tailor Resume locally" }).click();
+  await page.getByRole("button", { name: "Try the labelled sample Resume" }).click();
+  await page.getByRole("button", { name: "Analyse against this role" }).click();
+  await expect(page.getByText("Not scored", { exact: true })).toBeVisible();
+  await expect(page.getByText("Review JD", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Use selected draft" }).click();
+  await expect(page.getByText("Match score withheld", { exact: true })).toBeVisible();
+});
+
 test("a reviewed resume transfers exactly into the application and can be refined again", async ({ page }, testInfo) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("ir35careers:cookie-consent:v1", "essential");
@@ -20,6 +39,7 @@ test("a reviewed resume transfers exactly into the application and can be refine
   await page.screenshot({ path: `output/resume-refinement-review-${testInfo.project.name}.png`, fullPage: true });
   await page.getByRole("button", { name: "Use selected draft" }).click();
   const editor = page.getByLabel("Resume text", { exact: true });
+  if (testInfo.project.name === "mobile-chrome") expect(await editor.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(16);
   await expect(editor).toHaveValue(/Contract technology specialist delivering AWS/);
   await page.getByRole("button", { name: "Approve & save version" }).click();
   const apply = page.getByRole("link", { name: "Review & apply with this resume" });

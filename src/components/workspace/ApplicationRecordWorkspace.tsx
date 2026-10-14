@@ -29,7 +29,7 @@ import { applyRefinedResume, type RefinedResumeDraft } from "@/lib/resume/refine
 import { scoreResumeForRole } from "@/lib/resume/analysis";
 import { StatusPill } from "@/components/workspace/WorkspacePage";
 import { formatRate, type JobDetail } from "@/lib/job-types";
-import { parseResumeText } from "@/lib/resume/analysis";
+import { extractRoleKeywords, parseResumeText } from "@/lib/resume/analysis";
 import type {
   ApplicationRecord,
   ContractorProfile,
@@ -148,6 +148,7 @@ export function ApplicationRecordWorkspace({
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const [emailCopied, setEmailCopied] = useState(false);
   const locked = submitted || applicationHasBeenSubmitted(application) || submissionInProgress;
+  const hasRoleKeywords = extractRoleKeywords(job).length > 0;
   const saveRefinement = async (draft: RefinedResumeDraft) => {
     if (locked || draft.sourceText !== application.tailoredCvText) throw new Error("This resume changed or was submitted. Review the current version again.");
     applyRefinedResume(application, draft, job);
@@ -304,7 +305,7 @@ export function ApplicationRecordWorkspace({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-bold text-white">
-              {application.matchScore}% match
+              {hasRoleKeywords ? `${application.matchScore}% match` : "Match not scored"}
             </span>
             <a
               href={job.apply_url}
@@ -771,10 +772,10 @@ export function ApplicationRecordWorkspace({
                   </div>
                   <div className="mx-5 mt-4 sm:mx-6"><ResumeRefiner job={job} resumeText={application.tailoredCvText} disabled={locked || busy !== null} onUseDraft={saveRefinement} /></div>
                   <details className="mx-5 mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm sm:mx-6">
-                    <summary className="cursor-pointer font-semibold text-slate-700">Match details: {application.matchScore}%</summary>
+                    <summary className="cursor-pointer font-semibold text-slate-700">{hasRoleKeywords ? `Match details: ${application.matchScore}%` : "Requirements need a full-description review"}</summary>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Evidence found</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.matchedKeywords.join(", ") || "No strong keyword matches yet."}</p></div>
-                      <div><p className="text-xs font-bold uppercase tracking-wide text-amber-800">Missing from your evidence</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.missingKeywords.join(", ") || "No material gaps found."}</p></div>
+                      <div><p className="text-xs font-bold uppercase tracking-wide text-amber-800">Missing from your evidence</p><p className="mt-1 text-sm leading-6 text-slate-700">{application.missingKeywords.join(", ") || (hasRoleKeywords ? "No listed keyword gaps. Still review the full description." : "Requirement tags are unavailable; a gap count cannot be established.")}</p></div>
                     </div>
                   </details>
                   {resumeEditing && !locked ? (
@@ -784,7 +785,7 @@ export function ApplicationRecordWorkspace({
                           <p className="text-sm font-semibold text-slate-950">Edit Resume text</p>
                           <p className="mt-1 text-xs leading-5 text-slate-500">Changes appear in the document preview. Your approval is reset after an edit.</p>
                         </div>
-                        <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-[13px] leading-6 text-slate-800" />
+                        <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-base leading-6 text-slate-800 sm:text-[13px]" />
                       </section>
                       <div className="hidden xl:block">
                         <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} candidateName={profile.fullName} />

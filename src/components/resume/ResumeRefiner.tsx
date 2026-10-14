@@ -9,7 +9,7 @@ import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { buildRefinedResumeDraft, type RefinedResumeDraft } from "@/lib/resume/refinement";
-import { scoreResumeForRole } from "@/lib/resume/analysis";
+import { extractRoleKeywords, scoreResumeForRole } from "@/lib/resume/analysis";
 
 export function ResumeRefiner({ job, resumeText, disabled = false, autoStart = false, actionLabel = "Use this version & review application", onUseDraft }: {
   job: JobDetail;
@@ -33,6 +33,7 @@ export function ResumeRefiner({ job, resumeText, disabled = false, autoStart = f
   const requestRef = useRef<AbortController | null>(null);
   useEffect(() => () => requestRef.current?.abort(), []);
   const stale = Boolean(result && reviewSource !== resumeText);
+  const hasRoleKeywords = extractRoleKeywords(job).length > 0;
   const { draft, draftIssue } = useMemo(() => {
     if (!result) return { draft: null, draftIssue: "" };
     try { return { draft: buildRefinedResumeDraft({ sourceText: reviewSource, suggestions: result.suggestions,
@@ -92,9 +93,10 @@ export function ResumeRefiner({ job, resumeText, disabled = false, autoStart = f
         <div className="flex flex-wrap items-center justify-between gap-2"><p className="flex items-center gap-2 text-xs font-medium text-emerald-800"><ShieldCheck size={14} />{mode}</p>
           {busy === "refine" && <div className="flex items-center gap-2 text-xs text-slate-600" role="status">Reviewing wording…<button type="button" onClick={() => { requestRef.current?.abort(); requestRef.current = null; setBusy(null); }} className="ir35-focus min-h-11 rounded-lg px-2 font-semibold">Use local review</button></div>}</div>
         <div className="grid grid-cols-3 gap-2">
-          {[{ label: "Resume match", value: `${result.baseline.overall}% → ${score?.overall ?? result.baseline.overall}%` }, { label: "Edits selected", value: String(selected.length) }, { label: "Evidence gaps", value: String(result.baseline.missingKeywords.length) }].map((item) => <div key={item.label} className="min-w-0 rounded-xl border border-white bg-white/80 p-3"><p className="text-base font-semibold tabular-nums text-slate-950 sm:text-xl">{item.value}</p><p className="mt-1 text-[10px] font-semibold text-slate-500">{item.label}</p></div>)}
+          {[{ label: "Resume match", value: hasRoleKeywords ? `${result.baseline.overall}% → ${score?.overall ?? result.baseline.overall}%` : "Not scored" }, { label: "Edits selected", value: String(selected.length) }, { label: "Evidence gaps", value: hasRoleKeywords ? String(result.baseline.missingKeywords.length) : "Review JD" }].map((item) => <div key={item.label} className="min-w-0 rounded-xl border border-white bg-white/80 p-3"><p className="text-base font-semibold tabular-nums text-slate-950 sm:text-xl">{item.value}</p><p className="mt-1 text-[10px] font-semibold text-slate-500">{item.label}</p></div>)}
         </div>
         <p className="text-[11px] leading-5 text-slate-500">The score measures keyword coverage, relevance, evidence and readability. It is not a hiring prediction or a guarantee of ATS success.</p>
+        {!hasRoleKeywords && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">This listing has no recognised requirement tags. A numerical match and gap count are withheld. Review the full job description; wording suggestions do not establish that you meet its qualifications.</p>}
         <details className="rounded-xl border border-slate-200 bg-white p-3"><summary className="ir35-focus min-h-11 cursor-pointer text-sm font-semibold text-slate-800">Job description &amp; requirements</summary>
           <div className="mt-3 grid gap-4 lg:grid-cols-2"><div><p className="text-xs font-bold text-emerald-800">Priority requirements</p><ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-5 text-slate-700">{result.mustHaveRequirements.map((item) => <li key={item}>{item}</li>)}</ul>
             {result.niceToHaveRequirements.length > 0 && <><p className="mt-3 text-xs font-bold text-slate-700">Preferred</p><ul className="mt-1 list-inside list-disc text-xs leading-5">{result.niceToHaveRequirements.map((item) => <li key={item}>{item}</li>)}</ul></>}</div>
