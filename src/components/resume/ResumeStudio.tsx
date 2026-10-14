@@ -175,6 +175,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   const [notice, setNotice] = useState("");
   const [approvedVersion, setApprovedVersion] = useState<ResumeVersion | null>(null);
   const [documentPreview, setDocumentPreview] = useState(false);
+  const sampleVersion = sourceFilename === "Alex-Morgan-sample-Resume.txt";
   const savedResume = workspace.profile.resumeProfiles?.find((item) => item.id === workspace.profile.activeResumeProfileId)
     ?? workspace.profile.resumeProfiles?.find((item) => item.isDefault);
 
@@ -260,6 +261,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
   };
 
   const persistVersion = async (status: ResumeVersionStatus) => {
+    if (status === "approved" && sampleVersion) { setError("This sample is fictional. Upload or paste your real resume before approving an application version."); return; }
     const version = makeVersion(status);
     if (!version) return;
     setBusy(status === "approved" ? "approve" : "save");
@@ -326,7 +328,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
     setConfirmedIds(version.confirmedKeywordIds);
     setTailoredText(version.tailoredText);
     setVersionLabel(version.label);
-    setApprovedVersion(version.status === "approved" ? version : null);
+    setApprovedVersion(version.status === "approved" && version.sourceFilename !== "Alex-Morgan-sample-Resume.txt" ? version : null);
     setPhase("final");
     setNotice(`Restored ${version.label}. Saving creates a new version; the original remains unchanged.`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -498,8 +500,9 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               {documentPreview && <div className="mt-4 max-w-full overflow-auto rounded-2xl bg-slate-100 p-3"><ResumeDocumentPreview resumeText={tailoredText} filename={sourceFilename} /></div>}
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => void persistVersion("draft")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 hover:border-slate-400 disabled:opacity-50">{busy === "save" ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save new version</button>
-                <button type="button" onClick={() => void persistVersion("approved")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50">{busy === "approve" ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={17} />} Approve & save version</button>
+                <button type="button" onClick={() => void persistVersion("approved")} disabled={busy !== null || sampleVersion} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50">{busy === "approve" ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={17} />} Approve & save version</button>
               </div>
+              {sampleVersion && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">This is a fictional sample, not an application resume. Upload or paste your real resume to approve a version and apply.</p>}
               {!forceLocalHistory && approvedVersion && <Link href={`/applications/new/${job.id}?resumeVersionId=${encodeURIComponent(approvedVersion.id)}`} className="ir35-focus mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white"><FileText size={16} />Review &amp; apply with this resume</Link>}
               {!forceLocalHistory && !approvedVersion && <p className="mt-3 text-xs leading-5 text-slate-500">Approve and save the current text to use this exact version in your application. Editing it requires a new approval.</p>}
               {!user && isSupabaseConfigured() && !forceLocalHistory && <Link href={`/account?next=${encodeURIComponent(`/jobs/${job.id}/resume`)}`} prefetch={false} className="ir35-focus mt-3 inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-emerald-800 underline">Sign in to save versions and apply</Link>}

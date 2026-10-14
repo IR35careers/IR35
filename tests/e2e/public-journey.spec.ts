@@ -484,6 +484,8 @@ test("Resume Studio analyses, verifies, versions and exports a role-ready Resume
   const editor = page.getByLabel("Resume text");
   await expect(editor).toHaveValue(/ADDITIONAL EXPERIENCE/);
   await expect(editor).toHaveValue(/Kubernetes/);
+  await expect(page.getByRole("button", { name: "Approve & save version" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Review & apply with this resume" })).toHaveCount(0);
   await page.getByRole("button", { name: "Save new version" }).click();
   await expect(page.getByText("Draft version saved.")).toBeVisible();
   await expect(page.getByText("Application Resume").last()).toBeVisible();

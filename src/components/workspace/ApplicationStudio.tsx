@@ -696,6 +696,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     try {
       const version = (await loadResumeVersions(job.id, user?.id ?? null)).find((item) => item.id === versionId);
       if (!version || version.status !== "approved") throw new Error("This approved resume version is unavailable in your account for this role. Open the resume studio and save it again.");
+      if (version.sourceFilename === "Alex-Morgan-sample-Resume.txt") throw new Error("A fictional sample cannot be used to apply. Upload your real resume in the studio.");
       const current = applicationRef.current;
       if (current) {
         const imported = { ...applyRefinedResume(current, {

@@ -11,7 +11,7 @@ test("a reviewed resume transfers exactly into the application and can be refine
   await page.goto(`/jobs/${jobId}/resume`);
   const privacy = page.getByRole("button", { name: "Essential only", exact: true });
   if (await privacy.isVisible()) await privacy.click();
-  await page.getByRole("button", { name: "Try the labelled sample Resume" }).click();
+  await page.getByLabel("Resume text", { exact: true }).fill(`Alex Morgan\nalex.morgan@example.test\n\nPROFILE\nContract technology specialist with cloud platform delivery experience.\n\nSKILLS\nGit, AWS, Terraform, Linux\n\nEXPERIENCE\n- I was responsible for improving AWS platform reliability across production services.\n- I worked on Terraform components for engineering teams.\n- Reduced recurring deployment failures by 28%.`);
   await page.getByRole("button", { name: "Analyse against this role" }).click();
   await expect(page.getByRole("heading", { name: "Choose the changes you want" })).toBeVisible();
   const accept = page.getByRole("button", { name: /^Accept change / }).first();
