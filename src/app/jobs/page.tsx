@@ -332,13 +332,13 @@ function JobsBoard() {
               <div className="mt-6 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(230px,0.55fr)]">
                 <label className="relative block">
                   <span className="sr-only">Search contracts</span>
-                  <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                  <input type="search" value={q} onChange={(e) => { setQ(e.target.value); resetPage(); }} placeholder="Role, skill or company" className="ir35-focus min-h-[54px] w-full rounded-2xl border border-white/15 bg-white/[0.10] pl-11 pr-4 text-sm text-white shadow-inner backdrop-blur placeholder:text-slate-400 focus:bg-white/[0.14]" aria-label="Search contracts" />
+                  <Search size={18} className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-300" aria-hidden="true" />
+                  <input type="search" value={q} onChange={(e) => { setQ(e.target.value); resetPage(); }} placeholder="Role, skill or company" className="ir35-focus min-h-[54px] w-full rounded-2xl border border-white/15 bg-white/[0.10] pl-11 pr-4 text-sm text-white shadow-inner placeholder:text-slate-400 focus:bg-white/[0.14]" aria-label="Search contracts" />
                 </label>
                 <label className="relative block">
                   <span className="sr-only">Location</span>
-                  <MapPin size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                  <input type="search" value={locationLock} onChange={(e) => { setLocationLock(e.target.value); resetPage(); }} placeholder="Town, region or UK" className="ir35-focus min-h-[54px] w-full rounded-2xl border border-white/15 bg-white/[0.10] pl-11 pr-4 text-sm text-white shadow-inner backdrop-blur placeholder:text-slate-400 focus:bg-white/[0.14]" aria-label="Filter by location" />
+                  <MapPin size={18} className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-300" aria-hidden="true" />
+                  <input type="search" value={locationLock} onChange={(e) => { setLocationLock(e.target.value); resetPage(); }} placeholder="Town, region or UK" className="ir35-focus min-h-[54px] w-full rounded-2xl border border-white/15 bg-white/[0.10] pl-11 pr-4 text-sm text-white shadow-inner placeholder:text-slate-400 focus:bg-white/[0.14]" aria-label="Filter by location" />
                 </label>
               </div>
             </div>

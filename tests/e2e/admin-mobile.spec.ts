@@ -18,7 +18,16 @@ test(`mobile admin navigation and support details stay within ${width}px`, async
   }, { project, user });
   await page.route("**/auth/v1/**", (route) => route.fulfill({ json: user }));
   await page.route("**/api/admin/session", (route) => route.fulfill({ json: { unlocked: true, role: "admin", expiresIn: 1200 } }));
+  const contractor = {
+    id: "controlled-contractor", email: "a-long-contractor-email-address-for-layout-testing@example.com",
+    created_at: new Date().toISOString(), last_sign_in_at: new Date().toISOString(),
+    email_confirmed_at: new Date().toISOString(), provider: "google",
+    profile: { full_name: "Alex Morgan Controlled Contractor", cv_filename: "fixture-resume.pdf", skills: ["Azure"] },
+    activity: { applications: 7, savedJobs: 2, applied: 1, needsAttention: 0, resumeVersions: 0, alerts: 0, inboxMessages: 0, unreadMessages: 0 },
+  };
   await page.route("**/api/admin?*", (route) => route.fulfill({ json: {
+    users: [contractor], total: 140,
+    contractor: { account: contractor, profile: contractor.profile, activity: contractor.activity, applications: [], resumeVersions: [], audit: [], resume: { filename: "fixture-resume.pdf", available: true, source: "uploaded" } },
     feedback: [{ id: "fixture-ticket", name: "Controlled Customer", email: "customer@example.com", company: "", subject: "Mobile support fixture", message: "A controlled long-message layout test for the mobile support conversation.", status: "new", category: "general", priority: "normal", created_at: new Date().toISOString(), messages: [] }],
     feedbackSummary: { total: 1, new: 1, inProgress: 0, resolved: 0, highPriority: 0, spam: 0 },
   } }));
@@ -47,5 +56,43 @@ test(`mobile admin navigation and support details stay within ${width}px`, async
   await page.screenshot({ path: `output/admin-mobile-support-${width}.png` });
   await page.getByRole("button", { name: "Back to enquiries" }).click();
   await expect(page.getByRole("button", { name: /Mobile support fixture/ })).toBeVisible();
+
+  await page.getByRole("button", { name: "Open admin navigation" }).click();
+  await page.getByRole("button", { name: "Contractors", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Contractors", exact: true })).toBeVisible();
+  const cards = page.getByRole("list", { name: "Contractor accounts" });
+  await expect(cards).toBeVisible();
+  await expect(cards.getByText(contractor.email, { exact: true })).toBeVisible();
+  await expect(page.getByRole("table")).not.toBeVisible();
+  const stats = page.locator(".ir35-admin-colour-grid > article");
+  const first = await stats.nth(0).boundingBox();
+  const second = await stats.nth(1).boundingBox();
+  expect(first!.y).toBe(second!.y);
+  expect(second!.x).toBeGreaterThan(first!.x);
+  const main = await page.locator("main").boundingBox();
+  expect(main!.width).toBe(width);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await cards.getByRole("button", { name: `View ${contractor.profile.full_name}` }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `output/admin-mobile-contractors-${width}.png` });
+  await cards.getByRole("button", { name: `View ${contractor.profile.full_name}` }).click();
+  await expect(page.getByRole("dialog", { name: contractor.profile.full_name })).toBeVisible();
+  const record = page.getByRole("dialog", { name: contractor.profile.full_name });
+  await expect(record.getByRole("button", { name: "Close contractor details", exact: true })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  expect(await record.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.getByRole("tab", { name: /^resume$/i }).click();
+  await expect(page.getByText("Original resume", { exact: true })).toBeVisible();
+  await expect(record.getByRole("button", { name: "Download", exact: true })).toBeVisible();
+  const tabs = record.getByRole("tablist");
+  expect(await tabs.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `output/admin-mobile-contractor-record-${width}.png` });
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: contractor.profile.full_name })).toHaveCount(0);
+  await expect(cards.getByRole("button", { name: `View ${contractor.profile.full_name}` })).toBeFocused();
+  await page.getByLabel("Search Contractors", { exact: true }).fill("no-matching-contractor");
+  await expect(page.getByText("No matching contractors", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
 });
 }

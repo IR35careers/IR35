@@ -582,7 +582,7 @@ async function clickAndFollow(
   return destination;
 }
 
-async function openApplicationForm(
+export async function openApplicationForm(
   initialPage: Page,
   ats: AtsDefinition,
   navigationStages: string[] = [],
@@ -596,7 +596,18 @@ async function openApplicationForm(
     );
     navigationStages.push(`Opening: form ${applicationFormReady}; dismissal ${dismiss ? clean(await dismiss.innerText().catch(() => ""), 70) : "none"}`);
     if (dismiss) {
+      const applicationUrl = applicationFormReady ? page.url() : null;
       page = await clickAndFollow(page, dismiss, 300);
+      // Some legacy cookie endpoints store the preference then redirect to a
+      // generic jobs page. Return to the exact ready form with the new cookies;
+      // never follow an unrelated listing's Apply action after this redirect.
+      if (applicationUrl && page.url().split("#")[0] !== applicationUrl.split("#")[0]) {
+        await validatePublicHttpsUrl(applicationUrl);
+        await page.goto(applicationUrl, { waitUntil: "domcontentloaded", timeout: 30_000 });
+        await validatePublicHttpsUrl(page.url());
+        navigationStages.push(`Cookie redirect restored ${new URL(page.url()).pathname}; application form ${await hasApplicationForm(page)}`);
+        if (!(await hasApplicationForm(page))) break;
+      }
       continue;
     }
     if (applicationFormReady) break;
@@ -1899,7 +1910,7 @@ export async function runNativeApplication(
     timedOut = true;
     void browser?.close().catch(() => null);
   }, budgetMs);
-  const navigationStages: string[] = ["Adapter no-decline-v3"];
+  const navigationStages: string[] = ["Adapter preserve-cookie-form-v4"];
   try {
     const destination = await validatePublicHttpsUrl(payload.destination);
     // The packet reaches this function only after the signed-in contractor has

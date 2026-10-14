@@ -53,9 +53,9 @@ export function PublicHeader({ hideForWorkspaceMembers = false, variant = "defau
             : "ir35-container flex h-[68px] items-center justify-between gap-4 sm:h-[76px]"
         }
       >
-        <div className="flex items-center gap-9">
+        <div className="flex min-w-0 items-center gap-4 xl:gap-9">
           <Brand />
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
             {NAV_ITEMS.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
@@ -63,7 +63,7 @@ export function PublicHeader({ hideForWorkspaceMembers = false, variant = "defau
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`ir35-focus inline-flex min-h-10 items-center rounded-xl px-3.5 text-sm font-semibold transition-[background-color,color,box-shadow,transform] duration-200 ${
+                  className={`ir35-focus inline-flex min-h-10 items-center whitespace-nowrap rounded-xl px-2.5 text-sm font-semibold transition-[background-color,color,box-shadow,transform] duration-200 xl:px-3.5 ${
                     active
                       ? "bg-slate-100 text-slate-950"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
@@ -115,7 +115,7 @@ export function PublicHeader({ hideForWorkspaceMembers = false, variant = "defau
             type="button"
             disabled={!hydrated}
             onClick={() => setOpen((value) => !value)}
-            className={`ir35-focus inline-flex h-11 w-11 items-center justify-center border border-slate-300 bg-white text-slate-700 disabled:cursor-wait disabled:opacity-60 md:hidden ${floating ? "rounded-full" : "rounded-xl"}`}
+            className={`ir35-focus inline-flex h-11 w-11 shrink-0 items-center justify-center border border-slate-300 bg-white text-slate-700 disabled:cursor-wait disabled:opacity-60 lg:hidden ${floating ? "rounded-full" : "rounded-xl"}`}
             aria-expanded={open}
             aria-controls="public-mobile-menu"
             aria-label={!hydrated ? "Navigation loading" : open ? "Close navigation" : "Open navigation"}
@@ -130,8 +130,8 @@ export function PublicHeader({ hideForWorkspaceMembers = false, variant = "defau
           id="public-mobile-menu"
           className={
             floating
-              ? "ir35-popover mx-auto mt-2 max-w-[calc(100%-0.5rem)] rounded-3xl border border-slate-200 bg-white/95 px-4 py-4 shadow-floating backdrop-blur-xl md:hidden"
-              : "ir35-popover border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur-xl md:hidden"
+              ? "ir35-popover mx-auto mt-2 max-w-[calc(100%-0.5rem)] rounded-3xl border border-slate-200 bg-white/95 px-4 py-4 shadow-floating backdrop-blur-xl lg:hidden"
+              : "ir35-popover border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur-xl lg:hidden"
           }
         >
           <nav className="mx-auto flex max-w-[1440px] flex-col gap-1" aria-label="Mobile navigation">

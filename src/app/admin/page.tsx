@@ -510,7 +510,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`ir35-admin-panel overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${className}`}>
+    <section className={`ir35-admin-panel min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${className}`}>
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
         <div>
           <h2 className="text-[15px] font-semibold text-slate-950">{title}</h2>
@@ -1886,8 +1886,8 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
   }, [detailsOpen]);
 
   return (
-    <div className="mt-7 space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="mt-7 min-w-0 space-y-5">
+      <div className="ir35-admin-colour-grid grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {[
           { label: "Registered", value: total, detail: `${users.length} loaded`, icon: Users, tone: "bg-blue-50 text-blue-700" },
           { label: "Verified email", value: verified, detail: `${users.length ? Math.round((verified / users.length) * 100) : 0}% of loaded accounts`, icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
@@ -1906,7 +1906,33 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
       <div>
         <Panel title="Contractor accounts" description="Select an account to inspect membership and product activity.">
           {users.length ? (
-            <div className="overflow-x-auto">
+            <>
+            <ul aria-label="Contractor accounts" className="divide-y divide-slate-100 md:hidden">
+              {users.map((account) => {
+                const name = account.profile?.full_name || "Name not added";
+                const restricted = Boolean(account.banned_until && new Date(account.banned_until).getTime() > currentTime);
+                return (
+                  <li key={account.id} className="min-w-0 p-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white" aria-hidden="true">{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-950">{name}</p>
+                        <p className="mt-1 break-all text-xs leading-5 text-slate-500">{account.email || "No email"}</p>
+                        <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${restricted ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{restricted ? "Restricted" : account.email_confirmed_at ? "Verified" : "Pending"}</span>
+                      </div>
+                    </div>
+                    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                      <div><dt className="text-slate-500">Last active</dt><dd className="mt-1 font-medium text-slate-800">{timeAgo(account.last_sign_in_at)}</dd></div>
+                      <div><dt className="text-slate-500">Applications</dt><dd className="mt-1 font-semibold tabular-nums text-slate-800">{account.activity?.applications ?? 0}</dd></div>
+                      <div><dt className="text-slate-500">Joined</dt><dd className="mt-1 font-medium text-slate-800">{formatDate(account.created_at)}</dd></div>
+                      <div><dt className="text-slate-500">Sign-in</dt><dd className="mt-1 font-medium capitalize text-slate-800">{account.provider || "email"}</dd></div>
+                    </dl>
+                    <button type="button" onClick={() => openDetails(account.id)} aria-haspopup="dialog" aria-label={`View ${account.profile?.full_name || account.email || "contractor"}`} className="mt-4 flex min-h-11 w-full items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">View contractor <ChevronRight size={16} /></button>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="hidden max-w-full overflow-x-auto md:block">
               <table className="w-full min-w-[820px] text-left">
                 <thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Contractor</th><th className="px-4 py-3.5">Account</th><th className="px-4 py-3.5">Last active</th><th className="px-4 py-3.5">Applications</th><th className="px-6 py-3.5">Joined</th><th className="px-4 py-3.5"><span className="sr-only">View</span></th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1926,6 +1952,7 @@ function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; 
                 </tbody>
               </table>
             </div>
+            </>
           ) : <EmptyState title={query ? "No matching contractors" : "No contractor accounts"} detail={query ? "Try searching by name, email or sign-in provider." : "New registrations will appear here."} />}
         </Panel>
       </div>
@@ -1984,6 +2011,27 @@ function ContractorDetailsDrawer({
   const [currentTime] = useState(Date.now);
   const [documentAction, setDocumentAction] = useState<string | null>(null);
   const [documentError, setDocumentError] = useState("");
+  const dialogRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    const controls = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]') ?? []).filter((element) => element.getClientRects().length > 0);
+    controls()[0]?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const elements = controls();
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && (document.activeElement === first || !dialog?.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog?.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapFocus);
+    return () => { document.removeEventListener("keydown", trapFocus); previousFocus?.focus(); };
+  }, []);
   const account = detail?.account ?? selected;
   const profile = detail?.profile ?? selected.profile;
   const applicationProfile = (profile?.application_profile ?? {}) as Record<string, unknown>;
@@ -2065,7 +2113,7 @@ function ContractorDetailsDrawer({
   return (
     <div className="fixed inset-0 z-[90] flex justify-end" role="presentation">
       <button type="button" className="absolute inset-0 cursor-default bg-slate-950/50 backdrop-blur-[3px]" onClick={onClose} aria-label="Close contractor details" />
-      <section role="dialog" aria-modal="true" aria-labelledby="contractor-record-title" className="relative flex h-full w-full max-w-3xl flex-col overflow-hidden bg-slate-50 shadow-[-24px_0_70px_rgba(15,23,42,0.24)]">
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contractor-record-title" className="relative flex h-[100dvh] w-full min-w-0 max-w-3xl flex-col overflow-hidden bg-slate-50 shadow-[-24px_0_70px_rgba(15,23,42,0.24)]">
         <header className="border-b border-slate-200 bg-white px-5 py-5 sm:px-7">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -2076,16 +2124,16 @@ function ContractorDetailsDrawer({
                 <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold sm:inline-flex ${restricted ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{accountStatus}</span>
               </div>
             </div>
-            <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-950" aria-label="Close contractor details"><X size={18} /></button>
+            <button type="button" onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-950" aria-label="Close contractor details"><X size={18} /></button>
           </div>
           <div className="mt-5 flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Contractor record sections">
             {(["overview", "resume", "applications", "activity"] as const).map((item) => (
-              <button key={item} type="button" role="tab" aria-selected={tab === item} onClick={() => onTabChange(item)} className={`min-h-9 flex-1 whitespace-nowrap rounded-lg px-3 text-xs font-semibold capitalize transition ${tab === item ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{item}</button>
+              <button key={item} type="button" role="tab" aria-selected={tab === item} onClick={() => onTabChange(item)} className={`min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold capitalize transition sm:px-3 sm:text-xs ${tab === item ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{item}</button>
             ))}
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7">
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7">
           {loading ? (
             <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-center"><Loader2 className="animate-spin text-emerald-600" size={26} /><p className="mt-3 text-sm font-semibold text-slate-900">Loading private contractor data</p><p className="mt-1 text-xs text-slate-500">Resume access is authorised only for this admin session.</p></div>
           ) : error ? (
@@ -2135,10 +2183,10 @@ function ContractorDetailsDrawer({
                         {detail.resume ? <p className="mt-2 text-[11px] leading-5 text-slate-400">{detail.resume.source === "uploaded" ? "Private uploaded file. Administrator access is checked for every request." : "Secure PDF generated from the contractor's saved resume data."}</p> : null}
                       </div>
                       {detail.resume?.available ? <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => openResumeDocument({ mode: "view", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-60">
+                        <button type="button" onClick={() => openResumeDocument({ mode: "view", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-60">
                           {documentAction === "original-original-view" ? <Loader2 className="animate-spin" size={14} /> : <ExternalLink size={14} />} View
                         </button>
-                        <button type="button" onClick={() => openResumeDocument({ mode: "download", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">
+                        <button type="button" onClick={() => openResumeDocument({ mode: "download", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">
                           {documentAction === "original-original-download" ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />} Download
                         </button>
                       </div> : null}
