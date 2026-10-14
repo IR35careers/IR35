@@ -37,7 +37,8 @@ test("mobile admin navigation and support details stay within the viewport", asy
   await expect(page.getByRole("button", { name: "Back to enquiries" })).toBeVisible();
   await expect(page.getByLabel("Reply to customer")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.screenshot({ path: "output/admin-mobile-support.png", fullPage: true });
+  await page.getByRole("button", { name: "Back to enquiries" }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "output/admin-mobile-support.png" });
   await page.getByRole("button", { name: "Back to enquiries" }).click();
   await expect(page.getByRole("button", { name: /Mobile support fixture/ })).toBeVisible();
 });

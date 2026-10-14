@@ -2218,7 +2218,7 @@ function FeedbackPanel({
 
   return (
     <div className="mt-7 space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="ir35-admin-colour-grid grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {[
           { label: "New", value: summary.new, detail: "Awaiting first review", tone: "bg-blue-50 text-blue-700" },
           { label: "In progress", value: summary.inProgress, detail: "Follow-up underway", tone: "bg-amber-50 text-amber-700" },

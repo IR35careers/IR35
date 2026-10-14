@@ -1,5 +1,10 @@
 {
   "buildCommand": "npm run vercel-build",
+  "functions": {
+    "src/app/api/queues/applications/route.ts": {
+      "experimentalTriggers": [{ "type": "queue/v2beta", "topic": "ir35-application-kicks" }]
+    }
+  },
   "crons": [
     {
       "path": "/api/pipeline/fetch",

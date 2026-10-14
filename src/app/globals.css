@@ -399,6 +399,8 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   @media (max-width: 639px) {
+    .ir35-admin-topbar { backdrop-filter: none; background: #f7fcfa; }
+    .ir35-admin-colour-grid > article { padding: 16px; }
     .ir35-admin-canvas input,
     .ir35-admin-canvas select,
     .ir35-admin-canvas textarea { font-size: 16px; }
