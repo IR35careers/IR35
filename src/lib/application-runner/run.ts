@@ -35,6 +35,7 @@ import {
   preferredResumeUploadFormat,
   shouldTreatSingleFileAsResume,
   shouldSkipConsumedResumeInput,
+  shouldDismissApplicationOpeningAction,
   type AtsDefinition,
 } from "@/lib/application-runner/ats";
 import {
@@ -587,15 +588,16 @@ async function openApplicationForm(
 ): Promise<Page> {
   let page = initialPage;
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    const dismiss = await actionLocator(
+    const applicationFormReady = await hasApplicationForm(page);
+    const dismiss = await actionLocatorMatching(
       page,
-      /^(decline all|reject all|reject optional cookies|only necessary cookies|just necessary|no,? thanks(?:,? take me to the job)?|continue to job|take me to the job)$/i,
+      (label) => shouldDismissApplicationOpeningAction({ label, hasApplicationForm: applicationFormReady }),
     );
     if (dismiss) {
       page = await clickAndFollow(page, dismiss, 300);
       continue;
     }
-    if (await hasApplicationForm(page)) break;
+    if (applicationFormReady) break;
     const apply = await actionLocator(page, ats.applyPattern);
     if (!apply) break;
     page = await clickAndFollow(page, apply, 800);
