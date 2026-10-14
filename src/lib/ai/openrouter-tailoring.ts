@@ -1,4 +1,4 @@
-import { analyseResumeForRole, extractRoleKeywords, resumeContainsTerm, scoreResumeForRole } from "@/lib/resume/analysis";
+import { analyseResumeForRole, extractRoleKeywords, resumeEvidencesTerm, scoreResumeForRole } from "@/lib/resume/analysis";
 import type { JobDetail } from "@/lib/job-types";
 import type { AiTailoringResult, AiTailoringSuggestion } from "@/lib/ai/tailoring-types";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
@@ -107,7 +107,7 @@ function introducesUnsupportedNumber(replacement: string, evidence: string): boo
 
 function introducesUnsupportedRoleKeyword(replacement: string, sourceCv: string, job?: JobDetail): boolean {
   if (!job) return false;
-  return extractRoleKeywords(job).some(({ term }) => resumeContainsTerm(replacement, term) && !resumeContainsTerm(sourceCv, term));
+  return extractRoleKeywords(job).some(({ term }) => resumeEvidencesTerm(replacement, term) && !resumeEvidencesTerm(sourceCv, term));
 }
 
 export function validateTailoringSuggestions(raw: unknown, sourceCv: string, job?: JobDetail): AiTailoringSuggestion[] {

@@ -79,7 +79,7 @@ const TERM_ALIASES: Record<string, string[]> = {
   nodejs: ["nodejs", "node js", "node.js"],
   "node.js": ["nodejs", "node js", "node.js"],
   qa: ["qa", "quality assurance"],
-  "sc cleared": ["sc cleared", "security clearance", "security cleared"],
+  "sc cleared": ["sc cleared", "sc clearance"],
   typescript: ["typescript", "type script"],
 };
 
@@ -148,6 +148,28 @@ function aliasesFor(term: string): string[] {
 export function resumeContainsTerm(text: string, term: string): boolean {
   const haystack = normaliseForMatch(text);
   return aliasesFor(term).some((alias) => haystack.includes(normaliseForMatch(alias)));
+}
+
+/** A denial or future intention is not evidence of a current capability. */
+export function resumeEvidencesTerm(text: string, term: string): boolean {
+  const deniedBefore = /\b(?:no|not|never|without|lack|lacking|cannot|can t|don t)\s+(?:(?:hold|held|have|had|possess|obtained|achieved|active|current|currently|valid|any|prior|previous|commercial|production|professional|hands|on|experience|working|knowledge|certification|certified|clearance|licence|license|with|in|of|a|an|the|to|been|yet|used)\s+){0,8}$/;
+  const futureBefore = /\b(?:eligible for|willing to obtain|plan to obtain|planning to learn|working towards|learning|interested in)\s+$/;
+  return text.split(/\n|[.!?](?=\s|$)/).some((line) => {
+    const haystack = normaliseForMatch(line);
+    return aliasesFor(term).some((alias) => {
+      const needle = normaliseForMatch(alias).trim();
+      if (!needle) return false;
+      let start = haystack.indexOf(` ${needle} `);
+      while (start >= 0) {
+        const before = haystack.slice(Math.max(0, start - 220), start + 1);
+        const after = haystack.slice(start + needle.length + 2, start + needle.length + 122);
+        const deniedAfter = /^(?:(?:is|was|were|has|have|been|currently)\s+)*(?:not\s+(?:held|obtained|active|current|valid|certified|yet)|no\s+(?:experience|certification|licence|license)|expired|lapsed|eligible)\b/.test(after);
+        if (!deniedBefore.test(before) && !futureBefore.test(before) && !deniedAfter) return true;
+        start = haystack.indexOf(` ${needle} `, start + needle.length + 1);
+      }
+      return false;
+    });
+  });
 }
 
 function sectionKind(title: string): ResumeSectionKind | null {
@@ -292,8 +314,8 @@ export function scoreResumeForRole(
 ): ResumeScore {
   const parsed = parseResumeText(text, filename);
   const keywords = extractRoleKeywords(job);
-  const matched = keywords.filter((keyword) => resumeContainsTerm(text, keyword.term));
-  const missing = keywords.filter((keyword) => !resumeContainsTerm(text, keyword.term));
+  const matched = keywords.filter((keyword) => resumeEvidencesTerm(text, keyword.term));
+  const missing = keywords.filter((keyword) => !resumeEvidencesTerm(text, keyword.term));
   const totalWeight = keywords.reduce((sum, keyword) => sum + keyword.weight, 0) || 1;
   const matchedWeight = matched.reduce((sum, keyword) => sum + keyword.weight, 0);
   const keywordCoverage = clamp((matchedWeight / totalWeight) * 100);
