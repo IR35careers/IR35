@@ -1316,7 +1316,7 @@ export default function AdminPage() {
       <div className="min-w-0 lg:pl-[272px]">
         <header className="ir35-admin-topbar sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-slate-200/80 px-3 backdrop-blur-xl sm:h-20 sm:gap-3 sm:px-6 xl:px-8">
           <button type="button" onClick={() => setMobileOpen(true)} aria-expanded={mobileOpen} aria-controls="admin-mobile-navigation" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden" aria-label="Open admin navigation"><Menu size={18} /></button>
-          <div className="relative max-w-xl flex-1">
+          <div className="relative min-w-0 max-w-xl flex-1">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100" placeholder={`Search ${section === "stats" ? "recent roles" : current.title.toLowerCase()}…`} aria-label={`Search ${current.title}`} />
             <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block">/</kbd>

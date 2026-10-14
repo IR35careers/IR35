@@ -131,6 +131,7 @@ function reviewReceipt(
 }
 
 type RunnerPageDiagnostic = {
+  navigationStages?: string[];
   title: string;
   headings: string[];
   actions: Array<{ label: string; enabled: boolean; role: string }>;
@@ -155,6 +156,7 @@ async function pageDiagnostic(
   page: Page,
   blockedHosts: ReadonlySet<string> = new Set(),
   networkFailures: ReadonlySet<string> = new Set(),
+  navigationStages: string[] = [],
 ): Promise<RunnerPageDiagnostic> {
   const title = clean(await page.title().catch(() => ""), 160);
   const headingNodes = page.locator(
@@ -282,6 +284,7 @@ async function pageDiagnostic(
 
   return {
     title,
+    navigationStages: navigationStages.slice(0, 16),
     headings,
     actions,
     controls,
@@ -1892,6 +1895,7 @@ export async function runNativeApplication(
     timedOut = true;
     void browser?.close().catch(() => null);
   }, budgetMs);
+  const navigationStages: string[] = [];
   try {
     const destination = await validatePublicHttpsUrl(payload.destination);
     // The packet reaches this function only after the signed-in contractor has
@@ -2000,12 +2004,18 @@ export async function runNativeApplication(
         // Keep diagnostics value-free when a browser reports a malformed URL.
       }
     });
+    context.on("request", (request) => {
+      if (request.method() !== "POST" || navigationStages.length >= 8) return;
+      try { const target = new URL(request.url()); if (approvedHosts.has(target.hostname)) navigationStages.push(`POST ${target.pathname.slice(0, 120)} (${sensitive ? "application" : "before filling"})`); } catch { /* No request bodies or query strings are recorded. */ }
+    });
     let navigationStatus: number | null = null;
     try {
       const navigation = await page.goto(startUrl.toString(), {
         waitUntil: "domcontentloaded",
       });
       navigationStatus = navigation?.status() ?? null;
+      navigationStages.push(`Requested ${startUrl.pathname}; query keys ${Array.from(startUrl.searchParams.keys()).join(",")}; saved session ${Boolean(savedSession)}`);
+      navigationStages.push(`Loaded ${new URL(page.url()).pathname}; application form ${await hasApplicationForm(page)}`);
     } catch (error) {
       console.warn("application_runner_navigation_failed", {
         host: startUrl.hostname,
@@ -2048,6 +2058,7 @@ export async function runNativeApplication(
     await validatePublicHttpsUrl(page.url());
     ats = detectAts(page.url());
     page = await openApplicationForm(page, ats);
+    navigationStages.push(`Opened form ${new URL(page.url()).pathname}; application form ${await hasApplicationForm(page)}`);
     const handoffBody = clean(
       await page
         .locator("body")
@@ -2214,7 +2225,7 @@ export async function runNativeApplication(
           [],
           "unsupported_form",
           currentDestination(page, startUrl.toString()),
-          await pageDiagnostic(page, blockedHosts, networkFailures),
+          await pageDiagnostic(page, blockedHosts, networkFailures, navigationStages),
         );
       }
 
@@ -2243,7 +2254,7 @@ export async function runNativeApplication(
           fields,
           "validation_failed",
           currentDestination(page, startUrl.toString()),
-          await pageDiagnostic(page, blockedHosts, networkFailures),
+          await pageDiagnostic(page, blockedHosts, networkFailures, navigationStages),
         );
       }
     }

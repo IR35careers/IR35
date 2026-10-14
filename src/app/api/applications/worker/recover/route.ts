@@ -116,6 +116,7 @@ function safeDiagnostic(value: unknown): Record<string, unknown> | null {
     : [];
   return {
     title: String(diagnostic.title ?? "").slice(0, 160),
+    navigationStages: safeStrings(diagnostic.navigationStages, 16, 180),
     headings: safeStrings(diagnostic.headings, 20, 180),
     actions,
     controls,

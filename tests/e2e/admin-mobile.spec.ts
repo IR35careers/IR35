@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("mobile admin navigation and support details stay within the viewport", async ({ page }, testInfo) => {
+for (const width of [320, 390, 430]) {
+test(`mobile admin navigation and support details stay within ${width}px`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome", "Phone-specific admin interactions");
+  await page.setViewportSize({ width, height: 844 });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   test.skip(!url, "Requires the public Supabase URL for the isolated client fixture");
   const project = new URL(url!).hostname.split(".")[0];
@@ -30,6 +32,10 @@ test("mobile admin navigation and support details stay within the viewport", asy
   const navigation = page.getByRole("dialog", { name: "Administrator navigation" });
   await expect(navigation).toBeVisible();
   expect(await page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+  await page.keyboard.press("Shift+Tab");
+  await expect(navigation.getByRole("button", { name: "Lock admin and sign out" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(navigation.getByRole("link", { name: /IR35Careers/ })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open admin navigation" })).toBeFocused();
   await expect(navigation).toHaveCount(0);
@@ -38,7 +44,8 @@ test("mobile admin navigation and support details stay within the viewport", asy
   await expect(page.getByLabel("Reply to customer")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByRole("button", { name: "Back to enquiries" }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: "output/admin-mobile-support.png" });
+  await page.screenshot({ path: `output/admin-mobile-support-${width}.png` });
   await page.getByRole("button", { name: "Back to enquiries" }).click();
   await expect(page.getByRole("button", { name: /Mobile support fixture/ })).toBeVisible();
 });
+}
