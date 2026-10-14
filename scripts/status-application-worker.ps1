@@ -36,8 +36,24 @@ try {
 $lastConnectedAt = $null
 $connectionFresh = $false
 if ($health.controlPlane.lastConnectedAt) {
-  $lastConnectedAt = [DateTimeOffset]::Parse($health.controlPlane.lastConnectedAt)
-  $connectionFresh = $lastConnectedAt -gt [DateTimeOffset]::UtcNow.AddMinutes(-2)
+  # PowerShell 7 can deserialize an ISO JSON timestamp into DateTime before
+  # it reaches this script; parsing its locale-dependent string then fails.
+  if ($health.controlPlane.lastConnectedAt -is [DateTime]) {
+    $lastConnectedAt = [DateTimeOffset]$health.controlPlane.lastConnectedAt
+  } elseif ($health.controlPlane.lastConnectedAt -is [DateTimeOffset]) {
+    $lastConnectedAt = $health.controlPlane.lastConnectedAt
+  } else {
+    $parsedHeartbeat = [DateTimeOffset]::MinValue
+    if ([DateTimeOffset]::TryParse(
+      [string]$health.controlPlane.lastConnectedAt,
+      [Globalization.CultureInfo]::InvariantCulture,
+      [Globalization.DateTimeStyles]::RoundtripKind,
+      [ref]$parsedHeartbeat
+    )) {
+      $lastConnectedAt = $parsedHeartbeat
+    }
+  }
+  $connectionFresh = $lastConnectedAt -and $lastConnectedAt -gt [DateTimeOffset]::UtcNow.AddMinutes(-2)
 }
 
 $recommendations = @()
