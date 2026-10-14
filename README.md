@@ -78,6 +78,8 @@ The Playwright suite covers the public search-to-detail journey, CV analysis/ver
 
 ## Production behaviour
 
+Approved web applications run on the managed cloud queue; customers do not need an extension, desktop process or a tab left open. Proven pre-submit browser failures are retried with bounded backoff. Missing employer answers remain actionable questions, not repeated empty attempts. If the final employer action was attempted but its confirmation is unknown, the runner does not silently send it again. Opening an employer-only manual step uses a normal URL without creating an extension handoff or changing the recorded application status.
+
 ```bash
 npm run build
 npm start

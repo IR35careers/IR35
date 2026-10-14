@@ -243,6 +243,7 @@ export type ApplicationAttentionKind =
   | "email_verification"
   | "employer_account"
   | "security_check"
+  | "confirmation_pending"
   | "employer_form"
   | "retry";
 

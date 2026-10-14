@@ -473,6 +473,14 @@ export function ApplicationRecordWorkspace({
                         </div>
                       )}
                     {application.attention.questionIds.length === 0 &&
+                      application.attention.kind === "confirmation_pending" && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Link href="/inbox" className="ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-700 px-4 text-sm font-bold text-white">Check confirmation email <Mail size={15} /></Link>
+                          <button type="button" onClick={() => void onContinueInBrowser()} disabled={busy !== null || submissionInProgress} className="ir35-focus min-h-11 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 disabled:opacity-50">Open employer page</button>
+                          <button type="button" onClick={() => void onConfirmManualSubmission()} disabled={busy !== null || submissionInProgress} className="ir35-focus min-h-11 rounded-xl border border-amber-300 bg-white px-4 text-sm font-bold text-amber-900 disabled:opacity-50">I received confirmation</button>
+                        </div>
+                      )}
+                    {application.attention.questionIds.length === 0 &&
                       (application.attention.kind === "employer_form" ||
                         application.attention.kind === "retry") && (
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -716,7 +724,7 @@ export function ApplicationRecordWorkspace({
                     </div>
                   </section>
 
-                  {!submitted && (
+                  {!submitted && application.attention?.kind !== "confirmation_pending" && (
                     <section className="border-t border-slate-200 pt-6">
                       <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
                         <input
@@ -737,6 +745,7 @@ export function ApplicationRecordWorkspace({
                         {busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
                         {submissionInProgress ? "Submitting application" : application.status === "failed" ? "Retry application" : "Submit application"}
                       </button>
+                      <p className="mt-3 text-xs leading-5 text-slate-500">Runs in the cloud — no extension or desktop app. You can close this tab; progress and any employer-only steps appear in Tracker.</p>
                     </section>
                   )}
 

@@ -1,4 +1,5 @@
 import { runNativeApplication } from "@/lib/application-runner/run";
+import { ApplicationRunnerPreSubmitError } from "@/lib/application-runner/failure";
 import { signApplicationWorkerBody } from "@/lib/application-worker-auth";
 import type {
   ApplicationWorkerAssignment,
@@ -192,6 +193,7 @@ export async function executeApplicationWorkerAssignment(input: {
       applicationId: task.application_id,
       idempotencyKey: task.idempotency_key,
       completedAt,
+      workerAttempt: task.attempts,
       receipt: {
         state: "needs_user",
         providerSubmissionId: `preflight:${task.id}`,
@@ -213,6 +215,7 @@ export async function executeApplicationWorkerAssignment(input: {
       applicationId: task.application_id,
       idempotencyKey: task.idempotency_key,
       completedAt: new Date().toISOString(),
+      workerAttempt: task.attempts,
       receipt: result.receipt,
       portalSession: result.portalSession,
       clearPortalSession: result.clearPortalSession,
@@ -224,7 +227,9 @@ export async function executeApplicationWorkerAssignment(input: {
       applicationId: task.application_id,
       idempotencyKey: task.idempotency_key,
       completedAt: new Date().toISOString(),
+      workerAttempt: task.attempts,
       error: safeApplicationWorkerError(error),
+      retryable: error instanceof ApplicationRunnerPreSubmitError,
     };
   }
 }

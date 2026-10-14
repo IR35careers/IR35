@@ -28,6 +28,7 @@ import {
 } from "@/lib/application-worker-retry";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
+import { providerReviewQuestions, type SubmissionProviderReceipt } from "@/lib/application-submission";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -36,10 +37,6 @@ const HEADERS = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
 };
-
-function callbackAction(action: string | undefined): string | undefined {
-  return action === "browser_continue" ? "runner_timeout" : action;
-}
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -93,6 +90,18 @@ export async function POST(request: Request): Promise<Response> {
       );
     if (["completed", "cancelled"].includes(taskResult.data.status))
       return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
+    // An old invocation must not overwrite a newer attempt's receipt or lease.
+    if (callback.workerAttempt !== undefined && callback.workerAttempt !== taskResult.data.attempts)
+      return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
+
+    let receipt: SubmissionProviderReceipt | undefined = callback.receipt;
+    if (callback.error && callback.retryable === true) {
+      receipt = {
+        state: "needs_user", providerSubmissionId: "", submittedAt: callback.completedAt,
+        message: "The hosted browser stopped before submission. IR35Careers can retry the approved application automatically.",
+        review: { action: "runner_timeout" },
+      };
+    }
 
     const callbackDestination = resolveApplicationTaskDestination({
       taskDestination: taskResult.data.destination,
@@ -144,7 +153,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!recipient)
       throw new Error("The contractor notification address is unavailable.");
 
-    if (callback.error) {
+    if (callback.error && !receipt) {
       const profileAction =
         callback.error.startsWith("Complete your Application Profile") ||
         callback.error.startsWith("Add your full name");
@@ -178,7 +187,6 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const receipt = callback.receipt;
     if (!receipt)
       return Response.json(
         { error: "The worker result is missing." },
@@ -186,7 +194,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     const resolvedDestination = callbackDestination;
     if (receipt.state === "needs_user") {
-      const action = callbackAction(providerReviewAction(receipt));
+      const action = providerReviewAction(receipt);
       if (action === "listing_unavailable") {
         const now = callback.completedAt;
         const jobId = String(job.id || "").trim();
@@ -255,9 +263,11 @@ export async function POST(request: Request): Promise<Response> {
       }
       const workerAttempts = Number(taskResult.data.attempts ?? 0);
       if (
+        packet.truth_approved === true && packet.materials_approved === true && packet.submission_approved === true &&
         shouldAutomaticallyRetryWorkerAttention({
           action,
           attempts: workerAttempts,
+          hasUnansweredQuestions: providerReviewQuestions(receipt.review).some((question) => question.required && (!question.reviewed || !question.answer.trim())),
         })
       ) {
         const now = callback.completedAt;
@@ -267,6 +277,9 @@ export async function POST(request: Request): Promise<Response> {
             applicationWorkerRetryDelayMs(workerAttempts),
         ).toISOString();
         const results = await Promise.all([
+          admin.from("application_packets")
+            .update({ status: "ready", updated_at: now })
+            .eq("id", callback.applicationId).eq("user_id", callback.userId),
           admin
             .from("application_submissions")
             .update({
@@ -307,7 +320,7 @@ export async function POST(request: Request): Promise<Response> {
               destination: resolvedDestination,
               status: "queued",
               available_at: availableAt,
-              last_error: null,
+              last_error: callback.error?.slice(0, 500) ?? null,
               lease_owner: null,
               lease_expires_at: null,
               completed_at: null,
@@ -320,7 +333,7 @@ export async function POST(request: Request): Promise<Response> {
         const publishRetry = async () => {
           await kickApplicationWorker({
             applicationId: callback.applicationId,
-            reason: "verification_retry",
+            reason: "automatic_application_retry",
             delaySeconds: applicationWorkerRetryDelayMs(workerAttempts) / 1_000,
           });
         };

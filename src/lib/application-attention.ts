@@ -95,6 +95,16 @@ export function buildApplicationAttention(input: {
       questionIds,
     };
   }
+  if (action === "confirmation_pending") {
+    return {
+      kind: "confirmation_pending",
+      title: "Check employer confirmation before retrying",
+      message,
+      action: "#needs-attention",
+      actionLabel: "Check confirmation",
+      questionIds,
+    };
+  }
   if (action === "source_access_denied") {
     return {
       kind: "employer_form",

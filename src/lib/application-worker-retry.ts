@@ -12,8 +12,10 @@ export function applicationWorkerCallbackErrorStatus(): "needs_user" {
 export function shouldAutomaticallyRetryWorkerAttention(input: {
   action?: string;
   attempts: number;
+  hasUnansweredQuestions?: boolean;
 }): boolean {
   return (
+    !input.hasUnansweredQuestions &&
     (isApplicationEmailAction(input.action) ||
       ["browser_continue", "source_access_denied", "runner_timeout"].includes(
         input.action ?? "",

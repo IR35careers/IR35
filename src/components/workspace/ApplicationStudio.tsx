@@ -1181,7 +1181,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     if (continuationWindow) continuationWindow.opener = null;
     setBusy("submit");
     setError(null);
-    setNotice("Preparing the approved application for your secure browser.");
+    setNotice("Opening the employer page. No extension is needed.");
     try {
       const response = await fetchWithFreshSession(
         "/api/applications/browser-handoff",
@@ -1189,24 +1189,24 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "create",
+            action: "open_employer",
             applicationId: application.id,
           }),
           signal: AbortSignal.timeout(30_000),
         },
       );
       const payload = (await response.json().catch(() => ({}))) as {
-        handoffUrl?: string;
+        employerUrl?: string;
         error?: string;
       };
-      if (!response.ok || !payload.handoffUrl)
+      if (!response.ok || !payload.employerUrl)
         throw new Error(
           payload.error || "The employer application page could not be opened.",
         );
-      if (continuationWindow) continuationWindow.location.assign(payload.handoffUrl);
-      else window.location.assign(payload.handoffUrl);
+      if (continuationWindow) continuationWindow.location.assign(payload.employerUrl);
+      else window.location.assign(payload.employerUrl);
       setNotice(
-        "The approved application is open on the employer page. Complete any employer-only security step there; your Resume and saved answers remain available here.",
+        "The employer page is open for its manual security or account step. Opening it does not submit or change your application status. Your Resume and answers remain saved here; no extension is needed.",
       );
     } catch (caught) {
       continuationWindow?.close();

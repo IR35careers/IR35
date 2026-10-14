@@ -69,6 +69,7 @@ import { canResumeSavedApplicationStep } from "@/lib/application-continuation-de
 import { getPinnedPublicHttps } from "@/lib/security/pinned-https";
 import { buildResumeDocx, buildResumePdf } from "@/lib/resume/export";
 import { parseApplicationInboxAlias } from "@/lib/email/inbox-alias";
+import { ApplicationRunnerPreSubmitError, runnerInterruptionAction, runnerInterruptionMessage } from "@/lib/application-runner/failure";
 import type {
   NativeSubmissionRuntime,
   SubmissionProviderPayload,
@@ -555,10 +556,11 @@ async function hasApplicationForm(page: Page): Promise<boolean> {
   });
 }
 
-async function clickAndFollow(
+export async function clickAndFollow(
   page: Page,
   action: Locator,
   settleMs: number,
+  allowClickRetry = true,
 ): Promise<Page> {
   const popupPromise = page
     .waitForEvent("popup", { timeout: 1_500 })
@@ -566,6 +568,7 @@ async function clickAndFollow(
   try {
     await action.click({ timeout: 12_000 });
   } catch (error) {
+    if (!allowClickRetry) throw error;
     const stillActionable =
       (await action.isVisible().catch(() => false)) &&
       (await action.isEnabled().catch(() => false));
@@ -1906,6 +1909,7 @@ export async function runNativeApplication(
   let accountCreationPending = false;
   let accountRecoveryAttempted = false;
   let timedOut = false;
+  let finalSubmissionAttempted = false;
   const budgetTimer = setTimeout(() => {
     timedOut = true;
     void browser?.close().catch(() => null);
@@ -2036,12 +2040,9 @@ export async function runNativeApplication(
         host: startUrl.hostname,
         reason: error instanceof Error ? clean(error.message, 240) : "unknown",
       });
-      return reviewReceipt(
-        "This job listing is no longer available at its original source.",
-        [],
-        "listing_unavailable",
-        currentDestination(page, startUrl.toString()),
-      );
+      // A network timeout is not evidence that a vacancy has closed. Keep the
+      // live listing and let the cloud queue retry this pre-submission failure.
+      throw error;
     }
     // Aggregator redirect pages can reject hosted browsers while the original
     // public employer form is still available. Recover the direct listing
@@ -2058,17 +2059,20 @@ export async function runNativeApplication(
       return reviewReceipt(
         "The job board requires a sign-in or browser verification before it will accept this application.",
         [],
-        "employer_login",
+        navigationStatus === 401 ? "employer_login" : "source_access_denied",
         currentDestination(page, startUrl.toString()),
       );
     }
-    if (navigationStatus && navigationStatus >= 400) {
+    if (navigationStatus && [404, 410].includes(navigationStatus)) {
       return reviewReceipt(
         "This job listing is no longer available at its original source.",
         [],
         "listing_unavailable",
         currentDestination(page, startUrl.toString()),
       );
+    }
+    if (navigationStatus && navigationStatus >= 400) {
+      throw new Error(`The employer application page temporarily returned HTTP ${navigationStatus}.`);
     }
     await validatePublicHttpsUrl(page.url());
     ats = detectAts(page.url());
@@ -2102,7 +2106,7 @@ export async function runNativeApplication(
       } else {
         sessionDisposition = "clear";
         return reviewReceipt(
-          "The job board blocked access to the employer application page. Continue the same prepared application in your secure desktop browser.",
+          "The job board blocked access to the hosted application. No submission is confirmed; your approved materials are saved.",
           [],
           "source_access_denied",
           currentDestination(page, startUrl.toString()),
@@ -2118,9 +2122,9 @@ export async function runNativeApplication(
     for (let step = 0; step < MAX_STEPS; step += 1) {
       if (Date.now() - startedAt >= budgetMs) {
         return reviewReceipt(
-          "The employer portal did not finish within the safe application window. Your approved application is ready to retry.",
+          runnerInterruptionMessage(finalSubmissionAttempted),
           [],
-          "runner_timeout",
+          runnerInterruptionAction(finalSubmissionAttempted),
           currentDestination(page, startUrl.toString()),
         );
       }
@@ -2245,7 +2249,10 @@ export async function runNativeApplication(
       }
 
       const isSubmit = action === submit;
-      page = await clickAndFollow(page, action, isSubmit ? 1_000 : 700);
+      // Set this before the click: a navigation error may occur after the
+      // employer has accepted the request. Never silently replay that action.
+      if (isSubmit) finalSubmissionAttempted = true;
+      page = await clickAndFollow(page, action, isSubmit ? 1_000 : 700, !isSubmit);
       const confirmed = isSubmit
         ? await waitForSubmissionConfirmation(page, ats)
         : await successMessage(page, ats);
@@ -2280,15 +2287,15 @@ export async function runNativeApplication(
       currentDestination(page, startUrl.toString()),
     );
   } catch (error) {
-    if (timedOut) {
+    if (timedOut || finalSubmissionAttempted) {
       return reviewReceipt(
-        "The employer portal did not finish within the safe application window. Your approved application is ready to retry.",
+        runnerInterruptionMessage(finalSubmissionAttempted),
         [],
-        "runner_timeout",
+        runnerInterruptionAction(finalSubmissionAttempted),
         currentDestination(page, payload.destination),
       );
     }
-    throw error;
+    throw new ApplicationRunnerPreSubmitError(error);
   } finally {
     clearTimeout(budgetTimer);
     if (runtime && payload.candidate.portalAccountConsent) {

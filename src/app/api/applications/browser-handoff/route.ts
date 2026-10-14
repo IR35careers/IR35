@@ -157,7 +157,7 @@ async function applicationContext(admin: AdminClient, userId: string, applicatio
   };
 }
 
-async function createHandoff(request: Request, applicationId: string): Promise<Response> {
+async function createHandoff(request: Request, applicationId: string, assisted = true): Promise<Response> {
   const authorization = request.headers.get("authorization") ?? "";
   const accessToken = authorization.startsWith("Bearer ")
     ? authorization.slice(7)
@@ -215,6 +215,13 @@ async function createHandoff(request: Request, applicationId: string): Promise<R
       { error: "The employer application destination is no longer available." },
       { status: 409, headers: headers(request) },
     );
+  // The web application never requires an extension. Opening a manual
+  // employer-only security step must not create an assistant token, erase the
+  // recorded blocker or pretend that an application is running/submitted.
+  if (!assisted) {
+    destination.hash = "";
+    return Response.json({ employerUrl: destination.toString(), automatic: false }, { headers: headers(request) });
+  }
   const created = await createApplicationBrowserHandoff({
     admin,
     userId: authUser.id,
@@ -742,11 +749,11 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const body = await readJsonBody<DbRow>(request, 150_000);
     const action = clean(body.action, 40) || "create";
-    if (action === "create") {
+    if (action === "create" || action === "open_employer") {
       const applicationId = clean(body.applicationId, 80);
       if (!/^[0-9a-f-]{36}$/i.test(applicationId))
         return Response.json({ error: "Application reference is invalid." }, { status: 400, headers: headers(request) });
-      return await createHandoff(request, applicationId);
+      return await createHandoff(request, applicationId, action === "create");
     }
     if (action === "confirm_manual") {
       const applicationId = clean(body.applicationId, 80);

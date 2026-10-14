@@ -25,6 +25,9 @@ export interface ApplicationWorkerCallback {
   completedAt: string;
   receipt?: SubmissionProviderReceipt;
   error?: string;
+  /** Set only when the browser proved no final submission was attempted. */
+  retryable?: boolean;
+  workerAttempt?: number;
   portalSession?: NativePortalSession;
   clearPortalSession?: boolean;
 }
@@ -69,6 +72,10 @@ export function validApplicationWorkerCallback(
     !Number.isFinite(new Date(callback.completedAt).getTime())
   )
     return false;
+  if (
+    (callback.retryable !== undefined && typeof callback.retryable !== "boolean") ||
+    (callback.workerAttempt !== undefined && (!Number.isInteger(callback.workerAttempt) || Number(callback.workerAttempt) < 1))
+  ) return false;
   if (
     callback.clearPortalSession !== undefined &&
     typeof callback.clearPortalSession !== "boolean"
