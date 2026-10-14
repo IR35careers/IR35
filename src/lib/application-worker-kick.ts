@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { APPLICATION_CLOUD_TOPIC, managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
 import {
   applicationWorkerAppOrigin,
   applicationWorkerConfig,
@@ -8,6 +9,7 @@ import {
 export async function kickApplicationWorker(input?: {
   applicationId?: string;
   reason?: string;
+  delaySeconds?: number;
 }): Promise<"disabled" | "accepted" | "idle"> {
   if (!applicationWorkerConfig().enabled) return "disabled";
   const appOrigin = applicationWorkerAppOrigin(
@@ -19,6 +21,20 @@ export async function kickApplicationWorker(input?: {
     reason: (input?.reason || "application_queued").slice(0, 80),
     requestedAt: new Date().toISOString(),
   });
+  if (managedApplicationQueueEnabled()) {
+    // Publish only opaque IDs. Candidate evidence and browser credentials stay
+    // in Supabase and are fetched through the existing signed claim API.
+    const { send } = await import("@vercel/queue");
+    const message = JSON.parse(body);
+    await send(APPLICATION_CLOUD_TOPIC, message, {
+      region: "iad1",
+      idempotencyKey: message.kickId,
+      retentionSeconds: 604_800,
+      delaySeconds: Math.max(0, Math.min(600, Math.ceil(input?.delaySeconds || 0))),
+    });
+    return "accepted";
+  }
+  if (input?.delaySeconds) await new Promise((resolve) => setTimeout(resolve, input.delaySeconds! * 1_000));
   const signed = signApplicationWorkerBody(body);
   const response = await fetch(`${appOrigin}/api/applications/worker/drain`, {
     method: "POST",

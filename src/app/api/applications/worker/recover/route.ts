@@ -7,6 +7,7 @@ import { resolveApplicationTaskDestination } from "@/lib/application-worker-dest
 import { directEmployerCandidateScore } from "@/lib/application-runner/source-resolution";
 import { clearPortalSession } from "@/lib/application-portal-session";
 import { validatePublicHttpsUrl } from "@/lib/security/public-url";
+import { kickApplicationWorker } from "@/lib/application-worker-kick";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -451,6 +452,7 @@ export async function POST(request: Request): Promise<Response> {
       packetUpdate.error ||
       eventUpdate.error;
     if (error) throw error;
+    await kickApplicationWorker({ applicationId: selected.submission.application_id, reason: "approved_application_recovered" });
     return Response.json(
       {
         ok: true,

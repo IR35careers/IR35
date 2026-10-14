@@ -392,6 +392,24 @@
     box-shadow: 0 14px 42px -38px rgba(6, 78, 59, 0.62);
   }
 
+  .ir35-admin-canvas main .grid > * { min-width: 0; }
+  .ir35-admin-navigation {
+    height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (max-width: 639px) {
+    .ir35-admin-canvas input,
+    .ir35-admin-canvas select,
+    .ir35-admin-canvas textarea { font-size: 16px; }
+    .ir35-admin-canvas main { padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+    .ir35-admin-canvas h1 { font-size: clamp(24px, 6vw, 30px); line-height: 1.2; }
+    .ir35-admin-canvas h2,
+    .ir35-admin-canvas p,
+    .ir35-admin-canvas dd { overflow-wrap: anywhere; }
+    .ir35-admin-colour-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
   .ir35-admin-panel {
     background:
       radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.06), transparent 18rem),

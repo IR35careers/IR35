@@ -68,6 +68,7 @@ export type ApplicationRunSummary = {
 };
 
 export type ApplicationWorkerQueueSummary = {
+  executionMode?: "managed_cloud_queue" | "external_worker";
   queued: number;
   running: number;
   completed: number;
@@ -199,10 +200,11 @@ export function SystemMapPanel({ integrations, applicationRuns, workerQueue, que
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-[15px] font-semibold text-slate-950">Persistent worker queue</h2>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${workerQueue.onlineWorkers ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{workerQueue.onlineWorkers ? `${workerQueue.onlineWorkers} online` : "No worker heartbeat"}</span>
+              <h2 className="text-[15px] font-semibold text-slate-950">Application processing queue</h2>
+              {workerQueue.executionMode === "managed_cloud_queue" ? <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-cyan-800">Cloud · event driven</span> : <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${workerQueue.onlineWorkers ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{workerQueue.onlineWorkers ? `${workerQueue.onlineWorkers} online` : "No worker heartbeat"}</span>}
             </div>
             <p className="mt-1 text-xs leading-5 text-slate-500">Durable employer form tasks remain here until confirmed, paused for one user action or exhausted after controlled retries.</p>
+            {workerQueue.executionMode === "managed_cloud_queue" && <p className="mt-2 text-xs leading-5 text-cyan-800">No contractor device or plugin is needed. Cloud consumers start when messages arrive; an idle queue does not require a continuous heartbeat.</p>}
           </div>
           <div className="grid grid-cols-2 gap-px bg-slate-100 sm:grid-cols-5">
             {[

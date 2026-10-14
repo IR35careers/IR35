@@ -317,23 +317,15 @@ export async function POST(request: Request): Promise<Response> {
         ]);
         const failure = results.find((result) => result.error)?.error;
         if (failure) throw failure;
-        after(async () => {
-          await new Promise((resolve) =>
-            setTimeout(resolve, applicationWorkerRetryDelayMs(workerAttempts)),
-          );
+        const publishRetry = async () => {
           await kickApplicationWorker({
             applicationId: callback.applicationId,
             reason: "verification_retry",
-          }).catch((error) =>
-            console.warn("verification_worker_kick_failed", {
-              applicationId: callback.applicationId,
-              reason:
-                error instanceof Error
-                  ? error.message.slice(0, 240)
-                  : "unknown",
-            }),
-          );
-        });
+            delaySeconds: applicationWorkerRetryDelayMs(workerAttempts) / 1_000,
+          });
+        };
+        if (process.env.VERCEL === "1") await publishRetry();
+        else after(publishRetry);
         return Response.json(
           { ok: true, state: "processing", availableAt },
           { headers: HEADERS },
@@ -400,6 +392,7 @@ export async function POST(request: Request): Promise<Response> {
           })
           .eq("id", callback.taskId),
       ]);
+      await kickApplicationWorker({ applicationId: callback.applicationId, reason: "provider_processing", delaySeconds: 20 });
       return Response.json(
         { ok: true, state: "processing" },
         { headers: HEADERS },

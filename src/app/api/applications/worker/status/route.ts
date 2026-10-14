@@ -59,6 +59,8 @@ export async function POST(request: Request): Promise<Response> {
     ]);
     if (heartbeatResult.error) throw heartbeatResult.error;
     const report = buildApplicationDeliveryReport({ packets, submissions, tasks, nowMs: Date.parse(asOf) });
+    const verification = await admin.from("moderation_logs").select("created_at,summary")
+      .eq("run_type", "cloud_worker_verification").order("created_at", { ascending: false }).limit(1).maybeSingle();
     const offset = parsed.offset ?? 0;
     const limit = parsed.limit ?? 500;
     const bySource: Record<string, number> = {};
@@ -83,6 +85,9 @@ export async function POST(request: Request): Promise<Response> {
         nextOffset: offset + limit < report.rows.length ? offset + limit : null,
       },
       worker: {
+        execution: process.env.VERCEL === "1" ? "managed_cloud_queue" : "external_worker",
+        deviceRequired: process.env.VERCEL !== "1",
+        latestCloudVerification: verification.data || null,
         recentlyConnected: heartbeats.length,
         active: heartbeats.reduce((sum, worker) => sum + Number(worker.active || 0), 0),
         concurrency: heartbeats.reduce((sum, worker) => sum + Number(worker.concurrency || 0), 0),

@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
+import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { applicationWorkerAppOrigin } from "@/lib/application-worker-auth";
 import {
   ApplicationWorkerRequestError,
@@ -49,6 +51,10 @@ export async function POST(request: Request): Promise<Response> {
         { error: "The cloud worker request is invalid." },
         { status: 400, headers: HEADERS },
       );
+    if (managedApplicationQueueEnabled()) {
+      const state = await kickApplicationWorker({ applicationId: parsed.applicationId || undefined, reason: parsed.reason });
+      return Response.json({ ok: true, state, execution: "managed_cloud_queue" }, { status: 202, headers: HEADERS });
+    }
     const appOrigin = applicationWorkerAppOrigin(
       process.env.IR35CAREERS_APP_URL || "https://www.ir35careers.com",
     );

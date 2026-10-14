@@ -6,6 +6,7 @@ const original = {
   enabled: process.env.APPLICATION_WORKER_ENABLED,
   secret: process.env.APPLICATION_WORKER_SECRET,
   origin: process.env.IR35CAREERS_APP_URL,
+  vercel: process.env.VERCEL,
 };
 
 function restoreEnvironment(name: string, value: string | undefined) {
@@ -19,6 +20,7 @@ describe("cloud application worker kick", () => {
     process.env.APPLICATION_WORKER_SECRET =
       "worker-test-secret-that-is-long-enough-123";
     process.env.IR35CAREERS_APP_URL = "https://www.ir35careers.com";
+    delete process.env.VERCEL;
   });
 
   afterEach(() => {
@@ -26,6 +28,7 @@ describe("cloud application worker kick", () => {
     restoreEnvironment("APPLICATION_WORKER_ENABLED", original.enabled);
     restoreEnvironment("APPLICATION_WORKER_SECRET", original.secret);
     restoreEnvironment("IR35CAREERS_APP_URL", original.origin);
+    restoreEnvironment("VERCEL", original.vercel);
   });
 
   it("sends an authenticated cloud drain request", async () => {

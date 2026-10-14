@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { runScheduledAutoApply } from "@/lib/automation/scheduled-runner";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { reconcileCloudApplications } from "@/lib/application-cloud-reconcile";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -40,6 +41,7 @@ export async function GET(request: Request): Promise<Response> {
     const origin =
       process.env.IR35CAREERS_APP_URL?.trim() || new URL(request.url).origin;
     const summary = await runScheduledAutoApply({ origin });
+    const queueReconciled = await reconcileCloudApplications();
     console.info("scheduled_auto_apply_finished", {
       enabledAccounts: summary.enabledAccounts,
       accountsAttempted: summary.accountsAttempted,
@@ -66,7 +68,7 @@ export async function GET(request: Request): Promise<Response> {
             reason: auditError.message.slice(0, 240),
           });
       });
-    return Response.json({ ok: true, summary }, { headers: NO_STORE });
+    return Response.json({ ok: true, summary, queueReconciled }, { headers: NO_STORE });
   } catch (error) {
     const reason = error instanceof Error ? error.message.slice(0, 240) : "unknown";
     console.error("scheduled_auto_apply_failed", {

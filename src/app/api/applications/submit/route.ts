@@ -437,6 +437,9 @@ export async function POST(request: Request): Promise<Response> {
       previous.error_code !== "needs_user" &&
       !staleProcessing
     ) {
+      // A prior publish may have failed after the durable SQL task was saved.
+      // Republishing is safe: the existing task lease prevents duplicate work.
+      if (process.env.VERCEL === "1") await kickApplicationWorker({ applicationId: String(packet.id), reason: "approved_submission_already_processing" });
       return Response.json(
         {
           state: "processing",
@@ -529,8 +532,14 @@ export async function POST(request: Request): Promise<Response> {
           : provider?.kind || "unavailable",
     });
 
+    // Complete the durable publish before returning approval to the browser.
+    // The browser may close immediately afterwards without losing execution.
+    if (persistentWorkerQueued && process.env.VERCEL === "1") {
+      await kickApplicationWorker({ applicationId: String(packet.id), reason: "application_approved" });
+    }
     after(async () => {
       if (persistentWorkerQueued) {
+        if (process.env.VERCEL !== "1") {
         await kickApplicationWorker({
           applicationId: String(packet.id),
           reason: "application_approved",
@@ -543,6 +552,7 @@ export async function POST(request: Request): Promise<Response> {
                 : "unknown",
           }),
         );
+        }
         if (workerConfig.url) {
           await fetch(`${workerConfig.url}/health`, {
             headers: { accept: "application/json" },

@@ -1,5 +1,35 @@
 # IR35Careers persistent application worker
 
+## Production: managed cloud queue
+
+The production application runs approved tasks on Vercel Queues and hosted
+Chromium. A contractor or administrator does not need to keep any laptop,
+phone, browser, extension or local worker running. The consumer is declared
+in `vercel.json` at `src/app/api/queues/applications/route.ts` and is private
+to Vercel's queue infrastructure.
+
+Approval publishes an ID-only event before the API responds. Delayed email
+checks use durable queue delays, not sleeping website requests. Failed
+invocations are redelivered after the SQL lease expires; completed or paused
+tasks are acknowledged without resubmitting. Existing daily automation also
+reconciles persisted tasks to repair a database/queue publish gap.
+
+Queue payloads contain no candidate evidence or credentials. The consumer
+uses the existing HMAC claim/callback APIs and approved packet. It requires
+the normal application-worker secrets on Vercel, but no third-party browser
+plugin or separate hosting account. Idle cloud consumers do not emit a
+continuous heartbeat; admin distinguishes event-driven execution from an
+offline external worker.
+
+The signed drain endpoint can enqueue `reason: cloud_runner_verification`
+without an application ID to test the controlled IR35Careers portal. Results
+are recorded separately as `cloud_worker_verification`, never as customer
+applications. Confirm the recorded receipt before disabling a legacy local
+worker. Employer CAPTCHA/account checks still cannot be bypassed.
+
+The standalone service and Windows instructions below are retained for
+development and optional external hosts, not as a production requirement.
+
 This service owns the long-running browser session used after a contractor
 approves an application. It is separate from Vercel so multi-step employer
 forms, account creation and email verification are not cut off by a website

@@ -109,10 +109,10 @@ export function getIntegrationStatuses(options?: { includeOperations?: boolean }
   if (options?.includeOperations) {
     statuses.push({
       id: "persistent_worker",
-      name: "Persistent employer portal worker",
+      name: process.env.VERCEL === "1" ? "Managed cloud application queue" : "Persistent employer portal worker",
       state: persistentWorkerConnected ? "connected" : "provider_gate",
-      scope: "Keeps employer browser sessions alive through multi-step forms, account creation and email verification.",
-      nextStep: persistentWorkerConnected ? "Approved applications can run outside the website request limit." : "Start the signed worker service and add its connection settings in Vercel.",
+      scope: "Processes approved applications on hosted Chromium with durable dispatch, leases and retries. No contractor device or browser plugin is required.",
+      nextStep: persistentWorkerConnected ? "Inspect queue outcomes and employer receipts. Idle cloud consumers do not need a continuous desktop heartbeat." : "Enable the signed cloud worker and deploy the managed queue consumer.",
     });
   }
   return statuses;

@@ -538,6 +538,8 @@ export default function AdminPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(false);
+  const adminNavigationRef = useRef<HTMLElement>(null);
   const [expiringId, setExpiringId] = useState<string | null>(null);
   const [sendingLaunch, setSendingLaunch] = useState(false);
   const [emailDraft, setEmailDraft] = useState<EmailCampaignDraft | null>(null);
@@ -709,11 +711,39 @@ export default function AdminPage() {
     setDestinationSourceId(data.jobSources[0].id);
   }, [data?.jobSources, destinationSourceId, section]);
 
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const update = () => { setMobileViewport(media.matches); if (!media.matches) setMobileOpen(false); };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileOpen || !mobileViewport) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = "hidden";
+    const controls = () => Array.from(adminNavigationRef.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled])') ?? []).filter((node) => node.getClientRects().length);
+    controls()[0]?.focus();
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key !== "Tab") return;
+      const items = controls();
+      const first = items[0]; const last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    window.addEventListener("keydown", keyboard);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", keyboard); previousFocus?.focus(); };
+  }, [mobileOpen, mobileViewport]);
+
   const navigate = (next: Section) => {
     setSection(next);
     setQuery("");
     setNotice(null);
     setMobileOpen(false);
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   const unlockAdmin = async () => {
@@ -1233,7 +1263,7 @@ export default function AdminPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-emerald-950 shadow-[0_0_28px_rgba(16,185,129,0.2)]"><BriefcaseBusiness size={20} /></span>
           <span><span className="block text-sm font-bold tracking-tight text-white">IR35Careers</span><span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">Admin workspace</span></span>
         </Link>
-        <button type="button" onClick={() => setMobileOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Close admin navigation"><X size={18} /></button>
+        <button type="button" onClick={() => setMobileOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Close admin navigation"><X size={18} /></button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 py-5" aria-label="Admin navigation">
@@ -1249,7 +1279,7 @@ export default function AdminPage() {
                     key={item.id}
                     onClick={() => navigate(item.id)}
                     aria-current={selected ? "page" : undefined}
-                    className={`group flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-400 ${selected ? "bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" : "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}
+                    className={`group flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-400 ${selected ? "bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" : "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}
                   >
                     <item.icon size={17} className={selected ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-300"} />
                     <span className="flex-1">{item.label}</span>
@@ -1281,11 +1311,11 @@ export default function AdminPage() {
   return (
     <div className="ir35-admin-canvas min-h-screen text-slate-950">
       {mobileOpen && <button type="button" className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col border-r border-white/[0.06] bg-[#0b0f17] transition-transform duration-200 lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
+      <aside ref={adminNavigationRef} id="admin-mobile-navigation" inert={mobileViewport && !mobileOpen} role={mobileViewport && mobileOpen ? "dialog" : undefined} aria-modal={mobileViewport && mobileOpen ? true : undefined} aria-label="Administrator navigation" className={`ir35-admin-navigation fixed inset-y-0 left-0 z-50 flex w-[min(320px,88vw)] flex-col border-r border-white/[0.06] bg-[#0b0f17] transition-transform duration-200 motion-reduce:transition-none lg:w-[272px] lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
-      <div className="lg:pl-[272px]">
-        <header className="ir35-admin-topbar sticky top-0 z-30 flex h-20 items-center gap-3 border-b border-slate-200/80 px-4 backdrop-blur-xl sm:px-6 xl:px-8">
-          <button type="button" onClick={() => setMobileOpen(true)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden" aria-label="Open admin navigation"><Menu size={18} /></button>
+      <div className="min-w-0 lg:pl-[272px]">
+        <header className="ir35-admin-topbar sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-slate-200/80 px-3 backdrop-blur-xl sm:h-20 sm:gap-3 sm:px-6 xl:px-8">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-expanded={mobileOpen} aria-controls="admin-mobile-navigation" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden" aria-label="Open admin navigation"><Menu size={18} /></button>
           <div className="relative max-w-xl flex-1">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100" placeholder={`Search ${section === "stats" ? "recent roles" : current.title.toLowerCase()}…`} aria-label={`Search ${current.title}`} />
@@ -1297,7 +1327,7 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1560px] px-4 py-6 sm:px-6 sm:py-8 xl:px-8">
+        <main className="mx-auto min-w-0 max-w-[1560px] px-3 py-5 sm:px-6 sm:py-8 xl:px-8">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">{current.eyebrow}</p>
@@ -2170,8 +2200,11 @@ function FeedbackPanel({
   onStatusChange: (feedbackId: string, status: FeedbackStatus) => void;
   onReply: (feedbackId: string, message: string, resolve: boolean) => void;
 }) {
-  const [statusFilter, setStatusFilter] = useState<"all" | FeedbackStatus>("all");
-  const [selectedId, setSelectedId] = useState<string | null>(feedback[0]?.id ?? null);
+  const [statusFilter, updateStatusFilter] = useState<"all" | FeedbackStatus>("all");
+  const [selectedId, updateSelectedId] = useState<string | null>(feedback[0]?.id ?? null);
+  const [mobileFeedbackOpen, setMobileFeedbackOpen] = useState(false);
+  const setSelectedId = (id: string) => { updateSelectedId(id); setMobileFeedbackOpen(true); };
+  const setStatusFilter = (status: "all" | FeedbackStatus) => { updateStatusFilter(status); setMobileFeedbackOpen(false); };
   const [replyText, setReplyText] = useState("");
   const visible = feedback.filter((record) => {
     const matchesStatus = statusFilter === "all" || record.status === statusFilter;
@@ -2198,15 +2231,16 @@ function FeedbackPanel({
         <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4 sm:px-6">
           {(["all", "new", "in_progress", "resolved", "spam"] as const).map((status) => <button key={status} type="button" onClick={() => setStatusFilter(status)} className={`min-h-9 rounded-lg px-3 text-xs font-semibold transition ${statusFilter === status ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}>{status === "all" ? "All" : statusLabel(status)}</button>)}
         </div>
-        <div className="grid min-h-[520px] lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)]">
-          <div className="border-b border-slate-100 lg:border-b-0 lg:border-r">
+        <div className="grid min-w-0 lg:min-h-[520px] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className={`${mobileFeedbackOpen ? "hidden lg:block" : "block"} min-w-0 border-b border-slate-100 lg:border-b-0 lg:border-r`}>
             {visible.length ? <div className="divide-y divide-slate-100">{visible.map((record) => {
               const isSelected = selected?.id === record.id;
               return <button key={record.id} type="button" onClick={() => { setSelectedId(record.id); setReplyText(""); }} className={`block w-full p-5 text-left transition sm:px-6 ${isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{record.subject || "Customer feedback"}</p><p className="mt-1 truncate text-xs text-slate-500">{record.name} · {record.email}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${record.priority === "high" ? "bg-rose-50 text-rose-700" : record.status === "resolved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{record.priority === "high" ? "High priority" : statusLabel(record.status)}</span></div><p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{record.message}</p><div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-slate-400"><span>{categoryLabel(record.category)}{record.attachment_path ? " · Image" : ""}</span><span>{timeAgo(record.updated_at || record.created_at)}</span></div></button>;
             })}</div> : <EmptyState title={query || statusFilter !== "all" ? "No matching feedback" : "No customer feedback"} detail={query || statusFilter !== "all" ? "Clear the search or choose another status." : "New contact enquiries will appear here."} />}
           </div>
 
-          {selected ? <div className="p-5 sm:p-6">
+          {selected ? <div className={`${mobileFeedbackOpen ? "block" : "hidden lg:block"} min-w-0 p-4 sm:p-6`}>
+            <button type="button" onClick={() => setMobileFeedbackOpen(false)} className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 lg:hidden"><ArrowRight size={16} className="rotate-180" /> Back to enquiries</button>
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${selected.priority === "high" ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{selected.priority === "high" ? "High priority" : "Normal priority"}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">{categoryLabel(selected.category)}</span></div><h2 className="mt-4 text-xl font-semibold text-slate-950">{selected.subject || "Customer feedback"}</h2><p className="mt-1 text-sm text-slate-500">{selected.name} · received {formatDate(selected.created_at, true)}</p></div><a href={`mailto:${encodeURIComponent(selected.email)}?subject=${replySubject}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><Mail size={14} /> Open email</a></div>
             <dl className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2"><div><dt className="text-xs text-slate-500">Email</dt><dd className="mt-1 break-all font-semibold text-slate-900">{selected.email}</dd></div><div><dt className="text-xs text-slate-500">Ticket reference</dt><dd className="mt-1 font-mono text-xs font-semibold uppercase text-slate-900">{selected.id.slice(0, 8)}</dd></div><div><dt className="text-xs text-slate-500">Current status</dt><dd className="mt-1 font-semibold text-slate-900">{statusLabel(selected.status)}</dd></div><div><dt className="text-xs text-slate-500">Last updated</dt><dd className="mt-1 font-semibold text-slate-900">{timeAgo(selected.updated_at || selected.created_at)}</dd></div>{selected.page_url && <div className="sm:col-span-2"><dt className="text-xs text-slate-500">Reported page</dt><dd className="mt-1 break-all text-xs font-semibold text-slate-900"><a href={selected.page_url} target="_blank" rel="noreferrer" className="text-emerald-700 underline">{selected.page_url}</a></dd></div>}</dl>
             <div className="mt-6"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Support conversation</p><div className="mt-3 space-y-3"><article className="mr-6 rounded-2xl rounded-tl-md bg-slate-100 p-4"><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{selected.message}</p>{selected.attachment_url && <a href={selected.attachment_url} target="_blank" rel="noreferrer" className="mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-white"><Image src={selected.attachment_url} alt="Customer screenshot" width={960} height={600} unoptimized className="max-h-72 w-full object-contain" /></a>}<p className="mt-2 text-[10px] text-slate-400">Customer, {formatDate(selected.created_at, true)}</p></article>{(selected.messages ?? []).map((message) => <article key={message.id} className={`rounded-2xl p-4 ${message.author_type === "admin" ? "ml-6 rounded-tr-md bg-emerald-50" : message.author_type === "system" ? "border border-slate-200 bg-white" : "mr-6 rounded-tl-md bg-slate-100"}`}><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{message.message}</p>{message.attachment_url && <a href={message.attachment_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-xs font-semibold text-emerald-700 underline">View attached image</a>}<p className="mt-2 text-[10px] text-slate-400">{message.author_type === "admin" ? "IR35Careers support" : message.author_type === "system" ? "System" : "Customer"}, {formatDate(message.created_at, true)}</p></article>)}</div></div>

@@ -1014,6 +1014,7 @@ export async function GET(request: Request): Promise<Response> {
         integrations,
         applicationRuns,
         workerQueue: workerTasksResult.error ? undefined : {
+          executionMode: process.env.VERCEL === "1" ? "managed_cloud_queue" : "external_worker",
           queued: workerRows.filter((row) => row.status === "queued").length,
           running: workerRows.filter((row) => row.status === "running").length,
           completed: workerRows.filter((row) => row.status === "completed").length,
