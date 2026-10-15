@@ -25,6 +25,7 @@ import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplica
 import { getSupabaseAdmin } from "../supabase-admin";
 import { collapseConflictKeyDuplicates } from "./conflict-deduplicator";
 import { revalidateTag } from "next/cache";
+import { jobRateStorageBounds } from "../processing/job-rate-storage";
 
 export interface PipelineSummary {
   companies: number;
@@ -386,6 +387,7 @@ export async function runFetchPipeline(
   for (let i = 0; i < accepted.length; i += UPSERT_CHUNK) {
     const chunk = accepted.slice(i, i + UPSERT_CHUNK).map((job) => ({
       ...job,
+      ...jobRateStorageBounds(job),
       last_seen_at: nowIso,
       expired_at: null, // a job seen in a live feed is active by definition
     }));

@@ -120,6 +120,11 @@ describe("category relevance and reversible feed repairs", () => {
     expect(parseRate("£35.98 per hour")).toMatchObject({ min: 35.98, max: 35.98 });
     expect(findRateInText("Rate: £45.50 - £48.75 per hour.")).toMatchObject({ min: 45.5, max: 48.75, type: "hourly" });
   });
+  it("defers fractional backfills until the database migration has been enabled", () => {
+    const candidate = { ...job, rate_min: null, rate_max: null, description: "Contract: £35.98 per hour. Design complex attachments." };
+    expect(planJobQuality([candidate]).counts).toMatchObject({ rates: 0, deferredDecimalRates: 1 });
+    expect(planJobQuality([candidate], true).counts).toMatchObject({ rates: 1, deferredDecimalRates: 0 });
+  });
   it("binds approval to an exact reproducible repair plan", () => {
     const a = { ...job, title: "English Teacher" };
     expect(planJobQuality([a]).planHash).toBe(planJobQuality([a]).planHash);
