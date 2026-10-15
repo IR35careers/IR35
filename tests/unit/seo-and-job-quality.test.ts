@@ -7,6 +7,7 @@ import { planJobQuality, type QualityJob } from "@/lib/processing/job-quality";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import { findFuzzyDuplicate } from "@/lib/processing/deduplicator";
 import { findRateInText, parseRate } from "@/lib/processing/rate-parser";
+import { jobRateStorageBounds } from "@/lib/processing/job-rate-storage";
 vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn }));
 import { matchesSeoFilters, isRelevantPublicJob } from "@/lib/public-job-inventory";
 
@@ -124,6 +125,19 @@ describe("category relevance and reversible feed repairs", () => {
     const candidate = { ...job, rate_min: null, rate_max: null, description: "Contract: £35.98 per hour. Design complex attachments." };
     expect(planJobQuality([candidate]).counts).toMatchObject({ rates: 0, deferredDecimalRates: 1 });
     expect(planJobQuality([candidate], true).counts).toMatchObject({ rates: 1, deferredDecimalRates: 0 });
+  });
+  it("applies professional rate gates to advertised pay even before numeric backfill", () => {
+    const candidate = { ...job, rate_min: null, rate_max: null, description: "Contract: £12.50 per hour. Support technical projects." };
+    expect(planJobQuality([candidate]).counts).toMatchObject({ offTopic: 1, deferredDecimalRates: 0 });
+  });
+  it("never breaks an integer-column ingest with a fractional advertised rate", () => {
+    try {
+      vi.stubEnv("JOB_DECIMAL_RATES_ENABLED", "false");
+      expect(jobRateStorageBounds({ rate_min: 35.98, rate_max: 35.98 })).toEqual({ rate_min: null, rate_max: null });
+      expect(jobRateStorageBounds({ rate_min: 500, rate_max: 600 })).toEqual({ rate_min: 500, rate_max: 600 });
+      vi.stubEnv("JOB_DECIMAL_RATES_ENABLED", "true");
+      expect(jobRateStorageBounds({ rate_min: 35.98, rate_max: 35.98 })).toEqual({ rate_min: 35.98, rate_max: 35.98 });
+    } finally { vi.unstubAllEnvs(); }
   });
   it("binds approval to an exact reproducible repair plan", () => {
     const a = { ...job, title: "English Teacher" };

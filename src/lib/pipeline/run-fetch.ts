@@ -26,6 +26,7 @@ import { getSupabaseAdmin } from "../supabase-admin";
 import { collapseConflictKeyDuplicates } from "./conflict-deduplicator";
 import { revalidateTag } from "next/cache";
 import { jobRateStorageBounds } from "../processing/job-rate-storage";
+import { repairJobQuality } from "./repair-job-quality";
 
 export interface PipelineSummary {
   companies: number;
@@ -408,6 +409,19 @@ export async function runFetchPipeline(
     .select("id");
   if (expireError) throw new Error(`Expiry failed: ${expireError.message}`);
   const expired = expiredRows?.length ?? 0;
+
+  // Source updates can make previously different rows converge on the same
+  // identity. Enforce the same conservative quality policy after every refresh,
+  // not only during a one-off cleanup. The audit precedes all repair writes.
+  try {
+    const quality = await repairJobQuality("preview");
+    if (quality.changed > 0) {
+      const result = await repairJobQuality("apply", quality.planHash);
+      notes.push(`Post-refresh quality: ${result.applied} repairs; ${result.deferredDecimalRates} fractional rates await schema enablement`);
+    }
+  } catch (error) {
+    companyErrors.push({ company: "_quality_repair", error: error instanceof Error ? error.message : "Post-refresh quality check failed" });
+  }
 
   // ── 6. Log ─────────────────────────────────────────────────────────────
   const bySource: Record<string, number> = {};

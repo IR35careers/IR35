@@ -23,7 +23,9 @@ export function planJobQuality(jobs: QualityJob[], decimalRatesEnabled = false) 
   let deferredDecimalRates = 0;
   const identities = new Map<string, QualityJob[]>();
   for (const job of [...jobs].sort((a, b) => a.first_seen_at.localeCompare(b.first_seen_at) || a.id.localeCompare(b.id))) {
-    const rate = { min: job.rate_min, max: job.rate_max, type: job.rate_type, currency: job.rate_currency, confidence: "low" as const, raw: "" };
+    const rate = job.rate_min === null && job.rate_max === null
+      ? findRateInText(job.description)
+      : { min: job.rate_min, max: job.rate_max, type: job.rate_type, currency: job.rate_currency, confidence: "low" as const, raw: "" };
     if (!isProfessionalRole(job.title, rate)) {
       changes.push({ id: job.id, reason: "off_topic_or_below_professional_rate", before: { expired_at: null, title: job.title, rate_min: job.rate_min, rate_max: job.rate_max, rate_type: job.rate_type }, after: { expired_at: "REPAIR_TIME" } });
       continue;
