@@ -20,6 +20,8 @@ Incident evidence: authenticated Supabase CLI read-only query confirmed the name
 
 Latest checkpoint: six controlled Playwright browser tests passed, including an actual mock-form confirmation committed through migration 025's RPC and rendered as Submitted after tracker/page reload. That local UI test hydrates the labelled preview from the SQL result; it is **not** a claim of live Supabase Realtime or Railway staging connectivity. GitHub CLI 2.102.0 was installed in user scope; its browser login is in progress. The later full release check passed 502 tests/110 files and 199 legacy checks; the last modal-phase regression and final CI run are still being checked.
 
+CI repair checkpoint: release run `38702026292` failed dependency installation and the Docker build. Reproducing its pinned npm 11.19.0 locally found missing `@emnapi/core` / `@emnapi/runtime` 1.11.3 lock entries; the workstation's default npm was 11.6.2. Regenerated only the lockfile with npm 11.19.0; the exact-version `npm ci --ignore-scripts --dry-run` now succeeds. No security gate is waived. The latest full local suite passed 503 tests/110 files and 199 legacy checks; final Docker and browser CI remain pending. Railway CLI 5.68.0 is installed but not authenticated; Supabase is linked and Vercel authenticated. GitHub device approval expired twice; a fresh native login is pending. No production release or cutover has occurred.
+
 ## Plan persistence and audit
 
 - [x] Persist section 8 phases and section 9 rules in root `AGENTS.md`; read them before further implementation.
