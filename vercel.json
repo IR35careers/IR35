@@ -1,4 +1,7 @@
 {
+  "git": {
+    "deploymentEnabled": { "codex/railway-*": false }
+  },
   "buildCommand": "npm run vercel-build",
   "functions": {
     "src/app/api/queues/applications/route.ts": {
