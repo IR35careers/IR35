@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import { Mail, MessageSquareText, ShieldCheck } from "lucide-react";
 import { ContactForm } from "@/components/ContactForm";
@@ -5,7 +6,8 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
-export const metadata: Metadata = { title: "Contact IR35Careers", description: "Contact IR35Careers about UK contract discovery, IR35 resources or your contractor workspace." };
+export const metadata: Metadata = withPublicPageMetadata("/contact", { title: "Contact IR35Careers", description: "Contact IR35Careers about UK contract discovery, IR35 resources or your contractor workspace.",
+});
 
 export default function ContactPage() {
   return (

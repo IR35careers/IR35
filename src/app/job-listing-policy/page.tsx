@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "Job Listing and IR35 Information Policy", description: "How IR35Careers sources, refreshes, deduplicates and labels contract jobs." };
+export const metadata: Metadata = withPublicPageMetadata("/job-listing-policy", { title: "Job Listing and IR35 Information Policy", description: "How IR35Careers sources, refreshes, deduplicates and labels contract jobs.",
+});
 
 const sections = [
   { id: "sources", label: "Sources and provenance" },

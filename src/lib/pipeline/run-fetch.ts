@@ -24,6 +24,7 @@ import { processRawJob } from "../processing/job-processor";
 import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplicator";
 import { getSupabaseAdmin } from "../supabase-admin";
 import { collapseConflictKeyDuplicates } from "./conflict-deduplicator";
+import { revalidateTag } from "next/cache";
 
 export interface PipelineSummary {
   companies: number;
@@ -436,5 +437,6 @@ export async function runFetchPipeline(
     summary.companyErrors.push({ company: "_logging", error: logError.message });
   }
 
+  revalidateTag("public-jobs", { expire: 0 });
   return summary;
 }

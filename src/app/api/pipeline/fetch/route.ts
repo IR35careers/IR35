@@ -10,6 +10,7 @@
  */
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
+import { repairJobQuality } from "@/lib/pipeline/repair-job-quality";
 import { timingSafeEqual } from "node:crypto";
 import {
   ApplicationWorkerRequestError,
@@ -60,6 +61,12 @@ export async function GET(request: Request): Promise<Response> {
 export async function POST(request: Request): Promise<Response> {
   try {
     const body = await readSignedApplicationWorkerJson(request, 2_000);
+    if (body && typeof body === "object" && (body as Record<string, unknown>).action === "repair_job_quality") {
+      const input = body as Record<string, unknown>;
+      if (input.mode !== "preview" && input.mode !== "apply") return Response.json({ error: "Invalid repair mode" }, { status: 400, headers: NO_STORE });
+      const summary = await repairJobQuality(input.mode, typeof input.planHash === "string" ? input.planHash : undefined);
+      return Response.json({ ok: true, summary }, { headers: NO_STORE });
+    }
     if (
       !body ||
       typeof body !== "object" ||

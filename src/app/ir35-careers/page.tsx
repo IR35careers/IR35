@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -20,7 +21,7 @@ import { SITE_ORIGIN } from "@/lib/seo";
 
 const PAGE_URL = `${SITE_ORIGIN}/ir35-careers`;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/ir35-careers", {
   title: "IR35 Careers: UK Contract Jobs, Rates and Guidance",
   description:
     "Explore IR35 careers in the UK. Find contract jobs, compare Inside and Outside IR35 roles, understand day rates and use free contractor tools.",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     url: PAGE_URL,
     type: "website",
   },
-};
+});
 
 const CAREER_PATHS = [
   {

@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, FlaskConical, MessageSquareText, RefreshCcw, ShieldCheck } from "lucide-react";
@@ -5,10 +6,10 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/beta", {
   title: "Public Beta",
   description: "What the IR35Careers public beta includes, what may change and how contractors can share feedback.",
-};
+});
 
 const AVAILABLE = [
   "Open signup without a waitlist or invitation code",

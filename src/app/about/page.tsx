@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -7,12 +8,12 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
 import { SITE_DESCRIPTION, SITE_ORIGIN } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/about", {
   title: "About IR35Careers",
   description:
     "Learn how IR35Careers helps UK contractors find Inside and Outside IR35 roles, prepare evidence-based applications and track employer responses.",
   alternates: { canonical: `${SITE_ORIGIN}/about` },
-};
+});
 
 const PRINCIPLES = [
   {

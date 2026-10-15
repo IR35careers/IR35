@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, CreditCard, LockKeyhole } from "lucide-react";
@@ -6,7 +7,8 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
 import { billingConfig } from "@/lib/billing/stripe";
 
-export const metadata: Metadata = { title: "Public Beta Access", description: "Current public beta access and future plan availability for IR35Careers." };
+export const metadata: Metadata = withPublicPageMetadata("/pricing", { title: "Public Beta Access", description: "Current public beta access and future plan availability for IR35Careers.",
+});
 
 const CURRENT = ["Browse all indexed UK contracts", "IR35 and source evidence", "Contractor calculators and guides", "Saved roles and searches", "Role-specific Resume analysis", "Dry-run application preparation"];
 const LOCKED = ["Approved plan benefits will be listed before sale", "Secure checkout remains locked until release approval"];

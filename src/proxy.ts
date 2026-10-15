@@ -62,6 +62,16 @@ export function proxy(request: NextRequest) {
   const redirect = (url: URL | string, status?: 301 | 302 | 303 | 307 | 308) => protect(NextResponse.redirect(url, status));
   const host = request.headers.get("host")?.split(":")[0].toLowerCase();
   const pathname = request.nextUrl.pathname;
+  // Keep this redirect in the application so the apex HTTPS response carries
+  // our complete HSTS policy (Vercel domain-level redirects bypass headers).
+  if (host === "ir35careers.com") {
+    const canonical = new URL(request.url);
+    canonical.protocol = "https:";
+    canonical.host = "www.ir35careers.com";
+    const response = redirect(canonical, 308);
+    response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+    return response;
+  }
 
   if (host === ADMIN_HOST) {
     if (pathname.startsWith("/api/") || pathname.startsWith("/_next/") || /\.[a-z0-9]+$/i.test(pathname)) {

@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 import { CookiePreferencesButton } from "@/components/CookiePreferencesButton";
 
-export const metadata: Metadata = { title: "Cookie Policy", description: "Essential browser storage and cookie information for IR35Careers." };
+export const metadata: Metadata = withPublicPageMetadata("/cookies", { title: "Cookie Policy", description: "Learn which essential and optional cookies IR35Careers uses, how analytics works and how to manage your cookie preferences on our UK contractor platform.",
+});
 
 const sections = [
   { id: "overview", label: "Our current approach" },

@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "Accessibility Statement", description: "Accessibility approach, current support and contact route for IR35Careers." };
+export const metadata: Metadata = withPublicPageMetadata("/accessibility", { title: "Accessibility Statement", description: "Accessibility approach, current support and contact route for IR35Careers.",
+});
 
 const sections = [
   { id: "commitment", label: "Our commitment" },

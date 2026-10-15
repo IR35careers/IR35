@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, CircleDashed, KeyRound, LockKeyhole, PlugZap, ShieldCheck } from "lucide-react";
@@ -6,10 +7,10 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { getIntegrationStatuses, type IntegrationState } from "@/lib/integration-status";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/connections", {
   title: "Integration connections",
   description: "Current IR35Careers data, developer and provider connection states.",
-};
+});
 
 const STATE_COPY: Record<IntegrationState, { label: string; style: string }> = {
   available: { label: "Available", style: "border-emerald-200 bg-emerald-50 text-emerald-800" },

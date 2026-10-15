@@ -24,7 +24,7 @@ export function Brand({ href = "/", compact = false, tone = "light" }: BrandProp
       >
         <Image
           src="/images/generated/brand/ir35careers-mark-256.png"
-          alt=""
+          alt="IR35Careers logo"
           width={40}
           height={40}
           sizes="40px"

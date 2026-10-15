@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "Security and Responsible Disclosure", description: "IR35Careers security controls and responsible vulnerability-reporting rules." };
+export const metadata: Metadata = withPublicPageMetadata("/security", { title: "Security and Responsible Disclosure", description: "IR35Careers security controls and responsible vulnerability-reporting rules.",
+});
 const sections = [
   { id: "controls", label: "Security controls" },
   { id: "report", label: "Report a vulnerability" },

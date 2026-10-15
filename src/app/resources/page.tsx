@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -16,12 +17,12 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/resources", {
   title: "IR35 Guides for UK Contractors",
   description:
     "Plain-English IR35 guidance for UK contractors, including inside and outside IR35, status decisions, umbrella companies and limited companies.",
   alternates: { canonical: "/resources" },
-};
+});
 
 const GUIDES = [
   {

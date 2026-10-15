@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "AI and Automation Disclosure", description: "How IR35Careers uses deterministic scoring, optional AI tailoring, automation and human approval." };
+export const metadata: Metadata = withPublicPageMetadata("/ai-disclosure", { title: "AI and Automation Disclosure", description: "How IR35Careers uses deterministic scoring, optional AI tailoring, automation and human approval.",
+});
 
 const sections = [
   { id: "current", label: "What is used today" },

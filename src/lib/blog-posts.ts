@@ -8,6 +8,7 @@ export interface BlogPost {
   slug: string;
   category: "IR35 essentials" | "Contract decisions" | "Working practices";
   title: string;
+  seoTitle: string;
   description: string;
   publishedAt: string;
   updatedAt: string;
@@ -23,6 +24,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "inside-vs-outside-ir35-contract-checks",
     category: "IR35 essentials",
     title: "Inside vs Outside IR35: five checks before you accept a contract",
+    seoTitle: "Inside vs Outside IR35: 5 Contract Checks",
     description: "A practical way to compare the tax status, working arrangement and commercial reality of a UK contract before you commit.",
     publishedAt: "2026-08-26",
     updatedAt: "2026-08-26",
@@ -83,6 +85,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "status-determination-statement-contractor-guide",
     category: "IR35 essentials",
     title: "Status Determination Statements: what UK contractors should look for",
+    seoTitle: "IR35 Status Determination Statements: A UK Guide",
     description: "What an SDS is, when you should receive one and how to review the reasoning without turning the process into a legal maze.",
     publishedAt: "2026-08-26",
     updatedAt: "2026-08-26",
@@ -135,6 +138,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "ir35-working-practices-contract-wording",
     category: "Working practices",
     title: "IR35 and working practices: why the contract wording is not enough",
+    seoTitle: "IR35 Working Practices: Beyond the Contract",
     description: "How control, substitution and the wider working relationship show up in the real life of a contract engagement.",
     publishedAt: "2026-08-26",
     updatedAt: "2026-08-26",
@@ -191,6 +195,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "umbrella-or-limited-company-contractor-checklist",
     category: "Contract decisions",
     title: "Umbrella or limited company: a practical contractor checklist",
+    seoTitle: "Umbrella or Limited Company? Contractor Checklist",
     description: "A decision framework for comparing engagement routes without reducing the choice to a single take-home number.",
     publishedAt: "2026-08-26",
     updatedAt: "2026-08-26",
@@ -241,6 +246,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "compare-uk-contract-offers-beyond-day-rate",
     category: "Contract decisions",
     title: "How to compare UK contract offers beyond the day rate",
+    seoTitle: "Compare UK Contract Offers Beyond the Day Rate",
     description: "A scorecard for rate, IR35 status, duration, payment risk, working pattern and the value of the experience itself.",
     publishedAt: "2026-08-26",
     updatedAt: "2026-08-26",

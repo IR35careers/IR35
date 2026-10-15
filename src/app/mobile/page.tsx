@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BellRing, BriefcaseBusiness, ClipboardCheck, Cloud, LockKeyhole, ScanSearch } from "lucide-react";
@@ -6,10 +7,10 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { PwaInstallPanel } from "@/components/PwaInstallPanel";
 import { buttonClassName } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/mobile", {
   title: "IR35Careers Mobile App",
   description: "Install the IR35Careers responsive web app on iPhone, iPad, Android or desktop and keep a UK contractor workspace within reach.",
-};
+});
 
 const features = [
   [ScanSearch, "Find", "Search live UK contracts by IR35 status, rate, skills, location and working pattern."],

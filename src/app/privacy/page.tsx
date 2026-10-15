@@ -1,12 +1,13 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 import { legalOperatorConfig } from "@/lib/legal/operator";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/privacy", {
   title: "Privacy Notice",
   description: "How IR35Careers collects, uses, stores and protects contractor personal information.",
-};
+});
 
 const sections = [
   { id: "who-we-are", label: "Who we are" },

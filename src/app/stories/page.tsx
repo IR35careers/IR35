@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MessageCircleHeart, ShieldCheck } from "lucide-react";
@@ -6,7 +7,8 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Contractor stories", description: "Consented, reviewed stories from UK contractors using IR35Careers." };
+export const metadata: Metadata = withPublicPageMetadata("/stories", { title: "Contractor stories", description: "Explore contractor stories and practical UK contracting workflows, from finding Inside and Outside IR35 roles to preparing a CV and tracking applications.",
+});
 
 interface Story { id: string; display_name: string; role_label: string; quote: string }
 

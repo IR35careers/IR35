@@ -15,7 +15,7 @@ describe("formatRate", () => {
   });
 
   it("does not invent a rate", () => {
-    expect(formatRate(base)).toBe("Rate on application");
+    expect(formatRate(base)).toBe("Rate not stated");
   });
 
   it("formats annual and upper-bound values", () => {

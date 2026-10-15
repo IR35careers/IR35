@@ -7,7 +7,7 @@ import { Reveal } from "@/components/HomeReveal";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { BLOG_POSTS, formatBlogDate, getBlogPost } from "@/lib/blog-posts";
-import { SITE_ORIGIN } from "@/lib/seo";
+import { SITE_ORIGIN, searchTitle } from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const post = getBlogPost(slug);
   if (!post) return {};
   return {
-    title: post.title,
+    title: { absolute: searchTitle(post.seoTitle) },
     description: post.description,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {

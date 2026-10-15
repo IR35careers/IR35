@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { headers } from "next/headers";
+import { buildJobPosting, jobMetadata } from "@/lib/job-seo";
+import { structuredDataJson } from "@/lib/seo";
 import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase, Sparkles, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
 import { IR35EvidencePanel } from "@/components/IR35EvidencePanel";
@@ -34,17 +37,7 @@ export async function generateMetadata({
   const { id } = await params;
   const job = await getJob(id);
   if (!job) return { title: "Contract not found", robots: { index: false, follow: false } };
-  const status =
-    job.ir35_status === "outside" ? "Outside IR35" : job.ir35_status === "inside" ? "Inside IR35" : "";
-  const title = `${job.title} at ${job.company_name}${status ? ` (${status})` : ""}`;
-  const description = `${formatRate(job)} · ${job.location}. Review this UK contract role on IR35Careers.`;
-  const url = `/jobs/${job.id}`;
-  return {
-    title,
-    description,
-    alternates: { canonical: url },
-    openGraph: { title, description, url },
-  };
+  return jobMetadata(job);
 }
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,6 +46,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   if (!job) notFound();
   const similar = await getSimilar(job);
   const isDemo = job.source_domain === "demo.ir35careers.local";
+  const posting = buildJobPosting(job);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const remoteLabel =
     job.remote_type === "remote"
       ? "Remote"
@@ -71,6 +66,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="ir35-workspace-canvas min-h-screen text-slate-900">
+      {posting && <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: structuredDataJson(posting) }} />}
       <PublicHeader hideForWorkspaceMembers />
 
       <main className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 sm:py-8">

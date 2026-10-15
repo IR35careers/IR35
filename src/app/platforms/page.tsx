@@ -1,10 +1,12 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BellRing, ExternalLink, Globe2, Mail, Smartphone } from "lucide-react";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 
-export const metadata: Metadata = { title: "Ways to use IR35Careers", description: "Search and manage UK contract opportunities from desktop, tablet or mobile." };
+export const metadata: Metadata = withPublicPageMetadata("/platforms", { title: "Ways to use IR35Careers", description: "Search and manage UK contract opportunities from desktop, tablet or mobile.",
+});
 const platforms = [
   { icon: Globe2, title: "Web workspace", body: "Search, prepare, review and track from modern desktop, tablet and mobile browsers.", href: "/dashboard", action: "Open workspace" },
   { icon: Smartphone, title: "Mobile access", body: "Add IR35Careers to an iPhone, iPad or Android home screen for quick access to your contract search.", href: "/mobile", action: "View mobile guide" },

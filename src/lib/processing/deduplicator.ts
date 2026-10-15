@@ -132,6 +132,13 @@ function rateMidpoint(job: DedupCandidate): number | null {
 
 /** Weighted similarity score between two jobs, 0..1. */
 export function jobSimilarity(a: DedupCandidate, b: DedupCandidate): number {
+  // Missing pay is not evidence against an otherwise exact identity. Do not
+  // extend this exception to fuzzy titles or to two conflicting known rates.
+  const exactIdentity = normalize(a.title) === normalize(b.title)
+    && normalize(a.company_name) === normalize(b.company_name)
+    && normalize(a.location) === normalize(b.location)
+    && Boolean(normalize(a.company_name)) && Boolean(normalize(a.location));
+  if (exactIdentity && (rateMidpoint(a) === null || rateMidpoint(b) === null)) return 1;
   const titleScore = titleSimilarity(a.title, b.title);
 
   const companyScore =

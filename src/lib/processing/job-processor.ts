@@ -129,6 +129,9 @@ const NON_PROFESSIONAL_TITLES =
   /\b(colleague|shop\s+assistant|store\s+assistant|retail\s+(?:assistant|associate)|sales\s+assistant|customer\s+(?:service|team)\s+(?:advisor|assistant|member)|checkout|shelf\s+stacker|warehouse\s+(?:operative|assistant|worker)|delivery\s+driver|courier|van\s+driver|hgv|forklift|cleaner|cleaning\s+operative|housekeep(?:er|ing)|janitor|barista|waiter|waitress|bartender|kitchen\s+(?:porter|assistant|staff)|chef\b|catering\s+assistant|care\s+(?:assistant|worker)|support\s+worker|healthcare\s+assistant|nursery\s+(?:nurse|assistant)|teaching\s+assistant|classroom\s+assistant|labourer|picker|packer|production\s+operative|assembly\s+operative|security\s+(?:officer|guard)|door\s+supervisor|steward|crew\s+member|shift\s+leader\b|admin(?:istration|istrative)?\s+(?:support\s+)?(?:assistant|officer|clerk|apprentice)|recruitment\s+(?:administration|admin|resourcing|support)\s+\w+|receptionist|data\s+entry|office\s+junior|apprentice\b)/i;
 
 export function isProfessionalRole(title: string, rate: ParsedRate): boolean {
+  // A provider's "contract" flag also includes supply teaching and retail temps.
+  // Keep technology/education consultants; reject the explicitly off-topic jobs.
+  if (/\b(?:early\s+years\s+practitioner|teacher|retail\s+sales|flt\s+driver)\b/i.test(title ?? "")) return false;
   if (NON_PROFESSIONAL_TITLES.test(title ?? "")) return false;
   // Known rates far below professional contracting: hourly under £18, day rate
   // under £120, or an annual salary under £45k (permanent-junior territory).

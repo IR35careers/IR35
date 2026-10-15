@@ -1,10 +1,12 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Bot, Braces, Database, Download, ShieldCheck, TerminalSquare } from "lucide-react";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 
-export const metadata: Metadata = { title: "Developer API", description: "Read-only IR35Careers contract-search API documentation." };
+export const metadata: Metadata = withPublicPageMetadata("/developers", { title: "Developer API", description: "Read-only IR35Careers contract-search API documentation.",
+});
 const params = [["q","Role, company or description search"],["location","UK town or region substring"],["ir35","outside, inside or tbc"],["remote","remote, hybrid or onsite"],["min_rate","Minimum advertised day rate"],["rate_type","daily, hourly or annual"],["seniority","entry, senior, lead or manager; matched from explicit title wording"],["sponsorship","stated; matches explicit positive wording only"],["skills","Comma-separated canonical skills"],["within_days","1 to 60 days"],["sort","recent, rate_high or rate_low"],["page / per_page","Pagination; up to 50 per page"]];
 
 export default function DevelopersPage() {

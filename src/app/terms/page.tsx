@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "Terms of Use", description: "Terms governing use of IR35Careers job discovery and contractor workspace tools." };
+export const metadata: Metadata = withPublicPageMetadata("/terms", { title: "Terms of Use", description: "Terms governing use of IR35Careers job discovery and contractor workspace tools.",
+});
 
 const sections = [
   { id: "service", label: "The service" },

@@ -1,14 +1,15 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import { CheckCircle2, Database, MailCheck, ShieldCheck, Zap } from "lucide-react";
 import { EmployerOnboardingForm } from "@/components/EmployerOnboardingForm";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/employers", {
   title: "Free Employer Job Feed and Direct Applications",
   description: "Connect a supported public careers board to IR35Careers at no charge and verify direct candidate application delivery.",
   alternates: { canonical: "/employers" },
-};
+});
 
 const STEPS = [
   { icon: Database, title: "Add the public board", body: "Choose Greenhouse, Lever, Ashby, Workable or SmartRecruiters and enter the identifier already used by your careers page." },

@@ -1,10 +1,12 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2 } from "lucide-react";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 
-export const metadata: Metadata = { title: "Changelog", description: "A dated record of meaningful IR35Careers product changes." };
+export const metadata: Metadata = withPublicPageMetadata("/changelog", { title: "Changelog", description: "Follow IR35Careers product updates, improvements and fixes for UK contractors, including contract search, CV tools, applications and account features.",
+});
 const releases = [
   { date: "21 August 2026", title: "Cleaner one-click application flow", items: ["Candidate workspace now hides provider names and infrastructure connection details", "Role tailoring remains available through a local evidence engine when enhanced AI is unavailable", "One confirmation replaces three repetitive approval boxes", "Managed application API route supports submitted, processing and needs-you outcomes", "Application Profile stores reusable employer-form defaults"] },
   { date: "20 August 2026", title: "Open public beta", items: ["Public signup remains open without a waitlist or invitation code", "Beta status is visible across the website, installed app and service emails", "Clear beta expectations, known boundaries and feedback route", "Prepared waitlist notice rewritten as a beta invitation and kept behind explicit send approval"] },

@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "Billing, Cancellation and Refund Policy", description: "How optional IR35Careers paid subscriptions, renewals, cancellation and refunds work." };
+export const metadata: Metadata = withPublicPageMetadata("/billing-policy", { title: "Billing, Cancellation and Refund Policy", description: "How optional IR35Careers paid subscriptions, renewals, cancellation and refunds work.",
+});
 
 const sections = [
   { id: "availability", label: "When paid plans are available" },

@@ -392,7 +392,7 @@ function JobsBoard() {
                   <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/60 blur-2xl" />
                   <div className="relative flex items-start justify-between gap-3"><CompanyLogo companyName={companyName} /><IR35Badge status={job.ir35_status} /></div>
                   <div className="relative mt-5 min-w-0 flex-1"><h2 className="line-clamp-2 text-lg font-semibold leading-6 tracking-[-0.025em] text-slate-950 transition-colors group-hover:text-brand-800">{job.title}</h2><p className="mt-2 truncate text-sm font-medium text-slate-700">{companyName}</p><p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500"><span className="inline-flex items-center gap-1"><MapPin size={12} />{job.location || "UK"}</span><span aria-hidden>·</span><span>{formatPosted(job)}</span></p><div className="mt-4 flex flex-wrap items-center gap-1.5"><RemoteTag type={job.remote_type} />{job.skills.slice(0, 3).map((skill) => <span key={skill} className="rounded-full border border-white/80 bg-white/75 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm">{skill}</span>)}{job.skills.length > 3 && <span className="px-1 text-[11px] font-medium text-slate-500">+{job.skills.length - 3}</span>}</div></div>
-                  <div className="relative mt-5 flex items-end justify-between gap-3 border-t border-slate-900/[0.07] pt-4"><div><p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500"><PoundSterling size={11} /> Contract rate</p>{hasRate ? <span className="mt-1 block text-base font-semibold tabular-nums tracking-[-0.02em] text-slate-950">{formatRate(job)}</span> : <span className="mt-1 block text-sm font-semibold text-slate-700">Rate on application</span>}</div><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white transition group-hover:bg-emerald-700"><ArrowUpRight size={17} /></span></div>
+                  <div className="relative mt-5 flex items-end justify-between gap-3 border-t border-slate-900/[0.07] pt-4"><div><p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500"><PoundSterling size={11} /> Contract rate</p>{hasRate ? <span className="mt-1 block text-base font-semibold tabular-nums tracking-[-0.02em] text-slate-950">{formatRate(job)}</span> : <span className="mt-1 block text-sm font-semibold text-slate-700">Rate not stated</span>}</div><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white transition group-hover:bg-emerald-700"><ArrowUpRight size={17} /></span></div>
                 </Link></li>;
               })}
             </ul>}
@@ -423,7 +423,7 @@ function JobsPageSkeleton() {
           <div className="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
           <div className="relative animate-pulse">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">UK contract search</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Find your next contract</h1>
+            <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Find your next contract</p>
             <div className="mt-6 h-14 max-w-3xl rounded-2xl border border-white/10 bg-white/10" aria-hidden="true" />
           </div>
         </section>

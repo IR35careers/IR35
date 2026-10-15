@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
@@ -7,10 +8,10 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { BLOG_POSTS, formatBlogDate } from "@/lib/blog-posts";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/blog", {
   title: "IR35 contractor guides and insights",
   description: "Practical, evidence-led IR35 guides for UK contractors comparing status, working practices, rates and contract opportunities.",
-};
+});
 
 const accentClasses = {
   emerald: "border-emerald-200 bg-emerald-50 text-emerald-800",

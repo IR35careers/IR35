@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -16,12 +17,12 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/tools", {
   title: "Free Contractor Tools: IR35 Checker and Take-Home Calculator",
   description:
     "Free tools for UK contractors to check an engagement's indicative IR35 status and estimate take-home pay inside and outside IR35.",
   alternates: { canonical: "/tools" },
-};
+});
 
 const LIVE_TOOLS = [
   {

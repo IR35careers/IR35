@@ -1,8 +1,10 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalCallout, LegalDocument } from "@/components/legal/LegalDocument";
 
-export const metadata: Metadata = { title: "Delete your IR35Careers account", description: "How to export and permanently delete an IR35Careers account." };
+export const metadata: Metadata = withPublicPageMetadata("/delete-account", { title: "Delete your IR35Careers account", description: "Request deletion of your IR35Careers account and personal data. Learn what happens to your contractor profile, uploaded CV and saved application records.",
+});
 const sections = [
   { id: "before", label: "Before deletion" },
   { id: "delete", label: "Delete the account" },
