@@ -48,6 +48,7 @@ import {
   hasActiveSubmission,
   latestSubmissionLifecycleEvent,
 } from "@/lib/application-submission-state";
+import { canRetryDelivery } from "@/lib/application-lifecycle";
 import { resolveApplicationProgressPhase } from "@/lib/application-progress";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import {
@@ -73,7 +74,7 @@ import {
   SAMPLE_CONTRACTOR_PROFILE,
   SAMPLE_CV_TEXT,
 } from "@/lib/workspace/seed";
-import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
+import { flushWorkspaceChanges, refreshWorkspaceApplications, updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { ApplicationRecord } from "@/lib/workspace/types";
 import { rememberReviewedApplicationAnswers } from "@/lib/workspace/answer-memory";
 
@@ -168,6 +169,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const [application, setApplication] = useState<ApplicationRecord | null>(
     initialApplication,
   );
+  // Realtime/reload returns the server-owned lifecycle; do not keep a stale
+  // component-local ready packet after a worker outcome arrives.
+  useEffect(() => {
+    if (existing?.deliveryVersion && existing.deliveryVersion > (application?.deliveryVersion ?? 0)) {
+      setApplication(cleanExisting(existing, workspace.profile.fullName));
+    }
+  }, [existing, application?.deliveryVersion, workspace.profile.fullName]);
   const applicationRef = useRef<ApplicationRecord | null>(initialApplication);
   useEffect(() => { applicationRef.current = application; }, [application]);
   const [busy, setBusy] = useState<BusyState>(null);
@@ -229,15 +237,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         application.status,
         application.events,
         application.attention,
+        application.deliveryStatus,
       ),
   );
   const submissionProgressPhase = resolveApplicationProgressPhase({
     submitted,
     busy: busy === "submit",
     submissionInProgress,
-    hasAttention: Boolean(application?.attention),
-    hasError: Boolean(error),
+    hasAttention: Boolean(application?.attention) || application?.deliveryStatus === "external_only" || application?.deliveryStatus === "needs_info",
+    hasError: Boolean(error) || application?.deliveryStatus === "failed",
     elapsedSeconds: submitElapsedSeconds,
+    deliveryStatus: application?.deliveryStatus,
   });
   const selectedSuggestions =
     aiResult?.suggestions.filter((item) =>
@@ -325,7 +335,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   }, [busy]);
 
   useEffect(() => {
-    if (!application || !submissionInProgress || !isSupabaseConfigured())
+    if (!application || application.deliveryStatus || !submissionInProgress || !isSupabaseConfigured())
       return;
     let active = true;
     const applicationId = application.id;
@@ -859,11 +869,6 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     };
     setApplication(ready);
     persistApplication(ready);
-    const rememberedProfile = rememberReviewedApplicationAnswers(
-      workspace.profile,
-      ready.questions,
-      now,
-    );
     updateWorkspace((current) => ({
       ...current,
       profile: rememberReviewedApplicationAnswers(
@@ -876,17 +881,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       const { data } = await getSupabase().auth.getSession();
       if (!data.session)
         throw new Error("Sign in again before saving this application.");
-      const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
-      await saveCloudWorkspace(data.session.user.id, {
-        ...workspace,
-        profile: rememberedProfile,
-        applications: [
-          ready,
-          ...workspace.applications.filter(
-            (item) => item.id !== ready.id && item.job.id !== ready.job.id,
-          ),
-        ],
-      });
+      const stored = await flushWorkspaceChanges();
+      return stored.applications.find(item => item.id === ready.id) ?? ready;
     }
     return ready;
   };
@@ -941,10 +937,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     setError(null);
     setNotice(null);
     try {
-      const ready =
+      let ready =
         application.status === "ready" && approvalsComplete
           ? application
           : await persistReviewedPacket(application, false);
+      const saved = await flushWorkspaceChanges();
+      ready = saved.applications.find(item => item.id === ready.id) ?? ready;
       setNotice(
         "Starting the secure employer application. You can leave this page while it completes.",
       );
@@ -955,6 +953,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
           applicationId: ready.id,
           approval: "SUBMIT_APPROVED_APPLICATION",
           packet: ready,
+          retry: canRetryDelivery(application.deliveryStatus),
         }),
         signal: AbortSignal.timeout(120_000),
       });
@@ -971,6 +970,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         error?: string;
         retryAfterSeconds?: number;
       };
+      await refreshWorkspaceApplications();
       if (response.status === 202 && payload.state) {
         if (payload.state === "needs_user") {
           const questions = payload.questions ?? ready.questions;
@@ -1356,12 +1356,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       phase={submissionProgressPhase}
       roleTitle={job.title}
       companyName={job.company_name}
+      externalUrl={job.apply_url}
       elapsedSeconds={submitElapsedSeconds}
       message={
         submissionProgressPhase === "attention"
           ? application?.attention?.message
           : submissionProgressPhase === "error"
-            ? error
+            ? error || application?.errorDetail
             : submissionProgressPhase === "success"
               ? application?.receipt?.message
               : notice
@@ -1461,7 +1462,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                 {application.matchScore}% match
               </span>
             )}
-            {application && <StatusPill status={application.status} />}
+            {application && <StatusPill status={application.deliveryStatus ?? application.status} />}
             {submitted && (
               <span className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-3 text-sm font-bold text-emerald-800">
                 <CheckCircle2 size={16} /> Submitted

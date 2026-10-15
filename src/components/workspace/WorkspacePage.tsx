@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useWorkspaceCloudSync } from "@/lib/workspace/store";
 import { useContractorPortalBoundary } from "@/components/useContractorPortalBoundary";
 import { AccountSidebar, type AccountSection } from "@/components/account/AccountSidebar";
+import { DELIVERY_LABELS, applicationDeliveryStatusSchema } from "@/lib/application-lifecycle";
 
 export function WorkspacePage({
   title,
@@ -54,6 +55,7 @@ export function WorkspacePage({
         data-account-layout={accountSection ? "true" : undefined}
         className={`mx-auto px-4 sm:px-6 ${accountSection ? "max-w-[1600px] py-8" : `max-w-[1400px] lg:px-8 ${density === "compact" ? "py-5 lg:py-7" : "py-7 lg:py-10"}`}`}
       >
+        {cloud.syncError && <p role="alert" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{cloud.syncError}</p>}
         {!configured && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
             <FlaskConical className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
@@ -80,8 +82,9 @@ export function WorkspacePage({
 }
 
 export function StatusPill({ status }: { status: string }) {
+  const delivery = applicationDeliveryStatusSchema.safeParse(status);
   const label =
-    status === "needs_review"
+    delivery.success ? DELIVERY_LABELS[delivery.data] : status === "needs_review"
       ? "Needs you"
       : status === "failed"
         ? "Not submitted"

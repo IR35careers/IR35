@@ -47,7 +47,7 @@ export function buildRefinedResumeDraft(input: {
 /** Refining material never approves or submits an application implicitly. */
 export function applyRefinedResume(application: ApplicationRecord, draft: RefinedResumeDraft, job: JobDetail): ApplicationRecord {
   if (application.job.id !== job.id) throw new Error("Choose a resume version for this specific job.");
-  if (["applied", "viewed", "replied", "interview", "offer", "rejected", "withdrawn"].includes(application.status) || hasActiveSubmission(application.status, application.events, application.attention)) {
+  if (["applied", "viewed", "replied", "interview", "offer", "rejected", "withdrawn"].includes(application.status) || hasActiveSubmission(application.status, application.events, application.attention, application.deliveryStatus)) {
     throw new Error("The submitted or processing resume cannot be replaced.");
   }
   if (draft.sourceText !== application.tailoredCvText) throw new Error("The resume changed after this review. Refine it again before using these edits.");

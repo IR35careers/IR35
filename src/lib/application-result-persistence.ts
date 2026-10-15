@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { providerReviewQuestions, type SubmissionProviderReceipt } from "@/lib/application-submission";
 import { buildApplicationAttention } from "@/lib/application-attention";
 import { sendApplicationNotification } from "@/lib/email/application-notifications";
+import { commitDeliveryResult } from "@/lib/application-lifecycle-server";
+import { isUnresolvedAggregator } from "@/lib/application-lifecycle";
 import type { JobDetail } from "@/lib/job-types";
 import type {
   ApplicationQuestion,
@@ -55,6 +57,8 @@ export async function storeNeedsUser(input: {
   providerReceipt?: SubmissionProviderReceipt;
   message: string;
   action?: string;
+  taskId?: string;
+  attempt?: number;
 }): Promise<ApplicationQuestion[]> {
   const current =
     (input.packet.screening_answers as ApplicationQuestion[]) ?? [];
@@ -68,7 +72,6 @@ export async function storeNeedsUser(input: {
     message: input.message,
     questions: incoming.length ? incoming : questions,
   });
-  const now = new Date().toISOString();
   const idempotencyKey = `submit:${String(input.packet.id)}`;
   const attentionKey = createHash("sha256")
     .update(
@@ -80,59 +83,18 @@ export async function storeNeedsUser(input: {
     )
     .digest("hex")
     .slice(0, 18);
-  const [{ error: packetError }, { error: queueError }, { error: eventError }] =
-    await Promise.all([
-      input.admin
-        .from("application_packets")
-        .update({
-          status: "needs_review",
-          screening_answers: questions,
-          submission_approved: applicationMaterialsNeedApproval
-            ? false
-            : Boolean(input.packet.submission_approved),
-          updated_at: now,
-        })
-        .eq("id", input.packet.id)
-        .eq("user_id", input.userId),
-      input.admin
-        .from("application_submissions")
-        .update({
-          status: "processing",
-          provider_submission_id:
-            input.providerReceipt?.providerSubmissionId ?? null,
-          error_code: "needs_user",
-          receipt: {
-            state: "needs_user",
-            review: input.providerReceipt?.review ?? null,
-            message: input.message,
-            action: input.action ?? null,
-            destination: input.providerReceipt?.destination ?? null,
-            attention,
-          },
-          updated_at: now,
-        })
-        .eq("user_id", input.userId)
-        .eq("idempotency_key", idempotencyKey),
-      input.admin.from("application_events").upsert(
-        {
-          user_id: input.userId,
-          application_id: input.packet.id,
-          event_type: "status_changed",
-          label: attention.title,
-          metadata: {
-            questionCount: incoming.length,
-            action: input.action ?? null,
-            attention,
-          },
-          idempotency_key: `${idempotencyKey}:needs-user:${attentionKey}`,
-        },
-        { onConflict: "user_id,idempotency_key" },
-      ),
-    ]);
-  if (packetError || queueError || eventError)
-    throw new Error(
-      packetError?.message || queueError?.message || eventError?.message,
-    );
+  const externalOnly = input.action !== "/profile" && incoming.length === 0 &&
+    isUnresolvedAggregator(input.providerReceipt?.destination || input.job.apply_url);
+  await commitDeliveryResult(input.admin, {
+    applicationId: String(input.packet.id), userId: input.userId,
+    status: externalOnly ? "external_only" : "needs_info", questions,
+    keepApproval: !applicationMaterialsNeedApproval, taskId: input.taskId, attempt: input.attempt,
+    reason: externalOnly ? "unsupported_aggregator" : (input.action || "employer_action_required").slice(0, 100),
+    detail: input.message.slice(0, 2000),
+    receipt: { state: "needs_user", review: input.providerReceipt?.review ?? null,
+      message: input.message, action: externalOnly ? "external_only" : input.action ?? null,
+      destination: input.providerReceipt?.destination ?? input.job.apply_url, attention },
+  });
   await sendApplicationNotification({
     kind: "needs_attention",
     to: input.recipient,
@@ -162,6 +124,8 @@ export async function storeSubmittedApplication(input: {
   candidateName: string;
   providerReceipt: SubmissionProviderReceipt;
   destination: string;
+  taskId?: string;
+  attempt?: number;
 }): Promise<ApplicationReceipt> {
   const idempotencyKey = `submit:${String(input.packet.id)}`;
   const receipt: ApplicationReceipt = {
@@ -178,52 +142,10 @@ export async function storeSubmittedApplication(input: {
     skippedFields: [],
     message: input.providerReceipt.message,
   };
-  const now = new Date().toISOString();
-  const [
-    { error: submissionError },
-    { error: packetError },
-    { error: eventError },
-  ] = await Promise.all([
-    input.admin
-      .from("application_submissions")
-      .update({
-        status: "succeeded",
-        provider_submission_id: input.providerReceipt.providerSubmissionId,
-        receipt,
-        error_code: null,
-        submitted_at: input.providerReceipt.submittedAt,
-        updated_at: now,
-      })
-      .eq("user_id", input.userId)
-      .eq("idempotency_key", idempotencyKey),
-    input.admin
-      .from("application_packets")
-      .update({
-        status: "applied",
-        mode: "external_handoff",
-        receipt,
-        updated_at: now,
-      })
-      .eq("id", input.packet.id)
-      .eq("user_id", input.userId),
-    input.admin.from("application_events").upsert(
-      {
-        user_id: input.userId,
-        application_id: input.packet.id,
-        event_type: "status_changed",
-        label: "Application submitted successfully",
-        metadata: {
-          providerSubmissionId: input.providerReceipt.providerSubmissionId,
-        },
-        idempotency_key: `${idempotencyKey}:event`,
-      },
-      { onConflict: "user_id,idempotency_key" },
-    ),
-  ]);
-  if (submissionError || packetError || eventError)
-    throw new Error(
-      submissionError?.message || packetError?.message || eventError?.message,
-    );
+  await commitDeliveryResult(input.admin, {
+    applicationId: String(input.packet.id), userId: input.userId, status: "submitted",
+    receipt: { ...receipt }, taskId: input.taskId, attempt: input.attempt,
+  });
   await sendApplicationNotification({
     kind: "submitted",
     to: input.recipient,

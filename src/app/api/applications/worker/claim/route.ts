@@ -14,7 +14,6 @@ import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candida
 import { applicationInboxAlias, ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { recoverPendingVerificationEmails } from "@/lib/email/recover-pending-verifications";
 import { recoverDiscoverySourceApplications } from "@/lib/application-worker-source-recovery";
-import { APPLICATION_WORKER_MAX_ATTEMPTS } from "@/lib/application-worker-retry";
 import type { JobDetail } from "@/lib/job-types";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -92,84 +91,11 @@ async function claimWorkerTask(input: {
   workerId: string;
   preferredApplicationId?: string;
 }): Promise<ApplicationWorkerTaskRow | null> {
-  if (!input.preferredApplicationId) {
-    const claimResult = await input.admin.rpc("claim_application_worker_task", {
-      p_worker_id: input.workerId,
-    });
-    if (claimResult.error) throw new Error(claimResult.error.message);
-    return (Array.isArray(claimResult.data)
-      ? claimResult.data[0]
-      : claimResult.data) as ApplicationWorkerTaskRow | null;
-  }
-
-  // Cloud wake-ups are application-specific. Claiming an unrelated queued
-  // packet here makes a user's retry appear to do nothing and can leave the
-  // requested application stranded behind other work.
-  const now = new Date().toISOString();
-  const expiredLease = await input.admin
-    .from("application_worker_tasks")
-    .update({
-      status: "queued",
-      available_at: now,
-      lease_owner: null,
-      lease_expires_at: null,
-      last_error:
-        "The previous browser worker stopped before returning a result.",
-      updated_at: now,
-    })
-    .eq("application_id", input.preferredApplicationId)
-    .eq("status", "running")
-    .lt("lease_expires_at", now)
-    .lt("attempts", APPLICATION_WORKER_MAX_ATTEMPTS);
-  if (expiredLease.error) throw new Error(expiredLease.error.message);
-
-  const exhaustedLease = await input.admin
-    .from("application_worker_tasks")
-    .update({
-      status: "failed",
-      lease_owner: null,
-      lease_expires_at: null,
-      last_error:
-        "The browser worker stopped before confirmation after the final automatic attempt.",
-      completed_at: now,
-      updated_at: now,
-    })
-    .eq("application_id", input.preferredApplicationId)
-    .eq("status", "running")
-    .lt("lease_expires_at", now)
-    .gte("attempts", APPLICATION_WORKER_MAX_ATTEMPTS);
-  if (exhaustedLease.error) throw new Error(exhaustedLease.error.message);
-
-  const queuedResult = await input.admin
-    .from("application_worker_tasks")
-    .select("*")
-    .eq("application_id", input.preferredApplicationId)
-    .eq("status", "queued")
-    .lte("available_at", now)
-    .lt("attempts", APPLICATION_WORKER_MAX_ATTEMPTS)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (queuedResult.error) throw new Error(queuedResult.error.message);
-  if (!queuedResult.data) return null;
-
-  const attempts = Number(queuedResult.data.attempts ?? 0);
-  const claimedResult = await input.admin
-    .from("application_worker_tasks")
-    .update({
-      status: "running",
-      attempts: attempts + 1,
-      lease_owner: input.workerId.slice(0, 120),
-      lease_expires_at: new Date(Date.now() + 6 * 60_000).toISOString(),
-      updated_at: now,
-    })
-    .eq("id", queuedResult.data.id)
-    .eq("status", "queued")
-    .eq("attempts", attempts)
-    .select("*")
-    .maybeSingle();
-  if (claimedResult.error) throw new Error(claimedResult.error.message);
-  return claimedResult.data as ApplicationWorkerTaskRow | null;
+  const result = await input.admin.rpc("claim_application_delivery_task", {
+    p_worker_id: input.workerId, p_application_id: input.preferredApplicationId ?? null,
+  });
+  if (result.error) throw new Error("The application could not be claimed safely.");
+  return (Array.isArray(result.data) ? result.data[0] ?? null : result.data) as ApplicationWorkerTaskRow | null;
 }
 
 export async function POST(request: Request): Promise<Response> {

@@ -36,6 +36,7 @@ import type {
   InboxMessage,
   InboxSettings,
 } from "@/lib/workspace/types";
+import { DELIVERY_LABELS } from "@/lib/application-lifecycle";
 
 type ApplicationTab = "form" | "resume" | "cover" | "contract";
 
@@ -55,6 +56,7 @@ function resumeLabel(value: string) {
 }
 
 function statusHeading(application: ApplicationRecord) {
+  if (application.deliveryStatus && application.deliveryStatus !== "submitted") return DELIVERY_LABELS[application.deliveryStatus];
   if (application.status === "applied" || application.status === "viewed") return "Application submitted";
   if (application.status === "replied") return "Employer replied";
   if (application.status === "interview") return "Interview stage";
@@ -198,7 +200,7 @@ export function ApplicationRecordWorkspace({
       : profile.fullName.trim() || "Your";
   const displayResumeName = `${resumeOwner} Resume`;
   const needsAttention = Boolean(
-    application.attention && application.status === "needs_review",
+    application.attention && application.status === "needs_review" && application.deliveryStatus !== "external_only",
   );
   const employerAccountAttention = Boolean(
     needsAttention &&
@@ -291,7 +293,7 @@ export function ApplicationRecordWorkspace({
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                 {job.title}
               </h1>
-              <StatusPill status={application.status} />
+              <StatusPill status={application.deliveryStatus ?? application.status} />
             </div>
             <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
               <span className="inline-flex items-center gap-1.5">
@@ -724,7 +726,12 @@ export function ApplicationRecordWorkspace({
                     </div>
                   </section>
 
-                  {!submitted && application.attention?.kind !== "confirmation_pending" && (
+                  {application.deliveryStatus === "external_only" && <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-950">
+                    <h2 className="font-semibold">Apply on the employer site</h2>
+                    <p className="mt-2 text-sm leading-6">We could not resolve a supported application form. Your CV and answers are saved; this application has not been submitted.</p>
+                    <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="ir35-focus mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-bold text-white">Apply on employer site <ExternalLink size={15} /></a>
+                  </section>}
+                  {!submitted && application.deliveryStatus !== "external_only" && application.attention?.kind !== "confirmation_pending" && (
                     <section className="border-t border-slate-200 pt-6">
                       <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
                         <input

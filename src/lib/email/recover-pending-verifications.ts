@@ -69,8 +69,9 @@ export async function recoverPendingVerificationEmails(input: {
   const checkedAt = new Date(nowMs).toISOString();
   const { data, error } = await input.admin
     .from("application_submissions")
-    .select("user_id, application_id, updated_at, receipt")
+    .select("user_id, application_id, updated_at, receipt, application_packets!inner(delivery_status)")
     .eq("error_code", "needs_user")
+    .in("application_packets.delivery_status", ["queued", "submitting"])
     .order("updated_at", { ascending: true })
     .limit(Math.max(1, Math.min(input.limit ?? 20, 50)));
   if (error) throw new Error(error.message);

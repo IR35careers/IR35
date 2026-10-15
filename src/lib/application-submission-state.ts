@@ -1,3 +1,6 @@
+import type { ApplicationDeliveryStatus } from "@/lib/application-lifecycle";
+import { isDeliveryInFlight } from "@/lib/application-lifecycle";
+
 // The cloud browser runner can spend up to four minutes creating an employer
 // account, waiting for ordinary email verification and completing the form.
 // Keep a callback safety margin before treating the attempt as abandoned.
@@ -46,7 +49,9 @@ export function hasActiveSubmission(
   status: string,
   events: SubmissionLifecycleEvent[],
   attention?: SubmissionAttention,
+  deliveryStatus?: ApplicationDeliveryStatus,
 ): boolean {
+  if (deliveryStatus) return isDeliveryInFlight(deliveryStatus);
   const latest = latestSubmissionLifecycleEvent(events)?.label;
   if (status === "ready") return latest === "Application submission started";
 

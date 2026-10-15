@@ -118,7 +118,7 @@ export async function recoverDiscoverySourceApplications(input: {
     const packetResult = await input.admin
       .from("application_packets")
       .select(
-        "screening_answers, truth_approved, materials_approved, submission_approved",
+        "screening_answers, truth_approved, materials_approved, submission_approved, delivery_status",
       )
       .eq("id", submission.application_id)
       .eq("user_id", submission.user_id)
@@ -129,6 +129,7 @@ export async function recoverDiscoverySourceApplications(input: {
       truth_approved?: boolean;
       materials_approved?: boolean;
       submission_approved?: boolean;
+      delivery_status?: string;
     } | null;
     const questionsReady = (packet?.screening_answers ?? []).every(
       (question) =>
@@ -136,6 +137,7 @@ export async function recoverDiscoverySourceApplications(input: {
         (question.reviewed === true && String(question.answer ?? "").trim()),
     );
     if (
+      (packet?.delivery_status && !["queued", "submitting"].includes(packet.delivery_status)) ||
       !packet?.truth_approved ||
       !packet.materials_approved ||
       !packet.submission_approved ||

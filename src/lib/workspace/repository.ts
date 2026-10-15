@@ -18,6 +18,7 @@ import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type { JobDetail } from "@/lib/job-types";
 import { submissionAttentionFromRow } from "@/lib/workspace/submission-attention";
 import { clampDailyApplicationLimit } from "@/lib/automation/daily-limit";
+import { applicationLifecycleSchema } from "@/lib/application-lifecycle";
 import {
   normaliseCoverLetterSignoff,
   normaliseCoverLetterTerminology,
@@ -31,6 +32,24 @@ const CLOUD_APPLICATION_LIMIT = 100;
 const CLOUD_EVENT_LIMIT = 1_000;
 const CLOUD_MESSAGE_LIMIT = 250;
 const CLOUD_SUBMISSION_LIMIT = 200;
+const savedDrafts = new Map<string, string>();
+
+function draftFields(application: ApplicationRecord) {
+  return {
+    id: application.id, job_id: application.job.id, job_snapshot: application.job,
+    status: ["draft", "ready", "needs_review"].includes(application.status) ? application.status : "needs_review",
+    match_score: application.matchScore, resume_version_label: application.resumeVersionLabel,
+    source_cv_text: normaliseResumeText(application.sourceCvText),
+    tailored_cv_text: normaliseResumeText(application.tailoredCvText), cover_letter: application.coverLetter,
+    screening_answers: application.questions, matched_keywords: application.matchedKeywords,
+    missing_keywords: application.missingKeywords, truth_approved: application.truthApproved,
+    materials_approved: application.materialsApproved, submission_approved: application.submissionApproved,
+  };
+}
+function rememberDraft(userId: string, application: ApplicationRecord) {
+  savedDrafts.set(`${userId}:${application.id}`, JSON.stringify(draftFields(application)));
+  return application;
+}
 
 export function createBlankCloudWorkspaceState(email: string): WorkspaceState {
   const seed = createSeedWorkspaceState();
@@ -175,7 +194,7 @@ function mapEvent(row: DbRow): ApplicationEvent {
   };
 }
 
-function mapApplication(
+export function mapCloudApplication(
   row: DbRow,
   events: ApplicationEvent[],
   submission?: DbRow,
@@ -188,10 +207,15 @@ function mapApplication(
     .find((event) => event.metadata?.attention)?.metadata?.attention;
   const submissionAttention = submissionAttentionFromRow(submission);
   const latestAttention = submissionAttention ?? eventAttention;
+  const lifecycle = applicationLifecycleSchema.parse(row);
   return {
     id: String(row.id),
     job: row.job_snapshot as JobDetail,
     status: row.status as ApplicationRecord["status"],
+    deliveryStatus: lifecycle.delivery_status,
+    deliveryVersion: lifecycle.delivery_version,
+    failureReason: lifecycle.failure_reason,
+    errorDetail: lifecycle.error_detail,
     matchScore: Number(row.match_score ?? 0),
     matchedKeywords: (row.matched_keywords as string[]) ?? [],
     missingKeywords: (row.missing_keywords as string[]) ?? [],
@@ -206,7 +230,7 @@ function mapApplication(
     mode: row.mode as ApplicationRecord["mode"],
     receipt: (row.receipt as ApplicationRecord["receipt"]) ?? null,
     attention:
-      row.status === "needs_review" &&
+      ["needs_info", "external_only", "failed"].includes(lifecycle.delivery_status) &&
       latestAttention &&
       typeof latestAttention === "object"
         ? (latestAttention as ApplicationRecord["attention"])
@@ -254,7 +278,7 @@ export async function loadCloudWorkspace(
       .maybeSingle(),
     supabase
       .from("application_packets")
-      .select("id, job_snapshot, status, match_score, matched_keywords, missing_keywords, source_cv_text, tailored_cv_text, resume_version_label, cover_letter, screening_answers, truth_approved, materials_approved, submission_approved, mode, receipt, created_at, updated_at")
+      .select("id, job_snapshot, status, delivery_status, delivery_version, failure_reason, error_detail, match_score, matched_keywords, missing_keywords, source_cv_text, tailored_cv_text, resume_version_label, cover_letter, screening_answers, truth_approved, materials_approved, submission_approved, mode, receipt, created_at, updated_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
       .limit(CLOUD_APPLICATION_LIMIT),
@@ -395,7 +419,7 @@ export async function loadCloudWorkspace(
     ...state,
     profile: loadedProfile,
     applications: ((applicationsResult.data ?? []) as DbRow[]).map((row) =>
-      mapApplication(row, events, submissionMap.get(String(row.id))),
+      rememberDraft(userId, mapCloudApplication(row, events, submissionMap.get(String(row.id)))),
     ),
     messages: ((messagesResult.data ?? []) as DbRow[])
       .map(mapMessage)
@@ -422,7 +446,8 @@ export async function loadCloudWorkspace(
 export async function saveCloudWorkspace(
   userId: string,
   state: WorkspaceState,
-): Promise<void> {
+): Promise<ApplicationRecord[]> {
+  const savedApplications: ApplicationRecord[] = [];
   const supabase = getSupabase();
   const activeResume =
     state.profile.resumeProfiles?.find(
@@ -461,39 +486,19 @@ export async function saveCloudWorkspace(
   if (profileResult.error) throw new Error(profileResult.error.message);
 
   if (state.applications.length > 0) {
-    // Provider receipts and post-submission states are server-owned. The
-    // browser persists only candidate-reviewed drafts.
-    const applicationRows = state.applications
-      .filter((application) =>
-        ["draft", "ready", "needs_review"].includes(application.status),
-      )
-      .map((application) => ({
-        id: application.id,
-        user_id: userId,
-        job_id: application.job.id,
-        job_snapshot: application.job,
-        status: application.status,
-        match_score: application.matchScore,
-        resume_version_label: application.resumeVersionLabel,
-        source_cv_text: normaliseResumeText(application.sourceCvText),
-        tailored_cv_text: normaliseResumeText(application.tailoredCvText),
-        cover_letter: application.coverLetter,
-        screening_answers: application.questions,
-        matched_keywords: application.matchedKeywords,
-        missing_keywords: application.missingKeywords,
-        truth_approved: application.truthApproved,
-        materials_approved: application.materialsApproved,
-        submission_approved: application.submissionApproved,
-        idempotency_key: application.id,
-        created_at: application.createdAt,
-        updated_at: application.updatedAt,
-      }));
-    if (applicationRows.length > 0) {
-      const applicationResult = await supabase
-        .from("application_packets")
-        .upsert(applicationRows);
-      if (applicationResult.error)
-        throw new Error(applicationResult.error.message);
+    for (const application of state.applications) {
+      if (application.deliveryStatus && ["queued", "submitting", "submitted", "skipped"].includes(application.deliveryStatus)) continue;
+      const fields = draftFields(application);
+      const fingerprint = JSON.stringify(fields);
+      if (savedDrafts.get(`${userId}:${application.id}`) === fingerprint) continue;
+      const result = await supabase.rpc("save_application_draft", {
+        p_packet: fields, p_expected_version: application.deliveryVersion ?? 0,
+      });
+      if (result.error) throw new Error(result.error.code === "40001"
+        ? "This application changed in the background. Reload its saved status before editing again."
+        : "Your application could not be saved. Please try again; it has not been submitted.");
+      const stored = mapCloudApplication(result.data as DbRow, application.events);
+      savedApplications.push(rememberDraft(userId, stored));
     }
 
     const eventRows = state.applications.flatMap((application) =>
@@ -567,4 +572,19 @@ export async function saveCloudWorkspace(
     );
     if (runsResult.error) throw new Error(runsResult.error.message);
   }
+  return savedApplications;
+}
+
+/** Small owner-RLS refresh used for Realtime/reconnect; never writes a draft. */
+export async function loadCloudApplications(userId: string): Promise<ApplicationRecord[]> {
+  const client = getSupabase();
+  const [packets, events, submissions] = await Promise.all([
+    client.from("application_packets").select("*").eq("user_id", userId).order("updated_at", { ascending: false }).limit(CLOUD_APPLICATION_LIMIT),
+    client.from("application_events").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(CLOUD_EVENT_LIMIT),
+    client.from("application_submissions").select("application_id,status,error_code,receipt,updated_at").eq("user_id", userId).order("updated_at", { ascending: false }).limit(CLOUD_SUBMISSION_LIMIT),
+  ]);
+  if (packets.error || events.error || submissions.error) throw new Error("The saved application status could not be refreshed.");
+  const mappedEvents = ((events.data ?? []) as DbRow[]).map(mapEvent).reverse();
+  return ((packets.data ?? []) as DbRow[]).map(row => rememberDraft(userId,
+    mapCloudApplication(row, mappedEvents, ((submissions.data ?? []) as DbRow[]).find(item => item.application_id === row.id))));
 }

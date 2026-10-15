@@ -30,6 +30,16 @@ const PHASE_CONTENT: Record<
     progress: number;
   }
 > = {
+  queued: {
+    eyebrow: "Application queued", title: "Your approved application is saved",
+    description: "The worker has not opened the employer form yet. You can close this window; the stored status will update when it starts.",
+    activeStep: 0, progress: 25,
+  },
+  external: {
+    eyebrow: "Employer website required", title: "Apply on the employer site",
+    description: "We could not resolve a supported employer form. Your CV and answers are saved. No submission has been confirmed.",
+    activeStep: 0, progress: 25,
+  },
   preparing: {
     eyebrow: "Preparing your application",
     title: "Getting everything ready",
@@ -82,6 +92,7 @@ export function ApplicationProgressDialog({
   onClose,
   onReview,
   onRetry,
+  externalUrl,
 }: {
   open: boolean;
   phase: ApplicationProgressPhase;
@@ -92,10 +103,11 @@ export function ApplicationProgressDialog({
   onClose: () => void;
   onReview: () => void;
   onRetry: () => void;
+  externalUrl?: string;
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const content = PHASE_CONTENT[phase];
-  const isWorking = phase === "preparing" || phase === "applying";
+  const isWorking = phase === "preparing" || phase === "queued" || phase === "applying";
   const closeDialog = useEffectEvent(onClose);
 
   useEffect(() => {
@@ -223,7 +235,7 @@ export function ApplicationProgressDialog({
             <p className="text-sm leading-6 text-slate-700">{message || content.description}</p>
             {isWorking && (
               <p className="mt-2 text-xs font-semibold text-slate-500">
-                Running for {elapsedSeconds}s. You can safely continue using IR35Careers.
+                {phase === "queued" ? "Waiting for the worker." : `Running for ${elapsedSeconds}s.`} You can safely continue using IR35Careers.
               </p>
             )}
           </div>
@@ -238,7 +250,9 @@ export function ApplicationProgressDialog({
                 Close
               </button>
             )}
-            {phase === "attention" ? (
+            {phase === "external" && externalUrl?.startsWith("https://") ? (
+              <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="ir35-focus inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-bold text-white">Apply on employer site</a>
+            ) : phase === "attention" ? (
               <button
                 type="button"
                 onClick={onReview}

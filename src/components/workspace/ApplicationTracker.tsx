@@ -19,6 +19,7 @@ import {
 } from "@/components/workspace/WorkspacePage";
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { hasActiveSubmission } from "@/lib/application-submission-state";
+import type { ApplicationDeliveryStatus } from "@/lib/application-lifecycle";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
 import {
@@ -60,8 +61,15 @@ const APPLICATION_VIEWS: Array<{ id: ApplicationView; label: string }> = [
 function matchesApplicationView(
   status: ApplicationStatus,
   view: ApplicationView,
+  deliveryStatus?: ApplicationDeliveryStatus,
 ): boolean {
   if (view === "all") return true;
+  if (deliveryStatus) {
+    if (view === "submitted") return deliveryStatus === "submitted";
+    if (view === "in_flight") return deliveryStatus === "queued" || deliveryStatus === "submitting";
+    if (view === "needs_review") return ["needs_info", "needs_profile", "awaiting_approval", "external_only"].includes(deliveryStatus);
+    return deliveryStatus === view;
+  }
   if (view === "submitted")
     return ["applied", "viewed", "replied", "interview", "offer", "rejected"].includes(status);
   if (view === "in_flight")
@@ -194,7 +202,7 @@ export function ApplicationTracker() {
   const applications = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return workspace.applications.filter((application) => {
-      const statusMatches = matchesApplicationView(application.status, view);
+      const statusMatches = matchesApplicationView(application.status, view, application.deliveryStatus);
       const searchMatches =
         !needle ||
         `${application.job.company_name} ${application.job.title} ${application.job.location}`
@@ -219,7 +227,7 @@ export function ApplicationTracker() {
     () =>
       workspace.applications
         .filter((item) =>
-          hasActiveSubmission(item.status, item.events, item.attention),
+          !item.deliveryStatus && hasActiveSubmission(item.status, item.events, item.attention),
         )
         .slice(0, 10)
         .map((item) => item.id),
@@ -334,7 +342,7 @@ export function ApplicationTracker() {
       application.job.company_name,
       application.job.title,
       application.job.location,
-      application.status,
+      application.deliveryStatus ?? application.status,
       application.createdAt.slice(0, 10),
       application.job.apply_url,
       messageCounts.get(application.id) ?? 0,
@@ -586,7 +594,7 @@ export function ApplicationTracker() {
                         <p className="mt-1 text-xs text-slate-500">{application.matchScore}% match</p>
                       </td>
                       <td className="px-5 py-4">
-                        <StatusPill status={application.status} />
+                        <StatusPill status={application.deliveryStatus ?? application.status} />
                         {attention && <p className="mt-2 max-w-56 line-clamp-2 text-xs leading-5 text-amber-800">{attention.title}</p>}
                       </td>
                       <td className="px-5 py-4 text-sm text-slate-600">
@@ -619,7 +627,7 @@ export function ApplicationTracker() {
                 <article key={application.id} className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <StatusPill status={application.status} />
+                      <StatusPill status={application.deliveryStatus ?? application.status} />
                       <h2 className="mt-3 text-lg font-semibold text-slate-950">{application.job.title}</h2>
                       <p className="mt-1 text-sm text-slate-600">{application.job.company_name} · {application.job.location}</p>
                     </div>

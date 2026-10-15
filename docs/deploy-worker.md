@@ -1,5 +1,7 @@
 # Railway worker deployment runbook — prepared, NOT deployed
 
+Execution authority update: the owner's later end-to-end Phase 0 brief now authorizes the agent to run these setup and **standby** deployment commands, collecting native login/hidden secret input only when needed. The owner must not be asked to run commands. Dashboard-only actions are described for the owner and then awaited. Do not change web APPLY_RUNNER or enable worker ACCEPT_JOBS until the owner explicitly types **YES CUTOVER**. Preserve a seven-day rollback window and open—but do not merge—the consumer-removal PR. Migration **025_application_delivery_lifecycle.sql** must be installed and tested before the new web lifecycle code is deployed; it strengthens browser write access and is additive. The earlier owner-run wording below is a reference command inventory, not a current request for the owner to execute it.
+
 Owner decision, 15 October 2026: Railway, existing Supabase Postgres, pg-boss in private `pgboss`, **session pooler port 5432**, one replica starting at **1 vCPU / 2 GB RAM**. No Railway resource was created, no secrets added, no production runner switched by this change.
 
 Local verification: TypeScript, ESLint, 486 Vitest tests and 199 legacy checks passed; six Playwright tests used controlled mock ATS responses only. Production Next build passed. The real pg-boss constructor accepted the settings, but no authenticated Postgres integration or Docker build was possible locally. That distinction is a release gate, not a claim of live readiness. Review [draft PR #1](https://github.com/IR35careers/IR35/pull/1); it is not a completed Phase 0 incident resolution.
@@ -23,6 +25,7 @@ See root `.env.example` for every supported worker setting and its default. Neve
 | `APPLY_RUNNER` | Web defaults to vercel; worker requires railway. Switch web only at cutover. |
 | `PG_BOSS_DATABASE_URL` | Both. Use Supabase **Session pooler**, actual regional host, port 5432/database postgres; percent-encode password. Never transaction pooler 6543. |
 | `PG_BOSS_SSL_CA` | Both, optional trusted certificate PEM if required by project's CA chain. Verification is never disabled. |
+| `PG_BOSS_LOCAL_TEST` | CI only, never production. Loopback Postgres without TLS is accepted only when both NODE_ENV=test and this flag=true; every production connection still requires the verified-TLS Supabase session pooler. |
 | `APPLICATION_WORKER_SECRET` | Both, same existing HMAC secret, at least 32 characters; approved-packet/callback API authentication. |
 | `IR35CAREERS_APP_URL` | Worker, canonical HTTPS origin, normally https://www.ir35careers.com. |
 | `APPLICATION_WORKER_ACCEPT_JOBS` | Worker, false during staging; true only after approved cutover. |

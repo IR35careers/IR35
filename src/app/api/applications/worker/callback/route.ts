@@ -1,5 +1,7 @@
 import { after } from "next/server";
 import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { commitDeliveryResult } from "@/lib/application-lifecycle-server";
+import { isUnresolvedAggregator } from "@/lib/application-lifecycle";
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import {
   ApplicationWorkerRequestError,
@@ -89,7 +91,7 @@ export async function POST(request: Request): Promise<Response> {
         { error: "The application worker task was not found." },
         { status: 404, headers: HEADERS },
       );
-    if (["completed", "cancelled"].includes(taskResult.data.status))
+    if (taskResult.data.status !== "running")
       return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
     // An old invocation must not overwrite a newer attempt's receipt or lease.
     if (callback.workerAttempt !== undefined && callback.workerAttempt !== taskResult.data.attempts)
@@ -158,7 +160,7 @@ export async function POST(request: Request): Promise<Response> {
       const profileAction =
         callback.error.startsWith("Complete your Application Profile") ||
         callback.error.startsWith("Add your full name");
-      await storeNeedsUser({
+      if (profileAction) await storeNeedsUser({
         admin,
         userId: callback.userId,
         packet,
@@ -170,11 +172,18 @@ export async function POST(request: Request): Promise<Response> {
           ? callback.error
           : "The employer portal stopped before confirmation. Your approved application is saved and IR35Careers can retry it without starting again.",
         action: profileAction ? "/profile" : "runner_timeout",
+        taskId: callback.taskId, attempt: taskResult.data.attempts,
+      });
+      else await commitDeliveryResult(admin, {
+        applicationId: callback.applicationId, userId: callback.userId, status: "failed",
+        reason: "worker_crash", detail: "The worker stopped before employer confirmation. Check the outcome before retrying.",
+        receipt: { state: "failed", message: "The worker stopped before confirmation.", action: "retry" },
+        taskId: callback.taskId, attempt: taskResult.data.attempts,
       });
       await admin
         .from("application_worker_tasks")
         .update({
-          status: applicationWorkerCallbackErrorStatus(),
+          status: profileAction ? applicationWorkerCallbackErrorStatus() : "failed",
           last_error: callback.error.slice(0, 500),
           lease_owner: null,
           lease_expires_at: null,
@@ -183,7 +192,7 @@ export async function POST(request: Request): Promise<Response> {
         })
         .eq("id", callback.taskId);
       return Response.json(
-        { ok: true, state: "needs_user" },
+        { ok: true, state: profileAction ? "needs_user" : "failed" },
         { headers: HEADERS },
       );
     }
@@ -263,11 +272,13 @@ export async function POST(request: Request): Promise<Response> {
         );
       }
       const workerAttempts = Number(taskResult.data.attempts ?? 0);
+      const attemptsThisRun = workerAttempts - Number(taskResult.data.attempt_base ?? 0);
       if (
+        !isUnresolvedAggregator(resolvedDestination) &&
         packet.truth_approved === true && packet.materials_approved === true && packet.submission_approved === true &&
         shouldAutomaticallyRetryWorkerAttention({
           action,
-          attempts: workerAttempts,
+          attempts: attemptsThisRun,
           maximumAttempts: selectedApplyRunner() === "railway" ? 3 : undefined,
           hasUnansweredQuestions: providerReviewQuestions(receipt.review).some((question) => question.required && (!question.reviewed || !question.answer.trim())),
         })
@@ -276,7 +287,7 @@ export async function POST(request: Request): Promise<Response> {
         const retryProgress = applicationWorkerRetryProgress(action);
         const availableAt = new Date(
           new Date(now).getTime() +
-            applicationWorkerRetryDelayMs(workerAttempts),
+            applicationWorkerRetryDelayMs(attemptsThisRun),
         ).toISOString();
         const results = await Promise.all([
           admin.from("application_packets")
@@ -336,7 +347,7 @@ export async function POST(request: Request): Promise<Response> {
           await kickApplicationWorker({
             applicationId: callback.applicationId,
             reason: "automatic_application_retry",
-            delaySeconds: applicationWorkerRetryDelayMs(workerAttempts) / 1_000,
+            delaySeconds: applicationWorkerRetryDelayMs(attemptsThisRun) / 1_000,
           });
         };
         if (process.env.VERCEL === "1") await publishRetry();
@@ -345,6 +356,13 @@ export async function POST(request: Request): Promise<Response> {
           { ok: true, state: "processing", availableAt },
           { headers: HEADERS },
         );
+      }
+      if (action === "runner_timeout") {
+        await commitDeliveryResult(admin, { applicationId: callback.applicationId, userId: callback.userId,
+          status: "failed", reason: "runner_timeout", detail: "The browser stopped before confirmation after the permitted retries.",
+          receipt: { state: "failed", action: "retry", message: "The application stopped before confirmation." },
+          taskId: callback.taskId, attempt: workerAttempts });
+        return Response.json({ ok: true, state: "failed" }, { headers: HEADERS });
       }
       await storeNeedsUser({
         admin,
@@ -355,6 +373,7 @@ export async function POST(request: Request): Promise<Response> {
         inboxAlias: inbox?.alias,
         candidateName,
         providerReceipt: receipt,
+        taskId: callback.taskId, attempt: workerAttempts,
         message:
           action === "runner_timeout"
             ? "The employer portal paused before confirmation. Your approved application is saved and can be retried from IR35Careers."
@@ -365,7 +384,7 @@ export async function POST(request: Request): Promise<Response> {
         .from("application_worker_tasks")
         .update({
           destination: resolvedDestination,
-          status: "needs_user",
+          status: isUnresolvedAggregator(resolvedDestination) ? "cancelled" : "needs_user",
           last_error: null,
           lease_owner: null,
           lease_expires_at: null,
@@ -379,6 +398,13 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
     if (receipt.state === "processing") {
+      if (Number(taskResult.data.attempts) - Number(taskResult.data.attempt_base ?? 0) >= 3) {
+        await commitDeliveryResult(admin, { applicationId: callback.applicationId, userId: callback.userId,
+          status: "failed", reason: "provider_timeout", detail: "The provider did not confirm submission within the permitted attempts.",
+          receipt: { state: "failed", action: "retry", message: "The provider did not confirm submission." },
+          taskId: callback.taskId, attempt: taskResult.data.attempts });
+        return Response.json({ ok: true, state: "failed" }, { headers: HEADERS });
+      }
       await Promise.all([
         admin
           .from("application_submissions")
@@ -423,6 +449,7 @@ export async function POST(request: Request): Promise<Response> {
       inboxAlias: inbox?.alias,
       candidateName,
       providerReceipt: receipt,
+      taskId: callback.taskId, attempt: taskResult.data.attempts,
       destination: resolvedDestination,
     });
     await admin

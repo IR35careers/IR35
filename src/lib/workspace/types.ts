@@ -1,4 +1,5 @@
 import type { JobDetail } from "@/lib/job-types";
+import type { ApplicationDeliveryStatus } from "@/lib/application-lifecycle";
 
 export type ApplicationStatus =
   | "draft"
@@ -260,6 +261,11 @@ export interface ApplicationRecord {
   id: string;
   job: JobDetail;
   status: ApplicationStatus;
+  /** Server-owned delivery state. `status` is the legacy recruiting projection. */
+  deliveryStatus?: ApplicationDeliveryStatus;
+  deliveryVersion?: number;
+  failureReason?: string | null;
+  errorDetail?: string | null;
   matchScore: number;
   matchedKeywords: string[];
   missingKeywords: string[];

@@ -33,7 +33,15 @@ Audited 15 October 2026 at `0df1489`. This describes checked-in code and the lim
 - Billing: Checkout/Portal/webhook routes and Stripe release/legal gates exist. `user_entitlements` is not the target append-only `credits_ledger`/subscriptions/referrals design. Never enable charges from a mock entitlement or unverified live price.
 - Networking is user-added contact/outreach state in profile JSON. Preserve draft-only behaviour; no inferred personal contacts or automatic sending.
 
-## Current apply runner: three persisted states, not one
+## Branch implementation update — migration 025, not installed yet
+
+The active Phase 0 branch adds authoritative `application_packets.delivery_status`, `delivery_version`, failure reason/detail and start time, retaining the packet's legacy `status` solely as a recruiting/compatibility projection. Database guards enforce forward-only edges and an explicit service-only Retry RPC. Task claims and outcomes write delivery events atomically; a result RPC commits packet, submission and task projections together. Absolute task attempt IDs never reset, so old callbacks cannot affect a new explicit Retry. Claims never reclaim a running unknown outcome; at most two proven pre-submit transient retries are allowed.
+
+Direct browser INSERT/UPDATE grants are revoked (including historical column grants). Owner-checked `save_application_draft` permits only whitelisted material fields with version CAS. It cannot write receipts or delivery state. The shared cloud store coalesces saves, surfaces failures, subscribes to owner-RLS INSERT/UPDATE Realtime and refreshes on reconnect/focus. Status GET uses the owner JWT/RLS and performs no writes or browser/provider calls. The modal distinguishes queued from actual submitting; page and tracker show stored state and external-only handoff. These changes require migration 025 **before** releasing the branch; absence of the lifecycle fails closed rather than fabricating Ready. Target normalized `applications`/profiles and worker-only privileged commands remain later migration work, not claimed complete by adding these columns.
+
+The following three-state runner description is the audited **production baseline**, not a description of the uninstalled branch fix.
+
+## Production baseline: three persisted states, not one
 
 1. `application_packets.status` uses legacy `draft`, `ready`, `needs_review`, `applied` and subsequent recruiting stages (`workspace/types.ts`).
 2. `application_submissions.status` records delivery (`queued`, `processing`, success/failure/cancellation).

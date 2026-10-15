@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "0.5.9",
     "@playwright/test": "1.61.0",
     "@types/node": "^22.10.2",
     "@types/pdfkit": "^0.17.6",

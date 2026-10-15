@@ -45,7 +45,7 @@ describe("application worker idle recovery", () => {
       "preferredApplicationId: parsed.applicationId || undefined",
     );
     expect(claimSource).toContain(
-      '.eq("application_id", input.preferredApplicationId)',
+      'p_application_id: input.preferredApplicationId ?? null',
     );
     expect(claimSource).toContain(
       "preferredApplicationId: parsed.preferredApplicationId",

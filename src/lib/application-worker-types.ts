@@ -13,6 +13,7 @@ export interface ApplicationWorkerTaskRow {
   callback_url: string;
   status: "queued" | "running" | "completed" | "needs_user" | "failed" | "cancelled";
   attempts: number;
+  attempt_base?: number;
   lease_owner?: string | null;
   lease_expires_at?: string | null;
 }

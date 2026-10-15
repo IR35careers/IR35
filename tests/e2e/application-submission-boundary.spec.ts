@@ -3,10 +3,12 @@ import { chromium } from "playwright-core";
 import { runNativeApplication } from "../../src/lib/application-runner/run";
 import { ApplicationRunnerPreSubmitError } from "../../src/lib/application-runner/failure";
 import { DEMO_JOBS } from "../../src/lib/demo-jobs";
-import { SAMPLE_CONTRACTOR_PROFILE } from "../../src/lib/workspace/seed";
+import { SAMPLE_CONTRACTOR_PROFILE, createSeedWorkspaceState } from "../../src/lib/workspace/seed";
+import { createTestLifecycleDb } from "../helpers/application-lifecycle-db";
+import { mapCloudApplication } from "../../src/lib/workspace/repository";
 
 for (const outcome of ["cancelled", "navigation-failure", "employer-outage", "closed", "confirmation-lost", "confirmed"] as const) {
-  test(`owned runner preserves the submission boundary: ${outcome}`, async ({ browserName }, testInfo) => {
+  test(`owned runner preserves the submission boundary: ${outcome}`, async ({ browserName, page }, testInfo) => {
     test.skip(browserName !== "chromium", "Chromium server-runner adapter");
     test.skip(testInfo.project.name !== "desktop-chrome", "Isolated server-runner browser test");
     const previousExecutable = process.env.CHROME_EXECUTABLE_PATH;
@@ -60,7 +62,7 @@ for (const outcome of ["cancelled", "navigation-failure", "employer-outage", "cl
       const attempt = runNativeApplication({
         applicationId: "00000000-0000-4000-8000-000000000001", destination,
         job: { ...DEMO_JOBS[0], title: "Platform Engineer", apply_url: destination },
-        candidate: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Alex Morgan", email: "controlled@example.test", phone: "+447700900123" },
+        candidate: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Alex Morgan", email: "anvesh.mannuru+ir35test@gmail.com", phone: "+447700900123" },
         resume: { label: "Controlled fixture", text: "Alex Morgan\nPlatform Engineer\nAWS and Terraform delivery experience.\nBuilt and operated UK cloud infrastructure for internal engineering teams." },
         coverLetter: "Controlled application fixture.", screeningAnswers: [],
       }, { budgetMs: 60_000, signal: outcome === "cancelled" ? AbortSignal.abort() : undefined });
@@ -76,6 +78,45 @@ for (const outcome of ["cancelled", "navigation-failure", "employer-outage", "cl
         expect(requests).toBe(1);
         expect(receipt.state).toBe(outcome === "confirmed" ? "submitted" : "needs_user");
         if (outcome === "confirmation-lost") expect(receipt.review).toMatchObject({ action: "confirmation_pending" });
+        if (outcome === "confirmed") {
+          const db = await createTestLifecycleDb();
+          try {
+            const userId = "11111111-1111-4111-8111-111111111111";
+            const appId = "00000000-0000-4000-8000-000000000001";
+            await db.query("INSERT INTO auth.users VALUES($1)", [userId]);
+            await db.query(`INSERT INTO application_packets(id,user_id,job_snapshot,status,idempotency_key,
+              truth_approved,materials_approved,submission_approved) VALUES($1::uuid,$2,$3,'ready',$1::text,true,true,true)`,
+            [appId, userId, JSON.stringify(DEMO_JOBS[0])]);
+            await db.query("SELECT transition_application_delivery($1,$2,'queued')", [appId, userId]);
+            await db.query("SELECT transition_application_delivery($1,$2,'submitting')", [appId, userId]);
+            await db.query("SELECT commit_application_delivery_result($1,$2,'submitted',$3)", [appId, userId, JSON.stringify({
+              receiptId: receipt.providerSubmissionId, createdAt: receipt.submittedAt, destination,
+              mode: "external_handoff", message: receipt.message, reviewedFields: [], skippedFields: [],
+            })]);
+            const stored = (await db.query<Record<string, unknown>>("SELECT * FROM application_packets WHERE id=$1", [appId])).rows[0];
+            const state = createSeedWorkspaceState();
+            state.applications = [mapCloudApplication(stored, [])];
+            // Hydrate the real preview UI from the persisted SQL result. This
+            // proves reload rendering, not production Realtime connectivity.
+            await page.addInitScript(workspace => {
+              if (!localStorage.getItem("ir35careers.workspace.v1")) localStorage.setItem("ir35careers.workspace.v1", JSON.stringify(workspace));
+              localStorage.setItem("ir35careers:cookie-consent:v1", "essential");
+              localStorage.setItem("ir35careers:dashboard-tour:v2:local-preview", "complete");
+            }, state);
+            await page.goto("/applications");
+            const row = page.getByRole("row").filter({ hasText: DEMO_JOBS[0].title });
+            await expect(row.getByText("Submitted", { exact: true })).toBeVisible();
+            await page.reload();
+            await expect(row.getByText("Submitted", { exact: true })).toBeVisible();
+            await page.goto(`/applications/new/${DEMO_JOBS[0].id}?applicationId=${appId}`);
+            await page.getByRole("button", { name: "Form", exact: true }).click();
+            await expect(page.getByRole("heading", { name: "Employer confirmation received" })).toBeVisible();
+            await page.reload();
+            await page.getByRole("button", { name: "Form", exact: true }).click();
+            await expect(page.getByRole("heading", { name: "Employer confirmation received" })).toBeVisible();
+            expect(requests).toBe(1);
+          } finally { await db.close(); }
+        }
       }
     } finally {
       chromium.launch = launch;

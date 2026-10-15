@@ -61,6 +61,12 @@ describe("application submission processing locks", () => {
 });
 
 describe("application submission client state", () => {
+  it("uses stored delivery state instead of stale labels whenever present", () => {
+    expect(hasActiveSubmission("ready", [{ label: "Application submission started" }], null, "failed")).toBe(false);
+    expect(hasActiveSubmission("needs_review", [], null, "submitting")).toBe(true);
+    expect(hasActiveSubmission("ready", [], null, "queued")).toBe(true);
+    expect(hasActiveSubmission("ready", [{ label: "Application submission started" }], null, "external_only")).toBe(false);
+  });
   it("treats only the latest lifecycle event as authoritative", () => {
     const events = [
       { label: "Application submission started" },

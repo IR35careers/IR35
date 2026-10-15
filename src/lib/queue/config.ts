@@ -22,10 +22,13 @@ export function pgBossOptions(mode: "producer" | "worker" | "setup"): Constructo
   // Never include a parser error or connection string in an error/log.
   const raw = z.string().min(1).safeParse(process.env.PG_BOSS_DATABASE_URL);
   let connection: URL;
+  let localTest = false;
   try {
     connection = new URL(raw.success ? raw.data : "");
+    localTest = process.env.NODE_ENV === "test" && process.env.PG_BOSS_LOCAL_TEST === "true" &&
+      ["127.0.0.1", "localhost"].includes(connection.hostname);
     if (!/^postgres(?:ql)?:$/.test(connection.protocol) ||
-      !connection.hostname.endsWith(".pooler.supabase.com") ||
+      (!localTest && !connection.hostname.endsWith(".pooler.supabase.com")) ||
       connection.port !== "5432" || connection.pathname !== "/postgres" ||
       !connection.username || !connection.password || connection.hash)
       throw new Error();
@@ -38,7 +41,7 @@ export function pgBossOptions(mode: "producer" | "worker" | "setup"): Constructo
   const ca = process.env.PG_BOSS_SSL_CA?.replace(/\\n/g, "\n");
   return {
     connectionString: connection.toString(), schema: "pgboss",
-    ssl: { rejectUnauthorized: true, ...(ca ? { ca } : {}) },
+    ssl: localTest ? false : { rejectUnauthorized: true, ...(ca ? { ca } : {}) },
     max: mode === "producer" ? 1 : 4,
     connectionTimeoutMillis: 10_000,
     application_name: `ir35-${mode}`,

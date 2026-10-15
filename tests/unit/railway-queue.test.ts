@@ -51,6 +51,13 @@ describe("Railway queue safety", () => {
     vi.stubEnv("APPLICATION_WORKER_CONCURRENCY", "10");
     expect(() => railwayWorkerConfig()).toThrow("Invalid Railway");
   });
+  it("permits loopback Postgres only with both explicit test gates", () => {
+    configure(); vi.stubEnv("PG_BOSS_DATABASE_URL", "postgres://ci:local-only@127.0.0.1:5432/postgres");
+    vi.stubEnv("PG_BOSS_LOCAL_TEST", "true"); vi.stubEnv("NODE_ENV", "production");
+    expect(() => pgBossOptions("setup")).toThrow("session pooler");
+    vi.stubEnv("NODE_ENV", "test");
+    expect(pgBossOptions("setup").ssl).toBe(false);
+  });
   it("only enqueues opaque IDs and closes producer resources", async () => {
     configure(); queue.send.mockResolvedValue("test-message");
     await expect(kickApplicationWorker({ applicationId: "2344d4ef-4afd-42c3-b4f0-979e671e81a7", delaySeconds: 30 })).resolves.toBe("accepted");

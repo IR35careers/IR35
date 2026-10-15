@@ -33,7 +33,6 @@ import {
 } from "@/lib/application-packet-snapshot";
 import type {
   ApplicationQuestion,
-  ApplicationRecord,
   ContractorProfile,
 } from "@/lib/workspace/types";
 import type { JobDetail } from "@/lib/job-types";
@@ -60,6 +59,9 @@ import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { z } from "zod";
+import { canRetryDelivery, isDeliveryInFlight, applicationDeliveryStatusSchema } from "@/lib/application-lifecycle";
+import { commitDeliveryResult, transitionDelivery } from "@/lib/application-lifecycle-server";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -77,6 +79,7 @@ async function saveApprovedPacket(input: {
   userId: string;
   applicationId: string;
   packet: unknown;
+  explicitRetry: boolean;
 }): Promise<void> {
   const snapshot = normaliseApprovedApplicationPacket(
     input.packet,
@@ -88,7 +91,7 @@ async function saveApprovedPacket(input: {
   ] = await Promise.all([
     input.admin
       .from("application_packets")
-      .select("id, user_id")
+      .select("id, user_id, delivery_status, delivery_version")
       .eq("id", input.applicationId)
       .maybeSingle(),
     input.admin
@@ -101,6 +104,16 @@ async function saveApprovedPacket(input: {
     throw new Error(existingError?.message || jobError?.message);
   if (existing && existing.user_id !== input.userId)
     throw new InvalidApplicationPacketError();
+  if (existing) {
+    const lifecycle = applicationDeliveryStatusSchema.parse(existing.delivery_status);
+    // Duplicate clicks must not clear a running packet or its confirmation.
+    if (isDeliveryInFlight(lifecycle) || lifecycle === "submitted") return;
+    if (lifecycle === "skipped" || (canRetryDelivery(lifecycle) && !input.explicitRetry))
+      throw new InvalidApplicationPacketError("Open the saved application and choose Retry explicitly.");
+    const version = z.object({ deliveryVersion: z.number().int().positive() }).safeParse(input.packet);
+    if (!version.success || version.data.deliveryVersion !== existing.delivery_version)
+      throw new InvalidApplicationPacketError("This application changed in the background. Reload its saved status.");
+  }
   if (!trustedJobRow)
     throw new InvalidApplicationPacketError(
       "This contract is no longer available in the live job feed.",
@@ -114,8 +127,11 @@ async function saveApprovedPacket(input: {
         .update(row)
         .eq("id", input.applicationId)
         .eq("user_id", input.userId)
+        .eq("delivery_version", existing.delivery_version)
+        .select("id")
     : await input.admin.from("application_packets").insert(row);
   if (result.error) throw new Error(result.error.message);
+  if (existing && !result.data?.length) throw new InvalidApplicationPacketError("This application changed in the background. Reload its saved status.");
 
   const { error: eventError } = await input.admin
     .from("application_events")
@@ -210,12 +226,9 @@ export async function POST(request: Request): Promise<Response> {
     : "";
 
   try {
-    const body = await readJsonBody<{
-      applicationId?: string;
-      approval?: string;
-      packet?: ApplicationRecord;
-      internalUserId?: string;
-    }>(request, 750_000);
+    const body = z.object({ applicationId: z.uuid(), approval: z.literal("SUBMIT_APPROVED_APPLICATION"),
+      packet: z.unknown().optional(), internalUserId: z.uuid().optional(), retry: z.boolean().default(false),
+    }).parse(await readJsonBody<unknown>(request, 750_000));
     if (
       !/^[0-9a-f-]{36}$/i.test(body.applicationId ?? "") ||
       body.approval !== "SUBMIT_APPROVED_APPLICATION"
@@ -280,6 +293,7 @@ export async function POST(request: Request): Promise<Response> {
           userId,
           applicationId: body.applicationId as string,
           packet: body.packet,
+          explicitRetry: body.retry && !internalAuthorized,
         });
       } catch (error) {
         if (error instanceof InvalidApplicationPacketError) {
@@ -314,6 +328,15 @@ export async function POST(request: Request): Promise<Response> {
         { error: "Application packet was not found." },
         { status: 404, headers: NO_STORE },
       );
+    const storedStatus = applicationDeliveryStatusSchema.parse(packet.delivery_status);
+    if (storedStatus === "submitted") return Response.json({ state: "submitted", receipt: packet.receipt, duplicate: true }, { headers: NO_STORE });
+    if (isDeliveryInFlight(storedStatus)) {
+      if (process.env.VERCEL === "1" && storedStatus === "queued")
+        await kickApplicationWorker({ applicationId: String(packet.id), reason: "approved_submission_already_queued" });
+      return Response.json({ state: "processing", deliveryStatus: storedStatus, duplicate: true }, { status: 202, headers: NO_STORE });
+    }
+    if (storedStatus === "skipped" || (canRetryDelivery(storedStatus) && (!body.retry || internalAuthorized)))
+      return Response.json({ error: "Choose Retry explicitly to start another attempt.", deliveryStatus: storedStatus }, { status: 409, headers: NO_STORE });
     if (!approved(packet as DbRow))
       return Response.json(
         { error: "Review and approve every required field before submission." },
@@ -434,6 +457,7 @@ export async function POST(request: Request): Promise<Response> {
       isStaleSubmissionLock(previous.updated_at);
     if (
       previous?.status === "processing" &&
+      !canRetryDelivery(storedStatus) &&
       !canResume &&
       previous.error_code !== "needs_user" &&
       !staleProcessing
@@ -451,6 +475,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
+    await transitionDelivery(admin, { applicationId: String(packet.id), userId, status: "queued", explicitRetry: body.retry && !internalAuthorized });
     const payloadHash = createHash("sha256")
       .update(
         JSON.stringify({
@@ -566,6 +591,7 @@ export async function POST(request: Request): Promise<Response> {
         return;
       }
       try {
+        await transitionDelivery(admin, { applicationId: String(packet.id), userId, status: "submitting" });
         let resumeUrl: string | undefined;
         let resumeBuffer: Buffer | undefined;
         if (
@@ -874,45 +900,9 @@ export async function POST(request: Request): Promise<Response> {
               .trim()
               .slice(0, 300) || "unknown",
         });
-        const failedAt = new Date().toISOString();
-        await Promise.all([
-          admin
-            .from("application_submissions")
-            .update({
-              status: "failed",
-              error_code: failure.code,
-              receipt: {
-                state: "failed",
-                message: failure.message,
-                action: "retry",
-                attention,
-              },
-              updated_at: failedAt,
-            })
-            .eq("user_id", userId)
-            .eq("idempotency_key", idempotencyKey),
-          admin
-            .from("application_packets")
-            .update({
-              status: "ready",
-              updated_at: failedAt,
-            })
-            .eq("id", packet.id)
-            .eq("user_id", userId),
-          admin
-            .from("application_events")
-            .upsert(
-              {
-                user_id: userId,
-                application_id: packet.id,
-                event_type: "status_changed",
-                label: "Application stopped before confirmation and is ready to retry",
-                metadata: { reason: failure.code, attention },
-                idempotency_key: `${idempotencyKey}:failed:${payloadHash}`,
-              },
-              { onConflict: "user_id,idempotency_key" },
-            ),
-        ]);
+        await commitDeliveryResult(admin, { applicationId: String(packet.id), userId, status: "failed",
+          reason: failure.code.slice(0, 100), detail: failure.message.slice(0, 2000),
+          receipt: { state: "failed", message: failure.message, action: "retry", attention } });
         await sendApplicationNotification({
           kind: "submission_issue",
           to: notificationEmail,
@@ -938,6 +928,7 @@ export async function POST(request: Request): Promise<Response> {
       { status: 202, headers: NO_STORE },
     );
   } catch (error) {
+    if (error instanceof z.ZodError) return Response.json({ error: "A valid application and explicit approval are required." }, { status: 400, headers: NO_STORE });
     if (error instanceof RequestBodyError)
       return Response.json(
         { error: error.message },

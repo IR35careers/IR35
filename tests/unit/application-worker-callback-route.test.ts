@@ -5,6 +5,7 @@ const fixture = vi.hoisted(() => ({
   callback: {} as Record<string, unknown>, attempts: 1, approved: true,
   writes: [] as Array<{ table: string; data: Record<string, unknown> }>,
   kick: vi.fn(), needsUser: vi.fn(), submitted: vi.fn(),
+  commit: vi.fn(),
 }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
 vi.mock("@/lib/application-worker-auth", () => ({ applicationWorkerConfig: () => ({ enabled: true }) }));
@@ -13,6 +14,7 @@ vi.mock("@/lib/application-worker-request", () => ({
   ApplicationWorkerRequestError: class extends Error {},
 }));
 vi.mock("@/lib/application-worker-kick", () => ({ kickApplicationWorker: fixture.kick }));
+vi.mock("@/lib/application-lifecycle-server", () => ({ commitDeliveryResult: fixture.commit }));
 vi.mock("@/lib/application-portal-session", () => ({ clearPortalSession: vi.fn(), savePortalSession: vi.fn() }));
 vi.mock("@/lib/email/inbox-alias", () => ({ ensureInboxAlias: async () => ({ forwardingEmail: "controlled@example.test" }) }));
 vi.mock("@/lib/application-result-persistence", () => ({
@@ -80,13 +82,15 @@ describe("cloud callback durable retry", () => {
   });
   it("does not automatically replay an error with unknown submission boundaries", async () => {
     fixture.callback.retryable = false;
-    expect(await (await POST(request())).json()).toMatchObject({ state: "needs_user" });
-    expect(fixture.needsUser).toHaveBeenCalledOnce();
+    expect(await (await POST(request())).json()).toMatchObject({ state: "failed" });
+    expect(fixture.commit).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ status: "failed", reason: "worker_crash" }));
+    expect(fixture.needsUser).not.toHaveBeenCalled();
     expect(fixture.kick).not.toHaveBeenCalled();
   });
   it("retains the bounded attempt limit", async () => {
     fixture.attempts = 5; fixture.callback.workerAttempt = 5;
-    expect(await (await POST(request())).json()).toMatchObject({ state: "needs_user" });
+    expect(await (await POST(request())).json()).toMatchObject({ state: "failed" });
+    expect(fixture.commit).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ status: "failed", reason: "runner_timeout" }));
     expect(fixture.kick).not.toHaveBeenCalled();
   });
   it("asks the actual missing employer question instead of retrying the same empty form", async () => {

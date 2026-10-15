@@ -2,6 +2,24 @@
 
 Updated 15 October 2026. Source of truth: `spec.md` and the original Phase 0 brief, preserved below. `[x]` means evidenced completion; existing partial implementations stay unchecked. Continue with the first unchecked task. Update this file after each completed task. Never infer production success from UI copy or a deployment alone.
 
+## Active Phase 0 delivery authority — 15 October follow-up
+
+The owner's end-to-end Phase 0 instruction supersedes the earlier **prepare-only** restriction. Standby infrastructure deployment is now authorized; production `APPLY_RUNNER=railway` and worker `APPLICATION_WORKER_ACCEPT_JOBS=true` still require the literal **YES CUTOVER**, which has **not** been received. Never test against real employers. The owner only supplies native logins/secrets and final approval; the agent runs commands. No destructive database change without separate approval.
+
+- [ ] Step 1: finish lifecycle/incident/UI/reload/mock tests and Docker/Postgres CI; all checks green before merging. Migration **025** is additive and required before releasing the new UI; do not let a main-branch Git deployment race its installation.
+- [ ] Step 2: install/check all five requested CLIs/Docker and link accounts/projects. Supabase CLI browser login succeeded; CLI project read confirms `kxcbgflleqnjzjbkevwd`, healthy, `eu-west-2`. Vercel is already authenticated. Railway/GitHub CLI/Docker remain unverified or missing.
+- [ ] Step 3: backup/PITR evidence, migrations 023 if needed, 024 and 025, least-privilege pg-boss roles, verified session-pooler URLs, private schema and seven queues.
+- [ ] Step 4: Railway `ir35-worker`, nearest region, 1 vCPU/2 GB, one replica/no sleep, stdin secret transfer, standby deploy and real browser/database health; $30/month alert.
+- [ ] Step 5: live-worker staging/mock ATS matrix (duplicate/outage/restart/lost acknowledgement/watchdog/cancellation/reload), no employer traffic.
+- [ ] Step 6: obtain **YES CUTOVER**, switch producers/consumer, verify mock receipt and queued ingestion, then observe logs for 30 minutes.
+- [ ] Step 7: deployment/evidence/env-name/rollback/remaining-phase report; attach consumer-removal follow-up PR, leave unmerged for the seven-day rollback window.
+
+Step 1 progress: additive delivery lifecycle, atomic result/event RPC, CAS draft saves, monotonic attempt IDs, stored-state Realtime/reload mapping, read-only status GET, explicit Retry and external-only UI are implemented in the working branch, not deployed. SQL regressions execute the actual migrations with embedded PostgreSQL (PGlite), including stale state, receipt integrity, timeout, crash, tenant ownership, duplicate result and stale callback cases. First full verification passed 497 tests/109 files + 199 legacy checks, TypeScript/ESLint and a production build; additional regression tests and final CI are pending. Docker standby CI is added but not yet run. Existing npm audit failures remain unresolved; they are not silently waived to obtain a green badge.
+
+Incident evidence: authenticated Supabase CLI read-only query confirmed the named test account and full persisted timeline; see `incident-auto-apply.md`. Vercel CLI historical query returned no retained entries at the later check, so earlier captured Vercel evidence is clearly distinguished. A temporary `.env.worker.local` created for diagnostics was deleted; no credential values were printed or committed. No migrations, queues, Railway resources or production flags have been changed by this follow-up.
+
+Latest checkpoint: six controlled Playwright browser tests passed, including an actual mock-form confirmation committed through migration 025's RPC and rendered as Submitted after tracker/page reload. That local UI test hydrates the labelled preview from the SQL result; it is **not** a claim of live Supabase Realtime or Railway staging connectivity. GitHub CLI 2.102.0 was installed in user scope; its browser login is in progress. The later full release check passed 502 tests/110 files and 199 legacy checks; the last modal-phase regression and final CI run are still being checked.
+
 ## Plan persistence and audit
 
 - [x] Persist section 8 phases and section 9 rules in root `AGENTS.md`; read them before further implementation.
@@ -117,7 +135,7 @@ Updated 15 October 2026. Source of truth: `spec.md` and the original Phase 0 bri
 
 - [ ] Every task: strict TS; new boundaries use Zod; no client secrets or unexplained RLS/CSP changes; relevant Vitest + mock-ATS Playwright + recorded connector fixtures.
 - [ ] Every PR: one concern, what/why, screenshots where applicable, tests, migrations, environment names, manual Supabase/Vercel/DNS/Stripe/mail/Google steps and safe production verification using the named test account. Attach created PRs to this chat.
-- [x] Persistent host/queue choice resolved: Railway + existing Supabase pg-boss session pooler. Owner will connect account and add secrets; no deployment authorized. Do not create resources or change production APPLY_RUNNER.
+- [x] Persistent host/queue choice resolved: Railway + existing Supabase pg-boss session pooler. Original prepare-only restriction is superseded by the end-to-end instruction above. Standby deployment is authorized; production runner/accept-jobs cutover still requires **YES CUTOVER**.
 - [ ] Confirm custom auth-domain DNS/provider steps, mail provider/MX/SPF/DKIM/DMARC and Stripe products/prices in the owner's accounts; never request pasted passwords/tokens.
 - [ ] Final live audit and release report; all phases remain active until implemented and verified, not merely planned.
 

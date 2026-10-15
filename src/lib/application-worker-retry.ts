@@ -1,6 +1,6 @@
 import { isApplicationEmailAction } from "@/lib/application-email-action";
 
-export const APPLICATION_WORKER_MAX_ATTEMPTS = 5;
+export const APPLICATION_WORKER_MAX_ATTEMPTS = 3;
 
 // A callback error is not an employer rejection and must not be presented as
 // a terminal worker failure. The approved packet remains recoverable and the
