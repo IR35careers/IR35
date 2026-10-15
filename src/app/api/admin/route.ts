@@ -13,6 +13,7 @@
  */
 
 import type { User } from "@supabase/supabase-js";
+import { applyRunnerExecution } from "@/lib/application-runner-selection";
 import { createHash } from "node:crypto";
 import { adminSessionCookieName, cookieValue, isAdminRequestHost, verifyAdminSession } from "@/lib/admin-session";
 import {
@@ -1014,7 +1015,7 @@ export async function GET(request: Request): Promise<Response> {
         integrations,
         applicationRuns,
         workerQueue: workerTasksResult.error ? undefined : {
-          executionMode: process.env.VERCEL === "1" ? "managed_cloud_queue" : "external_worker",
+          executionMode: applyRunnerExecution(),
           queued: workerRows.filter((row) => row.status === "queued").length,
           running: workerRows.filter((row) => row.status === "running").length,
           completed: workerRows.filter((row) => row.status === "completed").length,

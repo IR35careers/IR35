@@ -8,3 +8,8 @@ export function selectedApplyRunner(): "vercel" | "railway" {
   if (!result.success) throw new Error("APPLY_RUNNER must be vercel or railway.");
   return result.data;
 }
+
+export function applyRunnerExecution(): "railway_pg_boss" | "managed_cloud_queue" | "external_worker" {
+  return selectedApplyRunner() === "railway" ? "railway_pg_boss"
+    : process.env.VERCEL === "1" ? "managed_cloud_queue" : "external_worker";
+}

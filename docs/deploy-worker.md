@@ -2,7 +2,7 @@
 
 Owner decision, 15 October 2026: Railway, existing Supabase Postgres, pg-boss in private `pgboss`, **session pooler port 5432**, one replica starting at **1 vCPU / 2 GB RAM**. No Railway resource was created, no secrets added, no production runner switched by this change.
 
-Local verification: TypeScript, ESLint, 485 Vitest tests and 199 legacy checks passed; six Playwright tests used controlled mock ATS responses only. Production Next build passed. The real pg-boss constructor accepted the settings, but no authenticated Postgres integration or Docker build was possible locally. That distinction is a release gate, not a claim of live readiness.
+Local verification: TypeScript, ESLint, 486 Vitest tests and 199 legacy checks passed; six Playwright tests used controlled mock ATS responses only. Production Next build passed. The real pg-boss constructor accepted the settings, but no authenticated Postgres integration or Docker build was possible locally. That distinction is a release gate, not a claim of live readiness. Review [draft PR #1](https://github.com/IR35careers/IR35/pull/1); it is not a completed Phase 0 incident resolution.
 
 ## What is prepared
 

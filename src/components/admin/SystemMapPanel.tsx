@@ -68,7 +68,7 @@ export type ApplicationRunSummary = {
 };
 
 export type ApplicationWorkerQueueSummary = {
-  executionMode?: "managed_cloud_queue" | "external_worker";
+  executionMode?: "managed_cloud_queue" | "external_worker" | "railway_pg_boss";
   queued: number;
   running: number;
   completed: number;

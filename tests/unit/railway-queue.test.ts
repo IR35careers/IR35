@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { pgBossOptions, railwayWorkerConfig, workQueueOptions } from "@/lib/queue/config";
-import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { applyRunnerExecution, selectedApplyRunner } from "@/lib/application-runner-selection";
 import { managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 
@@ -31,6 +31,7 @@ describe("Railway queue safety", () => {
   it("does not run the managed Vercel consumer in Railway mode", () => {
     configure(); vi.stubEnv("VERCEL", "1");
     expect(managedApplicationQueueEnabled()).toBe(false);
+    expect(applyRunnerExecution()).toBe("railway_pg_boss");
   });
   it("requires session pooling and redacts invalid connection strings", () => {
     configure();

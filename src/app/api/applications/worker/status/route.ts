@@ -8,6 +8,7 @@ import {
   readAllDeliveryRows,
 } from "@/lib/application-delivery-status";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { applyRunnerExecution } from "@/lib/application-runner-selection";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -85,8 +86,8 @@ export async function POST(request: Request): Promise<Response> {
         nextOffset: offset + limit < report.rows.length ? offset + limit : null,
       },
       worker: {
-        execution: process.env.VERCEL === "1" ? "managed_cloud_queue" : "external_worker",
-        deviceRequired: process.env.VERCEL !== "1",
+        execution: applyRunnerExecution(),
+        deviceRequired: applyRunnerExecution() === "external_worker",
         latestCloudVerification: verification.data || null,
         recentlyConnected: heartbeats.length,
         active: heartbeats.reduce((sum, worker) => sum + Number(worker.active || 0), 0),
