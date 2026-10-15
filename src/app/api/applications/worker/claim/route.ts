@@ -27,6 +27,7 @@ import type {
   ContractorProfile,
 } from "@/lib/workspace/types";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -186,6 +187,17 @@ export async function POST(request: Request): Promise<Response> {
       );
 
     const admin = getSupabaseAdmin();
+    if (parsed.workerId.startsWith("railway-")) {
+      if (selectedApplyRunner() !== "railway" || !parsed.preferredApplicationId)
+        return Response.json({ error: "Railway consumption is not enabled for this application." }, { status: 409, headers: HEADERS });
+      // Keep unknown browser outcomes stopped, even if the old six-minute
+      // lease expired. The ten-minute watchdog fails them without resubmitting.
+      const pending = await admin.from("application_worker_tasks").select("status")
+        .eq("application_id", parsed.preferredApplicationId).maybeSingle();
+      if (pending.error) throw new Error("Could not inspect the application lease.");
+      if (pending.data?.status === "running")
+        return Response.json({ assignment: null }, { headers: HEADERS });
+    }
     const now = new Date().toISOString();
     const heartbeatResult = await admin.from("application_worker_heartbeats").upsert({
         worker_id: parsed.workerId,

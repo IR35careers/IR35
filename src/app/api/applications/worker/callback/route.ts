@@ -1,4 +1,5 @@
 import { after } from "next/server";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import {
   ApplicationWorkerRequestError,
@@ -267,6 +268,7 @@ export async function POST(request: Request): Promise<Response> {
         shouldAutomaticallyRetryWorkerAttention({
           action,
           attempts: workerAttempts,
+          maximumAttempts: selectedApplyRunner() === "railway" ? 3 : undefined,
           hasUnansweredQuestions: providerReviewQuestions(receipt.review).some((question) => question.required && (!question.reviewed || !question.answer.trim())),
         })
       ) {

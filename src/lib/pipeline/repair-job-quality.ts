@@ -1,10 +1,11 @@
-import { revalidateTag } from "next/cache";
+import { invalidatePublicJobs } from "./invalidate-public-jobs";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { JOB_DETAIL_COLUMNS } from "@/lib/public-jobs";
 import { planJobQuality, type QualityJob } from "@/lib/processing/job-quality";
 import { decimalJobRatesEnabled } from "@/lib/processing/job-rate-storage";
 
-export async function repairJobQuality(mode: "preview" | "apply", expectedHash?: string) {
+export async function repairJobQuality(mode: "preview" | "apply", expectedHash?: string,
+  invalidate: () => void | Promise<void> = invalidatePublicJobs) {
   const db = getSupabaseAdmin();
   const jobs: QualityJob[] = [];
   for (let offset = 0; ; offset += 500) {
@@ -45,7 +46,7 @@ export async function repairJobQuality(mode: "preview" | "apply", expectedHash?:
     if (data?.length) applied++;
   }
   } finally {
-    revalidateTag("public-jobs", { expire: 0 });
+    await invalidate();
   }
   await db.from("moderation_logs").insert({ run_type: "job_quality_repair", summary: { phase: "completed", at: now, planHash: plan.planHash, counts: plan.counts, applied } });
   return { ...plan.counts, planHash: plan.planHash, applied, skippedConcurrentChanges: plan.changes.length - applied };

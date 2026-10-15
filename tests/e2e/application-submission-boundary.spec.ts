@@ -5,7 +5,7 @@ import { ApplicationRunnerPreSubmitError } from "../../src/lib/application-runne
 import { DEMO_JOBS } from "../../src/lib/demo-jobs";
 import { SAMPLE_CONTRACTOR_PROFILE } from "../../src/lib/workspace/seed";
 
-for (const outcome of ["navigation-failure", "employer-outage", "closed", "confirmation-lost", "confirmed"] as const) {
+for (const outcome of ["cancelled", "navigation-failure", "employer-outage", "closed", "confirmation-lost", "confirmed"] as const) {
   test(`owned runner preserves the submission boundary: ${outcome}`, async ({ browserName }, testInfo) => {
     test.skip(browserName !== "chromium", "Chromium server-runner adapter");
     test.skip(testInfo.project.name !== "desktop-chrome", "Isolated server-runner browser test");
@@ -63,8 +63,8 @@ for (const outcome of ["navigation-failure", "employer-outage", "closed", "confi
         candidate: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Alex Morgan", email: "controlled@example.test", phone: "+447700900123" },
         resume: { label: "Controlled fixture", text: "Alex Morgan\nPlatform Engineer\nAWS and Terraform delivery experience.\nBuilt and operated UK cloud infrastructure for internal engineering teams." },
         coverLetter: "Controlled application fixture.", screeningAnswers: [],
-      }, { budgetMs: 60_000 });
-      if (outcome === "navigation-failure" || outcome === "employer-outage") {
+      }, { budgetMs: 60_000, signal: outcome === "cancelled" ? AbortSignal.abort() : undefined });
+      if (outcome === "cancelled" || outcome === "navigation-failure" || outcome === "employer-outage") {
         await expect(attempt).rejects.toBeInstanceOf(ApplicationRunnerPreSubmitError);
         expect(requests).toBe(0);
       } else if (outcome === "closed") {

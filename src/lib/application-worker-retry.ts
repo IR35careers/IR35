@@ -13,6 +13,7 @@ export function shouldAutomaticallyRetryWorkerAttention(input: {
   action?: string;
   attempts: number;
   hasUnansweredQuestions?: boolean;
+  maximumAttempts?: number;
 }): boolean {
   return (
     !input.hasUnansweredQuestions &&
@@ -22,7 +23,7 @@ export function shouldAutomaticallyRetryWorkerAttention(input: {
       )) &&
     Number.isFinite(input.attempts) &&
     input.attempts >= 1 &&
-    input.attempts < APPLICATION_WORKER_MAX_ATTEMPTS
+    input.attempts < (input.maximumAttempts ?? APPLICATION_WORKER_MAX_ATTEMPTS)
   );
 }
 

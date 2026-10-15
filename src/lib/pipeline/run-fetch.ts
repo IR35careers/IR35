@@ -24,7 +24,7 @@ import { processRawJob } from "../processing/job-processor";
 import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplicator";
 import { getSupabaseAdmin } from "../supabase-admin";
 import { collapseConflictKeyDuplicates } from "./conflict-deduplicator";
-import { revalidateTag } from "next/cache";
+import { invalidatePublicJobs } from "./invalidate-public-jobs";
 import { jobRateStorageBounds } from "../processing/job-rate-storage";
 import { repairJobQuality } from "./repair-job-quality";
 
@@ -92,7 +92,8 @@ function jobDetailScore(job: ProcessedJob): number {
 }
 
 export async function runFetchPipeline(
-  configuredSources?: CompanyConfig[]
+  configuredSources?: CompanyConfig[],
+  invalidate: () => void | Promise<void> = invalidatePublicJobs,
 ): Promise<PipelineSummary> {
   const started = Date.now();
   const supabase = getSupabaseAdmin();
@@ -414,9 +415,9 @@ export async function runFetchPipeline(
   // identity. Enforce the same conservative quality policy after every refresh,
   // not only during a one-off cleanup. The audit precedes all repair writes.
   try {
-    const quality = await repairJobQuality("preview");
+    const quality = await repairJobQuality("preview", undefined, invalidate);
     if ("changed" in quality && quality.changed > 0) {
-      const result = await repairJobQuality("apply", quality.planHash);
+      const result = await repairJobQuality("apply", quality.planHash, invalidate);
       if ("applied" in result) notes.push(`Post-refresh quality: ${result.applied} repairs; ${result.deferredDecimalRates} fractional rates await schema enablement`);
     }
   } catch (error) {
@@ -453,6 +454,6 @@ export async function runFetchPipeline(
     summary.companyErrors.push({ company: "_logging", error: logError.message });
   }
 
-  revalidateTag("public-jobs", { expire: 0 });
+  await invalidate();
   return summary;
 }

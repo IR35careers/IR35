@@ -22,6 +22,8 @@
     "worker:install-browser": "playwright-core install chromium",
     "worker:build": "esbuild ./services/application-worker/server.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@=./src --outfile=./services/application-worker/dist/server.mjs",
     "worker:start": "npm run worker:build && node --env-file=services/application-worker/.env services/application-worker/dist/server.mjs",
+    "worker:railway": "tsx services/application-worker/railway.ts",
+    "worker:queue:setup": "tsx services/application-worker/setup-queue.ts",
     "security:source": "node scripts/security-check.mjs",
     "security:audit": "npm audit --audit-level=low",
     "security:signatures": "npm audit signatures",
@@ -42,6 +44,7 @@
     "mammoth": "^1.12.1",
     "next": "^16.3.2",
     "pdfkit": "^0.19.1",
+    "pg-boss": "12.38.0",
     "playwright-core": "1.61.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -50,7 +53,8 @@
     "stripe": "^22.5.0",
     "tailwind-merge": "^2.6.0",
     "three": "^0.185.1",
-    "unpdf": "^1.8.1"
+    "unpdf": "^1.8.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

@@ -1,4 +1,5 @@
 import { runNativeApplication } from "@/lib/application-runner/run";
+import { setTimeout as delay } from "node:timers/promises";
 import { ApplicationRunnerPreSubmitError } from "@/lib/application-runner/failure";
 import { signApplicationWorkerBody } from "@/lib/application-worker-auth";
 import type {
@@ -34,6 +35,7 @@ async function signedPost<T>(
   url: string,
   payload: unknown,
   timeoutMs = 60_000,
+  signal?: AbortSignal,
 ): Promise<T> {
   const body = JSON.stringify(payload);
   const signed = signApplicationWorkerBody(body);
@@ -46,7 +48,7 @@ async function signedPost<T>(
     },
     body,
     cache: "no-store",
-    signal: AbortSignal.timeout(timeoutMs),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs),
   });
   const raw = await response.text();
   if (!response.ok)
@@ -61,8 +63,10 @@ async function remoteVerificationCode(input: {
   alias: string;
   requestedAfter: string;
   appOrigin: string;
+  signal?: AbortSignal;
 }): Promise<string | null> {
   for (let attempt = 0; attempt < 30; attempt += 1) {
+    input.signal?.throwIfAborted();
     const result = await signedPost<{ code?: string | null }>(
       `${input.appOrigin}/api/applications/worker/verification-code`,
       {
@@ -73,11 +77,13 @@ async function remoteVerificationCode(input: {
         providerSync: attempt % 5 === 0,
       },
       20_000,
+      input.signal,
     ).catch(() => ({ code: null }));
+    input.signal?.throwIfAborted();
     if (result.code && /^[A-Z0-9-]{4,12}$/i.test(result.code))
       return result.code;
     if (attempt < 29)
-      await new Promise((resolve) => setTimeout(resolve, 3_000));
+      await delay(3_000, undefined, { signal: input.signal });
   }
   return null;
 }
@@ -87,8 +93,10 @@ async function remoteEmailActionLink(input: {
   alias: string;
   requestedAfter: string;
   appOrigin: string;
+  signal?: AbortSignal;
 }): Promise<string | null> {
   for (let attempt = 0; attempt < 30; attempt += 1) {
+    input.signal?.throwIfAborted();
     const result = await signedPost<{ actionLink?: string | null }>(
       `${input.appOrigin}/api/applications/worker/email-action`,
       {
@@ -99,7 +107,9 @@ async function remoteEmailActionLink(input: {
         providerSync: attempt % 5 === 0,
       },
       20_000,
+      input.signal,
     ).catch(() => ({ actionLink: null }));
+    input.signal?.throwIfAborted();
     if (result.actionLink) {
       try {
         const url = new URL(result.actionLink);
@@ -115,7 +125,7 @@ async function remoteEmailActionLink(input: {
       }
     }
     if (attempt < 29)
-      await new Promise((resolve) => setTimeout(resolve, 3_000));
+      await delay(3_000, undefined, { signal: input.signal });
   }
   return null;
 }
@@ -124,6 +134,7 @@ async function buildAndRun(
   assignment: ApplicationWorkerAssignment,
   appOrigin: string,
   budgetMs?: number,
+  signal?: AbortSignal,
 ): Promise<{
   receipt: Awaited<ReturnType<typeof runNativeApplication>>;
   portalSession?: NativePortalSession;
@@ -138,6 +149,7 @@ async function buildAndRun(
   const candidate = assignment.payload.candidate;
   const receipt = await runNativeApplication(assignment.payload, {
     budgetMs,
+    signal,
     portalPassword: assignment.portalPassword,
     resolvePortalPassword: assignment.portalPassword
       ? async () => assignment.portalPassword
@@ -149,6 +161,7 @@ async function buildAndRun(
             alias: candidate.email,
             requestedAfter,
             appOrigin,
+            signal,
           })
       : undefined,
     resolveEmailActionLink: candidate.automaticEmailVerification
@@ -158,6 +171,7 @@ async function buildAndRun(
             alias: candidate.email,
             requestedAfter,
             appOrigin,
+            signal,
           })
       : undefined,
     loadPortalSession: candidate.portalAccountConsent
@@ -183,6 +197,7 @@ export async function executeApplicationWorkerAssignment(input: {
   assignment: ApplicationWorkerAssignment;
   appOrigin: string;
   budgetMs?: number;
+  signal?: AbortSignal;
 }): Promise<ApplicationWorkerCallback> {
   const task = input.assignment.task;
   if (input.assignment.preflightError) {
@@ -208,6 +223,7 @@ export async function executeApplicationWorkerAssignment(input: {
       input.assignment,
       input.appOrigin,
       input.budgetMs,
+      input.signal,
     );
     return {
       taskId: task.id,

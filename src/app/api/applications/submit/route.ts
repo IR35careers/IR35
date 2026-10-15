@@ -59,6 +59,7 @@ import {
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -522,6 +523,8 @@ export async function POST(request: Request): Promise<Response> {
           });
       }
     }
+    if (selectedApplyRunner() === "railway" && provider?.kind === "native" && !persistentWorkerQueued)
+      throw new Error("The durable Railway queue is unavailable. No employer submission was started.");
     console.info("application_submit_stage", {
       applicationId: String(packet.id),
       stage: "runner_queued",

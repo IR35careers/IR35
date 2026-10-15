@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { APPLICATION_CLOUD_TOPIC, managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
 import {
   applicationWorkerAppOrigin,
   applicationWorkerConfig,
@@ -21,6 +22,11 @@ export async function kickApplicationWorker(input?: {
     reason: (input?.reason || "application_queued").slice(0, 80),
     requestedAt: new Date().toISOString(),
   });
+  if (selectedApplyRunner() === "railway") {
+    const { enqueueRailwayApplication } = await import("@/lib/queue/producer");
+    await enqueueRailwayApplication(JSON.parse(body), input?.delaySeconds);
+    return "accepted";
+  }
   if (managedApplicationQueueEnabled()) {
     // Publish only opaque IDs. Candidate evidence and browser credentials stay
     // in Supabase and are fetched through the existing signed claim API.

@@ -2,6 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 import { runScheduledAutoApply } from "@/lib/automation/scheduled-runner";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { reconcileCloudApplications } from "@/lib/application-cloud-reconcile";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { enqueueScheduledWork } from "@/lib/queue/producer";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -38,6 +40,10 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
+    if (selectedApplyRunner() === "railway") {
+      await enqueueScheduledWork("automation");
+      return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
+    }
     const origin =
       process.env.IR35CAREERS_APP_URL?.trim() || new URL(request.url).origin;
     const summary = await runScheduledAutoApply({ origin });

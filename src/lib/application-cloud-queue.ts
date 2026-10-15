@@ -1,3 +1,5 @@
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
+
 export const APPLICATION_CLOUD_TOPIC = "ir35-application-kicks";
 
 export type ApplicationCloudKick = {
@@ -17,7 +19,7 @@ export function validApplicationCloudKick(value: unknown): value is ApplicationC
 }
 
 export function managedApplicationQueueEnabled(): boolean {
-  return process.env.VERCEL === "1";
+  return process.env.VERCEL === "1" && selectedApplyRunner() === "vercel";
 }
 
 export class ApplicationLeasePending extends Error {

@@ -1914,8 +1914,11 @@ export async function runNativeApplication(
     timedOut = true;
     void browser?.close().catch(() => null);
   }, budgetMs);
+  const abortBrowser = () => { void browser?.close().catch(() => null); };
+  runtime?.signal?.addEventListener("abort", abortBrowser, { once: true });
   const navigationStages: string[] = ["Adapter preserve-cookie-form-v4"];
   try {
+    runtime?.signal?.throwIfAborted();
     const destination = await validatePublicHttpsUrl(payload.destination);
     // The packet reaches this function only after the signed-in contractor has
     // approved a stored job snapshot. Accept its validated public HTTPS
@@ -1972,6 +1975,7 @@ export async function runNativeApplication(
         : chromiumBinary.args,
       headless,
     });
+    runtime?.signal?.throwIfAborted();
     context = await browser.newContext({
       acceptDownloads: false,
       ignoreHTTPSErrors: false,
@@ -2120,6 +2124,7 @@ export async function runNativeApplication(
     let portalAccessAttempts = 0;
     let portalPasswordAttempts = 0;
     for (let step = 0; step < MAX_STEPS; step += 1) {
+      runtime?.signal?.throwIfAborted();
       if (Date.now() - startedAt >= budgetMs) {
         return reviewReceipt(
           runnerInterruptionMessage(finalSubmissionAttempted),
@@ -2249,6 +2254,7 @@ export async function runNativeApplication(
       }
 
       const isSubmit = action === submit;
+      runtime?.signal?.throwIfAborted();
       // Set this before the click: a navigation error may occur after the
       // employer has accepted the request. Never silently replay that action.
       if (isSubmit) finalSubmissionAttempted = true;
@@ -2298,6 +2304,7 @@ export async function runNativeApplication(
     throw new ApplicationRunnerPreSubmitError(error);
   } finally {
     clearTimeout(budgetTimer);
+    runtime?.signal?.removeEventListener("abort", abortBrowser);
     if (runtime && payload.candidate.portalAccountConsent) {
       if (sessionDisposition === "clear") {
         await runtime.clearPortalSession?.().catch(() => null);

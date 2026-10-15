@@ -1,4 +1,5 @@
 import { after } from "next/server";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
 import {
   checkSubmissionWithProvider,
   providerReviewQuestions,
@@ -131,7 +132,7 @@ export async function GET(request: Request): Promise<Response> {
         { status: 404, headers: NO_STORE },
       );
     let effectiveWorkerTask = workerTask;
-    const recoveredStatus = recoveredWorkerTaskStatus({
+    const recoveredStatus = selectedApplyRunner() === "railway" ? workerTask?.status : recoveredWorkerTaskStatus({
       status: workerTask?.status,
       leaseExpiresAt: workerTask?.lease_expires_at,
       attempts: workerTask?.attempts,

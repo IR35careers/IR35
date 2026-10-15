@@ -12,6 +12,10 @@
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
 import { repairJobQuality } from "@/lib/pipeline/repair-job-quality";
 import { timingSafeEqual } from "node:crypto";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { enqueueScheduledWork } from "@/lib/queue/producer";
+import { invalidatePublicJobs } from "@/lib/pipeline/invalidate-public-jobs";
+import { z } from "zod";
 import {
   ApplicationWorkerRequestError,
   readSignedApplicationWorkerJson,
@@ -21,6 +25,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+const operationSchema = z.discriminatedUnion("action", [
+  z.strictObject({ action: z.literal("invalidate_public_jobs") }),
+  z.strictObject({ action: z.literal("fetch_contract_jobs") }),
+  z.strictObject({ action: z.literal("repair_job_quality"), mode: z.enum(["preview", "apply"]), planHash: z.string().regex(/^[a-f0-9]{64}$/).optional() }),
+]);
 
 function secureTokenEqual(presented: string, expected: string): boolean {
   const left = Buffer.from(presented);
@@ -45,6 +54,10 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
+    if (selectedApplyRunner() === "railway") {
+      await enqueueScheduledWork("ingest");
+      return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
+    }
     const summary = await runFetchPipeline();
     return Response.json({ ok: true, summary }, { headers: NO_STORE });
   } catch (err) {
@@ -60,22 +73,21 @@ export async function GET(request: Request): Promise<Response> {
  * authentication independently. */
 export async function POST(request: Request): Promise<Response> {
   try {
-    const body = await readSignedApplicationWorkerJson(request, 2_000);
-    if (body && typeof body === "object" && (body as Record<string, unknown>).action === "repair_job_quality") {
-      const input = body as Record<string, unknown>;
-      if (input.mode !== "preview" && input.mode !== "apply") return Response.json({ error: "Invalid repair mode" }, { status: 400, headers: NO_STORE });
-      const summary = await repairJobQuality(input.mode, typeof input.planHash === "string" ? input.planHash : undefined);
+    const parsed = operationSchema.safeParse(await readSignedApplicationWorkerJson(request, 2_000));
+    if (!parsed.success) return Response.json({ error: "The pipeline operation is invalid." }, { status: 400, headers: NO_STORE });
+    const body = parsed.data;
+    if (body.action === "invalidate_public_jobs") {
+      invalidatePublicJobs();
+      return Response.json({ ok: true }, { headers: NO_STORE });
+    }
+    if (body.action === "repair_job_quality") {
+      const summary = await repairJobQuality(body.mode, body.planHash);
       return Response.json({ ok: true, summary }, { headers: NO_STORE });
     }
-    if (
-      !body ||
-      typeof body !== "object" ||
-      (body as Record<string, unknown>).action !== "fetch_contract_jobs"
-    )
-      return Response.json(
-        { error: "The contract refresh request is invalid." },
-        { status: 400, headers: NO_STORE },
-      );
+    if (selectedApplyRunner() === "railway") {
+      await enqueueScheduledWork("ingest");
+      return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
+    }
     const summary = await runFetchPipeline();
     return Response.json({ ok: true, summary }, { headers: NO_STORE });
   } catch (error) {

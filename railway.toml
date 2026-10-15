@@ -1,0 +1,13 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "services/application-worker/Dockerfile"
+
+[deploy]
+numReplicas = 1
+healthcheckPath = "/health"
+healthcheckTimeout = 180
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+sleepApplication = false
+# Set Replica Limits to 1 vCPU / 2 GB in Railway Settings > Deploy.
+# Resource limits are dashboard settings, not supported railway.toml fields.

@@ -1,5 +1,15 @@
 # IR35Careers persistent application worker
 
+## Prepared replacement: Railway (not deployed)
+
+The owner selected Railway with pg-boss on the existing Supabase session
+pooler (5432). The Dockerfile now starts `railway.ts` in standby by default.
+Use [`docs/deploy-worker.md`](../../docs/deploy-worker.md) and root
+`.env.example` for setup, secrets, 1 vCPU / 2 GB limits and staged cutover.
+Do not use the legacy standalone environment block below for the new image.
+`APPLY_RUNNER=vercel` remains the web default; no production switch is made
+by preparing these files. `server.ts` is retained for legacy development.
+
 ## Production: managed cloud queue
 
 The production application runs approved tasks on Vercel Queues and hosted
