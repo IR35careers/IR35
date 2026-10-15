@@ -15,6 +15,9 @@ export function jobMetadata(job: JobDetail) {
 /** Only facts visible in the listing: no invented salary, expiry, employer URL or directApply promise. */
 export function buildJobPosting(job: JobDetail) {
   if (job.source_domain === "demo.ir35careers.local" || !job.title.trim() || !job.description.trim() || !job.company_name.trim()) return null;
+  // Aggregator search snippets are not a complete job description. Google
+  // requires the full advert, not just the presence of required JSON fields.
+  if (isTruncatedJobDescription(job.description)) return null;
   // first_seen_at is discovery time, NOT the advertiser's original posting date.
   if (!job.posted_at || !Number.isFinite(Date.parse(job.posted_at))) return null;
   const location = job.location?.trim();
@@ -53,4 +56,8 @@ export function buildJobPosting(job: JobDetail) {
     } : {}),
     ...(job.skills.length ? { skills: job.skills.join(", ") } : {}),
   };
+}
+
+export function isTruncatedJobDescription(description: string): boolean {
+  return /(?:…|\.\.\.)\s*$/.test(description.trim());
 }

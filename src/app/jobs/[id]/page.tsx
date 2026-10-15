@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { headers } from "next/headers";
-import { buildJobPosting, jobMetadata } from "@/lib/job-seo";
+import { buildJobPosting, isTruncatedJobDescription, jobMetadata } from "@/lib/job-seo";
 import { structuredDataJson } from "@/lib/seo";
 import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase, Sparkles, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
@@ -48,6 +48,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const isDemo = job.source_domain === "demo.ir35careers.local";
   const posting = buildJobPosting(job);
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const originalUrl = /^https?:\/\//i.test(job.apply_url) ? job.apply_url : null;
   const remoteLabel =
     job.remote_type === "remote"
       ? "Remote"
@@ -95,6 +96,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">Ready when you are</p>
               <ApplyButton jobId={job.id} sourceDomain={job.source_domain} />
               <Link href={`/jobs/${job.id}/resume`} className="ir35-focus mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-200/30 bg-emerald-200/10 px-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/20"><WandSparkles size={16} />Refine resume for this job</Link>
+              {originalUrl && !isDemo && <a href={originalUrl} target="_blank" rel="noopener noreferrer" className="ir35-focus mt-2 flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-emerald-100 hover:bg-white/10">View original posting <ArrowUpRight size={15} /></a>}
               <div className="mt-2 [&_button]:border-white/20 [&_button]:bg-white/95">
                 <SaveJobButton jobId={job.id} />
               </div>
@@ -129,6 +131,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <div className="mt-6 whitespace-pre-line text-[15px] leading-7 text-slate-700 sm:text-base sm:leading-8">
                 {job.description || "Full details are on the original listing."}
               </div>
+              {isTruncatedJobDescription(job.description) && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">The provider supplied a summary of this role. Read the complete advert using “View original posting” before applying.</p>}
               {job.skills.length > 0 && (
                 <div className="mt-7 border-t border-slate-200 pt-6">
                   <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Skills in this listing</h2>

@@ -63,6 +63,10 @@ describe("truthful JobPosting markup", () => {
   it("does not advertise demo jobs to Google", () => {
     expect(buildJobPosting({ ...job, source_domain: "demo.ir35careers.local" })).toBeNull();
   });
+  it("withholds Google Jobs markup when a provider supplied a truncated search summary", () => {
+    expect(buildJobPosting({ ...job, description: "Build integrations and support products fro…" })).toBeNull();
+    expect(buildJobPosting({ ...job, description: "Truncated description..." })).toBeNull();
+  });
   it("marks fully remote UK jobs differently from hybrid jobs", () => {
     const remote = buildJobPosting({ ...job, remote_type: "remote" });
     expect(remote).toMatchObject({ jobLocationType: "TELECOMMUTE", applicantLocationRequirements: { name: "United Kingdom" } });
