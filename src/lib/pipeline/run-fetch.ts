@@ -415,9 +415,9 @@ export async function runFetchPipeline(
   // not only during a one-off cleanup. The audit precedes all repair writes.
   try {
     const quality = await repairJobQuality("preview");
-    if (quality.changed > 0) {
+    if ("changed" in quality && quality.changed > 0) {
       const result = await repairJobQuality("apply", quality.planHash);
-      notes.push(`Post-refresh quality: ${result.applied} repairs; ${result.deferredDecimalRates} fractional rates await schema enablement`);
+      if ("applied" in result) notes.push(`Post-refresh quality: ${result.applied} repairs; ${result.deferredDecimalRates} fractional rates await schema enablement`);
     }
   } catch (error) {
     companyErrors.push({ company: "_quality_repair", error: error instanceof Error ? error.message : "Post-refresh quality check failed" });
