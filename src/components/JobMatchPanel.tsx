@@ -144,7 +144,7 @@ export function JobMatchPanel({ job, showTailorAction = true }: { job: JobListin
             </div>
           ))}
           {result.unmatchedSkills.length > 0 && <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950"><strong>Profile skills not tagged in this listing:</strong> {result.unmatchedSkills.slice(0, 5).join(", ")}{result.unmatchedSkills.length > 5 ? "…" : ""}</p>}
-          <p className="text-[11px] leading-5 text-slate-500">This is a deterministic comparison of structured listing data and your saved preferences. It is not an AI assessment, hiring prediction or guarantee.</p>
+          <p className="text-xs leading-5 text-slate-600">This is a deterministic comparison of structured listing data and your saved preferences. It is not an AI assessment, hiring prediction or guarantee.</p>
         </div>
       </details>
       {showTailorAction && (

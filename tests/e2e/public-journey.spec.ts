@@ -119,6 +119,9 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expect(page.getByText(/Evidence checked/)).toBeVisible();
   await expect(page.getByText(/not an independent legal determination/i)).toBeVisible();
   await page.getByText("How this score is calculated").click();
+  // Essential disclosure text stays opaque even during its entrance motion.
+  const disclosure = page.locator("details").filter({ hasText: "How this score is calculated" }).locator(":scope > div");
+  await expect(disclosure).toHaveCSS("opacity", "1");
   await expect(page.getByText("Skill overlap")).toBeVisible();
   await expect(page.getByText("Rate fit")).toBeVisible();
   await expect(page.getByText(/not an AI assessment, hiring prediction or guarantee/i)).toBeVisible();
@@ -553,8 +556,11 @@ test("application workspace presents a clean review flow and never claims an unc
 
   await page.goto("/applications");
   await expect(page.getByRole("heading", { name: "Your contract pipeline" })).toBeVisible();
-  await expect(page.getByText("Ready", { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Review and apply" }).first()).toBeVisible();
+  // Preview-only packets have no database lifecycle. The renamed action must
+  // still open review, and a gated preview must never claim a submission.
+  await expect(page.getByText("ready", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Review application" }).first()).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: "Northstar Digital" })).not.toContainText("Submitted");
 
   await page.goto("/inbox");
   await expect(page.getByRole("heading", { name: "Your application messages" })).toBeVisible();

@@ -942,7 +942,14 @@
 }
 
 details[open] > :not(summary) {
-  animation: ir35-popover-enter var(--ir35-standard) var(--ir35-ease) both;
+  /* Disclosures contain essential text. Keep it fully opaque throughout the
+     entrance so opening a panel never washes out its contrast. */
+  animation: ir35-disclosure-enter var(--ir35-standard) var(--ir35-ease) both;
+}
+
+@keyframes ir35-disclosure-enter {
+  from { transform: translateY(-3px); }
+  to { transform: translateY(0); }
 }
 
 @keyframes ir35-backdrop-enter {
