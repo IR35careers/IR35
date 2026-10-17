@@ -35,7 +35,7 @@
     "postcss-selector-parser": "7.1.6"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^149.0.0",
+    "@sparticuz/chromium": "^153.0.0",
     "@supabase/supabase-js": "^2.112.3",
     "@vercel/queue": "^0.8.0",
     "clsx": "^2.1.1",
