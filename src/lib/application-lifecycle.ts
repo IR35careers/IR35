@@ -39,6 +39,34 @@ export const DELIVERY_LABELS: Record<ApplicationDeliveryStatus, string> = {
   failed: "Not submitted", external_only: "Apply on employer site", skipped: "Skipped",
 };
 
+export function applicationDeliveryAction(application: { deliveryStatus?: ApplicationDeliveryStatus; status: string }): string {
+  const delivery = application.deliveryStatus;
+  if (delivery === "queued" || delivery === "submitting") return "View progress";
+  if (delivery === "external_only") return "Apply on employer site";
+  if (delivery === "failed" || delivery === "needs_info") return "Review and retry";
+  if (delivery === "submitted" || delivery === "skipped") return "View application";
+  if (delivery || ["draft", "ready", "needs_review"].includes(application.status)) return "Review application";
+  return application.status === "failed" ? "Review and retry" : "View application";
+}
+
+export function applicationEmployerLink(application: { deliveryStatus?: ApplicationDeliveryStatus; job: { apply_url: string } }): string | null {
+  if (application.deliveryStatus !== "external_only") return null;
+  try {
+    const url = new URL(application.job.apply_url);
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+    return url.toString();
+  } catch { return null; }
+}
+
+export function applicationPipelineBucket(application: { deliveryStatus?: ApplicationDeliveryStatus; status: string }): string {
+  const delivery = application.deliveryStatus;
+  if (!delivery) return application.status;
+  if (delivery === "queued" || delivery === "submitting") return "in_flight";
+  if (["draft", "needs_profile", "awaiting_approval", "needs_info", "external_only"].includes(delivery)) return "needs_review";
+  if (delivery === "submitted") return ["viewed", "replied", "interview", "offer", "rejected", "withdrawn"].includes(application.status) ? application.status : "applied";
+  return delivery;
+}
+
 export function isUnresolvedAggregator(destination?: string | null): boolean {
   try {
     const host = new URL(destination ?? "").hostname.toLowerCase().replace(/^www\./, "");

@@ -96,9 +96,9 @@ export function StatusPill({ status }: { status: string }) {
         ? "border-rose-200 bg-rose-50 text-rose-700"
         : status === "failed"
           ? "border-slate-200 bg-slate-50 text-slate-700"
-        : status === "needs_review" || status === "action_required"
+        : ["needs_review", "action_required", "needs_info", "needs_profile", "awaiting_approval", "external_only"].includes(status)
           ? "border-amber-200 bg-amber-50 text-amber-800"
-          : status === "applied" || status === "viewed" || status === "replied"
+          : ["applied", "viewed", "replied", "queued", "submitting", "submitted"].includes(status)
             ? "border-blue-200 bg-blue-50 text-blue-700"
             : "border-slate-200 bg-slate-50 text-slate-600";
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${style}`}>{label}</span>;

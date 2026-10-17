@@ -36,7 +36,7 @@ import type {
   InboxMessage,
   InboxSettings,
 } from "@/lib/workspace/types";
-import { DELIVERY_LABELS } from "@/lib/application-lifecycle";
+import { canRetryDelivery, DELIVERY_LABELS } from "@/lib/application-lifecycle";
 
 type ApplicationTab = "form" | "resume" | "cover" | "contract";
 
@@ -76,6 +76,10 @@ function applicationHasBeenSubmitted(application: ApplicationRecord) {
 }
 
 function statusSummary(application: ApplicationRecord) {
+  if (application.deliveryStatus === "queued") return "Your approved application is saved and waiting for the worker.";
+  if (application.deliveryStatus === "submitting") return "The worker has started. Employer confirmation is still pending.";
+  if (application.deliveryStatus === "failed") return application.errorDetail || "The attempt stopped without confirmation. Check the outcome before an explicit Retry.";
+  if (application.deliveryStatus === "external_only") return "No supported employer form was resolved. Your CV and answers are saved.";
   if (application.attention) return "Everything prepared so far is saved.";
   if (application.status === "replied") return "The employer response is linked to this application.";
   if (application.status === "interview") return "Your interview details and employer messages are saved here.";
@@ -750,7 +754,7 @@ export function ApplicationRecordWorkspace({
                         className="ir35-focus mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
                       >
                         {busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
-                        {submissionInProgress ? "Submitting application" : application.status === "failed" ? "Retry application" : "Submit application"}
+                        {submissionInProgress ? "View application progress" : canRetryDelivery(application.deliveryStatus) || application.status === "failed" ? "Retry application" : "Submit application"}
                       </button>
                       <p className="mt-3 text-xs leading-5 text-slate-500">Runs in the cloud — no extension or desktop app. You can close this tab; progress and any employer-only steps appear in Tracker.</p>
                     </section>

@@ -1225,13 +1225,13 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
     if (!application) return;
     if (
       !window.confirm(
-        "Only confirm this after the employer website showed that your application was submitted. Mark this application as submitted?",
+        "Record that you submitted on the employer website? This saves your report in the activity history; it does not create an employer-verified receipt or change automatic delivery status.",
       )
     )
       return;
     setBusy("submit");
     setError(null);
-    setNotice("Saving your employer-page submission confirmation.");
+    setNotice("Saving your employer-page submission report.");
     try {
       const response = await fetchWithFreshSession(
         "/api/applications/browser-handoff",
@@ -1246,41 +1246,17 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         },
       );
       const payload = (await response.json().catch(() => ({}))) as {
-        receipt?: ApplicationRecord["receipt"];
+        reported?: boolean;
+        deliveryStatus?: string;
+        message?: string;
         error?: string;
       };
-      if (!response.ok || !payload.receipt)
+      if (!response.ok || (payload.reported !== true && payload.deliveryStatus !== "submitted"))
         throw new Error(
           payload.error || "The employer-page confirmation could not be saved.",
         );
-      const now = new Date().toISOString();
-      const submittedApplication: ApplicationRecord = {
-        ...application,
-        status: "applied",
-        attention: undefined,
-        mode: "external_handoff",
-        receipt: payload.receipt,
-        updatedAt: now,
-        events: application.events.some(
-          (event) => event.label === "Application submitted on employer page",
-        )
-          ? application.events
-          : [
-              ...application.events,
-              {
-                id: newWorkspaceId(),
-                applicationId: application.id,
-                type: "status_changed",
-                label: "Application submitted on employer page",
-                createdAt: now,
-              },
-            ],
-      };
-      setApplication(submittedApplication);
-      persistApplication(submittedApplication);
-      setNotice(
-        "Application marked as submitted from your employer-page confirmation.",
-      );
+      await refreshWorkspaceApplications();
+      setNotice(payload.message || "Your report is saved; automatic delivery status is unchanged.");
     } catch (caught) {
       setNotice(null);
       setError(
@@ -1295,6 +1271,11 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
   const resumeApprovedApplicationAfterProfile = useEffectEvent(() => {
     if (!application) return;
+    if (application.deliveryStatus) {
+      profileResumeAttempted.current = true;
+      setNotice("Profile saved. Review the saved application, then choose Retry application to continue.");
+      return;
+    }
     if (
       !application.submissionApproved &&
       application.truthApproved &&

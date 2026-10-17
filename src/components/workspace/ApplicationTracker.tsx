@@ -20,6 +20,7 @@ import {
 import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { hasActiveSubmission } from "@/lib/application-submission-state";
 import type { ApplicationDeliveryStatus } from "@/lib/application-lifecycle";
+import { applicationDeliveryAction, applicationEmployerLink, applicationPipelineBucket } from "@/lib/application-lifecycle";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
 import {
@@ -32,9 +33,9 @@ import type {
   ApplicationStatus,
 } from "@/lib/workspace/types";
 
-const PIPELINE: Array<{ id: ApplicationStatus; label: string }> = [
+const PIPELINE: Array<{ id: ApplicationStatus | "in_flight"; label: string }> = [
   { id: "needs_review", label: "Needs you" },
-  { id: "ready", label: "Ready" },
+  { id: "in_flight", label: "In flight" },
   { id: "applied", label: "Applied" },
   { id: "replied", label: "Replied" },
   { id: "interview", label: "Interview" },
@@ -78,7 +79,23 @@ function matchesApplicationView(
 }
 
 function resumeLabel(value: string) {
-  return value.replace(/\bCV\b/gi, "Resume");
+  return value.replace(/\bResume\b/gi, "CV");
+}
+
+function ApplicationAction({ application, className }: { application: ApplicationRecord; className: string }) {
+  const recordUrl = `/applications/new/${application.job.id}?applicationId=${encodeURIComponent(application.id)}${application.attention ? "#needs-attention" : ""}`;
+  const employerUrl = applicationEmployerLink(application);
+  if (employerUrl) return (
+    <div>
+      <a href={employerUrl} target="_blank" rel="noopener noreferrer" className={className}>
+        Apply on employer site <ChevronRight size={15} />
+      </a>
+      <Link href={recordUrl} className="ir35-focus mt-2 block text-xs font-semibold text-slate-600 underline underline-offset-4">View saved application</Link>
+    </div>
+  );
+  return <Link href={recordUrl} className={className}>
+    {application.deliveryStatus === "external_only" ? "Review employer destination" : applicationDeliveryAction(application)} <ChevronRight size={15} />
+  </Link>;
 }
 
 function csvValue(value: unknown): string {
@@ -505,7 +522,7 @@ export function ApplicationTracker() {
       >
         {PIPELINE.map((stage, index) => {
           const count = workspace.applications.filter(
-            (application) => application.status === stage.id,
+            (application) => applicationPipelineBucket(application) === stage.id,
           ).length;
           return (
             <div
@@ -562,7 +579,7 @@ export function ApplicationTracker() {
               <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
                 <tr>
                   <th className="px-5 py-4">Contract</th>
-                  <th className="px-5 py-4">Resume</th>
+                  <th className="px-5 py-4">CV</th>
                   <th className="px-5 py-4">Status</th>
                   <th className="px-5 py-4">Updated</th>
                   <th className="px-5 py-4"><span className="sr-only">Action</span></th>
@@ -571,13 +588,6 @@ export function ApplicationTracker() {
               <tbody className="divide-y divide-slate-100">
                 {applications.map((application) => {
                   const attention = application.attention;
-                  const actionLabel = application.status === "needs_review"
-                    ? "Review and apply"
-                    : application.status === "failed"
-                      ? "Review and retry"
-                      : application.status === "ready"
-                        ? "Review and apply"
-                        : "View application";
                   return (
                     <tr key={application.id} className="hover:bg-slate-50/70">
                       <td className="px-5 py-4">
@@ -602,9 +612,7 @@ export function ApplicationTracker() {
                         <p className="mt-1 text-xs text-slate-400">{messageCounts.get(application.id) ?? 0} linked message{(messageCounts.get(application.id) ?? 0) === 1 ? "" : "s"}</p>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <Link href={`/applications/new/${application.job.id}?applicationId=${encodeURIComponent(application.id)}${attention ? "#needs-attention" : ""}`} className={`ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white hover:bg-emerald-800" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"}`}>
-                          {actionLabel} <ChevronRight size={14} />
-                        </Link>
+                        <ApplicationAction application={application} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-100" />
                       </td>
                     </tr>
                   );
@@ -616,13 +624,6 @@ export function ApplicationTracker() {
           <div className="divide-y divide-slate-100 md:hidden">
             {applications.map((application) => {
               const attention = application.attention;
-              const actionLabel = application.status === "needs_review"
-                ? "Review and apply"
-                : application.status === "failed"
-                  ? "Review and retry"
-                  : application.status === "ready"
-                    ? "Review and apply"
-                    : "View application";
               return (
                 <article key={application.id} className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -635,9 +636,7 @@ export function ApplicationTracker() {
                   </div>
                   {attention && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900"><strong className="block">{attention.title}</strong>{attention.message}</div>}
                   <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>{resumeLabel(application.resumeVersionLabel)}</span><span>{messageCounts.get(application.id) ?? 0} messages</span></div>
-                  <Link href={`/applications/new/${application.job.id}?applicationId=${encodeURIComponent(application.id)}${attention ? "#needs-attention" : ""}`} className={`ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-between rounded-xl px-4 text-sm font-bold ${application.status === "ready" || application.status === "needs_review" ? "bg-emerald-700 text-white" : "border border-slate-300 text-slate-700"}`}>
-                    {actionLabel} <ChevronRight size={15} />
-                  </Link>
+                  <ApplicationAction application={application} className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-between rounded-xl border border-slate-300 px-4 text-sm font-bold text-slate-700" />
                 </article>
               );
             })}

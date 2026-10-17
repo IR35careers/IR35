@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mapCloudApplication } from "@/lib/workspace/repository";
 import { hasActiveSubmission } from "@/lib/application-submission-state";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
+import { applicationDeliveryAction, applicationEmployerLink, applicationPipelineBucket } from "@/lib/application-lifecycle";
 
 describe("stored delivery state on reload", () => {
   const row = { id: "a1111111-1111-4111-8111-111111111111", job_snapshot: DEMO_JOBS[0],
@@ -11,6 +12,8 @@ describe("stored delivery state on reload", () => {
     const loaded = mapCloudApplication(row, []);
     expect(hasActiveSubmission(loaded.status, loaded.events, loaded.attention, loaded.deliveryStatus)).toBe(true);
     expect(loaded.deliveryStatus).toBe("submitting");
+    expect(applicationPipelineBucket(loaded)).toBe("in_flight");
+    expect(applicationDeliveryAction(loaded)).toBe("View progress");
   });
   it("retains the actual failure instead of recomputing Ready from approvals", () => {
     const loaded = mapCloudApplication({ ...row, status: "failed", delivery_status: "failed",
@@ -22,5 +25,15 @@ describe("stored delivery state on reload", () => {
   });
   it("fails closed when a row has no installed authoritative lifecycle", () => {
     expect(() => mapCloudApplication({ ...row, delivery_status: undefined }, [])).toThrow();
+  });
+  it("offers an HTTPS employer handoff without inventing a submitting state", () => {
+    const loaded = mapCloudApplication({ ...row, delivery_status: "external_only" }, []);
+    expect(applicationPipelineBucket(loaded)).toBe("needs_review");
+    expect(applicationDeliveryAction(loaded)).toBe("Apply on employer site");
+    expect(applicationEmployerLink({ ...loaded, job: { ...loaded.job, apply_url: "https://employer.example.test/apply" } })).toBe("https://employer.example.test/apply");
+    for (const apply_url of ["javascript:alert(1)", "http://employer.example.test", "https://user:secret@employer.example.test"]) {
+      expect(applicationEmployerLink({ ...loaded, job: { ...loaded.job, apply_url } })).toBeNull();
+    }
+    expect(applicationEmployerLink({ ...loaded, deliveryStatus: "submitting" })).toBeNull();
   });
 });
