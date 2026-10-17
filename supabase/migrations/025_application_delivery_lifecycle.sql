@@ -17,10 +17,23 @@ ALTER TABLE public.application_events
   ADD COLUMN error_detail text;
 ALTER TABLE public.application_worker_tasks ADD COLUMN attempt_base integer NOT NULL DEFAULT 0 CHECK(attempt_base>=0);
 
+-- Preview receipts and contractor self-reports are history, not proof that an
+-- employer accepted an application. Preserve them without promoting delivery.
+CREATE FUNCTION public.application_has_delivery_receipt(p_receipt jsonb,p_mode text)
+RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path='' AS $$
+  SELECT COALESCE(jsonb_typeof(p_receipt)='object'
+    AND COALESCE(p_receipt->>'receiptId','')<>''
+    AND COALESCE(p_receipt->>'destination','') ~ '^https://'
+    AND lower(p_receipt->>'receiptId') NOT LIKE 'contractor-confirmed-%'
+    AND lower(p_receipt->>'receiptId') NOT LIKE 'dry-%'
+    AND COALESCE(p_receipt->>'mode','')<>'dry_run' AND COALESCE(p_mode,'')<>'dry_run',false)
+$$;
+
 -- Conservative historical backfill. Never turn queue acceptance into submission.
 UPDATE public.application_packets p SET delivery_status = CASE
   WHEN p.status IN ('applied','viewed','replied','interview','offer','rejected','withdrawn')
-    AND p.receipt->>'receiptId' IS NOT NULL THEN 'submitted'
+    AND public.application_has_delivery_receipt(p.receipt,p.mode) THEN 'submitted'
+  WHEN p.status IN ('applied','viewed','replied','interview','offer','rejected','withdrawn') THEN 'needs_info'
   WHEN p.status = 'skipped' THEN 'skipped'
   WHEN p.status = 'failed' OR EXISTS (SELECT 1 FROM public.application_worker_tasks t
     WHERE t.application_id=p.id AND t.status='failed') THEN 'failed'
@@ -69,7 +82,7 @@ BEGIN
     -- Legacy service code cannot reset the lifecycle by saving a ready snapshot.
     IF NEW.delivery_status=OLD.delivery_status THEN
       candidate := CASE
-        WHEN NEW.status='applied' AND NEW.receipt->>'receiptId' IS NOT NULL THEN 'submitted'
+        WHEN NEW.status='applied' AND public.application_has_delivery_receipt(NEW.receipt,NEW.mode) THEN 'submitted'
         WHEN NEW.status='failed' AND OLD.status IS DISTINCT FROM NEW.status THEN 'failed'
         WHEN NEW.status='skipped' AND OLD.status IS DISTINCT FROM NEW.status THEN 'skipped'
         WHEN NEW.status='needs_review' AND OLD.delivery_status IN ('queued','submitting') THEN 'needs_info'
@@ -88,7 +101,7 @@ BEGIN
     END IF;
     NEW.delivery_version := OLD.delivery_version+1;
   END IF;
-  IF NEW.delivery_status='submitted' AND (COALESCE(NEW.receipt->>'receiptId','')='' OR COALESCE(NEW.receipt->>'destination','')='') THEN
+  IF NEW.delivery_status='submitted' AND NOT public.application_has_delivery_receipt(NEW.receipt,NEW.mode) THEN
     RAISE EXCEPTION 'Submission requires an employer confirmation receipt';
   END IF;
   IF NEW.delivery_status IN ('queued','submitting') AND NOT (NEW.truth_approved AND NEW.materials_approved AND NEW.submission_approved) THEN

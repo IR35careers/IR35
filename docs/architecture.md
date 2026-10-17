@@ -41,6 +41,8 @@ Direct browser INSERT/UPDATE grants are revoked (including historical column gra
 
 The following three-state runner description is the audited **production baseline**, not a description of the uninstalled branch fix.
 
+The branch also retires the legacy extension token exports/result callback so it cannot compete with the authoritative worker. Manual employer-page submissions are saved as explicitly unverified notes, not invented confirmation receipts. Receipt guards reject preview/self-report prefixes and preserve their original historical data. The extension-free employer link does not start a parallel application while delivery is in flight.
+
 ## Production baseline: three persisted states, not one
 
 1. `application_packets.status` uses legacy `draft`, `ready`, `needs_review`, `applied` and subsequent recruiting stages (`workspace/types.ts`).

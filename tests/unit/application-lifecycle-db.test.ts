@@ -43,7 +43,7 @@ describe("authoritative SQL delivery lifecycle", () => {
     const id = "a2222222-2222-4222-8222-222222222222";
     await packet(id); await transition(id, "queued");
     await expect(transition(id, "submitted")).rejects.toThrow("confirmation receipt");
-    await db.query("UPDATE application_packets SET status='applied',receipt=$2 WHERE id=$1", [id,
+    await db.query("UPDATE application_packets SET status='applied',mode='external_handoff',receipt=$2 WHERE id=$1", [id,
       JSON.stringify({ receiptId: "mock-ats-receipt", destination: "https://mock.example.test/apply" })]);
     await expect(db.query("UPDATE application_packets SET status='ready',receipt=NULL WHERE id=$1", [id])).rejects.toThrow("cannot be overwritten");
     expect((await state(id)).delivery_status).toBe("submitted");
@@ -99,6 +99,32 @@ describe("authoritative SQL delivery lifecycle", () => {
     expect((await state(id)).delivery_status).toBe("submitted");
     expect((await db.query("SELECT count(*)::int AS count FROM application_events WHERE application_id=$1 AND to_status='submitted'", [id])).rows[0]).toMatchObject({ count: 1 });
   });
+  it("rejects dry-run and self-reported receipts as worker-confirmed outcomes", async () => {
+    const id = "a9999999-9999-4999-8999-999999999999";
+    await packet(id); await transition(id, "queued"); await transition(id, "submitting");
+    for (const receipt of [
+      { receiptId: "contractor-confirmed-test", mode: "external_handoff" },
+      { receiptId: "DRY-test", mode: "dry_run" },
+      { receiptId: "mock-ats-test", mode: "dry_run" },
+    ]) {
+      await expect(db.query("SELECT commit_application_delivery_result($1,$2,'submitted',$3)", [id, user,
+        JSON.stringify({ ...receipt, destination: "https://mock.example.test/apply", createdAt: new Date().toISOString() })])).rejects.toThrow(/confirmation receipt/);
+      expect((await state(id)).delivery_status).toBe("submitting");
+    }
+  });
+  it("backfills contractor reports conservatively without deleting their original history", async () => {
+    const id = "b9999999-9999-4999-8999-999999999999";
+    const legacyReceipt = { receiptId: "contractor-confirmed-legacy", mode: "external_handoff", destination: "https://mock.example.test/apply" };
+    const legacy = await createTestLifecycleDb(async (before) => {
+      await before.query("INSERT INTO auth.users VALUES($1)", [user]);
+      await before.query(`INSERT INTO application_packets(id,user_id,job_snapshot,status,mode,idempotency_key,receipt)
+        VALUES($1::uuid,$2,'{}','applied','external_handoff',$1::text,$3)`, [id, user, JSON.stringify(legacyReceipt)]);
+    });
+    try {
+      expect((await legacy.query("SELECT delivery_status,receipt FROM application_packets WHERE id=$1", [id])).rows[0])
+        .toMatchObject({ delivery_status: "needs_info", receipt: legacyReceipt });
+    } finally { await legacy.close(); }
+  }, 30_000);
   it("does not reuse attempt IDs across explicit Retry or reclaim an unknown outcome", async () => {
     const id = "a8888888-8888-4888-8888-888888888888";
     await packet(id);
