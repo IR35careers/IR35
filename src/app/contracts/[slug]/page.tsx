@@ -2,36 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, ArrowRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { JOB_LIST_COLUMNS, formatPosted, formatRate, type JobListing } from "@/lib/job-types";
+import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 import { getSeoPage, relatedSeoPages, type SeoPage } from "@/lib/seo-pages";
+import { publicPageMetadata } from "@/lib/seo";
+import { getContractPageData } from "@/lib/public-job-inventory";
 
-// ISR: cached HTML for speed (Google cares), refreshed hourly.
+// Public inventory is cached separately; nonce-bearing HTML remains dynamic.
 export const revalidate = 3600;
 export const dynamicParams = true;
-
 const PAGE_SIZE = 20;
 
 async function fetchPageData(page: SeoPage) {
-  let query = supabase
-    .from("jobs")
-    .select(JOB_LIST_COLUMNS, { count: "exact" })
-    .is("expired_at", null);
-
-  const f = page.filters;
-  if (f.skill) query = query.contains("skills", [f.skill]);
-  if (f.location) query = query.ilike("location", `%${f.location}%`);
-  if (f.ir35) query = query.eq("ir35_status", f.ir35);
-  if (f.remote) query = query.eq("remote_type", "remote");
-
-  query = query
-    .order("posted_on", { ascending: false, nullsFirst: false })
-    .order("rate_max", { ascending: false, nullsFirst: false })
-    .limit(PAGE_SIZE);
-
-  const { data, count, error } = await query;
-  if (error) return { jobs: [] as JobListing[], total: 0 };
-  return { jobs: (data ?? []) as unknown as JobListing[], total: count ?? 0 };
+  return getContractPageData(page.filters);
 }
 
 function rateSummary(jobs: JobListing[]): string | null {
@@ -63,13 +45,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const page = getSeoPage(slug);
-  if (!page) return { title: "Not found | IR35Careers" };
-  const url = `https://ir35careers.com/contracts/${page.slug}`;
+  if (!page) return { title: "Not found", robots: { index: false, follow: false } };
+  const { total } = await fetchPageData(page);
   return {
-    title: `${page.metaTitle} | IR35Careers`,
-    description: page.metaDescription,
-    alternates: { canonical: url },
-    openGraph: { title: page.metaTitle, description: page.metaDescription, url },
+    ...publicPageMetadata(`/contracts/${page.slug}`, page.metaTitle, page.metaDescription),
+    robots: { index: total > 0, follow: true },
   };
 }
 
@@ -114,7 +94,7 @@ export default async function ContractsSeoPage({
           <p className="mt-3 max-w-2xl text-slate-600">
             {total > 0 ? (
               <>
-                <span className="font-medium text-white/90">{total.toLocaleString()}</span> live{" "}
+                <span className="font-medium text-slate-900">{total.toLocaleString()}</span> live{" "}
                 {total === 1 ? "role" : "roles"}
                 {rates ? <> · {rates}</> : null} · IR35 status shown only when stated in the
                 original listing.
@@ -168,7 +148,7 @@ export default async function ContractsSeoPage({
                       {hasRate ? (
                         <span className="font-semibold tabular-nums">{formatRate(job)}</span>
                       ) : (
-                        <span className="text-sm text-slate-400">Rate on application</span>
+                        <span className="text-sm text-slate-400">Rate not stated</span>
                       )}
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${

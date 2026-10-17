@@ -22,7 +22,7 @@
  *   the rate parser's magnitude inference reads "£450 - £550" correctly.
  */
 
-import { HttpClient } from "../ats/http-client";
+import { HttpClient, HttpError } from "../ats/http-client";
 import type { RawATSJob } from "../ats/types";
 
 export interface ReedJob {
@@ -84,17 +84,31 @@ export interface ReedFetchOptions {
   apiKey: string;
   /** Number of 100-result pages to fetch (keep small: serverless time budget). */
   pages?: number;
+  /** High-value searches fetched in addition to the general contract pages. */
+  keywordQueries?: string[];
+  /** Search beyond page one of each profession/IR35 partition. */
+  keywordPages?: number;
+  /** Stop starting requests before the shared database-write window. */
+  deadlineMs?: number;
+  onPageError?: (query: string, page: number, message: string) => void;
 }
 
 export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Promise<RawATSJob[]> {
-  const pages = opts.pages ?? 2;
+  const pages = Math.max(1, Math.min(10, opts.pages ?? 2));
+  const keywordPages = Math.max(1, Math.min(5, opts.keywordPages ?? 1));
+  const deadline = opts.deadlineMs ?? Number.POSITIVE_INFINITY;
   const auth = "Basic " + Buffer.from(`${opts.apiKey}:`).toString("base64");
   const jobs: RawATSJob[] = [];
   const seen = new Set<string>();
 
-  for (let page = 0; page < pages; page++) {
-    const skip = page * 100;
-    const url = `https://www.reed.co.uk/api/1.0/search?contract=true&resultsToTake=100&resultsToSkip=${skip}`;
+  const fetchPage = async (page: number, keywords?: string) => {
+    const params = new URLSearchParams({
+      contract: "true",
+      resultsToTake: "100",
+      resultsToSkip: String(page * 100),
+    });
+    if (keywords) params.set("keywords", keywords);
+    const url = `https://www.reed.co.uk/api/1.0/search?${params.toString()}`;
     const data = await client.getJson<ReedResponse>(url, { headers: { authorization: auth } });
     const results = Array.isArray(data?.results) ? data.results : [];
     for (const job of results) {
@@ -103,8 +117,29 @@ export async function fetchReed(client: HttpClient, opts: ReedFetchOptions): Pro
       seen.add(id);
       jobs.push(mapReedJob(job));
     }
-    if (results.length < 100) break; // no more pages available
+    return results.length;
+  };
+
+  let completedPages = 0;
+  let lastError = "";
+  const queries = [undefined, ...new Set(opts.keywordQueries ?? [])];
+  for (const keywords of queries) {
+    const pageCount = keywords === undefined ? pages : keywordPages;
+    for (let page = 0; page < pageCount; page++) {
+      if (Date.now() >= deadline) return jobs;
+      try {
+        const count = await fetchPage(page, keywords);
+        completedPages++;
+        if (count < 100) break;
+      } catch (error) {
+        lastError = error instanceof HttpError ? `HTTP ${error.status}` : "request failed or timed out";
+        opts.onPageError?.(keywords ?? "All UK contracts", page + 1, lastError);
+        // Preserve successful partitions and continue with another search.
+        break;
+      }
+    }
   }
+  if (completedPages === 0 && lastError) throw new Error(`Reed searches failed: ${lastError}`);
   return jobs;
 }
 

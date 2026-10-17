@@ -26,12 +26,52 @@ EXPERIENCE
 EDUCATION
 BSc Computing`;
 
-describe("role-specific CV analysis", () => {
+describe("role-specific Resume analysis", () => {
   it("parses common sections and contact evidence", () => {
     const parsed = parseResumeText(source, "alex.docx");
     expect(parsed.candidateName).toBe("Alex Morgan");
     expect(parsed.contactLine).toContain("alex@example.com");
     expect(parsed.sections.some((section) => section.kind === "experience")).toBe(true);
+  });
+
+  it("finds the candidate when a generated profile section appears before the identity", () => {
+    const parsed = parseResumeText(`PROFILE
+Experience includes AWS and Terraform, supported by delivery examples.
+Alex Morgan
+Senior Platform Engineer
+alex@example.com | +44 7700 900123
+
+CORE SKILLS
+AWS | Terraform`, "alex.pdf");
+    expect(parsed.candidateName).toBe("Alex Morgan");
+    expect(parsed.contactLine).toContain("alex@example.com");
+  });
+
+  it("does not mistake an uppercase candidate name for a section heading", () => {
+    const parsed = parseResumeText(`ANVESH MANNURU
+SITE RELIABILITY ENGINEER (SRE)
+mail2mannuru@gmail.com | +44 7438 977103
+
+PROFESSIONAL SUMMARY
+Site reliability engineer with five years of experience.`, "anvesh.pdf");
+    expect(parsed.candidateName).toBe("ANVESH MANNURU");
+    expect(parsed.sections.some((section) => section.content.includes("ANVESH MANNURU"))).toBe(true);
+  });
+
+  it("removes empty bullet rows before building Resume sections", () => {
+    const parsed = parseResumeText(`Alex Morgan
+alex@example.com
+
+EXPERIENCE
+Built reliable delivery pipelines.
+•
+•
+•
+Reduced deployment failures by 28%.`, "alex.pdf");
+
+    expect(parsed.rawText).not.toMatch(/^\s*•\s*$/m);
+    expect(parsed.rawText).toContain("Built reliable delivery pipelines.");
+    expect(parsed.rawText).toContain("Reduced deployment failures by 28%.");
   });
 
   it("reports matched and missing role keywords using a transparent score", () => {

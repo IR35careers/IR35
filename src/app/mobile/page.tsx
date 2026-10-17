@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BellRing, BriefcaseBusiness, ClipboardCheck, Cloud, LockKeyhole, ScanSearch } from "lucide-react";
@@ -6,15 +7,15 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { PwaInstallPanel } from "@/components/PwaInstallPanel";
 import { buttonClassName } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/mobile", {
   title: "IR35Careers Mobile App",
   description: "Install the IR35Careers responsive web app on iPhone, iPad, Android or desktop and keep a UK contractor workspace within reach.",
-};
+});
 
 const features = [
   [ScanSearch, "Find", "Search live UK contracts by IR35 status, rate, skills, location and working pattern."],
   [BriefcaseBusiness, "Understand", "Open role details with source links, freshness and the evidence behind every IR35 label."],
-  [ClipboardCheck, "Prepare", "Score and tailor a CV, review application materials and retain the exact approved packet."],
+  [ClipboardCheck, "Prepare", "Score and tailor a Resume, review application materials and retain the exact approved packet."],
   [BellRing, "Track", "Return to saved searches, the application pipeline and recruiter-response workspace."],
 ] as const;
 
@@ -28,7 +29,7 @@ export default function MobilePage() {
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-700">Installable contractor workspace</p>
               <h1 className="mt-3 text-4xl font-bold tracking-[-0.05em] sm:text-5xl lg:text-6xl">Your IR35 contract search, ready on any screen.</h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">Install IR35Careers from a supported browser for a standalone app window. It uses the same account and review-first workflows as the web—without pretending to be a native store app.</p>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">Install IR35Careers from a supported browser for a standalone app window. It uses the same account and review-first workflows as the website without pretending to be a native store app.</p>
               <div className="mt-7 flex flex-wrap gap-3"><Link href="/jobs" className={buttonClassName({ size: "lg" })}>Browse contracts</Link><Link href="/dashboard" className={buttonClassName({ variant: "secondary", size: "lg" })}>Open workspace</Link></div>
             </div>
             <aside className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/15 sm:p-8">
@@ -48,7 +49,7 @@ export default function MobilePage() {
             <article className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8"><h2 className="text-2xl font-bold">Install on Android or desktop</h2><ol className="mt-5 ml-5 list-decimal space-y-3 text-sm leading-6 text-slate-600"><li>Open IR35Careers in Chrome or another supporting browser.</li><li>Use the install button above when shown, or choose <strong>Install app</strong> from the browser menu.</li><li>Launch it from the new IR35Careers app icon.</li></ol></article>
           </section>
 
-          <section className="mt-10 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 shrink-0 text-amber-800" aria-hidden="true" /><div><h2 className="text-lg font-bold text-amber-950">What installation does not change</h2><p className="mt-2 text-sm leading-6 text-amber-900">Installing does not enable automatic ATS submission, background messaging or native push delivery. Those capabilities remain behind their documented provider, consent and approval gates. The installable app never claims that a dry run was sent.</p></div></div></section>
+          <section className="mt-10 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 shrink-0 text-amber-800" aria-hidden="true" /><div><h2 className="text-lg font-bold text-amber-950">What installation does not change</h2><p className="mt-2 text-sm leading-6 text-amber-900">Installing adds convenient access from your home screen. It does not change your account permissions, application approvals or protected employer steps.</p></div></div></section>
         </section>
       </main>
       <PublicFooter />

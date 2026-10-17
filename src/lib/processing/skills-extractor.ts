@@ -151,9 +151,17 @@ export function extractSkills(title: string, description: string): string[] {
   const text = `${title ?? ""} ${description ?? ""}`;
   const found: string[] = [];
   for (const skill of COMPILED) {
+    if (skill.canonical === "SAP" && !isPrimarySapRole(title, description)) continue;
     if (skill.regexes.some((re) => re.test(text))) {
       found.push(skill.canonical);
     }
   }
   return found;
+}
+
+/** An incidental SAP end-user requirement does not make a vacancy an SAP contract. */
+export function isPrimarySapRole(title: string, description: string): boolean {
+  if (/\bsap\b/i.test(title)) return true;
+  return /\b(?:erp|enterprise\s+(?:applications?|systems?))\b/i.test(title)
+    && /\bsap\b/i.test(description);
 }

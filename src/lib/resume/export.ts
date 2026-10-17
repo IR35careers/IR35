@@ -12,12 +12,14 @@ import {
 // The standalone build embeds PDFKit's standard font metrics. This avoids
 // filesystem lookups that break in bundled serverless/Next.js runtimes.
 import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
+import { resolveCandidateName } from "@/lib/candidate-name";
 import type { ResumeExportRequest } from "@/lib/resume/types";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 
 const SECTION_HEADING = /^(profile|professional profile|summary|professional summary|skills|technical skills|core skills|experience|professional experience|employment|career history|education|qualifications|certifications?|projects?|verified role skills)$/i;
 
 function normaliseExportText(value: string): string {
-  return value.replace(/\r\n?/g, "\n").replace(/\n{4,}/g, "\n\n\n").trim();
+  return normaliseResumeText(value).replace(/\n{4,}/g, "\n\n\n");
 }
 
 function isHeading(line: string): boolean {
@@ -26,9 +28,9 @@ function isHeading(line: string): boolean {
 }
 
 function safeCandidateName(request: ResumeExportRequest): string {
-  const firstLine = normaliseExportText(request.resumeText).split("\n").find((line) => line.trim())?.trim();
-  const supplied = request.candidateName.trim();
-  return supplied && supplied.length <= 100 ? supplied : firstLine?.slice(0, 100) || "Candidate";
+  const resolved = resolveCandidateName(request.candidateName, request.resumeText);
+  if (resolved) return resolved;
+  throw new Error("A candidate name is required before exporting the Resume.");
 }
 
 function bodyLines(request: ResumeExportRequest): string[] {
@@ -50,14 +52,7 @@ export async function buildResumeDocx(request: ResumeExportRequest): Promise<Buf
       alignment: AlignmentType.CENTER,
       spacing: { after: 320 },
       border: { bottom: { style: BorderStyle.SINGLE, color: "A7F3D0", size: 10, space: 10 } },
-      children: [
-        new TextRun({
-          text: `Tailored for ${request.jobTitle} at ${request.companyName}`,
-          size: 19,
-          color: "475569",
-          font: "Arial",
-        }),
-      ],
+      children: [],
     }),
   ];
 
@@ -97,9 +92,9 @@ export async function buildResumeDocx(request: ResumeExportRequest): Promise<Buf
   }
 
   const document = new Document({
-    creator: "IR35Careers",
-    title: `${name} - ${request.jobTitle}`,
-    description: `Approved CV version ${request.versionLabel}`,
+    creator: name,
+    title: `${name} - Resume`,
+    description: "Curriculum Vitae",
     styles: {
       default: {
         document: { run: { font: "Arial", size: 20, color: "1E293B" }, paragraph: { spacing: { line: 286 } } },
@@ -121,7 +116,7 @@ export async function buildResumeDocx(request: ResumeExportRequest): Promise<Buf
                 alignment: AlignmentType.CENTER,
                 spacing: { before: 120 },
                 children: [
-                  new TextRun({ text: `${request.versionLabel}  |  Page `, color: "64748B", size: 16, font: "Arial" }),
+                  new TextRun({ text: "Page ", color: "64748B", size: 16, font: "Arial" }),
                   new TextRun({ children: [PageNumber.CURRENT], color: "64748B", size: 16, font: "Arial" }),
                 ],
               }),
@@ -154,9 +149,9 @@ export async function buildResumePdf(request: ResumeExportRequest): Promise<Buff
     margins: { top: 48, right: 54, bottom: 54, left: 54 },
     bufferPages: true,
     info: {
-      Title: `${name} - ${request.jobTitle}`,
-      Author: "IR35Careers",
-      Subject: `Approved CV version ${request.versionLabel}`,
+      Title: `${name} - Resume`,
+      Author: name,
+      Subject: "Curriculum Vitae",
     },
   });
   document.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -166,13 +161,7 @@ export async function buildResumePdf(request: ResumeExportRequest): Promise<Buff
   });
 
   document.font("Helvetica-Bold").fontSize(22).fillColor("#087A5B").text(pdfSafe(name), { align: "center" });
-  document.moveDown(0.35);
-  document
-    .font("Helvetica")
-    .fontSize(9.5)
-    .fillColor("#475569")
-    .text(pdfSafe(`Tailored for ${request.jobTitle} at ${request.companyName}`), { align: "center" });
-  document.moveDown(0.8);
+  document.moveDown(0.65);
   document.strokeColor("#A7F3D0").lineWidth(1.2).moveTo(54, document.y).lineTo(541, document.y).stroke();
   document.moveDown(0.8);
 
@@ -208,7 +197,7 @@ export async function buildResumePdf(request: ResumeExportRequest): Promise<Buff
       .font("Helvetica")
       .fontSize(7.5)
       .fillColor("#64748B")
-      .text(pdfSafe(`${request.versionLabel}  |  Page ${page + 1} of ${range.count}`), 54, 811, {
+      .text(pdfSafe(`Page ${page + 1} of ${range.count}`), 54, 811, {
         width: 487,
         align: "center",
         lineBreak: false,

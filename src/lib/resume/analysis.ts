@@ -8,6 +8,7 @@ import type {
   ResumeSuggestion,
   RoleKeyword,
 } from "@/lib/resume/types";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
 
 const HEADING_KINDS: Array<[RegExp, ResumeSectionKind]> = [
   [/^(profile|professional profile|summary|professional summary|about me)$/i, "summary"],
@@ -78,7 +79,7 @@ const TERM_ALIASES: Record<string, string[]> = {
   nodejs: ["nodejs", "node js", "node.js"],
   "node.js": ["nodejs", "node js", "node.js"],
   qa: ["qa", "quality assurance"],
-  "sc cleared": ["sc cleared", "security clearance", "security cleared"],
+  "sc cleared": ["sc cleared", "sc clearance"],
   typescript: ["typescript", "type script"],
 };
 
@@ -120,6 +121,8 @@ const TITLE_STOP_WORDS = new Set([
   "the",
 ]);
 
+const NAME_BLOCKLIST = /\b(curriculum|vitae|resume|profile|summary|engineer|developer|architect|analyst|manager|consultant|specialist|scientist|designer|administrator|director|lead|officer|contractor|platform|reliability|devops)\b/i;
+
 function clamp(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
@@ -147,6 +150,28 @@ export function resumeContainsTerm(text: string, term: string): boolean {
   return aliasesFor(term).some((alias) => haystack.includes(normaliseForMatch(alias)));
 }
 
+/** A denial or future intention is not evidence of a current capability. */
+export function resumeEvidencesTerm(text: string, term: string): boolean {
+  const deniedBefore = /\b(?:no|not|never|without|lack|lacking|cannot|can t|don t)\s+(?:(?:hold|held|have|had|possess|obtained|achieved|active|current|currently|valid|any|prior|previous|commercial|production|professional|hands|on|experience|working|knowledge|certification|certified|clearance|licence|license|with|in|of|a|an|the|to|been|yet|used)\s+){0,8}$/;
+  const futureBefore = /\b(?:eligible for|willing to obtain|plan to obtain|planning to learn|working towards|learning|interested in)\s+$/;
+  return text.split(/\n|[.!?](?=\s|$)/).some((line) => {
+    const haystack = normaliseForMatch(line);
+    return aliasesFor(term).some((alias) => {
+      const needle = normaliseForMatch(alias).trim();
+      if (!needle) return false;
+      let start = haystack.indexOf(` ${needle} `);
+      while (start >= 0) {
+        const before = haystack.slice(Math.max(0, start - 220), start + 1);
+        const after = haystack.slice(start + needle.length + 2, start + needle.length + 122);
+        const deniedAfter = /^(?:(?:is|was|were|has|have|been|currently)\s+)*(?:not\s+(?:held|obtained|active|current|valid|certified|yet)|no\s+(?:experience|certification|licence|license)|expired|lapsed|eligible)\b/.test(after);
+        if (!deniedBefore.test(before) && !futureBefore.test(before) && !deniedAfter) return true;
+        start = haystack.indexOf(` ${needle} `, start + needle.length + 1);
+      }
+      return false;
+    });
+  });
+}
+
 function sectionKind(title: string): ResumeSectionKind | null {
   for (const [pattern, kind] of HEADING_KINDS) {
     if (pattern.test(title.trim())) return kind;
@@ -161,16 +186,39 @@ function looksLikeHeading(line: string): boolean {
   return /^[A-Z][A-Z &/+-]{2,}$/.test(trimmed);
 }
 
-export function parseResumeText(rawText: string, filename = "Pasted CV"): ParsedResume {
-  const text = rawText
-    .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]+\n/g, "\n")
+function findCandidateName(lines: string[], contactIndex: number): string {
+  const candidates = lines.slice(0, 20).flatMap((raw, index) => {
+    const line = raw.trim();
+    const words = line.split(/\s+/).filter(Boolean);
+    if (
+      words.length < 2 ||
+      words.length > 5 ||
+      line.length > 60 ||
+      /@|linkedin|https?:|www\.|\+?\d[\d ()-]{7,}/i.test(line) ||
+      sectionKind(line) ||
+      NAME_BLOCKLIST.test(line) ||
+      !/^[\p{L}][\p{L}'’-]*(?:\s+[\p{L}][\p{L}'’-]*)+$/u.test(line)
+    ) return [];
+
+    let score = words.length <= 3 ? 5 : 2;
+    if (index <= 5) score += 4;
+    if (contactIndex >= 0 && index < contactIndex && contactIndex - index <= 4) score += 3;
+    if (words.every((word) => /^\p{Lu}[\p{L}'’-]*$/u.test(word) || /^\p{Lu}+$/u.test(word))) score += 2;
+    return [{ line, index, score }];
+  });
+
+  return candidates.sort((left, right) => right.score - left.score || left.index - right.index)[0]?.line ?? "Candidate";
+}
+
+export function parseResumeText(rawText: string, filename = "Pasted Resume"): ParsedResume {
+  const text = normaliseResumeText(rawText)
     .replace(/\n{4,}/g, "\n\n\n")
     .trim();
   const lines = text.split("\n");
   const nonEmpty = lines.map((line) => line.trim()).filter(Boolean);
-  const candidateName = nonEmpty[0] ?? "Candidate";
-  const contactLine = nonEmpty.slice(1, 4).find((line) => /@|linkedin|\+?\d[\d ()-]{7,}/i.test(line)) ?? "";
+  const contactIndex = nonEmpty.slice(0, 20).findIndex((line) => /@|linkedin|\+?\d[\d ()-]{7,}/i.test(line));
+  const contactLine = contactIndex >= 0 ? nonEmpty[contactIndex] : "";
+  const candidateName = findCandidateName(nonEmpty, contactIndex);
 
   const sections: ResumeSection[] = [];
   let currentTitle = "Profile";
@@ -185,7 +233,8 @@ export function parseResumeText(rawText: string, filename = "Pasted CV"): Parsed
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (looksLikeHeading(trimmed)) {
+    const isIdentityLine = trimmed.toLocaleLowerCase("en-GB") === candidateName.toLocaleLowerCase("en-GB");
+    if (!isIdentityLine && looksLikeHeading(trimmed)) {
       flush();
       currentTitle = trimmed;
       currentKind = sectionKind(trimmed) ?? "other";
@@ -196,7 +245,7 @@ export function parseResumeText(rawText: string, filename = "Pasted CV"): Parsed
   flush();
 
   if (sections.length === 0 && text) {
-    sections.push({ kind: "other", title: "CV", content: text });
+    sections.push({ kind: "other", title: "Resume", content: text });
   }
 
   return { filename, rawText: text, candidateName, contactLine, sections };
@@ -261,12 +310,12 @@ function roleRelevanceScore(text: string, jobTitle: string, keywordCoverage: num
 export function scoreResumeForRole(
   text: string,
   job: Pick<JobDetail, "title" | "description" | "skills">,
-  filename = "CV"
+  filename = "Resume"
 ): ResumeScore {
   const parsed = parseResumeText(text, filename);
   const keywords = extractRoleKeywords(job);
-  const matched = keywords.filter((keyword) => resumeContainsTerm(text, keyword.term));
-  const missing = keywords.filter((keyword) => !resumeContainsTerm(text, keyword.term));
+  const matched = keywords.filter((keyword) => resumeEvidencesTerm(text, keyword.term));
+  const missing = keywords.filter((keyword) => !resumeEvidencesTerm(text, keyword.term));
   const totalWeight = keywords.reduce((sum, keyword) => sum + keyword.weight, 0) || 1;
   const matchedWeight = matched.reduce((sum, keyword) => sum + keyword.weight, 0);
   const keywordCoverage = clamp((matchedWeight / totalWeight) * 100);
@@ -319,15 +368,15 @@ function makeSuggestions(
   const focusTerms = baseline.matchedKeywords.slice(0, 5);
 
   if (focusTerms.length > 0) {
-    const evidenceLine = `Role-relevant CV evidence: ${focusTerms.join(", ")}.`;
+    const evidenceLine = `Core skills: ${focusTerms.join(", ")}.`;
     const original = summary?.content.trim() ?? "";
     const replacement = original ? `${original.replace(/\s+$/g, "")}\n${evidenceLine}` : `PROFILE\n${evidenceLine}`;
-    if (!resumeContainsTerm(original, job.title) || focusTerms.some((term) => !resumeContainsTerm(original, term))) {
+    if (!original || focusTerms.some((term) => !resumeContainsTerm(original, term))) {
       suggestions.push({
         id: "summary-role-focus",
         kind: "summary",
         title: original ? "Focus the opening profile" : "Add a role-focused profile",
-        rationale: "Moves only skills already evidenced elsewhere in your CV into the first scan area.",
+        rationale: "Moves only skills already evidenced elsewhere in your Resume into the first scan area.",
         original,
         replacement,
         evidenceTerms: focusTerms,
@@ -367,9 +416,9 @@ function makeSuggestions(
       title: `Verify ${keyword}`,
       rationale:
         roleKeyword?.source === "listed-skill"
-          ? "This skill is explicitly listed for the role, but it is not evidenced in your CV. Add it only if it is genuinely yours."
-          : "This term appears in the role description, but not your CV. Add it only if you can support it in an interview.",
-      original: "Not found in your CV",
+          ? "This skill is explicitly listed for the role, but it is not evidenced in your Resume. Add it only if it is genuinely yours."
+          : "This term appears in the role description, but not your Resume. Add it only if you can support it in an interview.",
+      original: "Not found in your Resume",
       replacement: keyword,
       evidenceTerms: [],
       requiresConfirmation: true,

@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Inbox, Link2, Mail, MessageCircle, ShieldCheck } from "lucide-react";
@@ -5,10 +6,10 @@ import { PublicFooter } from "@/components/PublicFooter";
 import { PublicHeader } from "@/components/PublicHeader";
 import { buttonClassName } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/messaging", {
   title: "Recruiter Messaging",
   description: "See how IR35Careers keeps recruiter responses connected to the relevant contract application.",
-};
+});
 
 export default function MessagingPage() {
   return (

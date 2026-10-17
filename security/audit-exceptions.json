@@ -1,0 +1,16 @@
+[
+  {
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "versions": ["3.0.3"],
+    "expiresAt": "2026-10-29T00:00:00Z",
+    "reason": "Owner-approved temporary exception: dev-only Tailwind/ESLint glob patterns are repository-owned, never request or CV input. No upstream patch. See docs/dependency-security.md."
+  },
+  {
+    "advisory": "GHSA-hp3w-g68c-fv3c",
+    "package": "sprintf-js",
+    "versions": ["1.0.3"],
+    "expiresAt": "2026-10-29T00:00:00Z",
+    "reason": "Owner-approved temporary exception: only Mammoth's unused CLI argparse path; the CV extraction library does not load it. No upstream patch. See docs/dependency-security.md."
+  }
+]

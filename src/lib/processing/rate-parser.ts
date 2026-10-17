@@ -61,7 +61,7 @@ function parseAmount(token: string): number | null {
   if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
   const n = parseFloat(cleaned);
   if (!Number.isFinite(n)) return null;
-  const rounded = Math.round(n);
+  const rounded = Math.round(n * 100) / 100;
   // £0 means "unspecified", never a real rate.
   return rounded > 0 ? rounded : null;
 }
@@ -179,7 +179,7 @@ export function parseRate(input: string | null | undefined): ParsedRate {
   }
 
   // Sanity bounds per period — genuinely out-of-band numbers are dropped
-  // entirely (better "Rate on application" than a wrong figure).
+  // entirely (better "Rate not stated" than a wrong figure).
   const basis = max ?? min ?? 0;
   const outOfBounds =
     (type === "daily" && (basis < 80 || basis > 5000)) ||
@@ -208,7 +208,7 @@ export function parseRate(input: string | null | undefined): ParsedRate {
 export function findRateInText(description: string): ParsedRate {
   const text = description ?? "";
   const sentenceRe =
-    /[^.\n]*[£$€][^.\n]{0,80}?(?:per\s*day|a\s*day|day\s*rate|daily|\/\s*day|p\/?d\b|per\s*hour|hourly|p\/?h\b|per\s*annum)[^.\n]*/gi;
+    /[^.\n!?]*[£$€](?:[^.\n!?]|\.(?=\d)){0,80}?(?:per\s*day|a\s*day|day\s*rate|daily|\/\s*day|p\/?d\b|per\s*hour|hourly|\/\s*(?:hour|hr|h)\b|p\/?h\b|per\s*annum)[^.\n!?]*/gi;
   const candidates = text.match(sentenceRe);
   if (!candidates) return EMPTY("");
   // Parse the first plausible sentence.

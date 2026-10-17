@@ -1,6 +1,10 @@
-const CACHE_NAME = "ir35careers-shell-v1";
+const CACHE_NAME = "ir35careers-shell-v6";
 const OFFLINE_URL = "/offline";
-const STATIC_URLS = [OFFLINE_URL, "/images/generated/brand/ir35careers-mark-256.png"];
+const STATIC_URLS = [
+  OFFLINE_URL,
+  "/images/generated/brand/ir35careers-mark-256.png",
+  "/images/generated/brand/ir35careers-app-icon-256.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_URLS)));
@@ -25,15 +29,39 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (["style", "script", "font", "image"].includes(request.destination)) {
+  const isVersionedAsset = url.pathname.startsWith("/_next/static/");
+  const isPublicBrandAsset = url.pathname.startsWith("/images/");
+
+  if (isVersionedAsset && ["style", "script", "font", "image"].includes(request.destination)) {
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      }))
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  if (isPublicBrandAsset && request.destination === "image") {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              const copy = response.clone();
+              void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          })
+          .catch(() => cached);
+        return cached ?? network;
+      })
     );
   }
 });

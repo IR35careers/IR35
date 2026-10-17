@@ -1,0 +1,485 @@
+import { after } from "next/server";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { commitDeliveryResult } from "@/lib/application-lifecycle-server";
+import { isUnresolvedAggregator } from "@/lib/application-lifecycle";
+import { applicationWorkerConfig } from "@/lib/application-worker-auth";
+import {
+  ApplicationWorkerRequestError,
+  readSignedApplicationWorkerJson,
+} from "@/lib/application-worker-request";
+import { validApplicationWorkerCallback } from "@/lib/application-worker-types";
+import {
+  providerReviewAction,
+  storeNeedsUser,
+  storeSubmittedApplication,
+} from "@/lib/application-result-persistence";
+import { ensureInboxAlias } from "@/lib/email/inbox-alias";
+import type { JobDetail } from "@/lib/job-types";
+import { normaliseResumeText } from "@/lib/resume/normalise-text";
+import { resolveCandidateName } from "@/lib/candidate-name";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import type { ContractorProfile } from "@/lib/workspace/types";
+import {
+  clearPortalSession,
+  savePortalSession,
+} from "@/lib/application-portal-session";
+import {
+  applicationWorkerCallbackErrorStatus,
+  applicationWorkerRetryDelayMs,
+  applicationWorkerRetryProgress,
+  shouldAutomaticallyRetryWorkerAttention,
+} from "@/lib/application-worker-retry";
+import { kickApplicationWorker } from "@/lib/application-worker-kick";
+import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
+import { providerReviewQuestions, type SubmissionProviderReceipt } from "@/lib/application-submission";
+
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
+const HEADERS = {
+  "Cache-Control": "no-store",
+  "X-Content-Type-Options": "nosniff",
+};
+
+export async function POST(request: Request): Promise<Response> {
+  try {
+    if (!applicationWorkerConfig().enabled)
+      return Response.json(
+        { error: "The application worker is not enabled." },
+        { status: 503, headers: HEADERS },
+      );
+    const parsed = await readSignedApplicationWorkerJson(request);
+    if (!validApplicationWorkerCallback(parsed))
+      return Response.json(
+        { error: "The worker callback is invalid." },
+        { status: 400, headers: HEADERS },
+      );
+
+    const callback = parsed;
+    const admin = getSupabaseAdmin();
+    const [taskResult, packetResult, profileResult, authResult] =
+      await Promise.all([
+        admin
+          .from("application_worker_tasks")
+          .select("*")
+          .eq("id", callback.taskId)
+          .eq("user_id", callback.userId)
+          .eq("application_id", callback.applicationId)
+          .eq("idempotency_key", callback.idempotencyKey)
+          .maybeSingle(),
+        admin
+          .from("application_packets")
+          .select("*")
+          .eq("id", callback.applicationId)
+          .eq("user_id", callback.userId)
+          .maybeSingle(),
+        admin
+          .from("profiles")
+          .select("application_profile")
+          .eq("id", callback.userId)
+          .maybeSingle(),
+        admin.auth.admin.getUserById(callback.userId),
+      ]);
+    if (taskResult.error || packetResult.error || profileResult.error)
+      throw new Error(
+        taskResult.error?.message ||
+          packetResult.error?.message ||
+          profileResult.error?.message,
+      );
+    if (!taskResult.data || !packetResult.data)
+      return Response.json(
+        { error: "The application worker task was not found." },
+        { status: 404, headers: HEADERS },
+      );
+    if (taskResult.data.status !== "running")
+      return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
+    // An old invocation must not overwrite a newer attempt's receipt or lease.
+    if (callback.workerAttempt !== undefined && callback.workerAttempt !== taskResult.data.attempts)
+      return Response.json({ ok: true, duplicate: true }, { headers: HEADERS });
+
+    let receipt: SubmissionProviderReceipt | undefined = callback.receipt;
+    if (callback.error && callback.retryable === true) {
+      receipt = {
+        state: "needs_user", providerSubmissionId: "", submittedAt: callback.completedAt,
+        message: "The hosted browser stopped before submission. IR35Careers can retry the approved application automatically.",
+        review: { action: "runner_timeout" },
+      };
+    }
+
+    const callbackDestination = resolveApplicationTaskDestination({
+      taskDestination: taskResult.data.destination,
+      receiptDestination: callback.receipt?.destination,
+    });
+    if (!callbackDestination)
+      return Response.json(
+        { error: "The employer application destination is invalid." },
+        { status: 400, headers: HEADERS },
+      );
+
+    if (callback.clearPortalSession) {
+      await clearPortalSession({
+        admin,
+        userId: callback.userId,
+        applicationId: callback.applicationId,
+      });
+    } else if (callback.portalSession) {
+      await savePortalSession({
+        admin,
+        userId: callback.userId,
+        applicationId: callback.applicationId,
+        destinationHost: new URL(callbackDestination).hostname,
+        session: callback.portalSession,
+      });
+    }
+
+    const packet = packetResult.data as Record<string, unknown>;
+    const job = packet.job_snapshot as JobDetail;
+    const profile = (profileResult.data?.application_profile ??
+      {}) as ContractorProfile;
+    const resumeText = normaliseResumeText(
+      String(packet.tailored_cv_text || packet.source_cv_text || ""),
+    );
+    const candidateName =
+      resolveCandidateName(profile.fullName || "", resumeText) || "Contractor";
+    const accountEmail =
+      authResult.data.user?.email ||
+      profile.forwardingEmail ||
+      profile.email ||
+      "";
+    const inbox = await ensureInboxAlias(
+      admin,
+      callback.userId,
+      accountEmail,
+      true,
+    );
+    const recipient = inbox?.forwardingEmail || accountEmail;
+    if (!recipient)
+      throw new Error("The contractor notification address is unavailable.");
+
+    if (callback.error && !receipt) {
+      const profileAction =
+        callback.error.startsWith("Complete your Application Profile") ||
+        callback.error.startsWith("Add your full name");
+      if (profileAction) await storeNeedsUser({
+        admin,
+        userId: callback.userId,
+        packet,
+        job,
+        recipient,
+        inboxAlias: inbox?.alias,
+        candidateName,
+        message: profileAction
+          ? callback.error
+          : "The employer portal stopped before confirmation. Your approved application is saved and IR35Careers can retry it without starting again.",
+        action: profileAction ? "/profile" : "runner_timeout",
+        taskId: callback.taskId, attempt: taskResult.data.attempts,
+      });
+      else await commitDeliveryResult(admin, {
+        applicationId: callback.applicationId, userId: callback.userId, status: "failed",
+        reason: "worker_crash", detail: "The worker stopped before employer confirmation. Check the outcome before retrying.",
+        receipt: { state: "failed", message: "The worker stopped before confirmation.", action: "retry" },
+        taskId: callback.taskId, attempt: taskResult.data.attempts,
+      });
+      await admin
+        .from("application_worker_tasks")
+        .update({
+          status: profileAction ? applicationWorkerCallbackErrorStatus() : "failed",
+          last_error: callback.error.slice(0, 500),
+          lease_owner: null,
+          lease_expires_at: null,
+          completed_at: callback.completedAt,
+          updated_at: callback.completedAt,
+        })
+        .eq("id", callback.taskId);
+      return Response.json(
+        { ok: true, state: profileAction ? "needs_user" : "failed" },
+        { headers: HEADERS },
+      );
+    }
+
+    if (!receipt)
+      return Response.json(
+        { error: "The worker result is missing." },
+        { status: 400, headers: HEADERS },
+      );
+    const resolvedDestination = callbackDestination;
+    if (receipt.state === "needs_user") {
+      const action = providerReviewAction(receipt);
+      if (action === "listing_unavailable") {
+        const now = callback.completedAt;
+        const jobId = String(job.id || "").trim();
+        const updates = [
+          admin
+            .from("application_submissions")
+            .update({
+              status: "cancelled",
+              error_code: "listing_unavailable",
+              receipt: {
+                state: "cancelled",
+                message:
+                  "This role is no longer accepting applications at its original source.",
+                action,
+              },
+              updated_at: now,
+            })
+            .eq("user_id", callback.userId)
+            .eq("idempotency_key", callback.idempotencyKey),
+          admin
+            .from("application_packets")
+            .update({ status: "skipped", updated_at: now })
+            .eq("id", callback.applicationId)
+            .eq("user_id", callback.userId),
+          admin.from("application_events").upsert(
+            {
+              user_id: callback.userId,
+              application_id: callback.applicationId,
+              event_type: "status_changed",
+              label: "Role no longer accepting applications",
+              idempotency_key: `submit:${callback.applicationId}:listing-unavailable`,
+              metadata: { action },
+            },
+            {
+              onConflict: "user_id,idempotency_key",
+              ignoreDuplicates: true,
+            },
+          ),
+          admin
+            .from("application_worker_tasks")
+            .update({
+              status: "cancelled",
+              last_error: null,
+              lease_owner: null,
+              lease_expires_at: null,
+              completed_at: now,
+              updated_at: now,
+            })
+            .eq("id", callback.taskId),
+        ];
+        if (jobId)
+          updates.push(
+            admin
+              .from("jobs")
+              .update({ expired_at: now })
+              .eq("id", jobId)
+              .is("expired_at", null),
+          );
+        const results = await Promise.all(updates);
+        const failure = results.find((result) => result.error)?.error;
+        if (failure) throw failure;
+        return Response.json(
+          { ok: true, state: "cancelled" },
+          { headers: HEADERS },
+        );
+      }
+      const workerAttempts = Number(taskResult.data.attempts ?? 0);
+      const attemptsThisRun = workerAttempts - Number(taskResult.data.attempt_base ?? 0);
+      if (
+        !isUnresolvedAggregator(resolvedDestination) &&
+        packet.truth_approved === true && packet.materials_approved === true && packet.submission_approved === true &&
+        shouldAutomaticallyRetryWorkerAttention({
+          action,
+          attempts: attemptsThisRun,
+          maximumAttempts: selectedApplyRunner() === "railway" ? 3 : undefined,
+          hasUnansweredQuestions: providerReviewQuestions(receipt.review).some((question) => question.required && (!question.reviewed || !question.answer.trim())),
+        })
+      ) {
+        const now = callback.completedAt;
+        const retryProgress = applicationWorkerRetryProgress(action);
+        const availableAt = new Date(
+          new Date(now).getTime() +
+            applicationWorkerRetryDelayMs(attemptsThisRun),
+        ).toISOString();
+        const results = await Promise.all([
+          admin.from("application_packets")
+            .update({ status: "ready", updated_at: now })
+            .eq("id", callback.applicationId).eq("user_id", callback.userId),
+          admin
+            .from("application_submissions")
+            .update({
+              status: "processing",
+              provider_submission_id: receipt.providerSubmissionId,
+              error_code: null,
+              receipt: {
+                state: "processing",
+                message: retryProgress.message,
+                action,
+                destination: receipt.destination ?? null,
+              },
+              updated_at: now,
+            })
+            .eq("user_id", callback.userId)
+            .eq("idempotency_key", callback.idempotencyKey),
+          admin.from("application_events").upsert(
+            {
+              user_id: callback.userId,
+              application_id: callback.applicationId,
+              event_type: "status_changed",
+              label: retryProgress.eventLabel,
+              idempotency_key: `submit:${callback.applicationId}:worker-retry:${workerAttempts}`,
+              metadata: {
+                action,
+                nextAttemptAt: availableAt,
+                workerAttempt: workerAttempts,
+              },
+            },
+            {
+              onConflict: "user_id,idempotency_key",
+              ignoreDuplicates: true,
+            },
+          ),
+          admin
+            .from("application_worker_tasks")
+            .update({
+              destination: resolvedDestination,
+              status: "queued",
+              available_at: availableAt,
+              last_error: callback.error?.slice(0, 500) ?? null,
+              lease_owner: null,
+              lease_expires_at: null,
+              completed_at: null,
+              updated_at: now,
+            })
+            .eq("id", callback.taskId),
+        ]);
+        const failure = results.find((result) => result.error)?.error;
+        if (failure) throw failure;
+        const publishRetry = async () => {
+          await kickApplicationWorker({
+            applicationId: callback.applicationId,
+            reason: "automatic_application_retry",
+            delaySeconds: applicationWorkerRetryDelayMs(attemptsThisRun) / 1_000,
+          });
+        };
+        if (process.env.VERCEL === "1") await publishRetry();
+        else after(publishRetry);
+        return Response.json(
+          { ok: true, state: "processing", availableAt },
+          { headers: HEADERS },
+        );
+      }
+      if (action === "runner_timeout") {
+        await commitDeliveryResult(admin, { applicationId: callback.applicationId, userId: callback.userId,
+          status: "failed", reason: "runner_timeout", detail: "The browser stopped before confirmation after the permitted retries.",
+          receipt: { state: "failed", action: "retry", message: "The application stopped before confirmation." },
+          taskId: callback.taskId, attempt: workerAttempts });
+        return Response.json({ ok: true, state: "failed" }, { headers: HEADERS });
+      }
+      await storeNeedsUser({
+        admin,
+        userId: callback.userId,
+        packet,
+        job,
+        recipient,
+        inboxAlias: inbox?.alias,
+        candidateName,
+        providerReceipt: receipt,
+        taskId: callback.taskId, attempt: workerAttempts,
+        message:
+          action === "runner_timeout"
+            ? "The employer portal paused before confirmation. Your approved application is saved and can be retried from IR35Careers."
+            : receipt.message,
+        action,
+      });
+      await admin
+        .from("application_worker_tasks")
+        .update({
+          destination: resolvedDestination,
+          status: isUnresolvedAggregator(resolvedDestination) ? "cancelled" : "needs_user",
+          last_error: null,
+          lease_owner: null,
+          lease_expires_at: null,
+          completed_at: callback.completedAt,
+          updated_at: callback.completedAt,
+        })
+        .eq("id", callback.taskId);
+      return Response.json(
+        { ok: true, state: "needs_user" },
+        { headers: HEADERS },
+      );
+    }
+    if (receipt.state === "processing") {
+      if (Number(taskResult.data.attempts) - Number(taskResult.data.attempt_base ?? 0) >= 3) {
+        await commitDeliveryResult(admin, { applicationId: callback.applicationId, userId: callback.userId,
+          status: "failed", reason: "provider_timeout", detail: "The provider did not confirm submission within the permitted attempts.",
+          receipt: { state: "failed", action: "retry", message: "The provider did not confirm submission." },
+          taskId: callback.taskId, attempt: taskResult.data.attempts });
+        return Response.json({ ok: true, state: "failed" }, { headers: HEADERS });
+      }
+      await Promise.all([
+        admin
+          .from("application_submissions")
+          .update({
+            status: "processing",
+            provider_submission_id: receipt.providerSubmissionId,
+            error_code: null,
+            receipt: {
+              state: "processing",
+              message: receipt.message,
+              destination: receipt.destination ?? null,
+            },
+            updated_at: callback.completedAt,
+          })
+          .eq("user_id", callback.userId)
+          .eq("idempotency_key", callback.idempotencyKey),
+        admin
+          .from("application_worker_tasks")
+          .update({
+            destination: resolvedDestination,
+            status: "queued",
+            available_at: new Date(Date.now() + 20_000).toISOString(),
+            lease_owner: null,
+            lease_expires_at: null,
+            updated_at: callback.completedAt,
+          })
+          .eq("id", callback.taskId),
+      ]);
+      await kickApplicationWorker({ applicationId: callback.applicationId, reason: "provider_processing", delaySeconds: 20 });
+      return Response.json(
+        { ok: true, state: "processing" },
+        { headers: HEADERS },
+      );
+    }
+
+    await storeSubmittedApplication({
+      admin,
+      userId: callback.userId,
+      packet,
+      job,
+      recipient,
+      inboxAlias: inbox?.alias,
+      candidateName,
+      providerReceipt: receipt,
+      taskId: callback.taskId, attempt: taskResult.data.attempts,
+      destination: resolvedDestination,
+    });
+    await admin
+      .from("application_worker_tasks")
+      .update({
+        destination: resolvedDestination,
+        status: "completed",
+        last_error: null,
+        lease_owner: null,
+        lease_expires_at: null,
+        completed_at: callback.completedAt,
+        updated_at: callback.completedAt,
+      })
+      .eq("id", callback.taskId);
+    return Response.json(
+      { ok: true, state: "submitted" },
+      { headers: HEADERS },
+    );
+  } catch (error) {
+    if (error instanceof ApplicationWorkerRequestError)
+      return Response.json(
+        { error: error.message },
+        { status: error.status, headers: HEADERS },
+      );
+    console.error("application_worker_callback_failed", {
+      reason: error instanceof Error ? error.message.slice(0, 300) : "unknown",
+    });
+    return Response.json(
+      { error: "The application worker result could not be saved." },
+      { status: 500, headers: HEADERS },
+    );
+  }
+}

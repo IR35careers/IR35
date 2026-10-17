@@ -14,6 +14,8 @@ tmp/
 out/
 build/
 dist/
+!services/application-worker/dist/
+!services/application-worker/dist/server.mjs
 .vinext/
 .wrangler/
 
@@ -22,6 +24,7 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.worker/
 
 # Local env files
 .env*.local
@@ -29,6 +32,7 @@ yarn-error.log*
 
 # Vercel
 .vercel
+supabase/.temp/
 
 # TypeScript
 *.tsbuildinfo
@@ -46,3 +50,5 @@ Thumbs.db
 
 # processing-engine test build output
 .test-build/
+
+.vercel

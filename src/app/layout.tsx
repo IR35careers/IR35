@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PwaRegister } from "@/components/PwaRegister";
+import { DeferredFeedbackBubble } from "@/components/DeferredFeedbackBubble";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { AppMotion } from "@/components/AppMotion";
+import { SITE_DESCRIPTION, SITE_ORIGIN } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,11 +17,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "IR35Careers | Find Better UK Contract Jobs",
+    default: "IR35Careers: UK Contract Jobs and IR35 Tools",
     template: "%s | IR35Careers",
   },
-  description:
-    "Find UK contract roles with IR35 status, day rates and working arrangements up front. Search, compare, save and create contractor job alerts.",
+  description: SITE_DESCRIPTION,
+  applicationName: "IR35Careers",
+  category: "UK contractor jobs",
   keywords: [
     "IR35",
     "UK contractor jobs",
@@ -30,19 +36,17 @@ export const metadata: Metadata = {
   authors: [{ name: "IR35Careers" }],
   creator: "IR35Careers",
   publisher: "IR35Careers",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://ir35careers.com"
-  ),
-  alternates: {
-    canonical: "/",
+  metadataBase: new URL(SITE_ORIGIN),
+  icons: {
+    icon: [{ url: "/favicon.ico", sizes: "16x16 32x32 48x48", type: "image/x-icon" }, { url: "/images/generated/brand/ir35careers-app-icon-512.png", sizes: "512x512", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     type: "website",
     locale: "en_GB",
-    url: "/",
-    title: "IR35Careers | Find Better UK Contract Jobs",
-    description:
-      "Find UK contract roles with IR35 status, day rates and working arrangements up front.",
+    url: `${SITE_ORIGIN}/`,
+    title: "IR35Careers: UK Contract Jobs and IR35 Tools",
+    description: SITE_DESCRIPTION,
     siteName: "IR35Careers",
     images: [
       {
@@ -55,9 +59,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "IR35Careers | Find Better UK Contract Jobs",
-    description:
-      "Find UK contract roles with IR35 status, day rates and working arrangements up front.",
+    title: "IR35Careers: UK Contract Jobs and IR35 Tools",
+    description: SITE_DESCRIPTION,
     images: ["/og-image.png"],
     creator: "@ir35careers",
   },
@@ -74,15 +77,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
   return (
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <AppMotion>{children}</AppMotion>
+        <GoogleAnalytics nonce={nonce} />
+        <DeferredFeedbackBubble />
         <CookieNotice />
         <PwaRegister />
       </body>

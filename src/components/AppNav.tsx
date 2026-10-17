@@ -4,63 +4,56 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  BarChart3,
   Bell,
   Bot,
   BriefcaseBusiness,
-  ChevronRight,
   Inbox,
   LayoutDashboard,
   Loader2,
   LogOut,
   Menu,
-  Network,
-  RefreshCw,
   Search,
   Settings,
   UserRound,
   X,
 } from "lucide-react";
-import { BetaDeniedModal } from "@/components/BetaDeniedModal";
+import type { LucideIcon } from "lucide-react";
 import { Brand } from "@/components/ui/brand";
-import { checkBetaAccess } from "@/lib/access";
 import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { useWorkspaceCloudSync, useWorkspaceState } from "@/lib/workspace/store";
+import { isUnsolicitedJobMarketingMessage } from "@/lib/workspace/mail";
 
-const NAV_GROUPS = [
-  {
-    label: "Workspace",
-    items: [
-      { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/jobs", label: "Find contracts", icon: Search },
-      { href: "/applications", label: "Applications", icon: BriefcaseBusiness, badge: "applications" },
-    ],
-  },
-  {
-    label: "Search assistant",
-    items: [
-      { href: "/automation", label: "Automation", icon: Bot },
-      { href: "/alerts", label: "Job alerts", icon: Bell },
-    ],
-  },
-  {
-    label: "Relationships",
-    items: [
-      { href: "/inbox", label: "Recruiter inbox", icon: Inbox, badge: "unread" },
-      { href: "/network", label: "Network", icon: Network },
-    ],
-  },
-  {
-    label: "Insights",
-    items: [{ href: "/analytics", label: "Analytics", icon: BarChart3 }],
-  },
-] as const;
+type NavItem = {
+  href: string;
+  label: string;
+  mobileLabel?: string;
+  icon: LucideIcon;
+  badge?: "applications" | "unread";
+  tour?: string;
+};
 
-let accessConfirmed = false;
+const PRIMARY_NAV = [
+  { href: "/dashboard", label: "Dashboard", mobileLabel: "Home", icon: LayoutDashboard },
+  { href: "/jobs", label: "Browse contracts", mobileLabel: "Browse", icon: Search, tour: "browse-contracts" },
+  { href: "/automation", label: "Auto Apply", icon: Bot, tour: "auto-apply" },
+  { href: "/applications", label: "Tracker", icon: BriefcaseBusiness, badge: "applications", tour: "application-tracker" },
+  { href: "/inbox", label: "Inbox", icon: Inbox, badge: "unread" },
+  { href: "/profile", label: "Profile", icon: UserRound },
+] satisfies readonly NavItem[];
+
+const MOBILE_QUICK_NAV = PRIMARY_NAV.slice(0, 5);
+
+const SECONDARY_NAV = [
+  { href: "/alerts", label: "Job alerts", icon: Bell },
+] satisfies readonly NavItem[];
 
 function activeRoute(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function initials(email?: string | null): string {
+  return (email?.trim().slice(0, 1) || "U").toUpperCase();
 }
 
 export function AppNav() {
@@ -69,143 +62,154 @@ export function AppNav() {
   const cloud = useWorkspaceCloudSync(isSupabaseConfigured() ? user?.id ?? null : null, user?.email ?? "");
   const pathname = usePathname();
   const router = useRouter();
-  const [checking, setChecking] = useState(!accessConfirmed);
-  const [denied, setDenied] = useState<{ email?: string } | null>(null);
-  const [accessError, setAccessError] = useState(false);
-  const [retryNonce, setRetryNonce] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const memberName = [user?.user_metadata?.full_name, user?.user_metadata?.name]
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0)
+    ?.trim();
+  const memberLabel = memberName || user?.email || "Your account";
 
   const counts = useMemo(() => cloud.error ? { applications: 0, unread: 0 } : ({
     applications: workspace.applications.filter((item) => !["rejected", "withdrawn", "failed", "skipped"].includes(item.status)).length,
-    unread: workspace.messages.filter((item) => !item.read).length,
+    unread: workspace.messages.filter(
+      (item) =>
+        !item.read &&
+        !isUnsolicitedJobMarketingMessage(
+          item.subject,
+          item.body,
+          item.from,
+        ),
+    ).length,
   }), [cloud.error, workspace.applications, workspace.messages]);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!user) {
-      setChecking(false);
-      return;
-    }
-    if (accessConfirmed) {
-      setChecking(false);
-      return;
-    }
-    let active = true;
-    const run = async () => {
-      let result = await checkBetaAccess();
-      if (result.state === "unknown") {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        if (!active) return;
-        result = await checkBetaAccess();
-      }
-      if (!active) return;
-      if (result.state === "denied") {
-        setDenied({ email: result.email });
-        return;
-      }
-      if (result.state === "unknown") {
-        setAccessError(true);
-        setChecking(false);
-        return;
-      }
-      accessConfirmed = true;
-      setChecking(false);
-    };
-    void run();
-    return () => { active = false; };
-  }, [retryNonce, user]);
+  useEffect(() => setMobileOpen(false), [pathname]);
 
   const leaveWorkspace = async () => {
     await signOut();
     router.replace("/");
   };
 
-  const sidebar = (mobile = false) => (
-    <div className="flex h-full flex-col bg-white">
-      <div className="flex h-[72px] items-center justify-between border-b border-slate-200 px-5">
-        <Brand href="/dashboard" />
-        {mobile && (
-          <button type="button" onClick={() => setMobileOpen(false)} className="ir35-focus inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600" aria-label="Close navigation">
-            <X size={18} aria-hidden="true" />
-          </button>
+  const navLink = (item: NavItem, mobile = false) => {
+    const active = activeRoute(pathname, item.href);
+    const badge = item.badge ? counts[item.badge] : 0;
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        data-tour={item.tour}
+        aria-current={active ? "page" : undefined}
+        className={`ir35-focus group inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-[background-color,color,box-shadow,transform] duration-200 ${
+          active
+            ? "ir35-nav-active"
+            : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+        } ${mobile ? "w-full justify-start" : "justify-center"}`}
+      >
+        <Icon size={16} className={`transition-[color,transform] duration-200 ${active ? "scale-105 text-brand-700" : "text-slate-400 group-hover:scale-105 group-hover:text-slate-600"}`} aria-hidden="true" />
+        <span>{item.label}</span>
+        {badge > 0 && (
+          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${active ? "bg-white text-brand-800" : "bg-slate-100 text-slate-600"}`}>
+            {badge > 99 ? "99+" : badge}
+          </span>
         )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-3 py-5">
-        <Link href="/jobs" className="ir35-focus mb-6 flex min-h-12 items-center justify-between rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-700">
-          <span className="flex items-center gap-2.5"><Search size={17} aria-hidden="true" /> Find a contract</span>
-          <ChevronRight size={15} aria-hidden="true" />
-        </Link>
-
-        <nav aria-label="Workspace navigation" className="space-y-6">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
-              <p className="px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
-              <div className="mt-2 space-y-1">
-                {group.items.map((item) => {
-                  const active = activeRoute(pathname, item.href);
-                  const badge = "badge" in item ? counts[item.badge] : 0;
-                  const Icon = item.icon;
-                  return (
-                    <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`ir35-focus group flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors ${active ? "bg-brand-50 text-brand-900" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>
-                      <Icon size={17} className={active ? "text-brand-700" : "text-slate-400 group-hover:text-slate-600"} aria-hidden="true" />
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {badge > 0 && <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${active ? "bg-white text-brand-800" : "bg-slate-100 text-slate-600"}`}>{badge > 99 ? "99+" : badge}</span>}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </div>
-
-      <div className="border-t border-slate-200 p-3">
-        <Link href="/profile" className="ir35-focus flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><UserRound size={17} aria-hidden="true" /></span>
-          <span className="min-w-0 flex-1"><span className="block truncate">{user?.email ?? "Preview workspace"}</span><span className="block text-[11px] font-normal text-slate-500">Profile and CV evidence</span></span>
-        </Link>
-        <div className="mt-1 grid grid-cols-2 gap-1">
-          <Link href="/settings" className="ir35-focus flex min-h-10 items-center justify-center gap-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"><Settings size={14} aria-hidden="true" /> Settings</Link>
-          {user ? <button type="button" onClick={() => void leaveWorkspace()} className="ir35-focus flex min-h-10 items-center justify-center gap-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"><LogOut size={14} aria-hidden="true" /> Sign out</button> : <span className="flex min-h-10 items-center justify-center text-[11px] font-semibold text-amber-700">Local preview</span>}
-        </div>
-      </div>
-    </div>
-  );
+      </Link>
+    );
+  };
 
   return (
     <>
-      {denied && <BetaDeniedModal email={denied.email} onJoin={async () => { await leaveWorkspace(); }} onClose={async () => { await signOut(); router.replace("/account"); }} />}
-      {(checking || cloud.loading) && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50" aria-live="polite" aria-busy="true"><Loader2 className="animate-spin text-slate-300" size={24} /><span className="sr-only">Loading your workspace</span></div>}
-      {accessError && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true" aria-labelledby="access-check-title">
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-floating">
-            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><RefreshCw size={20} aria-hidden="true" /></span>
-            <h2 id="access-check-title" className="mt-4 text-lg font-semibold text-slate-950">We couldn&apos;t confirm access</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Your session is still safe. Check your connection and try again.</p>
-            <button type="button" onClick={() => { setAccessError(false); setChecking(true); setRetryNonce((value) => value + 1); }} className="ir35-focus mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"><RefreshCw size={15} aria-hidden="true" /> Try again</button>
-          </div>
+      {cloud.loading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50" aria-live="polite" aria-busy="true">
+          <Loader2 className="animate-spin text-slate-300" size={24} />
+          <span className="sr-only">Loading your workspace</span>
         </div>
       )}
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-slate-200 lg:block" aria-label="Workspace sidebar">
-        {sidebar()}
-      </aside>
+      <header className="ir35-app-header ir35-glass-nav sticky top-0 z-40 border-b border-emerald-100/80">
+        <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-6 px-4 sm:px-6 lg:px-8">
+          <div className="shrink-0"><Brand href="/dashboard" /></div>
 
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl lg:hidden">
-        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-          <Brand href="/dashboard" />
-          <button type="button" onClick={() => setMobileOpen(true)} className="ir35-focus inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700" aria-expanded={mobileOpen} aria-controls="member-mobile-menu" aria-label="Open workspace navigation"><Menu size={19} aria-hidden="true" /></button>
+          <nav aria-label="Workspace navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 xl:flex">
+            {PRIMARY_NAV.map((item) => navLink(item))}
+          </nav>
+
+          <div className="ml-auto hidden shrink-0 items-center gap-2 xl:flex">
+            <Link href="/settings" aria-label="Settings" className={`ir35-focus inline-flex h-10 w-10 items-center justify-center rounded-xl ${activeRoute(pathname, "/settings") ? "bg-brand-50 text-brand-800" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`}>
+              <Settings size={17} aria-hidden="true" />
+            </Link>
+            <details className="group relative">
+              <summary className="ir35-account-pill ir35-focus flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200 bg-white py-1.5 pl-1.5 pr-3 text-left shadow-[0_6px_20px_-18px_rgba(15,23,42,0.7)] hover:bg-slate-50">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-xs font-bold text-white">{initials(memberLabel)}</span>
+                <span className="max-w-36 truncate text-xs font-semibold text-slate-700">{memberLabel}</span>
+              </summary>
+              <div className="ir35-popover absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+                {memberName && <p className="truncate px-3 py-2 text-xs text-slate-500">{user?.email}</p>}
+                {SECONDARY_NAV.map((item) => navLink(item, true))}
+                {user && <button type="button" onClick={() => void leaveWorkspace()} className="ir35-focus flex min-h-10 w-full items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-950"><LogOut size={16} /> Sign out</button>}
+              </div>
+            </details>
+          </div>
+
+          <button type="button" onClick={() => setMobileOpen(true)} className="ir35-focus ml-auto inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 xl:hidden" aria-expanded={mobileOpen} aria-controls="member-mobile-menu" aria-label="Open workspace navigation">
+            <Menu size={19} aria-hidden="true" />
+          </button>
         </div>
       </header>
 
+      <nav
+        id="workspace-quick-nav"
+        aria-label="Quick workspace navigation"
+        className="ir35-mobile-dock fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/90 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-16px_36px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl xl:hidden"
+      >
+        <div className="mx-auto grid max-w-2xl grid-cols-5 px-1.5">
+          {MOBILE_QUICK_NAV.map((item) => {
+            const active = activeRoute(pathname, item.href);
+            const badge = item.badge ? counts[item.badge] : 0;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                data-tour={item.tour}
+                aria-current={active ? "page" : undefined}
+                className={`ir35-focus group relative flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-[background-color,color,transform] duration-200 ${active ? "text-brand-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
+              >
+                <span className={`relative flex h-7 min-w-8 items-center justify-center rounded-full px-2 transition-[background-color,transform] duration-200 ${active ? "scale-105 bg-brand-50" : "bg-transparent group-hover:scale-105"}`}>
+                  <Icon size={17} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
+                  {badge > 0 && (
+                    <span className="absolute -right-3 -top-2 min-w-4 rounded-full bg-slate-950 px-1 py-0.5 text-center text-[8px] leading-none text-white">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
+                <span className="max-w-full truncate">{item.mobileLabel ?? item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />
-          <div id="member-mobile-menu" className="relative h-full w-[min(88vw,320px)] shadow-2xl">{sidebar(true)}</div>
+        <div className="ir35-dialog-backdrop fixed inset-0 z-50 xl:hidden">
+          <button type="button" className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />
+          <aside id="member-mobile-menu" className="ir35-mobile-sheet ir35-sheet-panel absolute inset-y-0 right-0 flex w-[min(92vw,360px)] flex-col bg-white shadow-2xl" aria-label="Workspace menu">
+            <div className="flex h-[72px] items-center justify-between border-b border-slate-200 px-5">
+              <Brand href="/dashboard" />
+              <button type="button" onClick={() => setMobileOpen(false)} className="ir35-focus inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600" aria-label="Close navigation"><X size={18} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <p className="px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Main</p>
+              <nav className="mt-2 space-y-1" aria-label="Main workspace links">{PRIMARY_NAV.map((item) => navLink(item, true))}</nav>
+              <p className="mt-6 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">More</p>
+              <nav className="mt-2 space-y-1" aria-label="More workspace links">{SECONDARY_NAV.map((item) => navLink(item, true))}{navLink({ href: "/settings", label: "Settings", icon: Settings }, true)}</nav>
+            </div>
+            <div className="border-t border-slate-200 p-4">
+              <Link href="/profile" className="ir35-focus flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-sm font-bold text-white">{initials(memberLabel)}</span>
+                <span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{memberLabel}</span><span className="block truncate text-xs text-slate-500">{memberName ? user?.email : "Profile and application details"}</span></span>
+              </Link>
+              {user && <button type="button" onClick={() => void leaveWorkspace()} className="ir35-focus mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600"><LogOut size={16} /> Sign out</button>}
+            </div>
+          </aside>
         </div>
       )}
     </>

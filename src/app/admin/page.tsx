@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -10,30 +11,67 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   ChevronRight,
-  Clock3,
+  CloudDownload,
   Database,
+  Download,
   ExternalLink,
   FileCheck2,
   Gauge,
+  Globe2,
   Home,
+  Inbox,
   LayoutDashboard,
+  LayoutTemplate,
   Loader2,
+  LockKeyhole,
   LogOut,
+  Mail,
   Menu,
+  MessageSquareText,
+  Monitor,
+  Plus,
+  Power,
   RefreshCw,
+  RotateCcw,
   Search,
+  Send,
   ShieldAlert,
   ShieldCheck,
+  Smartphone,
   TrendingUp,
+  Trash2,
   UserRound,
   Users,
+  Workflow,
   X,
   Zap,
 } from "lucide-react";
+import { SystemMapPanel, type ApplicationRunSummary, type ApplicationWorkerQueueSummary, type RunnerTestResult } from "@/components/admin/SystemMapPanel";
 import { useAuth } from "@/lib/auth-context";
+import type { CampaignAudience, EmailCampaignDraft, EmailCampaignTemplate } from "@/lib/email/campaigns";
+import type { IntegrationStatus } from "@/lib/integration-status";
+import { feedbackSummary as summariseFeedback, type FeedbackRecord, type FeedbackStatus } from "@/lib/admin-feedback";
 import { supabase } from "@/lib/supabase";
+import type { GoogleAnalyticsSnapshot } from "@/lib/google-analytics";
 
-type Section = "stats" | "jobs" | "users" | "waitlist" | "runs";
+type Section = "stats" | "analytics" | "jobs" | "sources" | "users" | "feedback" | "campaigns" | "waitlist" | "admins" | "runs" | "system";
+
+type AdminRole = "owner" | "admin";
+type AdminStatus = "active" | "disabled";
+
+type AdministratorRow = {
+  id: string | null;
+  email: string;
+  userId: string | null;
+  role: AdminRole;
+  status: AdminStatus;
+  invitedByEmail: string | null;
+  lastLoginAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  managed: boolean;
+  source: "registry" | "bootstrap";
+};
 
 type JobRow = {
   id: string;
@@ -55,11 +93,140 @@ type UserRow = {
   email?: string;
   created_at: string;
   last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+  updated_at?: string | null;
+  banned_until?: string | null;
   provider?: string;
   profile?: {
     full_name?: string | null;
+    phone?: string | null;
+    linkedin_url?: string | null;
+    job_title?: string | null;
+    years_experience?: number | null;
     skills?: string[] | null;
     cv_filename?: string | null;
+    target_rate_min?: number | null;
+    preferred_ir35?: string | null;
+    preferred_remote?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    application_profile?: {
+      location?: string;
+      availability?: string;
+      targetRole?: string;
+      phone?: string;
+      linkedInUrl?: string;
+    } | null;
+  } | null;
+  activity?: {
+    applications: number;
+    applied: number;
+    needsAttention: number;
+    savedJobs: number;
+    resumeVersions: number;
+    alerts: number;
+    inboxMessages: number;
+    unreadMessages: number;
+    latestApplicationAt?: string | null;
+  };
+};
+
+type ContractorDetail = {
+  account: {
+    id: string;
+    email?: string;
+    created_at: string;
+    last_sign_in_at?: string | null;
+    email_confirmed_at?: string | null;
+    updated_at?: string | null;
+    banned_until?: string | null;
+    provider?: string;
+  };
+  profile: (NonNullable<UserRow["profile"]> & {
+    cv_path?: string | null;
+    application_profile?: Record<string, unknown> | null;
+  }) | null;
+  resume: {
+    filename: string;
+    available: boolean;
+    source: "uploaded" | "saved_text";
+  } | null;
+  resumeVersions: Array<{
+    id: string;
+    job_id: string | null;
+    job_title: string;
+    company_name: string;
+    source_filename: string;
+    label: string;
+    status: string;
+    source_text: string;
+    tailored_text: string;
+    accepted_suggestion_ids?: string[] | null;
+    confirmed_keyword_ids?: string[] | null;
+    score?: number | Record<string, unknown> | null;
+    created_at: string;
+    approved_at?: string | null;
+  }>;
+  applications: Array<{
+    id: string;
+    job_id: string;
+    job_snapshot: Record<string, unknown> | null;
+    status: string;
+    mode: string;
+    match_score?: number | null;
+    resume_version_id?: string | null;
+    resume_version_label?: string | null;
+    materials_approved?: boolean | null;
+    submission_approved?: boolean | null;
+    receipt?: Record<string, unknown> | null;
+    created_at: string;
+    updated_at: string;
+  }>;
+  events: Array<{
+    id: string;
+    application_id: string;
+    event_type: string;
+    label: string;
+    metadata?: Record<string, unknown> | null;
+    created_at: string;
+  }>;
+  inboxMessages: Array<{
+    id: string;
+    application_id?: string | null;
+    sender: string;
+    recipient: string;
+    subject: string;
+    preview?: string | null;
+    classification: string;
+    is_read: boolean;
+    received_at: string;
+  }>;
+  inboxAlias: {
+    alias: string;
+    forwarding_email?: string | null;
+    forwarding_enabled: boolean;
+    provider_state?: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  automation: {
+    enabled: boolean;
+    dry_run_only: boolean;
+    minimum_match: number;
+    minimum_day_rate?: number | null;
+    ir35_statuses?: string[] | null;
+    workplaces?: string[] | null;
+    daily_limit: number;
+    prepare_cover_letter: boolean;
+    require_human_approval: boolean;
+    excluded_companies?: string[] | null;
+    updated_at: string;
+  } | null;
+  entitlement: {
+    plan: string;
+    preparation_credits?: number | null;
+    billing_state?: string | null;
+    updated_at: string;
   } | null;
 };
 
@@ -69,11 +236,79 @@ type RunRow = {
   created_at: string;
 };
 
+type JobSourceRow = {
+  id: string;
+  name: string;
+  type: "greenhouse" | "lever" | "ashby" | "workable" | "smartrecruiters";
+  slug: string;
+  enabled: boolean;
+  builtIn: boolean;
+  createdAt: string;
+  updatedAt: string;
+  directApplyConnected?: boolean;
+  directApplyEmail?: string | null;
+  directApplyVerifiedAt?: string | null;
+};
+
+type PendingEmployerConnection = {
+  id: string;
+  requestLogId: string;
+  sourceId: string;
+  sourceName: string;
+  email: string;
+  confirmedAt: string;
+};
+
+type WaitlistRow = {
+  id: string;
+  email: string;
+  created_at: string;
+  launch_notified_at?: string | null;
+  launch_email_id?: string | null;
+  launch_email_attempts?: number | null;
+  launch_last_error?: string | null;
+};
+
+type CampaignHistoryRow = {
+  id: string;
+  created_at: string;
+  summary: {
+    action?: string;
+    subject?: string;
+    audience?: CampaignAudience;
+    recipient_count?: number;
+    sent?: number;
+    failed?: number;
+    status?: string;
+  } | null;
+};
+
+type AnalyticsData = {
+  totalUsers: number;
+  activeUsers7d: number;
+  newUsers30d: number;
+  profiles: number;
+  cvsUploaded: number;
+  savedJobs: number;
+  alerts: number;
+  resumeVersions: number;
+  applicationPackets: number;
+  submissions: number;
+  inboxMessages: number;
+  signupSeries: Array<{ date: string; label: string; count: number }>;
+  applicationStages: Record<string, number>;
+  submissionStages: Record<string, number>;
+  campaignsSent: number;
+  campaignAccepted: number;
+  campaignFailed: number;
+  visitorAnalytics: GoogleAnalyticsSnapshot;
+};
+
 type AdminData = {
   totalUsers?: number | null;
   profiles?: number;
   cvsUploaded?: number;
-  waitlist?: Array<{ email: string; created_at: string }> | number;
+  waitlist?: WaitlistRow[] | number;
   liveJobs?: number;
   expiredJobs?: number;
   ir35Breakdown?: { outside?: number; inside?: number; tbc?: number };
@@ -86,6 +321,25 @@ type AdminData = {
   total?: number;
   jobs?: JobRow[];
   runs?: RunRow[];
+  emailTemplates?: EmailCampaignTemplate[];
+  audienceCounts?: Record<CampaignAudience, number>;
+  campaignHistory?: CampaignHistoryRow[];
+  sender?: string | null;
+  deliveryConfigured?: boolean;
+  analytics?: AnalyticsData;
+  jobSources?: JobSourceRow[];
+  sourceProviders?: JobSourceRow["type"][];
+  pendingEmployerConnections?: PendingEmployerConnection[];
+  integrations?: IntegrationStatus[];
+  applicationRuns?: ApplicationRunSummary[];
+  workerQueue?: ApplicationWorkerQueueSummary;
+  systemGeneratedAt?: string;
+  feedback?: FeedbackRecord[];
+  feedbackSummary?: ReturnType<typeof summariseFeedback>;
+  administrators?: AdministratorRow[];
+  viewerRole?: AdminRole;
+  viewerEmail?: string;
+  canManageAdministrators?: boolean;
 };
 
 const NAV_GROUPS: Array<{
@@ -96,17 +350,27 @@ const NAV_GROUPS: Array<{
     label: "Workspace",
     items: [
       { id: "stats", label: "Dashboard", icon: LayoutDashboard },
+      { id: "analytics", label: "Analytics", icon: BarChart3 },
       { id: "jobs", label: "Job inventory", icon: BriefcaseBusiness },
+      { id: "sources", label: "Free job sources", icon: CloudDownload },
       { id: "users", label: "Contractors", icon: Users },
     ],
   },
   {
-    label: "Growth",
-    items: [{ id: "waitlist", label: "Waitlist", icon: Clock3 }],
+    label: "Communications",
+    items: [
+      { id: "feedback", label: "Customer feedback", icon: MessageSquareText },
+      { id: "campaigns", label: "Email campaigns", icon: Send },
+      { id: "waitlist", label: "Beta audience", icon: Mail },
+    ],
   },
   {
     label: "System",
-    items: [{ id: "runs", label: "Pipeline runs", icon: Activity }],
+    items: [
+      { id: "admins", label: "Administrators", icon: ShieldCheck },
+      { id: "system", label: "System map", icon: Workflow },
+      { id: "runs", label: "Pipeline runs", icon: Activity },
+    ],
   },
 ];
 
@@ -116,25 +380,55 @@ const SECTION_COPY: Record<Section, { eyebrow: string; title: string; descriptio
     title: "Business dashboard",
     description: "Monitor contractor growth, job quality and the health of your ingestion pipeline.",
   },
+  analytics: {
+    eyebrow: "Growth intelligence",
+    title: "Product analytics",
+    description: "Understand acquisition, activation, application progress and campaign delivery without exposing personal data.",
+  },
   jobs: {
     eyebrow: "Content operations",
     title: "Job inventory",
     description: "Review the latest roles, IR35 coverage and listings that need moderation.",
   },
+  sources: {
+    eyebrow: "Free discovery network",
+    title: "Public ATS sources",
+    description: "Add and verify employer career boards that publish jobs through free public ATS endpoints.",
+  },
   users: {
     eyebrow: "Audience",
     title: "Contractors",
-    description: "Understand registrations, profile readiness and CV adoption.",
+    description: "Review account history, profile readiness and product activity for each contractor.",
+  },
+  feedback: {
+    eyebrow: "Customer voice",
+    title: "Feedback and support",
+    description: "Prioritise customer enquiries, record follow-up progress and keep unresolved issues visible.",
   },
   waitlist: {
-    eyebrow: "Growth",
-    title: "Waitlist",
-    description: "Track early demand and the people waiting to hear from IR35Careers.",
+    eyebrow: "One-time notice",
+    title: "Beta audience",
+    description: "Review the former waitlist retained only for the approved public-access announcement.",
+  },
+  campaigns: {
+    eyebrow: "Communications",
+    title: "Email campaigns",
+    description: "Create, preview, test and send professional branded service emails from one secure workspace.",
+  },
+  admins: {
+    eyebrow: "Access control",
+    title: "Administrators",
+    description: "Control who can open the private admin workspace and keep every access change auditable.",
   },
   runs: {
     eyebrow: "System health",
     title: "Pipeline runs",
     description: "Inspect recent ingestion and moderation activity across the platform.",
+  },
+  system: {
+    eyebrow: "System intelligence",
+    title: "Platform connection map",
+    description: "Inspect the complete user journey, live integrations, failure points and recovery actions from one view.",
   },
 };
 
@@ -148,13 +442,13 @@ async function adminFetch(path: string, init?: RequestInit) {
 }
 
 function formatNumber(value: number | null | undefined) {
-  return typeof value === "number" ? new Intl.NumberFormat("en-GB").format(value) : "—";
+  return typeof value === "number" ? new Intl.NumberFormat("en-GB").format(value) : "Not available";
 }
 
 function formatDate(value?: string | null, includeTime = false) {
-  if (!value) return "—";
+  if (!value) return "Not available";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "Not available";
   return new Intl.DateTimeFormat("en-GB", includeTime
     ? { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
     : { day: "2-digit", month: "short", year: "numeric" }
@@ -178,7 +472,7 @@ function formatRate(job: JobRow) {
   const suffix = job.rate_type === "day" ? "/day" : job.rate_type === "hour" ? "/hr" : job.rate_type ? `/${job.rate_type}` : "";
   const formatter = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
   if (job.rate_min && job.rate_max && job.rate_min !== job.rate_max) {
-    return `${formatter.format(job.rate_min)}–${formatter.format(job.rate_max)}${suffix}`;
+    return `${formatter.format(job.rate_min)} - ${formatter.format(job.rate_max)}${suffix}`;
   }
   return `${formatter.format(job.rate_max ?? job.rate_min ?? 0)}${suffix}`;
 }
@@ -216,7 +510,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${className}`}>
+    <section className={`ir35-admin-panel min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${className}`}>
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
         <div>
           <h2 className="text-[15px] font-semibold text-slate-950">{title}</h2>
@@ -233,22 +527,57 @@ export default function AdminPage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
+  const campaignDraftHydrated = useRef(false);
   const [section, setSection] = useState<Section>("stats");
   const [data, setData] = useState<AdminData | null>(null);
   const [busy, setBusy] = useState(true);
   const [forbidden, setForbidden] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(false);
+  const adminNavigationRef = useRef<HTMLElement>(null);
   const [expiringId, setExpiringId] = useState<string | null>(null);
+  const [sendingLaunch, setSendingLaunch] = useState(false);
+  const [emailDraft, setEmailDraft] = useState<EmailCampaignDraft | null>(null);
+  const [campaignId, setCampaignId] = useState("");
+  const [campaignAudience, setCampaignAudience] = useState<CampaignAudience>("registered");
+  const [customRecipient, setCustomRecipient] = useState("");
+  const [emailPreview, setEmailPreview] = useState("");
+  const [previewingEmail, setPreviewingEmail] = useState(false);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
+  const [sendingCampaign, setSendingCampaign] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [sourceName, setSourceName] = useState("");
+  const [sourceType, setSourceType] = useState<JobSourceRow["type"]>("greenhouse");
+  const [sourceSlug, setSourceSlug] = useState("");
+  const [savingSource, setSavingSource] = useState(false);
+  const [sourceActionId, setSourceActionId] = useState<string | null>(null);
+  const [runningPipeline, setRunningPipeline] = useState(false);
+  const [destinationSourceId, setDestinationSourceId] = useState("");
+  const [recruitmentEmail, setRecruitmentEmail] = useState("");
+  const [sendingDestinationVerification, setSendingDestinationVerification] = useState(false);
+  const [reviewingConnectionId, setReviewingConnectionId] = useState<string | null>(null);
+  const [testingRunner, setTestingRunner] = useState(false);
+  const [runnerTestResult, setRunnerTestResult] = useState<RunnerTestResult | null>(null);
+  const [emailLoopTestResult, setEmailLoopTestResult] = useState<RunnerTestResult | null>(null);
+  const [testingEmailLoop, setTestingEmailLoop] = useState(false);
+  const [recoveringSubmissions, setRecoveringSubmissions] = useState(false);
+  const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
   const load = useCallback(async (target: Section) => {
     setBusy(true);
     setError(null);
     try {
       const response = await adminFetch(`/api/admin?section=${target}`);
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (response.status === 403) {
         setForbidden(true);
         return;
       }
@@ -263,12 +592,42 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && user) load(section);
+    if (!loading && user && sessionReady) load(section);
     if (!loading && !user) {
       setBusy(false);
-      setForbidden(true);
+      router.replace("/login");
     }
-  }, [user, loading, section, load]);
+  }, [user, loading, section, load, router, sessionReady]);
+
+  useEffect(() => {
+    if (!user || !sessionReady || forbidden) return;
+
+    const publishPresence = () => {
+      if (document.visibilityState !== "visible") return;
+      void adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "support_presence", currentSection: section }),
+      }).catch(() => undefined);
+    };
+
+    publishPresence();
+    const timer = window.setInterval(publishPresence, 30_000);
+    window.addEventListener("focus", publishPresence);
+    document.addEventListener("visibilitychange", publishPresence);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", publishPresence);
+      document.removeEventListener("visibilitychange", publishPresence);
+    };
+  }, [forbidden, section, sessionReady, user]);
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("section");
+    if (requested && ["stats", "analytics", "jobs", "sources", "users", "feedback", "campaigns", "waitlist", "admins", "runs", "system"].includes(requested)) {
+      setSection(requested as Section);
+    }
+  }, []);
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -281,11 +640,142 @@ export default function AdminPage() {
     return () => window.removeEventListener("keydown", focusSearch);
   }, []);
 
+  useEffect(() => {
+    if (section !== "campaigns" || !data?.emailTemplates?.length || campaignDraftHydrated.current) return;
+    campaignDraftHydrated.current = true;
+    try {
+      const stored = window.sessionStorage.getItem("ir35careers-admin-email-draft");
+      if (stored) {
+        const saved = JSON.parse(stored) as { draft?: EmailCampaignDraft; campaignId?: string; audience?: CampaignAudience; customRecipient?: string };
+        if (saved.draft?.subject && saved.draft?.message && saved.campaignId) {
+          setEmailDraft(saved.draft);
+          setCampaignId(saved.campaignId);
+          if (["registered", "registered_with_cv", "registered_without_cv", "inactive_30d", "waitlist", "all", "custom"].includes(saved.audience ?? "")) setCampaignAudience(saved.audience as CampaignAudience);
+          setCustomRecipient(saved.customRecipient ?? "");
+          setDraftSavedAt(new Date().toISOString());
+          return;
+        }
+      }
+    } catch {
+      window.sessionStorage.removeItem("ir35careers-admin-email-draft");
+    }
+    const first = data.emailTemplates[0];
+    setEmailDraft({
+      templateId: first.templateId,
+      subject: first.subject,
+      preheader: first.preheader,
+      eyebrow: first.eyebrow,
+      heading: first.heading,
+      message: first.message,
+      ctaLabel: first.ctaLabel,
+      ctaUrl: first.ctaUrl,
+    });
+    setCampaignId(crypto.randomUUID());
+  }, [data?.emailTemplates, section]);
+
+  useEffect(() => {
+    if (section !== "campaigns" || !emailDraft || !campaignId || !campaignDraftHydrated.current) return;
+    const timeout = window.setTimeout(() => {
+      window.sessionStorage.setItem("ir35careers-admin-email-draft", JSON.stringify({
+        draft: emailDraft,
+        campaignId,
+        audience: campaignAudience,
+        customRecipient,
+      }));
+      setDraftSavedAt(new Date().toISOString());
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [campaignAudience, campaignId, customRecipient, emailDraft, section]);
+
+  useEffect(() => {
+    if (section !== "campaigns" || !emailDraft) return;
+    const timeout = window.setTimeout(async () => {
+      setPreviewingEmail(true);
+      try {
+        const response = await adminFetch("/api/admin", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "preview_email_campaign", draft: emailDraft }),
+        });
+        const json = await response.json();
+        if (response.ok) setEmailPreview(json.html ?? "");
+      } finally {
+        setPreviewingEmail(false);
+      }
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [emailDraft, section]);
+
+  useEffect(() => {
+    if (section !== "sources" || destinationSourceId || !data?.jobSources?.length) return;
+    setDestinationSourceId(data.jobSources[0].id);
+  }, [data?.jobSources, destinationSourceId, section]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const update = () => { setMobileViewport(media.matches); if (!media.matches) setMobileOpen(false); };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileOpen || !mobileViewport) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = "hidden";
+    const controls = () => Array.from(adminNavigationRef.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled])') ?? []).filter((node) => node.getClientRects().length);
+    controls()[0]?.focus();
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key !== "Tab") return;
+      const items = controls();
+      const first = items[0]; const last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    window.addEventListener("keydown", keyboard);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", keyboard); previousFocus?.focus(); };
+  }, [mobileOpen, mobileViewport]);
+
   const navigate = (next: Section) => {
     setSection(next);
     setQuery("");
     setNotice(null);
     setMobileOpen(false);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  const unlockAdmin = async () => {
+    setUnlocking(true);
+    setError(null);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token ?? "";
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const json = await response.json();
+      if (response.status === 401 || response.status === 403) {
+        setForbidden(true);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "Unable to unlock secure administration");
+      setForbidden(false);
+      setBusy(true);
+      setSessionReady(true);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to unlock secure administration");
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
+  const lockAndSignOut = async (destination = "/") => {
+    await fetch("/api/admin/session", { method: "DELETE" }).catch(() => undefined);
+    await signOut();
+    router.replace(destination);
   };
 
   const expireJob = async (job: JobRow) => {
@@ -309,9 +799,395 @@ export default function AdminPage() {
     }
   };
 
+  const saveJobSource = async () => {
+    setSavingSource(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "upsert_job_source",
+          source: { name: sourceName, type: sourceType, slug: sourceSlug },
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to verify this public job board");
+      setSourceName("");
+      setSourceSlug("");
+      setNotice(`${json.source?.name ?? "The source"} was verified and added. ${formatNumber(json.publishedJobsFound)} published jobs were visible on its board.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to verify this public job board");
+    } finally {
+      setSavingSource(false);
+    }
+  };
+
+  const toggleJobSource = async (source: JobSourceRow) => {
+    setSourceActionId(source.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "toggle_job_source", sourceId: source.id, enabled: !source.enabled }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to update this source");
+      setNotice(`${source.name} is now ${source.enabled ? "paused" : "included in daily refreshes"}.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to update this source");
+    } finally {
+      setSourceActionId(null);
+    }
+  };
+
+  const removeJobSource = async (source: JobSourceRow) => {
+    if (!window.confirm(`Remove ${source.name} from future free job refreshes? Existing listings remain until they expire.`)) return;
+    setSourceActionId(source.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "remove_job_source", sourceId: source.id }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to remove this source");
+      setNotice(`${source.name} was removed from future refreshes.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to remove this source");
+    } finally {
+      setSourceActionId(null);
+    }
+  };
+
+  const runJobPipeline = async () => {
+    setRunningPipeline(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "run_job_pipeline" }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "The job refresh did not complete");
+      setNotice(`Refresh complete. ${formatNumber(json.summary?.upserted)} jobs were updated from ${formatNumber(json.summary?.fetched)} fetched listings.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The job refresh did not complete");
+    } finally {
+      setRunningPipeline(false);
+    }
+  };
+
+  const runApplicationRunnerTest = async () => {
+    setTestingRunner(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "test_application_runner" }),
+      });
+      const json = await response.json() as RunnerTestResult & { error?: string };
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "The application runner test could not start");
+      setRunnerTestResult(json);
+      setNotice(json.state === "submitted" ? "The controlled production application completed successfully." : "The controlled test found an application runner issue. Review the failed check below.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The application runner test failed");
+    } finally {
+      setTestingRunner(false);
+    }
+  };
+
+  const runInboundEmailLoopTest = async () => {
+    setTestingEmailLoop(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "test_inbound_email_loop" }),
+      });
+      const json = (await response.json()) as RunnerTestResult & {
+        error?: string;
+      };
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok)
+        throw new Error(json.error ?? "The application email test could not start");
+      setEmailLoopTestResult(json);
+      setNotice(
+        json.state === "submitted"
+          ? "The private application email was received, linked and accepted for forwarding."
+          : "The email loop test found a delivery issue. Review the failed check below.",
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The application email loop test failed",
+      );
+    } finally {
+      setTestingEmailLoop(false);
+    }
+  };
+
+  const recoverStaleSubmissions = async () => {
+    setRecoveringSubmissions(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "recover_stale_submissions" }),
+      });
+      const json = await response.json() as {
+        recovered?: number;
+        requeued?: number;
+        error?: string;
+      };
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "Stale application attempts could not be recovered");
+      const recovered = json.recovered ?? 0;
+      const requeued = json.requeued ?? 0;
+      setNotice(
+        requeued > 0
+          ? `${requeued} approved application${requeued === 1 ? "" : "s"} returned to the background submission queue.`
+          : recovered > 0
+            ? `${recovered} interrupted application attempt${recovered === 1 ? "" : "s"} moved to secure continuation.`
+          : "No stale application attempts were found.",
+      );
+      await load("analytics");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Stale application attempts could not be recovered");
+    } finally {
+      setRecoveringSubmissions(false);
+    }
+  };
+
+  const requestDestinationVerification = async () => {
+    setSendingDestinationVerification(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "request_employer_destination_verification",
+          sourceId: destinationSourceId,
+          recruitmentEmail,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to send employer verification");
+      setRecruitmentEmail("");
+      setNotice(`Verification sent to ${json.email}. Direct application delivery activates only after the employer confirms the link.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send employer verification");
+    } finally {
+      setSendingDestinationVerification(false);
+    }
+  };
+
+  const reviewEmployerConnection = async (connection: PendingEmployerConnection, approve: boolean) => {
+    if (!window.confirm(`${approve ? "Approve" : "Reject"} direct application delivery for ${connection.sourceName} at ${connection.email}?`)) return;
+    setReviewingConnectionId(connection.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: approve ? "approve_employer_connection" : "reject_employer_connection",
+          connectionId: connection.id,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to review this employer connection");
+      setNotice(`${connection.sourceName} application delivery was ${approve ? "approved" : "rejected"}.`);
+      await load("sources");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to review this employer connection");
+    } finally {
+      setReviewingConnectionId(null);
+    }
+  };
+
+  const sendBetaLaunch = async () => {
+    if (!window.confirm("Correct the approved addresses, remove registered duplicates and invalid rows, then send the beta invitation to every remaining recipient?")) return;
+    setSendingLaunch(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "send_beta_launch",
+          confirmation: "SEND_BETA_ACCESS_2026_08_21",
+        }),
+      });
+      const json = await response.json();
+      if (response.status === 401) {
+        setSessionReady(false);
+        return;
+      }
+      if (!response.ok) throw new Error(json.error ?? "Unable to send the beta invitation");
+      setNotice(`${json.sent ?? 0} beta invitation emails were accepted by the delivery provider. ${json.failed ?? 0} failed.`);
+      await load("waitlist");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the beta invitation");
+    } finally {
+      setSendingLaunch(false);
+    }
+  };
+
+  const chooseEmailTemplate = (template: EmailCampaignTemplate) => {
+    setEmailDraft({
+      templateId: template.templateId,
+      subject: template.subject,
+      preheader: template.preheader,
+      eyebrow: template.eyebrow,
+      heading: template.heading,
+      message: template.message,
+      ctaLabel: template.ctaLabel,
+      ctaUrl: template.ctaUrl,
+    });
+    setCampaignId(crypto.randomUUID());
+    setNotice(null);
+  };
+
+  const sendCampaignTest = async () => {
+    if (!emailDraft) return;
+    setSendingTestEmail(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "send_email_campaign_test", draft: emailDraft }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to send the test email");
+      setNotice(`A test email was sent to ${json.recipient}.`);
+      await load("campaigns");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the test email");
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
+
+  const sendEmailCampaign = async () => {
+    if (!emailDraft || !campaignId) return;
+    setSendingCampaign(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "send_email_campaign",
+          confirmation: "SEND_EMAIL_CAMPAIGN",
+          campaignId,
+          draft: emailDraft,
+          audience: campaignAudience,
+          customEmail: customRecipient,
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Unable to send the email campaign");
+      setNotice(`${json.sent ?? 0} emails were accepted by the delivery provider. ${json.failed ?? 0} failed.`);
+      setCampaignId(crypto.randomUUID());
+      await load("campaigns");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the email campaign");
+    } finally {
+      setSendingCampaign(false);
+    }
+  };
+
+  const updateFeedbackStatus = async (feedbackId: string, feedbackStatus: FeedbackStatus) => {
+    setUpdatingFeedbackId(feedbackId);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "update_feedback_status", feedbackId, feedbackStatus }),
+      });
+      const json = await response.json() as { error?: string; feedback?: FeedbackRecord };
+      if (!response.ok || !json.feedback) throw new Error(json.error ?? "Unable to update feedback");
+      setData((current) => {
+        if (!current) return current;
+        const feedback = (current.feedback ?? []).map((record) => record.id === feedbackId ? json.feedback as FeedbackRecord : record);
+        return { ...current, feedback, feedbackSummary: summariseFeedback(feedback) };
+      });
+      setNotice(`Feedback marked ${feedbackStatus.replaceAll("_", " ")}.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to update feedback");
+    } finally {
+      setUpdatingFeedbackId(null);
+    }
+  };
+
+  const replyToFeedback = async (feedbackId: string, feedbackReply: string, feedbackResolve: boolean) => {
+    setUpdatingFeedbackId(feedbackId);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "reply_feedback", feedbackId, feedbackReply, feedbackResolve }),
+      });
+      const json = await response.json() as { error?: string; feedback?: FeedbackRecord };
+      if (!response.ok || !json.feedback) throw new Error(json.error ?? "Unable to send the support reply");
+      setData((current) => {
+        if (!current) return current;
+        const feedback = (current.feedback ?? []).map((record) => record.id === feedbackId ? json.feedback as FeedbackRecord : record);
+        return { ...current, feedback, feedbackSummary: summariseFeedback(feedback) };
+      });
+      setNotice(feedbackResolve ? "The resolution was sent to the customer." : "Your reply was sent to the customer.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the support reply");
+    } finally {
+      setUpdatingFeedbackId(null);
+    }
+  };
+
   const normalisedQuery = query.trim().toLowerCase();
   const jobs = (data?.jobs ?? []).filter((job) => !normalisedQuery || [job.title, job.company_name, job.location, job.source_domain, job.ir35_status]
     .some((value) => value?.toLowerCase().includes(normalisedQuery)));
+  const jobSources = (data?.jobSources ?? []).filter((source) => !normalisedQuery || [source.name, source.type, source.slug]
+    .some((value) => value.toLowerCase().includes(normalisedQuery)));
   const users = (data?.users ?? []).filter((account) => !normalisedQuery || [account.email, account.profile?.full_name, account.provider]
     .some((value) => value?.toLowerCase().includes(normalisedQuery)));
   const waitlist = (Array.isArray(data?.waitlist) ? data.waitlist : []).filter((entry) => !normalisedQuery || entry.email.toLowerCase().includes(normalisedQuery));
@@ -321,6 +1197,14 @@ export default function AdminPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0b0f17] text-slate-400">
         <div className="flex items-center gap-3 text-sm"><Loader2 className="animate-spin text-emerald-400" size={20} /> Opening admin workspace…</div>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#0b0f17] text-slate-400">
+        <div className="flex items-center gap-3 text-sm"><Loader2 className="animate-spin text-emerald-400" size={20} /> Opening administrator sign in…</div>
       </main>
     );
   }
@@ -335,11 +1219,37 @@ export default function AdminPage() {
           </span>
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">Protected workspace</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin access required</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-400">Sign in with an approved IR35Careers administrator account to open the operations dashboard.</p>
-          <Link href="/account?next=/admin" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
-            Continue to sign in <ArrowRight size={15} />
-          </Link>
-          <Link href="/" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
+          <p className="mt-3 text-sm leading-6 text-slate-400">Only approved IR35Careers administrator accounts can create a short-lived admin session.</p>
+          {user ? (
+            <button type="button" onClick={() => void lockAndSignOut("/login")} className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+              Try a different account <ArrowRight size={15} />
+            </button>
+          ) : (
+            <Link href="/login" className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+              Continue to sign in <ArrowRight size={15} />
+            </Link>
+          )}
+          <Link href="https://www.ir35careers.com" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!sessionReady) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0f17] px-5 py-12 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_35%)]" />
+        <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.055] p-7 text-center shadow-2xl backdrop-blur-xl sm:p-9">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"><LockKeyhole size={25} /></span>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">Short-lived secure session</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight">Unlock administration</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-400">Your account will be verified on the server before a protected, HttpOnly admin session is opened for 20 minutes.</p>
+          <p className="mt-5 rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3 text-xs text-slate-400"><span className="block font-semibold text-slate-200">admin.ir35careers</span><span className="mt-1 block truncate">{user?.email}</span></p>
+          {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
+          <button type="button" onClick={() => void unlockAdmin()} disabled={unlocking} className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-[#0b0f17]">
+            {unlocking ? <Loader2 className="animate-spin" size={16} /> : <LockKeyhole size={16} />} {unlocking ? "Verifying account…" : "Unlock for 20 minutes"}
+          </button>
+          <Link href="https://www.ir35careers.com" className="mt-4 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><Home size={14} /> Back to website</Link>
         </div>
       </main>
     );
@@ -353,7 +1263,7 @@ export default function AdminPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-emerald-950 shadow-[0_0_28px_rgba(16,185,129,0.2)]"><BriefcaseBusiness size={20} /></span>
           <span><span className="block text-sm font-bold tracking-tight text-white">IR35Careers</span><span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">Admin workspace</span></span>
         </Link>
-        <button type="button" onClick={() => setMobileOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Close admin navigation"><X size={18} /></button>
+        <button type="button" onClick={() => setMobileOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Close admin navigation"><X size={18} /></button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 py-5" aria-label="Admin navigation">
@@ -369,7 +1279,7 @@ export default function AdminPage() {
                     key={item.id}
                     onClick={() => navigate(item.id)}
                     aria-current={selected ? "page" : undefined}
-                    className={`group flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-400 ${selected ? "bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" : "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}
+                    className={`group flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-400 ${selected ? "bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]" : "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}
                   >
                     <item.icon size={17} className={selected ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-300"} />
                     <span className="flex-1">{item.label}</span>
@@ -391,33 +1301,33 @@ export default function AdminPage() {
       <div className="border-t border-white/[0.07] p-4">
         <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-slate-300"><UserRound size={16} /></span>
-          <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-white">Administrator</p><p className="truncate text-[11px] text-slate-500">{user?.email}</p></div>
-          <button type="button" onClick={async () => { await signOut(); router.replace("/"); }} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="Sign out"><LogOut size={15} /></button>
+          <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-white">admin.ir35careers</p><p className="truncate text-[11px] text-slate-500">{user?.email}</p></div>
+          <button type="button" onClick={() => void lockAndSignOut()} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="Lock admin and sign out"><LogOut size={15} /></button>
         </div>
       </div>
     </>
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f7f9] text-slate-950">
+    <div className="ir35-admin-canvas min-h-screen text-slate-950">
       {mobileOpen && <button type="button" className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col border-r border-white/[0.06] bg-[#0b0f17] transition-transform duration-200 lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
+      <aside ref={adminNavigationRef} id="admin-mobile-navigation" inert={mobileViewport && !mobileOpen} role={mobileViewport && mobileOpen ? "dialog" : undefined} aria-modal={mobileViewport && mobileOpen ? true : undefined} aria-label="Administrator navigation" className={`ir35-admin-navigation fixed inset-y-0 left-0 z-50 flex w-[min(320px,88vw)] flex-col border-r border-white/[0.06] bg-[#0b0f17] transition-transform duration-200 motion-reduce:transition-none lg:w-[272px] lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
-      <div className="lg:pl-[272px]">
-        <header className="sticky top-0 z-30 flex h-20 items-center gap-3 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-xl sm:px-6 xl:px-8">
-          <button type="button" onClick={() => setMobileOpen(true)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden" aria-label="Open admin navigation"><Menu size={18} /></button>
-          <div className="relative max-w-xl flex-1">
+      <div className="min-w-0 lg:pl-[272px]">
+        <header className="ir35-admin-topbar sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-slate-200/80 px-3 backdrop-blur-xl sm:h-20 sm:gap-3 sm:px-6 xl:px-8">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-expanded={mobileOpen} aria-controls="admin-mobile-navigation" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden" aria-label="Open admin navigation"><Menu size={18} /></button>
+          <div className="relative min-w-0 max-w-xl flex-1">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100" placeholder={`Search ${section === "stats" ? "recent roles" : current.title.toLowerCase()}…`} aria-label={`Search ${current.title}`} />
             <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block">/</kbd>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/" target="_blank" className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950 sm:inline-flex">View website <ExternalLink size={14} /></Link>
+            <Link href="https://www.ir35careers.com" target="_blank" className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-950 sm:inline-flex">View website <ExternalLink size={14} /></Link>
             <button type="button" onClick={() => load(section)} disabled={busy} className="flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-70" aria-label="Refresh admin data"><RefreshCw size={14} className={busy ? "animate-spin" : ""} /><span className="hidden sm:inline">Refresh</span></button>
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1560px] px-4 py-6 sm:px-6 sm:py-8 xl:px-8">
+        <main className="mx-auto min-w-0 max-w-[1560px] px-3 py-5 sm:px-6 sm:py-8 xl:px-8">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">{current.eyebrow}</p>
@@ -436,14 +1346,78 @@ export default function AdminPage() {
             </div>
           ) : section === "stats" && data ? (
             <Overview data={data} query={normalisedQuery} onNavigate={navigate} />
+          ) : section === "analytics" && data?.analytics ? (
+            <AnalyticsPanel analytics={data.analytics} recovering={recoveringSubmissions} onRecover={() => void recoverStaleSubmissions()} />
           ) : section === "jobs" && data ? (
             <JobsPanel jobs={jobs} total={(data.jobs ?? []).length} query={normalisedQuery} expiringId={expiringId} onExpire={expireJob} />
+          ) : section === "sources" && data ? (
+            <JobSourcesPanel
+              sources={jobSources}
+              total={(data.jobSources ?? []).length}
+              providers={data.sourceProviders ?? ["greenhouse", "lever", "ashby", "workable", "smartrecruiters"]}
+              lastRun={data.lastPipelineRun ?? null}
+              query={normalisedQuery}
+              name={sourceName}
+              type={sourceType}
+              slug={sourceSlug}
+              saving={savingSource}
+              actionId={sourceActionId}
+              running={runningPipeline}
+              destinationSourceId={destinationSourceId}
+              recruitmentEmail={recruitmentEmail}
+              sendingDestinationVerification={sendingDestinationVerification}
+              pendingConnections={data.pendingEmployerConnections ?? []}
+              reviewingConnectionId={reviewingConnectionId}
+              onNameChange={setSourceName}
+              onTypeChange={setSourceType}
+              onSlugChange={setSourceSlug}
+              onSave={() => void saveJobSource()}
+              onToggle={(source) => void toggleJobSource(source)}
+              onRemove={(source) => void removeJobSource(source)}
+              onRun={() => void runJobPipeline()}
+              onDestinationSourceChange={setDestinationSourceId}
+              onRecruitmentEmailChange={setRecruitmentEmail}
+              onRequestDestinationVerification={() => void requestDestinationVerification()}
+              onReviewConnection={(connection, approve) => void reviewEmployerConnection(connection, approve)}
+            />
           ) : section === "users" && data ? (
             <UsersPanel users={users} total={data.total ?? (data.users ?? []).length} query={normalisedQuery} />
+          ) : section === "feedback" && data ? (
+            <FeedbackPanel
+              feedback={data.feedback ?? []}
+              summary={data.feedbackSummary ?? summariseFeedback(data.feedback ?? [])}
+              query={normalisedQuery}
+              updatingId={updatingFeedbackId}
+              onStatusChange={(feedbackId, status) => void updateFeedbackStatus(feedbackId, status)}
+              onReply={(feedbackId, message, resolve) => void replyToFeedback(feedbackId, message, resolve)}
+            />
+          ) : section === "campaigns" && data ? (
+            <EmailCampaignsPanel
+              data={data}
+              draft={emailDraft}
+              audience={campaignAudience}
+              customRecipient={customRecipient}
+              previewHtml={emailPreview}
+              previewing={previewingEmail}
+              sendingTest={sendingTestEmail}
+              sendingCampaign={sendingCampaign}
+              draftSavedAt={draftSavedAt}
+              query={normalisedQuery}
+              onChooseTemplate={chooseEmailTemplate}
+              onDraftChange={setEmailDraft}
+              onAudienceChange={setCampaignAudience}
+              onCustomRecipientChange={setCustomRecipient}
+              onSendTest={() => void sendCampaignTest()}
+              onSendCampaign={() => void sendEmailCampaign()}
+            />
           ) : section === "waitlist" && data ? (
-            <WaitlistPanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} />
+            <LaunchAudiencePanel entries={waitlist} total={Array.isArray(data.waitlist) ? data.waitlist.length : 0} query={normalisedQuery} sending={sendingLaunch} onSend={sendBetaLaunch} />
+          ) : section === "admins" && data ? (
+            <AdministratorsPanel data={data} onChanged={() => load("admins")} onNotice={setNotice} onError={setError} />
           ) : section === "runs" && data ? (
             <RunsPanel runs={runs} query={normalisedQuery} />
+          ) : section === "system" && data ? (
+            <SystemMapPanel integrations={data.integrations ?? []} applicationRuns={data.applicationRuns ?? []} workerQueue={data.workerQueue} query={normalisedQuery} testing={testingRunner} testingEmail={testingEmailLoop} testResult={runnerTestResult} emailTestResult={emailLoopTestResult} onRunTest={() => void runApplicationRunnerTest()} onRunEmailTest={() => void runInboundEmailLoopTest()} />
           ) : null}
         </main>
       </div>
@@ -461,20 +1435,55 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   const breakdownTotal = (breakdown.outside ?? 0) + (breakdown.inside ?? 0) + (breakdown.tbc ?? 0);
   const recentJobs = (data.recentJobs ?? []).filter((job) => !query || [job.title, job.company_name, job.location, job.source_domain].some((value) => value?.toLowerCase().includes(query)));
   const latestRun = data.lastPipelineRun;
+  const feedback = data.feedbackSummary ?? summariseFeedback(data.feedback ?? []);
+  const pendingConnections = data.pendingEmployerConnections?.length ?? 0;
+  const needsUser = data.workerQueue?.needsUser ?? 0;
+  const attentionTotal = feedback.new + pendingConnections + needsUser;
 
   const cards = [
-    { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-50 text-emerald-700", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
-    { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-blue-50 text-blue-700", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
-    { label: "CV readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
-    { label: "Waitlist", value: typeof data.waitlist === "number" ? data.waitlist : 0, icon: Clock3, tone: "bg-amber-50 text-amber-700", detail: "People awaiting product updates", badge: "Demand" },
+    { label: "Active jobs", value: data.liveJobs, icon: BriefcaseBusiness, tone: "bg-emerald-600 text-white", surface: "from-[#d8fff0] to-[#f5fffb] border-emerald-100", detail: `${liveShare}% of total inventory is live`, badge: "Live" },
+    { label: "Contractors", value: data.totalUsers, icon: Users, tone: "bg-cyan-600 text-white", surface: "from-[#ddf7ff] to-[#f5fcff] border-cyan-100", detail: `${formatNumber(profiles)} completed profiles`, badge: "Members" },
+    { label: "Resume readiness", value: `${cvReadiness}%`, icon: FileCheck2, tone: "bg-violet-600 text-white", surface: "from-[#eee8ff] to-[#fbf9ff] border-violet-100", detail: `${formatNumber(cvs)} of ${formatNumber(profiles)} profiles`, badge: "Adoption" },
+    { label: "Launch audience", value: typeof data.waitlist === "number" ? data.waitlist : Array.isArray(data.waitlist) ? data.waitlist.length : 0, icon: Mail, tone: "bg-amber-500 text-amber-950", surface: "from-[#fff3c7] to-[#fffbf0] border-amber-100", detail: "People previously invited to the beta", badge: "Audience" },
   ];
 
   return (
     <div className="mt-7 space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="relative overflow-hidden rounded-[28px] border border-emerald-950/10 bg-[#071f28] text-white shadow-[0_28px_80px_-46px_rgba(2,44,34,0.82)]">
+        <div className="pointer-events-none absolute -right-24 -top-36 h-[360px] w-[360px] rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-44 left-[28%] h-[360px] w-[360px] rounded-full bg-emerald-400/20 blur-3xl" />
+        <div className="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] lg:items-stretch lg:p-8">
+          <div className="flex min-h-[230px] flex-col justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">Today at IR35Careers</p>
+              <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-[1.08] tracking-[-0.04em] text-white sm:text-[2.6rem]">Run the platform from one clear view.</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">Monitor contractor growth, fresh contract inventory, application health and customer support without jumping between systems.</p>
+            </div>
+            <div className="mt-7 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-2 text-slate-200"><strong className="text-white">{formatNumber(data.liveJobs)}</strong> live roles</span>
+              <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-2 text-slate-200"><strong className="text-white">{formatNumber(data.totalUsers)}</strong> contractors</span>
+              <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-2 text-slate-200">Pipeline {latestRun ? "reporting" : "waiting"}</span>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/15 bg-white/[0.09] p-5 backdrop-blur-xl sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-300">Priority queue</p><p className="mt-1 text-lg font-semibold text-white">{attentionTotal ? `${attentionTotal} items need review` : "Nothing urgent"}</p></div>
+              <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${attentionTotal ? "bg-amber-300 text-amber-950" : "bg-emerald-300 text-emerald-950"}`}>{attentionTotal ? <ShieldAlert size={20} /> : <CheckCircle2 size={20} />}</span>
+            </div>
+            <div className="mt-5 space-y-2.5">
+              <button type="button" onClick={() => onNavigate("feedback")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 text-left text-xs text-slate-300 transition hover:bg-white/10"><span>New customer feedback</span><strong className="text-white">{feedback.new}</strong></button>
+              <button type="button" onClick={() => onNavigate("sources")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 text-left text-xs text-slate-300 transition hover:bg-white/10"><span>Employer connections</span><strong className="text-white">{pendingConnections}</strong></button>
+              <button type="button" onClick={() => onNavigate("system")} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3.5 py-3 text-left text-xs text-slate-300 transition hover:bg-white/10"><span>Applications waiting for users</span><strong className="text-white">{needsUser}</strong></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <article key={card.label} className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/40">
-            <div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-semibold text-slate-500">{card.badge}</span></div>
+          <article key={card.label} className={`group rounded-2xl border bg-gradient-to-br p-5 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.44)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.34)] ${card.surface}`}>
+            <div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-sm ${card.tone}`}><card.icon size={18} /></span><span className="rounded-full border border-white/80 bg-white/65 px-2 py-1 text-[10px] font-semibold text-slate-600">{card.badge}</span></div>
             <p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] text-slate-950 tabular-nums">{typeof card.value === "string" ? card.value : formatNumber(card.value)}</p>
             <p className="mt-1 text-sm font-medium text-slate-700">{card.label}</p>
             <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500"><TrendingUp size={13} className="text-emerald-600" /> {card.detail}</p>
@@ -539,6 +1548,284 @@ function Overview({ data, query, onNavigate }: { data: AdminData; query: string;
   );
 }
 
+function compactDuration(seconds: number) {
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+}
+
+function VisitorAnalyticsPanel({ analytics }: { analytics: GoogleAnalyticsSnapshot }) {
+  if (!analytics.trackingConfigured || !analytics.reportingConfigured || !analytics.connected) {
+    const title = !analytics.trackingConfigured
+      ? "Google Analytics setup is waiting for its Measurement ID"
+      : !analytics.reportingConfigured
+        ? "Visitor tracking is ready; reporting access is not connected"
+        : "Google Analytics reporting needs attention";
+    const detail = !analytics.trackingConfigured
+      ? "Finish the Google Analytics property and web data stream, then add the Measurement ID to Vercel. Analytics remains off for every visitor until they actively allow it."
+      : !analytics.reportingConfigured
+        ? "The website can collect consented visits. Add the Analytics property ID and a read-only service account to show locations, devices, sources and pages in this admin panel."
+        : analytics.error || "The Google reporting service did not return data.";
+    return (
+      <Panel title="Website visitors" description="Google Analytics 4, with consent-first tracking and no advertising signals.">
+        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_280px] sm:p-6">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+            <p className="text-sm font-semibold text-amber-950">{title}</p>
+            <p className="mt-2 text-sm leading-6 text-amber-900">{detail}</p>
+            <p className="mt-3 text-xs leading-5 text-amber-800">Required Vercel values: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID, GOOGLE_ANALYTICS_PROPERTY_ID, GOOGLE_ANALYTICS_CLIENT_EMAIL and GOOGLE_ANALYTICS_PRIVATE_KEY.</p>
+          </div>
+          <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="flex min-h-28 items-center justify-between gap-4 rounded-2xl bg-slate-950 p-5 text-white transition hover:bg-slate-900">
+            <span><span className="block text-sm font-semibold">Open Google Analytics</span><span className="mt-2 block text-xs leading-5 text-slate-400">Finish setup or inspect the original reports.</span></span><ExternalLink size={18} />
+          </a>
+        </div>
+      </Panel>
+    );
+  }
+
+  const maxViews = Math.max(...analytics.daily.map((day) => day.pageViews), 1);
+  const summaryCards = [
+    { label: "Live now", value: analytics.realtimeUsers, detail: "Active in the last 30 minutes", icon: Activity, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "Visitors", value: analytics.summary.activeUsers, detail: `${formatNumber(analytics.summary.newUsers)} new visitors`, icon: Users, tone: "bg-blue-50 text-blue-700" },
+    { label: "Sessions", value: analytics.summary.sessions, detail: `${formatNumber(analytics.summary.engagedSessions)} engaged`, icon: Globe2, tone: "bg-violet-50 text-violet-700" },
+    { label: "Page views", value: analytics.summary.pageViews, detail: `${analytics.summary.bounceRate}% bounce rate`, icon: BarChart3, tone: "bg-amber-50 text-amber-700" },
+  ];
+  const list = (title: string, rows: Array<{ label: string; value: number; secondary?: string }>, empty: string) => (
+    <Panel title={title} description="Last 30 days">
+      {rows.length ? <div className="divide-y divide-slate-100">{rows.map((row, index) => <div key={`${row.label}-${index}`} className="flex items-center justify-between gap-4 px-5 py-3.5"><div className="min-w-0"><p className="truncate text-xs font-semibold text-slate-800">{row.label || "Not set"}</p>{row.secondary && <p className="mt-1 truncate text-[11px] text-slate-500">{row.secondary}</p>}</div><span className="shrink-0 text-xs font-semibold tabular-nums text-slate-700">{formatNumber(row.value)}</span></div>)}</div> : <EmptyState title={empty} detail="Data appears after consented visits are processed." />}
+    </Panel>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-700">Google Analytics 4</p><h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-950">Website visitors</h2><p className="mt-1 text-xs text-slate-500">Aggregated, consented traffic. No Resume content, application answers or individual account identity is sent.</p></div>
+        <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:border-slate-300">Open Google Analytics <ExternalLink size={13} /></a>
+      </div>
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {summaryCards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{formatNumber(card.value)}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.85fr]">
+        <Panel title="Visitor activity" description="Daily page views during the last 30 days.">
+          <div className="p-5 sm:p-6">
+            <div className="flex h-52 items-end gap-1.5" aria-label="Daily website page views">{analytics.daily.map((day) => <div key={day.date} className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[9px] font-semibold tabular-nums text-slate-500 opacity-0 group-hover:opacity-100">{day.pageViews}</span><div className="w-full rounded-t bg-gradient-to-t from-emerald-700 to-emerald-400" style={{ height: `${Math.max((day.pageViews / maxViews) * 168, day.pageViews ? 7 : 2)}px` }} title={`${day.date}: ${day.pageViews} page views`} /></div>)}</div>
+            <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5"><div><p className="text-xs text-slate-500">Average session</p><p className="mt-1 text-lg font-semibold tabular-nums text-slate-900">{compactDuration(analytics.summary.averageSessionDuration)}</p></div><div><p className="text-xs text-slate-500">Consent scope</p><p className="mt-1 text-sm font-semibold text-emerald-700">Analytics only</p></div></div>
+          </div>
+        </Panel>
+        {list("Visitor countries", analytics.countries, "No country data yet")}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-3">
+        {list("Cities and regions", analytics.cities, "No city data yet")}
+        {list("Traffic sources", analytics.sources, "No source data yet")}
+        {list("Devices", analytics.devices, "No device data yet")}
+      </div>
+      {list("Popular pages", analytics.pages, "No page data yet")}
+    </div>
+  );
+}
+
+function AnalyticsPanel({ analytics, recovering, onRecover }: { analytics: AnalyticsData; recovering: boolean; onRecover: () => void }) {
+  const cvRate = analytics.profiles > 0 ? Math.round((analytics.cvsUploaded / analytics.profiles) * 100) : 0;
+  const activeRate = analytics.totalUsers > 0 ? Math.round((analytics.activeUsers7d / analytics.totalUsers) * 100) : 0;
+  const submissionRate = analytics.applicationPackets > 0 ? Math.round((analytics.submissions / analytics.applicationPackets) * 100) : 0;
+  const maxSignups = Math.max(...analytics.signupSeries.map((day) => day.count), 1);
+  const funnel = [
+    { label: "Accounts", value: analytics.totalUsers, tone: "bg-slate-950" },
+    { label: "Profiles", value: analytics.profiles, tone: "bg-emerald-700" },
+    { label: "Resumes", value: analytics.cvsUploaded, tone: "bg-emerald-500" },
+    { label: "Applications", value: analytics.applicationPackets, tone: "bg-cyan-500" },
+    { label: "Submissions", value: analytics.submissions, tone: "bg-blue-500" },
+  ];
+  const applicationStages = Object.entries(analytics.applicationStages).sort((a, b) => b[1] - a[1]);
+  const stageMax = Math.max(...applicationStages.map(([, count]) => count), 1);
+  const submissionStages = Object.entries(analytics.submissionStages).sort((a, b) => b[1] - a[1]);
+  const submissionStageMax = Math.max(...submissionStages.map(([, count]) => count), 1);
+  const campaignTotal = analytics.campaignAccepted + analytics.campaignFailed;
+  const deliveryRate = campaignTotal > 0 ? Math.round((analytics.campaignAccepted / campaignTotal) * 100) : 100;
+  const cards = [
+    { label: "Contractors", value: analytics.totalUsers, detail: `+${formatNumber(analytics.newUsers30d)} in the last 30 days`, icon: Users, tone: "bg-blue-50 text-blue-700" },
+    { label: "Active this week", value: analytics.activeUsers7d, detail: `${activeRate}% of all accounts`, icon: Activity, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "Resume readiness", value: `${cvRate}%`, detail: `${formatNumber(analytics.cvsUploaded)} uploaded Resumes`, icon: FileCheck2, tone: "bg-violet-50 text-violet-700" },
+    { label: "Submission progress", value: `${submissionRate}%`, detail: `${formatNumber(analytics.submissions)} submission records`, icon: Send, tone: "bg-amber-50 text-amber-700" },
+  ];
+
+  return (
+    <div className="mt-7 space-y-5">
+      <VisitorAnalyticsPanel analytics={analytics.visitorAnalytics} />
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => <article key={card.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"><div className="flex items-center justify-between"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}><card.icon size={18} /></span><TrendingUp size={16} className="text-slate-300" /></div><p className="mt-5 text-[28px] font-semibold tracking-[-0.04em] tabular-nums text-slate-950">{typeof card.value === "number" ? formatNumber(card.value) : card.value}</p><p className="mt-1 text-xs font-semibold text-slate-800">{card.label}</p><p className="mt-2 text-xs text-slate-500">{card.detail}</p></article>)}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.85fr]">
+        <Panel title="New contractor accounts" description="Daily registrations over the last 14 days" action={<span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-500">Live</span>}>
+          <div className="p-5 sm:p-6">
+            <div className="flex h-64 items-end gap-1.5 sm:gap-2" aria-label="Fourteen-day signup chart">
+              {analytics.signupSeries.map((day) => <div key={day.date} className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[10px] font-semibold tabular-nums text-slate-500 opacity-0 transition group-hover:opacity-100">{day.count}</span><div className="w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 transition group-hover:from-emerald-700" style={{ height: `${Math.max((day.count / maxSignups) * 178, day.count ? 12 : 3)}px` }} title={`${day.label}: ${day.count} registrations`} /><span className="truncate text-[9px] text-slate-400 [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{day.label}</span></div>)}
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="Engagement signals" description="Actions that show contractor intent">
+          <dl className="divide-y divide-slate-100 px-5 sm:px-6">
+            {[
+              ["Saved jobs", analytics.savedJobs, "Roles contractors want to revisit"],
+              ["Active alerts", analytics.alerts, "Automated role discovery"],
+              ["Resume versions", analytics.resumeVersions, "Prepared application documents"],
+              ["Recruiter messages", analytics.inboxMessages, "Responses received in workspace"],
+            ].map(([label, value, detail]) => <div key={String(label)} className="flex items-center justify-between gap-4 py-4"><div><dt className="text-sm font-semibold text-slate-900">{label}</dt><p className="mt-1 text-xs text-slate-500">{detail}</p></div><dd className="text-xl font-semibold tabular-nums text-slate-950">{formatNumber(Number(value))}</dd></div>)}
+          </dl>
+        </Panel>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <Panel title="Contractor activation funnel" description="From registration to a recorded employer submission">
+          <div className="space-y-4 p-5 sm:p-6">
+            {funnel.map((step, index) => {
+              const width = analytics.totalUsers > 0 ? Math.max((step.value / analytics.totalUsers) * 100, step.value ? 8 : 1) : 1;
+              const previous = index > 0 ? funnel[index - 1].value : step.value;
+              const conversion = previous > 0 ? Math.round((step.value / previous) * 100) : 0;
+              return <div key={step.label}><div className="mb-2 flex items-center justify-between gap-4 text-xs"><span className="font-semibold text-slate-700">{step.label}</span><span className="text-slate-500"><strong className="text-slate-950">{formatNumber(step.value)}</strong>{index > 0 ? ` · ${conversion}% from previous` : ""}</span></div><div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${step.tone}`} style={{ width: `${width}%` }} /></div></div>;
+            })}
+          </div>
+        </Panel>
+
+        <Panel title="Application stages" description="Current packet status distribution">
+          {applicationStages.length ? <div className="space-y-4 p-5 sm:p-6">{applicationStages.map(([status, count]) => <div key={status}><div className="mb-2 flex items-center justify-between text-xs"><span className="font-semibold capitalize text-slate-700">{status.replaceAll("_", " ")}</span><span className="font-semibold tabular-nums text-slate-950">{formatNumber(count)}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-slate-800" style={{ width: `${(count / stageMax) * 100}%` }} /></div></div>)}</div> : <EmptyState title="No application activity yet" detail="Application stages will appear as contractors prepare and submit packets." />}
+        </Panel>
+      </div>
+
+      <Panel title="Submission runner health" description="Real employer submission attempts by current processing state" action={<button type="button" onClick={onRecover} disabled={recovering} className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-slate-950 px-3 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-60">{recovering ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />} {recovering ? "Resetting" : "Reset processing attempts"}</button>}>
+        {submissionStages.length ? <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-6">{submissionStages.map(([status, count]) => {
+          const tone = status === "succeeded" ? "bg-emerald-600" : status === "processing" || status === "queued" || status === "needs_user" ? "bg-amber-500" : "bg-rose-500";
+          const detail = status === "succeeded" ? "Employer confirmation and receipt saved" : status === "needs_user" ? "Waiting for a contractor answer or security step" : status === "processing" || status === "queued" ? "Runner active or awaiting bounded recovery" : "Not submitted; contractor materials remain saved";
+          return <div key={status} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold capitalize text-slate-700">{status.replaceAll("_", " ")}</p><p className="text-xl font-semibold tabular-nums text-slate-950">{formatNumber(count)}</p></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-white"><div className={`h-full rounded-full ${tone}`} style={{ width: `${(count / submissionStageMax) * 100}%` }} /></div><p className="mt-3 text-[11px] leading-5 text-slate-500">{detail}</p></div>;
+        })}</div> : <EmptyState title="No submission attempts yet" detail="Runner activity will appear after a contractor approves an application." />}
+      </Panel>
+
+      <Panel title="Communication delivery" description="Accepted and failed recipients across administrator campaigns">
+        <div className="grid gap-4 p-5 sm:grid-cols-4 sm:p-6">
+          <div className="rounded-2xl bg-slate-950 p-5 text-white sm:col-span-2"><p className="text-xs font-semibold text-slate-400">Provider acceptance rate</p><p className="mt-3 text-4xl font-semibold tracking-[-0.05em]">{deliveryRate}%</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-emerald-400" style={{ width: `${deliveryRate}%` }} /></div></div>
+          {[ ["Campaigns sent", analytics.campaignsSent], ["Recipients accepted", analytics.campaignAccepted] ].map(([label, value]) => <div key={String(label)} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-3 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(Number(value))}</p><p className="mt-2 text-[11px] text-slate-500">{label === "Campaigns sent" ? `${formatNumber(analytics.campaignFailed)} failed recipients` : "Recorded by the delivery provider"}</p></div>)}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function JobSourcesPanel({
+  sources,
+  total,
+  providers,
+  lastRun,
+  query,
+  name,
+  type,
+  slug,
+  saving,
+  actionId,
+  running,
+  destinationSourceId,
+  recruitmentEmail,
+  sendingDestinationVerification,
+  pendingConnections,
+  reviewingConnectionId,
+  onNameChange,
+  onTypeChange,
+  onSlugChange,
+  onSave,
+  onToggle,
+  onRemove,
+  onRun,
+  onDestinationSourceChange,
+  onRecruitmentEmailChange,
+  onRequestDestinationVerification,
+  onReviewConnection,
+}: {
+  sources: JobSourceRow[];
+  total: number;
+  providers: JobSourceRow["type"][];
+  lastRun: RunRow | null;
+  query: string;
+  name: string;
+  type: JobSourceRow["type"];
+  slug: string;
+  saving: boolean;
+  actionId: string | null;
+  running: boolean;
+  destinationSourceId: string;
+  recruitmentEmail: string;
+  sendingDestinationVerification: boolean;
+  pendingConnections: PendingEmployerConnection[];
+  reviewingConnectionId: string | null;
+  onNameChange: (value: string) => void;
+  onTypeChange: (value: JobSourceRow["type"]) => void;
+  onSlugChange: (value: string) => void;
+  onSave: () => void;
+  onToggle: (source: JobSourceRow) => void;
+  onRemove: (source: JobSourceRow) => void;
+  onRun: () => void;
+  onDestinationSourceChange: (value: string) => void;
+  onRecruitmentEmailChange: (value: string) => void;
+  onRequestDestinationVerification: () => void;
+  onReviewConnection: (connection: PendingEmployerConnection, approve: boolean) => void;
+}) {
+  const enabled = sources.filter((source) => source.enabled).length;
+  const custom = sources.filter((source) => !source.builtIn).length;
+  const lastSummary = lastRun?.summary ?? {};
+  const fetched = typeof lastSummary.fetched === "number" ? lastSummary.fetched : 0;
+  const upserted = typeof lastSummary.upserted === "number" ? lastSummary.upserted : 0;
+  const fieldClass = "mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100";
+  const examples: Record<JobSourceRow["type"], string> = {
+    greenhouse: "boards.greenhouse.io/company-name",
+    lever: "jobs.lever.co/company-name",
+    ashby: "jobs.ashbyhq.com/company-name",
+    workable: "apply.workable.com/company-name",
+    smartrecruiters: "jobs.smartrecruiters.com/company-name",
+  };
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="ir35-admin-colour-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Configured sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{total}</p><p className="mt-2 text-xs text-slate-500">{enabled} currently enabled</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Custom sources</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{custom}</p><p className="mt-2 text-xs text-slate-500">Admin or employer verified boards</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last fetch</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{formatNumber(fetched)}</p><p className="mt-2 text-xs text-slate-500">{lastRun ? formatDate(lastRun.created_at, true) : "No run recorded"}</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Last database update</p><p className="mt-3 text-3xl font-semibold tabular-nums text-emerald-700">{formatNumber(upserted)}</p><p className="mt-2 text-xs text-slate-500">Fresh or updated listings</p></article>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[390px_minmax(0,1fr)]">
+        <Panel title="Add a free public board" description="The board is checked before it is saved. Full website addresses are not accepted.">
+          <div className="space-y-4 p-5 sm:p-6">
+            <label className="block text-xs font-semibold text-slate-700">Employer or agency name<input value={name} maxLength={100} onChange={(event) => onNameChange(event.target.value)} className={fieldClass} placeholder="Example Recruitment" /></label>
+            <label className="block text-xs font-semibold text-slate-700">Public ATS provider<select value={type} onChange={(event) => onTypeChange(event.target.value as JobSourceRow["type"])} className={fieldClass}>{providers.map((provider) => <option key={provider} value={provider}>{provider[0].toUpperCase() + provider.slice(1)}</option>)}</select></label>
+            <label className="block text-xs font-semibold text-slate-700">Board identifier<input value={slug} maxLength={100} onChange={(event) => onSlugChange(event.target.value)} className={fieldClass} placeholder="company-name" /><span className="mt-1.5 block text-[11px] font-normal text-slate-500">From {examples[type]}</span></label>
+            <button type="button" onClick={onSave} disabled={saving || name.trim().length < 2 || !slug.trim()} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} {saving ? "Checking public board" : "Verify and add source"}</button>
+            <p className="text-[11px] leading-5 text-slate-500">Only supported public ATS endpoints are used. No account password is stored.</p>
+          </div>
+        </Panel>
+
+        <Panel title="Daily source registry" description={`${formatNumber(total)} public boards configured. Enabled sources run during the 7 am UK refresh.`} action={<button type="button" onClick={onRun} disabled={running || enabled === 0} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-slate-950 px-3.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-50">{running ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} {running ? "Refreshing jobs" : "Run refresh now"}</button>}>
+          {sources.length ? <div className="divide-y divide-slate-100">{sources.map((source) => <div key={source.id} className="flex flex-col gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:flex-row sm:items-center sm:px-6"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${source.enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"}`}><CloudDownload size={17} /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold text-slate-900">{source.name}</p><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{source.type}</span>{source.builtIn && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Starter</span>}</div><p className="mt-1 truncate text-xs text-slate-500">{examples[source.type].replace("company-name", source.slug)}</p></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => onToggle(source)} disabled={actionId === source.id} className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition ${source.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{actionId === source.id ? <Loader2 size={13} className="animate-spin" /> : <Power size={13} />} {source.enabled ? "Enabled" : "Paused"}</button>{!source.builtIn && <button type="button" onClick={() => onRemove(source)} disabled={actionId === source.id} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50" aria-label={`Remove ${source.name}`}><Trash2 size={14} /></button>}</div></div>)}</div> : <EmptyState title={query ? "No matching sources" : "No sources configured"} detail={query ? "Try an employer, provider or board identifier." : "Add a public ATS board to start free job discovery."} />}
+        </Panel>
+      </div>
+
+      <Panel title="Employer connection review" description="Public boards and recruitment inboxes are confirmed first. Approve direct delivery only after the organisation and destination are credible.">
+        {pendingConnections.length ? <div className="divide-y divide-slate-100">{pendingConnections.map((connection) => <div key={connection.id} className="flex flex-col gap-4 px-5 py-4 sm:px-6 lg:flex-row lg:items-center"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><ShieldCheck size={17} /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-slate-950">{connection.sourceName}</p><span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">Review needed</span></div><p className="mt-1 truncate text-xs text-slate-600">{connection.email}</p><p className="mt-1 text-[11px] text-slate-400">Recruitment inbox confirmed {formatDate(connection.confirmedAt, true)}</p></div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => onReviewConnection(connection, false)} disabled={reviewingConnectionId === connection.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"><X size={13} /> Reject</button><button type="button" onClick={() => onReviewConnection(connection, true)} disabled={reviewingConnectionId === connection.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{reviewingConnectionId === connection.id ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />} Approve delivery</button></div></div>)}</div> : <div className="px-5 py-6 text-sm text-slate-500 sm:px-6">No employer-confirmed connections are waiting for review.</div>}
+      </Panel>
+
+      <Panel title="Connect free direct application delivery" description="The employer confirms its recruitment address before any candidate information can be sent.">
+        <div className="grid gap-5 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
+          <label className="block text-xs font-semibold text-slate-700">Public job source<select value={destinationSourceId} onChange={(event) => onDestinationSourceChange(event.target.value)} className={fieldClass}>{(sources.length ? sources : []).map((source) => <option key={source.id} value={source.id}>{source.name} · {source.type}</option>)}</select></label>
+          <label className="block text-xs font-semibold text-slate-700">Employer recruitment email<input type="email" value={recruitmentEmail} maxLength={254} onChange={(event) => onRecruitmentEmailChange(event.target.value)} className={fieldClass} placeholder="recruitment@company.co.uk" /></label>
+          <button type="button" onClick={onRequestDestinationVerification} disabled={sendingDestinationVerification || !destinationSourceId || !recruitmentEmail.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">{sendingDestinationVerification ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} {sendingDestinationVerification ? "Sending verification" : "Send verification"}</button>
+        </div>
+        <div className="border-t border-slate-100 px-5 py-4 sm:px-6"><div className="flex flex-wrap gap-2">{sources.filter((source) => source.directApplyConnected).map((source) => <span key={source.id} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800"><CheckCircle2 size={13} /> {source.name}: {source.directApplyEmail}</span>)}{!sources.some((source) => source.directApplyConnected) && <span className="text-xs text-slate-500">No employer recruitment destinations have been confirmed yet.</span>}</div></div>
+      </Panel>
+
+      <Panel title="How free source coverage works" description="Published jobs are read from public employer career-board endpoints.">
+        <div className="grid gap-px bg-slate-100 sm:grid-cols-3"><div className="bg-white p-5"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><CloudDownload size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-900">No listing fee</p><p className="mt-2 text-xs leading-5 text-slate-500">Reading published jobs from these public endpoints needs no ATS account key.</p></div><div className="bg-white p-5"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><ShieldCheck size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-900">Safe fixed endpoints</p><p className="mt-2 text-xs leading-5 text-slate-500">Only known ATS hosts and validated board identifiers can be saved.</p></div><div className="bg-white p-5"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-700"><Zap size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-900">IR35 processing</p><p className="mt-2 text-xs leading-5 text-slate-500">Listings still pass contract, UK, status, freshness and duplicate checks before publication.</p></div></div>
+      </Panel>
+    </div>
+  );
+}
+
 function JobsPanel({ jobs, total, query, expiringId, onExpire }: { jobs: JobRow[]; total: number; query: string; expiringId: string | null; onExpire: (job: JobRow) => void }) {
   return (
     <div className="mt-7">
@@ -550,26 +1837,847 @@ function JobsPanel({ jobs, total, query, expiringId, onExpire }: { jobs: JobRow[
 }
 
 function UsersPanel({ users, total, query }: { users: UserRow[]; total: number; query: string }) {
+  const [currentTime] = useState(Date.now);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [details, setDetails] = useState<ContractorDetail | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
+  const [detailsTab, setDetailsTab] = useState<"overview" | "resume" | "applications" | "activity">("overview");
+  const selected = users.find((account) => account.id === selectedId) ?? null;
   const withCv = users.filter((account) => account.profile?.cv_filename).length;
+  const verified = users.filter((account) => account.email_confirmed_at).length;
+  const active30d = users.filter((account) => account.last_sign_in_at && currentTime - new Date(account.last_sign_in_at).getTime() < 30 * 24 * 60 * 60 * 1000).length;
+
+  const openDetails = async (accountId: string) => {
+    setSelectedId(accountId);
+    setDetailsOpen(true);
+    setDetails(null);
+    setDetailsError("");
+    setDetailsTab("overview");
+    setDetailsLoading(true);
+
+    try {
+      const response = await adminFetch(`/api/admin?section=users&userId=${encodeURIComponent(accountId)}`);
+      const payload = (await response.json()) as { contractor?: ContractorDetail; error?: string };
+      if (!response.ok || !payload.contractor) throw new Error(payload.error || "Contractor record could not be loaded.");
+      setDetails(payload.contractor);
+    } catch (error) {
+      setDetailsError(error instanceof Error ? error.message : "Contractor record could not be loaded.");
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!detailsOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDetailsOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [detailsOpen]);
+
   return (
-    <div className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
-      <Panel title="Contractor accounts" description={`${formatNumber(total)} registered accounts`}>
-        {users.length ? <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Contractor</th><th className="px-4 py-3.5">Sign-in</th><th className="px-4 py-3.5">Skills</th><th className="px-4 py-3.5">CV status</th><th className="px-6 py-3.5">Joined</th></tr></thead><tbody className="divide-y divide-slate-100">{users.map((account) => <tr key={account.id} className="hover:bg-slate-50/70"><td className="px-6 py-4"><div className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{account.profile?.full_name || "Name not added"}</p><p className="mt-0.5 truncate text-xs text-slate-500">{account.email || "No email"}</p></div></div></td><td className="px-4 py-4 text-xs capitalize text-slate-600">{account.provider || "email"}</td><td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-700">{account.profile?.skills?.length ?? 0}</td><td className="px-4 py-4">{account.profile?.cv_filename ? <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><CheckCircle2 size={14} /> Uploaded</span> : <span className="text-xs text-slate-400">Not uploaded</span>}</td><td className="px-6 py-4"><p className="text-xs text-slate-700">{formatDate(account.created_at)}</p><p className="mt-1 text-[11px] text-slate-400">{timeAgo(account.created_at)}</p></td></tr>)}</tbody></table></div> : <EmptyState title={query ? "No matching contractors" : "No contractor accounts"} detail={query ? "Try searching by name, email or sign-in provider." : "New registrations will appear here."} />}
-      </Panel>
-      <Panel title="Profile readiness" description="A quick adoption snapshot for the loaded accounts.">
-        <div className="p-6"><div className="flex items-end justify-between"><span className="text-4xl font-semibold tracking-[-0.05em] text-slate-950">{users.length ? Math.round((withCv / users.length) * 100) : 0}%</span><FileCheck2 className="text-violet-600" size={22} /></div><p className="mt-2 text-sm font-medium text-slate-700">CV adoption</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-violet-500" style={{ width: `${users.length ? (withCv / users.length) * 100 : 0}%` }} /></div><dl className="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm"><div className="flex justify-between"><dt className="text-slate-500">Loaded accounts</dt><dd className="font-semibold tabular-nums">{users.length}</dd></div><div className="flex justify-between"><dt className="text-slate-500">CV uploaded</dt><dd className="font-semibold tabular-nums">{withCv}</dd></div><div className="flex justify-between"><dt className="text-slate-500">Needs CV</dt><dd className="font-semibold tabular-nums">{Math.max(users.length - withCv, 0)}</dd></div></dl></div>
+    <div className="mt-7 min-w-0 space-y-5">
+      <div className="ir35-admin-colour-grid grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {[
+          { label: "Registered", value: total, detail: `${users.length} loaded`, icon: Users, tone: "bg-blue-50 text-blue-700" },
+          { label: "Verified email", value: verified, detail: `${users.length ? Math.round((verified / users.length) * 100) : 0}% of loaded accounts`, icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
+          { label: "Active in 30 days", value: active30d, detail: "Based on last sign-in", icon: Activity, tone: "bg-violet-50 text-violet-700" },
+          { label: "Resume uploaded", value: withCv, detail: `${users.length ? Math.round((withCv / users.length) * 100) : 0}% adoption`, icon: FileCheck2, tone: "bg-amber-50 text-amber-700" },
+        ].map((item) => (
+          <article key={item.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={18} /></span>
+            <p className="mt-4 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(item.value)}</p>
+            <p className="mt-1 text-sm font-medium text-slate-800">{item.label}</p>
+            <p className="mt-1 text-xs text-slate-500">{item.detail}</p>
+          </article>
+        ))}
+      </div>
+
+      <div>
+        <Panel title="Contractor accounts" description="Select an account to inspect membership and product activity.">
+          {users.length ? (
+            <>
+            <ul aria-label="Contractor accounts" className="divide-y divide-slate-100 md:hidden">
+              {users.map((account) => {
+                const name = account.profile?.full_name || "Name not added";
+                const restricted = Boolean(account.banned_until && new Date(account.banned_until).getTime() > currentTime);
+                return (
+                  <li key={account.id} className="min-w-0 p-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white" aria-hidden="true">{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-950">{name}</p>
+                        <p className="mt-1 break-all text-xs leading-5 text-slate-500">{account.email || "No email"}</p>
+                        <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${restricted ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{restricted ? "Restricted" : account.email_confirmed_at ? "Verified" : "Pending"}</span>
+                      </div>
+                    </div>
+                    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                      <div><dt className="text-slate-500">Last active</dt><dd className="mt-1 font-medium text-slate-800">{timeAgo(account.last_sign_in_at)}</dd></div>
+                      <div><dt className="text-slate-500">Applications</dt><dd className="mt-1 font-semibold tabular-nums text-slate-800">{account.activity?.applications ?? 0}</dd></div>
+                      <div><dt className="text-slate-500">Joined</dt><dd className="mt-1 font-medium text-slate-800">{formatDate(account.created_at)}</dd></div>
+                      <div><dt className="text-slate-500">Sign-in</dt><dd className="mt-1 font-medium capitalize text-slate-800">{account.provider || "email"}</dd></div>
+                    </dl>
+                    <button type="button" onClick={() => openDetails(account.id)} aria-haspopup="dialog" aria-label={`View ${account.profile?.full_name || account.email || "contractor"}`} className="mt-4 flex min-h-11 w-full items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">View contractor <ChevronRight size={16} /></button>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="hidden max-w-full overflow-x-auto md:block">
+              <table className="w-full min-w-[820px] text-left">
+                <thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Contractor</th><th className="px-4 py-3.5">Account</th><th className="px-4 py-3.5">Last active</th><th className="px-4 py-3.5">Applications</th><th className="px-6 py-3.5">Joined</th><th className="px-4 py-3.5"><span className="sr-only">View</span></th></tr></thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((account) => {
+                    const isSelected = selected?.id === account.id;
+                    return (
+                      <tr key={account.id} className={isSelected ? "bg-emerald-50/60" : "hover:bg-slate-50/70"}>
+                        <td className="px-6 py-4"><button type="button" onClick={() => openDetails(account.id)} aria-haspopup="dialog" className="flex w-full items-center gap-3 text-left focus:outline-none"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-900 text-white"}`}>{(account.profile?.full_name || account.email || "A").charAt(0).toUpperCase()}</span><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{account.profile?.full_name || "Name not added"}</span><span className="mt-0.5 block truncate text-xs text-slate-500">{account.email || "No email"}</span></span></button></td>
+                        <td className="px-4 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${account.banned_until && new Date(account.banned_until).getTime() > currentTime ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{account.banned_until && new Date(account.banned_until).getTime() > currentTime ? "Restricted" : account.email_confirmed_at ? "Verified" : "Pending"}</span></td>
+                        <td className="px-4 py-4"><p className="text-xs font-medium text-slate-700">{timeAgo(account.last_sign_in_at)}</p><p className="mt-1 text-[11px] capitalize text-slate-400">{account.provider || "email"}</p></td>
+                        <td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-700">{account.activity?.applications ?? 0}</td>
+                        <td className="px-6 py-4"><p className="text-xs text-slate-700">{formatDate(account.created_at)}</p><p className="mt-1 text-[11px] text-slate-400">{timeAgo(account.created_at)}</p></td>
+                        <td className="px-4 py-4"><button type="button" onClick={() => openDetails(account.id)} aria-haspopup="dialog" aria-label={`View ${account.profile?.full_name || account.email || "contractor"}`} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:text-emerald-700">View <ChevronRight size={13} /></button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            </>
+          ) : <EmptyState title={query ? "No matching contractors" : "No contractor accounts"} detail={query ? "Try searching by name, email or sign-in provider." : "New registrations will appear here."} />}
+        </Panel>
+      </div>
+
+      {selected && detailsOpen ? (
+        <ContractorDetailsDrawer
+          selected={selected}
+          detail={details}
+          loading={detailsLoading}
+          error={detailsError}
+          tab={detailsTab}
+          onTabChange={setDetailsTab}
+          onClose={() => setDetailsOpen(false)}
+          onRetry={() => void openDetails(selected.id)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function recordText(record: Record<string, unknown> | null | undefined, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record?.[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function applicationIdentity(application: ContractorDetail["applications"][number]) {
+  const snapshot = application.job_snapshot;
+  return {
+    title: recordText(snapshot, "title", "job_title", "role") || "Contract application",
+    company: recordText(snapshot, "company_name", "company", "employer") || "Employer not recorded",
+  };
+}
+
+function ContractorDetailsDrawer({
+  selected,
+  detail,
+  loading,
+  error,
+  tab,
+  onTabChange,
+  onClose,
+  onRetry,
+}: {
+  selected: UserRow;
+  detail: ContractorDetail | null;
+  loading: boolean;
+  error: string;
+  tab: "overview" | "resume" | "applications" | "activity";
+  onTabChange: (tab: "overview" | "resume" | "applications" | "activity") => void;
+  onClose: () => void;
+  onRetry: () => void;
+}) {
+  const [currentTime] = useState(Date.now);
+  const [documentAction, setDocumentAction] = useState<string | null>(null);
+  const [documentError, setDocumentError] = useState("");
+  const dialogRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    const controls = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]') ?? []).filter((element) => element.getClientRects().length > 0);
+    controls()[0]?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const elements = controls();
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && (document.activeElement === first || !dialog?.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog?.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapFocus);
+    return () => { document.removeEventListener("keydown", trapFocus); previousFocus?.focus(); };
+  }, []);
+  const account = detail?.account ?? selected;
+  const profile = detail?.profile ?? selected.profile;
+  const applicationProfile = (profile?.application_profile ?? {}) as Record<string, unknown>;
+  const fullName = profile?.full_name || "Name not added";
+  const email = account.email || "No email";
+  const phone = profile?.phone || recordText(applicationProfile, "phone");
+  const location = recordText(applicationProfile, "location", "preferredLocation");
+  const currentRole = profile?.job_title || recordText(applicationProfile, "targetRole", "jobTitle");
+  const linkedIn = profile?.linkedin_url || recordText(applicationProfile, "linkedInUrl", "linkedinUrl");
+  const linkedInUrl = linkedIn ? (/^https?:\/\//i.test(linkedIn) ? linkedIn : `https://${linkedIn}`) : "";
+  const profileFields = [profile?.full_name, currentRole, profile?.skills?.length, profile?.cv_filename, phone, location];
+  const profileCompletion = Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100);
+  const restricted = Boolean(account.banned_until && new Date(account.banned_until).getTime() > currentTime);
+  const accountStatus = restricted ? "Restricted" : account.email_confirmed_at ? "Verified" : "Email pending";
+  const exportRecord = () => {
+    if (!detail) return;
+    const safeName = (fullName === "Name not added" ? email.split("@")[0] : fullName).replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "contractor";
+    const blob = new Blob([JSON.stringify(detail, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${safeName}-admin-record.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+  const openResumeDocument = async ({
+    mode,
+    filename,
+    versionId,
+    variant,
+  }: {
+    mode: "view" | "download";
+    filename: string;
+    versionId?: string;
+    variant?: "source" | "tailored";
+  }) => {
+    const actionKey = `${versionId || "original"}-${variant || "original"}-${mode}`;
+    const previewWindow = mode === "view" ? window.open("about:blank", "_blank") : null;
+    if (previewWindow) previewWindow.opener = null;
+    setDocumentAction(actionKey);
+    setDocumentError("");
+    try {
+      const query = new URLSearchParams({
+        section: "resume",
+        userId: account.id,
+        disposition: mode === "download" ? "attachment" : "inline",
+      });
+      if (versionId) query.set("versionId", versionId);
+      if (variant) query.set("variant", variant);
+      const response = await adminFetch(`/api/admin?${query.toString()}`);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error || "The resume document could not be opened.");
+      }
+      const blobUrl = URL.createObjectURL(await response.blob());
+      const encodedName = response.headers.get("x-resume-filename");
+      const responseFilename = encodedName ? decodeURIComponent(encodedName) : filename;
+      if (mode === "view") {
+        if (previewWindow) previewWindow.location.href = blobUrl;
+        else window.open(blobUrl, "_blank", "noopener,noreferrer");
+        window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      } else {
+        const anchor = document.createElement("a");
+        anchor.href = blobUrl;
+        anchor.download = responseFilename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1_000);
+      }
+    } catch (requestError) {
+      previewWindow?.close();
+      setDocumentError(requestError instanceof Error ? requestError.message : "The resume document could not be opened.");
+    } finally {
+      setDocumentAction(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[90] flex justify-end" role="presentation">
+      <button type="button" className="absolute inset-0 cursor-default bg-slate-950/50 backdrop-blur-[3px]" onClick={onClose} aria-label="Close contractor details" />
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contractor-record-title" className="relative flex h-[100dvh] w-full min-w-0 max-w-3xl flex-col overflow-hidden bg-slate-50 shadow-[-24px_0_70px_rgba(15,23,42,0.24)]">
+        <header className="border-b border-slate-200 bg-white px-5 py-5 sm:px-7">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">Secure contractor record</p>
+              <div className="mt-2 flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">{(fullName === "Name not added" ? email : fullName).charAt(0).toUpperCase()}</span>
+                <div className="min-w-0"><h2 id="contractor-record-title" className="truncate text-xl font-semibold text-slate-950">{fullName}</h2><p className="mt-0.5 truncate text-xs text-slate-500">{email}</p></div>
+                <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold sm:inline-flex ${restricted ? "bg-rose-50 text-rose-700" : account.email_confirmed_at ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{accountStatus}</span>
+              </div>
+            </div>
+            <button type="button" onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-950" aria-label="Close contractor details"><X size={18} /></button>
+          </div>
+          <div className="mt-5 flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Contractor record sections">
+            {(["overview", "resume", "applications", "activity"] as const).map((item) => (
+              <button key={item} type="button" role="tab" aria-selected={tab === item} onClick={() => onTabChange(item)} className={`min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold capitalize transition sm:px-3 sm:text-xs ${tab === item ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{item}</button>
+            ))}
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7">
+          {loading ? (
+            <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-center"><Loader2 className="animate-spin text-emerald-600" size={26} /><p className="mt-3 text-sm font-semibold text-slate-900">Loading private contractor data</p><p className="mt-1 text-xs text-slate-500">Resume access is authorised only for this admin session.</p></div>
+          ) : error ? (
+            <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"><ShieldAlert className="text-rose-600" size={28} /><p className="mt-3 text-sm font-semibold text-rose-950">Contractor record unavailable</p><p className="mt-2 max-w-md text-xs leading-5 text-rose-700">{error}</p><button type="button" onClick={onRetry} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"><RefreshCw size={14} /> Try again</button></div>
+          ) : detail ? (
+            <>
+              {tab === "overview" ? (
+                <div className="space-y-5">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Profile</p><p className="mt-2 text-2xl font-semibold text-emerald-950">{profileCompletion}%</p><p className="mt-1 text-xs text-emerald-700">Application details complete</p></article>
+                    <article className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Applications</p><p className="mt-2 text-2xl font-semibold text-slate-950">{detail.applications.length}</p><p className="mt-1 text-xs text-slate-500">Recent records loaded</p></article>
+                    <article className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Plan</p><p className="mt-2 text-lg font-semibold capitalize text-slate-950">{detail.entitlement?.plan || "Free"}</p><p className="mt-1 text-xs text-slate-500">{detail.entitlement?.billing_state || "No billing issue"}</p></article>
+                  </div>
+
+                  <Panel title="Identity and membership" description="Account and approved profile information.">
+                    <dl className="grid gap-x-8 gap-y-5 p-5 text-sm sm:grid-cols-2">
+                      {[
+                        ["Joined", formatDate(account.created_at, true)], ["Last sign-in", formatDate(account.last_sign_in_at, true)],
+                        ["Sign-in method", account.provider || "email"], ["Email confirmed", formatDate(account.email_confirmed_at, true)],
+                        ["Current role", currentRole || "Not added"], ["Location", location || "Not added"],
+                        ["Phone", phone || "Not added"], ["Experience", typeof profile?.years_experience === "number" ? `${profile.years_experience} years` : "Not added"],
+                        ["IR35 preference", profile?.preferred_ir35 || "Not added"], ["Minimum rate", profile?.target_rate_min ? `£${formatNumber(profile.target_rate_min)} per day` : "Not added"],
+                      ].map(([label, value]) => <div key={String(label)}><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 break-words font-semibold capitalize text-slate-900">{value}</dd></div>)}
+                    </dl>
+                  </Panel>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Panel title="Application email" description="Managed recruiter identity and forwarding state."><div className="space-y-3 p-5 text-sm"><p className="break-all font-semibold text-slate-900">{detail.inboxAlias?.alias || "Not created"}</p><p className="text-xs text-slate-500">Forwarding {detail.inboxAlias?.forwarding_enabled ? "enabled" : "not enabled"}{detail.inboxAlias?.forwarding_email ? ` to ${detail.inboxAlias.forwarding_email}` : ""}.</p></div></Panel>
+                    <Panel title="Automation" description="Current contractor-owned application preferences."><div className="space-y-3 p-5 text-sm"><div className="flex items-center justify-between"><span className="text-slate-500">Status</span><strong className="text-slate-900">{detail.automation?.enabled ? "Enabled" : "Off"}</strong></div><div className="flex items-center justify-between"><span className="text-slate-500">Daily limit</span><strong className="text-slate-900">{detail.automation?.daily_limit ?? 5}</strong></div><div className="flex items-center justify-between"><span className="text-slate-500">Minimum match</span><strong className="text-slate-900">{detail.automation?.minimum_match ?? 0}%</strong></div></div></Panel>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <a href={`mailto:${email}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"><Mail size={14} /> Email contractor</a>
+                    {linkedInUrl ? <a href={linkedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><ExternalLink size={14} /> LinkedIn</a> : null}
+                    <button type="button" onClick={exportRecord} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><Download size={14} /> Export support record</button>
+                  </div>
+                </div>
+              ) : null}
+
+              {tab === "resume" ? (
+                <div className="space-y-5">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">Original resume</p>
+                        <p className="mt-1 break-all text-xs text-slate-500">{detail.resume?.filename || "No resume uploaded"}</p>
+                        {detail.resume ? <p className="mt-2 text-[11px] leading-5 text-slate-400">{detail.resume.source === "uploaded" ? "Private uploaded file. Administrator access is checked for every request." : "Secure PDF generated from the contractor's saved resume data."}</p> : null}
+                      </div>
+                      {detail.resume?.available ? <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => openResumeDocument({ mode: "view", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-60">
+                          {documentAction === "original-original-view" ? <Loader2 className="animate-spin" size={14} /> : <ExternalLink size={14} />} View
+                        </button>
+                        <button type="button" onClick={() => openResumeDocument({ mode: "download", filename: detail.resume!.filename })} disabled={Boolean(documentAction)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">
+                          {documentAction === "original-original-download" ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />} Download
+                        </button>
+                      </div> : null}
+                    </div>
+                    {documentError ? <div role="alert" className="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700"><ShieldAlert className="mt-0.5 shrink-0" size={14} />{documentError}</div> : null}
+                  </div>
+                  <Panel title="Resume versions" description="Source and tailored versions retained for application review.">
+                    {detail.resumeVersions.length ? <div className="divide-y divide-slate-100">{detail.resumeVersions.map((version) => (
+                      <details key={version.id} className="group p-5">
+                        <summary className="flex cursor-pointer list-none items-start justify-between gap-4"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-950">{version.label || version.source_filename}</span><span className="mt-1 block text-xs text-slate-500">{version.job_title || "Profile resume"}{version.company_name ? ` at ${version.company_name}` : ""} · {formatDate(version.created_at, true)}</span></span><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-600">{version.status}</span></summary>
+                        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                          <div>
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Source</p>{version.source_text ? <div className="flex gap-1.5"><button type="button" onClick={() => openResumeDocument({ mode: "view", filename: `${version.source_filename || "resume"}-source.pdf`, versionId: version.id, variant: "source" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-source-view` ? <Loader2 className="animate-spin" size={12} /> : <ExternalLink size={12} />} View</button><button type="button" onClick={() => openResumeDocument({ mode: "download", filename: `${version.source_filename || "resume"}-source.pdf`, versionId: version.id, variant: "source" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-slate-950 px-2.5 text-[10px] font-semibold text-white disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-source-download` ? <Loader2 className="animate-spin" size={12} /> : <Download size={12} />} Download</button></div> : null}</div>
+                            <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-[11px] leading-5 text-slate-200">{version.source_text || "No source text saved."}</pre>
+                          </div>
+                          <div>
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Prepared version</p>{version.tailored_text ? <div className="flex gap-1.5"><button type="button" onClick={() => openResumeDocument({ mode: "view", filename: `${version.source_filename || "resume"}-prepared.pdf`, versionId: version.id, variant: "tailored" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-2.5 text-[10px] font-semibold text-emerald-800 disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-tailored-view` ? <Loader2 className="animate-spin" size={12} /> : <ExternalLink size={12} />} View</button><button type="button" onClick={() => openResumeDocument({ mode: "download", filename: `${version.source_filename || "resume"}-prepared.pdf`, versionId: version.id, variant: "tailored" })} disabled={Boolean(documentAction)} className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-emerald-700 px-2.5 text-[10px] font-semibold text-white disabled:cursor-wait disabled:opacity-50">{documentAction === `${version.id}-tailored-download` ? <Loader2 className="animate-spin" size={12} /> : <Download size={12} />} Download</button></div> : null}</div>
+                            <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-emerald-950 p-4 text-[11px] leading-5 text-emerald-50">{version.tailored_text || "No tailored text saved."}</pre>
+                          </div>
+                        </div>
+                      </details>
+                    ))}</div> : <EmptyState title="No resume versions" detail="Prepared application resumes will appear here." />}
+                  </Panel>
+                </div>
+              ) : null}
+
+              {tab === "applications" ? (
+                <Panel title="Application history" description="Recent contract applications and their latest state.">
+                  {detail.applications.length ? <div className="divide-y divide-slate-100">{detail.applications.map((application) => { const identity = applicationIdentity(application); return <article key={application.id} className="p-5"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{identity.title}</p><p className="mt-1 truncate text-xs text-slate-500">{identity.company}</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold capitalize text-slate-700">{application.status.replaceAll("_", " ")}</span></div><div className="mt-4 grid gap-3 text-xs text-slate-500 sm:grid-cols-3"><span>Match <strong className="text-slate-800">{application.match_score ?? 0}%</strong></span><span>Mode <strong className="capitalize text-slate-800">{application.mode}</strong></span><span>Updated <strong className="text-slate-800">{formatDate(application.updated_at, true)}</strong></span></div></article>; })}</div> : <EmptyState title="No applications" detail="Applications prepared by this contractor will appear here." />}
+                </Panel>
+              ) : null}
+
+              {tab === "activity" ? (
+                <div className="grid gap-5 lg:grid-cols-2">
+                  <Panel title="Application events" description="Latest workflow events across this account.">{detail.events.length ? <div className="max-h-[620px] divide-y divide-slate-100 overflow-y-auto">{detail.events.map((event) => <article key={event.id} className="p-4"><div className="flex items-start gap-3"><span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" /><div><p className="text-xs font-semibold text-slate-900">{event.label || event.event_type.replaceAll("_", " ")}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(event.created_at, true)}</p></div></div></article>)}</div> : <EmptyState title="No workflow events" detail="Application events will appear here." />}</Panel>
+                  <Panel title="Recruiter inbox" description="Recent messages received for this contractor.">{detail.inboxMessages.length ? <div className="max-h-[620px] divide-y divide-slate-100 overflow-y-auto">{detail.inboxMessages.map((message) => <article key={message.id} className="p-4"><div className="flex items-center justify-between gap-3"><p className="truncate text-xs font-semibold text-slate-900">{message.subject}</p><span className={`h-2 w-2 shrink-0 rounded-full ${message.is_read ? "bg-slate-300" : "bg-blue-500"}`} /></div><p className="mt-1 truncate text-[11px] text-slate-500">{message.sender} · {formatDate(message.received_at, true)}</p>{message.preview ? <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">{message.preview}</p> : null}</article>)}</div> : <EmptyState title="No recruiter messages" detail="Inbound application messages will appear here." />}</Panel>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FeedbackPanel({
+  feedback,
+  summary,
+  query,
+  updatingId,
+  onStatusChange,
+  onReply,
+}: {
+  feedback: FeedbackRecord[];
+  summary: ReturnType<typeof summariseFeedback>;
+  query: string;
+  updatingId: string | null;
+  onStatusChange: (feedbackId: string, status: FeedbackStatus) => void;
+  onReply: (feedbackId: string, message: string, resolve: boolean) => void;
+}) {
+  const [statusFilter, updateStatusFilter] = useState<"all" | FeedbackStatus>("all");
+  const [selectedId, updateSelectedId] = useState<string | null>(feedback[0]?.id ?? null);
+  const [mobileFeedbackOpen, setMobileFeedbackOpen] = useState(false);
+  const setSelectedId = (id: string) => { updateSelectedId(id); setMobileFeedbackOpen(true); };
+  const setStatusFilter = (status: "all" | FeedbackStatus) => { updateStatusFilter(status); setMobileFeedbackOpen(false); };
+  const [replyText, setReplyText] = useState("");
+  const visible = feedback.filter((record) => {
+    const matchesStatus = statusFilter === "all" || record.status === statusFilter;
+    const matchesQuery = !query || [record.name, record.email, record.company, record.message, record.category].some((value) => value.toLowerCase().includes(query));
+    return matchesStatus && matchesQuery;
+  });
+  const selected = visible.find((record) => record.id === selectedId) ?? visible[0] ?? null;
+  const statusLabel = (status: FeedbackStatus) => status === "in_progress" ? "In progress" : status.charAt(0).toUpperCase() + status.slice(1);
+  const categoryLabel = (category: FeedbackRecord["category"]) => ({ application: "Application", job_listing: "Job listing", account: "Account", billing: "Billing", accessibility: "Accessibility", general: "General" })[category];
+  const replySubject = selected ? encodeURIComponent(`Re: ${selected.subject || "Your IR35Careers enquiry"}`) : "";
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="ir35-admin-colour-grid grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {[
+          { label: "New", value: summary.new, detail: "Awaiting first review", tone: "bg-blue-50 text-blue-700" },
+          { label: "In progress", value: summary.inProgress, detail: "Follow-up underway", tone: "bg-amber-50 text-amber-700" },
+          { label: "High priority", value: summary.highPriority, detail: "Blocked or overdue", tone: "bg-rose-50 text-rose-700" },
+          { label: "Resolved", value: summary.resolved, detail: `${summary.total} total enquiries`, tone: "bg-emerald-50 text-emerald-700" },
+        ].map((item) => <article key={item.label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}><MessageSquareText size={18} /></span><p className="mt-4 text-2xl font-semibold tabular-nums text-slate-950">{formatNumber(item.value)}</p><p className="mt-1 text-sm font-medium text-slate-800">{item.label}</p><p className="mt-1 text-xs text-slate-500">{item.detail}</p></article>)}
+      </div>
+
+      <Panel title="Customer feedback queue" description="Contact enquiries grouped by urgency and follow-up status.">
+        <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4 sm:px-6">
+          {(["all", "new", "in_progress", "resolved", "spam"] as const).map((status) => <button key={status} type="button" onClick={() => setStatusFilter(status)} className={`min-h-9 rounded-lg px-3 text-xs font-semibold transition ${statusFilter === status ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}>{status === "all" ? "All" : statusLabel(status)}</button>)}
+        </div>
+        <div className="grid min-w-0 lg:min-h-[520px] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className={`${mobileFeedbackOpen ? "hidden lg:block" : "block"} min-w-0 border-b border-slate-100 lg:border-b-0 lg:border-r`}>
+            {visible.length ? <div className="divide-y divide-slate-100">{visible.map((record) => {
+              const isSelected = selected?.id === record.id;
+              return <button key={record.id} type="button" onClick={() => { setSelectedId(record.id); setReplyText(""); }} className={`block w-full p-5 text-left transition sm:px-6 ${isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50"}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{record.subject || "Customer feedback"}</p><p className="mt-1 truncate text-xs text-slate-500">{record.name} · {record.email}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${record.priority === "high" ? "bg-rose-50 text-rose-700" : record.status === "resolved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{record.priority === "high" ? "High priority" : statusLabel(record.status)}</span></div><p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{record.message}</p><div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-slate-400"><span>{categoryLabel(record.category)}{record.attachment_path ? " · Image" : ""}</span><span>{timeAgo(record.updated_at || record.created_at)}</span></div></button>;
+            })}</div> : <EmptyState title={query || statusFilter !== "all" ? "No matching feedback" : "No customer feedback"} detail={query || statusFilter !== "all" ? "Clear the search or choose another status." : "New contact enquiries will appear here."} />}
+          </div>
+
+          {selected ? <div className={`${mobileFeedbackOpen ? "block" : "hidden lg:block"} min-w-0 p-4 sm:p-6`}>
+            <button type="button" onClick={() => setMobileFeedbackOpen(false)} className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 lg:hidden"><ArrowRight size={16} className="rotate-180" /> Back to enquiries</button>
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${selected.priority === "high" ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"}`}>{selected.priority === "high" ? "High priority" : "Normal priority"}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">{categoryLabel(selected.category)}</span></div><h2 className="mt-4 text-xl font-semibold text-slate-950">{selected.subject || "Customer feedback"}</h2><p className="mt-1 text-sm text-slate-500">{selected.name} · received {formatDate(selected.created_at, true)}</p></div><a href={`mailto:${encodeURIComponent(selected.email)}?subject=${replySubject}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700"><Mail size={14} /> Open email</a></div>
+            <dl className="mt-6 grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2"><div><dt className="text-xs text-slate-500">Email</dt><dd className="mt-1 break-all font-semibold text-slate-900">{selected.email}</dd></div><div><dt className="text-xs text-slate-500">Ticket reference</dt><dd className="mt-1 font-mono text-xs font-semibold uppercase text-slate-900">{selected.id.slice(0, 8)}</dd></div><div><dt className="text-xs text-slate-500">Current status</dt><dd className="mt-1 font-semibold text-slate-900">{statusLabel(selected.status)}</dd></div><div><dt className="text-xs text-slate-500">Last updated</dt><dd className="mt-1 font-semibold text-slate-900">{timeAgo(selected.updated_at || selected.created_at)}</dd></div>{selected.page_url && <div className="sm:col-span-2"><dt className="text-xs text-slate-500">Reported page</dt><dd className="mt-1 break-all text-xs font-semibold text-slate-900"><a href={selected.page_url} target="_blank" rel="noreferrer" className="text-emerald-700 underline">{selected.page_url}</a></dd></div>}</dl>
+            <div className="mt-6"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Support conversation</p><div className="mt-3 space-y-3"><article className="mr-6 rounded-2xl rounded-tl-md bg-slate-100 p-4"><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{selected.message}</p>{selected.attachment_url && <a href={selected.attachment_url} target="_blank" rel="noreferrer" className="mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-white"><Image src={selected.attachment_url} alt="Customer screenshot" width={960} height={600} unoptimized className="max-h-72 w-full object-contain" /></a>}<p className="mt-2 text-[10px] text-slate-400">Customer, {formatDate(selected.created_at, true)}</p></article>{(selected.messages ?? []).map((message) => <article key={message.id} className={`rounded-2xl p-4 ${message.author_type === "admin" ? "ml-6 rounded-tr-md bg-emerald-50" : message.author_type === "system" ? "border border-slate-200 bg-white" : "mr-6 rounded-tl-md bg-slate-100"}`}><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{message.message}</p>{message.attachment_url && <a href={message.attachment_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-xs font-semibold text-emerald-700 underline">View attached image</a>}<p className="mt-2 text-[10px] text-slate-400">{message.author_type === "admin" ? "IR35Careers support" : message.author_type === "system" ? "System" : "Customer"}, {formatDate(message.created_at, true)}</p></article>)}</div></div>
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4"><label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Reply to customer<textarea value={replyText} onChange={(event) => setReplyText(event.target.value)} rows={5} maxLength={5000} placeholder="Explain what was checked, what changed and what the customer should do next." className="mt-3 w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm font-normal normal-case leading-6 tracking-normal text-slate-900 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" /></label><div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={() => { onReply(selected.id, replyText, false); setReplyText(""); }} disabled={updatingId === selected.id || replyText.trim().length < 2} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 disabled:opacity-50"><Send size={14} /> Send update</button><button type="button" onClick={() => { onReply(selected.id, replyText, true); setReplyText(""); }} disabled={updatingId === selected.id || replyText.trim().length < 2} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} /> Send and resolve</button></div></div>
+            <div className="mt-6 border-t border-slate-100 pt-5"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Update follow-up status {updatingId === selected.id && <Loader2 size={13} className="animate-spin" />}</p><div className="mt-3 flex flex-wrap gap-2">{(["new", "in_progress", "resolved", "spam"] as FeedbackStatus[]).map((status) => <button key={status} type="button" onClick={() => onStatusChange(selected.id, status)} disabled={updatingId === selected.id || selected.status === status} className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-semibold disabled:cursor-not-allowed ${selected.status === status ? "bg-emerald-50 text-emerald-700" : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 disabled:opacity-50"}`}>{selected.status === status ? <CheckCircle2 size={13} /> : null}{statusLabel(status)}</button>)}</div></div>
+          </div> : <EmptyState title="Choose an enquiry" detail="Select a customer message to review its details and update follow-up status." />}
+        </div>
       </Panel>
     </div>
   );
 }
 
-function WaitlistPanel({ entries, total, query }: { entries: Array<{ email: string; created_at: string }>; total: number; query: string }) {
+function EmailCampaignsPanel({
+  data,
+  draft,
+  audience,
+  customRecipient,
+  previewHtml,
+  previewing,
+  sendingTest,
+  sendingCampaign,
+  draftSavedAt,
+  query,
+  onChooseTemplate,
+  onDraftChange,
+  onAudienceChange,
+  onCustomRecipientChange,
+  onSendTest,
+  onSendCampaign,
+}: {
+  data: AdminData;
+  draft: EmailCampaignDraft | null;
+  audience: CampaignAudience;
+  customRecipient: string;
+  previewHtml: string;
+  previewing: boolean;
+  sendingTest: boolean;
+  sendingCampaign: boolean;
+  draftSavedAt: string | null;
+  query: string;
+  onChooseTemplate: (template: EmailCampaignTemplate) => void;
+  onDraftChange: (draft: EmailCampaignDraft) => void;
+  onAudienceChange: (audience: CampaignAudience) => void;
+  onCustomRecipientChange: (value: string) => void;
+  onSendTest: () => void;
+  onSendCampaign: () => void;
+}) {
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const templates = (data.emailTemplates ?? []).filter((template) => !query || [template.name, template.description, template.subject].some((value) => value.toLowerCase().includes(query)));
+  const history = (data.campaignHistory ?? []).filter((entry) => !query || JSON.stringify(entry.summary).toLowerCase().includes(query));
+  const counts = data.audienceCounts ?? { registered: 0, registered_with_cv: 0, registered_without_cv: 0, inactive_30d: 0, waitlist: 0, all: 0, custom: 1 };
+  const recipientCount = audience === "custom" ? 1 : counts[audience];
+  const audienceLabel = audience === "registered"
+    ? "Registered contractors"
+    : audience === "registered_with_cv"
+      ? "Contractors with a Resume"
+      : audience === "registered_without_cv"
+        ? "Contractors without a Resume"
+        : audience === "inactive_30d"
+          ? "Inactive for 30 days"
+          : audience === "waitlist"
+            ? "Former waitlist"
+            : audience === "all"
+              ? "All unique contacts"
+              : customRecipient || "Single address";
+  const qualityChecks = draft ? [
+    { label: "Clear subject", passed: draft.subject.length >= 20 && draft.subject.length <= 70 },
+    { label: "Useful preview text", passed: draft.preheader.length >= 30 && draft.preheader.length <= 140 },
+    { label: "Focused message", passed: draft.message.length >= 80 && draft.message.length <= 1200 },
+    { label: "Secure website link", passed: draft.ctaUrl.startsWith("https://www.ir35careers.com/") },
+    { label: "Audience selected", passed: recipientCount > 0 && (audience !== "custom" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customRecipient)) },
+  ] : [];
+  const passedChecks = qualityChecks.filter((check) => check.passed).length;
+  const readyToSend = Boolean(draft && data.deliveryConfigured && qualityChecks.every((check) => check.passed));
+  const liveCampaigns = history.filter((entry) => entry.summary?.action === "send");
+  const acceptedTotal = liveCampaigns.reduce((total, entry) => total + Number(entry.summary?.sent ?? 0), 0);
+  const failedTotal = liveCampaigns.reduce((total, entry) => total + Number(entry.summary?.failed ?? 0), 0);
+  const fieldClass = "mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100";
+  const update = <Key extends keyof EmailCampaignDraft,>(key: Key, value: EmailCampaignDraft[Key]) => {
+    if (draft) onDraftChange({ ...draft, [key]: value });
+  };
+
+  return (
+    <div className="mt-7 space-y-5">
+      <Panel
+        title="Choose a professional template"
+        description="Start with a branded layout, then edit every important part before sending."
+        action={<span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${data.deliveryConfigured ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{data.deliveryConfigured ? "Email ready" : "Email not configured"}</span>}
+      >
+        <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4 sm:p-6">
+          {templates.map((template) => {
+            const selected = draft?.templateId === template.templateId;
+            return <button key={template.templateId} type="button" onClick={() => onChooseTemplate(template)} className={`rounded-2xl border p-4 text-left transition focus:outline-none focus:ring-4 focus:ring-emerald-100 ${selected ? "border-emerald-400 bg-emerald-50/70 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"}`}><span className={`flex h-9 w-9 items-center justify-center rounded-xl ${selected ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600"}`}><LayoutTemplate size={16} /></span><p className="mt-4 text-sm font-semibold text-slate-950">{template.name}</p><p className="mt-1.5 text-xs leading-5 text-slate-500">{template.description}</p>{selected && <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Selected</span>}</button>;
+          })}
+          {!templates.length && <div className="sm:col-span-2 xl:col-span-4"><EmptyState title="No matching templates" detail="Clear the search to see all professional email templates." /></div>}
+        </div>
+      </Panel>
+
+      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(540px,0.9fr)_minmax(560px,1.1fr)]">
+        <Panel title="Design your email" description="Your edits are escaped, validated and rendered inside the approved IR35Careers layout." action={draftSavedAt ? <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500"><CheckCircle2 size={12} className="text-emerald-600" /> Draft saved</span> : null}>
+          {draft ? <div className="space-y-5 p-5 sm:p-6">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
+                <label className="text-xs font-semibold text-slate-700">Audience
+                  <select value={audience} onChange={(event) => onAudienceChange(event.target.value as CampaignAudience)} className={fieldClass}>
+                    <option value="registered">Registered contractors ({counts.registered})</option>
+                    <option value="registered_with_cv">Contractors with a Resume ({counts.registered_with_cv})</option>
+                    <option value="registered_without_cv">Contractors without a Resume ({counts.registered_without_cv})</option>
+                    <option value="inactive_30d">Inactive for 30 days ({counts.inactive_30d})</option>
+                    <option value="waitlist">Former waitlist ({counts.waitlist})</option>
+                    <option value="all">All unique contacts ({counts.all})</option>
+                    <option value="custom">Single address</option>
+                  </select>
+                </label>
+                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Recipients</p><p className="mt-1 text-2xl font-semibold tabular-nums text-slate-950">{recipientCount}</p></div>
+              </div>
+              {audience === "custom" && <label className="mt-4 block text-xs font-semibold text-slate-700">Recipient email<input type="email" value={customRecipient} onChange={(event) => onCustomRecipientChange(event.target.value)} className={fieldClass} placeholder="name@example.com" /></label>}
+              <p className="mt-3 text-[11px] leading-5 text-slate-500">Send only service information that matches why each contact gave IR35Careers their email address.</p>
+            </div>
+
+            <label className="block text-xs font-semibold text-slate-700"><span className="flex items-center justify-between"><span>Subject</span><span className="font-normal tabular-nums text-slate-400">{draft.subject.length}/120</span></span><input value={draft.subject} maxLength={120} onChange={(event) => update("subject", event.target.value)} className={fieldClass} /></label>
+            <label className="block text-xs font-semibold text-slate-700"><span className="flex items-center justify-between"><span>Inbox preview text</span><span className="font-normal tabular-nums text-slate-400">{draft.preheader.length}/180</span></span><input value={draft.preheader} maxLength={180} onChange={(event) => update("preheader", event.target.value)} className={fieldClass} /></label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-xs font-semibold text-slate-700">Section label<input value={draft.eyebrow} maxLength={60} onChange={(event) => update("eyebrow", event.target.value)} className={fieldClass} /></label>
+              <label className="block text-xs font-semibold text-slate-700">Button label<input value={draft.ctaLabel} maxLength={50} onChange={(event) => update("ctaLabel", event.target.value)} className={fieldClass} /></label>
+            </div>
+            <label className="block text-xs font-semibold text-slate-700">Main heading<input value={draft.heading} maxLength={140} onChange={(event) => update("heading", event.target.value)} className={fieldClass} /></label>
+            <label className="block text-xs font-semibold text-slate-700"><span className="flex items-center justify-between"><span>Message</span><span className="font-normal tabular-nums text-slate-400">{draft.message.length}/3000</span></span><textarea value={draft.message} maxLength={3000} rows={8} onChange={(event) => update("message", event.target.value)} className={`${fieldClass} resize-y leading-6`} /></label>
+            <label className="block text-xs font-semibold text-slate-700">Button destination<input type="url" value={draft.ctaUrl} maxLength={300} onChange={(event) => update("ctaUrl", event.target.value)} className={fieldClass} /><span className="mt-1.5 block text-[11px] font-normal leading-5 text-slate-500">For safety, campaign buttons can link only to www.ir35careers.com.</span></label>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-4"><div><p className="text-xs font-semibold text-slate-900">Send readiness</p><p className="mt-1 text-[11px] text-slate-500">{passedChecks} of {qualityChecks.length} recommended checks passed</p></div><span className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold ${readyToSend ? "bg-emerald-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}>{qualityChecks.length ? Math.round((passedChecks / qualityChecks.length) * 100) : 0}%</span></div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">{qualityChecks.map((check) => <div key={check.label} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium ${check.passed ? "bg-emerald-50 text-emerald-700" : "bg-white text-slate-500 ring-1 ring-slate-200"}`}><CheckCircle2 size={13} className={check.passed ? "text-emerald-600" : "text-slate-300"} /> {check.label}</div>)}</div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-5"><button type="button" onClick={() => { const template = data.emailTemplates?.find((item) => item.templateId === draft.templateId); if (template) onChooseTemplate(template); }} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-slate-900"><RotateCcw size={13} /> Reset template</button><span className="text-[11px] text-slate-400">Changes save automatically</span></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button type="button" onClick={onSendTest} disabled={sendingTest || sendingCampaign || !data.deliveryConfigured} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50">{sendingTest ? <Loader2 size={15} className="animate-spin" /> : <Inbox size={15} />} {sendingTest ? "Sending test" : "Send test to me"}</button>
+              <button type="button" onClick={() => setReviewOpen(true)} disabled={sendingCampaign || sendingTest || !readyToSend} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{sendingCampaign ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} {sendingCampaign ? "Sending campaign" : `Review and send to ${recipientCount}`}</button>
+            </div>
+            <p className="text-center text-[11px] leading-5 text-slate-500">From {data.sender || "the configured IR35Careers sender"}. A final confirmation appears before the campaign is sent.</p>
+          </div> : <EmptyState title="Choose a template" detail="Select one of the professional templates to start designing your message." />}
+        </Panel>
+
+        <Panel title="Live email preview" description="This is the same responsive HTML that recipients will receive." action={<div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1"><button type="button" onClick={() => setPreviewMode("desktop")} className={`flex h-7 w-7 items-center justify-center rounded-md transition ${previewMode === "desktop" ? "bg-white text-slate-950 shadow-sm" : "text-slate-400"}`} aria-label="Desktop email preview"><Monitor size={13} /></button><button type="button" onClick={() => setPreviewMode("mobile")} className={`flex h-7 w-7 items-center justify-center rounded-md transition ${previewMode === "mobile" ? "bg-white text-slate-950 shadow-sm" : "text-slate-400"}`} aria-label="Mobile email preview"><Smartphone size={13} /></button></div>}>
+          <div className="border-b border-slate-100 bg-white px-5 py-4 sm:px-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700"><Mail size={17} /></span><div className="min-w-0"><p className="text-xs font-semibold text-slate-900">IR35Careers <span className="font-normal text-slate-500">&lt;hello@mail.ir35careers.com&gt;</span></p><p className="mt-1 truncate text-sm font-semibold text-slate-950">{draft?.subject || "Email subject"}</p><p className="mt-0.5 truncate text-xs text-slate-500">{draft?.preheader || "Inbox preview text"}</p></div></div></div>
+          <div className="relative flex min-h-[852px] justify-center overflow-hidden bg-slate-100 p-2 sm:p-4">{previewing && <span className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] text-slate-500 shadow-sm"><Loader2 size={12} className="animate-spin" /> Updating</span>}<iframe title="Campaign email preview" sandbox="" srcDoc={previewHtml} className={`h-[820px] rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ${previewMode === "mobile" ? "w-[390px] max-w-full" : "w-full"}`} /></div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3"><article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Live campaigns</p><p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{liveCampaigns.length}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Provider accepted</p><p className="mt-3 text-3xl font-semibold tabular-nums text-emerald-700">{acceptedTotal}</p></article><article className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Failed</p><p className={`mt-3 text-3xl font-semibold tabular-nums ${failedTotal ? "text-rose-700" : "text-slate-950"}`}>{failedTotal}</p></article></div>
+
+      <Panel title="Campaign history" description="Test sends and live campaigns are recorded in the private audit trail.">
+        {history.length ? <div className="overflow-x-auto"><table className="w-full min-w-[780px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"><th className="px-6 py-3.5">Email</th><th className="px-4 py-3.5">Audience</th><th className="px-4 py-3.5">Accepted</th><th className="px-4 py-3.5">Status</th><th className="px-6 py-3.5">Sent</th></tr></thead><tbody className="divide-y divide-slate-100">{history.map((entry) => { const summary = entry.summary ?? {}; const accepted = summary.sent ?? (summary.action === "test" ? 1 : 0); return <tr key={entry.id} className="hover:bg-slate-50/70"><td className="px-6 py-4"><p className="max-w-[340px] truncate text-sm font-semibold text-slate-900">{summary.subject || "Email campaign"}</p><p className="mt-1 text-xs capitalize text-slate-500">{summary.action === "test" ? "Administrator test" : "Live campaign"}</p></td><td className="px-4 py-4 text-xs capitalize text-slate-600">{summary.action === "test" ? "Administrator" : summary.audience?.replaceAll("_", " ") || "-"}</td><td className="px-4 py-4 text-xs font-semibold tabular-nums text-slate-800">{accepted} / {summary.recipient_count ?? accepted}</td><td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${summary.status === "accepted" ? "bg-emerald-50 text-emerald-700" : summary.status === "failed" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>{summary.status || "Recorded"}</span></td><td className="px-6 py-4 text-xs text-slate-500">{formatDate(entry.created_at, true)}</td></tr>; })}</tbody></table></div> : <EmptyState title={query ? "No matching campaigns" : "No email campaigns yet"} detail={query ? "Try a different subject or audience search." : "Send yourself a test email to begin the private campaign history."} />}
+      </Panel>
+
+      {reviewOpen && draft && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="campaign-review-title"><div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl"><div className="border-b border-slate-100 px-6 py-5"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><Send size={18} /></span><h2 id="campaign-review-title" className="mt-4 text-xl font-semibold tracking-tight text-slate-950">Review before sending</h2><p className="mt-1 text-sm leading-6 text-slate-500">This sends one private copy to every unique recipient and records the provider result.</p></div><dl className="space-y-4 px-6 py-5 text-sm"><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">Subject</dt><dd className="font-semibold text-slate-900">{draft.subject}</dd></div><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">Audience</dt><dd className="font-semibold text-slate-900">{audienceLabel}</dd></div><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">Recipients</dt><dd className="font-semibold tabular-nums text-slate-900">{recipientCount}</dd></div><div className="grid grid-cols-[100px_1fr] gap-3"><dt className="text-slate-500">From</dt><dd className="break-all font-semibold text-slate-900">{data.sender}</dd></div></dl><div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 px-6 py-5 sm:flex-row sm:justify-end"><button type="button" onClick={() => setReviewOpen(false)} className="min-h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Keep editing</button><button type="button" onClick={() => { setReviewOpen(false); onSendCampaign(); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700"><Send size={15} /> Send campaign now</button></div></div></div>}
+    </div>
+  );
+}
+
+function LaunchAudiencePanel({
+  entries,
+  total,
+  query,
+  sending,
+  onSend,
+}: {
+  entries: WaitlistRow[];
+  total: number;
+  query: string;
+  sending: boolean;
+  onSend: () => void;
+}) {
+  const notified = entries.filter((entry) => entry.launch_notified_at).length;
+  const pending = entries.filter((entry) => !entry.launch_notified_at).length;
   return (
     <div className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <Panel title="Waiting list" description={`${formatNumber(total)} email sign-ups · newest first`}>
-        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div><span className="hidden text-xs font-medium text-slate-400 sm:block">{timeAgo(entry.created_at)}</span></div>)}</div> : <EmptyState title={query ? "No matching sign-ups" : "The waitlist is empty"} detail={query ? "Try a different email search." : "New waitlist registrations will appear here."} />}
+      <Panel title="Former waitlist recipients" description={`${formatNumber(total)} permission-based sign-ups · newest first`}>
+        {entries.length ? <div className="divide-y divide-slate-100">{entries.map((entry, index) => <div key={`${entry.email}-${entry.created_at}`} className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50/70 sm:px-6"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">{String(index + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{entry.email}</p><p className="mt-1 text-xs text-slate-500">Joined {formatDate(entry.created_at, true)}</p></div>{entry.launch_notified_at ? <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"><CheckCircle2 size={13} /> Sent</span> : entry.launch_last_error ? <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">Failed</span> : <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Pending</span>}</div>)}</div> : <EmptyState title={query ? "No matching recipients" : "No beta recipients"} detail={query ? "Try a different email search." : "No historical waitlist records are stored."} />}
       </Panel>
-      <Panel title="Growth signal" description="A concise view of early product demand."><div className="p-6"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><BarChart3 size={19} /></span><p className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-slate-950 tabular-nums">{formatNumber(total)}</p><p className="mt-1 text-sm font-medium text-slate-700">Total sign-ups</p><p className="mt-4 text-xs leading-5 text-slate-500">Use this list for permission-based product updates only. Keep consent and unsubscribe handling in your email workflow.</p></div></Panel>
+      <Panel title="Beta invitation" description={pending ? `${pending} recipients are ready` : `${notified} invitations recorded`}><div className="p-6"><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${pending ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{pending ? <Mail size={19} /> : <CheckCircle2 size={19} />}</span><p className="mt-5 text-sm font-semibold text-slate-950">Your IR35Careers beta access is ready</p><p className="mt-3 text-xs leading-5 text-slate-500">{pending ? "The approved branded invitation is ready. Sending automatically removes registered duplicates and invalid placeholder addresses, then records every provider delivery ID." : "The cleaned audience has been processed. Each accepted invitation has its provider delivery ID stored in the private ledger."}</p>{pending ? <button type="button" onClick={onSend} disabled={sending} className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">{sending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {sending ? "Sending invitations" : "Clean audience and send"}</button> : <span className="mt-5 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">Delivery recorded</span>}</div></Panel>
+    </div>
+  );
+}
+
+function AdministratorsPanel({
+  data,
+  onChanged,
+  onNotice,
+  onError,
+}: {
+  data: AdminData;
+  onChanged: () => Promise<void> | void;
+  onNotice: (message: string | null) => void;
+  onError: (message: string | null) => void;
+}) {
+  const administrators = data.administrators ?? [];
+  const canManage = Boolean(data.canManageAdministrators);
+  const viewerEmail = data.viewerEmail?.toLowerCase() ?? "";
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<AdminRole>("admin");
+  const [actionKey, setActionKey] = useState<string | null>(null);
+
+  const activeCount = administrators.filter((administrator) => administrator.status === "active").length;
+  const ownerCount = administrators.filter((administrator) => administrator.role === "owner" && administrator.status === "active").length;
+  const disabledCount = administrators.filter((administrator) => administrator.status === "disabled").length;
+
+  const runAction = async (
+    action: "add_admin" | "update_admin" | "remove_admin",
+    administratorEmail: string,
+    administratorRole?: AdminRole,
+    administratorStatus?: AdminStatus,
+  ) => {
+    const key = `${action}:${administratorEmail}`;
+    setActionKey(key);
+    onError(null);
+    onNotice(null);
+    try {
+      const response = await adminFetch("/api/admin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action,
+          adminEmail: administratorEmail,
+          adminRole: administratorRole,
+          adminStatus: administratorStatus,
+        }),
+      });
+      const json = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(json.error ?? "Unable to update administrator access");
+      if (action === "add_admin") {
+        setEmail("");
+        setRole("admin");
+        onNotice(`${administratorEmail} can now sign in to the admin workspace.`);
+      } else if (action === "remove_admin") {
+        onNotice(`${administratorEmail} no longer has administrator access.`);
+      } else {
+        onNotice(`Access settings were updated for ${administratorEmail}.`);
+      }
+      await onChanged();
+    } catch (caught) {
+      onError(caught instanceof Error ? caught.message : "Unable to update administrator access");
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const submitNewAdministrator = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const administratorEmail = email.trim().toLowerCase();
+    if (!administratorEmail) {
+      onError("Enter the administrator's email address.");
+      return;
+    }
+    void runAction("add_admin", administratorEmail, role, "active");
+  };
+
+  return (
+    <div className="mt-7 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Administrators", value: administrators.length, detail: "Registered access", tone: "bg-slate-950 text-white" },
+          { label: "Active", value: activeCount, detail: "Can sign in now", tone: "bg-emerald-50 text-emerald-700" },
+          { label: "Owners", value: ownerCount, detail: "Can manage access", tone: "bg-cyan-50 text-cyan-700" },
+          { label: "Disabled", value: disabledCount, detail: "Access suspended", tone: "bg-amber-50 text-amber-700" },
+        ].map((metric) => (
+          <article key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${metric.tone}`}><ShieldCheck size={17} /></span>
+            <p className="mt-5 text-3xl font-semibold tabular-nums text-slate-950">{metric.value}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-800">{metric.label}</p>
+            <p className="mt-1 text-[11px] text-slate-500">{metric.detail}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Panel title="Administrator access" description="Every sign-in is checked against this private registry. Changes are recorded in the audit timeline.">
+          {administrators.length ? (
+            <div className="divide-y divide-slate-100">
+              {administrators.map((administrator) => {
+                const isCurrentUser = administrator.email.toLowerCase() === viewerEmail;
+                const isProtected = administrator.source === "bootstrap" || isCurrentUser;
+                const isUpdating = actionKey?.endsWith(`:${administrator.email}`) ?? false;
+                return (
+                  <article key={administrator.id ?? administrator.email} className="px-5 py-5 sm:px-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${administrator.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>
+                          {administrator.role === "owner" ? <ShieldCheck size={18} /> : <UserRound size={18} />}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-slate-950">{administrator.email}</p>
+                            {isCurrentUser && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">You</span>}
+                            {administrator.source === "bootstrap" && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">Recovery owner</span>}
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Last sign-in: {administrator.lastLoginAt ? `${timeAgo(administrator.lastLoginAt)} · ${formatDate(administrator.lastLoginAt, true)}` : "Not recorded yet"}
+                          </p>
+                          <p className="mt-1 text-[11px] text-slate-400">Added {formatDate(administrator.createdAt)}{administrator.invitedByEmail ? ` by ${administrator.invitedByEmail}` : ""}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${administrator.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{administrator.status}</span>
+                        {canManage ? (
+                          <>
+                            <label className="sr-only" htmlFor={`admin-role-${administrator.id ?? administrator.email}`}>Administrator role</label>
+                            <select
+                              id={`admin-role-${administrator.id ?? administrator.email}`}
+                              value={administrator.role}
+                              disabled={isUpdating || isProtected}
+                              onChange={(event) => void runAction("update_admin", administrator.email, event.target.value as AdminRole, administrator.status)}
+                              className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold capitalize text-slate-700 outline-none transition focus:border-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="owner">Owner</option>
+                            </select>
+                            <button
+                              type="button"
+                              disabled={isUpdating || isProtected}
+                              onClick={() => void runAction("update_admin", administrator.email, administrator.role, administrator.status === "active" ? "disabled" : "active")}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              {isUpdating ? <Loader2 size={13} className="animate-spin" /> : <Power size={13} />}
+                              {administrator.status === "active" ? "Disable" : "Enable"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isUpdating || isProtected}
+                              aria-label={`Remove ${administrator.email}`}
+                              onClick={() => {
+                                if (window.confirm(`Remove administrator access for ${administrator.email}?`)) void runAction("remove_admin", administrator.email);
+                              }}
+                              className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-35"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-semibold capitalize text-slate-600">{administrator.role}</span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : <EmptyState title="No administrators found" detail="The recovery owner can add the first managed administrator." />}
+        </Panel>
+
+        <div className="space-y-5">
+          <Panel title="Add an administrator" description={canManage ? "Grant access using the exact email address they will use to sign in." : "Only an owner can grant or change administrator access."}>
+            <form onSubmit={submitNewAdministrator} className="space-y-4 p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><Plus size={18} /></span>
+              <label className="block text-xs font-semibold text-slate-700">Email address
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={!canManage || actionKey !== null}
+                  placeholder="admin@example.com"
+                  autoComplete="off"
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="block text-xs font-semibold text-slate-700">Access level
+                <select value={role} onChange={(event) => setRole(event.target.value as AdminRole)} disabled={!canManage || actionKey !== null} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 disabled:bg-slate-50">
+                  <option value="admin">Administrator</option>
+                  <option value="owner">Owner</option>
+                </select>
+              </label>
+              <button type="submit" disabled={!canManage || actionKey !== null || !email.trim()} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45">
+                {actionKey?.startsWith("add_admin:") ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                Add administrator
+              </button>
+              <p className="text-[11px] leading-5 text-slate-500">No password is shared. The new administrator signs in at admin.ir35careers.com with this email using Google or their IR35Careers password.</p>
+            </form>
+          </Panel>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm"><LockKeyhole size={17} /></span>
+            <p className="mt-4 text-sm font-semibold text-emerald-950">Protected access</p>
+            <p className="mt-2 text-xs leading-5 text-emerald-800">The recovery owner cannot be removed or disabled. Owners cannot remove, disable or demote their own account, preventing accidental lockout.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

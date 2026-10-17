@@ -1,0 +1,229 @@
+import { describe, expect, it } from "vitest";
+import {
+  automaticSubmissionPriority,
+  bestDirectEmployerCandidate,
+  bestDiscoveryCandidate,
+  directEmployerCandidateScore,
+  directEmployerCandidatesFromSearchHtml,
+  discoveryCandidateScore,
+  discoveryProviderFromAdzunaPage,
+  discoveryProviderOrder,
+  duckDuckGoResultTarget,
+  isDiscoveryOnlyHost,
+} from "@/lib/application-runner/source-resolution";
+
+const job = {
+  title: "Mould Joiner/ Carpenter",
+  company_name: "Net-Temps",
+  location: "Nottingham, Nottinghamshire",
+};
+
+describe("application source resolution", () => {
+  it("recognises Resume Library evidence on an Adzuna listing", () => {
+    expect(
+      discoveryProviderFromAdzunaPage({
+        body: "Mould Joiner role",
+        html: '<img src="logo_cv_library.png" alt="Resume-Library">',
+      }),
+    ).toBe("cv_library");
+    expect(
+      discoveryProviderFromAdzunaPage({ body: "Apply", html: "" }),
+    ).toBeNull();
+  });
+
+  it("recognises Totaljobs evidence on an Adzuna listing", () => {
+    expect(
+      discoveryProviderFromAdzunaPage({
+        body: "DevOps Engineer",
+        html: '<img alt="Total Jobs" src="provider-logo.png">',
+      }),
+    ).toBe("totaljobs");
+  });
+
+  it("checks both recovery boards when an Adzuna block hides its source", () => {
+    expect(
+      discoveryProviderOrder({
+        body: "Access denied",
+        html: "<title>Forbidden</title>",
+      }),
+    ).toEqual(["totaljobs", "cv_library"]);
+    expect(
+      discoveryProviderOrder({
+        body: "Apply through Resume Library",
+        html: '<img src="logo_cv_library.png">',
+      }),
+    ).toEqual(["cv_library", "totaljobs"]);
+  });
+
+  it("prioritises direct application forms over discovery links", () => {
+    const base = { source_domain: "example.test" };
+    expect(
+      automaticSubmissionPriority({
+        ...base,
+        apply_url: "https://jobs.ashbyhq.com/example/role",
+      }),
+    ).toBeGreaterThan(
+      automaticSubmissionPriority({
+        ...base,
+        apply_url: "https://www.adzuna.co.uk/details/123",
+      }),
+    );
+    expect(
+      automaticSubmissionPriority({
+        ...base,
+        apply_url: "not-a-url",
+      }),
+    ).toBe(0);
+  });
+
+  it("requires both the role and company before using a direct listing", () => {
+    const exact = {
+      title: "Mould Joiner/ Carpenter",
+      context:
+        "Mould Joiner/ Carpenter Posted 2 days ago by Net-Temps Nottingham Contract Easy Apply",
+      href: "/job/225520701/mould-joiner-carpenter",
+    };
+    expect(discoveryCandidateScore(exact, job)).toBeGreaterThanOrEqual(95);
+    expect(
+      discoveryCandidateScore(
+        { ...exact, context: exact.context.replace("Net-Temps", "Another Co") },
+        job,
+      ),
+    ).toBe(0);
+  });
+
+  it("selects one unambiguous original listing", () => {
+    expect(
+      bestDiscoveryCandidate(
+        [
+          {
+            title: "Mould Joiner/ Carpenter",
+            context: "Posted by Net-Temps in Nottingham. Contract. Easy Apply.",
+            href: "/job/225520701/mould-joiner-carpenter",
+          },
+          {
+            title: "Mould Set Up",
+            context: "Posted by Net-Temps in Nottingham. Contract.",
+            href: "/job/225505345/mould-set-up",
+          },
+        ],
+        job,
+      )?.href,
+    ).toBe("/job/225520701/mould-joiner-carpenter");
+  });
+
+  it("selects an exact Totaljobs role only when the company also matches", () => {
+    const totalJobsRole = {
+      title: "DevOps Engineer",
+      company_name: "TALENT INTERNATIONAL UK LTD",
+      location: "UK",
+    };
+    expect(
+      bestDiscoveryCandidate(
+        [
+          {
+            title: "DevOps Engineer",
+            context:
+              "TALENT INTERNATIONAL UK LTD UK £480.00 per day Contract Published 2 days ago",
+            href: "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+          },
+          {
+            title: "DevOps Engineer",
+            context: "Another recruiter London £550 per day Contract",
+            href: "/job/devops-engineer/another-recruiter-job107879999",
+          },
+        ],
+        totalJobsRole,
+      )?.href,
+    ).toBe("/job/devops-engineer/talent-international-uk-ltd-job107879337");
+  });
+
+  it("uses the advert description to distinguish duplicate title and company matches", () => {
+    const totalJobsRole = {
+      title: "DevOps Engineer",
+      company_name: "TALENT INTERNATIONAL UK LTD",
+      location: "UK",
+      description:
+        "Senior DevOps Engineer supporting an AWS data platform with Terraform, GitLab CI/CD, Python and active SC clearance.",
+    };
+    expect(
+      bestDiscoveryCandidate(
+        [
+          {
+            title: "DevOps Engineer",
+            context:
+              "TALENT INTERNATIONAL UK LTD UK £480 per day. Senior DevOps Engineer supporting an AWS data platform with Terraform, GitLab CI/CD, Python and active SC clearance.",
+            href: "/job/devops-engineer/talent-international-uk-ltd-job107879337",
+          },
+          {
+            title: "DevOps Engineer",
+            context:
+              "TALENT INTERNATIONAL UK LTD UK £480 per day. Streamline software development, testing and deployment processes.",
+            href: "/job/devops-engineer/talent-international-uk-ltd-job107877198",
+          },
+        ],
+        totalJobsRole,
+      )?.href,
+    ).toBe("/job/devops-engineer/talent-international-uk-ltd-job107879337");
+  });
+
+  it("unwraps direct employer results and rejects another discovery board", () => {
+    expect(
+      duckDuckGoResultTarget(
+        "//duckduckgo.com/l/?uddg=https%3A%2F%2Fviqu.co.uk%2Fjob%2Fdevops-engineer%2F",
+      ),
+    ).toBe("https://viqu.co.uk/job/devops-engineer/");
+    expect(
+      duckDuckGoResultTarget(
+        "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.jobserve.com%2Fjob%2F123",
+      ),
+    ).toBeNull();
+    expect(isDiscoveryOnlyHost("www.adzuna.co.uk")).toBe(true);
+    expect(isDiscoveryOnlyHost("viqu.co.uk")).toBe(false);
+  });
+
+  it("extracts a recruiter-owned result from the no-script search response", () => {
+    const candidates = directEmployerCandidatesFromSearchHtml(`
+      <div class="result">
+        <a rel="nofollow" class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fviqu.co.uk%2Fjob%2Fdevops%2Dengineer%2F&amp;rut=abc">
+          DevOps Engineer &amp; Platform Specialist - VIQU IT
+        </a>
+      </div>
+      <a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.jobserve.com%2Fjob%2F123">Copied role</a>
+    `);
+    expect(candidates).toEqual([
+      {
+        title: "DevOps Engineer & Platform Specialist - VIQU IT",
+        context: "DevOps Engineer & Platform Specialist - VIQU IT",
+        href: "https://viqu.co.uk/job/devops-engineer/",
+      },
+    ]);
+  });
+
+  it("prefers the recruiter-owned copy of an aggregated role", () => {
+    const directJob = {
+      title: "DevOps Engineer - SC Cleared - Hybrid - Inside IR35",
+      company_name: "VIQU IT Recruitment",
+      location: "London",
+      description:
+        "DevOps Engineer with valid and transferrable SC Clearance supporting critical infrastructure.",
+    };
+    const official = {
+      title: "DevOps Engineer - SC Cleared - Hybrid - Inside IR35 - VIQU IT",
+      context:
+        "London. DevOps Engineer with valid and transferrable SC Clearance supporting critical infrastructure.",
+      href: "https://viqu.co.uk/job/devops-engineer-sc-cleared-hybrid-inside-ir35/",
+    };
+    const copied = {
+      ...official,
+      href: "https://www.jobserve.com/gb/en/job/123",
+    };
+    expect(
+      directEmployerCandidateScore(official, directJob),
+    ).toBeGreaterThanOrEqual(85);
+    expect(directEmployerCandidateScore(copied, directJob)).toBe(0);
+    expect(
+      bestDirectEmployerCandidate([copied, official], directJob)?.href,
+    ).toBe(official.href);
+  });
+});

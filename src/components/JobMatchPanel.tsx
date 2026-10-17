@@ -15,7 +15,7 @@ import { getProfile, PREVIEW_PROFILE, scoreJob, type ScoredJob } from "@/lib/pro
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import type { JobListing } from "@/lib/job-types";
 
-export function JobMatchPanel({ job }: { job: JobListing }) {
+export function JobMatchPanel({ job, showTailorAction = true }: { job: JobListing; showTailorAction?: boolean }) {
   const { user, loading } = useAuth();
   const preview = !isSupabaseConfigured();
   const [result, setResult] = useState<ScoredJob | "profile_empty" | "no_overlap" | null>(null);
@@ -78,7 +78,7 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
         <p className="mt-2 text-sm text-slate-500">
           Add skills to your profile to see how this contract matches you.
         </p>
-        <Link href="/onboarding" className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-400">
+        <Link href="/profile#application-readiness" className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-400">
           Complete profile
         </Link>
       </div>
@@ -144,15 +144,17 @@ export function JobMatchPanel({ job }: { job: JobListing }) {
             </div>
           ))}
           {result.unmatchedSkills.length > 0 && <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950"><strong>Profile skills not tagged in this listing:</strong> {result.unmatchedSkills.slice(0, 5).join(", ")}{result.unmatchedSkills.length > 5 ? "…" : ""}</p>}
-          <p className="text-[11px] leading-5 text-slate-500">This is a deterministic comparison of structured listing data and your saved preferences. It is not an AI assessment, hiring prediction or guarantee.</p>
+          <p className="text-xs leading-5 text-slate-600">This is a deterministic comparison of structured listing data and your saved preferences. It is not an AI assessment, hiring prediction or guarantee.</p>
         </div>
       </details>
-      <Link
-        href={`/jobs/${job.id}/resume`}
-        className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
-      >
-        <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your CV
-      </Link>
+      {showTailorAction && (
+        <Link
+          href={`/jobs/${job.id}/resume`}
+          className="ir35-focus mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
+        >
+          <WandSparkles size={15} aria-hidden="true" /> Analyse &amp; tailor your Resume
+        </Link>
+      )}
     </div>
   );
 }

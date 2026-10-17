@@ -42,7 +42,7 @@ export function deriveIR35Provenance(
       return {
         kind: "unconfirmed",
         label: "Conflicting advertiser wording",
-        shortLabel: "Conflicting wording—confirm before applying",
+        shortLabel: "Conflicting wording. Confirm before applying",
         explanation: "The listing contains both Inside and Outside IR35 wording, so IR35Careers does not choose a status. Ask for the engagement's Status Determination Statement (SDS).",
         evidence: classified.evidence,
         observedLabel,

@@ -20,7 +20,7 @@
  * rate parser find the real rate ("£550 per day") in the description text.
  */
 
-import { HttpClient } from "../ats/http-client";
+import { HttpClient, HttpError } from "../ats/http-client";
 import type { RawATSJob } from "../ats/types";
 
 export interface AdzunaJob {
@@ -43,7 +43,7 @@ interface AdzunaResponse {
 
 export function mapAdzunaJob(job: AdzunaJob): RawATSJob {
   return {
-    sourceDomain: "adzuna.com",
+    sourceDomain: "adzuna.co.uk",
     sourceIdentifier: String(job.id),
     sourceType: "adzuna",
     title: job.title ?? "",
@@ -64,22 +64,37 @@ export interface AdzunaFetchOptions {
   appKey: string;
   /** Number of 50-result pages to fetch (keep small: serverless time budget). */
   pages?: number;
+  /** High-value searches fetched in addition to the general contract pages. */
+  keywordQueries?: string[];
+  keywordPages?: number;
+  deadlineMs?: number;
+  /** Adzuna's official freshness filter; old adverts are not fresh inventory. */
+  maxDaysOld?: number;
+  onPageError?: (query: string, page: number, message: string) => void;
 }
 
 export async function fetchAdzuna(
   client: HttpClient,
   opts: AdzunaFetchOptions
 ): Promise<RawATSJob[]> {
-  const pages = opts.pages ?? 2;
+  const pages = Math.max(1, Math.min(10, opts.pages ?? 2));
+  const keywordPages = Math.max(1, Math.min(5, opts.keywordPages ?? 1));
+  const deadline = opts.deadlineMs ?? Number.POSITIVE_INFINITY;
   const jobs: RawATSJob[] = [];
   const seen = new Set<string>();
 
-  for (let page = 1; page <= pages; page++) {
-    const url =
-      `https://api.adzuna.com/v1/api/jobs/gb/search/${page}` +
-      `?app_id=${encodeURIComponent(opts.appId)}` +
-      `&app_key=${encodeURIComponent(opts.appKey)}` +
-      `&results_per_page=50&contract=1&content-type=application/json`;
+  const fetchPage = async (page: number, keywords?: string) => {
+    const params = new URLSearchParams({
+      app_id: opts.appId,
+      app_key: opts.appKey,
+      results_per_page: "50",
+      contract: "1",
+      sort_by: "date",
+      "content-type": "application/json",
+    });
+    if (keywords) params.set("what", keywords);
+    if (opts.maxDaysOld) params.set("max_days_old", String(Math.max(1, Math.min(90, opts.maxDaysOld))));
+    const url = `https://api.adzuna.com/v1/api/jobs/gb/search/${page}?${params.toString()}`;
     const data = await client.getJson<AdzunaResponse>(url);
     const results = Array.isArray(data?.results) ? data.results : [];
     for (const job of results) {
@@ -88,7 +103,28 @@ export async function fetchAdzuna(
       seen.add(id);
       jobs.push(mapAdzunaJob(job));
     }
-    if (results.length < 50) break; // no more pages available
+    return results.length;
+  };
+
+  let completedPages = 0;
+  let lastError = "";
+  const queries = [undefined, ...new Set(opts.keywordQueries ?? [])];
+  for (const keywords of queries) {
+    const pageCount = keywords === undefined ? pages : keywordPages;
+    for (let page = 1; page <= pageCount; page++) {
+      if (Date.now() >= deadline) return jobs;
+      try {
+        const count = await fetchPage(page, keywords);
+        completedPages++;
+        if (count < 50) break;
+      } catch (error) {
+        // HttpError.url contains app_key; keep credentials out of diagnostics.
+        lastError = error instanceof HttpError ? `HTTP ${error.status}` : "request failed or timed out";
+        opts.onPageError?.(keywords ?? "All UK contracts", page, lastError);
+        break;
+      }
+    }
   }
+  if (completedPages === 0 && lastError) throw new Error(`Adzuna searches failed: ${lastError}`);
   return jobs;
 }

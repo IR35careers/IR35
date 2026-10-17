@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import { BILLING_POLICY_VERSION } from "@/lib/billing/constants";
 import { billingProviderConfig, getStripe, stripeObjectId, subscriptionEntitlement, type BillingProviderConfig } from "@/lib/billing/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { readTextBody, RequestBodyError } from "@/lib/security/request-body";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,13 +88,19 @@ async function reconcileEvent(event: Stripe.Event, stripe: Stripe, config: Billi
 export async function POST(request: Request): Promise<Response> {
   const config = billingProviderConfig();
   if (!config) return Response.json({ error: "Billing webhook is not connected." }, { status: 503, headers: NO_STORE });
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (contentLength > MAX_WEBHOOK_BYTES) return Response.json({ error: "Payload too large." }, { status: 413, headers: NO_STORE });
+
+  let rawBody: string;
+  try {
+    rawBody = await readTextBody(request, MAX_WEBHOOK_BYTES);
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Invalid webhook payload." },
+      { status: error instanceof RequestBodyError ? error.status : 400, headers: NO_STORE },
+    );
+  }
+
   const signature = request.headers.get("stripe-signature");
   if (!signature) return Response.json({ error: "Signature required." }, { status: 400, headers: NO_STORE });
-
-  const rawBody = await request.text();
-  if (Buffer.byteLength(rawBody, "utf8") > MAX_WEBHOOK_BYTES) return Response.json({ error: "Payload too large." }, { status: 413, headers: NO_STORE });
 
   let event: Stripe.Event;
   try {

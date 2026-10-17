@@ -34,7 +34,8 @@ interface WorkableResponse {
 }
 
 export function mapWorkableJob(job: WorkableJob, company: CompanyConfig): RawATSJob {
-  const employment = job.employment_type ? `Employment type: ${job.employment_type}.` : "";
+  const employmentType = job.employment_type?.replace(/\b(full|part)[- ]time\b/gi, "$1 time");
+  const employment = employmentType ? `Employment type: ${employmentType}.` : "";
   const description = [employment, job.description ?? ""].filter(Boolean).join("\n\n");
 
   const locationParts = [job.city, job.state, job.country].filter(Boolean);
@@ -52,6 +53,7 @@ export function mapWorkableJob(job: WorkableJob, company: CompanyConfig): RawATS
     applyUrl: job.url ?? job.application_url ?? "",
     postedAt: job.published_on ?? job.created_at ?? null,
     rawPayload: job,
+    ukHint: /^(?:united kingdom|gb|uk)$/i.test(job.country ?? ""),
   };
 }
 

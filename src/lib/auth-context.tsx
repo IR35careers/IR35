@@ -10,7 +10,14 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { isSupabaseConfigured } from "@/lib/supabase-config";
+import {
+  isSupabaseConfigured,
+  isSupabaseOAuthProviderEnabled,
+} from "@/lib/supabase-config";
+import { resolvePostAuthPath } from "@/lib/auth-routing";
+import { isAdministratorEmail } from "@/lib/portal-access";
+import { clearWorkspaceForSignOut } from "@/lib/workspace/store";
+import { clearLocalResumeVersions } from "@/lib/resume/store";
 
 interface AuthResult {
   error: string | null;
@@ -22,9 +29,13 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
-  signUpWithPassword: (email: string, password: string) => Promise<AuthResult>;
+  signUpWithPassword: (email: string, password: string, next?: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
-  signInWithGoogle: (next?: string) => Promise<AuthResult>;
+  signInWithGoogle: (next?: string, selectAccount?: boolean) => Promise<AuthResult>;
+  signInWithGithub: (next?: string) => Promise<AuthResult>;
+  linkGithubIdentity: (next?: string) => Promise<AuthResult>;
+  signInWithGoogleAdmin: () => Promise<AuthResult>;
+  signInWithGoogleIdToken: (token: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
@@ -79,6 +90,13 @@ function hasAuthCallback(): boolean {
   return query.has("code") || query.has("error") || hash.has("access_token") || hash.has("refresh_token") || hash.has("error");
 }
 
+function clearLocalPrivateState(): void {
+  clearWorkspaceForSignOut();
+  clearLocalResumeVersions();
+  window.localStorage.removeItem("ir35careers-admin-email-draft");
+  window.sessionStorage.removeItem("ir35careers-admin-email-draft");
+}
+
 function installStorageListener() {
   if (storageSubscribed) return;
   storageSubscribed = true;
@@ -88,13 +106,14 @@ function installStorageListener() {
       publish({ ...state, loading: true });
       initialiseSession(true);
     } else {
+      clearLocalPrivateState();
       publish({ user: null, loading: false });
     }
   });
 }
 
 function requestWelcomeEmail(session: Session | null) {
-  if (!session?.user?.id || !session.access_token || welcomeRequestedFor.has(session.user.id)) return;
+  if (!session?.user?.id || !session.access_token || isAdministratorEmail(session.user.email) || welcomeRequestedFor.has(session.user.id)) return;
   welcomeRequestedFor.add(session.user.id);
   void fetch("/api/email/welcome", {
     method: "POST",
@@ -126,7 +145,8 @@ function initialiseSession(force = false) {
         requestWelcomeEmail(data.session);
       });
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event: string, session: Session | null) => {
+        (event: string, session: Session | null) => {
+          if (event === "SIGNED_OUT" || (state.user && session?.user && state.user.id !== session.user.id)) clearLocalPrivateState();
           publish({ user: session?.user ?? null, loading: false });
           requestWelcomeEmail(session);
         }
@@ -147,19 +167,21 @@ async function signInWithPassword(email: string, password: string): Promise<Auth
   const { getSupabase } = await import("@/lib/supabase");
   const { data, error } = await getSupabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
   if (!error) {
+    if (state.user && data.user && state.user.id !== data.user.id) clearLocalPrivateState();
     publish({ user: data.user, loading: false });
     initialiseSession(true);
   }
   return { error: error ? error.message : null };
 }
 
-async function signUpWithPassword(email: string, password: string): Promise<AuthResult> {
+async function signUpWithPassword(email: string, password: string, next = "/profile#application-readiness"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
   const { data, error } = await getSupabase().auth.signUp({
     email: email.trim().toLowerCase(),
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}${resolvePostAuthPath(next)}`,
       data: {
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-08-20",
@@ -176,13 +198,73 @@ async function signUpWithPassword(email: string, password: string): Promise<Auth
   return { error: null, needsConfirmation: Boolean(data.user && !data.session) };
 }
 
-async function signInWithGoogle(next = "/dashboard"): Promise<AuthResult> {
+async function signInWithGoogle(
+  next = "/dashboard",
+  selectAccount = false,
+): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  const destination = resolvePostAuthPath(next);
+  window.open(
+    `/api/auth/google?next=${encodeURIComponent(destination)}${selectAccount ? "&select_account=1" : ""}`,
+    "_self",
+  );
+  return { error: null };
+}
+
+function githubCallbackUrl(next: string): string {
+  const callback = new URL("/account/github", window.location.origin);
+  callback.searchParams.set("next", resolvePostAuthPath(next));
+  return callback.toString();
+}
+
+async function signInWithGithub(next = "/dashboard"): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  if (!(await isSupabaseOAuthProviderEnabled("github"))) {
+    return { error: "GitHub sign-in is temporarily unavailable. Use Google or email while it is being connected." };
+  }
   const { getSupabase } = await import("@/lib/supabase");
   const { error } = await getSupabase().auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${window.location.origin}${next}` },
+    provider: "github",
+    options: {
+      redirectTo: githubCallbackUrl(next),
+      scopes: "read:user user:email",
+    },
   });
+  return { error: error ? error.message : null };
+}
+
+async function linkGithubIdentity(next = "/profile#profile-professional-details"): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  if (!(await isSupabaseOAuthProviderEnabled("github"))) {
+    return { error: "GitHub connection is temporarily unavailable. Your existing profile remains unchanged." };
+  }
+  const { getSupabase } = await import("@/lib/supabase");
+  const { error } = await getSupabase().auth.linkIdentity({
+    provider: "github",
+    options: {
+      redirectTo: githubCallbackUrl(next),
+      scopes: "read:user user:email",
+    },
+  });
+  return { error: error ? error.message : null };
+}
+
+async function signInWithGoogleAdmin(): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  window.open("/api/auth/google?next=%2F&select_account=1", "_self");
+  return { error: null };
+}
+
+async function signInWithGoogleIdToken(token: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
+  if (!token.trim()) return { error: "Google did not return a secure identity token." };
+  const { getSupabase } = await import("@/lib/supabase");
+  const { data, error } = await getSupabase().auth.signInWithIdToken({ provider: "google", token });
+  if (!error) {
+    publish({ user: data.user, loading: false });
+    requestWelcomeEmail(data.session);
+    initialiseSession(true);
+  }
   return { error: error ? error.message : null };
 }
 
@@ -208,6 +290,7 @@ async function signOut(): Promise<void> {
     const { getSupabase } = await import("@/lib/supabase");
     await getSupabase().auth.signOut();
   }
+  clearLocalPrivateState();
   publish({ user: null, loading: false });
 }
 
@@ -220,6 +303,10 @@ export function useAuth(): AuthContextValue {
     signUpWithPassword,
     requestPasswordReset,
     signInWithGoogle,
+    signInWithGithub,
+    linkGithubIdentity,
+    signInWithGoogleAdmin,
+    signInWithGoogleIdToken,
     updatePassword,
     signOut,
   };

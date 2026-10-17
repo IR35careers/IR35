@@ -14,20 +14,26 @@
  *   6. LOG      one moderation_logs row per run with the full summary
  */
 
-import { fetchAllCompanies, COMPANY_CONFIGS } from "../ats";
+import { fetchAllCompanies } from "../ats";
 import { HttpClient } from "../ats/http-client";
+import { loadEnabledCompanyConfigs } from "../ats/source-registry";
 import type { CompanyConfig, ProcessedJob, RawATSJob } from "../ats/types";
 import { fetchReed, enrichReedDescriptions } from "../aggregators/reed-fetcher";
 import { fetchAdzuna } from "../aggregators/adzuna-fetcher";
 import { processRawJob } from "../processing/job-processor";
 import { findFuzzyDuplicate, type DedupCandidate } from "../processing/deduplicator";
 import { getSupabaseAdmin } from "../supabase-admin";
+import { collapseConflictKeyDuplicates } from "./conflict-deduplicator";
+import { invalidatePublicJobs } from "./invalidate-public-jobs";
+import { jobRateStorageBounds } from "../processing/job-rate-storage";
+import { repairJobQuality } from "./repair-job-quality";
 
 export interface PipelineSummary {
   companies: number;
   fetched: number;
   processed: number;
   skippedByGates: number;
+  exactDuplicatesCollapsed: number;
   fuzzyDuplicatesSkipped: number;
   upserted: number;
   expired: number;
@@ -36,11 +42,33 @@ export interface PipelineSummary {
   bySource: Record<string, number>;
   /** Operational notes: skipped sources, missing keys, time-budget cuts. */
   notes: string[];
+  /** Per-provider diagnostics so source failures are visible without log archaeology. */
+  sourceRuns: SourceRunSummary[];
   durationMs: number;
 }
 
-/** Stop starting new fetches once this much of the run has elapsed. */
-const FETCH_TIME_BUDGET_MS = 40000;
+export interface SourceRunSummary {
+  source: string;
+  status: "success" | "skipped" | "error";
+  fetched: number;
+  durationMs: number;
+  detailEnriched?: number;
+  message?: string;
+}
+
+/** Leave headroom inside Vercel's 60-second function limit for DB writes. */
+const FETCH_TIME_BUDGET_MS = 48000;
+const REED_ENRICHMENT_BUDGET_MS = 8000;
+const BASE_SOURCE_BUDGET_MS = 36_000;
+
+// The first few "all contract" pages are dominated by temp retail/care jobs.
+// Independent profession searches reach technical, change, engineering and
+// finance contracts that those pages never expose. Every search remains
+// contract-only at the provider and goes through the same UK/role/IR35 gates.
+export const UK_CONTRACT_SEARCH_PARTITIONS = [
+  "outside IR35", "inside IR35", "DevOps", "software engineer",
+  "data engineer", "business analyst", "project manager", "finance", "engineering",
+];
 
 const STALE_DAYS = 10;
 const UPSERT_CHUNK = 100;
@@ -54,67 +82,222 @@ function normCompany(name: string): string {
   return (name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function jobDetailScore(job: ProcessedJob): number {
+  return Math.min(job.description.length, 12_000)
+    + job.skills.length * 150
+    + (job.rate_min !== null ? 250 : 0)
+    + (job.rate_max !== null ? 250 : 0)
+    + (job.posted_at ? 100 : 0)
+    + (job.apply_url ? 100 : 0);
+}
+
 export async function runFetchPipeline(
-  configs: CompanyConfig[] = COMPANY_CONFIGS
+  configuredSources?: CompanyConfig[],
+  invalidate: () => void | Promise<void> = invalidatePublicJobs,
 ): Promise<PipelineSummary> {
   const started = Date.now();
   const supabase = getSupabaseAdmin();
-
-  // ── 1. Fetch: direct-employer ATS boards ───────────────────────────────
-  const results = await fetchAllCompanies(configs);
-  const companyErrors = results
-    .filter((r) => r.error)
-    .map((r) => ({ company: r.company.name, error: r.error as string }));
-  const rawJobs: RawATSJob[] = results.flatMap((r) => r.jobs);
+  const configs = configuredSources ?? await loadEnabledCompanyConfigs(supabase);
   const notes: string[] = [];
+  const companyErrors: Array<{ company: string; error: string }> = [];
+  const sourceRuns: SourceRunSummary[] = [];
 
-  // ── 1b. Fetch: job-board aggregators (the real contract volume) ────────
-  // These use contract-only queries at the API level. Each is optional —
-  // missing keys or an exhausted time budget produce a note, not a failure.
-  const aggregatorClient = new HttpClient({ minDelayMs: 400 });
-  const timeLeft = () => started + FETCH_TIME_BUDGET_MS - Date.now();
-
+  // ── 1. Fetch every provider independently ──────────────────────────────
+  // A slow ATS or Reed detail request must never prevent Adzuna from being
+  // attempted. Each provider gets its own rate limiter and failure boundary.
   const reedKey = process.env.REED_API_KEY;
-  if (!reedKey) {
-    notes.push("Reed skipped: REED_API_KEY not set (free key: reed.co.uk/developers/jobseeker)");
-  } else if (timeLeft() < 8000) {
-    notes.push("Reed skipped: fetch time budget exhausted");
-  } else {
-    try {
-      const reedJobs = await fetchReed(aggregatorClient, { apiKey: reedKey, pages: 4 });
-      // Fetch full descriptions (search API only returns a snippet). Newest
-      // first, bounded so it never blows the serverless time budget.
-      const enrichDeadline = started + 46000; // dedicated enrichment slice
-      const enriched = await enrichReedDescriptions(aggregatorClient, reedKey, reedJobs, enrichDeadline);
-      notes.push(`Reed: full descriptions fetched for ${enriched}/${reedJobs.length} jobs`);
-      rawJobs.push(...reedJobs);
-    } catch (err) {
-      companyErrors.push({
-        company: "Reed",
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
-  }
-
   const adzunaId = process.env.ADZUNA_APP_ID;
   const adzunaKey = process.env.ADZUNA_APP_KEY;
-  if (!adzunaId || !adzunaKey) {
-    notes.push("Adzuna skipped: ADZUNA_APP_ID / ADZUNA_APP_KEY not set (free: developer.adzuna.com)");
-  } else if (timeLeft() < 8000) {
-    notes.push("Adzuna skipped: fetch time budget exhausted");
-  } else {
+
+  const directTask = (async () => {
+    const sourceStarted = Date.now();
     try {
-      const adzunaJobs = await fetchAdzuna(aggregatorClient, {
+      const results = await fetchAllCompanies(
+        configs,
+        () => new HttpClient({
+          minDelayMs: 0,
+          timeoutMs: 4000,
+          maxRetries: 0,
+        }),
+        10,
+        started + BASE_SOURCE_BUDGET_MS
+      );
+      return {
+        results,
+        jobs: results.flatMap((result) => result.jobs),
+        run: {
+          source: "Direct employer ATS",
+          status: "success" as const,
+          fetched: results.reduce((count, result) => count + result.jobs.length, 0),
+          durationMs: Date.now() - sourceStarted,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        results: [],
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Direct employer ATS",
+          status: "error" as const,
+          fetched: 0,
+          durationMs: Date.now() - sourceStarted,
+          message,
+        },
+      };
+    }
+  })();
+
+  const reedTask = (async () => {
+    const sourceStarted = Date.now();
+    if (!reedKey) {
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Reed",
+          status: "skipped" as const,
+          fetched: 0,
+          durationMs: 0,
+          message: "REED_API_KEY is not configured",
+        },
+      };
+    }
+    try {
+      const client = new HttpClient({
+        minDelayMs: 300,
+        timeoutMs: 5000,
+        maxRetries: 0,
+        baseBackoffMs: 500,
+      });
+      const jobs = await fetchReed(client, {
+        apiKey: reedKey,
+        pages: 6,
+        keywordPages: 2,
+        keywordQueries: UK_CONTRACT_SEARCH_PARTITIONS,
+        deadlineMs: started + BASE_SOURCE_BUDGET_MS,
+        onPageError: (query, page, message) => notes.push(`Reed ${query} page ${page}: ${message}`),
+      });
+      return {
+        jobs,
+        run: {
+          source: "Reed",
+          status: "success" as const,
+          fetched: jobs.length,
+          durationMs: Date.now() - sourceStarted,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Reed",
+          status: "error" as const,
+          fetched: 0,
+          durationMs: Date.now() - sourceStarted,
+          message,
+        },
+      };
+    }
+  })();
+
+  const adzunaTask = (async () => {
+    const sourceStarted = Date.now();
+    if (!adzunaId || !adzunaKey) {
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Adzuna",
+          status: "skipped" as const,
+          fetched: 0,
+          durationMs: 0,
+          message: "ADZUNA_APP_ID or ADZUNA_APP_KEY is not configured",
+        },
+      };
+    }
+    try {
+      const client = new HttpClient({
+        minDelayMs: 300,
+        timeoutMs: 5000,
+        maxRetries: 0,
+        baseBackoffMs: 500,
+      });
+      const jobs = await fetchAdzuna(client, {
         appId: adzunaId,
         appKey: adzunaKey,
-        pages: 5,
+        pages: 4,
+        keywordPages: 2,
+        keywordQueries: UK_CONTRACT_SEARCH_PARTITIONS,
+        maxDaysOld: 30,
+        deadlineMs: started + BASE_SOURCE_BUDGET_MS,
+        onPageError: (query, page, message) => notes.push(`Adzuna ${query} page ${page}: ${message}`),
       });
-      rawJobs.push(...adzunaJobs);
-    } catch (err) {
-      companyErrors.push({
-        company: "Adzuna",
-        error: err instanceof Error ? err.message : String(err),
+      return {
+        jobs,
+        run: {
+          source: "Adzuna",
+          status: "success" as const,
+          fetched: jobs.length,
+          durationMs: Date.now() - sourceStarted,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        jobs: [] as RawATSJob[],
+        run: {
+          source: "Adzuna",
+          status: "error" as const,
+          fetched: 0,
+          durationMs: Date.now() - sourceStarted,
+          message,
+        },
+      };
+    }
+  })();
+
+  const [direct, reed, adzuna] = await Promise.all([directTask, reedTask, adzunaTask]);
+  const results = direct.results;
+  const rawJobs: RawATSJob[] = [...direct.jobs, ...reed.jobs, ...adzuna.jobs];
+  sourceRuns.push(direct.run, reed.run, adzuna.run);
+
+  for (const result of results) {
+    if (result.error) companyErrors.push({ company: result.company.name, error: result.error });
+  }
+  for (const run of sourceRuns) {
+    if (run.status === "skipped" && run.message) notes.push(`${run.source} skipped: ${run.message}`);
+    if (run.status === "error" && run.message) companyErrors.push({ company: run.source, error: run.message });
+  }
+
+  // Reed's search endpoint returns a snippet. Enrich only after every base
+  // provider has had its turn, and stop early to preserve DB-write headroom.
+  if (reedKey && reed.jobs.length > 0) {
+    const remainingMs = started + FETCH_TIME_BUDGET_MS - Date.now();
+    if (remainingMs > 1500) {
+      const enrichmentStarted = Date.now();
+      const enrichmentClient = new HttpClient({
+        minDelayMs: 150,
+        timeoutMs: 5000,
+        maxRetries: 0,
       });
+      const enrichDeadline = Math.min(
+        started + FETCH_TIME_BUDGET_MS,
+        enrichmentStarted + REED_ENRICHMENT_BUDGET_MS
+      );
+      const enriched = await enrichReedDescriptions(
+        enrichmentClient,
+        reedKey,
+        reed.jobs,
+        enrichDeadline
+      );
+      const reedRun = sourceRuns.find((run) => run.source === "Reed");
+      if (reedRun) {
+        reedRun.detailEnriched = enriched;
+        reedRun.durationMs += Date.now() - enrichmentStarted;
+      }
+      notes.push(`Reed: full descriptions fetched for ${enriched}/${reed.jobs.length} jobs`);
+    } else {
+      notes.push("Reed detail enrichment skipped: DB-write safety window reached");
     }
   }
 
@@ -125,6 +308,24 @@ export async function runFetchPipeline(
     if (job) processed.push(job);
   }
   const skippedByGates = rawJobs.length - processed.length;
+
+  // Multiple search terms and overlapping source configurations can return
+  // the same source listing more than once. PostgreSQL rejects an upsert when
+  // a conflict key appears twice in one statement, so collapse exact source
+  // keys globally before fuzzy matching and chunking. Keep the richer result.
+  const exactDeduplication = collapseConflictKeyDuplicates(
+    processed,
+    (current, candidate) =>
+      jobDetailScore(candidate) > jobDetailScore(current) ? candidate : current
+  );
+  const processedForDedup = exactDeduplication.records;
+  if (exactDeduplication.collapsed > 0) {
+    notes.push(
+      `Collapsed ${exactDeduplication.collapsed} repeated source listing${
+        exactDeduplication.collapsed === 1 ? "" : "s"
+      } before the database update`
+    );
+  }
 
   // ── 3. Fuzzy dedup (Tier 2) ────────────────────────────────────────────
   const { data: existingData, error: existingError } = await supabase
@@ -143,31 +344,33 @@ export async function runFetchPipeline(
   }
 
   const accepted: ProcessedJob[] = [];
+  const acceptedByCompany = new Map<string, ProcessedJob[]>();
   let fuzzyDuplicatesSkipped = 0;
 
-  for (const job of processed) {
+  for (const job of processedForDedup) {
     const companyKey = normCompany(job.company_name);
     const sameCompanyExisting = existingByCompany.get(companyKey) ?? [];
 
     // A fuzzy match only counts as a duplicate when it comes from a
     // DIFFERENT source posting — the same (source_domain, source_identifier)
     // is this very job re-fetched, which the upsert handles.
-    const fuzzyMatch = findFuzzyDuplicate(job, sameCompanyExisting);
-    const isCrossSourceDupe =
-      fuzzyMatch !== null &&
-      !(
-        fuzzyMatch.source_domain === job.source_domain &&
-        fuzzyMatch.source_identifier === job.source_identifier
-      );
+    // Filter the exact source row before matching. Otherwise it may be the
+    // first fuzzy result and hide a later duplicate from another provider.
+    const crossSourceExisting = sameCompanyExisting.filter(
+      (candidate) =>
+        !(candidate.source_domain === job.source_domain &&
+          candidate.source_identifier === job.source_identifier)
+    );
+    const fuzzyMatch = findFuzzyDuplicate(job, crossSourceExisting);
+    const isCrossSourceDupe = fuzzyMatch !== null;
 
     // Also compare against jobs already accepted in THIS batch (different
     // source keys only).
+    const sameCompanyAccepted = acceptedByCompany.get(companyKey) ?? [];
     const batchMatch = findFuzzyDuplicate(
       job,
-      accepted.filter(
-        (a) =>
-          normCompany(a.company_name) === companyKey &&
-          !(a.source_domain === job.source_domain && a.source_identifier === job.source_identifier)
+      sameCompanyAccepted.filter(
+        (a) => !(a.source_domain === job.source_domain && a.source_identifier === job.source_identifier)
       )
     );
 
@@ -176,6 +379,8 @@ export async function runFetchPipeline(
       continue;
     }
     accepted.push(job);
+    sameCompanyAccepted.push(job);
+    acceptedByCompany.set(companyKey, sameCompanyAccepted);
   }
 
   // ── 4. Upsert ──────────────────────────────────────────────────────────
@@ -184,6 +389,7 @@ export async function runFetchPipeline(
   for (let i = 0; i < accepted.length; i += UPSERT_CHUNK) {
     const chunk = accepted.slice(i, i + UPSERT_CHUNK).map((job) => ({
       ...job,
+      ...jobRateStorageBounds(job),
       last_seen_at: nowIso,
       expired_at: null, // a job seen in a live feed is active by definition
     }));
@@ -205,6 +411,19 @@ export async function runFetchPipeline(
   if (expireError) throw new Error(`Expiry failed: ${expireError.message}`);
   const expired = expiredRows?.length ?? 0;
 
+  // Source updates can make previously different rows converge on the same
+  // identity. Enforce the same conservative quality policy after every refresh,
+  // not only during a one-off cleanup. The audit precedes all repair writes.
+  try {
+    const quality = await repairJobQuality("preview", undefined, invalidate);
+    if ("changed" in quality && quality.changed > 0) {
+      const result = await repairJobQuality("apply", quality.planHash, invalidate);
+      if ("applied" in result) notes.push(`Post-refresh quality: ${result.applied} repairs; ${result.deferredDecimalRates} fractional rates await schema enablement`);
+    }
+  } catch (error) {
+    companyErrors.push({ company: "_quality_repair", error: error instanceof Error ? error.message : "Post-refresh quality check failed" });
+  }
+
   // ── 6. Log ─────────────────────────────────────────────────────────────
   const bySource: Record<string, number> = {};
   for (const job of accepted) {
@@ -216,12 +435,14 @@ export async function runFetchPipeline(
     fetched: rawJobs.length,
     processed: processed.length,
     skippedByGates,
+    exactDuplicatesCollapsed: exactDeduplication.collapsed,
     fuzzyDuplicatesSkipped,
     upserted,
     expired,
     companyErrors,
     bySource,
     notes,
+    sourceRuns,
     durationMs: Date.now() - started,
   };
 
@@ -233,5 +454,6 @@ export async function runFetchPipeline(
     summary.companyErrors.push({ company: "_logging", error: logError.message });
   }
 
+  await invalidate();
   return summary;
 }

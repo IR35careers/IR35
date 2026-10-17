@@ -16,6 +16,7 @@ export default defineConfig([
   globalIgnores([
     ".next/**",
     "dist/**",
+    "**/dist/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
@@ -23,5 +24,7 @@ export default defineConfig([
     "playwright-report/**",
     "test-results/**",
     "tmp/**",
+    ".codex-tmp/**",
+    "output/**",
   ]),
 ]);

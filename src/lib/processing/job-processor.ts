@@ -5,7 +5,7 @@
  *
  * A job is skipped when it fails either gate:
  *   1. Contract gate — permanent/salaried roles are dropped; this is a
- *      contract-only board. Signals: contract/interim/freelance/fixed-term
+ *      contract-only board. Signals: contract/interim/freelance/day-rate
  *      wording, day/hour rate wording, or any IR35 mention.
  *   2. UK gate — non-UK roles are dropped. A bare "Remote" with no country
  *      is accepted only when a UK-market signal exists (GBP day rate or an
@@ -63,7 +63,7 @@ export function cleanTitle(title: string): string {
 
 /** Strong signals: if ANY of these appear in the TITLE, it's a contract role. */
 const TITLE_CONTRACT_SIGNALS =
-  /\bcontract(?:or|ing)?\b|\binterim\b|\bfreelance\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\bday[\s-]*rate\b/i;
+  /\bcontract(?:or|ing)?\b|\binterim\b|\bfreelance\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\bday[\s-]*rate\b/i;
 
 /**
  * Description-level signals: contextual phrases that indicate a contract
@@ -71,7 +71,7 @@ const TITLE_CONTRACT_SIGNALS =
  * permanent job's legal boilerplate too).
  */
 const DESC_CONTRACT_SIGNALS =
-  /\bcontract\s+(?:role|position|opportunity|engagement|assignment|basis|duration|length)\b|\b(?:3|6|9|12|18|24)\s*[\s-]*month\s+(?:contract|engagement|assignment|extension)\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b|\bdaily\s+rate\b|\bper\s*hour\b|\bfreelance\b|\binterim\b|\bfixed[\s-]term\b|\bftc\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\binitial\s+(?:3|6|9|12|18|24)\s*[\s-]*month\b|\bcontract(?:or|ing)\s+(?:rate|pay|salary)\b|\brolling\s+contract\b|\b(?:via|through)\s+(?:an?\s+)?(?:umbrella|ltd|limited)\b/i;
+  /\bcontract\s+(?:role|position|opportunity|engagement|assignment|basis|duration|length)\b|\b(?:3|6|9|12|18|24)\s*[\s-]*month\s+(?:contract|engagement|assignment|extension)\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b|\bdaily\s+rate\b|\bper\s*hour\b|\bfreelance\b|\binterim\b|\bir\s*-?\s*35\b|\boutside\s*ir35\b|\binside\s*ir35\b|\binitial\s+(?:3|6|9|12|18|24)\s*[\s-]*month\b|\bcontract(?:or|ing)\s+(?:rate|pay|salary)\b|\brolling\s+contract\b|\b(?:via|through)\s+(?:an?\s+)?(?:umbrella|ltd|limited)\b/i;
 
 /** Phrases that strongly indicate a permanent role, overriding weak signals. */
 const PERMANENT_SIGNALS =
@@ -81,10 +81,21 @@ const PERMANENT_SIGNALS =
 const EMPLOYMENT_TYPE_CONTRACT =
   /\bemployment\s+type:\s*contract\b/i;
 
+/** Fixed-term employment is not automatically an IR35 contractor engagement. */
+const EMPLOYMENT_TYPE_EMPLOYEE =
+  /\bemployment\s+type:\s*(?:full\s*time|fulltime|part\s*time|parttime|permanent|employee)\b/i;
+
 export function isContractRole(title: string, description: string, rawSalary: string): boolean {
   const t = title ?? "";
   const d = description ?? "";
   const s = rawSalary ?? "";
+
+  // Structured ATS employment data overrides a vague "FTC" or fixed-term
+  // title. Keep the role only if the advertiser also states IR35 or day-rate
+  // evidence that clearly makes it a contractor engagement.
+  if (EMPLOYMENT_TYPE_EMPLOYEE.test(d) && !/\bir\s*-?\s*35\b|\bday[\s-]*rate\b|\bper\s*day\b|\bp\/?d\b/i.test(`${t} ${d} ${s}`)) {
+    return false;
+  }
 
   // 1. Title is the strongest signal — recruiters put "Contract" or
   //    "Outside IR35" in titles deliberately, never accidentally.
@@ -115,9 +126,12 @@ export function isContractRole(title: string, description: string, rawSalary: st
  * Filters on obvious title patterns plus a sub-professional rate floor.
  */
 const NON_PROFESSIONAL_TITLES =
-  /\b(colleague|shop\s+assistant|store\s+assistant|retail\s+assistant|sales\s+assistant|customer\s+(?:service|team)\s+(?:advisor|assistant|member)|checkout|shelf\s+stacker|warehouse\s+(?:operative|assistant|worker)|delivery\s+driver|courier|van\s+driver|hgv|forklift|cleaner|cleaning\s+operative|housekeep(?:er|ing)|janitor|barista|waiter|waitress|bartender|kitchen\s+(?:porter|assistant|staff)|chef\b|catering\s+assistant|care\s+(?:assistant|worker)|support\s+worker|healthcare\s+assistant|nursery\s+(?:nurse|assistant)|teaching\s+assistant|classroom\s+assistant|labourer|picker|packer|production\s+operative|assembly\s+operative|security\s+(?:officer|guard)|door\s+supervisor|steward|crew\s+member|shift\s+leader\b|admin(?:istration|istrative)?\s+(?:support\s+)?(?:assistant|officer|clerk|apprentice)|recruitment\s+(?:administration|admin|resourcing|support)\s+\w+|receptionist|data\s+entry|office\s+junior|apprentice\b)/i;
+  /\b(colleague|shop\s+assistant|store\s+assistant|retail\s+(?:assistant|associate)|sales\s+assistant|customer\s+(?:service|team)\s+(?:advisor|assistant|member)|checkout|shelf\s+stacker|warehouse\s+(?:operative|assistant|worker)|delivery\s+driver|courier|van\s+driver|hgv|forklift|cleaner|cleaning\s+operative|housekeep(?:er|ing)|janitor|barista|waiter|waitress|bartender|kitchen\s+(?:porter|assistant|staff)|chef\b|catering\s+assistant|care\s+(?:assistant|worker)|support\s+worker|healthcare\s+assistant|nursery\s+(?:nurse|assistant)|teaching\s+assistant|classroom\s+assistant|labourer|picker|packer|production\s+operative|assembly\s+operative|security\s+(?:officer|guard)|door\s+supervisor|steward|crew\s+member|shift\s+leader\b|admin(?:istration|istrative)?\s+(?:support\s+)?(?:assistant|officer|clerk|apprentice)|recruitment\s+(?:administration|admin|resourcing|support)\s+\w+|receptionist|data\s+entry|office\s+junior|apprentice\b)/i;
 
 export function isProfessionalRole(title: string, rate: ParsedRate): boolean {
+  // A provider's "contract" flag also includes supply teaching and retail temps.
+  // Keep technology/education consultants; reject the explicitly off-topic jobs.
+  if (/\b(?:early\s+years\s+practitioner|teacher|retail\s+sales|flt\s+driver)\b/i.test(title ?? "")) return false;
   if (NON_PROFESSIONAL_TITLES.test(title ?? "")) return false;
   // Known rates far below professional contracting: hourly under £18, day rate
   // under £120, or an annual salary under £45k (permanent-junior territory).

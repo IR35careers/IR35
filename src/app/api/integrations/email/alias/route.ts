@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import { resendInboundConfig } from "@/lib/email/resend";
+import { ensureInboxAlias } from "@/lib/email/inbox-alias";
 import { getIntegrationStatuses } from "@/lib/integration-status";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -23,23 +23,11 @@ export async function POST(request: Request): Promise<Response> {
     const { data, error } = await admin.auth.getUser(token);
     if (error || !data.user) return Response.json({ error: "Your session is no longer valid." }, { status: 401, headers: NO_STORE });
 
-    const stableId = createHash("sha256")
-      .update(`${data.user.id}:${provider.webhookSecret}`)
-      .digest("hex")
-      .slice(0, 14);
-    const alias = `apply-${stableId}@${provider.domain}`;
     const forwardingEmail = data.user.email ?? "";
-    const { error: saveError } = await admin.from("inbox_aliases").upsert({
-      user_id: data.user.id,
-      alias,
-      forwarding_email: forwardingEmail,
-      forwarding_enabled: false,
-      provider_state: "connected",
-      updated_at: new Date().toISOString(),
-    });
-    if (saveError) throw new Error(saveError.message);
+    const inbox = await ensureInboxAlias(admin, data.user.id, forwardingEmail);
+    if (!inbox) throw new Error("Recruiter email is not connected.");
 
-    return Response.json({ alias, forwardingEmail, providerState: "connected" }, { status: 201, headers: NO_STORE });
+    return Response.json({ alias: inbox.alias, forwardingEmail: inbox.forwardingEmail, forwardingEnabled: inbox.forwardingEnabled, providerState: "connected" }, { status: 201, headers: NO_STORE });
   } catch {
     return Response.json({ error: "The private inbox could not be activated." }, { status: 500, headers: NO_STORE });
   }

@@ -10,9 +10,9 @@ function file(name: string, type: string, body: Uint8Array | string): File {
   return new File([copy.buffer], name, { type });
 }
 
-describe("private CV upload validation", () => {
+describe("private Resume upload validation", () => {
   it("rejects empty, legacy and unsupported files before reading them", () => {
-    expect(validateCvFile(file("empty.pdf", "application/pdf", ""))).toBe("That CV file is empty.");
+    expect(validateCvFile(file("empty.pdf", "application/pdf", ""))).toBe("That Resume file is empty.");
     expect(validateCvFile(file("legacy.doc", "application/msword", "legacy"))).toMatch(/Older \.doc files/);
     expect(validateCvFile(file("photo.png", "image/png", "png"))).toBe("Please upload a PDF or DOCX document.");
   });
@@ -28,7 +28,7 @@ describe("private CV upload validation", () => {
       candidateName: "Alex Morgan",
       companyName: "Example Ltd",
       jobTitle: "Platform Engineer",
-      versionLabel: "Approved CV",
+      versionLabel: "Approved Resume",
       resumeText: "Alex Morgan\n\nPROFILE\nPlatform engineering contractor.\n\nEXPERIENCE\nBuilt reliable AWS services.",
     });
     await expect(validateCvFileContents(file("alex.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", new Uint8Array(bytes)))).resolves.toBeNull();

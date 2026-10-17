@@ -1,51 +1,163 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, Eye, Loader2, PauseCircle, PlayCircle, PlugZap, ShieldCheck, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, ChevronRight, Eye, Loader2, LockKeyhole, PauseCircle, PlayCircle, Plus, Send, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import { WorkspacePage } from "@/components/workspace/WorkspacePage";
+import { AUTO_APPLY_CONSENT_VERSION, DEFAULT_AUTO_APPLY_LANES, hasCurrentAutoApplyConsent } from "@/lib/automation/auto-apply";
+import { clampDailyApplicationLimit, FREE_DAILY_APPLICATION_LIMIT, hasActivePremiumPlan, maximumDailyApplicationLimit } from "@/lib/automation/daily-limit";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
+import { fetchWithFreshSession } from "@/lib/authenticated-fetch";
 import { evaluateAutomationJob } from "@/lib/workspace/engine";
 import { updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
-import type { AutomationRules } from "@/lib/workspace/types";
+import type { ApplicationPreferences, ApplicationRecord, AutoApplyLane, AutomationRules } from "@/lib/workspace/types";
 import { useAuth } from "@/lib/auth-context";
-import { getSupabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { getProfile, PREVIEW_PROFILE, scoreJob } from "@/lib/profile";
 import type { JobListing } from "@/lib/job-types";
 
+type AutomationSection = "matches" | "materials" | "permission";
+
+const DEFAULT_PREFERENCES: ApplicationPreferences = {
+  applicationMode: "automatic",
+  guidedReviewThreshold: 80,
+  resumeOptimisation: "honest",
+  autoApproveSafeEdits: true,
+  reviewBeforeSubmit: false,
+  generateCoverLetter: true,
+  usePrivateApplicationEmail: true,
+};
+
+function newLane(): AutoApplyLane {
+  return { id: crypto.randomUUID(), role: "", keywords: [], location: "United Kingdom", enabled: true };
+}
+
 export function AutomationSettings() {
   const workspace = useWorkspaceState();
   const { user } = useAuth();
-  const [rules, setRules] = useState<AutomationRules>(workspace.automation);
+  const storedPreferences = workspace.profile.applicationPreferences ?? DEFAULT_PREFERENCES;
+  const premiumActive = hasActivePremiumPlan(workspace.entitlement);
+  const maximumDailyLimit = maximumDailyApplicationLimit(workspace.entitlement);
+  const [rules, setRules] = useState<AutomationRules>(() => ({
+    ...workspace.automation,
+    dailyLimit: clampDailyApplicationLimit(workspace.automation.dailyLimit, workspace.entitlement),
+  }));
+  const [autoApplyEnabled, setAutoApplyEnabled] = useState(Boolean(storedPreferences.autoApplyEnabled));
+  const [workflowPreferences, setWorkflowPreferences] = useState<
+    Pick<
+      ApplicationPreferences,
+      | "applicationMode"
+      | "guidedReviewThreshold"
+      | "resumeOptimisation"
+      | "autoApproveSafeEdits"
+      | "reviewBeforeSubmit"
+      | "generateCoverLetter"
+      | "usePrivateApplicationEmail"
+    >
+  >({
+    applicationMode: storedPreferences.applicationMode ?? "automatic",
+    guidedReviewThreshold: storedPreferences.guidedReviewThreshold ?? 80,
+    resumeOptimisation: storedPreferences.resumeOptimisation ?? "honest",
+    autoApproveSafeEdits: storedPreferences.autoApproveSafeEdits ?? true,
+    reviewBeforeSubmit: (storedPreferences.applicationMode ?? "automatic") === "review",
+    generateCoverLetter: storedPreferences.generateCoverLetter ?? true,
+    usePrivateApplicationEmail:
+      storedPreferences.usePrivateApplicationEmail ?? true,
+  });
+  const [consentAccepted, setConsentAccepted] = useState(hasCurrentAutoApplyConsent({
+    enabled: storedPreferences.autoApplyEnabled,
+    consentAt: storedPreferences.autoApplyConsentAt,
+    consentVersion: storedPreferences.autoApplyConsentVersion,
+  }));
+  const [lanes, setLanes] = useState<AutoApplyLane[]>(storedPreferences.autoApplyLanes?.length ? storedPreferences.autoApplyLanes : DEFAULT_AUTO_APPLY_LANES);
   const [saved, setSaved] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [busy, setBusy] = useState<"preview" | "apply" | null>(null);
+  const [applyElapsedSeconds, setApplyElapsedSeconds] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
-  const [submissionState, setSubmissionState] = useState<"loading" | "connected" | "gated">(isSupabaseConfigured() ? "loading" : "gated");
+  const [showPremiumNotice, setShowPremiumNotice] = useState(false);
+  const [section, setSection] = useState<AutomationSection>("matches");
   const latestRun = workspace.automationRuns[0] ?? null;
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) return;
-    let active = true;
-    void getSupabase().auth.getSession().then(async ({ data }) => {
-      const token = data.session?.access_token;
-      if (!token) throw new Error("No session");
-      const response = await fetch("/api/integrations/status", { headers: { authorization: `Bearer ${token}` } });
-      const payload = response.ok ? (await response.json()) as { integrations?: Array<{ id: string; state: string }> } : null;
-      if (active) setSubmissionState(payload?.integrations?.find((item) => item.id === "ats_submission")?.state === "connected" ? "connected" : "gated");
-    }).catch(() => { if (active) setSubmissionState("gated"); });
-    return () => { active = false; };
-  }, []);
+    if (busy !== "apply") {
+      setApplyElapsedSeconds(0);
+      return;
+    }
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => setApplyElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1_000);
+    return () => window.clearInterval(timer);
+  }, [busy]);
 
-  const save = () => {
-    const safeRules: AutomationRules = { ...rules, dryRunOnly: true, requireHumanApproval: true };
-    updateWorkspace((current) => ({ ...current, automation: safeRules }));
+  useEffect(() => {
+    setRules((current) => ({
+      ...current,
+      dailyLimit: clampDailyApplicationLimit(current.dailyLimit, workspace.entitlement),
+    }));
+  }, [workspace.entitlement]);
+
+  const preferencesForSave = (): ApplicationPreferences => ({
+    ...storedPreferences,
+    ...workflowPreferences,
+    autoApproveSafeEdits: true,
+    reviewBeforeSubmit: workflowPreferences.applicationMode === "review",
+    autoApplyEnabled: autoApplyEnabled && consentAccepted,
+    autoApplyConsentAt: autoApplyEnabled && consentAccepted
+      ? storedPreferences.autoApplyConsentAt || new Date().toISOString()
+      : undefined,
+    autoApplyConsentVersion: autoApplyEnabled && consentAccepted ? AUTO_APPLY_CONSENT_VERSION : undefined,
+    autoApplyLanes: lanes,
+  });
+
+  const persistSettings = async (): Promise<ApplicationPreferences | null> => {
+    if (autoApplyEnabled && !consentAccepted) {
+      setRunError("Confirm the Auto Apply instruction before enabling it.");
+      return null;
+    }
+    const preferences = preferencesForSave();
+    const safeRules: AutomationRules = {
+      ...rules,
+      enabled: autoApplyEnabled,
+      dryRunOnly: true,
+      requireHumanApproval: true,
+      dailyLimit: clampDailyApplicationLimit(rules.dailyLimit, workspace.entitlement),
+    };
+    const nextWorkspace = {
+      ...workspace,
+      automation: safeRules,
+      profile: { ...workspace.profile, applicationPreferences: preferences },
+    };
+    updateWorkspace(() => nextWorkspace);
+    try {
+      if (user && isSupabaseConfigured()) {
+        const { saveCloudWorkspace } = await import("@/lib/workspace/repository");
+        await saveCloudWorkspace(user.id, nextWorkspace);
+      }
+    } catch {
+      setRunError("Auto Apply settings could not be saved. Check your connection and try again.");
+      setSaved(false);
+      return null;
+    }
     setRules(safeRules);
     setSaved(true);
+    setRunError(null);
+    setNotice(
+      safeRules.enabled
+        ? `${workflowPreferences.applicationMode === "automatic" ? "Automatic" : workflowPreferences.applicationMode === "guided" ? "Guided" : "Review"} mode is on. Matching applications will run each morning.`
+        : "Auto Apply is paused.",
+    );
+    return preferences;
+  };
+
+  const saveSettings = async () => {
+    setRunError(null);
+    setNotice("Saving your Auto Apply settings.");
+    await persistSettings();
   };
 
   const runPreview = async () => {
-    setRunning(true);
+    setBusy("preview");
     setRunError(null);
+    setNotice(null);
     const matchingJobIds: string[] = [];
     const skipped: Array<{ jobId: string; reason: string }> = [];
     try {
@@ -62,62 +174,316 @@ export function AutomationSettings() {
       }
       jobs.forEach((job) => {
         const score = scoreJob(job, profile)?.score ?? 0;
-        const reason = evaluateAutomationJob(job, score, { ...rules, dryRunOnly: true, requireHumanApproval: true });
+        const reason = evaluateAutomationJob(job, score, { ...rules, enabled: true, dryRunOnly: true, requireHumanApproval: true });
         if (reason) skipped.push({ jobId: job.id, reason });
         else matchingJobIds.push(job.id);
       });
       updateWorkspace((current) => ({
         ...current,
-        automation: { ...rules, dryRunOnly: true, requireHumanApproval: true },
         automationRuns: [{ id: globalThis.crypto?.randomUUID?.() ?? `run-${Date.now()}`, createdAt: new Date().toISOString(), matchingJobIds, skipped }, ...current.automationRuns].slice(0, 10),
       }));
+      setNotice(`${matchingJobIds.length} matching contract${matchingJobIds.length === 1 ? "" : "s"} found.`);
     } catch (error) {
       setRunError(error instanceof Error ? error.message : "The live preview could not run.");
     } finally {
-      setRunning(false);
+      setBusy(null);
     }
   };
 
+  const runAutoApply = async () => {
+    const preferences = await persistSettings();
+    if (!preferences) return;
+    if (!user) {
+      setRunError("Sign in before starting Auto Apply.");
+      return;
+    }
+    setBusy("apply");
+    setRunError(null);
+    setNotice("Selecting the next matching contract and completing its application.");
+    try {
+      const response = await fetchWithFreshSession("/api/automation/apply-next", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rules: {
+            ...rules,
+            enabled: true,
+            dailyLimit: clampDailyApplicationLimit(rules.dailyLimit, workspace.entitlement),
+          },
+          preferences,
+        }),
+        signal: AbortSignal.timeout(145_000),
+      });
+      const payload = await response.json().catch(() => ({ error: "The application service returned an unreadable response." })) as { state?: string; application?: ApplicationRecord; message?: string; error?: string; action?: string };
+      if (payload.application) {
+        updateWorkspace((current) => ({
+          ...current,
+          applications: [payload.application as ApplicationRecord, ...current.applications.filter((item) => item.id !== payload.application?.id)],
+        }));
+      }
+      if (!response.ok && response.status !== 202) throw new Error(payload.error ?? payload.message ?? "Auto Apply could not complete the contract.");
+      if (payload.state === "needs_user") setNotice(payload.message || "This application needs an answer from you. Open Applications to continue.");
+      else if (payload.state === "review_ready") setNotice(payload.message || "The application is prepared and ready for your review.");
+      else if (payload.application?.status === "applied") setNotice(`Applied successfully to ${payload.application.job.title} at ${payload.application.job.company_name}.`);
+      else setNotice(payload.message || "The application has started. Its employer status will update in Applications.");
+    } catch (error) {
+      setRunError(error instanceof DOMException && error.name === "TimeoutError"
+        ? "The employer did not confirm within the safe application window. Check Applications before trying again."
+        : error instanceof Error ? error.message : "Auto Apply could not complete the contract.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const updateLane = (id: string, patch: Partial<AutoApplyLane>) => setLanes((current) => current.map((lane) => lane.id === id ? { ...lane, ...patch } : lane));
   const toggleArray = <T extends string>(values: T[], value: T): T[] => values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 
   return (
-    <WorkspacePage eyebrow="Controlled automation" title="Set the rules once. Review every packet." description="Monitor live contracts, build a focused review queue and keep final submission under explicit approval. Discovery automation and external submission remain separate controls.">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <WorkspacePage eyebrow="Auto Apply" title="Choose the contracts you want" description="Set your role, rate and IR35 preferences. We prepare matching applications and keep every result in your tracker.">
+      <nav className="mb-5 grid max-w-3xl grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)]" aria-label="Auto Apply setup">
+        {([
+          ["matches", "Matches", "Matches"],
+          ["materials", "Resume", "Resume"],
+          ["permission", "Permission", "Permission"],
+        ] as const).map(([id, mobileLabel, desktopLabel]) => (
+          <button key={id} type="button" onClick={() => setSection(id)} aria-pressed={section === id} className={`ir35-focus min-h-11 min-w-0 rounded-xl px-2 text-xs font-semibold sm:px-4 sm:text-sm ${section === id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>
+            <span className="sm:hidden">{mobileLabel}</span>
+            <span className="hidden sm:inline">{desktopLabel}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="space-y-6">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><Bot size={21} /></span><div><h2 className="font-semibold text-slate-950">Preparation monitor</h2><p className="text-sm text-slate-600">Find roles and prepare a review queue.</p></div></div><button type="button" role="switch" aria-checked={rules.enabled} onClick={() => setRules((current) => ({ ...current, enabled: !current.enabled }))} className={`ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${rules.enabled ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{rules.enabled ? <PlayCircle size={17} /> : <PauseCircle size={17} />}{rules.enabled ? "Enabled" : "Paused"}</button></div>
+          {section === "matches" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><Bot size={21} /></span><div><h2 className="font-semibold text-slate-950">Auto Apply</h2><p className="text-sm text-slate-600">Pause or resume your saved searches at any time.</p></div></div><button type="button" role="switch" aria-checked={autoApplyEnabled} onClick={() => { setAutoApplyEnabled((value) => !value); setSaved(false); }} className={`ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${autoApplyEnabled ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{autoApplyEnabled ? <PlayCircle size={17} /> : <PauseCircle size={17} />}{autoApplyEnabled ? "On" : "Paused"}</button></div>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-800">Minimum match
-                <input type="range" min="40" max="95" step="5" value={rules.minimumMatch} onChange={(event) => setRules((current) => ({ ...current, minimumMatch: Number(event.target.value) }))} className="mt-3 w-full accent-emerald-700" />
-                <span className="mt-1 block text-sm font-bold text-brand-700">{rules.minimumMatch}% or higher</span>
-              </label>
-              <label className="text-sm font-semibold text-slate-800">Minimum day rate
-                <input type="number" min="0" max="3000" step="25" value={rules.minimumDayRate} onChange={(event) => setRules((current) => ({ ...current, minimumDayRate: Number(event.target.value) }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-semibold text-slate-800">Daily preparation limit
-                <input type="number" min="1" max="25" value={rules.dailyLimit} onChange={(event) => setRules((current) => ({ ...current, dailyLimit: Number(event.target.value) }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-semibold text-slate-800">Excluded companies
-                <input value={rules.excludedCompanies.join(", ")} onChange={(event) => setRules((current) => ({ ...current, excludedCompanies: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) }))} placeholder="Agency A, Company B" className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" />
-              </label>
+              <label className="text-sm font-semibold text-slate-800">Minimum match<input type="range" min="40" max="95" step="5" value={rules.minimumMatch} onChange={(event) => setRules((current) => ({ ...current, minimumMatch: Number(event.target.value) }))} className="mt-3 w-full accent-emerald-700" /><span className="mt-1 block text-sm font-bold text-brand-700">{rules.minimumMatch}% or higher</span></label>
+              <label className="text-sm font-semibold text-slate-800">Minimum day rate<input type="number" min="0" max="3000" step="25" value={rules.minimumDayRate} onChange={(event) => setRules((current) => ({ ...current, minimumDayRate: Number(event.target.value) }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" /></label>
+              <div className="text-sm font-semibold text-slate-800">
+                <label htmlFor="daily-application-limit">Daily application limit</label>
+                <div className="mt-2 flex gap-2">
+                  <select
+                    id="daily-application-limit"
+                    value={rules.dailyLimit}
+                    onChange={(event) => {
+                      if (event.target.value === "premium") {
+                        setShowPremiumNotice(true);
+                        return;
+                      }
+                      setRules((current) => ({ ...current, dailyLimit: Number(event.target.value) }));
+                      setSaved(false);
+                    }}
+                    className="ir35-focus min-h-11 min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm font-normal"
+                  >
+                    {Array.from({ length: maximumDailyLimit }, (_, index) => index + 1).map((limit) => (
+                      <option key={limit} value={limit}>{limit} per day</option>
+                    ))}
+                    {!premiumActive && <option value="premium">More than 5, Premium</option>}
+                  </select>
+                  {!premiumActive && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPremiumNotice(true)}
+                      className="ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700"
+                    >
+                      <LockKeyhole size={14} /> More
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-xs font-normal leading-5 text-slate-500">
+                  {premiumActive
+                    ? `Your Premium plan supports up to ${maximumDailyLimit} applications per day.`
+                    : `Free accounts can run up to ${FREE_DAILY_APPLICATION_LIMIT} applications per day.`}
+                </p>
+              </div>
+              <label className="text-sm font-semibold text-slate-800">Excluded companies<input value={rules.excludedCompanies.join(", ")} onChange={(event) => setRules((current) => ({ ...current, excludedCompanies: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) }))} placeholder="Agency A, Company B" className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" /></label>
             </div>
-          </section>
+            {showPremiumNotice && !premiumActive && (
+              <div role="status" className="mt-5 flex items-start gap-3 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-violet-950">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-violet-700 shadow-sm">
+                  <LockKeyhole size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold">Premium plans are coming soon</p>
+                  <p className="mt-1 text-sm leading-6 text-violet-900">
+                    The free plan includes up to five applications per day. Higher daily limits will be available when Premium launches.
+                  </p>
+                </div>
+                <button type="button" onClick={() => setShowPremiumNotice(false)} aria-label="Close Premium notice" className="ir35-focus rounded-lg p-1 text-violet-700 hover:bg-white">
+                  <XCircle size={18} />
+                </button>
+              </div>
+            )}
+          </section>}
 
-          <section className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><h2 className="font-semibold">IR35 statuses</h2><div className="mt-4 space-y-2">{(["outside", "inside", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.ir35.includes(value)} onChange={() => setRules((current) => ({ ...current, ir35: toggleArray(current.ir35, value) }))} className="h-5 w-5 accent-emerald-700" />{value === "unknown" ? "Status not stated" : `${value} IR35`}</label>)}</div></div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><h2 className="font-semibold">Working patterns</h2><div className="mt-4 space-y-2">{(["remote", "hybrid", "onsite", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.workplaces.includes(value)} onChange={() => setRules((current) => ({ ...current, workplaces: toggleArray(current.workplaces, value) }))} className="h-5 w-5 accent-emerald-700" />{value}</label>)}</div></div>
-          </section>
+          {section === "materials" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">
+                Contract application workflow
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-slate-950">
+                Find, prepare, apply and track
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                These controls decide what IR35Careers does in the background
+                for every matching UK contract.
+              </p>
+            </div>
+            <ol className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                ["01", "Find", "Match role, rate, IR35 status and location."],
+                ["02", "Prepare", "Build truthful role-specific application materials."],
+                ["03", "Apply", "Complete a compatible employer form in the cloud."],
+                ["04", "Track", "Store the receipt and connect recruiter replies."],
+              ].map(([number, label, help]) => (
+                <li key={number} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <span className="text-xs font-bold text-brand-700">{number}</span>
+                  <strong className="mt-2 block text-sm text-slate-950">{label}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                </li>
+              ))}
+            </ol>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card sm:p-6"><h2 className="font-semibold">Non-negotiable controls</h2><div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><ShieldCheck className="text-emerald-700" /><p className="mt-3 text-sm font-semibold text-emerald-950">Dry-run only</p><p className="mt-1 text-xs leading-5 text-emerald-900">No ATS form is submitted and no email is sent.</p></div><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><Eye className="text-emerald-700" /><p className="mt-3 text-sm font-semibold text-emerald-950">Human approval required</p><p className="mt-1 text-xs leading-5 text-emerald-900">The exact CV, letter and answers remain reviewable.</p></div></div></section>
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <h3 className="text-sm font-bold text-slate-950">Choose how applications move</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                You can change mode at any time. Login, security and unanswered employer questions still pause safely.
+              </p>
+              <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                {(
+                  [
+                    ["automatic", "Automatic", "Tailor and submit compatible applications without a final review."],
+                    ["guided", "Guided", "Submit stronger matches automatically and hold lower matches for review."],
+                    ["review", "Review", "Prepare every application and wait for your approval before submitting."],
+                  ] as const
+                ).map(([value, label, help]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={workflowPreferences.applicationMode === value}
+                    onClick={() => {
+                      setWorkflowPreferences((current) => ({
+                        ...current,
+                        applicationMode: value,
+                        reviewBeforeSubmit: value === "review",
+                        autoApproveSafeEdits: true,
+                      }));
+                      setSaved(false);
+                    }}
+                    className={`ir35-focus rounded-2xl border p-4 text-left transition ${workflowPreferences.applicationMode === value ? "border-brand-500 bg-brand-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <strong className="text-sm text-slate-950">{label}</strong>
+                      <span className={`h-3 w-3 rounded-full border-2 ${workflowPreferences.applicationMode === value ? "border-brand-700 bg-brand-700" : "border-slate-300"}`} />
+                    </span>
+                    <span className="mt-2 block text-xs leading-5 text-slate-600">{help}</span>
+                  </button>
+                ))}
+              </div>
+              {workflowPreferences.applicationMode === "guided" && (
+                <label className="mt-4 block rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm font-semibold text-slate-800">
+                  Review applications below {workflowPreferences.guidedReviewThreshold ?? 80}% match
+                  <input
+                    type="range"
+                    min="60"
+                    max="90"
+                    step="5"
+                    value={workflowPreferences.guidedReviewThreshold ?? 80}
+                    onChange={(event) => {
+                      setWorkflowPreferences((current) => ({ ...current, guidedReviewThreshold: Number(event.target.value) }));
+                      setSaved(false);
+                    }}
+                    className="mt-3 w-full accent-emerald-700"
+                  />
+                </label>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row"><button type="button" onClick={save} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700"><CheckCircle2 size={17} /> Save rules</button><button type="button" onClick={() => void runPreview()} disabled={running} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 hover:border-brand-300 disabled:opacity-50">{running ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {running ? "Checking live contracts…" : "Run live preview"}</button>{saved && <p className="self-center text-sm font-semibold text-emerald-700" role="status">Rules saved.</p>}</div>
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <h3 className="text-sm font-bold text-slate-950">Resume preparation</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {(
+                  [
+                    ["off", "Off", "Use the saved Resume unchanged."],
+                    ["honest", "Honest", "Improve relevance using existing evidence."],
+                    ["strong", "Strong", "Rewrite more comprehensively without adding claims."],
+                  ] as const
+                ).map(([value, label, help]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={workflowPreferences.resumeOptimisation === value}
+                    onClick={() => {
+                      setWorkflowPreferences((current) => ({ ...current, resumeOptimisation: value }));
+                      setSaved(false);
+                    }}
+                    className={`ir35-focus min-h-24 rounded-2xl border p-4 text-left ${workflowPreferences.resumeOptimisation === value ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white"}`}
+                  >
+                    <strong className="block text-sm text-slate-950">{label}</strong>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  ["generateCoverLetter", "Generate a cover letter", "Create a concise letter from verified Resume evidence."],
+                  ["usePrivateApplicationEmail", "Use my IR35Careers application email", "Link employer replies to the correct contract and forward them."],
+                ] as const
+              ).map(([key, label, help]) => (
+                <label key={key} className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4">
+                  <span>
+                    <strong className="block text-sm text-slate-950">{label}</strong>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{help}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={workflowPreferences[key]}
+                    onChange={(event) => {
+                      setWorkflowPreferences((current) => ({ ...current, [key]: event.target.checked }));
+                      setSaved(false);
+                    }}
+                    className="mt-1 h-5 w-5 shrink-0 accent-emerald-700"
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="mt-4 rounded-2xl bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-200">
+              {workflowPreferences.applicationMode === "automatic"
+                ? "Automatic mode: compatible contracts are tailored and submitted in the background. Only a genuine employer restriction pauses the application."
+                : workflowPreferences.applicationMode === "guided"
+                  ? `Guided mode: matches at ${workflowPreferences.guidedReviewThreshold ?? 80}% or above submit automatically. Lower matches wait for your review.`
+                  : "Review mode: contracts are prepared automatically and wait for your approval before submission."}
+            </p>
+          </section>}
+
+          {section === "matches" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
+            <div className="flex items-start justify-between gap-4"><div><h2 className="font-semibold text-slate-950">Role lanes</h2><p className="mt-1 text-sm text-slate-600">Create up to three focused role searches.</p></div>{lanes.length < 3 && <button type="button" onClick={() => setLanes((current) => [...current, newLane()])} className="ir35-focus inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-sm font-bold"><Plus size={15} /> Add lane</button>}</div>
+            <div className="mt-5 space-y-4">{lanes.map((lane, index) => <article key={lane.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-bold text-slate-950">Lane {index + 1}</p><div className="flex items-center gap-2"><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><input type="checkbox" checked={lane.enabled} onChange={(event) => updateLane(lane.id, { enabled: event.target.checked })} className="h-4 w-4 accent-emerald-700" /> Active</label>{lanes.length > 1 && <button type="button" onClick={() => setLanes((current) => current.filter((item) => item.id !== lane.id))} aria-label={`Remove lane ${index + 1}`} className="ir35-focus rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-700"><Trash2 size={15} /></button>}</div></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><input value={lane.role} onChange={(event) => updateLane(lane.id, { role: event.target.value })} placeholder="Role, for example DevOps" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" /><input value={lane.keywords.join(", ")} onChange={(event) => updateLane(lane.id, { keywords: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })} placeholder="AWS, Terraform" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" /><input value={lane.location} onChange={(event) => updateLane(lane.id, { location: event.target.value })} placeholder="United Kingdom" className="ir35-focus min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" /></div></article>)}</div>
+          </section>}
+
+          {section === "matches" && <section className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><h2 className="font-semibold">IR35 statuses</h2><div className="mt-4 space-y-2">{(["outside", "inside", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.ir35.includes(value)} onChange={() => setRules((current) => ({ ...current, ir35: toggleArray(current.ir35, value) }))} className="h-5 w-5 accent-emerald-700" />{value === "unknown" ? "Status not stated" : `${value} IR35`}</label>)}</div></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><h2 className="font-semibold">Working patterns</h2><div className="mt-4 space-y-2">{(["remote", "hybrid", "onsite", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.workplaces.includes(value)} onChange={() => setRules((current) => ({ ...current, workplaces: toggleArray(current.workplaces, value) }))} className="h-5 w-5 accent-emerald-700" />{value}</label>)}</div></div>
+          </section>}
+
+          {section === "permission" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-brand-700" /><div><h2 className="font-semibold text-slate-950">Permission to apply</h2><p className="mt-1 text-sm leading-6 text-slate-600">Confirm once to use your approved profile, Resume and saved answers for these searches.</p></div></div><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"><input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-5 w-5 accent-emerald-700" /><span><strong className="block text-slate-950">Allow IR35Careers to apply to my matching roles.</strong>I can pause Auto Apply or change these preferences at any time.</span></label></section>}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button type="button" onClick={() => void saveSettings()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50"><CheckCircle2 size={17} /> Save settings</button>
+            {section === "matches" && <button type="button" onClick={() => void runPreview()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50">{busy === "preview" ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {busy === "preview" ? "Checking contracts" : "Preview matches"}</button>}
+            {section !== "permission" ? <button type="button" onClick={() => setSection(section === "matches" ? "materials" : "permission")} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-brand-800">Continue <ChevronRight size={16} /></button> : <button type="button" onClick={() => void runAutoApply()} disabled={busy !== null || !autoApplyEnabled || !consentAccepted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Apply to next match now"}</button>}
+            {saved && <span className="self-center text-sm font-semibold text-emerald-700">Saved</span>}
+          </div>
+          {notice && <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900" role="status">{notice}</p>}
           {runError && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900" role="alert">{runError}</p>}
         </div>
 
         <aside className="space-y-5 xl:sticky xl:top-24 xl:h-max">
-          <section className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-card"><p className="text-xs font-bold uppercase tracking-wide text-emerald-300">Latest preview</p>{latestRun ? <><p className="mt-3 text-4xl font-bold tabular-nums">{latestRun.matchingJobIds.length}</p><p className="mt-1 text-sm text-slate-300">contracts entered the review queue</p><p className="mt-4 text-xs text-slate-400">Run {new Date(latestRun.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p></> : <p className="mt-3 text-sm leading-6 text-slate-300">Run a live preview to check current contracts against your profile and rules.</p>}</section>
-          <section className={`rounded-3xl border p-5 shadow-card ${submissionState === "connected" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}><PlugZap size={20} className={submissionState === "connected" ? "text-emerald-700" : "text-amber-800"} /><p className={`mt-3 text-xs font-bold uppercase tracking-wide ${submissionState === "connected" ? "text-emerald-700" : "text-amber-800"}`}>Submission connection</p><h2 className={`mt-2 font-semibold ${submissionState === "connected" ? "text-emerald-950" : "text-amber-950"}`}>{submissionState === "loading" ? "Checking provider…" : submissionState === "connected" ? "Authorised provider connected" : "Provider required"}</h2><p className={`mt-2 text-sm leading-6 ${submissionState === "connected" ? "text-emerald-900" : "text-amber-900"}`}>{submissionState === "connected" ? "Approved packets can be submitted from their final review screen, with an idempotent receipt." : "Rules can monitor and prepare now. Automatic external submission stays unavailable until an authorised gateway is connected."}</p></section>
-          {latestRun && !isSupabaseConfigured() && <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><h2 className="font-semibold">Decision log</h2><ul className="mt-4 space-y-3">{DEMO_JOBS.map((job) => { const skip = latestRun.skipped.find((item) => item.jobId === job.id); return <li key={job.id} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0"><span className="mt-0.5">{skip ? <XCircle className="text-slate-400" size={17} /> : <CheckCircle2 className="text-emerald-600" size={17} />}</span><div><p className="text-sm font-semibold text-slate-800">{job.title}</p><p className="mt-1 text-xs text-slate-500">{skip?.reason ?? "Prepared for human review"}</p></div></li>; })}</ul></section>}
+          <section className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-card"><p className="text-xs font-bold uppercase tracking-wide text-emerald-300">Latest match check</p>{latestRun ? <><p className="mt-3 text-4xl font-bold tabular-nums">{latestRun.matchingJobIds.length}</p><p className="mt-1 text-sm text-slate-300">contracts match your current rules</p><p className="mt-4 text-xs text-slate-400">Checked {new Date(latestRun.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p></> : <p className="mt-3 text-sm leading-6 text-slate-300">Preview current contracts before starting Auto Apply.</p>}</section>
+          {latestRun && !isSupabaseConfigured() && <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-card"><h2 className="font-semibold">Decision log</h2><ul className="mt-4 space-y-3">{DEMO_JOBS.map((job) => { const skip = latestRun.skipped.find((item) => item.jobId === job.id); return <li key={job.id} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0"><span className="mt-0.5">{skip ? <XCircle className="text-slate-400" size={17} /> : <CheckCircle2 className="text-emerald-600" size={17} />}</span><div><p className="text-sm font-semibold text-slate-800">{job.title}</p><p className="mt-1 text-xs text-slate-500">{skip?.reason ?? "Matches your saved rules"}</p></div></li>; })}</ul></section>}
         </aside>
       </div>
     </WorkspacePage>

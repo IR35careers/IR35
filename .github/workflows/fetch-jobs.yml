@@ -13,6 +13,13 @@ on:
     - cron: "0 */6 * * *" # every 6 hours, on the hour (UTC)
   workflow_dispatch: {} # adds a manual "Run workflow" button in the Actions tab
 
+permissions:
+  contents: read
+
+concurrency:
+  group: fetch-jobs-production
+  cancel-in-progress: false
+
 jobs:
   trigger-pipeline:
     runs-on: ubuntu-latest

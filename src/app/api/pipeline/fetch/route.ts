@@ -10,33 +10,98 @@
  */
 
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
+import { repairJobQuality } from "@/lib/pipeline/repair-job-quality";
+import { timingSafeEqual } from "node:crypto";
+import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { enqueueScheduledWork } from "@/lib/queue/producer";
+import { invalidatePublicJobs } from "@/lib/pipeline/invalidate-public-jobs";
+import { z } from "zod";
+import {
+  ApplicationWorkerRequestError,
+  readSignedApplicationWorkerJson,
+} from "@/lib/application-worker-request";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // Hobby-plan ceiling; keep the registry modest
+export const maxDuration = 300;
+
+const NO_STORE = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+const operationSchema = z.discriminatedUnion("action", [
+  z.strictObject({ action: z.literal("invalidate_public_jobs") }),
+  z.strictObject({ action: z.literal("fetch_contract_jobs") }),
+  z.strictObject({ action: z.literal("repair_job_quality"), mode: z.enum(["preview", "apply"]), planHash: z.string().regex(/^[a-f0-9]{64}$/).optional() }),
+]);
+
+function secureTokenEqual(presented: string, expected: string): boolean {
+  const left = Buffer.from(presented);
+  const right = Buffer.from(expected);
+  return left.length === right.length && timingSafeEqual(left, right);
+}
 
 export async function GET(request: Request): Promise<Response> {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
     return Response.json(
       { error: "CRON_SECRET is not configured on the server." },
-      { status: 500 }
+      { status: 500, headers: NO_STORE }
     );
   }
 
   const authHeader = request.headers.get("authorization") ?? "";
-  const authorized = authHeader === `Bearer ${secret}`;
+  const authorized = secureTokenEqual(authHeader, `Bearer ${secret}`);
 
   if (!authorized) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json({ error: "Unauthorized" }, { status: 401, headers: NO_STORE });
   }
 
   try {
+    if (selectedApplyRunner() === "railway") {
+      await enqueueScheduledWork("ingest");
+      return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
+    }
     const summary = await runFetchPipeline();
-    return Response.json({ ok: true, summary });
+    return Response.json({ ok: true, summary }, { headers: NO_STORE });
   } catch (err) {
     return Response.json(
       { ok: false, error: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
+      { status: 500, headers: NO_STORE }
+    );
+  }
+}
+
+/** Manual operations use the existing worker credential; credentials never
+ * enter a URL, browser bundle or log. The daily Vercel cron retains its GET
+ * authentication independently. */
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const parsed = operationSchema.safeParse(await readSignedApplicationWorkerJson(request, 2_000));
+    if (!parsed.success) return Response.json({ error: "The pipeline operation is invalid." }, { status: 400, headers: NO_STORE });
+    const body = parsed.data;
+    if (body.action === "invalidate_public_jobs") {
+      invalidatePublicJobs();
+      return Response.json({ ok: true }, { headers: NO_STORE });
+    }
+    if (body.action === "repair_job_quality") {
+      const summary = await repairJobQuality(body.mode, body.planHash);
+      return Response.json({ ok: true, summary }, { headers: NO_STORE });
+    }
+    if (selectedApplyRunner() === "railway") {
+      await enqueueScheduledWork("ingest");
+      return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
+    }
+    const summary = await runFetchPipeline();
+    return Response.json({ ok: true, summary }, { headers: NO_STORE });
+  } catch (error) {
+    if (error instanceof ApplicationWorkerRequestError)
+      return Response.json(
+        { error: error.message },
+        { status: error.status, headers: NO_STORE },
+      );
+    console.error("contract_job_refresh_failed", {
+      reason: error instanceof Error ? error.message.slice(0, 240) : "unknown",
+    });
+    return Response.json(
+      { ok: false, error: "The contract refresh could not complete." },
+      { status: 500, headers: NO_STORE },
     );
   }
 }

@@ -9,10 +9,35 @@ const styles = {
   unconfirmed: { icon: CircleAlert, shell: "border-slate-300 bg-slate-50", iconStyle: "bg-slate-200 text-slate-700" },
 } as const;
 
-export function IR35EvidencePanel({ job }: { job: JobDetail }) {
+export function IR35EvidencePanel({ job, compact = false }: { job: JobDetail; compact?: boolean }) {
   const provenance = deriveIR35Provenance(job);
   const style = styles[provenance.kind];
   const Icon = style.icon;
+
+  if (compact) {
+    return (
+      <section aria-labelledby="ir35-evidence-heading" className={`rounded-2xl border p-4 ${style.shell}`}>
+        <div className="flex items-center gap-3">
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${style.iconStyle}`}>
+            <Icon size={18} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">IR35 evidence</p>
+            <h2 id="ir35-evidence-heading" className="mt-0.5 text-sm font-bold text-slate-950">{provenance.label}</h2>
+          </div>
+        </div>
+        <details className="mt-3 border-t border-black/5 pt-3">
+          <summary className="ir35-focus min-h-9 cursor-pointer list-none rounded-lg text-xs font-bold text-slate-700 marker:content-none">Why this status</summary>
+          <div className="mt-2 space-y-3 text-xs leading-5 text-slate-700">
+            <p>{provenance.explanation}</p>
+            {provenance.evidence && <blockquote className="rounded-lg bg-white/80 px-3 py-2 font-semibold text-slate-800">{provenance.evidence}</blockquote>}
+            <p className="inline-flex items-center gap-1.5 text-slate-600"><CalendarClock size={13} aria-hidden="true" />{provenance.observedLabel} · {provenance.confidenceLabel}</p>
+            <p className="text-slate-600">Source: {job.source_domain.replace("www.", "")}</p>
+          </div>
+        </details>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="ir35-evidence-heading" className={`rounded-2xl border p-5 ${style.shell}`}>

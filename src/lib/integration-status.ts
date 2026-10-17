@@ -1,5 +1,8 @@
 import { billingConfig, stripeManagementConfig } from "@/lib/billing/stripe";
 import { resendInboundConfig } from "@/lib/email/resend";
+import { openRouterTailoringConfig } from "@/lib/ai/openrouter-tailoring";
+import { submissionProviderConfig } from "@/lib/application-submission";
+import { applicationWorkerConfig } from "@/lib/application-worker-auth";
 
 export type IntegrationState = "available" | "connected" | "provider_gate" | "not_configured";
 
@@ -21,7 +24,7 @@ function enabled(value: string | undefined): boolean {
  * Returns capability state only. Secret values, account identifiers and
  * provider errors are deliberately never exposed by this function.
  */
-export function getIntegrationStatuses(): IntegrationStatus[] {
+export function getIntegrationStatuses(options?: { includeOperations?: boolean }): IntegrationStatus[] {
   const databaseConnected = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
@@ -30,17 +33,13 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
   const reedConnected = Boolean(process.env.REED_API_KEY);
   const adzunaConnected = Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
   const inboundConnected = Boolean(enabled(process.env.ENABLE_INBOUND_MAIL) && resendInboundConfig());
-  let validSubmissionEndpoint = false;
-  try {
-    validSubmissionEndpoint = new URL(process.env.APPLICATION_SUBMISSION_PROVIDER_URL ?? "").protocol === "https:";
-  } catch {
-    validSubmissionEndpoint = false;
-  }
-  const submissionConnected = Boolean(enabled(process.env.ENABLE_APPLICATION_SUBMISSION) && validSubmissionEndpoint && process.env.APPLICATION_SUBMISSION_PROVIDER_API_KEY);
+  const aiTailoringConnected = Boolean(openRouterTailoringConfig());
+  const submissionConnected = Boolean(submissionProviderConfig());
+  const persistentWorkerConnected = applicationWorkerConfig().enabled;
   const billingConnected = Boolean(billingConfig());
   const billingManagementConnected = Boolean(stripeManagementConfig());
 
-  return [
+  const statuses: IntegrationStatus[] = [
     {
       id: "supabase",
       name: "Account and contract database",
@@ -77,11 +76,18 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       nextStep: inboundConnected ? "Users can activate a private address from their recruiter inbox." : "Verify an inbound domain and add the provider key, signing secret and feature flag.",
     },
     {
+      id: "ai_tailoring",
+      name: "Role-specific Resume tailoring",
+      state: aiTailoringConnected ? "connected" : "provider_gate",
+      scope: "Evidence-grounded role tailoring with a local fallback and optional enhanced language-model suggestions.",
+      nextStep: aiTailoringConnected ? "Users can request enhanced suggestions and approve each edit." : "Local evidence-based suggestions remain available. Add OPENROUTER_API_KEY for enhanced language suggestions.",
+    },
+    {
       id: "ats_submission",
-      name: "Live ATS submission",
+      name: "IR35Careers application runner",
       state: submissionConnected ? "connected" : "provider_gate",
-      scope: "Provider-specific application submission with final human approval.",
-      nextStep: submissionConnected ? "Approved packets can be sent through the configured submission gateway." : "Connect an authorised ATS or browser-automation gateway and pass sandbox, idempotency and receipt tests.",
+      scope: "Queues approved applications and records confirmed employer submissions.",
+      nextStep: submissionConnected ? "Application orchestration is enabled." : "Enable application submission after completing the release checks.",
     },
     {
       id: "billing",
@@ -100,4 +106,14 @@ export function getIntegrationStatuses(): IntegrationStatus[] {
       nextStep: "Requires provider approval, explicit consent, revocation and a retention policy.",
     },
   ];
+  if (options?.includeOperations) {
+    statuses.push({
+      id: "persistent_worker",
+      name: process.env.VERCEL === "1" ? "Managed cloud application queue" : "Persistent employer portal worker",
+      state: persistentWorkerConnected ? "connected" : "provider_gate",
+      scope: "Processes approved applications on hosted Chromium with durable dispatch, leases and retries. No contractor device or browser plugin is required.",
+      nextStep: persistentWorkerConnected ? "Inspect queue outcomes and employer receipts. Idle cloud consumers do not need a continuous desktop heartbeat." : "Enable the signed cloud worker and deploy the managed queue consumer.",
+    });
+  }
+  return statuses;
 }

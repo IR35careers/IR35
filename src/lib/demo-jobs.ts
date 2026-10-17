@@ -132,5 +132,8 @@ export const DEMO_JOBS: JobDetail[] = [
 ];
 
 export function isDemoDataAvailable(): boolean {
-  return process.env.NODE_ENV !== "production";
+  return (
+    process.env.NODE_ENV !== "production" ||
+    process.env.IR35CAREERS_E2E_DEMO_DATA === "1"
+  );
 }

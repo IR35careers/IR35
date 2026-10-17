@@ -23,5 +23,5 @@ export function buildReferralDraft(input: {
   const relationship = input.contact.relationship.trim();
   const context = relationship ? ` Given our ${relationship.toLowerCase()},` : "";
 
-  return `Hi ${firstName},\n\nI hope you’re well. I’m exploring the ${role} contract at ${company}.${context} I wondered whether you would be comfortable sharing any context on the team or referring me if you genuinely think my background is relevant. No pressure at all—I’m happy to apply directly.\n\nThanks,\n${senderName}`;
+  return `Hi ${firstName},\n\nI hope you’re well. I’m exploring the ${role} contract at ${company}.${context} I wondered whether you would be comfortable sharing any context on the team or referring me if you genuinely think my background is relevant. No pressure at all. I’m happy to apply directly.\n\nThanks,\n${senderName}`;
 }

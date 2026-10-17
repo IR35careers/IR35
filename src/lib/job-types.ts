@@ -38,10 +38,10 @@ export function ir35EvidenceLabel(
 export const JOB_LIST_COLUMNS =
   "id, title, company_name, location, remote_type, ir35_status, ir35_confidence, rate_min, rate_max, rate_currency, rate_type, skills, posted_at, first_seen_at, last_seen_at, source_domain";
 
-/** Human-friendly rate string: "£550-£650/day", "£85k/yr", "Rate on application". */
+/** Human-friendly rate string: "£550-£650/day", "£85k/yr", "Rate not stated". */
 export function formatRate(job: Pick<JobListing, "rate_min" | "rate_max" | "rate_currency" | "rate_type">): string {
   const { rate_min: min, rate_max: max, rate_type: type } = job;
-  if (min === null && max === null) return "Rate on application";
+  if (min === null && max === null) return "Rate not stated";
   const symbol = job.rate_currency === "USD" ? "$" : job.rate_currency === "EUR" ? "€" : "£";
   const fmt = (n: number) =>
     type === "annual" && n >= 1000 ? `${symbol}${Math.round(n / 1000)}k` : `${symbol}${n.toLocaleString()}`;

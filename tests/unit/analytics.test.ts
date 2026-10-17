@@ -17,7 +17,7 @@ describe("application analytics", () => {
     expect(snapshot.funnel.map((item) => item.label)).toEqual(["Prepared", "Applied", "Responses", "Interviews", "Offers"]);
   });
 
-  it("exports role data as escaped CSV without CV or message contents", () => {
+  it("exports role data as escaped CSV without Resume or message contents", () => {
     const workspace = createSeedWorkspaceState();
     workspace.applications[0] = {
       ...workspace.applications[0],
@@ -29,6 +29,15 @@ describe("application analytics", () => {
     expect(csv).toContain("Northstar Digital");
     expect(csv).not.toContain(workspace.applications[0].sourceCvText);
     expect(csv).not.toContain(workspace.messages[0].body);
+  });
+
+  it("neutralises spreadsheet formulas in exported user-controlled fields", () => {
+    const workspace = createSeedWorkspaceState();
+    workspace.applications[0] = {
+      ...workspace.applications[0],
+      job: { ...workspace.applications[0].job, company_name: "=HYPERLINK(\"https://attacker.invalid\")" },
+    };
+    expect(analyticsCsv(workspace)).toContain("'=HYPERLINK");
   });
 
   it("uses neutral zero values when no application has been prepared", () => {

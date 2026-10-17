@@ -248,8 +248,11 @@ export async function GET(request: Request): Promise<Response> {
       generated_at: new Date().toISOString(),
     });
   } catch (err) {
+    console.error("job_search_failed", {
+      type: err instanceof Error ? err.name : "UnknownError",
+    });
     return searchResponse(
-      { error: err instanceof Error ? err.message : "Search failed" },
+      { error: "Contract search is temporarily unavailable." },
       500
     );
   }

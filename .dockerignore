@@ -1,0 +1,14 @@
+**/node_modules
+**/.env
+**/.env.*
+**/.git
+.next
+.vercel
+.codex-tmp
+output
+coverage
+test-results
+playwright-report
+*.log
+*.tsbuildinfo
+services/application-worker/dist

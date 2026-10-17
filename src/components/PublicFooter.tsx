@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Instagram, Mail } from "lucide-react";
 import { Brand } from "@/components/ui/brand";
 import { legalOperatorConfig } from "@/lib/legal/operator";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const GROUPS = [
   {
@@ -14,17 +16,23 @@ const GROUPS = [
   {
     title: "Understand IR35",
     links: [
-      ["IR35 resources", "/resources"],
-      ["Status checker", "/tools/ir35-status"],
-      ["Take-home calculator", "/tools/take-home"],
+      ["IR35 careers guide", "/ir35-careers"],
+      ["IR35 guides", "/resources"],
+      ["What IR35 means", "/resources#what-is-ir35"],
+      ["Inside and outside", "/resources#inside-outside"],
+      ["How status is decided", "/resources#status-decision"],
     ],
   },
   {
     title: "IR35Careers",
     links: [
+      ["About IR35Careers", "/about"],
       ["Contractor workspace", "/dashboard"],
+      ["Contractor tools", "/tools"],
+      ["Public beta", "/beta"],
+      ["For employers", "/employers"],
       ["Pricing", "/pricing"],
-      ["Product updates", "/blog"],
+      ["Contractor guides", "/blog"],
       ["Contractor stories", "/stories"],
       ["Contact", "/contact"],
     ],
@@ -56,6 +64,18 @@ export function PublicFooter() {
           <p className="mt-3 text-xs leading-5 text-slate-500">
             Educational information only. IR35 status depends on the facts of each engagement.
           </p>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="ir35-focus mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-semibold text-brand-800 hover:text-brand-600">
+            <Mail size={16} aria-hidden="true" /> {CONTACT_EMAIL}
+          </a>
+          <a
+            href="https://www.instagram.com/ir35careers/"
+            target="_blank"
+            rel="noreferrer"
+            className="ir35-focus mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-600 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800"
+            aria-label="IR35Careers on Instagram"
+          >
+            <Instagram size={16} aria-hidden="true" /> Instagram
+          </a>
         </div>
         {GROUPS.map((group) => (
           <div key={group.title}>
@@ -74,7 +94,7 @@ export function PublicFooter() {
       </div>
       <div className="border-t border-slate-100">
         <div className="ir35-container flex flex-col gap-3 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} IR35Careers · Built for UK contractors.{operator && <><br />Operated by {operator.legalName}{operator.companyNumber ? ` · Company ${operator.companyNumber}` : ""}{operator.vatNumber ? ` · VAT ${operator.vatNumber}` : ""}</>}</span>
+          <span>© {new Date().getFullYear()} IR35Careers · Public beta · Built for UK contractors.{operator && <><br />Operated by {operator.legalName}{operator.companyNumber ? ` · Company ${operator.companyNumber}` : ""}{operator.vatNumber ? ` · VAT ${operator.vatNumber}` : ""}</>}</span>
           <span className="max-w-2xl sm:text-right">Job and IR35 information is educational, may be supplied by third parties and should be independently checked before you act.</span>
         </div>
       </div>

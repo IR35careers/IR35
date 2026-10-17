@@ -15,9 +15,9 @@ The welcome message is a service email, not a marketing subscription. It is sent
    - set **Reset password** subject to `Reset your IR35Careers password` and paste `supabase/email-templates/recovery.html`.
 3. Keep Resend click and open tracking disabled for authentication messages. Rewriting a confirmation URL can interfere with the Supabase verification link.
 4. In Vercel, set server-only production variables:
-   - `RESEND_API_KEY` — a Resend key with sending permission;
-   - `EMAIL_FROM=IR35Careers <welcome@mail.ir35careers.com>`;
-   - `EMAIL_REPLY_TO` — optional, but only use a monitored address;
+   - `RESEND_API_KEY` - a Resend key with sending permission;
+   - `EMAIL_FROM=IR35Careers <hello@mail.ir35careers.com>`;
+   - `EMAIL_REPLY_TO` - optional, but only use a monitored address;
    - `ENABLE_WELCOME_EMAIL=true`;
    - `NEXT_PUBLIC_SITE_URL=https://www.ir35careers.com`.
 5. Redeploy after changing environment variables.
@@ -31,8 +31,7 @@ Use a new email address, not an existing account:
 1. Create the account and accept the legal terms.
 2. Confirm that the branded confirmation email arrives from `account@mail.ir35careers.com`.
 3. Select the confirmation button and verify the site signs in or returns to the account flow successfully.
-4. Confirm exactly one branded welcome email arrives from `welcome@mail.ir35careers.com`.
+4. Confirm exactly one branded welcome email arrives from `hello@mail.ir35careers.com`.
 5. Sign out and sign in again; confirm no second welcome email is sent.
 6. Request a password reset and confirm the branded reset email works.
 7. Check the Resend delivery log and Supabase `email_delivery_events` row without exposing message content or provider secrets.
-

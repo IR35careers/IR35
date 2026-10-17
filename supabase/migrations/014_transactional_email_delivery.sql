@@ -24,4 +24,3 @@ CREATE INDEX IF NOT EXISTS email_delivery_events_status_updated_idx
 
 ALTER TABLE email_delivery_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON email_delivery_events FROM anon, authenticated;
-

@@ -8,6 +8,7 @@ import {
   prepareApplication,
   reviewApplicationReceipt,
 } from "@/lib/workspace/engine";
+import { normaliseCoverLetterSignoff, resolveCandidateName } from "@/lib/candidate-name";
 import { SAMPLE_CONTRACTOR_PROFILE } from "@/lib/workspace/seed";
 
 const job: JobDetail = {
@@ -52,6 +53,57 @@ describe("application workspace engine", () => {
     expect(application.coverLetter).toContain("AWS");
     expect(application.coverLetter).not.toContain("experience with AWS and Kubernetes");
     expect(application.status).toBe("needs_review");
+    expect(application.questions.length).toBeGreaterThan(20);
+    expect(application.questions.find((question) => question.id === "right-to-work")).toMatchObject({ answer: "Yes", reviewed: true });
+    expect(application.questions.find((question) => question.id === "notice-period")).toMatchObject({ answer: "two weeks", required: false, reviewed: true });
+    expect(application.questions.find((question) => question.id.includes("role-skill-1-aws"))).toMatchObject({ required: false, reviewed: true });
+    expect(application.questions.find((question) => question.id.includes("role-skill-2-kubernetes"))).toMatchObject({ answer: "", required: false, reviewed: false });
+  });
+
+  it("does not block an application because an optional reusable answer is blank", () => {
+    const application = prepareApplication({ job, profile: SAMPLE_CONTRACTOR_PROFILE, cvText: cv });
+    const approved = { ...application, truthApproved: true, materialsApproved: true, submissionApproved: true };
+    expect(approved.questions.some((question) => !question.required && !question.reviewed)).toBe(true);
+    expect(applicationIsReady(approved)).toBe(true);
+  });
+
+  it("uses the Resume name when an old generic contractor label is stored", () => {
+    const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cv });
+    expect(application.coverLetter).toMatch(/Kind regards,\nAlex Morgan$/);
+    expect(application.coverLetter).not.toMatch(/Kind regards,\nContractor$/);
+  });
+
+  it("prefers the saved profile name over a different Resume heading", () => {
+    const application = prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Priya Shah" }, cvText: cv });
+    expect(application.coverLetter).toMatch(/Kind regards,\nPriya Shah$/);
+  });
+
+  it("rejects preparation when neither profile nor Resume contains a real name", () => {
+    const cvWithoutName = cv.replace("Alex Morgan", "PROFESSIONAL PROFILE");
+    expect(resolveCandidateName("Contractor", cvWithoutName)).toBeNull();
+    expect(() => prepareApplication({ job, profile: { ...SAMPLE_CONTRACTOR_PROFILE, fullName: "Contractor" }, cvText: cvWithoutName })).toThrow(/Add your full name/);
+  });
+
+  it("replaces generic generated signatures with the applicant name", () => {
+    expect(normaliseCoverLetterSignoff("Dear team,\n\nI am applying.\n\nKind regards,\nContractor", "Alex Morgan")).toMatch(/Kind regards,\nAlex Morgan$/);
+    expect(normaliseCoverLetterSignoff("Dear team,\n\nI am applying.", "Alex Morgan")).toMatch(/Kind regards,\nAlex Morgan$/);
+  });
+
+  it("removes stale and repeated signatures before using the verified applicant", () => {
+    const letter = `Dear team,
+
+Please review my attached CV.
+
+Kind regards,
+Alex Morgan
+
+Kind regards, Anvesh Mannuru`;
+    const normalised = normaliseCoverLetterSignoff(letter, "Anvesh Mannuru");
+
+    expect(normalised).toContain("attached Resume");
+    expect(normalised).not.toContain("Alex Morgan");
+    expect(normalised.match(/Kind regards,/g)).toHaveLength(1);
+    expect(normalised).toMatch(/Kind regards,\nAnvesh Mannuru$/);
   });
 
   it("requires every answer and all approvals before issuing a receipt", () => {
@@ -70,7 +122,7 @@ describe("application workspace engine", () => {
     const receipt = issueDryRunReceipt(approved);
     expect(receipt.mode).toBe("dry_run");
     expect(receipt.message).toMatch(/No application or personal data was sent/);
-    expect(receipt.reviewedSnapshot?.resumeVersionLabel).toBe("Application CV");
+    expect(receipt.reviewedSnapshot?.resumeVersionLabel).toBe("Application Resume");
     expect(receipt.reviewedSnapshot?.answers).toHaveLength(approved.questions.length);
     expect(receipt.review).toBeNull();
 

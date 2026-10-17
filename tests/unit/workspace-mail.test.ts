@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { classifyInboundMessage, findLinkedApplication } from "@/lib/workspace/mail";
+import {
+  classifyInboundMessage,
+  findLinkedApplication,
+  inboxViewCategory,
+  isUnsolicitedJobMarketingMessage,
+} from "@/lib/workspace/mail";
 import { DEMO_JOBS } from "@/lib/demo-jobs";
 
 describe("inbound recruiter mail", () => {
@@ -7,6 +12,9 @@ describe("inbound recruiter mail", () => {
     expect(classifyInboundMessage("Interview availability", "Please book a call with the team.")).toBe("interview");
     expect(classifyInboundMessage("Application update", "Unfortunately we are not moving forward.")).toBe("rejection");
     expect(classifyInboundMessage("Action required", "Please confirm your working pattern.")).toBe("action_required");
+    expect(classifyInboundMessage("Technical assessment", "Complete the coding test by Friday.")).toBe("action_required");
+    expect(classifyInboundMessage("Application submitted", "Thank you for applying. We received your application.")).toBe("application_update");
+    expect(classifyInboundMessage("Interview update", "Unfortunately, we will not be progressing your application.")).toBe("rejection");
   });
 
   it("links a message to the strongest matching application", () => {
@@ -16,5 +24,67 @@ describe("inbound recruiter mail", () => {
     ];
     expect(findLinkedApplication("Northstar Digital - Senior DevOps Engineer", "Thanks for applying", applications)).toBe("northstar");
     expect(findLinkedApplication("General update", "No role information", applications)).toBeNull();
+  });
+
+  it("filters job-board recommendations without hiding application responses", () => {
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Our recommendation: Senior DevOps Engineer",
+        "Hello Anvesh, we recommend this job for you. Good Fit. Permanent.",
+        "info@jobs.totaljobsmail.com",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        '10 new "DevOps Engineer" jobs',
+        "Check out your latest matches. We found these new jobs that match your search.",
+        "info@jobs.totaljobsmail.com",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Jobs to complete your next application",
+        "Your latest recommendations are ready. Start a new application today.",
+        "Totaljobs alerts <info@jobs.totaljobsmail.com>",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Your latest matches",
+        "New roles selected for you. Manage your job alerts or unsubscribe.",
+        "alerts@example-jobs.co.uk",
+      ),
+    ).toBe(true);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Application received: Senior DevOps Engineer",
+        "Thank you for applying. We have received your application.",
+        "no-reply@totaljobs.com",
+      ),
+    ).toBe(false);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Interview invitation: Senior DevOps Engineer",
+        "Please choose an interview time with the hiring team.",
+        "jobs@employer.example",
+      ),
+    ).toBe(false);
+    expect(
+      isUnsolicitedJobMarketingMessage(
+        "Unfortunately your application will not progress",
+        "Thank you for your time and interest in the role.",
+        "no-reply@jobs.example",
+      ),
+    ).toBe(false);
+  });
+
+  it("derives detailed inbox categories without changing stored classifications", () => {
+    const message = (subject: string, body: string, classification: "interview" | "rejection" | "action_required" | "application_update" | "other" = "other") => ({ subject, body, preview: body, classification });
+    expect(inboxViewCategory(message("Verify your email", "Your security code is 123456"))).toBe("verification");
+    expect(inboxViewCategory(message("Technical assessment", "Complete the coding test by Friday"))).toBe("assessment");
+    expect(inboxViewCategory(message("Application received", "Thank you for applying"))).toBe("applied");
+    expect(inboxViewCategory(message("Application ready to retry", "Your approved Resume and answers are saved. Select Apply again."))).toBe("retry");
+    expect(inboxViewCategory(message("Offer letter", "We are pleased to offer you the contract"))).toBe("offer");
+    expect(inboxViewCategory(message("Working pattern", "Please confirm availability", "action_required"))).toBe("needs_you");
   });
 });

@@ -30,6 +30,7 @@ const CANONICAL_CITIES = [
   "Oxford",
   "Reading",
   "Brighton",
+  "Hastings",
   "Milton Keynes",
   "Leicester",
   "Coventry",

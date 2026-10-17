@@ -1,3 +1,4 @@
+import { withPublicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, CircleDashed, KeyRound, LockKeyhole, PlugZap, ShieldCheck } from "lucide-react";
@@ -6,10 +7,10 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { getIntegrationStatuses, type IntegrationState } from "@/lib/integration-status";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export const metadata: Metadata = withPublicPageMetadata("/connections", {
   title: "Integration connections",
   description: "Current IR35Careers data, developer and provider connection states.",
-};
+});
 
 const STATE_COPY: Record<IntegrationState, { label: string; style: string }> = {
   available: { label: "Available", style: "border-emerald-200 bg-emerald-50 text-emerald-800" },
@@ -62,16 +63,16 @@ export default function ConnectionsPage() {
 
         <section className="mt-10 grid gap-5 lg:grid-cols-3">
           {[
-            [KeyRound, "Secrets stay server-side", "Credentials belong in Vercel environment variables and provider secret stores—not Git, browser storage or support messages."],
+            [KeyRound, "Secrets stay server-side", "Credentials belong in Vercel environment variables and provider secret stores. Never place them in Git, browser storage or support messages."],
             [ShieldCheck, "Least privilege", "Job sources receive read-only access. Write scopes are added only for an approved, tested workflow."],
-            [LockKeyhole, "Human approval", "CV edits, application materials and any future submission remain reviewable and revocable."],
+            [LockKeyhole, "Human approval", "Resume edits, application materials and any future submission remain reviewable and revocable."],
           ].map(([Icon, title, body]) => {
             const Item = Icon as typeof PlugZap;
             return <article key={String(title)} className="rounded-3xl border border-slate-200 bg-white p-6"><Item size={20} className="text-brand-700" /><h2 className="mt-4 font-bold">{String(title)}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{String(body)}</p></article>;
           })}
         </section>
 
-        <p className="mt-8 text-sm text-slate-600">Technical setup details are in the <Link href="/developers" className="font-bold text-brand-700 underline">developer documentation</Link>. If a provider is missing, <Link href="/contact" className="font-bold text-brand-700 underline">contact IR35Careers</Link> with the provider name—never send a secret.</p>
+        <p className="mt-8 text-sm text-slate-600">Technical setup details are in the <Link href="/developers" className="font-bold text-brand-700 underline">developer documentation</Link>. If a provider is missing, <Link href="/contact" className="font-bold text-brand-700 underline">contact IR35Careers</Link> with the provider name. Never send a secret.</p>
       </main>
       <PublicFooter />
     </div>
