@@ -762,6 +762,13 @@
   .ir35-product-browser-bar > span:nth-child(3) { background: #6ee7b7; }
   .ir35-product-browser-bar b { margin-left: auto; color: #64748b; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .ir35-product-browser-label { color: #047857; font-size: 0.65rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; }
+  .ir35-product-browser-dark .ir35-product-browser-bar b { color: #cbd5e1; }
+  .ir35-product-browser-dark .ir35-product-browser-label { color: #a7f3d0; }
+  .ir35-showcase-card.text-white .ir35-showcase-number {
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
   .ir35-product-dark-content { padding: 1.25rem; }
   .ir35-product-dark-content h3 { margin-top: 0.45rem; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.035em; }
 

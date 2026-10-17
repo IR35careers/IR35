@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { DEMO_JOBS } from "../../src/lib/demo-jobs";
 
 test("public homepage visual baseline", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.setFixedTime(new Date("2026-08-20T09:00:00Z"));
   await page.route("**/api/jobs/search?per_page=4", async (route) => {
     await route.fulfill({
       status: 200,
@@ -18,7 +20,7 @@ test("public homepage visual baseline", async ({ page }) => {
   });
   await page.goto("/");
   await expect(page.getByText(/Preview roles are shown in this local workspace/i)).toBeVisible();
-  await page.waitForTimeout(1_000);
+  await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("homepage.png", {
     animations: "disabled",
     caret: "initial",

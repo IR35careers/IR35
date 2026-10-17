@@ -72,5 +72,5 @@ describe("exception reachability constraints", () => {
     traverse(require.cache[require.resolve("mammoth")]);
     expect(visited.size).toBeGreaterThan(10);
     expect([...visited].filter((path) => /node_modules[\\/](argparse|sprintf-js)[\\/]/.test(path))).toEqual([]);
-  });
+  }, 30_000); // Cold CommonJS graph loading on the 8 GB Windows workstation.
 });

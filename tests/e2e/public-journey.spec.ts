@@ -93,7 +93,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
 
   await page.goto("/");
   await dismissPrivacyNotice(page);
-  await expect(page.getByRole("heading", { name: /Contract work, without the IR35 guesswork/i })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /One profile\.\s*Better contracts\.\s*Every reply connected\./i })).toBeVisible();
   await expect(page.getByText(/Preview roles are shown in this local workspace/i)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
@@ -288,7 +288,7 @@ test("an external job can be previewed and opened in local Resume Studio", async
   await page.getByRole("button", { name: "Analyse job" }).click();
   await expect(page.getByRole("heading", { name: /Platform Engineer Contract/ })).toBeVisible();
   await expect(page.getByText("Advertiser-stated in the job title")).toBeVisible();
-  await page.getByRole("button", { name: "Tailor Resume locally" }).click();
+  await page.getByRole("button", { name: "Tailor CV locally" }).click();
   await expect(page.getByRole("heading", { name: "Your experience. Refined for this contract." })).toBeVisible();
   await expect(page.getByText(/Scores are transparent, missing keywords are never treated as experience/)).toBeVisible();
   await expectNoSeriousA11yViolations(page);
@@ -434,10 +434,11 @@ test("mobile navigation exposes all primary destinations", async ({ page }, test
   await page.goto("/");
   await dismissPrivacyNotice(page);
   await page.getByRole("button", { name: "Open navigation" }).click();
-  await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Find contracts" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "IR35 guides" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Tools" })).toBeVisible();
+  const navigation = page.getByRole("navigation", { name: "Mobile navigation" });
+  await expect(navigation).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Find contracts" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "IR35 guides" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Tools" })).toBeVisible();
 });
 
 test("Resume Studio analyses, verifies, versions and exports a role-ready Resume", async ({ page, request }) => {

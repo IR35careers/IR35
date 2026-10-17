@@ -11,7 +11,7 @@ test("unrecognised requirements do not become a made-up score or zero evidence g
   await page.goto("/analyse-job");
   await page.getByLabel("Public job URL").fill("https://employer.example.test/controller");
   await page.getByRole("button", { name: "Analyse job", exact: true }).click();
-  await page.getByRole("button", { name: "Tailor Resume locally" }).click();
+  await page.getByRole("button", { name: "Tailor CV locally" }).click();
   await page.getByRole("button", { name: "Try the labelled sample Resume" }).click();
   await page.getByRole("button", { name: "Analyse against this role" }).click();
   await expect(page.getByText("Not scored", { exact: true })).toBeVisible();

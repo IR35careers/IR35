@@ -102,10 +102,14 @@ jobs:
         run: npm run build
 
   browser-smoke:
-    name: Responsive browser and accessibility
+    name: Responsive browser and accessibility (${{ matrix.project }})
     needs: quality
     runs-on: windows-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [mobile-chrome, tablet-chrome, desktop-chrome]
     env:
       IR35CAREERS_E2E_DEMO_DATA: "1"
     steps:
@@ -126,17 +130,17 @@ jobs:
       - name: Install exact dependencies
         run: npm ci --strict-allow-scripts
 
-      - name: Install Chrome for Playwright
-        run: npx playwright install chrome
+      - name: Install version-pinned Chromium for Playwright
+        run: npx playwright install chromium
 
       - name: Run phone, tablet and desktop journeys
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project ${{ matrix.project }}
 
       - name: Upload failure evidence
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-failure-evidence
+          name: playwright-failure-evidence-${{ matrix.project }}
           path: |
             playwright-report/
             test-results/

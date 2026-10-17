@@ -58,6 +58,7 @@ export function HomeStickyCta() {
   return (
     <div
       aria-hidden={!visible}
+      inert={!visible}
       className={`fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 transition-[opacity,transform] duration-200 motion-reduce:transition-none md:hidden ${visible ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-5 opacity-0"}`}
     >
       <div className="mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-white/80 bg-[#071426]/95 p-2 pl-4 text-white shadow-floating backdrop-blur-xl">
@@ -67,6 +68,7 @@ export function HomeStickyCta() {
         </div>
         <Link
           href="/jobs"
+          tabIndex={visible ? 0 : -1}
           className="ir35-focus inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-300 px-4 text-sm font-bold text-slate-950"
         >
           Browse <ArrowRight size={15} aria-hidden="true" />

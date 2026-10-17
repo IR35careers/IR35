@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createSeedWorkspaceState, SAMPLE_CV_TEXT } from "../../src/lib/workspace/seed";
 
 async function dismissPrivacyNotice(page: import("@playwright/test").Page) {
   const button = page.getByRole("button", { name: "Essential only", exact: true });
@@ -118,8 +119,17 @@ test("research library ranks practical topics and identifies every source", asyn
 });
 
 test("optional profile answers do not block a contractor from applying", async ({ page }) => {
+  const state = createSeedWorkspaceState();
+  // Exercise a new application, not the seed's already-submitted read-only record.
+  state.applications = [];
+  state.profile.willingToTravel = undefined;
+  await page.addInitScript((workspace) => {
+    window.localStorage.setItem("ir35careers.workspace.v1", JSON.stringify(workspace));
+  }, state);
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
   await dismissPrivacyNotice(page);
+  await page.getByText("Paste Resume text instead", { exact: true }).click();
+  await page.getByLabel("Resume text", { exact: true }).fill(SAMPLE_CV_TEXT);
   await expect(
     page.getByRole("heading", {
       name: "Optional details can improve automatic form filling",

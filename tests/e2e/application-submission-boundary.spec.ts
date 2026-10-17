@@ -13,9 +13,7 @@ for (const outcome of ["cancelled", "navigation-failure", "employer-outage", "cl
     test.skip(testInfo.project.name !== "desktop-chrome", "Isolated server-runner browser test");
     const previousExecutable = process.env.CHROME_EXECUTABLE_PATH;
     const previousHeadless = process.env.APPLICATION_RUNNER_HEADLESS;
-    process.env.CHROME_EXECUTABLE_PATH = previousExecutable || (process.platform === "win32"
-      ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
-      : process.platform === "darwin" ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" : "/opt/google/chrome/chrome");
+    process.env.CHROME_EXECUTABLE_PATH = chromium.executablePath();
     process.env.APPLICATION_RUNNER_HEADLESS = "true";
     const launch = chromium.launch.bind(chromium);
     const destination = "https://www.ir35careers.com/testing/controlled-submission-boundary";
