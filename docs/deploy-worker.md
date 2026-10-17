@@ -6,6 +6,12 @@ Owner decision, 15 October 2026: Railway, existing Supabase Postgres, pg-boss in
 
 Local verification: TypeScript, ESLint, 486 Vitest tests and 199 legacy checks passed; six Playwright tests used controlled mock ATS responses only. Production Next build passed. The real pg-boss constructor accepted the settings, but no authenticated Postgres integration or Docker build was possible locally. That distinction is a release gate, not a claim of live readiness. Review [draft PR #1](https://github.com/IR35careers/IR35/pull/1); it is not a completed Phase 0 incident resolution.
 
+## Verified release hold — 17 October
+
+Vercel's authenticated project API confirms `main` is the production Git branch. `vercel.json` temporarily disables Git-triggered deployments on `main` and `codex/railway-*`. This separates the authorized code merge from a production release. Do not remove the hold until the recovery backup, lifecycle migration/rolling-client compatibility and reviewed web-release gates are satisfied. Manual CLI deployments remain possible but must not precede migration 025. The hold does not stop or alter the currently deployed site, change either runner flag, or authorize cutover. After the coordinated web release is verified, remove `main: false` and its temporary regression test in a reviewed follow-up.
+
+Fresh native Railway login is verified; its account currently has no projects. Docker Desktop installation is explicitly deferred by the owner. The real pinned Chromium Docker/Postgres standby CI job passes; local Docker installation is not claimed. Supabase reports PITR disabled and no available physical backup: database changes remain gated on a verified recovery backup. All six focused production-mode browser regressions pass across the three viewports; final full CI is still required.
+
 ## What is prepared
 
 - `services/application-worker/Dockerfile`: pinned `mcr.microsoft.com/playwright:v1.61.0-noble`, matching installed playwright-core, non-root pwuser, explicit source COPY and `.dockerignore` excluding credentials/local output.

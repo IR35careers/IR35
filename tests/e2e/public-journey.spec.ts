@@ -558,7 +558,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByRole("heading", { name: "Your contract pipeline" })).toBeVisible();
   // Preview-only packets have no database lifecycle. The renamed action must
   // still open review, and a gated preview must never claim a submission.
-  await expect(page.getByText("ready", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("ready", { exact: true }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Review application" }).first()).toBeVisible();
   await expect(page.locator("article").filter({ hasText: "Northstar Digital" })).not.toContainText("Submitted");
 
