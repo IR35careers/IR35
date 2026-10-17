@@ -50,8 +50,17 @@ UPDATE public.application_packets p SET delivery_status = CASE
 UPDATE public.application_packets p SET delivery_status='external_only',
   failure_reason='unsupported_aggregator', error_detail='No supported employer application destination was resolved.'
   WHERE p.delivery_status='needs_info' AND EXISTS (
-    SELECT 1 FROM public.application_worker_tasks t WHERE t.application_id=p.id
-    AND t.destination ~* '^https://([a-z0-9-]+\.)*(adzuna|reed)\.co\.uk(/|$)');
+    SELECT 1 FROM public.application_submissions s WHERE s.application_id=p.id
+    AND s.receipt->>'state'='needs_user'
+    AND COALESCE(s.receipt->>'action',s.receipt#>>'{review,action}','')<>'/profile'
+    AND COALESCE(s.receipt#>'{review,questions}','[]'::jsonb)='[]'::jsonb
+    -- Prefer the actual last destination over the original aggregator URL.
+    -- A resolved employer asking a question is not an unsupported aggregator.
+    AND COALESCE(NULLIF(s.receipt->>'destination',''),(
+      SELECT t.destination FROM public.application_worker_tasks t
+      WHERE t.application_id=p.id AND t.status='needs_user'
+      ORDER BY t.updated_at DESC LIMIT 1
+    )) ~* '^https://([a-z0-9-]+\.)*(adzuna|reed)\.co\.uk(/|$)');
 UPDATE public.application_packets SET failure_reason=COALESCE(failure_reason,
   CASE delivery_status WHEN 'failed' THEN 'legacy_worker_failure' WHEN 'needs_info' THEN 'employer_action_required' END)
   WHERE delivery_status IN ('failed','needs_info');

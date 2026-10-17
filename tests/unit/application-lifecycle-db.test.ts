@@ -89,6 +89,28 @@ describe("authoritative SQL delivery lifecycle", () => {
     expect((await db.query(`SELECT has_function_privilege('authenticated',
       'public.transition_application_delivery(uuid,uuid,text,text,text,boolean)','EXECUTE') AS allowed`)).rows[0]).toMatchObject({ allowed: false });
     expect((await db.query(`SELECT has_column_privilege('authenticated','application_packets','delivery_status','UPDATE') AS allowed`)).rows[0]).toMatchObject({ allowed: false });
+    expect((await db.query(`SELECT has_any_column_privilege('authenticated','application_packets','UPDATE') AS updates,
+      has_any_column_privilege('authenticated','application_packets','INSERT') AS inserts`)).rows[0])
+      .toMatchObject({ updates: false, inserts: false });
+  });
+  it("removes historical 017 column grants but permits the owner CAS RPC under the actual browser role", async () => {
+    const id = "d1111111-1111-4111-8111-111111111111";
+    await packet(id);
+    await db.query("SELECT set_config('test.user',$1,false)", [user]);
+    await db.exec("SET ROLE authenticated");
+    try {
+      await expect(db.query("UPDATE application_packets SET source_cv_text='stale browser CV' WHERE id=$1", [id]))
+        .rejects.toThrow(/permission denied/);
+      const saved = await db.query<{ packet: { source_cv_text: string } }>("SELECT save_application_draft($1,1) AS packet", [
+        JSON.stringify({ id, status: "ready", job_snapshot: {}, source_cv_text: "Owner-approved CV", tailored_cv_text: "", resume_version_label: "CV",
+          cover_letter: "", screening_answers: [], matched_keywords: [], missing_keywords: [], match_score: 80,
+          truth_approved: true, materials_approved: true, submission_approved: true }),
+      ]);
+      expect(saved.rows[0].packet.source_cv_text).toBe("Owner-approved CV");
+    } finally {
+      await db.exec("RESET ROLE");
+      await db.query("SELECT set_config('test.user','',false)");
+    }
   });
   it("commits a confirmed outcome and its audit together, idempotently", async () => {
     const id = "a7777777-7777-4777-8777-777777777777";
@@ -143,6 +165,29 @@ describe("authoritative SQL delivery lifecycle", () => {
     expect(ignored.rows[0].result.duplicate).toBe(true);
     expect((await state(id)).delivery_status).toBe("submitting");
   });
+  it("backfills only unresolved aggregators, preserving resolved ATS, question and profile gates", async () => {
+    const ids = ["c1111111-1111-4111-8111-111111111111", "c2222222-2222-4222-8222-222222222222",
+      "c3333333-3333-4333-8333-333333333333", "c4444444-4444-4444-8444-444444444444"];
+    const legacy = await createTestLifecycleDb(async before => {
+      await before.query("INSERT INTO auth.users VALUES($1)", [user]);
+      for (const [index, id] of ids.entries()) {
+        await before.query(`INSERT INTO application_packets(id,user_id,job_snapshot,status,idempotency_key)
+          VALUES($1::uuid,$2,'{}','needs_review',$1::text)`, [id, user]);
+        await before.query(`INSERT INTO application_worker_tasks(user_id,application_id,idempotency_key,destination,callback_url,status)
+          VALUES($1,$2::uuid,$2::text,'https://www.adzuna.co.uk/jobs/details/123','https://mock.example.test/callback','needs_user')`, [user, id]);
+        const receipt = { state: "needs_user", action: index === 3 ? "/profile" : "employer_login",
+          destination: index === 1 ? "https://mock.example.test/apply" : "https://www.adzuna.co.uk/jobs/details/123",
+          review: { questions: index === 2 ? [{ id: "rate", label: "Day rate?", required: true }] : [] } };
+        await before.query(`INSERT INTO application_submissions(user_id,application_id,provider_name,idempotency_key,payload_hash,status,receipt)
+          VALUES($1,$2::uuid,'mock',$2::text,'fixture','processing',$3)`, [user, id, JSON.stringify(receipt)]);
+      }
+    });
+    try {
+      const rows = await legacy.query<{ id: string; delivery_status: string }>(
+        "SELECT id,delivery_status FROM application_packets ORDER BY id");
+      expect(rows.rows.map(row => row.delivery_status)).toEqual(["external_only", "needs_info", "needs_info", "needs_info"]);
+    } finally { await legacy.close(); }
+  }, 30_000);
 });
 describe("shared lifecycle contract", () => {
   it("matches the forward-only and explicit-retry rules", () => {
