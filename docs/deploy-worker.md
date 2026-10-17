@@ -12,6 +12,8 @@ Vercel's authenticated project API confirms `main` is the production Git branch.
 
 Fresh native Railway login is verified; its account currently has no projects. Docker Desktop installation is explicitly deferred by the owner. The real pinned Chromium Docker/Postgres standby CI job passes; local Docker installation is not claimed. Supabase reports PITR disabled and no available physical backup: database changes remain gated on a verified recovery backup. All six focused production-mode browser regressions pass across the three viewports; final full CI is still required.
 
+Final-head CI subsequently passed at `41148a0` (Release quality `39036142240`, CodeQL `39036142243`); PR #1 is merged as `bca7288`. Vercel still serves `0df1489`, so merging did not deploy the migration-dependent code. Operations continue on `codex/railway-deployment-ops`. The owner requires the verified portable encrypted backup described in [pre-migration-backup.md](pre-migration-backup.md) before any migration. Neither production runner flag has changed.
+
 ## What is prepared
 
 - `services/application-worker/Dockerfile`: pinned `mcr.microsoft.com/playwright:v1.61.0-noble`, matching installed playwright-core, non-root pwuser, explicit source COPY and `.dockerignore` excluding credentials/local output.
