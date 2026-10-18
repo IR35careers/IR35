@@ -23,6 +23,8 @@
     "worker:build": "esbuild ./services/application-worker/server.ts --bundle --platform=node --target=node22 --format=esm --packages=external --alias:@=./src --outfile=./services/application-worker/dist/server.mjs",
     "worker:start": "npm run worker:build && node --env-file=services/application-worker/.env services/application-worker/dist/server.mjs",
     "worker:railway": "tsx services/application-worker/railway.ts",
+    "worker:queue": "tsx services/application-worker/railway.ts",
+    "worker:mock-smoke": "tsx services/application-worker/mock-ats-smoke.ts",
     "worker:queue:setup": "tsx services/application-worker/setup-queue.ts",
     "security:source": "node scripts/security-check.mjs",
     "security:audit": "tsx scripts/security-audit.ts",

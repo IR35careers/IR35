@@ -12,7 +12,7 @@
 import { runFetchPipeline } from "@/lib/pipeline/run-fetch";
 import { repairJobQuality } from "@/lib/pipeline/repair-job-quality";
 import { timingSafeEqual } from "node:crypto";
-import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { isQueueApplyRunner } from "@/lib/application-runner-selection";
 import { enqueueScheduledWork } from "@/lib/queue/producer";
 import { invalidatePublicJobs } from "@/lib/pipeline/invalidate-public-jobs";
 import { z } from "zod";
@@ -54,7 +54,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
-    if (selectedApplyRunner() === "railway") {
+    if (isQueueApplyRunner()) {
       await enqueueScheduledWork("ingest");
       return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
     }
@@ -84,7 +84,7 @@ export async function POST(request: Request): Promise<Response> {
       const summary = await repairJobQuality(body.mode, body.planHash);
       return Response.json({ ok: true, summary }, { headers: NO_STORE });
     }
-    if (selectedApplyRunner() === "railway") {
+    if (isQueueApplyRunner()) {
       await enqueueScheduledWork("ingest");
       return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
     }

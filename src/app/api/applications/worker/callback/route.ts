@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { isQueueApplyRunner } from "@/lib/application-runner-selection";
 import { commitDeliveryResult } from "@/lib/application-lifecycle-server";
 import { isUnresolvedAggregator } from "@/lib/application-lifecycle";
 import { applicationWorkerConfig } from "@/lib/application-worker-auth";
@@ -279,7 +279,7 @@ export async function POST(request: Request): Promise<Response> {
         shouldAutomaticallyRetryWorkerAttention({
           action,
           attempts: attemptsThisRun,
-          maximumAttempts: selectedApplyRunner() === "railway" ? 3 : undefined,
+          maximumAttempts: isQueueApplyRunner() ? 3 : undefined,
           hasUnansweredQuestions: providerReviewQuestions(receipt.review).some((question) => question.required && (!question.reviewed || !question.answer.trim())),
         })
       ) {

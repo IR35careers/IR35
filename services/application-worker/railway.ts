@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { chromium } from "playwright-core";
 import { PgBoss } from "pg-boss";
 import { z } from "zod";
-import { APPLY_QUEUE, applicationKickSchema, pgBossOptions, railwayWorkerConfig, queueName, scheduledWorkSchema, HEARTBEAT_SECONDS } from "../../src/lib/queue/config";
+import { APPLY_QUEUE, applicationKickSchema, pgBossOptions, queueWorkerConfig, queueName, scheduledWorkSchema, HEARTBEAT_SECONDS } from "../../src/lib/queue/config";
 import { claimApplicationWorkerAssignment, executeApplicationWorkerAssignment, postApplicationWorkerCallback } from "../../src/lib/application-worker-executor";
 import { getSupabaseAdmin } from "../../src/lib/supabase-admin";
 import { signApplicationWorkerBody } from "../../src/lib/application-worker-auth";
@@ -14,25 +14,26 @@ import { reconcileCloudApplications } from "../../src/lib/application-cloud-reco
 import { handleRailwayApplication, LeaseDeferred } from "./railway-handler";
 
 async function main() {
-  const config = railwayWorkerConfig();
+  const config = queueWorkerConfig();
   const origin = config.IR35CAREERS_APP_URL.replace(/\/$/, "");
   const accepting = config.APPLICATION_WORKER_ACCEPT_JOBS === "true";
   if (accepting && (!process.env.SUPABASE_SECRET_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || (process.env.CRON_SECRET?.length || 0) < 32))
     throw new Error("Consuming work requires Supabase server credentials and the shared scheduler secret.");
   const boss = new PgBoss(pgBossOptions("worker"));
-  const workerId = `railway-${hostname().replace(/[^a-z0-9-]/gi, "-").slice(0, 45)}-${randomUUID().slice(0, 8)}`;
+  const hostLabel = config.APPLY_RUNNER === "vercel" ? "queue" : config.APPLY_RUNNER;
+  const workerId = `${hostLabel}-${hostname().replace(/[^a-z0-9-]/gi, "-").slice(0, 45)}-${randomUUID().slice(0, 8)}`;
   const startedAt = new Date().toISOString();
   let stopping = false, databaseReady = false, browserReady = false, active = 0, completed = 0, failed = 0;
   let lastReconciledAt = 0;
   let lastDatabaseAt = 0;
-  boss.on("error", () => { databaseReady = false; console.error("railway_queue_database_error"); });
+  boss.on("error", () => { databaseReady = false; console.error("queue_database_error"); });
   const server = createServer((request, response) => {
     if (request.method !== "GET" || request.url !== "/health") {
       response.writeHead(404).end(); return;
     }
     const ok = !stopping && databaseReady && browserReady && Date.now() - lastDatabaseAt < 45_000;
     response.writeHead(ok ? 200 : 503, { "content-type": "application/json", "cache-control": "no-store" });
-    response.end(JSON.stringify({ ok, service: "ir35-railway-worker", mode: accepting ? "consumer" : "standby", active, completed, failed, browserReady, databaseReady }));
+    response.end(JSON.stringify({ ok, service: "ir35-queue-worker", mode: accepting ? "consumer" : "standby", active, completed, failed, browserReady, databaseReady }));
   });
   server.listen(config.PORT, "0.0.0.0");
   process.env.CHROME_EXECUTABLE_PATH = chromium.executablePath();
@@ -69,7 +70,7 @@ async function main() {
           lastReconciledAt = Date.now();
         }
       }
-    } catch { databaseReady = false; console.error("railway_worker_health_failed"); }
+    } catch { databaseReady = false; console.error("queue_worker_health_failed"); }
   }
   await refreshHealth();
   if (!databaseReady) throw new Error("Worker queue is not ready.");
@@ -123,13 +124,13 @@ async function main() {
     if (stopping) return;
     stopping = true; clearInterval(timer);
     // Reject readiness immediately, stop fetching, and finish existing work.
-    // Railway's draining grace must exceed this bounded window.
+    // The host/Compose draining grace must exceed this bounded window.
     const deadline = setTimeout(() => process.exit(1), 330_000).unref();
     await boss.stop({ graceful: true, timeout: 320_000 });
     clearTimeout(deadline); server.close(() => process.exit(0));
   };
   process.on("SIGTERM", () => void shutdown());
   process.on("SIGINT", () => void shutdown());
-  console.info("railway_worker_ready", { mode: accepting ? "consumer" : "standby", concurrency: config.APPLICATION_WORKER_CONCURRENCY });
+  console.info("queue_worker_ready", { mode: accepting ? "consumer" : "standby", concurrency: config.APPLICATION_WORKER_CONCURRENCY });
 }
-void main().catch(() => { console.error("Railway worker startup failed; check deployment configuration. No credentials or candidate data are logged."); process.exit(1); });
+void main().catch(() => { console.error("Queue worker startup failed; check deployment configuration. No credentials or candidate data are logged."); process.exit(1); });

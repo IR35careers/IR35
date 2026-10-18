@@ -1,0 +1,12 @@
+[Unit]
+Description=Useful IR35 mock ATS check every six hours (not an idle-reclamation guarantee)
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=6h
+RandomizedDelaySec=5min
+Persistent=true
+Unit=ir35-worker-smoke.service
+
+[Install]
+WantedBy=timers.target

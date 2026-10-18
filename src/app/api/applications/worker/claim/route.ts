@@ -26,7 +26,7 @@ import type {
   ContractorProfile,
 } from "@/lib/workspace/types";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
-import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { isQueueApplyRunner, selectedApplyRunner } from "@/lib/application-runner-selection";
 import { EMAIL_CONFIRMATION_REQUIRED, hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
 
 export const runtime = "nodejs";
@@ -113,10 +113,13 @@ export async function POST(request: Request): Promise<Response> {
         { status: 400, headers: HEADERS },
       );
 
+    const queueRunner = isQueueApplyRunner();
+    const queueIdentity = /^(railway|oracle|queue)-/.test(parsed.workerId);
+    if (parsed.acceptTask && (queueRunner || queueIdentity)
+      && (!queueRunner || !parsed.workerId.startsWith(`${selectedApplyRunner()}-`) || !parsed.preferredApplicationId))
+      return Response.json({ error: "Queue consumption is not enabled for this application and worker." }, { status: 409, headers: HEADERS });
     const admin = getSupabaseAdmin();
-    if (parsed.workerId.startsWith("railway-")) {
-      if (selectedApplyRunner() !== "railway" || !parsed.preferredApplicationId)
-        return Response.json({ error: "Railway consumption is not enabled for this application." }, { status: 409, headers: HEADERS });
+    if (parsed.acceptTask && queueRunner) {
       // Keep unknown browser outcomes stopped, even if the old six-minute
       // lease expired. The ten-minute watchdog fails them without resubmitting.
       const pending = await admin.from("application_worker_tasks").select("status")
