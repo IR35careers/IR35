@@ -1,10 +1,10 @@
-"use client";
-
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import { Loader2 } from "lucide-react";
 import SignInForm from "@/components/ui/sign-in-form";
 
-export default function AccountPage() {
+export default async function AccountPage() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#edf2ef] px-4 py-6 [color-scheme:light] sm:px-6 lg:py-10">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -19,7 +19,7 @@ export default function AccountPage() {
             </div>
           }
         >
-          <SignInForm />
+          <SignInForm nonce={nonce} />
         </Suspense>
       </div>
     </main>

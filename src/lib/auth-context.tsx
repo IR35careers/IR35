@@ -16,6 +16,7 @@ import {
 } from "@/lib/supabase-config";
 import { canonicalAuthCallbackUrl, resolvePostAuthPath } from "@/lib/auth-routing";
 import { confirmationEmailSchema } from "@/lib/auth-confirmation";
+import { googleIdTokenInputSchema, googleRedirectFallbackEnabled } from "@/lib/google-identity";
 import { isAdministratorEmail } from "@/lib/portal-access";
 import { clearWorkspaceForSignOut } from "@/lib/workspace/store";
 import { clearLocalResumeVersions } from "@/lib/resume/store";
@@ -23,6 +24,7 @@ import { clearLocalResumeVersions } from "@/lib/resume/store";
 interface AuthResult {
   error: string | null;
   code?: string;
+  email?: string;
   /** True when sign-up created an account that needs email confirmation. */
   needsConfirmation?: boolean;
 }
@@ -38,7 +40,7 @@ interface AuthContextValue {
   signInWithGithub: (next?: string) => Promise<AuthResult>;
   linkGithubIdentity: (next?: string) => Promise<AuthResult>;
   signInWithGoogleAdmin: () => Promise<AuthResult>;
-  signInWithGoogleIdToken: (token: string) => Promise<AuthResult>;
+  signInWithGoogleIdToken: (token: string, nonce: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
@@ -217,6 +219,7 @@ async function signInWithGoogle(
   next = "/dashboard",
   selectAccount = false,
 ): Promise<AuthResult> {
+  if (!googleRedirectFallbackEnabled()) return { error: "Google redirect fallback is disabled. Use the secure Google button or email." };
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const destination = resolvePostAuthPath(next);
   window.open(
@@ -265,22 +268,26 @@ async function linkGithubIdentity(next = "/profile#profile-professional-details"
 }
 
 async function signInWithGoogleAdmin(): Promise<AuthResult> {
+  if (!googleRedirectFallbackEnabled()) return { error: "Google redirect fallback is disabled. Use the secure Google button or email." };
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   window.open("/api/auth/google?next=%2F&select_account=1", "_self");
   return { error: null };
 }
 
-async function signInWithGoogleIdToken(token: string): Promise<AuthResult> {
+export async function signInWithGoogleIdToken(token: string, nonce: string): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
-  if (!token.trim()) return { error: "Google did not return a secure identity token." };
-  const { getSupabase } = await import("@/lib/supabase");
-  const { data, error } = await getSupabase().auth.signInWithIdToken({ provider: "google", token });
-  if (!error) {
+  const input = googleIdTokenInputSchema.safeParse({ token, nonce });
+  if (!input.success) return { error: "Google did not return a valid nonce-bound identity token. Try again." };
+  try {
+    const { getSupabase } = await import("@/lib/supabase");
+    const { data, error } = await getSupabase().auth.signInWithIdToken({ provider: "google", token: input.data.token, nonce: input.data.nonce });
+    if (error || !data.user) return { error: "Google sign-in could not be verified. Try again or use email.", code: error?.code };
+    if (state.user && state.user.id !== data.user.id) clearLocalPrivateState();
     publish({ user: data.user, loading: false });
     requestWelcomeEmail(data.session);
     initialiseSession(true);
-  }
-  return { error: error ? error.message : null };
+    return { error: null, email: data.user.email };
+  } catch { return { error: "Google sign-in could not connect. Try again or use email." }; }
 }
 
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
