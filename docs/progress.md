@@ -6,6 +6,8 @@ Updated 18 October 2026. Source of truth: `spec.md` and the original Phase 0 bri
 
 ### Superseding zero-budget plan — 18 October 2026
 
+18 October follow-up: PR #25 is merged as **ee362a1cfa5d339e5acfd6a1a68c72f4be8ccacb** after all **15** checks passed at exact head **81c3af5fe0c04a9d8dd5555101177169b039d1c0** (Release quality **39115963652**, CodeQL **39115963657**, plus push runs **39115944247/39115944243**). This is code delivery, not production configuration or release. The zero-budget plan/AGENTS constraints are preserved in a separate operations PR; preparation holds now also cover `codex/oracle-*` and `codex/google-*` so a push cannot accidentally start a connected Vercel preview. No existing hold removed.
+
 The owner replaced Railway hosting with **Oracle Cloud Always Free A1**. **No upgrades, paid add-ons or Pay As You Go account conversion.** Leave the existing empty Railway trial project/service undeployed and do not delete it. Earlier Railway capacity/upgrade requests and custom-auth-domain preparation are withdrawn. Production acceptance stays false and `APPLY_RUNNER` stays on the existing selection until literal **YES CUTOVER**, including the new planned oracle alias. Existing backup/destructive-DB gates remain.
 
 - [x] O0.1 Read-only Supabase CLI check: project `kxcbgflleqnjzjbkevwd`, **eu-west-2**, **ACTIVE_HEALTHY**. Supabase documents this as London. Recommend Oracle commercial **UK South (London), uk-london-1** as the geographically closest home region; this is not a measured latency/capacity guarantee. Account signup belongs to the owner; not yet confirmed active.
