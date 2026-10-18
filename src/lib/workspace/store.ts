@@ -115,6 +115,7 @@ export async function flushWorkspaceChanges(): Promise<WorkspaceState> {
 export function updateWorkspace(updater: (current: WorkspaceState) => WorkspaceState): void {
   const current = readState();
   const next = updater(current);
+  if (next === current) return;
   persist({ ...next, applications: next.applications.map(application => {
     const stored = current.applications.find(item => item.id === application.id);
     // A component holding an older copy cannot erase a Realtime update.
