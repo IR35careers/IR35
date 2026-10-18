@@ -38,6 +38,8 @@ import type {
   InboxSettings,
 } from "@/lib/workspace/types";
 import { canRetryDelivery, DELIVERY_LABELS } from "@/lib/application-lifecycle";
+import { ActionBlockers } from "@/components/ui/action-blockers";
+import type { ActionBlocker } from "@/lib/workspace/action-blockers";
 
 type ApplicationTab = "form" | "resume" | "cover" | "contract";
 
@@ -122,6 +124,7 @@ export function ApplicationRecordWorkspace({
   submissionInProgress,
   answersReviewed,
   approvalsComplete,
+  submissionBlockers,
   onUpdate,
   onSubmit,
   onContinueInBrowser,
@@ -140,6 +143,7 @@ export function ApplicationRecordWorkspace({
   submissionInProgress: boolean;
   answersReviewed: boolean;
   approvalsComplete: boolean;
+  submissionBlockers: ActionBlocker[];
   onUpdate: (updater: (current: ApplicationRecord) => ApplicationRecord) => void;
   onSubmit: () => Promise<void>;
   onContinueInBrowser: () => Promise<void>;
@@ -737,6 +741,7 @@ export function ApplicationRecordWorkspace({
                     <section className="border-t border-slate-200 pt-6">
                       <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
                         <input
+                          id="application-final-approval"
                           type="checkbox"
                           checked={approvalsComplete}
                           disabled={submissionInProgress}
@@ -745,10 +750,23 @@ export function ApplicationRecordWorkspace({
                         />
                         <span><strong className="block text-slate-950">Approve this application</strong>I confirm the Resume and answers are accurate and authorise IR35Careers to submit them for this contract.</span>
                       </label>
+                      <ActionBlockers id="application-submit-reasons" title="Before you can submit" blockers={submissionBlockers}
+                        onFocus={targetId => {
+                          if (targetId === "application-cv-text") {
+                            setTab("resume");
+                            setResumeEditing(true);
+                          }
+                          window.setTimeout(() => {
+                            const target = document.getElementById(targetId);
+                            target?.scrollIntoView({ block: "center" });
+                            target?.focus();
+                          }, 0);
+                        }} />
                       <button
                         type="button"
                         onClick={() => void onSubmit()}
-                        disabled={busy !== null || submissionInProgress || !answersReviewed || !approvalsComplete}
+                        disabled={submissionBlockers.length > 0}
+                        aria-describedby="application-submit-reasons"
                         className="ir35-focus mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
                       >
                         {busy === "submit" || submissionInProgress ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
@@ -803,7 +821,7 @@ export function ApplicationRecordWorkspace({
                           <p className="text-sm font-semibold text-slate-950">Edit Resume text</p>
                           <p className="mt-1 text-xs leading-5 text-slate-500">Changes appear in the document preview. Your approval is reset after an edit.</p>
                         </div>
-                        <textarea aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-base leading-6 text-slate-800 sm:text-[13px]" />
+                        <textarea id="application-cv-text" aria-label="Resume text" value={application.tailoredCvText} onChange={(event) => onUpdate((current) => ({ ...current, tailoredCvText: event.target.value, truthApproved: false, materialsApproved: false, submissionApproved: false, status: "needs_review" }))} onBlur={onResumeBlur} rows={30} className="ir35-focus w-full resize-y rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-base leading-6 text-slate-800 sm:text-[13px]" />
                       </section>
                       <div className="hidden xl:block">
                         <ResumeDocumentPreview resumeText={application.tailoredCvText} filename={resumeLabel(application.resumeVersionLabel)} candidateName={profile.fullName} />

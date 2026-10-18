@@ -79,6 +79,7 @@ import { flushWorkspaceChanges, refreshWorkspaceApplications, updateWorkspace, u
 import type { ApplicationRecord } from "@/lib/workspace/types";
 import { rememberReviewedApplicationAnswers } from "@/lib/workspace/answer-memory";
 import { editApplicationDraft } from "@/lib/workspace/draft-edit";
+import { applicationSubmitBlockers } from "@/lib/workspace/action-blockers";
 
 type BusyState =
   | "parse"
@@ -242,6 +243,8 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         application.deliveryStatus,
       ),
   );
+  const submissionBlockers = application ? applicationSubmitBlockers({ application,
+    profile: workspace.profile, fallbackEmail: user?.email, busy, submissionInProgress }) : [];
   const submissionProgressPhase = resolveApplicationProgressPhase({
     submitted,
     busy: busy === "submit",
@@ -908,6 +911,10 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
 
   const submitApprovedApplication = async () => {
     if (!application) return;
+    if (submissionBlockers.length) {
+      setError(submissionBlockers.map(blocker => blocker.message).join(" "));
+      return;
+    }
     setSubmissionProgressOpen(true);
     if (submissionConnection !== "connected") {
       setError(
@@ -1370,6 +1377,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         submissionInProgress={submissionInProgress}
         answersReviewed={answersReviewed}
         approvalsComplete={approvalsComplete}
+        submissionBlockers={submissionBlockers}
         onUpdate={updateApplication}
         onSubmit={submitApprovedApplication}
         onContinueInBrowser={continueApprovedApplicationInBrowser}

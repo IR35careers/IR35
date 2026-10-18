@@ -33,6 +33,7 @@ import type {
   ResumeProfile,
 } from "@/lib/workspace/types";
 import {
+  evaluateApplicationReadiness,
   evaluateProfileReadiness,
   profileReadinessDestination,
 } from "@/lib/workspace/profile-readiness";
@@ -257,8 +258,8 @@ export function ContractorProfile({
       ),
     );
   const readiness = useMemo(
-    () => evaluateProfileReadiness(profile, activeProfile?.resumeText ?? ""),
-    [activeProfile?.resumeText, profile],
+    () => (returnTo ? evaluateApplicationReadiness : evaluateProfileReadiness)(profile, activeProfile?.resumeText ?? ""),
+    [activeProfile?.resumeText, profile, returnTo],
   );
 
   useEffect(() => {

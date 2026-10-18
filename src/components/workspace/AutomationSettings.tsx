@@ -14,6 +14,8 @@ import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { getProfile, PREVIEW_PROFILE, scoreJob } from "@/lib/profile";
 import type { JobListing } from "@/lib/job-types";
+import { autoApplyActionBlockers } from "@/lib/workspace/action-blockers";
+import { ActionBlockers } from "@/components/ui/action-blockers";
 
 type AutomationSection = "matches" | "materials" | "permission";
 
@@ -77,6 +79,7 @@ export function AutomationSettings() {
   const [showPremiumNotice, setShowPremiumNotice] = useState(false);
   const [section, setSection] = useState<AutomationSection>("matches");
   const latestRun = workspace.automationRuns[0] ?? null;
+  const applyBlockers = autoApplyActionBlockers({ busy, enabled: autoApplyEnabled, consentAccepted });
 
   useEffect(() => {
     if (busy !== "apply") {
@@ -191,6 +194,10 @@ export function AutomationSettings() {
   };
 
   const runAutoApply = async () => {
+    if (applyBlockers.length) {
+      setRunError(applyBlockers.map(blocker => blocker.message).join(" "));
+      return;
+    }
     const preferences = await persistSettings();
     if (!preferences) return;
     if (!user) {
@@ -255,7 +262,7 @@ export function AutomationSettings() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="space-y-6">
           {section === "matches" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><Bot size={21} /></span><div><h2 className="font-semibold text-slate-950">Auto Apply</h2><p className="text-sm text-slate-600">Pause or resume your saved searches at any time.</p></div></div><button type="button" role="switch" aria-checked={autoApplyEnabled} onClick={() => { setAutoApplyEnabled((value) => !value); setSaved(false); }} className={`ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${autoApplyEnabled ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{autoApplyEnabled ? <PlayCircle size={17} /> : <PauseCircle size={17} />}{autoApplyEnabled ? "On" : "Paused"}</button></div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><Bot size={21} /></span><div><h2 className="font-semibold text-slate-950">Auto Apply</h2><p className="text-sm text-slate-600">Pause or resume your saved searches at any time.</p></div></div><button id="auto-apply-toggle" type="button" role="switch" aria-checked={autoApplyEnabled} onClick={() => { setAutoApplyEnabled((value) => !value); setSaved(false); }} className={`ir35-focus inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${autoApplyEnabled ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{autoApplyEnabled ? <PlayCircle size={17} /> : <PauseCircle size={17} />}{autoApplyEnabled ? "On" : "Paused"}</button></div>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <label className="text-sm font-semibold text-slate-800">Minimum match<input type="range" min="40" max="95" step="5" value={rules.minimumMatch} onChange={(event) => setRules((current) => ({ ...current, minimumMatch: Number(event.target.value) }))} className="mt-3 w-full accent-emerald-700" /><span className="mt-1 block text-sm font-bold text-brand-700">{rules.minimumMatch}% or higher</span></label>
               <label className="text-sm font-semibold text-slate-800">Minimum day rate<input type="number" min="0" max="3000" step="25" value={rules.minimumDayRate} onChange={(event) => setRules((current) => ({ ...current, minimumDayRate: Number(event.target.value) }))} className="ir35-focus mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm" /></label>
@@ -469,12 +476,22 @@ export function AutomationSettings() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><h2 className="font-semibold">Working patterns</h2><div className="mt-4 space-y-2">{(["remote", "hybrid", "onsite", "unknown"] as const).map((value) => <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm capitalize"><input type="checkbox" checked={rules.workplaces.includes(value)} onChange={() => setRules((current) => ({ ...current, workplaces: toggleArray(current.workplaces, value) }))} className="h-5 w-5 accent-emerald-700" />{value}</label>)}</div></div>
           </section>}
 
-          {section === "permission" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-brand-700" /><div><h2 className="font-semibold text-slate-950">Permission to apply</h2><p className="mt-1 text-sm leading-6 text-slate-600">Confirm once to use your approved profile, Resume and saved answers for these searches.</p></div></div><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"><input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-5 w-5 accent-emerald-700" /><span><strong className="block text-slate-950">Allow IR35Careers to apply to my matching roles.</strong>I can pause Auto Apply or change these preferences at any time.</span></label></section>}
+          {section === "permission" && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_-28px_rgba(15,23,42,0.35)] sm:p-6"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-brand-700" /><div><h2 className="font-semibold text-slate-950">Permission to apply</h2><p className="mt-1 text-sm leading-6 text-slate-600">Confirm once to use your approved profile, Resume and saved answers for these searches.</p></div></div><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-800"><input id="auto-apply-consent" type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-5 w-5 accent-emerald-700" /><span><strong className="block text-slate-950">Allow IR35Careers to apply to my matching roles.</strong>I can pause Auto Apply or change these preferences at any time.</span></label></section>}
+
+          {section === "permission" && <ActionBlockers id="auto-apply-reasons" title="Before Auto Apply can start" blockers={applyBlockers}
+            onFocus={targetId => {
+              setSection(targetId === "auto-apply-toggle" ? "matches" : "permission");
+              window.setTimeout(() => {
+                const target = document.getElementById(targetId);
+                target?.scrollIntoView({ block: "center" });
+                target?.focus();
+              }, 0);
+            }} />}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button type="button" onClick={() => void saveSettings()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50"><CheckCircle2 size={17} /> Save settings</button>
             {section === "matches" && <button type="button" onClick={() => void runPreview()} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 disabled:opacity-50">{busy === "preview" ? <Loader2 className="animate-spin" size={17} /> : <Eye size={17} />} {busy === "preview" ? "Checking contracts" : "Preview matches"}</button>}
-            {section !== "permission" ? <button type="button" onClick={() => setSection(section === "matches" ? "materials" : "permission")} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-brand-800">Continue <ChevronRight size={16} /></button> : <button type="button" onClick={() => void runAutoApply()} disabled={busy !== null || !autoApplyEnabled || !consentAccepted} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Apply to next match now"}</button>}
+            {section !== "permission" ? <button type="button" onClick={() => setSection(section === "matches" ? "materials" : "permission")} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white hover:bg-brand-800">Continue <ChevronRight size={16} /></button> : <button type="button" onClick={() => void runAutoApply()} disabled={applyBlockers.length > 0} aria-describedby="auto-apply-reasons" className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-40">{busy === "apply" ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} />} {busy === "apply" ? `Applying ${applyElapsedSeconds}s` : "Apply to next match now"}</button>}
             {saved && <span className="self-center text-sm font-semibold text-emerald-700">Saved</span>}
           </div>
           {notice && <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900" role="status">{notice}</p>}
