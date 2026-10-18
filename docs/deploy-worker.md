@@ -1,4 +1,4 @@
-# Railway worker deployment runbook — prepared, NOT deployed
+# Railway worker deployment runbook — hosted preparation in progress
 
 Execution authority update: the owner's later end-to-end Phase 0 brief now authorizes the agent to run these setup and **standby** deployment commands, collecting native login/hidden secret input only when needed. The owner must not be asked to run commands. Dashboard-only actions are described for the owner and then awaited. Do not change web APPLY_RUNNER or enable worker ACCEPT_JOBS until the owner explicitly types **YES CUTOVER**. Preserve a seven-day rollback window and open—but do not merge—the consumer-removal PR. Migration **025_application_delivery_lifecycle.sql** must be installed and tested before the new web lifecycle code is deployed; it strengthens browser write access and is additive. The earlier owner-run wording below is a reference command inventory, not a current request for the owner to execute it.
 
@@ -15,6 +15,16 @@ Fresh native Railway login is verified; its account currently has no projects. D
 Final-head CI subsequently passed at `41148a0` (Release quality `39036142240`, CodeQL `39036142243`); PR #1 is merged as `bca7288`. Vercel still serves `0df1489`, so merging did not deploy the migration-dependent code. Operations continue on `codex/railway-deployment-ops`. The owner requires the verified portable encrypted backup described in [pre-migration-backup.md](pre-migration-backup.md) before any migration. Neither production runner flag has changed.
 
 ## What is prepared
+
+Current checkpoint, 18 October: encrypted recovery artifacts passed full decryption/integrity/archive checks (57 tables, roles/grants retained); see `pre-migration-backup.md`. Migration **024 is installed and its effective browser/service ACLs verified**. It was not invoked. Only 024 was registered in CLI history after physical verification; do not replay legacy migrations. **025 remains held for old-client compatibility**, and production web/runner flags remain unchanged. Queue logins/setup remain pending. Earlier preparation checkpoints below describe their date, not current backup status.
+
+### Live Railway preparation — not deployed
+
+- Project `ir35careers-worker`: `3bd3c930-efd8-4bfd-abc2-c9b38d24aab9`; environment `production`: `68bd54cf-87e9-4c36-ab79-85c8ab388d69`; service `ir35-worker`: `5a611011-f171-4a40-8fac-530b6584cd56`.
+- Empty service, no linked source/image, secrets, public domain or deployment. One replica, sleep off, root `/`, `services/application-worker/Dockerfile`, `/health`/180s, ON_FAILURE/10 retries and 330s drain were written and read back.
+- Live API schema exposes `serviceInstanceLimitsUpdate` with `vCPUs` and `memoryGB`; the requested 1/2 update failed with **maximum allowed memory 1 GB**. No smaller substitute or billing upgrade was made. Effective plan defaults remain CPU 2 / memoryBytes 1,000,000,000; these are not the requested limits. Owner action: workspace selector **IR35's Projects** > workspace Settings > Plans; review an appropriate plan supporting at least 2 GB and complete any payment themselves. Then the agent retries and verifies 1 vCPU/2 GB. See [Railway plans](https://docs.railway.com/pricing/plans).
+- EU Amsterdam (`europe-west4-drams3a`) is the closest currently listed Railway region to Supabase London, a geographic inference from [Railway regions](https://docs.railway.com/deployments/regions), not a latency measurement. The API accepted a region request but read-back is still null, so do not claim regional placement; inspect effective multi-region configuration before deployment.
+- Spend alert remains required: workspace Settings > Usage, configure a **$30 usage notification**. Do not substitute a hard shutdown limit without owner instruction. No Railway job acceptance is enabled.
 
 - `services/application-worker/Dockerfile`: pinned `mcr.microsoft.com/playwright:v1.61.0-noble`, matching installed playwright-core, non-root pwuser, explicit source COPY and `.dockerignore` excluding credentials/local output.
 - Root `railway.toml`: Docker build, `/health`, bounded startup healthcheck, ON_FAILURE restart policy, one replica, no sleeping.

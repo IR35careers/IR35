@@ -33,6 +33,12 @@ Audited 15 October 2026 at `0df1489`. This describes checked-in code and the lim
 - Billing: Checkout/Portal/webhook routes and Stripe release/legal gates exist. `user_entitlements` is not the target append-only `credits_ledger`/subscriptions/referrals design. Never enable charges from a mock entitlement or unverified live price.
 - Networking is user-added contact/outreach state in profile JSON. Preserve draft-only behaviour; no inferred personal contacts or automatic sending.
 
+## Hosted preparation checkpoint — 18 October 2026
+
+The real encrypted auth/public/storage + globals backup is verified; see `pre-migration-backup.md` for actual sizes/counts and restore limitations. Additive migration **024** is installed: the private pgboss schema and service-only watchdog exist, browser access/execution is denied. The watchdog has not been invoked and no queue job/application was modified. Only 024 is recorded in CLI migration history; do not replay the unregistered legacy migrations with `db push`.
+
+Migration **025 remains uninstalled** pending compatible database/web rolling-client release. Queue owner/producer logins and hosted pg-boss setup are not yet installed. Railway standby setup is authorized, but production cutover is not. An empty `ir35careers-worker` project / `ir35-worker` service now exists, with no source, secrets or deployment. The account rejected the requested 2 GB limit with a 1 GB plan ceiling; owner plan review is required before deploying the specified capacity. The temporary Vercel Git deployment hold remains in place. P0.3–P0.6 code is merged through PR #21, not yet verified on production.
+
 ## Branch implementation update — migration 025, not installed yet
 
 The active Phase 0 branch adds authoritative `application_packets.delivery_status`, `delivery_version`, failure reason/detail and start time, retaining the packet's legacy `status` solely as a recruiting/compatibility projection. Database guards enforce forward-only edges and an explicit service-only Retry RPC. Task claims and outcomes write delivery events atomically; a result RPC commits packet, submission and task projections together. Absolute task attempt IDs never reset, so old callbacks cannot affect a new explicit Retry. Claims never reclaim a running unknown outcome; at most two proven pre-submit transient retries are allowed.
