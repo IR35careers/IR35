@@ -39,6 +39,7 @@ import {
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import { extractResumeProfile, type ResumeProfileExtraction, type ResumeSkillSuggestion } from "@/lib/resume/profile-extraction";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
+import { cvDisplayTitle, isTechnicalIdentityLine } from "@/lib/resume/identity";
 import {
   normaliseCoverLetterSignoff,
   normaliseCoverLetterTerminology,
@@ -516,123 +517,129 @@ export function ContractorProfile({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !activeProfile) return;
-    setDocumentNotice("Reading your resume.");
-    const form = new FormData();
-    form.append("file", file);
-    const response = await fetch("/api/resume/parse", {
-      method: "POST",
-      body: form,
-    });
-    const payload = (await response.json()) as {
-      text?: string;
-      filename?: string;
-      error?: string;
-      extraction?: ResumeProfileExtraction;
-    };
-    if (!response.ok || !payload.text) {
-      setDocumentNotice(payload.error ?? "The resume could not be read.");
-      return;
+    try {
+      setDocumentNotice("Reading your CV.");
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/resume/parse", {
+        method: "POST",
+        body: form,
+      });
+      const payload = (await response.json()) as {
+        text?: string;
+        filename?: string;
+        error?: string;
+        extraction?: ResumeProfileExtraction;
+        warnings?: string[];
+      };
+      if (!response.ok || !payload.text) {
+        setDocumentNotice(payload.error ?? "The resume could not be read.");
+        return;
+      }
+      const extraction = payload.extraction;
+      const detectedSkills = extraction?.detectedSkills ?? extractSkills("", payload.text);
+      const prefill = extraction?.prefill ?? {};
+      const keepOrFill = (currentValue: string | undefined, nextValue: string | undefined) =>
+        currentValue?.trim() ? currentValue : nextValue ?? currentValue ?? "";
+      const keepBoolean = (currentValue: boolean | null | undefined, nextValue: boolean | undefined) =>
+        currentValue === true || currentValue === false ? currentValue : nextValue ?? currentValue;
+      const nextProfile: ContractorProfileType = {
+        ...profile,
+        fullName: keepOrFill(profile.fullName, prefill.fullName),
+        email: keepOrFill(profile.email, prefill.email),
+        phone: keepOrFill(profile.phone, prefill.phone),
+        location: keepOrFill(profile.location, prefill.location),
+        addressLine1: keepOrFill(profile.addressLine1, prefill.addressLine1),
+        city: keepOrFill(profile.city, prefill.city),
+        county: keepOrFill(profile.county, prefill.county),
+        postcode: keepOrFill(profile.postcode, prefill.postcode),
+        country: keepOrFill(profile.country, prefill.country),
+        linkedInUrl: keepOrFill(profile.linkedInUrl, prefill.linkedInUrl),
+        portfolioUrl: keepOrFill(profile.portfolioUrl, prefill.portfolioUrl),
+        githubUrl: keepOrFill(profile.githubUrl, prefill.githubUrl),
+        professionalSummary: keepOrFill(profile.professionalSummary, prefill.professionalSummary),
+        targetRole: keepOrFill(profile.targetRole, prefill.targetRole),
+        yearsOfExperience: keepOrFill(profile.yearsOfExperience, prefill.yearsOfExperience),
+        availability: keepOrFill(profile.availability, prefill.availability),
+        noticePeriod: keepOrFill(profile.noticePeriod, prefill.noticePeriod),
+        clearance: keepOrFill(profile.clearance, prefill.clearance),
+        rightToWork:
+          profile.rightToWork === "prefer_not_to_say" && prefill.rightToWork
+            ? prefill.rightToWork
+            : profile.rightToWork,
+        hasGovernmentClearance: keepBoolean(profile.hasGovernmentClearance, prefill.hasGovernmentClearance),
+        canWorkInPerson: keepBoolean(profile.canWorkInPerson, prefill.canWorkInPerson),
+        canRelocate: keepBoolean(profile.canRelocate, prefill.canRelocate),
+        canStartImmediately: keepBoolean(profile.canStartImmediately, prefill.canStartImmediately),
+        hasTransportation: keepBoolean(profile.hasTransportation, prefill.hasTransportation),
+        willingToTravel: keepBoolean(profile.willingToTravel, prefill.willingToTravel),
+        willingToWorkShifts: keepBoolean(profile.willingToWorkShifts, prefill.willingToWorkShifts),
+        willingToWorkWeekends: keepBoolean(profile.willingToWorkWeekends, prefill.willingToWorkWeekends),
+        targetDayRate: keepOrFill(profile.targetDayRate, prefill.targetDayRate),
+        targetAnnualSalary: keepOrFill(profile.targetAnnualSalary, prefill.targetAnnualSalary),
+        limitedCompanyName: keepOrFill(profile.limitedCompanyName, prefill.limitedCompanyName),
+        companyNumber: keepOrFill(profile.companyNumber, prefill.companyNumber),
+        vatRegistered: profile.vatRegistered || prefill.vatRegistered === true,
+        experienceText: keepOrFill(profile.experienceText, prefill.experienceText),
+        projectsText: keepOrFill(profile.projectsText, prefill.projectsText),
+        educationInstitution: keepOrFill(profile.educationInstitution, prefill.educationInstitution),
+        educationQualification: keepOrFill(profile.educationQualification, prefill.educationQualification),
+        certifications: [
+          ...new Set([...(profile.certifications ?? []), ...(prefill.certifications ?? [])]),
+        ],
+        skills: [...new Set([...(profile.skills ?? []), ...detectedSkills])],
+        forwardingEmail: keepOrFill(profile.forwardingEmail, prefill.email),
+        defaultCvLabel: activeProfile.isDefault ? cvDisplayTitle(profile.fullName, prefill.fullName) : profile.defaultCvLabel,
+        resumeProfiles: (profile.resumeProfiles ?? []).map((item) =>
+          item.id === activeProfile.id
+            ? {
+                ...item,
+                name: cvDisplayTitle(profile.fullName, prefill.fullName),
+                resumeText: normaliseResumeText(payload.text as string),
+              }
+            : item,
+        ),
+      };
+      setProfile(nextProfile);
+      setCvDetectedSkills(detectedSkills);
+      setSuggestedSkills(
+        (extraction?.suggestedSkills ?? []).filter(
+          (skill) =>
+            !(nextProfile.skills ?? []).some(
+              (current) => current.toLocaleLowerCase("en-GB") === skill.toLocaleLowerCase("en-GB"),
+            ) && !detectedSkills.includes(skill),
+        ),
+      );
+      setSkillSuggestionDetails(
+        (extraction?.skillSuggestions ?? []).filter(
+          (suggestion) =>
+            !(nextProfile.skills ?? []).some(
+              (current) => current.toLocaleLowerCase("en-GB") === suggestion.skill.toLocaleLowerCase("en-GB"),
+            ) && !detectedSkills.includes(suggestion.skill),
+        ),
+      );
+      setCvDetectedFields(extraction?.detectedFieldLabels ?? []);
+      setTab("details");
+      setDocumentNotice("CV read. Saving the information we found to your profile.");
+      const readinessAfterAutofill = evaluateProfileReadiness(nextProfile, payload.text);
+      const stored = await persistProfile(nextProfile);
+      const foundFields = extraction?.detectedFieldLabels.length ?? 0;
+      const remainingLabels = readinessAfterAutofill.missing.map((item) => item.label);
+      const savedNotice = stored
+          ? remainingLabels.length > 0
+            ? `CV saved. ${foundFields} detail${foundFields === 1 ? " was" : "s were"} filled automatically, including ${detectedSkills.length} confirmed skill${detectedSkills.length === 1 ? "" : "s"}. Please complete: ${remainingLabels.join(", ")}.`
+            : `CV saved. ${foundFields} detail${foundFields === 1 ? " was" : "s were"} filled automatically and your application profile is ready.`
+          : "Your CV was read, but the extracted profile could not be saved. Check your connection and select Save profile.";
+      const identityReview = isTechnicalIdentityLine(profile.fullName)
+        ? "Your saved name looks like a technical heading. Please review About you; we have not changed your saved identity automatically." : "";
+      setDocumentNotice([savedNotice, identityReview, ...(payload.warnings ?? []).slice(0, 3)].filter(Boolean).join(" "));
+      window.setTimeout(
+        () => document.getElementById("application-readiness")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        100,
+      );
+    } catch {
+      setDocumentNotice("We could not finish importing this CV. Check your connection and try again, or select Save profile if your new text is already shown.");
     }
-    const extraction = payload.extraction;
-    const detectedSkills = extraction?.detectedSkills ?? extractSkills("", payload.text);
-    const prefill = extraction?.prefill ?? {};
-    const keepOrFill = (currentValue: string | undefined, nextValue: string | undefined) =>
-      currentValue?.trim() ? currentValue : nextValue ?? currentValue ?? "";
-    const keepBoolean = (currentValue: boolean | null | undefined, nextValue: boolean | undefined) =>
-      currentValue === true || currentValue === false ? currentValue : nextValue ?? currentValue;
-    const nextProfile: ContractorProfileType = {
-      ...profile,
-      fullName: keepOrFill(profile.fullName, prefill.fullName),
-      email: keepOrFill(profile.email, prefill.email),
-      phone: keepOrFill(profile.phone, prefill.phone),
-      location: keepOrFill(profile.location, prefill.location),
-      addressLine1: keepOrFill(profile.addressLine1, prefill.addressLine1),
-      city: keepOrFill(profile.city, prefill.city),
-      county: keepOrFill(profile.county, prefill.county),
-      postcode: keepOrFill(profile.postcode, prefill.postcode),
-      country: keepOrFill(profile.country, prefill.country),
-      linkedInUrl: keepOrFill(profile.linkedInUrl, prefill.linkedInUrl),
-      portfolioUrl: keepOrFill(profile.portfolioUrl, prefill.portfolioUrl),
-      githubUrl: keepOrFill(profile.githubUrl, prefill.githubUrl),
-      professionalSummary: keepOrFill(profile.professionalSummary, prefill.professionalSummary),
-      targetRole: keepOrFill(profile.targetRole, prefill.targetRole),
-      yearsOfExperience: keepOrFill(profile.yearsOfExperience, prefill.yearsOfExperience),
-      availability: keepOrFill(profile.availability, prefill.availability),
-      noticePeriod: keepOrFill(profile.noticePeriod, prefill.noticePeriod),
-      clearance: keepOrFill(profile.clearance, prefill.clearance),
-      rightToWork:
-        profile.rightToWork === "prefer_not_to_say" && prefill.rightToWork
-          ? prefill.rightToWork
-          : profile.rightToWork,
-      hasGovernmentClearance: keepBoolean(profile.hasGovernmentClearance, prefill.hasGovernmentClearance),
-      canWorkInPerson: keepBoolean(profile.canWorkInPerson, prefill.canWorkInPerson),
-      canRelocate: keepBoolean(profile.canRelocate, prefill.canRelocate),
-      canStartImmediately: keepBoolean(profile.canStartImmediately, prefill.canStartImmediately),
-      hasTransportation: keepBoolean(profile.hasTransportation, prefill.hasTransportation),
-      willingToTravel: keepBoolean(profile.willingToTravel, prefill.willingToTravel),
-      willingToWorkShifts: keepBoolean(profile.willingToWorkShifts, prefill.willingToWorkShifts),
-      willingToWorkWeekends: keepBoolean(profile.willingToWorkWeekends, prefill.willingToWorkWeekends),
-      targetDayRate: keepOrFill(profile.targetDayRate, prefill.targetDayRate),
-      targetAnnualSalary: keepOrFill(profile.targetAnnualSalary, prefill.targetAnnualSalary),
-      limitedCompanyName: keepOrFill(profile.limitedCompanyName, prefill.limitedCompanyName),
-      companyNumber: keepOrFill(profile.companyNumber, prefill.companyNumber),
-      vatRegistered: profile.vatRegistered || prefill.vatRegistered === true,
-      experienceText: keepOrFill(profile.experienceText, prefill.experienceText),
-      projectsText: keepOrFill(profile.projectsText, prefill.projectsText),
-      educationInstitution: keepOrFill(profile.educationInstitution, prefill.educationInstitution),
-      educationQualification: keepOrFill(profile.educationQualification, prefill.educationQualification),
-      certifications: [
-        ...new Set([...(profile.certifications ?? []), ...(prefill.certifications ?? [])]),
-      ],
-      skills: [...new Set([...(profile.skills ?? []), ...detectedSkills])],
-      forwardingEmail: keepOrFill(profile.forwardingEmail, prefill.email),
-      defaultCvLabel: profile.defaultCvLabel || payload.filename || "Primary Resume",
-      resumeProfiles: (profile.resumeProfiles ?? []).map((item) =>
-        item.id === activeProfile.id
-          ? {
-              ...item,
-              name: payload.filename || item.name,
-              resumeText: normaliseResumeText(payload.text as string),
-            }
-          : item,
-      ),
-    };
-    setProfile(nextProfile);
-    setCvDetectedSkills(detectedSkills);
-    setSuggestedSkills(
-      (extraction?.suggestedSkills ?? []).filter(
-        (skill) =>
-          !(nextProfile.skills ?? []).some(
-            (current) => current.toLocaleLowerCase("en-GB") === skill.toLocaleLowerCase("en-GB"),
-          ) && !detectedSkills.includes(skill),
-      ),
-    );
-    setSkillSuggestionDetails(
-      (extraction?.skillSuggestions ?? []).filter(
-        (suggestion) =>
-          !(nextProfile.skills ?? []).some(
-            (current) => current.toLocaleLowerCase("en-GB") === suggestion.skill.toLocaleLowerCase("en-GB"),
-          ) && !detectedSkills.includes(suggestion.skill),
-      ),
-    );
-    setCvDetectedFields(extraction?.detectedFieldLabels ?? []);
-    setTab("details");
-    setDocumentNotice("Resume read. Saving the information we found to your profile.");
-    const readinessAfterAutofill = evaluateProfileReadiness(nextProfile, payload.text);
-    const stored = await persistProfile(nextProfile);
-    const foundFields = extraction?.detectedFieldLabels.length ?? 0;
-    const remainingLabels = readinessAfterAutofill.missing.map((item) => item.label);
-    setDocumentNotice(
-      stored
-        ? remainingLabels.length > 0
-          ? `Resume saved. ${foundFields} detail${foundFields === 1 ? " was" : "s were"} filled automatically, including ${detectedSkills.length} confirmed skill${detectedSkills.length === 1 ? "" : "s"}. Please complete: ${remainingLabels.join(", ")}.`
-          : `Resume saved. ${foundFields} detail${foundFields === 1 ? " was" : "s were"} filled automatically and your application profile is ready.`
-        : "Your resume was read, but the extracted profile could not be saved. Check your connection and select Save profile.",
-    );
-    window.setTimeout(
-      () => document.getElementById("application-readiness")?.scrollIntoView({ behavior: "smooth", block: "start" }),
-      100,
-    );
   };
 
   const downloadResume = async (format: "pdf" | "docx") => {
@@ -659,7 +666,8 @@ export function ContractorProfile({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${profile.fullName || "Candidate"}-Resume.${format}`;
+    anchor.download = response.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1]
+      ?? `${cvDisplayTitle(profile.fullName).replace(/ CV$/, "")}-CV.${format}`;
     anchor.click();
     URL.revokeObjectURL(url);
     setDocumentNotice(`${format.toUpperCase()} downloaded.`);

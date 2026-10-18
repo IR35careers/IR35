@@ -1,4 +1,5 @@
 import { extractSkills } from "@/lib/processing/skills-extractor";
+import { isPlausibleCandidateName, isPlausibleContactLocation, normaliseExtractedCvText } from "./identity";
 
 export interface ResumeProfilePrefill {
   fullName?: string;
@@ -73,7 +74,6 @@ const HEADING_ALIASES: Record<string, string[]> = {
 
 const ALL_HEADINGS = new Set(Object.values(HEADING_ALIASES).flat());
 const ROLE_WORDS = /\b(engineer|developer|architect|analyst|manager|consultant|specialist|scientist|designer|administrator|director|lead|officer|contractor|programmer|technician)\b/i;
-const NAME_BLOCKLIST = /\b(curriculum|vitae|resume|profile|summary|engineer|developer|architect|analyst|manager|consultant|specialist|scientist|director|lead|contractor)\b/i;
 
 interface SkillPath {
   name: string;
@@ -212,15 +212,7 @@ function sectionText(lines: string[], key: keyof typeof HEADING_ALIASES, limit: 
 function candidateName(lines: string[]): string {
   for (const raw of lines.slice(0, 12)) {
     const line = cleanLine(raw);
-    const words = line.split(/\s+/);
-    if (
-      words.length >= 2 &&
-      words.length <= 5 &&
-      line.length <= 60 &&
-      /^[\p{L}][\p{L}'’-]*(?:\s+[\p{L}][\p{L}'’-]*)+$/u.test(line) &&
-      !NAME_BLOCKLIST.test(line) &&
-      !headingKey(line)
-    ) return line;
+    if (isPlausibleCandidateName(line) && !headingKey(line)) return line;
   }
   return "";
 }
@@ -236,7 +228,9 @@ function targetRole(lines: string[], name: string): string {
 
 function contactLocation(lines: string[], name: string, role: string): string {
   for (const raw of lines.slice(0, 15)) {
-    const parts = raw.split(/[|•·]/).map(cleanLine).filter(Boolean);
+    const labelled = /^(?:location|based in|town|city)\s*:/i.test(raw.trim());
+    const contactContext = labelled || EMAIL.test(raw) || PHONE.test(raw) || /linkedin\.com|github\.com/i.test(raw);
+    const parts = raw.replace(/^(?:location|based in|town|city)\s*:\s*/i, "").split(/[|•·]/).map(cleanLine).filter(Boolean);
     for (const part of parts) {
       if (
         part !== name &&
@@ -248,7 +242,7 @@ function contactLocation(lines: string[], name: string, role: string): string {
         !part.match(URL) &&
         !headingKey(part) &&
         !ROLE_WORDS.test(part) &&
-        (/\b(?:UK|United Kingdom|England|Scotland|Wales|Northern Ireland)\b/i.test(part) || /^[\p{L}' -]+(?:,\s*[\p{L}' -]+)?$/u.test(part))
+        isPlausibleContactLocation(part, contactContext)
       ) return part;
     }
   }
@@ -263,19 +257,23 @@ function parseAddress(lines: string[]) {
   const postcode = line.match(UK_POSTCODE)?.[1].toUpperCase().replace(/\s+/, " ") ?? "";
   let beforePostcode = cleanLine(line.replace(UK_POSTCODE, "").replace(/[|,;-]+$/, ""));
   if (!beforePostcode) {
-    const preceding = topLines
-      .slice(Math.max(0, postcodeIndex - 3), postcodeIndex)
-      .filter((item) => item && !EMAIL.test(item) && !PHONE.test(item) && !item.match(URL) && !headingKey(item));
-    beforePostcode = preceding.join(", ");
+    const preceding = topLines.slice(Math.max(0, postcodeIndex - 3), postcodeIndex);
+    const streetIndex = preceding.findIndex(item => /\b\d+[A-Z]?\s+.+\b(?:street|road|lane|avenue|close|drive|way|court|square|crescent|terrace|gardens|place|st|rd)\b/i.test(item));
+    // A postcode on its own proves no name, street or town. Do not turn the
+    // preceding skills/summary lines into a guessed postal address.
+    if (streetIndex >= 0) beforePostcode = preceding.slice(streetIndex)
+      .filter(item => !EMAIL.test(item) && !PHONE.test(item) && !item.match(URL) && !headingKey(item)).join(", ");
   }
-  const parts = beforePostcode.split(/\s*,\s*/).filter(Boolean);
-  const hasCounty = parts.length >= 3;
+  const parts = beforePostcode.split(/\s*[,|;]\s*/).filter(Boolean);
+  const streetIndex = parts.findIndex(item => /^(?:flat\s+\w+,?\s*)?\d+[A-Z]?\s+/i.test(item));
+  const places = parts.slice(streetIndex >= 0 ? streetIndex + 1 : 0)
+    .filter(item => isPlausibleContactLocation(item, true));
   return {
     postcode,
     country: "United Kingdom",
-    city: parts.length >= 2 ? parts[hasCounty ? parts.length - 2 : parts.length - 1] : undefined,
-    county: hasCounty ? parts[parts.length - 1] : undefined,
-    addressLine1: parts.length >= 2 ? parts.slice(0, hasCounty ? -2 : -1).join(", ") : undefined,
+    city: places[0],
+    county: places.length >= 2 ? places[1] : undefined,
+    addressLine1: streetIndex >= 0 ? parts[streetIndex] : undefined,
   };
 }
 
@@ -416,7 +414,7 @@ function fieldLabels(prefill: ResumeProfilePrefill): string[] {
 }
 
 export function extractResumeProfile(text: string): ResumeProfileExtraction {
-  const lines = text.replace(/\u0000/g, "").replace(/\r\n?/g, "\n").split("\n");
+  const lines = normaliseExtractedCvText(text).split("\n");
   const flattened = lines.join("\n");
   const name = candidateName(lines);
   const role = targetRole(lines, name);

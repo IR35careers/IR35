@@ -60,6 +60,7 @@ import {
 import type { JobDetail } from "@/lib/job-types";
 import { scoreResumeForRole } from "@/lib/resume/analysis";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
+import { cvDisplayTitle } from "@/lib/resume/identity";
 import { getSupabase } from "@/lib/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { newWorkspaceId } from "@/lib/workspace/engine";
@@ -530,6 +531,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         text?: string;
         filename?: string;
         error?: string;
+        warnings?: string[];
       };
       if (!response.ok || !payload.text)
         throw new Error(payload.error ?? "We could not read that Resume.");
@@ -539,6 +541,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
       setAiResult(null);
       setSelectedSuggestionIds([]);
       setShowResumeEditor(false);
+      if (payload.warnings?.length) setNotice(payload.warnings.slice(0, 3).join(" "));
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "We could not read that Resume.",
@@ -1785,7 +1788,7 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm"><FileText size={18} /></span>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-950">{workspace.profile.fullName.trim() ? `${workspace.profile.fullName.trim()} Resume` : "Saved Resume"}</p>
+                          <p className="truncate text-sm font-semibold text-slate-950">{cvDisplayTitle(workspace.profile.fullName)}</p>
                           <p className="mt-1 text-xs text-slate-600">Selected from your profile</p>
                         </div>
                       </div>

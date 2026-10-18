@@ -1,4 +1,5 @@
 import { parseResumeText } from "@/lib/resume/analysis";
+import { resolveCvCandidateName } from "@/lib/resume/identity";
 
 function cleanDisplayLine(value: string): string {
   return value.replace(/^\s*[•*-]\s*/, "").replace(/\s+/g, " ").trim();
@@ -54,10 +55,7 @@ export function ResumeDocumentPreview({
   candidateName?: string;
 }) {
   const parsed = parseResumeText(resumeText, filename);
-  const resolvedCandidateName =
-    parsed.candidateName !== "Candidate"
-      ? parsed.candidateName
-      : candidateName?.trim() || "Candidate";
+  const resolvedCandidateName = resolveCvCandidateName(candidateName, parsed.candidateName);
   const normalisedName = resolvedCandidateName.trim().toLocaleLowerCase("en-GB");
   const normalisedContact = parsed.contactLine.trim().toLocaleLowerCase("en-GB");
 
@@ -67,7 +65,7 @@ export function ResumeDocumentPreview({
       lines: section.content
         .split("\n")
         .filter((line, index) => {
-          const normalised = line.trim().toLocaleLowerCase("en-GB");
+          const normalised = cleanDisplayLine(line).toLocaleLowerCase("en-GB");
           if (normalised === normalisedName) return false;
           if (normalisedContact && normalised === normalisedContact) return false;
           return index > 0 || normalised.length > 0;

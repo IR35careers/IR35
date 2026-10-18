@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import mammoth from "mammoth";
 import JSZip from "jszip";
+import { z } from "zod";
 import { readFormDataBody, RequestBodyError } from "@/lib/security/request-body";
 import { consumePublicRateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { extractResumeProfile } from "@/lib/resume/profile-extraction";
+import { normaliseExtractedCvText, normalisePdfTextItems } from "@/lib/resume/identity";
 
 export const runtime = "nodejs";
 
@@ -23,13 +25,19 @@ export async function POST(request: Request) {
   if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
   try {
     const formData = await readFormDataBody(request, MAX_BYTES + 128 * 1024);
-    const file = formData.get("file");
-    if (!(file instanceof File)) return errorResponse("Choose a PDF, DOCX or text Resume.");
+    const upload = z.instanceof(File).safeParse(formData.get("file"));
+    if (!upload.success) return errorResponse("Choose a PDF, DOCX or text CV.");
+    const file = upload.data;
     if (file.size === 0) return errorResponse("That file is empty.");
-    if (file.size > MAX_BYTES) return errorResponse("Resume must be under 5MB.", 413);
+    if (file.size > MAX_BYTES) return errorResponse("CV must be under 5MB.", 413);
 
     const extension = file.name.split(".").pop()?.toLocaleLowerCase("en-GB");
     const buffer = Buffer.from(await file.arrayBuffer());
+    const fileStart = buffer.subarray(0, 4096).toString("utf8").replace(/^\uFEFF/, "").trimStart()
+      .replace(/^(?:<!--[\s\S]*?-->\s*)+/, "");
+    if (/^(?:<!doctype\s+html\b|<html\b|<head\b|<body\b)/i.test(fileStart)) {
+      return errorResponse("This is a saved web page, not a CV document. In SharePoint or your document viewer, choose Download or Export to PDF/DOCX instead of Save page as, then upload that file.");
+    }
     let text = "";
     let pageCount: number | null = null;
     const warnings: string[] = [];
@@ -39,14 +47,21 @@ export async function POST(request: Request) {
       if (PDF_ACTIVE_CONTENT.test(buffer.toString("latin1"))) {
         return errorResponse("That PDF contains active or embedded content. Export a flattened PDF and try again.");
       }
-      const { extractText, getDocumentProxy } = await import("unpdf");
+      const { extractTextItems, getDocumentProxy } = await import("unpdf");
       const pdf = await getDocumentProxy(new Uint8Array(buffer));
-      if (pdf.numPages > MAX_PDF_PAGES) {
-        return errorResponse(`PDFs are limited to ${MAX_PDF_PAGES} pages.`, 413);
+      try {
+        if (pdf.numPages > MAX_PDF_PAGES) {
+          return errorResponse(`PDFs are limited to ${MAX_PDF_PAGES} pages.`, 413);
+        }
+        const extracted = await extractTextItems(pdf);
+        const pages = z.array(z.array(z.object({ str: z.string(), hasEOL: z.boolean() }))).parse(extracted.items);
+        if (pages.reduce((total, page) => total + page.reduce((sum, item) => sum + item.str.length, 0), 0) > MAX_TEXT_CHARS)
+          return errorResponse("This CV contains too much text to analyse safely.", 413);
+        text = normalisePdfTextItems(pages);
+        pageCount = extracted.totalPages;
+      } finally {
+        await pdf.loadingTask.destroy();
       }
-      const extracted = await extractText(pdf, { mergePages: true });
-      text = extracted.text;
-      pageCount = extracted.totalPages;
     } else if (extension === "docx" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       if (buffer.subarray(0, 2).toString("ascii") !== "PK") return errorResponse("That file is not a valid DOCX.");
       const archive = await JSZip.loadAsync(buffer);
@@ -73,12 +88,15 @@ export async function POST(request: Request) {
     } else if (extension === "doc") {
       return errorResponse("Older .doc files cannot be read safely. Save it as .docx or PDF, then try again.");
     } else {
-      return errorResponse("Use a PDF, DOCX or plain-text Resume.");
+      return errorResponse("Use a PDF, DOCX or plain-text CV.");
     }
 
     text = text.replace(/\u0000/g, "").replace(/\r\n?/g, "\n").trim();
-    if (!text) return errorResponse("No readable text was found. If this is a scanned PDF, paste the Resume text instead.", 422);
-    if (text.length > MAX_TEXT_CHARS) return errorResponse("This Resume contains too much text to analyse safely.", 413);
+    if (!text) return errorResponse("No readable text was found. If this is a scanned PDF, paste the CV text instead.", 422);
+    if (text.length > MAX_TEXT_CHARS) return errorResponse("This CV contains too much text to analyse safely.", 413);
+    text = normaliseExtractedCvText(text);
+    const extraction = extractResumeProfile(text);
+    if (!extraction.prefill.fullName) warnings.unshift("We could not reliably identify your name. Please confirm your name in your profile; we have not guessed it from a heading.");
 
     return NextResponse.json(
       {
@@ -86,7 +104,7 @@ export async function POST(request: Request) {
         filename: file.name,
         pageCount,
         warnings: warnings.slice(0, 5),
-        extraction: extractResumeProfile(text),
+        extraction,
       },
       { headers: { "Cache-Control": "no-store" } }
     );
@@ -98,6 +116,6 @@ export async function POST(request: Request) {
     if (parseError instanceof Error && parseError.message === "active-docx-content") {
       return errorResponse("That Word document contains macros or embedded objects. Export a clean DOCX and try again.");
     }
-    return errorResponse("We could not read that Resume. Try a different PDF/DOCX or paste the text.", 422);
+    return errorResponse("We could not read that CV. Try a different PDF/DOCX or paste the text.", 422);
   }
 }
