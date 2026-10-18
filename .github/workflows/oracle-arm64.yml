@@ -34,12 +34,8 @@ jobs:
           persist-credentials: false
       - name: Build the same pinned image natively for Oracle A1
         run: docker build --platform linux/arm64 -f services/application-worker/Dockerfile -t ir35-worker:arm-ci .
-      - name: Verify architecture and Compose without resolving any secrets
-        env:
-          IR35_WORKER_IMAGE: ir35-worker:arm-ci
-        run: |
-          test "$(docker image inspect --format '{{.Architecture}}' ir35-worker:arm-ci)" = arm64
-          docker compose -f infra/oracle/docker-compose.yml config --no-env-resolution --quiet
+      - name: Verify native image architecture
+        run: test "$(docker image inspect --format '{{.Architecture}}' ir35-worker:arm-ci)" = arm64
       - name: Exercise the actual timer wrapper with an immutable local image and no credential leakage
         run: |
           test ! -e /opt/ir35-worker
@@ -55,6 +51,7 @@ jobs:
           writeFileSync('/opt/ir35-worker/.env', 'PG_BOSS_DATABASE_URL=controlled-only-$not_a_real_secret\n', options);
           writeFileSync('/opt/ir35-worker/docker-compose.yml', readFileSync('infra/oracle/docker-compose.yml'), options);
           JS
+          docker compose --env-file /opt/ir35-worker/deploy.env -f /opt/ir35-worker/docker-compose.yml config --quiet
           bash infra/oracle/run-smoke.sh
       - name: Install disposable queues and verify distinct queue-only identities
         env:
