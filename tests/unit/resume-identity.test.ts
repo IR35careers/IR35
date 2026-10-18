@@ -44,6 +44,11 @@ describe("CV identity evidence", () => {
     expect(result.prefill.fullName).toBeUndefined();
     expect(result.prefill.location).toBeUndefined();
   });
+  it("checks the parsed profile hostname rather than a domain substring", () => {
+    expect(extractResumeProfile("Alex Morgan\nhttps://github.com/alex | Billericay").prefill.location).toBe("Billericay");
+    expect(extractResumeProfile("Alex Morgan\nhttps://github.com.attacker.example/alex | Billericay").prefill.location).toBeUndefined();
+    expect(extractResumeProfile("Alex Morgan\nhttps://attacker.example/github.com/alex | Billericay").prefill.location).toBeUndefined();
+  });
   it("does not manufacture a postal address from skills preceding a lone postcode", () => {
     const result = extractResumeProfile("Cloud Platforms\nRBAC, IAM\nBS1 4ST");
     expect(result.prefill).toMatchObject({ postcode: "BS1 4ST", country: "United Kingdom" });

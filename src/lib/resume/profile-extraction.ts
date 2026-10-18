@@ -226,10 +226,22 @@ function targetRole(lines: string[], name: string): string {
   return "";
 }
 
+function hasPublicProfileContact(line: string): boolean {
+  return line.split(/[|•·\s]+/).some(part => {
+    try {
+      const url = new globalThis.URL(part.includes("://") ? part : `https://${part}`);
+      return ((url.hostname === "linkedin.com" || url.hostname === "www.linkedin.com") && url.pathname.startsWith("/in/")) ||
+        ((url.hostname === "github.com" || url.hostname === "www.github.com") && url.pathname.length > 1);
+    } catch {
+      return false;
+    }
+  });
+}
+
 function contactLocation(lines: string[], name: string, role: string): string {
   for (const raw of lines.slice(0, 15)) {
     const labelled = /^(?:location|based in|town|city)\s*:/i.test(raw.trim());
-    const contactContext = labelled || EMAIL.test(raw) || PHONE.test(raw) || /linkedin\.com|github\.com/i.test(raw);
+    const contactContext = labelled || EMAIL.test(raw) || PHONE.test(raw) || hasPublicProfileContact(raw);
     const parts = raw.replace(/^(?:location|based in|town|city)\s*:\s*/i, "").split(/[|•·]/).map(cleanLine).filter(Boolean);
     for (const part of parts) {
       if (
