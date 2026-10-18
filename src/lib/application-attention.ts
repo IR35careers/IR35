@@ -25,6 +25,17 @@ export function buildApplicationAttention(input: {
     .filter((question) => question.required && !question.answer.trim())
     .map((question) => question.id);
 
+  if (action === "account_email_confirmation") {
+    return {
+      kind: "profile_missing",
+      title: "Confirm your IR35Careers account email",
+      message,
+      action: "/account?confirmation=1&next=%2Fapplications",
+      actionLabel: "Request confirmation email",
+      questionIds: [],
+    };
+  }
+
   if (action === "browser_continue" && questionIds.length > 0) {
     return {
       kind: "employer_form",

@@ -14,13 +14,15 @@ import {
   isSupabaseConfigured,
   isSupabaseOAuthProviderEnabled,
 } from "@/lib/supabase-config";
-import { resolvePostAuthPath } from "@/lib/auth-routing";
+import { canonicalAuthCallbackUrl, resolvePostAuthPath } from "@/lib/auth-routing";
+import { confirmationEmailSchema } from "@/lib/auth-confirmation";
 import { isAdministratorEmail } from "@/lib/portal-access";
 import { clearWorkspaceForSignOut } from "@/lib/workspace/store";
 import { clearLocalResumeVersions } from "@/lib/resume/store";
 
 interface AuthResult {
   error: string | null;
+  code?: string;
   /** True when sign-up created an account that needs email confirmation. */
   needsConfirmation?: boolean;
 }
@@ -30,6 +32,7 @@ interface AuthContextValue {
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
   signUpWithPassword: (email: string, password: string, next?: string) => Promise<AuthResult>;
+  resendConfirmation: (email: string, next?: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   signInWithGoogle: (next?: string, selectAccount?: boolean) => Promise<AuthResult>;
   signInWithGithub: (next?: string) => Promise<AuthResult>;
@@ -171,17 +174,17 @@ async function signInWithPassword(email: string, password: string): Promise<Auth
     publish({ user: data.user, loading: false });
     initialiseSession(true);
   }
-  return { error: error ? error.message : null };
+  return { error: error ? error.message : null, code: error?.code };
 }
 
-async function signUpWithPassword(email: string, password: string, next = "/profile#application-readiness"): Promise<AuthResult> {
+export async function signUpWithPassword(email: string, password: string, next = "/profile#application-readiness"): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
   const { data, error } = await getSupabase().auth.signUp({
     email: email.trim().toLowerCase(),
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}${resolvePostAuthPath(next)}`,
+      emailRedirectTo: canonicalAuthCallbackUrl(next),
       data: {
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-08-20",
@@ -196,6 +199,18 @@ async function signUpWithPassword(email: string, password: string, next = "/prof
     initialiseSession(true);
   }
   return { error: null, needsConfirmation: Boolean(data.user && !data.session) };
+}
+
+export async function resendConfirmation(email: string, next = "/dashboard"): Promise<AuthResult> {
+  const parsed = confirmationEmailSchema.safeParse(email.trim().toLowerCase());
+  if (!parsed.success) return { error: "Enter a valid account email address." };
+  if (!isSupabaseConfigured()) return { error: "Email confirmation is unavailable in this local preview." };
+  try {
+    const { getSupabase } = await import("@/lib/supabase");
+    const { error } = await getSupabase().auth.resend({ type: "signup", email: parsed.data,
+      options: { emailRedirectTo: canonicalAuthCallbackUrl(next) } });
+    return { error: error ? "We could not request a confirmation email. Please wait before trying again." : null, code: error?.code };
+  } catch { return { error: "Email confirmation could not connect. Please try again later." }; }
 }
 
 async function signInWithGoogle(
@@ -268,11 +283,11 @@ async function signInWithGoogleIdToken(token: string): Promise<AuthResult> {
   return { error: error ? error.message : null };
 }
 
-async function requestPasswordReset(email: string): Promise<AuthResult> {
+export async function requestPasswordReset(email: string): Promise<AuthResult> {
   if (!isSupabaseConfigured()) return { error: "Account services are unavailable in this local preview." };
   const { getSupabase } = await import("@/lib/supabase");
   const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-    redirectTo: `${window.location.origin}/account/reset`,
+    redirectTo: canonicalAuthCallbackUrl("/account/reset"),
   });
   return { error: error ? error.message : null };
 }
@@ -301,6 +316,7 @@ export function useAuth(): AuthContextValue {
     ...snapshot,
     signInWithPassword,
     signUpWithPassword,
+    resendConfirmation,
     requestPasswordReset,
     signInWithGoogle,
     signInWithGithub,

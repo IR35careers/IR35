@@ -20,6 +20,7 @@ import type { JobDetail } from "@/lib/job-types";
 import { readJsonBody, RequestBodyError } from "@/lib/security/request-body";
 import { createApplicationResumeAuthorization } from "@/lib/application-internal-resume";
 import { automaticSubmissionPriority } from "@/lib/application-runner/source-resolution";
+import { EMAIL_CONFIRMATION_REQUIRED, hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -153,6 +154,7 @@ export async function POST(request: Request): Promise<Response> {
       ? await admin.auth.admin.getUserById(internalUserId)
       : await admin.auth.getUser(token);
     if (authError || !authData.user) return Response.json({ error: "Your session has expired. Sign in again." }, { status: 401, headers: NO_STORE });
+    if (!hasConfirmedApplicationEmail(authData.user)) return Response.json(EMAIL_CONFIRMATION_REQUIRED, { status: 403, headers: NO_STORE });
     const userId = authData.user.id;
 
     const [

@@ -13,7 +13,7 @@ describe("Google OAuth server redirect", () => {
     expect(url.origin).toBe(SUPABASE_URL);
     expect(url.pathname).toBe("/auth/v1/authorize");
     expect(url.searchParams.get("provider")).toBe("google");
-    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/dashboard");
+    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/auth/callback?next=%2Fdashboard");
   });
 
   it("returns administrators to the admin portal", () => {
@@ -33,7 +33,7 @@ describe("Google OAuth server redirect", () => {
       selectAccount: true,
     }));
     expect(url.searchParams.get("prompt")).toBe("select_account");
-    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/applications");
+    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/auth/callback?next=%2Fapplications");
   });
 
   it("rejects an untrusted customer destination", () => {
@@ -42,6 +42,6 @@ describe("Google OAuth server redirect", () => {
       requestedPath: "https://attacker.example/steal",
       supabaseUrl: SUPABASE_URL,
     }));
-    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/dashboard");
+    expect(url.searchParams.get("redirect_to")).toBe("https://www.ir35careers.com/auth/callback?next=%2Fdashboard");
   });
 });

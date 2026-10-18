@@ -23,10 +23,30 @@ const RESUMABLE_DESTINATIONS = [
 ] as const;
 
 function isResumablePath(pathname: string): boolean {
+  if (pathname === "/account/reset") return true;
   if (/^\/jobs\/[^/]+(?:\/resume)?$/.test(pathname)) return true;
   return RESUMABLE_DESTINATIONS.some(
     (destination) => pathname === destination || pathname.startsWith(`${destination}/`)
   );
+}
+
+export function authCallbackPath(next?: string | null): string {
+  return `/auth/callback?${new URLSearchParams({ next: resolvePostAuthPath(next) })}`;
+}
+
+export function canonicalAuthCallbackUrl(next?: string | null): string {
+  return `https://www.ir35careers.com${authCallbackPath(next)}`;
+}
+
+export function accountSignInPath(next?: string | null): string {
+  return `/account?${new URLSearchParams({ next: resolvePostAuthPath(next) })}`;
+}
+
+/** Job facts must be loaded by this ID, never copied from untrusted query text. */
+export function applicationAuthJobId(next: string): string | null {
+  const pathname = new URL(resolvePostAuthPath(next), "https://www.ir35careers.com").pathname;
+  const match = /^\/(?:applications\/new|jobs)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/resume)?$/i.exec(pathname);
+  return match?.[1] ?? null;
 }
 
 export function resolvePostAuthPath(rawDestination: string | null | undefined): string {

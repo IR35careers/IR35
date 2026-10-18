@@ -51,6 +51,11 @@ export function proxy(request: NextRequest) {
   forwardedHeaders.set("x-nonce", nonce);
   const protect = (response: NextResponse) => {
     response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
+    if (request.nextUrl.pathname === "/auth/callback" || request.nextUrl.pathname === "/account" || request.nextUrl.pathname.startsWith("/account/")) {
+      response.headers.set("Cache-Control", "no-store, private");
+      response.headers.set("Referrer-Policy", "no-referrer");
+      response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
     if (request.nextUrl.pathname === "/api/admin" || request.nextUrl.pathname.startsWith("/api/admin/")) {
       response.headers.set("Cache-Control", "no-store, private");
       response.headers.set("Pragma", "no-cache");

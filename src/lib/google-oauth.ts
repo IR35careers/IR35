@@ -1,4 +1,4 @@
-import { resolvePostAuthPath } from "@/lib/auth-routing";
+import { authCallbackPath, resolvePostAuthPath } from "@/lib/auth-routing";
 
 const CUSTOMER_ORIGIN = "https://www.ir35careers.com";
 const ADMIN_ORIGIN = "https://admin.ir35careers.com";
@@ -29,7 +29,7 @@ export function buildGoogleOAuthAuthorizeUrl({
   const path = target.admin ? "/" : resolvePostAuthPath(requestedPath);
   const authorizeUrl = new URL("/auth/v1/authorize", supabaseUrl);
   authorizeUrl.searchParams.set("provider", "google");
-  authorizeUrl.searchParams.set("redirect_to", `${target.origin}${path}`);
+  authorizeUrl.searchParams.set("redirect_to", `${target.origin}${target.admin ? path : authCallbackPath(path)}`);
   if (selectAccount) authorizeUrl.searchParams.set("prompt", "select_account");
   return authorizeUrl.toString();
 }

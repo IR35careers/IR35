@@ -27,6 +27,7 @@ import type {
 } from "@/lib/workspace/types";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { EMAIL_CONFIRMATION_REQUIRED, hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -201,6 +202,9 @@ export async function POST(request: Request): Promise<Response> {
           profileResult.error?.message ||
           authResult.error?.message,
       );
+    // Recheck at execution, not just enqueue: confirmation can change while queued.
+    if (!hasConfirmedApplicationEmail(authResult.data.user))
+      return Response.json({ assignment: preflight(task, EMAIL_CONFIRMATION_REQUIRED.error, "account_email_confirmation") }, { headers: HEADERS });
     if (!packetResult.data)
       return Response.json(
         { assignment: preflight(task, "Application packet was not found.") },

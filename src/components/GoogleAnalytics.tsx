@@ -31,6 +31,7 @@ export function GoogleAnalytics({ nonce }: { nonce?: string }) {
   const [consent, setConsent] = useState<AnalyticsConsent>(null);
   const [ready, setReady] = useState(false);
   const isAdminHost = typeof window !== "undefined" && window.location.hostname === "admin.ir35careers.com";
+  const isAuthRoute = pathname === "/auth/callback" || pathname === "/account" || pathname.startsWith("/account/");
 
   useEffect(() => {
     setConsent(storedConsent());
@@ -40,15 +41,15 @@ export function GoogleAnalytics({ nonce }: { nonce?: string }) {
   }, []);
 
   useEffect(() => {
-    if (!ready || consent !== "granted" || !window.gtag || isAdminHost) return;
+    if (!ready || consent !== "granted" || !window.gtag || isAdminHost || isAuthRoute) return;
     window.gtag("event", "page_view", {
       page_path: pathname,
       page_location: `${window.location.origin}${pathname}`,
       page_title: document.title,
     });
-  }, [consent, isAdminHost, pathname, ready]);
+  }, [consent, isAdminHost, isAuthRoute, pathname, ready]);
 
-  if (!measurementId || consent !== "granted" || isAdminHost) return null;
+  if (!measurementId || consent !== "granted" || isAdminHost || isAuthRoute) return null;
 
   return (
     <>

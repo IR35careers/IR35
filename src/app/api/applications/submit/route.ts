@@ -60,6 +60,7 @@ import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import { selectedApplyRunner } from "@/lib/application-runner-selection";
 import { z } from "zod";
+import { EMAIL_CONFIRMATION_REQUIRED, hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
 import { canRetryDelivery, isDeliveryInFlight, applicationDeliveryStatusSchema } from "@/lib/application-lifecycle";
 import { commitDeliveryResult, transitionDelivery } from "@/lib/application-lifecycle-server";
 
@@ -281,6 +282,7 @@ export async function POST(request: Request): Promise<Response> {
         { status: 401, headers: NO_STORE },
       );
     }
+    if (!hasConfirmedApplicationEmail(authUser)) return Response.json(EMAIL_CONFIRMATION_REQUIRED, { status: 403, headers: NO_STORE });
     const userId = authUser.id;
     console.info("application_submit_stage", {
       applicationId: body.applicationId,
