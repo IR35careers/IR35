@@ -690,7 +690,7 @@ export function ContractorProfile({
   const resumeReady = (activeProfile?.resumeText.trim().length ?? 0) >= 120;
   const firstTimeResumeRequired = !profile.profileSetupCompletedAt && !resumeReady;
 
-  if (firstTimeResumeRequired) {
+  if (firstTimeResumeRequired && tab !== "settings") {
     return (
       <WorkspacePage
         accountSection="profile"

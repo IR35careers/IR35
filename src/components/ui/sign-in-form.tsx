@@ -22,6 +22,9 @@ import { useAuth } from "@/lib/auth-context";
 import { resolvePostAuthPath } from "@/lib/auth-routing";
 import { authenticatedDestination } from "@/lib/portal-access";
 import { validateEmail } from "@/lib/utils";
+import { EmailConfirmationForm } from "@/components/ui/email-confirmation-form";
+import { ApplicationSignInContext } from "@/components/ui/application-sign-in-context";
+import { hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
 
 type AccountMode = "sign-in" | "create" | "forgot";
 
@@ -53,7 +56,7 @@ function AuthPanel({ children }: { children: React.ReactNode }) {
             One professional profile. Every contract application ready.
           </h2>
           <p className="mt-5 max-w-sm text-base leading-7 text-slate-300">
-            Find the right roles, tailor your resume with evidence, and keep every employer response connected to your tracker.
+            Find the right roles, tailor your CV with evidence, and keep every employer response connected to your tracker.
           </p>
           <div className="mt-9 space-y-4">
             {[
@@ -105,6 +108,8 @@ export default function SignInForm() {
   const [resetSent, setResetSent] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [switchingAccount, setSwitchingAccount] = useState(switchRequested);
+  const confirmationRequested = searchParams.get("confirmation") === "1";
+  const showConfirmation = confirmSent || (confirmationRequested && (!user || !hasConfirmedApplicationEmail(user)));
 
   useEffect(() => {
     if (loading || !switchRequested) return;
@@ -118,12 +123,12 @@ export default function SignInForm() {
   }, [loading, next, router, signOut, switchRequested]);
 
   useEffect(() => {
-    if (!loading && user && !switchRequested) {
+    if (!loading && user && !switchRequested && !showConfirmation) {
       const destination = authenticatedDestination(user.email, next);
       if (destination.startsWith("https://")) window.location.replace(destination);
       else router.replace(destination);
     }
-  }, [user, loading, next, router, switchRequested]);
+  }, [user, loading, next, router, switchRequested, showConfirmation]);
 
   const selectMode = (selected: Exclude<AccountMode, "forgot">) => {
     setMode(selected);
@@ -171,6 +176,7 @@ export default function SignInForm() {
       const result = await signInWithPassword(email, password);
       if (result.error) {
         setSubmitting(false);
+        if (result.code === "email_not_confirmed") { setConfirmSent(true); return; }
         return setError("We couldn't sign you in with those details. Check them and try again.");
       }
       const destination = authenticatedDestination(email, next);
@@ -193,18 +199,20 @@ export default function SignInForm() {
     router.replace(signupNext);
   };
 
-  if (switchingAccount || switchRequested || (!loading && user)) {
+  if (switchingAccount || switchRequested || (!loading && user && !showConfirmation)) {
     return <AuthPanel><div className="mx-auto flex w-full max-w-md items-center justify-center gap-3 text-sm font-semibold text-slate-700"><Loader2 className="animate-spin" size={19} /> Preparing secure sign-in</div></AuthPanel>;
   }
 
-  if (confirmSent || resetSent) {
+  if (showConfirmation || resetSent) {
     return (
       <AuthPanel>
         <div className="mx-auto w-full max-w-md text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800"><CheckCircle2 size={30} /></div>
           <p className="mt-7 ir35-eyebrow">Secure account</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Check your inbox</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">We sent {resetSent ? "a one-use password reset link" : "an account confirmation link"} to <strong className="text-slate-900">{email}</strong>.</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">{resetSent ? "Check your inbox" : "Confirm your account email"}</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{resetSent ? "If this email has an account, a one-use reset link has been requested. Check your inbox and junk folder." : "Use the latest confirmation link from your inbox. Need another? Request it below; your selected contract is preserved."}</p>
+          {!resetSent && <EmailConfirmationForm next={signupNext} initialEmail={email || user?.email || ""} />}
+          {!resetSent && <button type="button" onClick={() => { setConfirmSent(false); router.replace(`/account?next=${encodeURIComponent(next)}`); }} className="ir35-focus mt-4 min-h-11 rounded-lg px-3 text-sm font-bold text-brand-700">Back to sign in</button>}
           <Link href="/jobs" className="ir35-focus mt-7 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Browse contracts <ArrowRight size={15} /></Link>
         </div>
       </AuthPanel>
@@ -220,8 +228,9 @@ export default function SignInForm() {
           {mode === "sign-in" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your account"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          {mode === "sign-in" ? "Sign in to continue to your contracts, applications and recruiter messages." : mode === "forgot" ? "Enter your account email. We will send a secure reset link." : "Create your free account, then import your resume or GitHub evidence to complete your profile faster."}
+          {mode === "sign-in" ? "Sign in to continue to your contracts, applications and recruiter messages." : mode === "forgot" ? "Enter your account email. We will send a secure reset link." : "Create your free account, then import your CV or GitHub evidence to complete your profile faster."}
         </p>
+        <ApplicationSignInContext next={next} />
 
         {mode !== "forgot" && (
           <div className="mt-6 grid grid-cols-2 rounded-xl border border-slate-200 bg-slate-100 p-1" aria-label="Account action">
