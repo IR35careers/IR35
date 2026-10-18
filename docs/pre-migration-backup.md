@@ -2,7 +2,20 @@
 
 Owner decision, 17 October 2026: portable passphrase encryption; enter the passphrase twice in a hidden prompt, never in chat or command arguments. No migration until full decryption and archive readability verification pass. The agent runs commands; the owner supplies the two entries and copies the verified artifacts to a second location.
 
-## Current preparation — no backup claimed yet
+## Verified recovery artifacts — 18 October 2026
+
+The owner completed the verification-only hidden prompts. Full decryption/integrity checks, `pg_restore --list` and the globals SQL-header check passed. The manifest at `C:\Users\anves\IR35CareersBackups\premigration-20261018T015741Z-ed9ea3b2\manifest.json` records **57 tables** (auth 27, public 22, storage 8), 57 table-data entries, 67 archive ACL entries, **16 roles and 19 role grants**. Both encrypted file sizes/checksums were independently matched against the manifest before migration 024.
+
+| Encrypted file in that directory | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `database.dump.gpg` | 11,308,269 | `F5E74AB6B9025FF2D6AE381E2D0ADF56CFFE64EF2368317100DB729C9BF70666` |
+| `globals.sql.gpg` | 7,173 | `044EE80EEBEDA8AA9554A3C9A538455A2E4968D4D30A7C4119CF80DE5D6D59BA` |
+
+The owner was given this directory for a second copy before any migration; a second copy is not claimed. No plaintext dump/passphrase was saved. This proves archive readability, **not a trial restore**; Storage object bytes are not included. The verifier's `migrationsRun: false` is its historical snapshot, not a claim about subsequent deployment operations.
+
+Migration 024 was subsequently applied and checked; see `progress.md`. Migration 025 remains held for rolling-client compatibility. Backup verification does not authorize a destructive operation or production runner cutover.
+
+## Preparation history
 
 - PostgreSQL client 17.11 was installed from PostgreSQL's official signed Ubuntu repository in the existing Ubuntu 24.04 WSL environment. No database server or Docker was installed.
 - GnuPG symmetric AES256 with salted/iterated SHA256 S2K and integrity protection encrypts the native dump streams. Plaintext SQL, auth records, CV contents and passphrases never pass through a disk file or tool output.
