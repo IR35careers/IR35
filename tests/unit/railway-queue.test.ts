@@ -3,6 +3,7 @@ import { pgBossOptions, railwayWorkerConfig, workQueueOptions } from "@/lib/queu
 import { applyRunnerExecution, selectedApplyRunner } from "@/lib/application-runner-selection";
 import { managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
+import { disposableQueuePermissionOptions } from "../../services/application-worker/queue-permission-config";
 
 const queue = vi.hoisted(() => ({ start: vi.fn(), stop: vi.fn(), send: vi.fn(), options: vi.fn() }));
 vi.mock("pg-boss", () => ({ PgBoss: class {
@@ -50,6 +51,40 @@ describe("Railway queue safety", () => {
     expect(workQueueOptions()).toMatchObject({ retryLimit: 2, expireInSeconds: 600, heartbeatSeconds: 60 });
     vi.stubEnv("APPLICATION_WORKER_CONCURRENCY", "10");
     expect(() => railwayWorkerConfig()).toThrow("Invalid Railway");
+  });
+  it("validates a separate producer URL without replacing the worker environment", () => {
+    configure();
+    const original = process.env.PG_BOSS_DATABASE_URL;
+    const url = "postgres://ir35_queue_producer.project:ci-only@aws-0-eu-west-2.pooler.supabase.com:5432/postgres";
+    expect(pgBossOptions("producer", url).connectionString).toContain("ir35_queue_producer.project");
+    expect(process.env.PG_BOSS_DATABASE_URL).toBe(original);
+    expect(() => pgBossOptions("producer", "invalid-private-value")).toThrow("session pooler");
+  });
+  it.each([
+    { NODE_ENV: "production", PG_BOSS_LOCAL_TEST: "true" },
+    { NODE_ENV: "test", PG_BOSS_LOCAL_TEST: "false" },
+    { NODE_ENV: "test", PG_BOSS_LOCAL_TEST: "true" },
+  ])("refuses the disposable permission probe outside a loopback test database: %o", gates => {
+    const url = "postgres://ir35_queue:must-not-appear@aws-0-eu-west-2.pooler.supabase.com:5432/postgres";
+    for (const [key, value] of Object.entries(gates)) vi.stubEnv(key, value);
+    vi.stubEnv("PG_BOSS_DATABASE_URL", url);
+    vi.stubEnv("PG_BOSS_PRODUCER_TEST_DATABASE_URL", url);
+    expect(() => disposableQueuePermissionOptions()).toThrow(/local-test gates|loopback Postgres/);
+    try { disposableQueuePermissionOptions(); }
+    catch (error) { expect(String(error)).not.toContain("must-not-appear"); }
+  });
+  it("requires the separate producer URL even with both disposable-test gates", () => {
+    vi.stubEnv("NODE_ENV", "test"); vi.stubEnv("PG_BOSS_LOCAL_TEST", "true");
+    vi.stubEnv("PG_BOSS_PRODUCER_TEST_DATABASE_URL", undefined);
+    expect(() => disposableQueuePermissionOptions()).toThrow("local-test gates");
+  });
+  it("accepts two loopback identities only with every disposable-test gate", () => {
+    vi.stubEnv("NODE_ENV", "test"); vi.stubEnv("PG_BOSS_LOCAL_TEST", "true");
+    vi.stubEnv("PG_BOSS_DATABASE_URL", "postgres://ir35_queue:ci-only@127.0.0.1:5432/postgres");
+    vi.stubEnv("PG_BOSS_PRODUCER_TEST_DATABASE_URL", "postgres://ir35_queue_producer:ci-only@127.0.0.1:5432/postgres");
+    expect(disposableQueuePermissionOptions()).toMatchObject({
+      worker: { max: 4, ssl: false, migrate: false }, producer: { max: 1, ssl: false, migrate: false, supervise: false },
+    });
   });
   it("permits loopback Postgres only with both explicit test gates", () => {
     configure(); vi.stubEnv("PG_BOSS_DATABASE_URL", "postgres://ci:local-only@127.0.0.1:5432/postgres");

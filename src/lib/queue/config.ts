@@ -18,9 +18,9 @@ export const scheduledWorkSchema = z.strictObject({
   requestedAt: z.iso.datetime(),
 });
 
-export function pgBossOptions(mode: "producer" | "worker" | "setup"): ConstructorOptions {
+export function pgBossOptions(mode: "producer" | "worker" | "setup", databaseUrl = process.env.PG_BOSS_DATABASE_URL): ConstructorOptions {
   // Never include a parser error or connection string in an error/log.
-  const raw = z.string().min(1).safeParse(process.env.PG_BOSS_DATABASE_URL);
+  const raw = z.string().min(1).safeParse(databaseUrl);
   let connection: URL;
   let localTest = false;
   try {
