@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { runScheduledAutoApply } from "@/lib/automation/scheduled-runner";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { reconcileCloudApplications } from "@/lib/application-cloud-reconcile";
-import { selectedApplyRunner } from "@/lib/application-runner-selection";
+import { isQueueApplyRunner } from "@/lib/application-runner-selection";
 import { enqueueScheduledWork } from "@/lib/queue/producer";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
-    if (selectedApplyRunner() === "railway") {
+    if (isQueueApplyRunner()) {
       await enqueueScheduledWork("automation");
       return Response.json({ ok: true, state: "queued" }, { status: 202, headers: NO_STORE });
     }

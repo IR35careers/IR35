@@ -1,151 +1,107 @@
-# Railway worker deployment runbook — hosted preparation in progress
+# Oracle Always Free worker — staged deployment runbook
 
-Execution authority update: the owner's later end-to-end Phase 0 brief now authorizes the agent to run these setup and **standby** deployment commands, collecting native login/hidden secret input only when needed. The owner must not be asked to run commands. Dashboard-only actions are described for the owner and then awaited. Do not change web APPLY_RUNNER or enable worker ACCEPT_JOBS until the owner explicitly types **YES CUTOVER**. Preserve a seven-day rollback window and open—but do not merge—the consumer-removal PR. Migration **025_application_delivery_lifecycle.sql** must be installed and tested before the new web lifecycle code is deployed; it strengthens browser write access and is additive. The earlier owner-run wording below is a reference command inventory, not a current request for the owner to execute it.
+18 October 2026 owner override: **zero budget**. Never upgrade Oracle to Pay As You Go, Railway, Supabase or another plan. Stop before a potentially chargeable action. Keep Railway's empty trial project/service intact and undeployed. The agent runs commands; the owner supplies only native logins/hidden secrets, dashboard-only approvals and final cutover. The [Railway command archive](deploy-worker-railway-archive.md) is withdrawn, not a deployment alternative.
 
-Owner decision, 15 October 2026: Railway, existing Supabase Postgres, pg-boss in private `pgboss`, **session pooler port 5432**, one replica starting at **1 vCPU / 2 GB RAM**. No Railway resource was created, no secrets added, no production runner switched by this change.
+No literal **YES CUTOVER** has been received. Both web and standby container retain `APPLY_RUNNER=vercel`; `APPLICATION_WORKER_ACCEPT_JOBS=false`. The standby queue process can validate Chromium/database health with those unchanged flags. It refuses consumption with the Vercel selection. Do not infer cutover approval from a successful build, account login, merge or healthy standby.
 
-Local verification: TypeScript, ESLint, 486 Vitest tests and 199 legacy checks passed; six Playwright tests used controlled mock ATS responses only. Production Next build passed. The real pg-boss constructor accepted the settings, but no authenticated Postgres integration or Docker build was possible locally. That distinction is a release gate, not a claim of live readiness. Review [draft PR #1](https://github.com/IR35careers/IR35/pull/1); it is not a completed Phase 0 incident resolution.
+## Current evidence, not claims of deployment
 
-## Verified release hold — 17 October
+- Supabase project `kxcbgflleqnjzjbkevwd`: CLI reports healthy **eu-west-2**. Closest geographical Oracle choice: **UK South (London), uk-london-1**, not a latency/capacity promise. Owner signup at [oracle.com/cloud/free](https://www.oracle.com/cloud/free/) is still unconfirmed. No OCI account/VM/public IP/billing result is claimed.
+- Actual registry manifest for Playwright `v1.61.0-noble` includes linux/amd64 and linux/arm64. Dockerfile pins the multi-architecture index **sha256:57b65fdc9ceabe0ef613124c7bbe2babcf9362c4d85e382fe3b03604e84b428a**, matching playwright-core 1.61.0. ARM child digest **sha256:35488358a60d3e7eacc4f02e0985e3b46240424d6d7b229732332016e6127508**. A manifest is not a browser execution test.
+- Native ARM CI builds the actual Dockerfile and runs an isolated mock ATS form/receipt on the standard `ubuntu-24.04-arm` runner. It uses no secrets, external network, Supabase or employer; no VM/registry deployment is included. This repository is PUBLIC; standard ARM runners are free for public repos. The new job is deliberately ineligible if repository visibility changes; ARM verification then remains a release gate, not silently proven.
+- Backup is verified outside Git; see [pre-migration-backup.md](pre-migration-backup.md). Migration **024 installed**, effective private/browser ACLs verified, watchdog not invoked. **025 uninstalled**, held for compatible database/web rolling-client release. Queue owner/producer and hosted pg-boss setup are still pending. Never use blind `supabase db push`: legacy 001–023 history is not registered.
+- Main/preparation Git deployment holds remain. Auth fixes through PR #27 are merged, not a production release. No consumer removal, job enqueue or acceptance setting is authorized here.
 
-Vercel's authenticated project API confirms `main` is the production Git branch. `vercel.json` temporarily disables Git-triggered deployments on `main` and `codex/railway-*`. This separates the authorized code merge from a production release. Do not remove the hold until the recovery backup, lifecycle migration/rolling-client compatibility and reviewed web-release gates are satisfied. Manual CLI deployments remain possible but must not precede migration 025. The hold does not stop or alter the currently deployed site, change either runner flag, or authorize cutover. After the coordinated web release is verified, remove `main: false` and its temporary regression test in a reviewed follow-up.
+## 1. Account, CLI and budget — blocked on owner activation
 
-Fresh native Railway login is verified; its account currently has no projects. Docker Desktop installation is explicitly deferred by the owner. The real pinned Chromium Docker/Postgres standby CI job passes; local Docker installation is not claimed. Supabase reports PITR disabled and no available physical backup: database changes remain gated on a verified recovery backup. All six focused production-mode browser regressions pass across the three viewports; final full CI is still required.
+Choose the commercial London home region carefully: Always Free compute is tied to the home region, which cannot be changed. A1 capacity is not guaranteed. Oracle may require a temporary card-verification hold, which it says is not a charge. Never select Upgrade/PAYG or use trial-only paid shapes as a fallback.
 
-Final-head CI subsequently passed at `41148a0` (Release quality `39036142240`, CodeQL `39036142243`); PR #1 is merged as `bca7288`. Vercel still serves `0df1489`, so merging did not deploy the migration-dependent code. Operations continue on `codex/railway-deployment-ops`. The owner requires the verified portable encrypted backup described in [pre-migration-backup.md](pre-migration-backup.md) before any migration. Neither production runner flag has changed.
+After the owner confirms account activation, the agent installs the official OCI CLI using an isolated user installation and runs `oci setup config`. The owner supplies tenancy/user OCIDs through the native prompt and approves adding the generated API **public** key in **Profile → My profile → API keys → Add API key → Paste public key**. API/SSH private keys stay outside Git with owner-only access. Never print a private key, token or credential response.
 
-## What is prepared
+Create the requested **$1 monthly budget** at tenancy scope and an actual/forecast spend alert to the owner's confirmed email. A budget is **an alert, not a spending cap**; verify the billing currency and UI/API result. No budget is claimed created yet. Do not invent an email address or send the alert before the owner account is identified. No paid subscription or usage is needed to prepare code.
 
-Current checkpoint, 18 October: encrypted recovery artifacts passed full decryption/integrity/archive checks (57 tables, roles/grants retained); see `pre-migration-backup.md`. Migration **024 is installed and its effective browser/service ACLs verified**. It was not invoked. Only 024 was registered in CLI history after physical verification; do not replay legacy migrations. **025 remains held for old-client compatibility**, and production web/runner flags remain unchanged. Queue logins/setup remain pending. Earlier preparation checkpoints below describe their date, not current backup status.
+## 2. Provisioning gate and reproducibility
 
-### Live Railway preparation — not deployed
+Required target: one **VM.Standard.A1.Flex, 2 OCPU, 12 GB RAM**, Ubuntu **24.04 aarch64**, **50 GB** boot volume, UK London. Verify the actual tenancy is Free Tier/non-PAYG, total existing usage/quota and that shape/image/storage are Always Free-eligible before creating anything. Current Oracle documentation lists 2 OCPU/12 GB-equivalent free A1 resources and 200 GB combined free boot/block storage; account-specific eligibility is authoritative. Stop on a charge estimate or uncertain eligibility.
 
-- Project `ir35careers-worker`: `3bd3c930-efd8-4bfd-abc2-c9b38d24aab9`; environment `production`: `68bd54cf-87e9-4c36-ab79-85c8ab388d69`; service `ir35-worker`: `5a611011-f171-4a40-8fac-530b6584cd56`.
-- Empty service, no linked source/image, secrets, public domain or deployment. One replica, sleep off, root `/`, `services/application-worker/Dockerfile`, `/health`/180s, ON_FAILURE/10 retries and 330s drain were written and read back.
-- Live API schema exposes `serviceInstanceLimitsUpdate` with `vCPUs` and `memoryGB`; the requested 1/2 update failed with **maximum allowed memory 1 GB**. No smaller substitute or billing upgrade was made. Effective plan defaults remain CPU 2 / memoryBytes 1,000,000,000; these are not the requested limits. Owner action: workspace selector **IR35's Projects** > workspace Settings > Plans; review an appropriate plan supporting at least 2 GB and complete any payment themselves. Then the agent retries and verifies 1 vCPU/2 GB. See [Railway plans](https://docs.railway.com/pricing/plans).
-- EU Amsterdam (`europe-west4-drams3a`) is the closest currently listed Railway region to Supabase London, a geographic inference from [Railway regions](https://docs.railway.com/deployments/regions), not a latency measurement. The API accepted a region request but read-back is still null, so do not claim regional placement; inspect effective multi-region configuration before deployment.
-- Spend alert remains required: workspace Settings > Usage, configure a **$30 usage notification**. Do not substitute a hard shutdown limit without owner instruction. No Railway job acceptance is enabled.
+Provisioning still needs an authenticated CLI/account; there is no pretend instance OCID or stub successful provisioner. The remaining reproducible provisioning command must create a VCN, internet gateway/route and public subnet, then a security list allowing inbound TCP **22 only from the owner's freshly verified public IPv4 /32**. No 80/443/8787, broad SSH or IPv6 ingress. Do not silently add SSH access for GitHub's runner ranges. Capture existing resource IDs and reuse only exact task-owned resources; retries must not duplicate VMs or recreate networks.
 
-- `services/application-worker/Dockerfile`: pinned `mcr.microsoft.com/playwright:v1.61.0-noble`, matching installed playwright-core, non-root pwuser, explicit source COPY and `.dockerignore` excluding credentials/local output.
-- Root `railway.toml`: Docker build, `/health`, bounded startup healthcheck, ON_FAILURE restart policy, one replica, no sleeping.
-- pg-boss 12.38.0, schema fixed to `pgboss`; verified TLS; only Supabase session-pooler URLs on 5432 accepted. Producer connections are short-lived/max one, no schema installation or worker timers in Vercel. Worker pool max four.
-- `APPLY_RUNNER=vercel|railway` defaults to vercel; unknown values fail closed. Railway mode routes apply kicks and ingestion/automation crons into Postgres. The old Vercel consumer forwards any residual deliveries to pg-boss rather than opening another browser.
-- Worker starts in **standby** (`APPLICATION_WORKER_ACCEPT_JOBS=false`): checks Chromium and queue/database readiness but does not claim applications or run scheduler/ingestion handlers. `/health` returns 503 on startup, shutdown or stale/failed DB health.
-- Active job heartbeats refresh every 15s. Queue heartbeat expiry is 60s; absolute queue-job expiry ten minutes; two transport retries. An expired application lease is NOT silently replayed: migration 024 records a ten-minute `runner_timeout` and stops for explicit review. Callback retries reuse the same result; no second browser invocation inside that handler.
-- Queues: apply, ingest, enrich, match, tailor, mail, alerts. This slice consumes **apply, ingest and the existing automation scheduler command on alerts**. Remaining queue handlers are intentionally unregistered until their phases are implemented; do not publish those workloads yet. Mail/webhook and interactive tailoring are not migrated by this PR.
+For `Out of host capacity` only: retry across returned availability domains every ten minutes for at most two hours. Re-read instance state/idempotency after unknown launch outcomes before retrying. A capacity retry is not authorization for a paid shape, larger volume or PAYG. Report other errors immediately and report the two-hour capacity limit honestly.
 
-## Environment variables
+`infra/oracle/cloud-init.ts` renders `#cloud-config` using JSON (a YAML subset) from a structurally validated Ed25519 public key and one public IPv4 /32. It never provisions. It installs Docker Engine/Compose from Docker's signed Ubuntu repository, unattended upgrades, fail2ban and a 2 GB swap file; creates locked-password non-root **ir35deploy**; disables root/password SSH; and restricts host UFW to the same SSH source. Initial package setup happens before enabling Docker's apt source/key. It does not write worker secrets or start a worker. Ubuntu's default maintenance user remains for controlled host administration.
 
-See root `.env.example` for every supported worker setting and its default. Never copy a local `.env` into the image, commit secret files, paste credentials into chat, or use `NEXT_PUBLIC_` for a secret.
+Docker group access is root-equivalent despite the non-root deploy account. Do not treat it as a sandbox for untrusted CI jobs. Never install a self-hosted Actions runner on this candidate-data VM for the public repository. Pin/check the SSH host key through trusted OCI console output before transferring secrets; never use `StrictHostKeyChecking=no` or accept an unverified `ssh-keyscan` result as proof.
 
-| Variable | Where / purpose |
+## 3. Image, Compose and secrets
+
+Build the same pinned Dockerfile for **linux/arm64** on the VM or use an approved free public GHCR build/publish. Native ARM CI is verification, not image publication. Do not invent `IR35_WORKER_IMAGE`: use the actual immutable local `sha256:...` image ID after a reviewed on-VM build, or the actual public GHCR `@sha256:...` digest after CI passes. Retain the preceding image for rollback. Before any first GHCR publication verify public visibility/free allowance; new packages can default private, so do not assume a free-public-image result from a public source repository.
+
+Install these reviewed files on the VM only after the free-resource gate:
+
+- `/opt/ir35-worker/docker-compose.yml` from `infra/oracle/docker-compose.yml` (JSON-style YAML).
+- `/opt/ir35-worker/deploy.env` from `infra/oracle/deploy.env.example`: **non-secret interpolation only**, image digest and both unchanged flags. Protect it from unauthorized modification.
+- `/opt/ir35-worker/.env`: raw one-line worker variables, owned by ir35deploy, **mode 600**, directory mode 750. Use SSH stdin from hidden prompts or a permitted private temporary Vercel export, normalize values in memory and delete that temporary file immediately. Never overwrite a pre-existing local env file. Never put secrets in SSH arguments, command output, Git or CI artifacts.
+
+Use Compose **2.30+** for `env_file.format=raw`. Always use `--env-file deploy.env` for Compose interpolation; the raw secret-bearing `.env` is loaded only into the container. This preserves literal `$`/quotes in credentials and avoids Compose interpolation warnings leaking secret fragments. Do not paste a quoted Vercel export directly into the raw file: parse and normalize selected keys without logging them. Escape CA newlines as literal `\n`, which the queue config converts back to PEM.
+
+Agent command inventory (not owner homework and not executed until the gates above):
+
+```sh
+cd /opt/ir35-worker
+test "$(stat -c '%a' .env)" = 600
+docker compose --env-file deploy.env -f docker-compose.yml config --quiet
+docker compose --env-file deploy.env -f docker-compose.yml up -d --pull never
+curl --fail --silent http://127.0.0.1:8787/health
+```
+
+Do not run bare `docker compose config` or `docker inspect` into shared logs: resolved environments contain secrets. Compose uses restart **unless-stopped**, 4 GB memory, bounded PIDs/shared memory, non-root image user, dropped capabilities, no-new-privileges, 330s graceful drain and three rotated 10 MB log files. Only **127.0.0.1:8787** is published; verify no public listener. `/health` must return HTTP 200 with **browserReady=true, databaseReady=true, mode=standby, active=0** through verified SSH. The current x64 mock test or ARM CI is not proof of that hosted database result.
+
+The inventory assumes the reviewed image is already present. For a verified public GHCR digest, explicitly pull that digest before `up`; for an on-VM build, use `docker build --platform linux/arm64 -f services/application-worker/Dockerfile --iidfile /opt/ir35-worker/image.id .` from the reviewed source checkout, then set its actual ID privately in deploy.env. Never attempt a registry pull of a local-only image ID. The smoke wrapper accepts only a local immutable SHA256 ID or the reviewed project's pinned GHCR digest, not arbitrary mutable tags.
+
+## 4. Queue and worker variables — names only
+
+Root `.env.example` and `infra/oracle/deploy.env.example` contain no real credentials.
+
+| Name | Use |
 | --- | --- |
-| `APPLY_RUNNER` | Web defaults to vercel; worker requires railway. Switch web only at cutover. |
-| `PG_BOSS_DATABASE_URL` | Both. Use Supabase **Session pooler**, actual regional host, port 5432/database postgres; percent-encode password. Never transaction pooler 6543. |
-| `PG_BOSS_SSL_CA` | Both, optional trusted certificate PEM if required by project's CA chain. Verification is never disabled. |
-| `PG_BOSS_LOCAL_TEST` | CI only, never production. Loopback Postgres without TLS is accepted only when both NODE_ENV=test and this flag=true; every production connection still requires the verified-TLS Supabase session pooler. |
-| `APPLICATION_WORKER_SECRET` | Both, same existing HMAC secret, at least 32 characters; approved-packet/callback API authentication. |
-| `IR35CAREERS_APP_URL` | Worker, canonical HTTPS origin, normally https://www.ir35careers.com. |
-| `APPLICATION_WORKER_ACCEPT_JOBS` | Worker, false during staging; true only after approved cutover. |
-| `APPLICATION_WORKER_CONCURRENCY` | Worker, 1 initially (validated maximum 2 for this small container). |
-| `APPLICATION_WORKER_VERSION` | Worker, release identifier for private heartbeat diagnostics. |
-| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Active worker: private task lease checks, watchdog, heartbeat, ingestion and scheduler. Public URL is not secret; key is. |
-| `CRON_SECRET` | Active worker: same >=32-character scheduler signing secret as Vercel. |
-| `JOB_DECIMAL_RATES_ENABLED` | Worker ingestion, true only with migration 023 installed. |
-| `REED_API_KEY`, `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` | Optional ingestion. Without them those feeds are skipped, not invented. |
-| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Optional existing evidence-safe field-label mapper. No key required for deterministic forms. This is not yet the spec's replacement OpenAI service. |
-| `APPLICATION_RUNNER_ALLOWED_HOSTS` | Optional narrower employer host allowlist. Existing public HTTPS/SSRF checks always apply. |
-| `AUTO_APPLY_DAILY_BATCH_LIMIT` | Scheduler, default 25, bounded 1–25 by existing code. |
-| `PORT` | Railway-injected port; local default 8787. |
-| `NODE_ENV`, `PLAYWRIGHT_BROWSERS_PATH` | Image defaults production and /ms-playwright. |
-| `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` | Set 330, allowing the worker's bounded graceful stop. |
+| `IR35_WORKER_IMAGE` | Non-secret deploy.env only, actual reviewed ARM image digest. |
+| `APPLY_RUNNER` | Web/standby default vercel; oracle and legacy railway select the same pg-boss path only after YES CUTOVER. |
+| `APPLICATION_WORKER_ACCEPT_JOBS` | false until approved cutover. Vercel selection + true is rejected. |
+| `PG_BOSS_DATABASE_URL` | Worker owner login **ir35_queue.PROJECT_REF**; Vercel uses separate **ir35_queue_producer.PROJECT_REF**. Supabase session pooler host, **5432**, database postgres, URL-encoded password. Never transaction pooler 6543. |
+| `PG_BOSS_SSL_CA` | Optional trusted CA PEM; certificate/hostname verification never disabled. |
+| `APPLICATION_WORKER_SECRET` | Existing shared >=32-character signed claim/callback key; standby also validates its shape. |
+| `IR35CAREERS_APP_URL` | Approved canonical HTTPS origin. |
+| `APPLICATION_WORKER_CONCURRENCY`, `APPLICATION_WORKER_VERSION` | Initially one, private release diagnostic label. |
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | Active consumer only; not needed for standby queue/browser checks. URL is public; the keys are not. |
+| `REED_API_KEY`, `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `JOB_DECIMAL_RATES_ENABLED` | Optional ingestion; absent sources are skipped, not fabricated. Decimal flag only with installed 023. |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Optional existing evidence-safe mapper; not a replacement for the later OpenAI service. |
+| `APPLICATION_RUNNER_ALLOWED_HOSTS`, `AUTO_APPLY_DAILY_BATCH_LIMIT` | Optional narrower destinations/scheduler limits; existing SSRF/approval/caps remain. |
+| `PORT`, `NODE_ENV`, `PLAYWRIGHT_BROWSERS_PATH` | Container defaults 8787, production, /ms-playwright. |
 
-Do NOT add Stripe, Google OAuth, mail-provider or Supabase anon keys to this worker just to make unrelated features appear connected. Existing signed web APIs still handle CV approval, OTP lookup and callback persistence. The target's worker-only service-role architecture and unified application state machine remain separate work; this preparation does not claim they are complete.
+`PG_BOSS_LOCAL_TEST` / `PG_BOSS_PRODUCER_TEST_DATABASE_URL` are **disposable CI only**, never hosted. No Stripe, Google OAuth, mail or anon key is added to make unrelated features appear configured. Legacy `railway.ts` / `enqueueRailwayApplication` names are compatibility entry points only; no Railway API is called. `worker:queue` is the host-neutral entry point.
 
-## 1. Prepare database (owner, before any consumption)
+Queue roles/setup remain agent-run after backup and hosted access: queue-only owner `ir35_queue` and separate producer `ir35_queue_producer`, both nonprivileged/no memberships/no BYPASSRLS, no candidate-schema access. Run `setup-queue.ts` as owner, then reviewed `supabase/operations/pgboss-producer-grants.sql` as owner; preserve private pgboss outside exposed Data API schemas. Runtime cannot migrate DDL. Seven queues: apply, ingest, enrich, match, tailor, mail, alerts. Current handlers consume apply/ingest/existing automation-on-alerts only. Do not publish unimplemented handlers. The destructive `verify-queue-permissions.ts` is for disposable loopback CI only, not the hosted customer database.
 
-1. Back up and run `supabase/migrations/024_railway_worker_watchdog.sql` in Supabase SQL editor. It creates the private schema and a service-role-only timeout RPC; it does not run the watchdog or requeue applications on installation.
-2. Keep `pgboss` OUT of Supabase Data API exposed schemas. Do not grant queue access to anon/authenticated or change public-table RLS.
-3. Create a dedicated queue login/owner with a strong generated password in the database administration UI. Give it ownership/CREATE of **pgboss only**, not ownership of public/auth/storage, and no BYPASSRLS. Copy its regional session-pooler connection string. Use a separate producer login for Vercel where practical.
-4. With the queue-owner URL in a private local environment, run setup once from the repository root:
+## 5. Useful smoke timer, monitoring and automatic updates
 
-```powershell
-npm ci
-node --env-file=.env.worker.local --import tsx services/application-worker/setup-queue.ts
-```
+After image/standby verification, install `infra/oracle/run-smoke.sh` as `/usr/local/bin/ir35-worker-smoke` and the service/timer under `/etc/systemd/system/`. Enable with `systemctl enable --now ir35-worker-smoke.timer`; verify `list-timers` and one successful service run. It launches the same pinned image with **--network none**, no worker env/secrets and a loopback mock ATS. It fills a form and checks exactly one receipt. It cannot send real applications or change queue acceptance. This is useful browser-health work, not artificial load.
 
-The private file needs only `PG_BOSS_DATABASE_URL` and optional `PG_BOSS_SSL_CA`. `.env.worker.local` is ignored. Setup installs pg-boss into the pre-created schema and all seven queues. Runtime `migrate=false` means deployment cannot silently upgrade queue DDL. Keep schema owner and pinned pg-boss version aligned; test future migrations separately.
+**No idle-reclamation guarantee:** a short six-hour smoke test does not ensure Oracle's seven-day 95th-percentile CPU/network/memory utilization thresholds. Do not generate fake load to evade policy. Keep image/config/infrastructure reproducible and secrets outside the boot volume backup; document restore/reprovisioning and A1 capacity risk.
 
-If the schema was created under postgres by SQL editor, an owner must `ALTER SCHEMA pgboss OWNER TO <queue_owner>` before setup. Do not use a PostgREST API key as a database password. For a separate producer role, after installation grant schema USAGE and SELECT/INSERT on pg-boss tables (plus USAGE/SELECT on its sequences if present); test `start`/`send` with that role. Do not grant it access to public candidate tables. Never expose SQL editor/browser credentials to clients.
+**Open network decision:** requested owner-IP-only SSH conflicts with GitHub-hosted SSH deploys from a different IP. Owner choice requested: keep the rule and approve an outbound image-pull updater, or explicitly approve a temporary deploy-job /32 rule that is removed afterwards. No broad range, new firewall rule, self-hosted public-repo runner or live auto-deploy is implemented/enabled without that decision. The final deploy workflow is still required, not claimed replaced by the smoke timer.
 
-### Separate-role permission gate
+**Open external uptime work:** the queue consumer currently writes heartbeat rows only while accepting jobs; standby persistence and an external stale-over-five-minute alert must still be implemented/tested. Vercel is currently **Hobby**; do not add an unsupported every-five-minute Vercel Cron or buy a plan. Preserve current daily crons, then prepare an approved free external schedule against the authenticated watchdog endpoint and document its actual alert latency. A five-minute staleness threshold is not a guarantee that a daily cron detects an outage within five minutes. No email/alert is claimed sent.
 
-The deployment uses **ir35_queue** as the queue-only owner/worker and **ir35_queue_producer** as the Vercel publisher. Both are LOGIN, NOINHERIT, NOSUPERUSER, NOCREATEDB, NOCREATEROLE, NOREPLICATION, NOBYPASSRLS, with no role memberships. Neither owns public/auth/storage or has access to candidate tables. Create credentials privately only after the verified backup gate; never use the published disposable CI passwords in a hosted environment.
+## 6. Staging, cutover and rollback
 
-After `setup-queue.ts`, the agent executes `supabase/operations/pgboss-producer-grants.sql` **as ir35_queue**. It grants the producer schema USAGE, table SELECT/INSERT, sequence USAGE/SELECT, and EXECUTE on `pgboss.job_now()` only. It denies browser roles/PUBLIC queue access, removes producer UPDATE/DELETE/DDL/maintenance authority, and establishes defaults for later queue tables/sequences. PostgreSQL grants PUBLIC function EXECUTE by default; the script explicitly revokes that default for future functions of this queue-only owner. Rerun the reviewed grants after a pinned pg-boss schema upgrade, including restoring the clock-function grant if that function was recreated. The script is operational ACL setup, not an automatically applied application migration, and contains no passwords. [PostgreSQL privilege semantics](https://www.postgresql.org/docs/17/ddl-priv.html).
+Before asking for cutover: actual Oracle SSH health above; current live queue roles/ACLs; compatible 025/web rollout; mock ATS duplicate/outage/restart/lost-ack/watchdog/cancellation/reload matrix and results table; external heartbeat/alert verification; preserved history/receipts. Use only the approved test identity and mocks, never a real employer. Google preview sign-in is a separate gate.
 
-The Docker/Postgres CI job now installs/starts pg-boss with the queue-only login and authenticates a **second TCP connection** as the producer. Its disposable probes verify all seven queues, actual publish/owner claim/completion, blocked producer claim/complete/cancel/delete/truncate/DDL/role escalation, denied public/auth/storage fixture access, browser isolation, and future-object defaults. Local embedded-Postgres tests execute the same pg-boss SQL and operational grants with session identities, including negative tests that deliberately overgrant UPDATE or reuse the owner identity. Neither test is proof that production roles already exist.
+Only after literal **YES CUTOVER**: set web and container selection to oracle and worker acceptance true, drain residual Vercel deliveries into pg-boss, verify a mock receipt/reload and queued ingestion, then observe logs for 30 minutes. Keep the Vercel consumer/trigger for the seven-day rollback window. Its removal is a separate unmerged follow-up PR until that window ends.
 
-`services/application-worker/verify-queue-permissions.ts` is a **destructive disposable-CI probe**, not a production command. It requires NODE_ENV=test, PG_BOSS_LOCAL_TEST=true, loopback database URLs and the CI-only PG_BOSS_PRODUCER_TEST_DATABASE_URL. Do not set these test gates/variable on Railway or Vercel. Hosted verification must inspect installed roles/ACLs and use only controlled mock queue work; do not create the CI fixture tables or run destructive probes against the customer database.
+Rollback: stop new queue claims by setting acceptance false, allow bounded active work to drain and inspect unknown outcomes/receipts; restore web `APPLY_RUNNER=vercel` and reviewed web version. Do not blindly replay unknown employer outcomes, delete queue/schema/history or run both schedulers. Retain the preceding image digest. Replay only still-queued IDs through existing idempotency/reconciliation after inspecting state.
 
-## 2. Connect Railway — exact owner-run CLI steps
+Final report must include actual region, instance OCID/IP, names-only environment inventory, hosted test results, rollback evidence and **real $0 billing read-back**. None is inferred from this local preparation.
 
-These are instructions, **not commands already executed**. Use the repository root as Railway's build root, not the services subdirectory, because package-lock and src are shared.
+## Primary references
 
-```powershell
-npm install --global @railway/cli
-railway --version
-railway login
-railway link --project YOUR_EXISTING_PROJECT_ID --environment production
-railway add --service ir35-worker
-railway link --project YOUR_EXISTING_PROJECT_ID --environment production --service ir35-worker
-railway variable set APPLY_RUNNER=railway APPLICATION_WORKER_ACCEPT_JOBS=false APPLICATION_WORKER_CONCURRENCY=1 IR35CAREERS_APP_URL=https://www.ir35careers.com RAILWAY_DEPLOYMENT_DRAINING_SECONDS=330 --service ir35-worker --skip-deploys
-```
-
-Add secrets yourself in Railway Variables (sealed where supported). If using CLI, feed each value over stdin, with no `KEY=secret` argument or secret-bearing output. Example PowerShell secure prompt:
-
-```powershell
-$queueCredential = Read-Host 'Session-pooler connection string' -AsSecureString
-[System.Net.NetworkCredential]::new('', $queueCredential).Password | railway variable set PG_BOSS_DATABASE_URL --stdin --service ir35-worker --skip-deploys
-$queueCredential.Dispose()
-```
-
-Repeat for the HMAC, Supabase server and cron secrets as needed. Do not use `railway variable list --kv/--json` in shared logs: those outputs can expose secrets.
-
-Before deployment, in Railway **Settings > Deploy > Replica Limits**, set **1 vCPU and 2 GB RAM**, one replica, choose a region near the existing Supabase database, and keep **Serverless/App Sleep off**. CPU/memory limits are dashboard settings, not fictional railway.toml keys. Set a spend alert/limit appropriate to your account. Do not add a new Railway Postgres service.
-
-## 3. Owner-triggered standby deploy and verification
-
-Do this only when ready to incur hosting usage:
-
-```powershell
-railway up --service ir35-worker
-railway logs --service ir35-worker
-railway domain --service ir35-worker
-```
-
-Check the generated service domain's `/health`: HTTP 200, mode standby, browserReady true and databaseReady true. Readiness tests a real Chromium launch and queue read, not just a listening port. No employer application should start in standby. Railway checks health at deployment, not continuously; add external uptime monitoring for `/health` if desired.
-
-Run repository tests, then verify staging with a **mock ATS only** using `anvesh.mannuru+ir35test@gmail.com`. Test duplicate messages, queue unavailable, restart while queued, lost callback ack, expired lease -> runner_timeout, and browser cancellation. Docker build/live Supabase queue behavior must be verified on a machine with Docker and database access; neither was available for this local preparation.
-
-## 4. Cutover — do not do before standby is healthy
-
-1. Drain/observe existing Vercel applications; don't disable an in-flight consumer midway through final submission.
-2. In Vercel, add producer `PG_BOSS_DATABASE_URL`/CA and keep existing worker/submission gates and HMAC secret. Set `APPLY_RUNNER=railway`, deploy the reviewed web code. New kicks/crons now only enqueue; residual Vercel deliveries are forwarded.
-3. Enable worker consumption yourself:
-
-```powershell
-railway variable set APPLICATION_WORKER_ACCEPT_JOBS=true --service ir35-worker --skip-deploys
-railway redeploy --service ir35-worker
-```
-
-4. Verify mock application receipt and persistent UI status after reload; inspect private worker heartbeats/events. Verify ingestion cron returns 202 and container logs show execution; no native browser runs in Vercel. Only test real employers outside tests with explicit contractor approval, not as infrastructure verification.
-5. Once pending Vercel messages are drained and Railway is verified, remove `/api/queues/applications` and its `experimentalTriggers` entry in `vercel.json` in a separate cutover PR. **They deliberately remain in this preparation** so rollback is possible. Retain `APPLY_RUNNER` and old code until the rollback window closes.
-
-## Rollback
-
-Stop new Railway claims (`APPLICATION_WORKER_ACCEPT_JOBS=false`, redeploy; let active work finish), inspect receipts/unknown outcomes, then restore web `APPLY_RUNNER=vercel` and redeploy. Use the existing reconciliation to republish still-queued application IDs, not to blindly resubmit failed/unknown outcomes. Do not delete pg-boss rows/schema or historical applications as a rollback. Ingestion/automation queued during a rollback need deliberate replay/deduplication; don't run both schedulers concurrently.
-
-## Primary references checked
-
-[Railway configuration](https://docs.railway.com/config-as-code/reference), [CLI deployment](https://docs.railway.com/cli/deploying), [variables/stdin](https://docs.railway.com/cli/variable), [healthchecks](https://docs.railway.com/deployments/healthchecks), [replica limits](https://docs.railway.com/pricing/cost-control), [Supabase pooling](https://supabase.com/docs/guides/database/connecting-to-postgres/pooling-and-limits), [Playwright images](https://playwright.dev/docs/docker), [pg-boss API](https://github.com/timgit/pg-boss/tree/master/docs/api).
+[Oracle Always Free/idle policy](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm), [Free Tier account/card FAQ](https://www.oracle.com/cloud/free/faq/), [budgets](https://docs.oracle.com/en-us/iaas/Content/Billing/Tasks/create-budget.htm), [Docker Ubuntu installation](https://docs.docker.com/engine/install/ubuntu/), [Compose services/raw env/resource/port options](https://docs.docker.com/reference/compose-file/services/), [Playwright Docker](https://playwright.dev/docs/docker), [GitHub standard runners/free public ARM](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), [GitHub public-repo self-hosted security warning](https://docs.github.com/en/actions/reference/security/secure-use), [Supabase session pooling](https://supabase.com/docs/guides/database/connecting-to-postgres/pooling-and-limits).

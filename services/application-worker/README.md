@@ -1,14 +1,19 @@
 # IR35Careers persistent application worker
 
-## Prepared replacement: Railway (not deployed)
+## Current prepared host: Oracle Always Free (not deployed)
 
-The owner selected Railway with pg-boss on the existing Supabase session
-pooler (5432). The Dockerfile now starts `railway.ts` in standby by default.
-Use [`docs/deploy-worker.md`](../../docs/deploy-worker.md) and root
-`.env.example` for setup, secrets, 1 vCPU / 2 GB limits and staged cutover.
+The owner replaced Railway with zero-budget Oracle A1, keeping pg-boss on
+the existing Supabase session pooler (5432). Leave Railway's empty trial
+intact and undeployed; never upgrade any plan. The Dockerfile's `railway.ts`
+name is a host-neutral compatibility entry point (`npm run worker:queue`).
+Use [`docs/deploy-worker.md`](../../docs/deploy-worker.md), `infra/oracle/`
+and root `.env.example` for actual gates, secure env, ARM tests and cutover.
 Do not use the legacy standalone environment block below for the new image.
-`APPLY_RUNNER=vercel` remains the web default; no production switch is made
-by preparing these files. `server.ts` is retained for legacy development.
+Both web and standby retain `APPLY_RUNNER=vercel`, with acceptance false,
+until literal YES CUTOVER. Standby verifies browser/queue without candidate
+credentials; active queue consumption additionally requires the documented
+Supabase server/cron credentials. `server.ts` and the text below describe the
+older standalone runner, not the new queue worker's guarantees or settings.
 
 ## Production: managed cloud queue
 

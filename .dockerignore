@@ -1,6 +1,7 @@
 **/node_modules
 **/.env
 **/.env.*
+**/deploy.env
 **/.git
 .next
 .vercel

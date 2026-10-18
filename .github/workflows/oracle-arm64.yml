@@ -1,0 +1,90 @@
+name: Oracle ARM worker verification
+on:
+  push:
+    branches: [main, "codex/oracle-*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: oracle-arm-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  arm64:
+    name: Native arm64 image and isolated mock ATS
+    # Standard hosted ARM runners are free for this PUBLIC repository.
+    # Do not incur private-repository minutes if its visibility changes.
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: local-ci-only
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Build the same pinned image natively for Oracle A1
+        run: docker build --platform linux/arm64 -f services/application-worker/Dockerfile -t ir35-worker:arm-ci .
+      - name: Verify native image architecture
+        run: test "$(docker image inspect --format '{{.Architecture}}' ir35-worker:arm-ci)" = arm64
+      - name: Exercise the actual timer wrapper with an immutable local image and no credential leakage
+        run: |
+          test ! -e /opt/ir35-worker
+          sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /opt/ir35-worker
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const image = execFileSync('docker', ['image', 'inspect', '--format', '{{.Id}}', 'ir35-worker:arm-ci'], {encoding:'utf8'}).trim();
+          if (!/^sha256:[a-f0-9]{64}$/.test(image)) throw new Error('Expected an immutable CI image ID');
+          const options = {flag:'wx', mode:0o600};
+          writeFileSync('/opt/ir35-worker/deploy.env', 'IR35_WORKER_IMAGE='+image+'\nAPPLY_RUNNER=vercel\nAPPLICATION_WORKER_ACCEPT_JOBS=false\n', options);
+          // Deliberate non-secret fixture must stay out of the smoke container.
+          writeFileSync('/opt/ir35-worker/.env', 'PG_BOSS_DATABASE_URL=controlled-only-$not_a_real_secret\n', options);
+          writeFileSync('/opt/ir35-worker/docker-compose.yml', readFileSync('infra/oracle/docker-compose.yml'), options);
+          JS
+          docker compose --env-file /opt/ir35-worker/deploy.env -f /opt/ir35-worker/docker-compose.yml config --quiet
+          bash infra/oracle/run-smoke.sh
+      - name: Install disposable queues and verify distinct queue-only identities
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < tests/fixtures/queue/roles.sql
+          docker run --rm --network host -e NODE_ENV=test -e PG_BOSS_LOCAL_TEST=true \
+            -e PG_BOSS_DATABASE_URL=postgresql://ir35_queue:ci-only-queue-owner@127.0.0.1:5432/postgres \
+            --entrypoint node ir35-worker:arm-ci --import tsx services/application-worker/setup-queue.ts
+          docker exec -i "$POSTGRES_CONTAINER" psql -U ir35_queue -d postgres -v ON_ERROR_STOP=1 < supabase/operations/pgboss-producer-grants.sql
+          docker run --rm --network host -e NODE_ENV=test -e PG_BOSS_LOCAL_TEST=true \
+            -e PG_BOSS_DATABASE_URL=postgresql://ir35_queue:ci-only-queue-owner@127.0.0.1:5432/postgres \
+            -e PG_BOSS_PRODUCER_TEST_DATABASE_URL=postgresql://ir35_queue_producer:ci-only-queue-producer@127.0.0.1:5432/postgres \
+            --entrypoint node ir35-worker:arm-ci --import tsx services/application-worker/verify-queue-permissions.ts
+      - name: Verify ARM standby with unchanged Vercel selection and no candidate credentials
+        run: |
+          docker run -d --name ir35-arm-standby \
+            -e NODE_ENV=test -e PG_BOSS_LOCAL_TEST=true \
+            -e PG_BOSS_DATABASE_URL=postgresql://ir35_queue:ci-only-queue-owner@127.0.0.1:5432/postgres \
+            -e APPLY_RUNNER=vercel -e APPLICATION_WORKER_ACCEPT_JOBS=false \
+            -e APPLICATION_WORKER_SECRET=mock-ci-signing-key-not-a-live-credential \
+            -e IR35CAREERS_APP_URL=https://mock.example.test \
+            --network host ir35-worker:arm-ci
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8787/health > /tmp/ir35-arm-health.json; then
+              node -e "const h=require('/tmp/ir35-arm-health.json');if(!h.ok||!h.browserReady||!h.databaseReady||h.mode!=='standby'||h.active!==0)process.exit(1)"
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1
+      - name: Redacted standby diagnostics and cleanup
+        if: always()
+        run: |
+          docker logs ir35-arm-standby 2>&1 || true
+          docker rm -f ir35-arm-standby 2>/dev/null || true

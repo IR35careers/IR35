@@ -1,0 +1,19 @@
+[Unit]
+Description=IR35 worker isolated mock ATS/browser smoke test
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ir35deploy
+WorkingDirectory=/opt/ir35-worker
+Environment=DOCKER_CONFIG=/tmp/ir35-smoke-docker
+ExecStart=/usr/local/bin/ir35-worker-smoke
+TimeoutStartSec=90
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

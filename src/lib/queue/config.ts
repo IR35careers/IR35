@@ -60,9 +60,9 @@ export function workQueueOptions(): Omit<Queue, "name"> {
   };
 }
 
-export function railwayWorkerConfig() {
+export function queueWorkerConfig() {
   const result = z.object({
-    APPLY_RUNNER: z.literal("railway"),
+    APPLY_RUNNER: z.enum(["vercel", "railway", "oracle"]).default("vercel"),
     APPLICATION_WORKER_SECRET: z.string().min(32),
     IR35CAREERS_APP_URL: z.url().refine(value => {
       const url = new URL(value);
@@ -72,8 +72,12 @@ export function railwayWorkerConfig() {
     PORT: z.coerce.number().int().min(1).max(65535).default(8787),
     APPLICATION_WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(2).default(1),
     APPLICATION_WORKER_ACCEPT_JOBS: z.enum(["true", "false"]).default("false"),
-    APPLICATION_WORKER_VERSION: z.string().min(1).max(80).default("railway-prepared"),
+    APPLICATION_WORKER_VERSION: z.string().min(1).max(80).default("queue-prepared"),
   }).safeParse(process.env);
-  if (!result.success) throw new Error("Invalid Railway worker environment. Check docs/deploy-worker.md; values are never logged.");
+  if (!result.success || (result.data.APPLICATION_WORKER_ACCEPT_JOBS === "true" && result.data.APPLY_RUNNER === "vercel"))
+    throw new Error("Invalid queue worker environment. Consumption requires an approved queue runner. Check docs/deploy-worker.md; values are never logged.");
   return result.data;
 }
+
+/** Compatibility for the original Railway preparation; no host API is called. */
+export const railwayWorkerConfig = queueWorkerConfig;

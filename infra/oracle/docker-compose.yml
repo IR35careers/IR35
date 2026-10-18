@@ -1,0 +1,25 @@
+{
+  "name": "ir35-worker",
+  "services": {
+    "worker": {
+      "image": "${IR35_WORKER_IMAGE:?Set the reviewed linux/arm64 image ID or digest}",
+      "platform": "linux/arm64",
+      "restart": "unless-stopped",
+      "init": true,
+      "env_file": [{ "path": "/opt/ir35-worker/.env", "format": "raw", "required": true }],
+      "environment": {
+        "APPLY_RUNNER": "${APPLY_RUNNER:-vercel}",
+        "APPLICATION_WORKER_ACCEPT_JOBS": "${APPLICATION_WORKER_ACCEPT_JOBS:-false}",
+        "PORT": "8787"
+      },
+      "ports": ["127.0.0.1:8787:8787"],
+      "mem_limit": "4g",
+      "pids_limit": 256,
+      "shm_size": "1gb",
+      "cap_drop": ["ALL"],
+      "security_opt": ["no-new-privileges:true"],
+      "stop_grace_period": "330s",
+      "logging": { "driver": "json-file", "options": { "max-size": "10m", "max-file": "3" } }
+    }
+  }
+}

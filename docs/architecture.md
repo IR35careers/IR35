@@ -10,6 +10,8 @@ PR #25 merged as `ee362a1` after all 15 final-head checks passed at `81c3af5`, i
 
 On `codex/google-identity`, the customer/admin Google entry now uses GIS's rendered button and Supabase ID-token exchange with a fresh raw nonce and its SHA256 hex hash. Local shape/intent validation is not signature verification: Supabase remains the authentication authority, and the admin session endpoint still checks membership. The original redirect is retained behind `NEXT_PUBLIC_GOOGLE_REDIRECT_FALLBACK_ENABLED`, off by default and enforced server-side. Only sign-in routes receive documented GIS CSP sources; no wildcard hosts or unsafe-inline script. See `google-identity-setup.md` for exact free provider setup and controlled-preview gates. This is locally verified branch implementation, not verified Google Cloud branding or production sign-in. Vercel is currently Hobby; no hosted preview was started.
 
+PR #27 subsequently merged as `15b023c` after all 15 final-head checks passed at `a3e4f6f`; provider configuration/preview and production release remain open. The Oracle runtime branch now treats oracle and legacy railway as aliases of the same pg-boss producer/consumer path, while standby keeps Vercel selection and acceptance false. It adds `infra/oracle/` Compose/cloud-init/mock-smoke assets and native ARM CI preparation; it does not create OCI resources or enable deployment. Host SSH/network auto-update choice and standby external monitoring are still open. `deploy-worker.md` supersedes the explicitly withdrawn Railway archive.
+
 ## Runtime and release boundaries
 
 - Next.js App Router, React 19, strict TypeScript, Tailwind; deployed on Vercel. `package.json` runs typecheck, ESLint, Vitest and legacy checks before the production build.
