@@ -39,6 +39,24 @@ function cleanLine(value: string, max = 240): string {
     .slice(0, max);
 }
 
+function statedJobText(value: string, max = 240): string {
+  const text = cleanLine(value, max);
+  return /^(?:unknown|undetermined|not stated|not specified|unspecified|tbc|tbd|n\/?a|location not stated)$/i.test(text) ? "" : text;
+}
+
+function workplaceLabel(job: JobDetail): string {
+  return job.remote_type === "remote" ? "remote" : job.remote_type === "hybrid" ? "hybrid" : job.remote_type === "onsite" ? "on-site" : "";
+}
+
+function advertisedWorkingContext(job: JobDetail): string {
+  const workplace = workplaceLabel(job);
+  const ir35 = job.ir35_status === "inside" ? "Inside IR35" : job.ir35_status === "outside" ? "Outside IR35" : "";
+  if (!workplace && !ir35) return "Please confirm the IR35 status and working pattern before engagement.";
+  if (!workplace) return `The advertised ${ir35} arrangement can be discussed against the final working practices. Please confirm the working pattern before engagement.`;
+  if (!ir35) return `The advertised ${workplace} working pattern can be discussed against the final working practices. Please confirm the IR35 status before engagement.`;
+  return `The advertised ${ir35} arrangement and ${workplace} working pattern are understood and can be discussed against the final working practices.`;
+}
+
 function evidenceSentence(matched: string[]): string {
   if (matched.length === 0) {
     return "My Resume contains transferable delivery experience relevant to the responsibilities described in this contract.";
@@ -62,8 +80,8 @@ export function buildTruthPreservingCoverLetter(
     throw new Error(
       "Add your full name to your profile or place it at the top of your Resume before continuing.",
     );
-  const title = cleanLine(job.title, 160);
-  const company = cleanLine(job.company_name, 120);
+  const title = statedJobText(job.title, 160) || "advertised";
+  const company = statedJobText(job.company_name, 120) || "your organisation";
   const availability = cleanLine(profile.availability, 120);
   const clearance = cleanLine(profile.clearance, 100);
 
@@ -79,7 +97,7 @@ export function buildTruthPreservingCoverLetter(
     "",
     `I am applying for the ${title} contract with ${company}.`,
     evidenceSentence(matchedKeywords),
-    `The advertised ${job.ir35_status === "outside" ? "Outside IR35" : job.ir35_status === "inside" ? "Inside IR35" : "IR35 status to be confirmed"} arrangement and ${cleanLine(job.remote_type)} working pattern are understood and can be discussed against the final working practices.`,
+    advertisedWorkingContext(job),
     ...optional,
     "",
     "I would welcome the opportunity to discuss the deliverables, working practices and evidence behind the status determination before engagement.",
@@ -119,8 +137,13 @@ export function buildScreeningQuestions(
     profile.availability || profile.noticePeriod,
     160,
   );
+  const workplace = workplaceLabel(job);
+  const location = statedJobText(job.location);
+  const company = statedJobText(job.company_name);
   const workingPattern =
-    job.remote_type === "remote"
+    !workplace
+      ? { answer: "", reviewed: false, source: "user" as const }
+      : job.remote_type === "remote"
       ? { answer: "Yes", reviewed: true, source: "job" as const }
       : profile.canWorkInPerson === null ||
           profile.canWorkInPerson === undefined
@@ -148,6 +171,7 @@ export function buildScreeningQuestions(
     };
   };
   const roleEvidence = job.skills
+    .filter(skill => statedJobText(skill))
     .slice(0, 6)
     .map((skill, index): ApplicationQuestion => {
       const answer = evidenceForSkillQuestion(cvText, skill);
@@ -165,7 +189,7 @@ export function buildScreeningQuestions(
     });
   const limitedCompanyAnswer =
     profile.limitedCompanyName || profile.companyNumber ? "Yes" : "";
-  return applyRememberedApplicationAnswers([
+  const questions = applyRememberedApplicationAnswers([
     {
       id: "right-to-work",
       label: "Do you have the right to work in the UK?",
@@ -184,7 +208,8 @@ export function buildScreeningQuestions(
     },
     {
       id: "location",
-      label: `Can you meet the advertised ${job.remote_type} working pattern in ${cleanLine(job.location)}?`,
+      label: workplace ? `Can you meet the advertised ${workplace} working pattern${location ? ` in ${location}` : ""}?`
+        : "What working pattern can you agree with the recruiter for this role?",
       answer: workingPattern.answer,
       required: true,
       source: workingPattern.source,
@@ -259,8 +284,8 @@ export function buildScreeningQuestions(
     ),
     yesNo(
       "previous-employer",
-      `Have you previously worked for ${cleanLine(job.company_name)}?`,
-      profile.workedForCompanyBefore,
+      company ? `Have you previously worked for ${company}?` : "Have you previously worked for this employer?",
+      company ? profile.workedForCompanyBefore : null,
     ),
     yesNo(
       "government-clearance",
@@ -355,6 +380,8 @@ export function buildScreeningQuestions(
     ),
     ...roleEvidence,
   ], profile.savedApplicationAnswers);
+  return questions.map(question => ((!workplace && question.id === "location") || (!company && question.id === "previous-employer"))
+    ? { ...question, answer: "", reviewed: false, source: "user" as const } : question);
 }
 
 export function prepareApplication(
