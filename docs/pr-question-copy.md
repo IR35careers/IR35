@@ -1,6 +1,6 @@
 # Ask for unstated job details without unknown placeholders
 
-Stacked on the independently reviewed P0.4 answer patch (PR #19). Retarget to main after that parent merges, then require final-head CI before merging this copy-only follow-up.
+The independently reviewed P0.4 answer patch (PR #19) is merged. This copy-only follow-up was retargeted to main and requires its own final-head CI before merge.
 
 ## What and why
 
