@@ -30,6 +30,8 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "",
       SUPABASE_SECRET_KEY: "",
       APPLICATION_WORKER_SECRET: "",
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "",
+      NEXT_PUBLIC_GOOGLE_REDIRECT_FALLBACK_ENABLED: "false",
     },
     url: baseURL,
     reuseExistingServer: !productionTest,

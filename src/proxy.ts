@@ -20,7 +20,10 @@ function configuredSupabaseConnectSources(): string[] {
   }
 }
 
-function contentSecurityPolicy(nonce: string): string {
+function contentSecurityPolicy(nonce: string, allowGoogleIdentity: boolean): string {
+  const gisParent = allowGoogleIdentity ? " https://accounts.google.com/gsi/" : "";
+  const gisScript = allowGoogleIdentity ? " https://accounts.google.com/gsi/client" : "";
+  const gisStyle = allowGoogleIdentity ? " https://accounts.google.com/gsi/style" : "";
   const connectSources = ["'self'", ...configuredSupabaseConnectSources(), "https://www.google-analytics.com", "https://region1.google-analytics.com", "https://analytics.google.com"].join(" ");
   const developmentEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
@@ -29,17 +32,17 @@ function contentSecurityPolicy(nonce: string): string {
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com${developmentEval}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com${gisScript}${developmentEval}`,
     "script-src-attr 'none'",
-    "style-src 'self'",
-    `style-src-elem 'self' 'nonce-${nonce}'`,
+    `style-src 'self'${gisStyle}`,
+    `style-src-elem 'self' 'nonce-${nonce}'${gisStyle}`,
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob: https://www.google-analytics.com",
     "font-src 'self' data:",
-    `connect-src ${connectSources}`,
+    `connect-src ${connectSources}${gisParent}`,
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
-    "frame-src 'self'",
+    `frame-src 'self'${gisParent}`,
     "manifest-src 'self'",
     "upgrade-insecure-requests",
   ].join("; ");
@@ -47,10 +50,12 @@ function contentSecurityPolicy(nonce: string): string {
 
 export function proxy(request: NextRequest) {
   const nonce = requestNonce();
+  const allowGoogleIdentity = request.nextUrl.pathname === "/account" || request.nextUrl.pathname === "/admin/login"
+    || (request.headers.get("host")?.split(":")[0].toLowerCase() === ADMIN_HOST && request.nextUrl.pathname === "/login");
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.set("x-nonce", nonce);
   const protect = (response: NextResponse) => {
-    response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
+    response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce, allowGoogleIdentity));
     if (request.nextUrl.pathname === "/auth/callback" || request.nextUrl.pathname === "/account" || request.nextUrl.pathname.startsWith("/account/")) {
       response.headers.set("Cache-Control", "no-store, private");
       response.headers.set("Referrer-Policy", "no-referrer");

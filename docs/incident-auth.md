@@ -1,5 +1,7 @@
 # P0.9 — authentication and application context audit
 
+**Superseding owner direction, 18 October:** zero budget; do not prepare or activate a paid Supabase auth domain. The existing default domain stays. Free Google Identity Services with nonce-bound ID-token exchange, flagged redirect fallback and consent branding is the separate P0.9a follow-up; see `google-identity-setup.md` and the current top checkpoint in `progress.md`. Historical paid-domain exploration below is evidence only, not authorization. PR #25's callback/confirmation/context fixes are merged, not released.
+
 Audit 18 October 2026, source `1ee7346`; the code follow-up below is implemented on `codex/railway-auth-flow`, **not deployed**. P0.9 remains open pending final-head verification, provider configuration and a compatible production release.
 
 ## Verified gaps

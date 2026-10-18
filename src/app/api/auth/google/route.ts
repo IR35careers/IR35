@@ -1,8 +1,10 @@
 import { buildGoogleOAuthAuthorizeUrl } from "@/lib/google-oauth";
+import { googleRedirectFallbackEnabled } from "@/lib/google-identity";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request): Promise<Response> {
+  if (!googleRedirectFallbackEnabled()) return Response.json({ error: "Google redirect fallback is disabled. Use the secure Google button or email." }, { status: 404, headers: { "Cache-Control": "no-store" } });
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   if (!supabaseUrl) {
     return Response.json(

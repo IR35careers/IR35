@@ -8,6 +8,8 @@ Zero budget: leave Railway's empty trial project undeployed, never upgrade Oracl
 
 PR #25 merged as `ee362a1` after all 15 final-head checks passed at `81c3af5`, including Docker/Postgres and three browser projects. Its callback/resend/confirmed-email/job-context code is merged, not released. Main and preparation branch families retain the Vercel Git deployment hold; an explicit isolated/test-account preview is a separate gate. Migration 025 and compatible web rollout remain pending, with no runner cutover approved.
 
+On `codex/google-identity`, the customer/admin Google entry now uses GIS's rendered button and Supabase ID-token exchange with a fresh raw nonce and its SHA256 hex hash. Local shape/intent validation is not signature verification: Supabase remains the authentication authority, and the admin session endpoint still checks membership. The original redirect is retained behind `NEXT_PUBLIC_GOOGLE_REDIRECT_FALLBACK_ENABLED`, off by default and enforced server-side. Only sign-in routes receive documented GIS CSP sources; no wildcard hosts or unsafe-inline script. See `google-identity-setup.md` for exact free provider setup and controlled-preview gates. This is locally verified branch implementation, not verified Google Cloud branding or production sign-in. Vercel is currently Hobby; no hosted preview was started.
+
 ## Runtime and release boundaries
 
 - Next.js App Router, React 19, strict TypeScript, Tailwind; deployed on Vercel. `package.json` runs typecheck, ESLint, Vitest and legacy checks before the production build.

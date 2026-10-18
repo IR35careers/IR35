@@ -25,6 +25,7 @@ import { validateEmail } from "@/lib/utils";
 import { EmailConfirmationForm } from "@/components/ui/email-confirmation-form";
 import { ApplicationSignInContext } from "@/components/ui/application-sign-in-context";
 import { hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
+import { GoogleIdentityButton } from "@/components/GoogleIdentityButton";
 
 type AccountMode = "sign-in" | "create" | "forgot";
 
@@ -80,14 +81,13 @@ function AuthPanel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function SignInForm() {
+export default function SignInForm({ nonce }: { nonce?: string }) {
   const {
     user,
     loading,
     signInWithPassword,
     signUpWithPassword,
     requestPasswordReset,
-    signInWithGoogle,
     signInWithGithub,
     signOut,
   } = useAuth();
@@ -110,6 +110,7 @@ export default function SignInForm() {
   const [switchingAccount, setSwitchingAccount] = useState(switchRequested);
   const confirmationRequested = searchParams.get("confirmation") === "1";
   const showConfirmation = confirmSent || (confirmationRequested && (!user || !hasConfirmedApplicationEmail(user)));
+  const accountDestination = mode === "create" ? signupNext : next;
 
   useEffect(() => {
     if (loading || !switchRequested) return;
@@ -124,11 +125,11 @@ export default function SignInForm() {
 
   useEffect(() => {
     if (!loading && user && !switchRequested && !showConfirmation) {
-      const destination = authenticatedDestination(user.email, next);
+      const destination = authenticatedDestination(user.email, accountDestination);
       if (destination.startsWith("https://")) window.location.replace(destination);
       else router.replace(destination);
     }
-  }, [user, loading, next, router, switchRequested, showConfirmation]);
+  }, [user, loading, accountDestination, router, switchRequested, showConfirmation]);
 
   const selectMode = (selected: Exclude<AccountMode, "forgot">) => {
     setMode(selected);
@@ -143,16 +144,14 @@ export default function SignInForm() {
     return false;
   };
 
-  const startSocial = async (provider: "google" | "github") => {
+  const startSocial = async (provider: "github") => {
     setError(null);
     if (!requireLegalConsent()) return;
     setSocialLoading(provider);
     const destination = mode === "create" ? signupNext : next;
-    const result = provider === "google"
-      ? await signInWithGoogle(destination, selectGoogleAccount)
-      : await signInWithGithub(destination);
+    const result = await signInWithGithub(destination);
     if (result.error) {
-      setError(providerMessage(provider === "google" ? "Google" : "GitHub", result.error));
+      setError(providerMessage("GitHub", result.error));
       setSocialLoading(null);
     }
   };
@@ -282,9 +281,7 @@ export default function SignInForm() {
           <>
             <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-slate-200" /><span className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-600">or continue with</span><span className="h-px flex-1 bg-slate-200" /></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <button type="button" onClick={() => void startSocial("google")} disabled={Boolean(socialLoading)} className="ir35-focus flex min-h-12 items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60">
-                {socialLoading === "google" ? <Loader2 className="animate-spin" size={17} /> : <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full bg-white text-sm font-black text-[#4285f4] shadow-sm">G</span>} Google
-              </button>
+              <GoogleIdentityButton nonce={nonce} mode={mode} next={accountDestination} selectAccount={selectGoogleAccount} disabled={Boolean(socialLoading) || submitting || (mode === "create" && !legalAccepted)} onError={setError} />
               <button type="button" onClick={() => void startSocial("github")} disabled={Boolean(socialLoading)} className="ir35-focus flex min-h-12 items-center justify-center gap-2.5 rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">
                 {socialLoading === "github" ? <Loader2 className="animate-spin" size={17} /> : <Github size={18} />} GitHub
               </button>

@@ -1,0 +1,37 @@
+# Free Google Identity Services setup — Phase 0
+
+Owner chose the default Supabase domain and **zero budget**, replacing the paid custom-domain plan. No plan upgrade, new paid service or custom auth-domain preparation is authorised. GIS authenticates on the application origin and sends a Google ID token plus the original random nonce to Supabase. The button uses FedCM where supported; Google/browser UI and brand-verification state still determine the exact displayed name/domain. Do not promise a particular production consent screen until the named test account proves it.
+
+## Code and security boundary
+
+- Generate a fresh 32-byte Web Crypto nonce per attempt; send only its SHA256 hex hash to Google's `initialize`. Keep the original only in a five-minute closure. Each credential callback consumes the attempt before exchange; replays/mismatches/expiry do not reach Supabase. Retry generates another attempt; navigation/disabling legal consent discards it.
+- Local bounded claim checks cover shape, nonce, audience, issuer and expiry. These are **not signature verification or authorization**. Supabase verifies the signed Google ID token and nonce. Keep the Google provider's nonce check enabled. No raw/hashed nonce, ID token, Supabase session or credential response is logged or put in a URL/storage by this implementation.
+- No automatic One Tap/auto-select. The user clicks Google's rendered sign-in button; create-account mode requires legal consent before loading/initializing GIS. Admin access remains checked by `/api/admin/session`; GitHub linking/import remains independent.
+- `NEXT_PUBLIC_GOOGLE_REDIRECT_FALLBACK_ENABLED=false` is the default. The existing redirect is shown only when explicitly enabled and is checked again in its server endpoint. It is never an automatic failure fallback. `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is the public OAuth web client ID, **not its secret**. Both public settings need a build/redeploy when changed.
+- Nonce CSP/strict-dynamic remain. Only `/account` and admin sign-in routes add the documented GIS client script, stylesheet, connect and iframe paths. No wildcard Google hosts, unsafe-inline script, Data API/RLS change or global frame exception. Existing popup COOP remains. Account server rendering passes the request nonce to the script.
+
+## Google Cloud — exact console steps
+
+Use the **existing** Google Cloud project and Web application OAuth client used by this Supabase Google provider; do not create billing or upgrade anything. Normal OAuth client/branding controls are not managed by the installed application CLIs. If a console action requires owner sign-in/verification, the owner performs that native approval; no password/token in chat.
+
+1. Open [Google Auth Platform → Branding](https://console.cloud.google.com/auth/branding). Select the existing project in the top project selector.
+2. App information: set **App name → IR35 Careers**. Choose an existing verified support email and upload the IR35Careers brand logo. Use only an owned/available support identity; do not invent Google Workspace ownership.
+3. App domain links: home `https://www.ir35careers.com/`, privacy `https://www.ir35careers.com/privacy`, terms `https://www.ir35careers.com/terms`. Under **Authorized domains**, add `ir35careers.com`, then Save. Complete any Google-requested domain/brand verification; a logo/name may remain unverified until Google approves it. No paid service is needed or authorised.
+4. Open **Google Auth Platform → Clients**. Select the existing **Web application** client whose public client ID matches the production `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (inspect privately, never print secrets).
+5. Under **Authorized JavaScript origins → Add URI**, retain existing entries and add `https://ir35careers.com`, **`https://www.ir35careers.com`**, `https://admin.ir35careers.com` if using GIS on the admin host, and the **actual controlled preview origin returned by Vercel**. Origin only: no path, trailing slash, query or wildcard. Do not guess the preview URL or authorize arbitrary deployments. Save.
+6. Keep the existing Supabase `https://kxcbgflleqnjzjbkevwd.supabase.co/auth/v1/callback` under **Authorized redirect URIs** for the optional redirect fallback. Do not confuse this provider callback with the app's `/auth/callback` confirmation page.
+7. **Audience**: if the app is Testing, add the owner's actual Google test identity as a test user. `anvesh.mannuru+ir35test@gmail.com` is the application test address; Google may identify the underlying account without the plus suffix. Confirm the actual selected Google identity with the owner rather than claiming the alias is a separate Google account. Use only the approved test identity; do not bypass Google's verification requirements.
+
+## Supabase / preview configuration
+
+- Authentication → Sign In / Providers → Google: enabled, the same web client ID accepted, **Skip nonce checks off**. Preserve existing redirect/provider configuration; never change this to make a failing nonce test pass.
+- Vercel already has a production `NEXT_PUBLIC_GOOGLE_CLIENT_ID` entry, but the last names-only read showed no preview target for it. Its presence does not prove the ID/origins/branding work. Copy the public ID privately into a branch-scoped controlled preview only, keeping fallback false. Do not copy unrestricted production secrets to a new preview. Check the hosting account has free build allowance before deployment; stop if any action could incur charges.
+- Git preparation holds remain. A deliberate preview needs separate, explicitly scoped configuration. The broad branch UI depends on uninstalled migration 025; do not run it against customer application data or declare workspace readiness from auth success. Use only the approved test account and mock ATS; production runner selection/acceptance stay unchanged. Never submit to a real employer.
+
+## Verification gates — not claimed complete
+
+Unit tests cover crypto hashing, one-use/expiry/discard, wrong nonce/audience/issuer/expiry, malformed credentials, original-nonce Supabase payload and fixed error copy, server fallback gating/canonical redirects, and route-scoped CSP. Isolated browser tests clear real credentials and prove truthful offline/consent/fallback behavior; **they do not verify a real Google popup or production branding**.
+
+Controlled preview must additionally prove: actual GIS loads under CSP, the selected approved Google identity and displayed application/domain, valid nonce exchange accepted, session belongs to the expected test user, safe saved-job return, explicit replay rejection, admin membership remains authoritative, and fallback on/off behavior. Do not capture live tokens in Playwright traces/screenshots/logs. Keep provider settings and real preview result recorded separately from mock evidence. Do not release to production until this passes.
+
+Primary references: [Supabase Google / nonce guide](https://supabase.com/docs/guides/auth/social-login/auth-google), [Google setup, origins and CSP](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid), [GIS JavaScript reference](https://developers.google.com/identity/gsi/web/reference/js-reference), [FedCM migration](https://developers.google.com/identity/gsi/web/guides/fedcm-migration). The currently documented `use_fedcm_for_prompt` option is deprecated; this implementation uses the documented button option.

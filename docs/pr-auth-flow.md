@@ -1,5 +1,7 @@
 # P0.9 — canonical confirmation and saved application context
 
+**Current owner override:** no paid custom auth domain or paid preparation. The free GIS/nonce/branding follow-up is documented in `google-identity-setup.md`; historical manual dependency #2 below is withdrawn. This PR was merged as `ee362a1`, not released to production.
+
 ## What / why
 
 Implement the missing www callback/recovery, explicit confirmation resend, confirmed-email application boundary and job-aware sign-in. Fix no-CV Apply settings deep links. Keep admin OAuth and GitHub import separate; preserve approval/lifecycle/tenant checks. See `incident-auth.md` for findings and evidence limits.
