@@ -41,6 +41,7 @@ import {
 import {
   closestOption,
   deterministicMapping,
+  lengthSafeFieldValue,
   screeningAnswer,
   valueForMapping,
 } from "@/lib/application-runner/field-mapping";
@@ -1445,13 +1446,14 @@ async function snapshotFields(
         .map((id) => document.getElementById(id)?.textContent ?? "")
         .join(" ");
       const label =
-        legend ||
+        ((type === "radio" || type === "checkbox") ? legend : "") ||
         described ||
         element.getAttribute("aria-label") ||
         ownLabel ||
         adjacentLabel ||
         element.getAttribute("placeholder") ||
         element.getAttribute("name") ||
+        legend ||
         "";
       let options: string[] = [];
       if (element instanceof HTMLSelectElement)
@@ -1488,6 +1490,8 @@ async function snapshotFields(
         options,
         optionValue: element instanceof HTMLInputElement ? element.value : "",
         optionLabel: ownLabel,
+        maxLength: (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) && element.maxLength >= 0
+          ? element.maxLength : undefined,
       };
     });
     fields.push({
@@ -1509,6 +1513,7 @@ async function snapshotFields(
           .slice(0, 50),
         optionValue: clean(snapshot.optionValue, 200),
         optionLabel: clean(snapshot.optionLabel, 200),
+        maxLength: snapshot.maxLength,
       },
     });
   }
@@ -1667,6 +1672,7 @@ async function fillField(input: {
       value = value.slice(2);
     if (value.startsWith("0")) value = value.slice(1);
   }
+  value = lengthSafeFieldValue(field, value);
   if (!value) return false;
   if (field.type === "select") {
     const option = closestOption(value, field.options);

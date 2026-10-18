@@ -9,6 +9,9 @@ const MAX_SAVED_ANSWERS = 120;
 export function normaliseApplicationQuestionLabel(value: string): string {
   return value
     .toLocaleLowerCase("en-GB")
+    .replace(/\bc\+\+/g, " cplusplus ")
+    .replace(/\bc#/g, " csharp ")
+    .replace(/\.net\b/g, " dotnet ")
     .replace(/\b(?:please|kindly|required)\b/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")

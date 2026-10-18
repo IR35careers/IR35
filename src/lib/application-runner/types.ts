@@ -59,6 +59,7 @@ export interface RunnerField {
   options: string[];
   optionValue: string;
   optionLabel: string;
+  maxLength?: number;
 }
 
 export interface FieldMapping {

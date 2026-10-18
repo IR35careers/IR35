@@ -5,6 +5,8 @@ import {
   type RunnerFacts,
   type RunnerField,
 } from "@/lib/application-runner/types";
+import { fitAnswerToLimit } from "@/lib/workspace/answer-text";
+import { normaliseApplicationQuestionLabel } from "@/lib/workspace/answer-memory";
 
 const PATTERNS: Array<[FactKey, RegExp]> = [
   ["first_name", /\b(first|given)\s*name\b/i],
@@ -94,21 +96,22 @@ export function screeningAnswer(
   field: RunnerField,
   facts: RunnerFacts,
 ): string {
-  const label = normalise(field.label || field.name || field.placeholder);
+  const label = normaliseApplicationQuestionLabel(field.label || field.name || field.placeholder);
   if (!label) return "";
-  const exact = facts.screeningAnswers.find(
-    (question) => normalise(question.label) === label && question.reviewed,
+  const exact = facts.screeningAnswers.filter(
+    (question) => normaliseApplicationQuestionLabel(question.label) === label && question.reviewed && question.answer.trim(),
   );
-  if (exact?.answer.trim()) return exact.answer.trim();
-  const near = facts.screeningAnswers.find((question) => {
-    if (!question.reviewed || !question.answer.trim()) return false;
-    const candidate = normalise(question.label);
-    return (
-      candidate.length >= 12 &&
-      (candidate.includes(label) || label.includes(candidate))
-    );
-  });
-  return near?.answer.trim() ?? "";
+  const answers = new Set(exact.map(question => question.answer.trim()));
+  // Generic/substring questions and conflicting duplicate answers are ambiguous.
+  // Never borrow an AWS answer for Azure, or guess which saved answer is current.
+  return answers.size === 1 ? [...answers][0] : "";
+}
+
+export function lengthSafeFieldValue(field: RunnerField, value: string): string {
+  if (field.maxLength === undefined || value.length <= field.maxLength) return value;
+  // Identity/contact/numeric facts cannot be shortened without changing them.
+  return field.type === "textarea" || /\b(?:describe|experience|statement|cover letter|message)\b/i.test(field.label)
+    ? fitAnswerToLimit(value, field.maxLength) : "";
 }
 
 export function valueForMapping(
