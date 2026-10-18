@@ -1,7 +1,4 @@
-import {
-  analyseResumeForRole,
-  resumeContainsTerm,
-} from "@/lib/resume/analysis";
+import { analyseResumeForRole } from "@/lib/resume/analysis";
 import { resolveCandidateName } from "@/lib/candidate-name";
 import { normaliseResumeText } from "@/lib/resume/normalise-text";
 import type {
@@ -18,6 +15,7 @@ import type {
 } from "@/lib/workspace/types";
 import type { JobDetail, JobListing } from "@/lib/job-types";
 import { applyRememberedApplicationAnswers } from "@/lib/workspace/answer-memory";
+import { evidenceForSkillQuestion } from "@/lib/workspace/answer-text";
 
 const MAX_CV_CHARACTERS = 80_000;
 
@@ -149,15 +147,10 @@ export function buildScreeningQuestions(
       reviewed: Boolean(answer),
     };
   };
-  const cvLines = cvText
-    .split(/\n+/)
-    .map((line) => cleanLine(line, 800))
-    .filter((line) => line.length >= 20);
   const roleEvidence = job.skills
     .slice(0, 6)
     .map((skill, index): ApplicationQuestion => {
-      const answer =
-        cvLines.find((line) => resumeContainsTerm(line, skill)) ?? "";
+      const answer = evidenceForSkillQuestion(cvText, skill);
       return {
         id: `role-skill-${index + 1}-${skill
           .toLowerCase()
