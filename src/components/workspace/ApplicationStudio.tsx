@@ -78,6 +78,7 @@ import {
 import { flushWorkspaceChanges, refreshWorkspaceApplications, updateWorkspace, useWorkspaceState } from "@/lib/workspace/store";
 import type { ApplicationRecord } from "@/lib/workspace/types";
 import { rememberReviewedApplicationAnswers } from "@/lib/workspace/answer-memory";
+import { editApplicationDraft } from "@/lib/workspace/draft-edit";
 
 type BusyState =
   | "parse"
@@ -498,19 +499,16 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   const updateApplication = (
     updater: (current: ApplicationRecord) => ApplicationRecord,
   ) => {
-    const current = applicationRef.current;
-    if (!current || submitted || ["applied", "viewed", "replied", "interview", "offer", "rejected", "withdrawn"].includes(current.status)) return;
-    const next: ApplicationRecord = {
-      ...updater(current),
-      receipt:
-        current.receipt?.mode === "external_handoff"
-          ? current.receipt
-          : null,
-      updatedAt: new Date().toISOString(),
-    };
-    applicationRef.current = next;
-    setApplication(next);
-    persistApplication(next);
+    const id = applicationRef.current?.id;
+    if (!id || submitted) return;
+    updateWorkspace(current => {
+      const result = editApplicationDraft(current, id, latest => updater(cleanExisting(latest, workspace.profile.fullName) ?? latest));
+      if (result.application) {
+        applicationRef.current = result.application;
+        setApplication(result.application);
+      }
+      return result.state;
+    });
   };
 
   const parseCvFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -832,20 +830,12 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
   };
 
   const recalculateEditedCv = () => {
-    if (!application) return;
-    const tailoredCvText = normaliseResumeText(application.tailoredCvText);
-    const score = scoreResumeForRole(
-      tailoredCvText,
-      job,
-      application.resumeVersionLabel,
-    );
-    updateApplication((current) => ({
-      ...current,
-      tailoredCvText,
-      matchScore: score.overall,
-      matchedKeywords: score.matchedKeywords,
-      missingKeywords: score.missingKeywords,
-    }));
+    updateApplication(current => {
+      const tailoredCvText = normaliseResumeText(current.tailoredCvText);
+      const score = scoreResumeForRole(tailoredCvText, job, current.resumeVersionLabel);
+      return { ...current, tailoredCvText, matchScore: score.overall,
+        matchedKeywords: score.matchedKeywords, missingKeywords: score.missingKeywords };
+    });
   };
 
   const persistReviewedPacket = async (
