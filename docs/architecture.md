@@ -2,6 +2,12 @@
 
 Audited 15 October 2026 at `0df1489`. This describes checked-in code and the limited live checks below, not a claim that every integration works in production. `spec.md` remains the target; `progress.md` records completion.
 
+## Superseding owner choices — 18 October 2026
+
+Zero budget: leave Railway's empty trial project undeployed, never upgrade Oracle to Pay As You Go or activate a paid auth domain. The persistent host target is Oracle Always Free A1 in London, with the existing Supabase pg-boss session pooler and unchanged standby/cutover gates. Oracle account activation is still awaiting the owner; no VM/resources are claimed. The default Supabase domain is retained; Google Identity Services + hashed nonce/ID-token exchange and free consent branding replace the paid-domain requirement. Detailed tasks and cost/idle-capacity caveats are in the top of `progress.md`. Historical Railway/paid-domain notes below are not current authorization.
+
+PR #25 merged as `ee362a1` after all 15 final-head checks passed at `81c3af5`, including Docker/Postgres and three browser projects. Its callback/resend/confirmed-email/job-context code is merged, not released. Main and preparation branch families retain the Vercel Git deployment hold; an explicit isolated/test-account preview is a separate gate. Migration 025 and compatible web rollout remain pending, with no runner cutover approved.
+
 ## Runtime and release boundaries
 
 - Next.js App Router, React 19, strict TypeScript, Tailwind; deployed on Vercel. `package.json` runs typecheck, ESLint, Vitest and legacy checks before the production build.
