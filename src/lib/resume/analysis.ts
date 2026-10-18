@@ -8,7 +8,7 @@ import type {
   ResumeSuggestion,
   RoleKeyword,
 } from "@/lib/resume/types";
-import { normaliseResumeText } from "@/lib/resume/normalise-text";
+import { isPlausibleCandidateName, normaliseExtractedCvText } from "@/lib/resume/identity";
 
 const HEADING_KINDS: Array<[RegExp, ResumeSectionKind]> = [
   [/^(profile|professional profile|summary|professional summary|about me)$/i, "summary"],
@@ -121,7 +121,6 @@ const TITLE_STOP_WORDS = new Set([
   "the",
 ]);
 
-const NAME_BLOCKLIST = /\b(curriculum|vitae|resume|profile|summary|engineer|developer|architect|analyst|manager|consultant|specialist|scientist|designer|administrator|director|lead|officer|contractor|platform|reliability|devops)\b/i;
 
 function clamp(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -188,7 +187,7 @@ function looksLikeHeading(line: string): boolean {
 
 function findCandidateName(lines: string[], contactIndex: number): string {
   const candidates = lines.slice(0, 20).flatMap((raw, index) => {
-    const line = raw.trim();
+    const line = cleanLine(raw);
     const words = line.split(/\s+/).filter(Boolean);
     if (
       words.length < 2 ||
@@ -196,8 +195,7 @@ function findCandidateName(lines: string[], contactIndex: number): string {
       line.length > 60 ||
       /@|linkedin|https?:|www\.|\+?\d[\d ()-]{7,}/i.test(line) ||
       sectionKind(line) ||
-      NAME_BLOCKLIST.test(line) ||
-      !/^[\p{L}][\p{L}'’-]*(?:\s+[\p{L}][\p{L}'’-]*)+$/u.test(line)
+      !isPlausibleCandidateName(line)
     ) return [];
 
     let score = words.length <= 3 ? 5 : 2;
@@ -211,7 +209,7 @@ function findCandidateName(lines: string[], contactIndex: number): string {
 }
 
 export function parseResumeText(rawText: string, filename = "Pasted Resume"): ParsedResume {
-  const text = normaliseResumeText(rawText)
+  const text = normaliseExtractedCvText(rawText)
     .replace(/\n{4,}/g, "\n\n\n")
     .trim();
   const lines = text.split("\n");

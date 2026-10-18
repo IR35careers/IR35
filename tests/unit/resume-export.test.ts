@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import JSZip from "jszip";
+import { z } from "zod";
 import { extractText, getDocumentProxy } from "unpdf";
 import { buildResumeDocx, buildResumePdf } from "@/lib/resume/export";
 import type { ResumeExportRequest } from "@/lib/resume/types";
@@ -27,11 +28,13 @@ describe("Resume exports", () => {
     expect(buffer.subarray(0, 4).toString("ascii")).toBe("%PDF");
     expect(buffer.byteLength).toBeGreaterThan(1_000);
     const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    expect(z.object({ Title: z.string() }).parse((await pdf.getMetadata()).info).Title).toBe("Alex Morgan - CV");
     const content = (await extractText(pdf, { mergePages: true })).text;
     expect(content).toContain("Alex Morgan");
     expect(content).not.toContain("Tailored for");
     expect(content).not.toContain("Approved v1");
     expect(content).not.toContain("IR35Careers");
+    await pdf.loadingTask.destroy();
   });
 
   it("creates a real DOCX package", async () => {
@@ -47,5 +50,6 @@ describe("Resume exports", () => {
     expect(exportedXml).not.toContain("Tailored for");
     expect(exportedXml).not.toContain("Approved v1");
     expect(exportedXml).not.toContain("IR35Careers");
+    expect(coreXml).toContain("Alex Morgan - CV");
   });
 });

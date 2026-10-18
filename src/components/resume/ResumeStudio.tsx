@@ -46,6 +46,7 @@ import { isSupabaseConfigured } from "@/lib/supabase-config";
 import { ResumeRefiner } from "@/components/resume/ResumeRefiner";
 import { ResumeDocumentPreview } from "@/components/resume/ResumeDocumentPreview";
 import { useWorkspaceState } from "@/lib/workspace/store";
+import { cvDisplayTitle, resolveCvCandidateName } from "@/lib/resume/identity";
 
 type StudioPhase = "source" | "review" | "final";
 
@@ -212,11 +213,12 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
       const formData = new FormData();
       formData.append("file", file);
       const response = await fetch("/api/resume/parse", { method: "POST", body: formData });
-      const payload = (await response.json()) as { text?: string; filename?: string; error?: string; warnings?: string[] };
+      const payload = (await response.json()) as { text?: string; filename?: string; error?: string; warnings?: string[]; extraction?: { prefill?: { fullName?: string } } };
       if (!response.ok || !payload.text) throw new Error(payload.error ?? "Resume could not be read.");
       setSourceText(payload.text);
       setSourceFilename(payload.filename ?? file.name);
-      if (payload.warnings?.length) setNotice("The Resume was read, but some Word formatting was simplified for analysis.");
+      setVersionLabel(cvDisplayTitle(workspace.profile.fullName, payload.extraction?.prefill?.fullName));
+      if (payload.warnings?.length) setNotice(payload.warnings.slice(0, 3).join(" "));
     } catch (parseError) {
       setError(parseError instanceof Error ? parseError.message : "Resume could not be read.");
     } finally {
@@ -282,10 +284,11 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
 
   const exportVersion = async (format: "pdf" | "docx") => {
     const parsed = parseResumeText(tailoredText, sourceFilename);
+    const name = resolveCvCandidateName(sampleVersion ? undefined : workspace.profile.fullName, parsed.candidateName);
     const payload: ResumeExportRequest = {
       format,
       resumeText: tailoredText,
-      candidateName: parsed.candidateName,
+      candidateName: name,
       jobTitle: job.title,
       companyName: job.company_name,
       versionLabel: versionLabel.trim() || "Approved version",
@@ -308,7 +311,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${parsed.candidateName || "Candidate"}-Resume.${format}`;
+      anchor.download = `${name}-CV.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -499,7 +502,7 @@ export function ResumeStudio({ job, backHref, forceLocalHistory = false }: { job
               <label htmlFor="tailored-cv" className="mt-5 block text-sm font-semibold text-slate-800">Resume text</label>
               <textarea id="tailored-cv" value={tailoredText} onChange={(event) => { setTailoredText(event.target.value); setApprovedVersion(null); }} rows={30} className="ir35-focus mt-2 w-full resize-y rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4 font-mono text-base leading-6 text-slate-800 sm:text-sm" />
               <button type="button" onClick={() => setDocumentPreview((value) => !value)} className="ir35-focus mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700"><FileText size={15} />{documentPreview ? "Hide document preview" : "Preview resume document"}</button>
-              {documentPreview && <div className="mt-4 max-w-full overflow-auto rounded-2xl bg-slate-100 p-3"><ResumeDocumentPreview resumeText={tailoredText} filename={sourceFilename} /></div>}
+              {documentPreview && <div className="mt-4 max-w-full overflow-auto rounded-2xl bg-slate-100 p-3"><ResumeDocumentPreview resumeText={tailoredText} filename={sourceFilename} candidateName={sampleVersion ? undefined : workspace.profile.fullName} /></div>}
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => void persistVersion("draft")} disabled={busy !== null} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 hover:border-slate-400 disabled:opacity-50">{busy === "save" ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save new version</button>
                 <button type="button" onClick={() => void persistVersion("approved")} disabled={busy !== null || sampleVersion} className="ir35-focus inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white hover:bg-brand-700 disabled:opacity-50">{busy === "approve" ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={17} />} Approve & save version</button>

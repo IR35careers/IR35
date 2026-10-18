@@ -30,6 +30,7 @@ import { scoreResumeForRole } from "@/lib/resume/analysis";
 import { StatusPill } from "@/components/workspace/WorkspacePage";
 import { formatRate, type JobDetail } from "@/lib/job-types";
 import { extractRoleKeywords, parseResumeText } from "@/lib/resume/analysis";
+import { cvDisplayTitle, resolveCvCandidateName } from "@/lib/resume/identity";
 import type {
   ApplicationRecord,
   ContractorProfile,
@@ -198,11 +199,7 @@ export function ApplicationRecordWorkspace({
     () => parseResumeText(application.tailoredCvText, application.resumeVersionLabel),
     [application.resumeVersionLabel, application.tailoredCvText],
   );
-  const resumeOwner =
-    parsedResume.candidateName !== "Candidate"
-      ? parsedResume.candidateName
-      : profile.fullName.trim() || "Your";
-  const displayResumeName = `${resumeOwner} Resume`;
+  const displayResumeName = cvDisplayTitle(profile.fullName, parsedResume.candidateName);
   const needsAttention = Boolean(
     application.attention && application.status === "needs_review" && application.deliveryStatus !== "external_only",
   );
@@ -237,7 +234,7 @@ export function ApplicationRecordWorkspace({
         body: JSON.stringify({
           format,
           resumeText: application.tailoredCvText,
-          candidateName: parsed.candidateName,
+          candidateName: resolveCvCandidateName(profile.fullName, parsed.candidateName),
           jobTitle: job.title,
           companyName: job.company_name,
           versionLabel: resumeLabel(application.resumeVersionLabel),
@@ -248,7 +245,8 @@ export function ApplicationRecordWorkspace({
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${parsed.candidateName || "Candidate"}-Resume.${format}`;
+      anchor.download = response.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1]
+        ?? `${resolveCvCandidateName(profile.fullName, parsed.candidateName)}-CV.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

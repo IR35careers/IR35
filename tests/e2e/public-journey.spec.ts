@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { spacedIdentityPdf } from "../helpers/cv-identity-fixture";
 import { DEMO_JOBS } from "../../src/lib/demo-jobs";
 import { hasStatedSponsorship, isSeniorityFilter, matchesSeniorityTitle } from "../../src/lib/job-search-filters";
 
@@ -504,6 +505,25 @@ test("Resume Studio analyses, verifies, versions and exports a role-ready Resume
   await expectNoSeriousA11yViolations(page);
 });
 
+test("CV upload explains saved web pages and preserves the user's identity from a letter-spaced PDF", async ({ page }) => {
+  await completeReusableApplicationProfile(page);
+  await page.goto("/jobs/11111111-1111-4111-8111-111111111111/resume");
+  await dismissPrivacyNotice(page);
+  const upload = page.getByLabel("Upload Resume file");
+  await upload.setInputFiles({ name: "sharepoint.pdf", mimeType: "application/pdf",
+    buffer: Buffer.from("<!doctype html><html><body>SharePoint viewer</body></html>") });
+  const importError = page.getByRole("alert").filter({ hasText: "This is a saved web page" });
+  await expect(importError).toBeVisible();
+  await expect(importError).toContainText("Download or Export");
+  await upload.setInputFiles({ name: "letter-spaced-cv.pdf", mimeType: "application/pdf", buffer: await spacedIdentityPdf() });
+  await expect(page.getByLabel("Resume text")).toHaveValue(/Alex Morgan/);
+  await page.getByRole("button", { name: "Analyse against this role" }).click();
+  await page.getByRole("button", { name: "Select all", exact: true }).click();
+  await page.getByRole("button", { name: "Use selected draft" }).click();
+  await expect(page.getByLabel("Version name")).toHaveValue("Alex Morgan CV");
+  await expectNoSeriousA11yViolations(page);
+});
+
 test("application workspace presents a clean review flow and never claims an unconfirmed submission", async ({ page }) => {
   await completeReusableApplicationProfile(page);
   await page.goto("/applications/new/11111111-1111-4111-8111-111111111111");
@@ -511,7 +531,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByRole("heading", { name: "Apply to Northstar Digital" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Complete your profile before applying" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Your Resume is ready" })).toBeVisible();
-  await expect(page.getByText("Alex Morgan Resume", { exact: true })).toBeVisible();
+  await expect(page.getByText("Alex Morgan CV", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Use a different Resume" })).toBeVisible();
   await page.getByRole("button", { name: "Prepare application" }).click();
 
@@ -521,7 +541,7 @@ test("application workspace presents a clean review flow and never claims an unc
   await expect(page.getByText("Employer questions", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await expect(page.getByText("Application Resume", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Alex Morgan Resume" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Alex Morgan CV" })).toBeVisible();
   await page.getByRole("button", { name: "Edit Resume" }).click();
   await expect(page.getByLabel("Resume text")).toHaveValue(/AWS, Terraform and Kubernetes/);
   await expect(page.getByRole("button", { name: "Refine for this job" })).toBeVisible();
