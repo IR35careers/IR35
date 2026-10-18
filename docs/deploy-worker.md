@@ -12,6 +12,8 @@ Vercel's authenticated project API confirms `main` is the production Git branch.
 
 Fresh native Railway login is verified; its account currently has no projects. Docker Desktop installation is explicitly deferred by the owner. The real pinned Chromium Docker/Postgres standby CI job passes; local Docker installation is not claimed. Supabase reports PITR disabled and no available physical backup: database changes remain gated on a verified recovery backup. All six focused production-mode browser regressions pass across the three viewports; final full CI is still required.
 
+Final-head CI subsequently passed at `41148a0` (Release quality `39036142240`, CodeQL `39036142243`); PR #1 is merged as `bca7288`. Vercel still serves `0df1489`, so merging did not deploy the migration-dependent code. Operations continue on `codex/railway-deployment-ops`. The owner requires the verified portable encrypted backup described in [pre-migration-backup.md](pre-migration-backup.md) before any migration. Neither production runner flag has changed.
+
 ## What is prepared
 
 - `services/application-worker/Dockerfile`: pinned `mcr.microsoft.com/playwright:v1.61.0-noble`, matching installed playwright-core, non-root pwuser, explicit source COPY and `.dockerignore` excluding credentials/local output.
@@ -65,6 +67,16 @@ node --env-file=.env.worker.local --import tsx services/application-worker/setup
 The private file needs only `PG_BOSS_DATABASE_URL` and optional `PG_BOSS_SSL_CA`. `.env.worker.local` is ignored. Setup installs pg-boss into the pre-created schema and all seven queues. Runtime `migrate=false` means deployment cannot silently upgrade queue DDL. Keep schema owner and pinned pg-boss version aligned; test future migrations separately.
 
 If the schema was created under postgres by SQL editor, an owner must `ALTER SCHEMA pgboss OWNER TO <queue_owner>` before setup. Do not use a PostgREST API key as a database password. For a separate producer role, after installation grant schema USAGE and SELECT/INSERT on pg-boss tables (plus USAGE/SELECT on its sequences if present); test `start`/`send` with that role. Do not grant it access to public candidate tables. Never expose SQL editor/browser credentials to clients.
+
+### Separate-role permission gate
+
+The deployment uses **ir35_queue** as the queue-only owner/worker and **ir35_queue_producer** as the Vercel publisher. Both are LOGIN, NOINHERIT, NOSUPERUSER, NOCREATEDB, NOCREATEROLE, NOREPLICATION, NOBYPASSRLS, with no role memberships. Neither owns public/auth/storage or has access to candidate tables. Create credentials privately only after the verified backup gate; never use the published disposable CI passwords in a hosted environment.
+
+After `setup-queue.ts`, the agent executes `supabase/operations/pgboss-producer-grants.sql` **as ir35_queue**. It grants the producer schema USAGE, table SELECT/INSERT, sequence USAGE/SELECT, and EXECUTE on `pgboss.job_now()` only. It denies browser roles/PUBLIC queue access, removes producer UPDATE/DELETE/DDL/maintenance authority, and establishes defaults for later queue tables/sequences. PostgreSQL grants PUBLIC function EXECUTE by default; the script explicitly revokes that default for future functions of this queue-only owner. Rerun the reviewed grants after a pinned pg-boss schema upgrade, including restoring the clock-function grant if that function was recreated. The script is operational ACL setup, not an automatically applied application migration, and contains no passwords. [PostgreSQL privilege semantics](https://www.postgresql.org/docs/17/ddl-priv.html).
+
+The Docker/Postgres CI job now installs/starts pg-boss with the queue-only login and authenticates a **second TCP connection** as the producer. Its disposable probes verify all seven queues, actual publish/owner claim/completion, blocked producer claim/complete/cancel/delete/truncate/DDL/role escalation, denied public/auth/storage fixture access, browser isolation, and future-object defaults. Local embedded-Postgres tests execute the same pg-boss SQL and operational grants with session identities, including negative tests that deliberately overgrant UPDATE or reuse the owner identity. Neither test is proof that production roles already exist.
+
+`services/application-worker/verify-queue-permissions.ts` is a **destructive disposable-CI probe**, not a production command. It requires NODE_ENV=test, PG_BOSS_LOCAL_TEST=true, loopback database URLs and the CI-only PG_BOSS_PRODUCER_TEST_DATABASE_URL. Do not set these test gates/variable on Railway or Vercel. Hosted verification must inspect installed roles/ACLs and use only controlled mock queue work; do not create the CI fixture tables or run destructive probes against the customer database.
 
 ## 2. Connect Railway — exact owner-run CLI steps
 
