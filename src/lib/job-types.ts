@@ -1,3 +1,5 @@
+import type { JobDescriptionKind } from "@/lib/job-description";
+
 /** Shape of a job row as returned by the public search API and detail pages. */
 export interface JobListing {
   id: string;
@@ -20,6 +22,8 @@ export interface JobListing {
 
 export interface JobDetail extends JobListing {
   description: string;
+  /** Known excerpt/import status; absence does not certify a complete advert. */
+  description_kind?: JobDescriptionKind;
   apply_url: string;
   source_domain: string;
 }

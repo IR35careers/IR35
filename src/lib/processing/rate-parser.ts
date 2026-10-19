@@ -207,8 +207,11 @@ export function parseRate(input: string | null | undefined): ParsedRate {
  */
 export function findRateInText(description: string): ParsedRate {
   const text = description ?? "";
+  // Start only at a sentence boundary. Without this anchor a long source
+  // paragraph without a pay period rescans its remaining text at every word
+  // (quadratic work on descriptions the importer legitimately accepts).
   const sentenceRe =
-    /[^.\n!?]*[£$€](?:[^.\n!?]|\.(?=\d)){0,80}?(?:per\s*day|a\s*day|day\s*rate|daily|\/\s*day|p\/?d\b|per\s*hour|hourly|\/\s*(?:hour|hr|h)\b|p\/?h\b|per\s*annum)[^.\n!?]*/gi;
+    /(?:^|(?<=[.\n!?]))[^.\n!?]*[£$€](?:[^.\n!?]|\.(?=\d)){0,80}?(?:per\s*day|a\s*day|day\s*rate|daily|\/\s*day|p\/?d\b|per\s*hour|hourly|\/\s*(?:hour|hr|h)\b|p\/?h\b|per\s*annum)[^.\n!?]*/gi;
   const candidates = text.match(sentenceRe);
   if (!candidates) return EMPTY("");
   // Parse the first plausible sentence.

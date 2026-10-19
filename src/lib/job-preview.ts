@@ -4,6 +4,7 @@ import { detectRemoteType } from "@/lib/processing/location-normalizer";
 import { findRateInText, parseRate } from "@/lib/processing/rate-parser";
 import { extractSkills } from "@/lib/processing/skills-extractor";
 import { stripHtml } from "@/lib/processing/job-processor";
+import { limitImportedJobDescription } from "@/lib/job-description";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -90,7 +91,9 @@ export function parseExternalJobHtml(html: string, sourceUrl: string, id: string
   const title = stringValue(job?.title) || meta(html, "og:title") || stripHtml(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "External contract role") || "External contract role";
   const organisation = record(job?.hiringOrganization);
   const company = stringValue(organisation?.name) || meta(html, "og:site_name") || parsedUrl.hostname.replace(/^www\./, "");
-  const description = stripHtml(stringValue(job?.description) || meta(html, "description") || meta(html, "og:description")).slice(0, 100_000);
+  const structuredDescription = stringValue(job?.description);
+  const imported = limitImportedJobDescription(stripHtml(structuredDescription || meta(html, "description") || meta(html, "og:description")));
+  const description = imported.text;
   const location = job ? address(job) : "Location not stated";
   const salary = job ? salaryText(job) : "";
   const rate = salary ? parseRate(salary) : findRateInText(description);
@@ -101,7 +104,8 @@ export function parseExternalJobHtml(html: string, sourceUrl: string, id: string
     id,
     title: title.slice(0, 240),
     company_name: company.slice(0, 160),
-    description: description || "The source did not expose a readable job description. Review the original page before acting.",
+    description,
+    description_kind: imported.limited ? "limited" : !description ? "missing" : !structuredDescription ? "summary" : "source_text",
     location: location.slice(0, 160),
     remote_type: detectRemoteType(location, description),
     ir35_status: ir35.status,
