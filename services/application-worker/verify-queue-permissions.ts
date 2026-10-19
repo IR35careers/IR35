@@ -4,7 +4,7 @@ import { verifyQueuePermissions } from "./queue-permission-check";
 
 async function main() {
   // This destructive probe is NEVER a production verification command.
-  const { worker: ownerOptions, producer: producerOptions } = disposableQueuePermissionOptions();
+  const { worker: ownerOptions, producer: producerOptions } = await disposableQueuePermissionOptions();
   const worker = new PgBoss({ ...ownerOptions, supervise: false, registerInstance: false });
   const producer = new PgBoss(producerOptions);
   worker.on("error", () => console.error("queue_permission_worker_error"));
