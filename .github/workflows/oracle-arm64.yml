@@ -83,6 +83,8 @@ jobs:
             sleep 3
           done
           exit 1
+      - name: Verify authenticated actual ARM standby drain and resume without acceptance
+        run: docker exec ir35-arm-standby node --import tsx services/application-worker/verify-maintenance.ts
       - name: Redacted standby diagnostics and cleanup
         if: always()
         run: |

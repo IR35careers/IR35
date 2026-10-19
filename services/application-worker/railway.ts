@@ -12,6 +12,7 @@ import { runFetchPipeline } from "../../src/lib/pipeline/run-fetch";
 import { runScheduledAutoApply } from "../../src/lib/automation/scheduled-runner";
 import { reconcileCloudApplications } from "../../src/lib/application-cloud-reconcile";
 import { handleRailwayApplication, LeaseDeferred } from "./railway-handler";
+import { handleMaintenanceHttp, TrackedWorkerHandlers, WorkerDatabaseObservation, WorkerMaintenance } from "./maintenance";
 
 async function main() {
   const config = queueWorkerConfig();
@@ -23,17 +24,28 @@ async function main() {
   const hostLabel = config.APPLY_RUNNER === "vercel" ? "queue" : config.APPLY_RUNNER;
   const workerId = `${hostLabel}-${hostname().replace(/[^a-z0-9-]/gi, "-").slice(0, 45)}-${randomUUID().slice(0, 8)}`;
   const startedAt = new Date().toISOString();
-  let stopping = false, databaseReady = false, browserReady = false, active = 0, completed = 0, failed = 0;
+  let stopping = false, browserReady = false, active = 0, completed = 0, failed = 0;
   let lastReconciledAt = 0;
-  let lastDatabaseAt = 0;
-  boss.on("error", () => { databaseReady = false; console.error("queue_database_error"); });
+  let maintenanceReady = false;
+  const trackedHandlers = new TrackedWorkerHandlers();
+  const databaseHealth = new WorkerDatabaseObservation();
+  boss.on("error", () => { databaseHealth.invalidate(); console.error("queue_database_error"); });
   const server = createServer((request, response) => {
+    if (request.url === "/maintenance") {
+      void handleMaintenanceHttp(request, response, { secret: config.APPLICATION_WORKER_SECRET,
+        ready: () => !stopping && maintenanceReady, controller: () => maintenance });
+      return;
+    }
     if (request.method !== "GET" || request.url !== "/health") {
       response.writeHead(404).end(); return;
     }
-    const ok = !stopping && databaseReady && browserReady && Date.now() - lastDatabaseAt < 45_000;
+    const { databaseReady, submitting } = databaseHealth.snapshot(Date.now());
+    const ok = !stopping && databaseReady && browserReady;
     response.writeHead(ok ? 200 : 503, { "content-type": "application/json", "cache-control": "no-store" });
-    response.end(JSON.stringify({ ok, service: "ir35-queue-worker", mode: accepting ? "consumer" : "standby", active, completed, failed, browserReady, databaseReady }));
+    const maintenanceState = maintenanceReady ? maintenance?.snapshot() : null;
+    response.end(JSON.stringify({ ok, service: "ir35-queue-worker", mode: accepting ? "consumer" : "standby", active, completed, failed,
+      browserReady, databaseReady, submitting, handlersActive: trackedHandlers.count,
+      maintenance: maintenanceState ? { ...maintenanceState, safeToReplace: ok && maintenanceState.safeToReplace && submitting === 0 && trackedHandlers.count === 0 } : null }));
   });
   server.listen(config.PORT, "0.0.0.0");
   process.env.CHROME_EXECUTABLE_PATH = chromium.executablePath();
@@ -45,13 +57,17 @@ async function main() {
 
   const pendingSchema = z.object({ status: z.string(), available_at: z.string().nullable(), lease_expires_at: z.string().nullable() });
   async function refreshHealth() {
+    const revision = databaseHealth.begin();
     try {
       const queue = await boss.getQueue(APPLY_QUEUE);
       if (!queue) throw new Error("Run worker:queue:setup before starting the worker.");
-      databaseReady = true; lastDatabaseAt = Date.now();
+      let running = 0;
       if (accepting) {
         const watchdog = await getSupabaseAdmin().rpc("fail_abandoned_application_tasks");
         if (watchdog.error) throw new Error("Worker watchdog migration is missing or unavailable.");
+        const submitting = await getSupabaseAdmin().from("application_worker_tasks").select("id", { count: "exact", head: true }).eq("status", "running");
+        if (submitting.error) throw new Error("Submitting count is unavailable.");
+        running = z.number().int().nonnegative().parse(submitting.count);
         const result = await getSupabaseAdmin().from("application_worker_heartbeats").upsert({
           worker_id: workerId, started_at: startedAt, last_seen_at: new Date().toISOString(),
           active, concurrency: config.APPLICATION_WORKER_CONCURRENCY, completed, failed, version: config.APPLICATION_WORKER_VERSION,
@@ -70,13 +86,16 @@ async function main() {
           lastReconciledAt = Date.now();
         }
       }
-    } catch { databaseReady = false; console.error("queue_worker_health_failed"); }
+      databaseHealth.commit(revision, running, Date.now());
+    } catch { databaseHealth.fail(revision); console.error("queue_worker_health_failed"); }
   }
   await refreshHealth();
-  if (!databaseReady) throw new Error("Worker queue is not ready.");
+  if (!databaseHealth.snapshot(Date.now()).databaseReady) throw new Error("Worker queue is not ready.");
 
-  if (accepting) {
-    await boss.work(APPLY_QUEUE, { localConcurrency: config.APPLICATION_WORKER_CONCURRENCY, batchSize: 1, heartbeatRefreshSeconds: HEARTBEAT_SECONDS }, async ([job]) => {
+  async function startConsumers() {
+    if (!accepting) return;
+    if (stopping) throw new Error("Worker is stopping.");
+    await boss.work(APPLY_QUEUE, { localConcurrency: config.APPLICATION_WORKER_CONCURRENCY, batchSize: 1, heartbeatRefreshSeconds: HEARTBEAT_SECONDS }, async ([job]) => trackedHandlers.run(async () => {
       active++;
       try {
         const result = await handleRailwayApplication({
@@ -99,8 +118,9 @@ async function main() {
           await boss.send(APPLY_QUEUE, kick, { startAfter: error.seconds, singletonKey: kick.applicationId || APPLY_QUEUE });
         } else { failed++; throw new Error("Application worker failed; inspect the saved application outcome before retrying."); }
       } finally { active--; }
-    });
-    await boss.work(queueName("ingest"), { batchSize: 1, heartbeatRefreshSeconds: HEARTBEAT_SECONDS }, async ([job]) => {
+    }));
+    if (stopping) throw new Error("Worker is stopping.");
+    await boss.work(queueName("ingest"), { batchSize: 1, heartbeatRefreshSeconds: HEARTBEAT_SECONDS }, async ([job]) => trackedHandlers.run(async () => {
       const command = scheduledWorkSchema.parse(job.data);
       if (command.operation !== "ingest") throw new Error("Invalid ingestion command.");
       await runFetchPipeline(undefined, async () => {
@@ -111,14 +131,30 @@ async function main() {
         }, signal: AbortSignal.timeout(20_000) });
         if (!response.ok) throw new Error("Public job cache invalidation was not acknowledged.");
       });
-    });
-    await boss.work(queueName("alerts"), { batchSize: 1, heartbeatRefreshSeconds: HEARTBEAT_SECONDS }, async ([job]) => {
+    }));
+    if (stopping) throw new Error("Worker is stopping.");
+    await boss.work(queueName("alerts"), { batchSize: 1, heartbeatRefreshSeconds: HEARTBEAT_SECONDS }, async ([job]) => trackedHandlers.run(async () => {
       const command = scheduledWorkSchema.parse(job.data);
       if (command.operation !== "automation") throw new Error("Invalid automation command.");
       await runScheduledAutoApply({ origin });
       await reconcileCloudApplications();
-    });
+    }));
   }
+  const maintenance = new WorkerMaintenance({
+    configuredToAccept: accepting,
+    stopConsumers: async () => {
+      await Promise.all([APPLY_QUEUE, queueName("ingest"), queueName("alerts")].map(name => boss.offWork(name, { wait: true })));
+      // Include orphaned/overrun callbacks, not only pg-boss's own wip count.
+      await trackedHandlers.whenIdle();
+      // Never report an old zero count after the last claim/callback. Older
+      // concurrent refreshes cannot overwrite this post-drain observation.
+      databaseHealth.invalidate();
+      await refreshHealth();
+    },
+    startConsumers,
+  });
+  await startConsumers();
+  maintenanceReady = true;
   const timer = setInterval(() => void refreshHealth(), HEARTBEAT_SECONDS * 1000);
   const shutdown = async () => {
     if (stopping) return;
