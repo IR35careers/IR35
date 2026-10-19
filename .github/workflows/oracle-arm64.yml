@@ -32,6 +32,21 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.3
+      - name: Check the pinned native ARM verifier's real command interface without registry writes
+        run: |
+          cosign version
+          # Exercise the actual argument parser rather than matching help layout.
+          # --help prevents any registry/signing request, but must not hide bad flags.
+          cosign verify --certificate-identity https://example.test/workflow \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --annotations repository=IR35careers/IR35 --output json --help > /dev/null
+          cosign sign --annotations repository=IR35careers/IR35 --yes --help > /dev/null
+          if cosign verify --definitely-not-an-ir35-option --help > /dev/null 2>&1; then
+            echo 'Invalid cosign option unexpectedly accepted'; exit 1
+          fi
       - name: Build the same pinned image natively for Oracle A1
         run: docker build --platform linux/arm64 -f services/application-worker/Dockerfile -t ir35-worker:arm-ci .
       - name: Verify native image architecture

@@ -1,0 +1,71 @@
+name: Signed ARM worker publication
+on:
+  workflow_run:
+    workflows: ["Release quality"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: signed-arm-worker-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    # Prepared, not enabled: agent sets this only after actual free-policy,
+    # account/registry and standby gates. A merge must not bypass those gates.
+    if: >-
+      vars.ORACLE_WORKER_PUBLISH_ENABLED == 'true' &&
+      github.repository == 'IR35careers/IR35' &&
+      github.event.repository.private == false && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.path == '.github/workflows/quality.yml' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == 'IR35careers/IR35'))
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+      id-token: write
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - name: Isolated registry configuration
+        run: |
+          install -d -m 0700 "$RUNNER_TEMP/worker-registry"
+          printf 'DOCKER_CONFIG=%s/worker-registry\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.3
+      - name: Install locked CLI dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Check exact commit release, ARM and CodeQL gates; refuse unverified existing tags
+        id: preflight
+        run: node --import tsx infra/oracle/publish-cli.ts preflight
+      - name: Build the actual native ARM image with immutable revision label
+        if: steps.preflight.outputs.build_needed == 'true'
+        run: >-
+          docker build --platform linux/arm64 -f services/application-worker/Dockerfile
+          --label "org.opencontainers.image.source=https://github.com/IR35careers/IR35"
+          --label "org.opencontainers.image.revision=$SOURCE_SHA"
+          -t "ghcr.io/ir35careers/ir35-worker:sha-$SOURCE_SHA" .
+      - name: Verify browser and single mock receipt in the actual image before pushing
+        if: steps.preflight.outputs.build_needed == 'true'
+        run: >-
+          docker run --rm --network none --entrypoint node
+          "ghcr.io/ir35careers/ir35-worker:sha-$SOURCE_SHA"
+          --import tsx services/application-worker/mock-ats-smoke.ts
+      - name: Publish immutable image, keyless sign, verify, and promote main by the same digest
+        run: node --import tsx infra/oracle/publish-cli.ts publish
+      - name: Remove temporary registry credentials
+        if: always()
+        run: test -n "${DOCKER_CONFIG:-}" && docker logout ghcr.io >/dev/null 2>&1 || true
