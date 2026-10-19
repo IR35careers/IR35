@@ -14,6 +14,12 @@ export default defineConfig([
     },
   },
   globalIgnores([
+    "bot-preview/src/**",
+    "bot-preview/public/**",
+    "bot-preview/.next/**",
+    "bot-preview/next-env.d.ts",
+    "bot-preview/tailwind.config.ts",
+    "bot-preview/next.base.cjs",
     ".next/**",
     "dist/**",
     "**/dist/**",

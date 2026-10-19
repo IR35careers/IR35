@@ -33,6 +33,14 @@ infra/oracle/deploy.env
 
 # Vercel
 .vercel
+
+# Materialised mock-preview application (tracked scaffold stays visible)
+/bot-preview/src/
+/bot-preview/public/
+/bot-preview/tsconfig.json
+/bot-preview/tailwind.config.ts
+/bot-preview/postcss.config.mjs
+/bot-preview/next.base.cjs
 supabase/.temp/
 
 # TypeScript

@@ -1,24 +1,12 @@
-import base from "../../vercel.base.json";
+import base from "../../vercel.json";
+import preview from "../../bot-preview/vercel.json";
 
 export const BOT_PREVIEW_PROJECT_ID = "prj_EvKGpPqbdFSKLveYYQ7bRVPly5Zs";
 export const BOT_PREVIEW_PROJECT_NAME = "ir35-bot-preview";
 
-export function projectConfig(projectId: string | undefined) {
-  if (projectId !== BOT_PREVIEW_PROJECT_ID) return structuredClone(base);
-  return {
-    framework: "nextjs",
-    git: { deploymentEnabled: { "*": false, "main": false, "codex/issue-*": true, "codex/bot-handoff": true } },
-    installCommand: "npm ci --ignore-scripts",
-    buildCommand: "node --import tsx scripts/bots/preview-build.ts",
-    // No production scheduler, Vercel queue consumer, integrations or domains.
-    functions: {},
-    crons: [],
-    headers: [{ source: "/(.*)", headers: [
-      { key: "X-IR35-Bot-Preview", value: "mock-only-v1" },
-      { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
-    ] }],
-  };
-}
+// Inspection/test helper only. Vercel reads the two STATIC files from separate
+// project roots; this function must not select runtime deployment configuration.
+export function deploymentConfigs() { return { live: structuredClone(base), preview: structuredClone(preview) }; }
 
 export function previewBuildEnvironment(input: Readonly<Record<string, string | undefined>>) {
   if (input.VERCEL_PROJECT_ID !== BOT_PREVIEW_PROJECT_ID || input.VERCEL_ENV !== "preview" ||

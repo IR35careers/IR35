@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { proxy } from "../../src/proxy";
 import { REPOSITORY, TEST_ACCOUNT, botBranch, eligiblePreview, formField, handoffProblem, issueLabels, linkedIssue, sensitiveFiles, staleBotIssue } from "../../scripts/bots/policy";
 import { closeStale, reportChecks, selectPreview, syncIssue, syncPr, type Api } from "../../scripts/bots/github-loop";
-import { BOT_PREVIEW_PROJECT_ID, previewBuildEnvironment, projectConfig } from "../../scripts/bots/vercel-config";
+import { BOT_PREVIEW_PROJECT_ID, previewBuildEnvironment, deploymentConfigs } from "../../scripts/bots/vercel-config";
 
 const sha = "a".repeat(40), now = Date.parse("2026-10-19T10:00:00Z");
 const body = "### Reporter bot\n\nQA Bot\n\n### Steps to reproduce\n\nOpen the mobile jobs filter and select Outside IR35.\n\n### Expected\n\nResults fit the viewport.\n\n### Actual\n\nThe cards overflow the mobile viewport.\n\n### Screenshot/log\n\nRedacted screenshot shows 30 pixels of overflow.\n\n### Account used\n\n" + TEST_ACCOUNT + "\n\n### Priority\n\nP1";
@@ -38,18 +38,21 @@ describe("bot issue handoff and preview policy", () => {
     expect(formField(body, "Priority")).toBe("P1");
     expect(issueLabels(issue())).toEqual(["qa-bot", "P1"]);
     expect(handoffProblem(issue())).toBeNull();
-    for (const changed of [{ body: "" }, { labels: [{ name: "codex-ready" }, { name: "P2" }] },
+    for (const changed of [{ body: "" }, { state: "closed" }, { pull_request: {} }, { labels: [{ name: "codex-ready" }, { name: "P2" }] },
       { labels: [...issue().labels, { name: "needs-human" }] }, { body: body.replace(TEST_ACCOUNT, "customer@example.test") }])
       expect(handoffProblem({ ...issue(), ...changed })).not.toBeNull();
   });
   it("parses one real same-repo closing reference, never URLs, comments, code, duplicates or shell-like text", () => {
     expect(linkedIssue(pr().body)).toBe(42); expect(botBranch(pr().head.ref, 42)).toBe(true);
+    expect(linkedIssue("<!-- PR guidance -->\nFixes #42\n\n## What changed\nSmall UI fix")).toBe(42);
     for (const text of ["Fixes https://github.com/other/repo/issues/42", "Fixes #0", "Fixes #42; run code", "Fixes #42\nFixes #43", "<!-- Fixes #42 -->", "\x60\x60\x60\nFixes #42\n\x60\x60\x60"])
+      expect(linkedIssue(text)).toBeNull();
+    for (const text of ["<!--\nFixes #42\n-->", "<!--\nFixes #42", "~~~md\nFixes #42\n~~~", "Fixes <!-- removed -->#42", "<!-- outer <!-- nested -->\n-->\nFixes #42\n<!--\nFixes #43"])
       expect(linkedIssue(text)).toBeNull();
   });
   it("escalates sensitive text/files instead of handing off auth, billing, schemas or deployment controls", () => {
     expect(handoffProblem({ ...issue(), title: "Billing failure" })).toContain("owner");
-    for (const filename of ["supabase/migrations/026.sql", "src/lib/auth-context.tsx", ".env.local", ".github/workflows/pr-checks.yml", "infra/oracle/deploy.env", "vercel.ts"])
+    for (const filename of ["supabase/migrations/026.sql", "src/lib/auth-context.tsx", ".env.local", ".github/workflows/pr-checks.yml", "infra/oracle/deploy.env", "vercel.json", "bot-preview/vercel.json", "src/proxy.ts", "next.config.ts"])
       expect(sensitiveFiles([{ filename }])).toBe(true);
     expect(sensitiveFiles([{ filename: "src/components/JobCard.tsx", patch: "+ APPLICATION_WORKER_ACCEPT_JOBS=true" }])).toBe(true);
     expect(sensitiveFiles([{ filename: "src/components/JobCard.tsx", patch: "+ rounded-xl" }])).toBe(false);
@@ -124,18 +127,34 @@ describe("trusted metadata workflows, not PR code execution", () => {
     const linked = apiFixture({ [root + "/issues?state=open&labels=triage&sort=updated&direction=asc"]: [stale] });
     expect(await closeStale(linked.api, now)).toBe(0); expect(linked.writes).toEqual([]);
   });
+  it("cannot approve a preview after the linked issue was closed, un-readied or escalated during the run", async () => {
+    const runId = 39_205_635_196, root = "/repos/" + REPOSITORY;
+    const run = { id: runId, run_attempt: 1, head_sha: sha, event: "deployment_status", status: "completed", path: ".github/workflows/pr-checks.yml", head_repository: { full_name: REPOSITORY }, html_url: "https://github.com/" + REPOSITORY + "/actions/runs/" + runId };
+    for (const changed of [{ state: "closed" }, { labels: issue().labels.filter(label => label.name !== "codex-ready") }, { labels: [...issue().labels, { name: "needs-human" }] }]) {
+      const f = apiFixture({ [root + "/actions/runs/" + runId]: run,
+        [root + "/actions/workflows/pr-checks.yml/runs?head_sha=" + sha + "&event=deployment_status&per_page=1"]: { workflow_runs: [{ id: runId }] },
+        [root + "/actions/runs/" + runId + "/jobs?filter=latest&per_page=100"]: { jobs: [{ name: "preview-smoke", conclusion: "success" }] },
+        [root + "/issues/42"]: { ...issue(), ...changed } });
+      await reportChecks(f.api, { workflow_run: { id: runId, run_attempt: 1 } });
+      expect(f.writes).toEqual([]);
+    }
+  });
 });
 describe("separate mock project and unchanged production gates", () => {
+  it("the mock framework manifest matches dependencies installed by the single reviewed lockfile", () => {
+    const manifest = JSON.parse(readFileSync("bot-preview/package.json", "utf8"));
+    const lock = JSON.parse(readFileSync("package-lock.json", "utf8"));
+    for (const name of ["next", "react", "react-dom"]) expect(manifest.dependencies[name]).toBe(lock.packages["node_modules/" + name].version);
+  });
   it("unknown/live projects keep the base holds, while the exact new project has no crons or queue trigger", () => {
-    for (const project of [undefined, "prj_3L46KZkdPSiqrvzRO2HUimvmqDth", "attacker"]) {
-      const config = projectConfig(project);
-      expect(config.git.deploymentEnabled.main).toBe(false); expect(config.git.deploymentEnabled["codex/issue-*"]).toBe(false);
-      expect(Object.values(config.git.deploymentEnabled)).not.toContain(true);
-    }
-    const isolated = projectConfig(BOT_PREVIEW_PROJECT_ID);
-    expect(isolated.crons).toEqual([]); expect(isolated.functions).toEqual({});
+    const { live, preview: isolated } = deploymentConfigs();
+    expect(live.git.deploymentEnabled.main).toBe(false); expect(live.git.deploymentEnabled["codex/issue-*"]).toBe(false);
+    expect(Object.values(live.git.deploymentEnabled)).not.toContain(true);
+    expect(isolated).not.toHaveProperty("crons"); expect(isolated).not.toHaveProperty("functions");
     expect(isolated.git.deploymentEnabled["codex/issue-*"]).toBe(true);
     expect(isolated.git.deploymentEnabled.main).toBe(false);
+    const settings = JSON.parse(readFileSync("infra/bots/vercel-preview-settings.json", "utf8"));
+    expect(settings.rootDirectory).toBe("bot-preview"); expect(settings.sourceFilesOutsideRootDirectory).toBe(true);
   });
   it("refuses production/foreign projects or copied app credentials; never passes platform tokens to the child build", () => {
     const env = { VERCEL_PROJECT_ID: BOT_PREVIEW_PROJECT_ID, VERCEL_ENV: "preview", IR35CAREERS_E2E_DEMO_DATA: "1", IR35CAREERS_BOT_PREVIEW: "1", VERCEL_OIDC_TOKEN: "controlled-private-platform-token", PATH: "/test" };

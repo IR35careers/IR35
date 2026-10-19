@@ -1,9 +1,10 @@
 {
   "name": "ir35-bot-preview",
   "framework": "nextjs",
-  "buildCommand": "node --import tsx scripts/bots/preview-build.ts",
-  "installCommand": "npm ci --ignore-scripts",
+  "buildCommand": "node --import tsx ../scripts/bots/preview-build.ts",
+  "installCommand": "cd .. && npm ci --ignore-scripts",
   "environmentVariables": [
-    { "key": "IR35CAREERS_E2E_DEMO_DATA", "value": "1", "target": "preview", "type": "plain" }
+    { "key": "IR35CAREERS_E2E_DEMO_DATA", "value": "1", "target": "preview", "type": "plain" },
+    { "key": "IR35CAREERS_BOT_PREVIEW", "value": "1", "target": "preview", "type": "plain" }
   ]
 }

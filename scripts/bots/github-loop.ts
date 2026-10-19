@@ -99,7 +99,9 @@ export async function reportChecks(api: Api, input: unknown) {
     if (!number || !botBranch(pr.head.ref, number)) continue;
     const fresh = prSchema.parse(await api(root + "/pulls/" + pr.number));
     if (fresh.head.sha !== run.head_sha || fresh.state !== "open") continue;
+    if (linkedIssue(fresh.body) !== number || !botBranch(fresh.head.ref, number) || fresh.base.ref !== "main" || fresh.head.repo?.full_name !== REPOSITORY) continue;
     if (kind === "preview" && fresh.labels.some(label => label.name === "needs-human")) continue;
+    if (kind === "preview" && (!fresh.draft || handoffProblem(await api(root + "/issues/" + number)))) continue;
     if (kind === "preview" && sensitiveFiles(await pages(api, root + "/pulls/" + pr.number + "/files"))) {
       await addLabels(api, pr.number, ["needs-human"]); continue;
     }

@@ -17,9 +17,34 @@ export type BotPr = z.infer<typeof prSchema>;
 
 export function linkedIssue(body: unknown): number | null {
   const text = z.string().max(65_536).nullable().parse(body) ?? "";
-  const visible = text.replace(/\x60{3}[\s\S]*?\x60{3}/g, "").replace(/<!--[\s\S]*?-->/g, "");
-  const matches = [...visible.matchAll(/^\s*Fixes\s+#([1-9]\d*)\s*[.!]?\s*$/gim)];
-  const found = [...new Set(matches.map(match => Number(match[1])))];
+  // Parse visibility instead of deleting HTML with a replace regex. Never
+  // reassemble fragments into a new closing reference (or publish sanitised HTML).
+  let comment = false, fence = "";
+  const matches: number[] = [];
+  for (const line of text.split(/\r?\n/)) {
+    const wasComment = comment;
+    let cursor = 0, markerSeen = false;
+    for (;;) {
+      const start = line.indexOf("<!--", cursor), end = line.indexOf("-->", cursor);
+      const opening = start >= 0 && (end < 0 || start < end);
+      const index = opening ? start : end;
+      if (index < 0) break;
+      if (opening === comment) return null; // malformed/nested markup: ask a human
+      cursor = index + (comment ? 3 : 4); comment = !comment; markerSeen = true;
+    }
+    if (wasComment || markerSeen || comment) continue;
+    const delimiter = line.match(/^\s{0,3}(\x60{3,}|~{3,})/)?.[1];
+    if (delimiter) {
+      if (!fence) fence = delimiter;
+      else if (delimiter[0] === fence[0] && delimiter.length >= fence.length) fence = "";
+      continue;
+    }
+    if (fence) continue;
+    const match = line.match(/^\s*Fixes\s+#([1-9]\d*)\s*[.!]?\s*$/i);
+    if (match) matches.push(Number(match[1]));
+  }
+  if (comment || fence) return null;
+  const found = [...new Set(matches)];
   return found.length === 1 && numberSchema.safeParse(found[0]).success ? found[0] : null;
 }
 export function formField(body: string, heading: string) {
@@ -38,6 +63,7 @@ export function issueLabels(input: unknown): string[] {
 const meaningful = (value: string) => value.length >= 12 && !/^(_No response_|n\/?a|none|todo|\.\.\.)$/i.test(value);
 export function handoffProblem(input: unknown): string | null {
   const issue = issueSchema.parse(input); const names = issue.labels.map(label => label.name); const body = issue.body ?? "";
+  if (issue.state !== "open" || issue.pull_request) return "Only an open issue may be handed off.";
   if (!names.includes("codex-ready")) return "The issue is not labelled codex-ready.";
   if (names.includes("needs-human")) return "This issue requires the owner.";
   const priority = names.filter(name => /^P[012]$/.test(name));
@@ -53,7 +79,7 @@ export function handoffProblem(input: unknown): string | null {
 }
 export function sensitiveFiles(input: unknown): boolean {
   const files = z.array(z.object({ filename: z.string().max(1000), patch: z.string().max(200_000).optional() })).max(3000).parse(input);
-  return files.some(file => /(^|\/)(?:\.github|\.env[^/]*|supabase|infra|auth|billing|account|settings)(\/|$)|(?:supabase|stripe|secret|auth-|auth\.)|^scripts\/bots\/|^vercel\./i.test(file.filename)
+  return files.some(file => /(^|\/)(?:\.github|\.env[^/]*|supabase|infra|auth|billing|account|settings)(\/|$)|(?:supabase|stripe|secret|auth-|auth\.)|^scripts\/bots\/|^bot-preview\/|^src\/proxy\.ts$|^next\.config\.|^vercel\./i.test(file.filename)
     || /APPLICATION_WORKER_ACCEPT_JOBS|APPLY_RUNNER|SUPABASE_SECRET|OPENAI_API_KEY/.test(file.patch ?? ""));
 }
 export function botBranch(input: unknown, issue: number) {

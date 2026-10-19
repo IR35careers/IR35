@@ -36,6 +36,11 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
+    "bot-preview/src",
+    "bot-preview/.next",
+    "bot-preview/next-env.d.ts",
+    "bot-preview/tailwind.config.ts",
+    "bot-preview/next.base.cjs",
     "node_modules",
     ".next/dev",
     "dist",
