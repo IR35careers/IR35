@@ -38,6 +38,11 @@ async function main() {
     throw new Error("Standby maintenance transition timed out.");
   }
   const operationId = randomUUID();
+  if (process.env.APPLICATION_WORKER_UPDATE_OPERATION !== undefined) {
+    const initial = z.uuid().parse(process.env.APPLICATION_WORKER_UPDATE_OPERATION);
+    await waitFor("drained", initial);
+    if (await command("resume", initial) !== 202) throw new Error("Updated standby did not resume.");
+  }
   await waitFor("idle", null);
   if (await command("drain", operationId, true) !== 401) throw new Error("Unsigned drain accepted.");
   if (await command("drain", operationId) !== 202) throw new Error("Drain not acknowledged.");

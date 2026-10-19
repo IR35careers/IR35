@@ -73,6 +73,8 @@ export function queueWorkerConfig() {
     APPLICATION_WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(2).default(1),
     APPLICATION_WORKER_ACCEPT_JOBS: z.enum(["true", "false"]).default("false"),
     APPLICATION_WORKER_VERSION: z.string().min(1).max(80).default("queue-prepared"),
+    // Ephemeral local updater override, not an acceptance/cutover setting.
+    APPLICATION_WORKER_UPDATE_OPERATION: z.uuid().optional(),
   }).safeParse(process.env);
   if (!result.success || (result.data.APPLICATION_WORKER_ACCEPT_JOBS === "true" && result.data.APPLY_RUNNER === "vercel"))
     throw new Error("Invalid queue worker environment. Consumption requires an approved queue runner. Check docs/deploy-worker.md; values are never logged.");

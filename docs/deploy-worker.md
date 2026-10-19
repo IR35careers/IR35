@@ -4,6 +4,8 @@
 
 No literal **YES CUTOVER** has been received. Both web and standby container retain `APPLY_RUNNER=vercel`; `APPLICATION_WORKER_ACCEPT_JOBS=false`. The standby queue process can validate Chromium/database health with those unchanged flags. It refuses consumption with the Vercel selection. Do not infer cutover approval from a successful build, account login, merge or healthy standby.
 
+Updater runtime prerequisite: authenticated local drain/resume and versioned readiness are prepared. `APPLICATION_WORKER_UPDATE_OPERATION` is a temporary valid-UUID Compose override, normally **absent**, not a persistent acceptance flag. It makes a replacement boot paused before queue registration until its health gate is accepted and the matching signed resume arrives. Do not add an empty value to the raw worker env or enable a host updater until its durable recovery protocol and native ARM tests pass. The registry publisher/host driver are still unfinished; see `oracle-pull-updates.md`.
+
 ## Current evidence, not claims of deployment
 
 - Supabase project `kxcbgflleqnjzjbkevwd`: CLI reports healthy **eu-west-2**. Closest geographical Oracle choice: **UK South (London), uk-london-1**, not a latency/capacity promise. Owner signup at [oracle.com/cloud/free](https://www.oracle.com/cloud/free/) is still unconfirmed. No OCI account/VM/public IP/billing result is claimed.
@@ -92,6 +94,7 @@ Root `.env.example` and `infra/oracle/deploy.env.example` contain no real creden
 | `APPLICATION_WORKER_SECRET` | Existing shared >=32-character signed claim/callback key; standby also validates its shape. |
 | `IR35CAREERS_APP_URL` | Approved canonical HTTPS origin. |
 | `APPLICATION_WORKER_CONCURRENCY`, `APPLICATION_WORKER_VERSION` | Initially one, private release diagnostic label. |
+| `APPLICATION_WORKER_UPDATE_OPERATION` | Updater-only UUID through a temporary local Compose override; normally absent. Boots paused for health/rollback, never enables acceptance. Do not put a blank value in the raw env. |
 | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | Active consumer only; not needed for standby queue/browser checks. URL is public; the keys are not. |
 | `REED_API_KEY`, `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `JOB_DECIMAL_RATES_ENABLED` | Optional ingestion; absent sources are skipped, not fabricated. Decimal flag only with installed 023. |
 | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Optional existing evidence-safe mapper; not a replacement for the later OpenAI service. |

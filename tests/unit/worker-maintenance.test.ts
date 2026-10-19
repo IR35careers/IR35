@@ -60,6 +60,22 @@ describe("worker local maintenance authentication", () => {
 });
 
 describe("polling drain without acceptance changes or application cancellation", () => {
+  it("an updated consumer starts paused until its operation's health gate and explicit resume", async () => {
+    const startConsumers = vi.fn(async () => {}); const stopConsumers = vi.fn(async () => {});
+    const maintenance = new WorkerMaintenance({ configuredToAccept: true, initialOperationId: operationId, startConsumers, stopConsumers });
+    expect(maintenance.snapshot()).toEqual({ phase: "drained", safeToReplace: true, operationId });
+    expect(startConsumers).not.toHaveBeenCalled(); expect(stopConsumers).not.toHaveBeenCalled();
+    expect(() => maintenance.request({ action: "resume", operationId: otherId })).toThrow("conflict");
+    maintenance.request({ action: "resume", operationId }); await maintenance.settled();
+    expect(startConsumers).toHaveBeenCalledTimes(1); expect(maintenance.snapshot().phase).toBe("idle");
+  });
+  it("a paused updated standby never starts consumers after its health gate", async () => {
+    const startConsumers = vi.fn(async () => {});
+    const maintenance = new WorkerMaintenance({ configuredToAccept: false, initialOperationId: operationId, startConsumers, stopConsumers: async () => {} });
+    maintenance.request({ action: "resume", operationId }); await maintenance.settled();
+    expect(startConsumers).not.toHaveBeenCalled(); expect(maintenance.snapshot().phase).toBe("idle");
+    expect(() => new WorkerMaintenance({ configuredToAccept: false, initialOperationId: "not-a-uuid", startConsumers, stopConsumers: async () => {} })).toThrow();
+  });
   it("includes a callback that outlives pg-boss stop acknowledgement, including late fetches and background work", async () => {
     const callbacks = new TrackedWorkerHandlers(); const app = deferred(); const background = deferred(); const stopped = deferred();
     const maintenance = new WorkerMaintenance({ configuredToAccept: true,

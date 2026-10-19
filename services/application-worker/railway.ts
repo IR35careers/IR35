@@ -40,9 +40,9 @@ async function main() {
       response.writeHead(404).end(); return;
     }
     const { databaseReady, submitting } = databaseHealth.snapshot(Date.now());
-    const ok = !stopping && databaseReady && browserReady;
-    response.writeHead(ok ? 200 : 503, { "content-type": "application/json", "cache-control": "no-store" });
     const maintenanceState = maintenanceReady ? maintenance?.snapshot() : null;
+    const ok = !stopping && databaseReady && browserReady && maintenanceState?.phase !== "failed";
+    response.writeHead(ok ? 200 : 503, { "content-type": "application/json", "cache-control": "no-store" });
     response.end(JSON.stringify({ ok, service: "ir35-queue-worker", mode: accepting ? "consumer" : "standby", active, completed, failed,
       browserReady, databaseReady, submitting, handlersActive: trackedHandlers.count,
       maintenance: maintenanceState ? { ...maintenanceState, safeToReplace: ok && maintenanceState.safeToReplace && submitting === 0 && trackedHandlers.count === 0 } : null }));
@@ -142,6 +142,7 @@ async function main() {
   }
   const maintenance = new WorkerMaintenance({
     configuredToAccept: accepting,
+    initialOperationId: config.APPLICATION_WORKER_UPDATE_OPERATION,
     stopConsumers: async () => {
       await Promise.all([APPLY_QUEUE, queueName("ingest"), queueName("alerts")].map(name => boss.offWork(name, { wait: true })));
       // Include orphaned/overrun callbacks, not only pg-boss's own wip count.
@@ -153,7 +154,7 @@ async function main() {
     },
     startConsumers,
   });
-  await startConsumers();
+  if (!config.APPLICATION_WORKER_UPDATE_OPERATION) await startConsumers();
   maintenanceReady = true;
   const timer = setInterval(() => void refreshHealth(), HEARTBEAT_SECONDS * 1000);
   const shutdown = async () => {

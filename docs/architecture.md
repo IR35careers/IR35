@@ -18,6 +18,8 @@ That offline planner subsequently merged in PR #30 as `5add77d`, all 17 checks g
 
 ## Runtime and release boundaries
 
+The owner selected outbound signed-image pulls rather than GitHub-to-VM SSH. Runtime preparation now adds a loopback HMAC drain/resume control plane: stop every pg-boss consumer, track actual callbacks beyond overrun acknowledgements, and require fresh versioned zero-running database evidence before replacement. An updater-only startup UUID makes a replacement boot paused until its health gate and matching resume, without changing the persistent runner/acceptance flags. Host publication/update journaling, rollback and timers remain unfinished; this runtime prerequisite is not an enabled deployment system. See `oracle-pull-updates.md`. Oracle signup and the required Bastion-private-/32 exception are still unconfirmed.
+
 - Next.js App Router, React 19, strict TypeScript, Tailwind; deployed on Vercel. `package.json` runs typecheck, ESLint, Vitest and legacy checks before the production build.
 - Supabase Auth/Postgres/Storage serve the web application. Browser clients use the public key and owner RLS. `src/lib/supabase-admin.ts` currently also exposes a privileged server client to web APIs. **The target's worker-only service-role boundary is not implemented.** Migrate privileged operations behind scoped worker commands without weakening RLS.
 - `src/proxy.ts` supplies the canonical-host/auth/security boundary, including nonce CSP. Nonce-bearing HTML remains dynamic; public job data uses five-minute caches. Static marketing HTML needs a separately reviewed CSP design, not removal of CSP.

@@ -76,7 +76,13 @@ export class WorkerMaintenance {
     configuredToAccept: boolean;
     stopConsumers: () => Promise<void>;
     startConsumers: () => Promise<void>;
-  }) {}
+    initialOperationId?: string;
+  }) {
+    if (ports.initialOperationId !== undefined) {
+      this.operationId = z.uuid().parse(ports.initialOperationId);
+      this.phase = "drained"; // Updated container must pass health BEFORE starting consumers.
+    }
+  }
 
   snapshot() {
     return { phase: this.phase, operationId: this.operationId, safeToReplace: this.phase === "drained" };

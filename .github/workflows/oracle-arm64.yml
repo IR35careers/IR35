@@ -73,6 +73,7 @@ jobs:
             -e PG_BOSS_DATABASE_URL=postgresql://ir35_queue:ci-only-queue-owner@127.0.0.1:5432/postgres \
             -e APPLY_RUNNER=vercel -e APPLICATION_WORKER_ACCEPT_JOBS=false \
             -e APPLICATION_WORKER_SECRET=mock-ci-signing-key-not-a-live-credential \
+            -e APPLICATION_WORKER_UPDATE_OPERATION=00000000-0000-4000-8000-000000000001 \
             -e IR35CAREERS_APP_URL=https://mock.example.test \
             --network host ir35-worker:arm-ci
           for attempt in $(seq 1 20); do

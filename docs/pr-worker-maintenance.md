@@ -10,9 +10,11 @@ POST /maintenance uses bounded JSON, operation UUID, a 30-second domain-separate
 
 Unit tests cover auth/schema/UTF-8 limits/skew/domain separation, actual Node loopback HTTP responses, callback overruns/late fetches, duplicate/conflicting commands, busy abort/resume, standby, failures, stale/out-of-order/expired database reads. Full pre-description-merge source: 802 unit tests/131 files, 199 legacy checks, TypeScript/ESLint pass. Native ARM CI adds an actual isolated-container drain/resume probe; final-head CI is required before merge. No real employer or candidate fixture. No UI change; screenshots not applicable.
 
+Final combined source (description work incorporated plus startup-pause tests): **832 unit tests/132 files + 199 legacy checks, TypeScript/ESLint pass**. Native ARM final-head check is still pending; no local Docker or live Oracle result is inferred.
+
 ## Migrations, environment and manual gates
 
-No dependency, migration, RLS, CSP or new env variable. Reuses APPLICATION_WORKER_SECRET only on authenticated loopback control, with a separate signature domain. No worker/registry/Oracle deployment, firewall, Railway or cutover changes. Oracle activation, queue roles, compatible migration/web release and real standby verification remain open. Publisher, host updater, timers and rollback driver remain separate unfinished work; do not infer their existence from the drain protocol.
+No dependency, migration, RLS or CSP change. Reuses APPLICATION_WORKER_SECRET only on authenticated loopback control, with a separate signature domain. Adds updater-only APPLICATION_WORKER_UPDATE_OPERATION (valid UUID, normally absent) so a new container starts paused pending its pre-consumption health gate; no cutover setting is changed. Native ARM fixtures exercise this boot pause and subsequent authenticated standby resume. The future host driver must retain/reconcile that pause across crashes before it can be enabled. No worker/registry/Oracle deployment, firewall, Railway or cutover changes. Oracle activation, queue roles, compatible migration/web release and real standby verification remain open. Publisher, host updater, timers and rollback driver remain separate unfinished work; do not infer their existence from the drain protocol.
 
 ## Production verification
 

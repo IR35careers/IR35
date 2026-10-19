@@ -53,6 +53,16 @@ describe("Railway queue safety", () => {
       catch (error) { expect(String(error)).not.toContain("private"); expect(String(error)).toContain("5432"); }
     }
   });
+  it("validates an updater-only startup UUID without changing acceptance or runner selection", () => {
+    configure(); vi.stubEnv("APPLY_RUNNER", "vercel"); vi.stubEnv("APPLICATION_WORKER_ACCEPT_JOBS", "false");
+    vi.stubEnv("APPLICATION_WORKER_UPDATE_OPERATION", "00000000-0000-4000-8000-000000000001");
+    expect(queueWorkerConfig()).toMatchObject({ APPLY_RUNNER: "vercel", APPLICATION_WORKER_ACCEPT_JOBS: "false", APPLICATION_WORKER_UPDATE_OPERATION: "00000000-0000-4000-8000-000000000001" });
+    for (const value of ["", "true", "secret-never-echo"]) {
+      vi.stubEnv("APPLICATION_WORKER_UPDATE_OPERATION", value);
+      try { queueWorkerConfig(); throw new Error("Unexpected success"); }
+      catch (error) { expect(String(error)).toContain("Invalid queue worker"); expect(String(error)).not.toContain("secret-never-echo"); }
+    }
+  });
   it("starts in standby with bounded concurrency and two transport retries", () => {
     configure(); vi.stubEnv("APPLICATION_WORKER_ACCEPT_JOBS", undefined); vi.stubEnv("APPLICATION_WORKER_CONCURRENCY", undefined);
     expect(railwayWorkerConfig()).toMatchObject({ APPLICATION_WORKER_ACCEPT_JOBS: "false", APPLICATION_WORKER_CONCURRENCY: 1 });
