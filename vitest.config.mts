@@ -8,6 +8,11 @@ export default defineConfig({
     },
   },
   test: {
+    // PGlite/Chromium fixtures must not compete for the small CI host's RAM.
+    // Keep every assertion and timeout; serialize files rather than weakening tests.
+    pool: "forks",
+    maxWorkers: 1,
+    fileParallelism: false,
     environment: "node",
     include: ["tests/unit/**/*.test.{ts,tsx}"],
     coverage: {
