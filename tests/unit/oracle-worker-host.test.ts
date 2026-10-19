@@ -45,8 +45,8 @@ function fixture() {
   const host = new WorkerHost("/opt/ir35-worker", { files, command, http, now: () => now,
     env: { PATH: "/controlled", HOME: "/owner", DOCKER_CONFIG: "/private/docker", NODE_ENV: "production", DOCKER_HOST: "attacker", DOCKER_CONTEXT: "unreviewed-remote-context", APPLY_RUNNER: "oracle", GHCR_TOKEN: "controlled_private_credential" } });
   const immutable = vi.fn(async (_revision: string, digest: string) => `${WORKER_IMAGE}@${digest}`);
-  const state: UpdateJournalState = { version: 1, revision: 0, mode: "standby", invariantsHash: snapshot.invariantsHash,
-    stable: { artifact: old, bootId: null }, previous: null, rejectedDigest: null, transaction: null };
+  const state: UpdateJournalState = { version: 2, revision: 0, mode: "standby", invariantsHash: snapshot.invariantsHash,
+    stable: { artifact: old, bootId: null }, previous: null, highWater: old, rejectedDigest: null, transaction: null };
   let durable = state;
   const journal = new WorkerUpdateJournal(state, async value => { durable = structuredClone(value); });
   return { host, files, command, http, immutable, journal, state: () => durable,
@@ -117,6 +117,12 @@ describe("actual host command/health/config integration boundaries", () => {
     const real = f.files.maintenanceSecret.getMockImplementation()!;
     f.files.maintenanceSecret.mockImplementationOnce(async () => { const value = await real(); f.setTime(at + 5001); return value; });
     await expect(f.host.control("drain", drain, observed)).rejects.toThrow("acknowledgement is uncertain");
+    expect(f.http.mock.calls.some(call => call[0].endsWith("/maintenance"))).toBe(false);
+  });
+  it("enforces the caller's actual signing deadline after private-file reads, even inside the five-second freshness bound", async () => {
+    const f = fixture(); const observed = await f.host.observe(), real = f.files.maintenanceSecret.getMockImplementation()!;
+    f.files.maintenanceSecret.mockImplementationOnce(async () => { const value = await real(); f.setTime(at + 4000); return value; });
+    await expect(f.host.control("drain", drain, observed, { notAfter: at + 3000 })).rejects.toThrow("acknowledgement is uncertain");
     expect(f.http.mock.calls.some(call => call[0].endsWith("/maintenance"))).toBe(false);
   });
   it("refuses unknown/multiple services, public bindings and inconsistent service identity", async () => {

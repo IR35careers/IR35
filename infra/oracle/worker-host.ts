@@ -113,14 +113,17 @@ export class WorkerHost {
     const finished = this.now();
     if (finished < now || finished - observed.observedAt > 5000) throw new Error();
   }
-  async control(action: "drain" | "resume", operation: unknown, observed: HostWorkerObservation) {
+  async control(action: "drain" | "resume", operation: unknown, observed: HostWorkerObservation, constraints?: { notAfter: number }) {
     try {
       z.enum(["drain", "resume"]).parse(action); const operationId = z.uuid().parse(operation);
+      const limit = constraints === undefined ? null : z.strictObject({ notAfter: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER) }).parse(constraints).notAfter;
       await this.unchanged(observed);
       if (!observed.identity?.running || observed.identity.image !== observed.files.image) throw new Error();
       const secret = await this.files.maintenanceSecret();
       await this.unchanged(observed); // a delayed private-file read cannot refresh authority
-      const body = JSON.stringify({ action, operationId }); const timestamp = String(this.now());
+      const now = this.now();
+      if (limit !== null && now >= limit) throw new Error();
+      const body = JSON.stringify({ action, operationId }); const timestamp = String(now);
       const response = await this.http("http://127.0.0.1:8787/maintenance", { method: "POST", redirect: "error", signal: AbortSignal.timeout(5000),
         headers: { "content-type": "application/json", "x-ir35-maintenance-timestamp": timestamp,
           "x-ir35-maintenance-signature": signMaintenanceBody(secret, body, timestamp) }, body });
