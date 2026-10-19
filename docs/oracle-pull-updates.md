@@ -29,6 +29,8 @@ First prerequisite: `maintenance.ts` provides the domain-separated HMAC command 
 
 ## Primary sources checked
 
+Transaction core now exists in `update-journal.ts`: write-ahead decisions, distinct drain/candidate/rollback generations, unchanged physical proof, fixed original deadlines, acknowledgement-loss reload and same-ID recovery. It refuses rollback after a durable candidate-resume decision and records failed candidate digests after confirmed rollback. Its isolated tests do not install a host interpreter, exclusive lock, registry/health integration or timer; those remain required. See `pr-worker-update-journal.md` for limits and verification. Storage PR #34 is now merged after all 17 final-head checks, including actual Linux I/O; this is still not an Oracle deployment.
+
 - [Oracle Bastion network requirements](https://docs.oracle.com/en-us/iaas/Content/Bastion/Tasks/connectingtosessions.htm): exact private endpoint /32 on target SSH22.
 - [Oracle Bastion pricing](https://www.oracle.com/security/cloud-security/bastion/): service listed free; actual account/network usage still needs verification.
 - [GHCR authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry): read:packages classic PAT for downloads, workflow GITHUB_TOKEN for publication; no repo/write/delete scopes in VM pull credential.
