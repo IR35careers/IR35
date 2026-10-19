@@ -1,0 +1,298 @@
+{
+  "name": "ir-35",
+  "framework": "nextjs",
+  "nodeVersion": "24.x",
+  "productionBranch": "main",
+  "productionDeployment": "dpl_C3tZJq77WY4heaQpv15BEpPou3HS",
+  "productionCommit": "0df1489e5e8c5351cd2a594ea5b194f7acba23eb",
+  "productionRef": "codex/live-ir35careers",
+  "cronEnabled": true,
+  "crons": [
+    {
+      "path": "/api/automation/run",
+      "schedule": "15 6 * * *"
+    },
+    {
+      "path": "/api/pipeline/fetch",
+      "schedule": "0 6 * * *"
+    }
+  ],
+  "environmentNames": [
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "NEXT_PUBLIC_SITE_URL",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "NEXT_PUBLIC_LAUNCH_DATE",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "SUPABASE_SECRET_KEY",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "CRON_SECRET",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "REED_API_KEY",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "ADZUNA_APP_ID",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "ADZUNA_APP_KEY",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "ADMIN_EMAILS1",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "BETA_EMAILS",
+      "targets": [
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "RESEND_WEBHOOK_SECRET",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "INBOUND_EMAIL_DOMAIN",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "ENABLE_INBOUND_MAIL",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "ENABLE_WELCOME_EMAIL",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "EMAIL_FROM",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "EMAIL_REPLY_TO",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "BETA_EMAILS",
+      "targets": [
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "ENABLE_WAITLIST_LAUNCH_EMAIL",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "ADMIN_EMAILS",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "OPENROUTER_API_KEY",
+      "targets": [
+        "production",
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "OPENROUTER_MODEL",
+      "targets": [
+        "preview",
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "ENABLE_APPLICATION_SUBMISSION",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "ADMIN_SESSION_SECRET",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "NEXT_TELEMETRY_DISABLED",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "APPLICATION_WORKER_SECRET",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "PORTAL_SESSION_SECRET",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "APPLICATION_ACCOUNT_SECRET",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "APPLICATION_WORKER_ENABLED",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "INBOUND_AUDIT_SECRET",
+      "targets": [
+        "production"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "name": "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "GOOGLE_ANALYTICS_PROPERTY_ID",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "GOOGLE_ANALYTICS_CLIENT_EMAIL",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "GOOGLE_ANALYTICS_PRIVATE_KEY",
+      "targets": [
+        "production"
+      ],
+      "type": "encrypted"
+    },
+    {
+      "name": "JOB_DECIMAL_RATES_ENABLED",
+      "targets": [
+        "production"
+      ],
+      "type": "plain"
+    }
+  ],
+  "speedInsightsHasData": false
+}
