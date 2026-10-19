@@ -1,0 +1,70 @@
+name: Bot bug report
+description: Reproducible QA or support problem; no private customer data.
+title: "[Bug] "
+labels: [bug, triage]
+body:
+  - type: dropdown
+    id: reporter
+    attributes:
+      label: Reporter bot
+      options: [QA Bot, SEO Bot, Source Curator Bot, Support Bot, X Growth Bot]
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      placeholder: https://your-approved-preview.vercel.app/jobs
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, browser/device and repeatability. Redact private details.
+      placeholder: "1. Open the URL\n2. Select ...\n3. Observe ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot/log
+      description: Attach redacted evidence only. No tokens, cookies, CVs, emails or secrets.
+    validations:
+      required: true
+  - type: dropdown
+    id: account
+    attributes:
+      label: Account used
+      description: Use only this designated test account, never a customer account.
+      options: [anvesh.mannuru+ir35test@gmail.com]
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [P2, P1, P0]
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: I searched open issues; this is not a duplicate.
+          required: true
+        - label: I did not submit to a real employer or include private data.
+          required: true

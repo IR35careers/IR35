@@ -1,0 +1,7 @@
+{
+  "nodeVersion": "22.x",
+  "rootDirectory": "bot-preview",
+  "sourceFilesOutsideRootDirectory": true,
+  "installCommand": "cd .. && npm ci --ignore-scripts",
+  "buildCommand": "node --import tsx ../scripts/bots/preview-build.ts"
+}

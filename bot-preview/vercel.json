@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "git": { "deploymentEnabled": { "*": false, "main": false, "codex/issue-*": true, "codex/bot-handoff": true } },
+  "installCommand": "cd .. && npm ci --ignore-scripts",
+  "buildCommand": "node --import tsx ../scripts/bots/preview-build.ts",
+  "headers": [{ "source": "/(.*)", "headers": [
+    { "key": "X-IR35-Bot-Preview", "value": "mock-only-v1" },
+    { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+  ] }]
+}

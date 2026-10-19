@@ -1,0 +1,33 @@
+name: Bot SEO report
+description: Evidence-backed search, indexing or metadata issue.
+title: "[SEO] "
+labels: [seo, triage, seo-bot]
+body:
+  - type: textarea
+    id: urls
+    attributes:
+      label: URLs affected
+      description: One URL per line; no private account URLs.
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: Check that failed
+      description: Include the exact check and how to reproduce it.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Observed tags, status codes, dates and redacted screenshots.
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested fix
+      description: A suggestion is not permission to change production settings.
+    validations:
+      required: true

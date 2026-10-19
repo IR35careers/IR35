@@ -1,0 +1,7 @@
+{
+  "name": "ir35-bot-preview",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "build": "node --import tsx ../scripts/bots/preview-build.ts" },
+  "dependencies": { "next": "16.4.0", "react": "19.2.8", "react-dom": "19.2.8" }
+}

@@ -11,6 +11,8 @@ describe("Phase 0 migration-first release hold", () => {
     expect(config.git.deploymentEnabled["codex/railway-*"]).toBe(false);
     expect(config.git.deploymentEnabled["codex/oracle-*"]).toBe(false);
     expect(config.git.deploymentEnabled["codex/google-*"]).toBe(false);
+    expect(config.git.deploymentEnabled["codex/issue-*"]).toBe(false);
+    expect(config.git.deploymentEnabled["codex/bot-*"]).toBe(false);
     // A matching true glob would override the hold in Vercel's configuration.
     expect(Object.values(config.git.deploymentEnabled)).not.toContain(true);
   });

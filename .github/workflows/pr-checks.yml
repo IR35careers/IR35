@@ -1,0 +1,96 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  deployment_status: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bot-checks-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.deployment.sha || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code:
+    name: pr-checks
+    if: github.event_name == 'pull_request' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@11.19.0
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+
+  select:
+    name: Select isolated preview
+    if: >-
+      github.event_name == 'deployment_status' &&
+      github.event.repository.private == false &&
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.production_environment == false &&
+      vars.BOT_PREVIEW_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      deployments: read
+      pull-requests: read
+      issues: read
+    outputs:
+      eligible: ${{ steps.select.outputs.eligible }}
+      url: ${{ steps.select.outputs.preview_url }}
+    steps:
+      # Trusted default-branch code only, never PR-head scripts in this job.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - id: select
+        run: node --import tsx scripts/bots/cli.ts select-preview
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BOT_PREVIEW_ENABLED: ${{ vars.BOT_PREVIEW_ENABLED }}
+          BOT_PREVIEW_PROJECT_PREFIX: ${{ vars.BOT_PREVIEW_PROJECT_PREFIX }}
+
+  preview:
+    name: preview-smoke
+    needs: select
+    if: needs.select.outputs.eligible == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx --no-install playwright install --with-deps chromium
+      # No GITHUB_TOKEN, Vercel bypass key, account password or production secret
+      # is passed to the browser. A protected/unavailable preview fails normally.
+      - run: npx --no-install playwright test --config=playwright.preview.config.ts
+        env:
+          CI: "true"
+          BOT_PREVIEW_URL: ${{ needs.select.outputs.url }}

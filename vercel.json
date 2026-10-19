@@ -1,6 +1,6 @@
 {
   "git": {
-    "deploymentEnabled": { "main": false, "codex/railway-*": false, "codex/oracle-*": false, "codex/google-*": false }
+    "deploymentEnabled": { "main": false, "codex/railway-*": false, "codex/oracle-*": false, "codex/google-*": false, "codex/issue-*": false, "codex/bot-*": false }
   },
   "buildCommand": "npm run vercel-build",
   "functions": {

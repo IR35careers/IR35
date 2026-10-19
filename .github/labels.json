@@ -1,0 +1,21 @@
+[
+  {"name":"qa-bot","color":"1D76DB","description":"Source: QA Bot"},
+  {"name":"seo-bot","color":"1D76DB","description":"Source: SEO Bot"},
+  {"name":"support","color":"1D76DB","description":"Source: Support Bot or customer support"},
+  {"name":"new-sources","color":"1D76DB","description":"Source: Source Curator Bot"},
+  {"name":"x-growth","color":"1D76DB","description":"Source: X Growth Bot"},
+  {"name":"triage","color":"EDEDED","description":"Awaiting owner triage"},
+  {"name":"codex-ready","color":"0E8A16","description":"P0/P1 with evidence; owner-authorised Codex handoff"},
+  {"name":"codex-working","color":"5319E7","description":"A linked Codex pull request is open"},
+  {"name":"needs-human","color":"B60205","description":"Missing evidence, sensitive change or owner decision"},
+  {"name":"preview-pass","color":"0E8A16","description":"Automated preview smoke passed for the current PR head"},
+  {"name":"preview-fail","color":"B60205","description":"Automated preview smoke failed for the current PR head"},
+  {"name":"P0","color":"B60205","description":"Critical production impact"},
+  {"name":"P1","color":"D93F0B","description":"High-impact defect"},
+  {"name":"P2","color":"FBCA04","description":"Normal-priority improvement"},
+  {"name":"bug","color":"D73A4A","description":"Something is not working"},
+  {"name":"seo","color":"0075CA","description":"Search visibility or metadata"},
+  {"name":"content","color":"0075CA","description":"Editorial or copy change"},
+  {"name":"source","color":"0075CA","description":"Permitted job-source proposal"},
+  {"name":"chore","color":"0075CA","description":"Repository maintenance"}
+]
