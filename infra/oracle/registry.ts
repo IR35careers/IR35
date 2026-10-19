@@ -63,4 +63,32 @@ export class WorkerRegistry {
     if (await this.resolve(`sha-${sha}`) !== expected) throw new Error("Signed revision does not match its immutable worker tag.");
     return `${WORKER_IMAGE}@${expected}`;
   }
+  /** Public ancestry only; never widen the VM's read:packages credential scope. */
+  async requireSuccessor(previous: unknown, candidate: unknown): Promise<void> {
+    try {
+      const base = shaSchema.parse(previous), head = shaSchema.parse(candidate);
+      if (base === head) throw new Error();
+      const headers = { accept: "application/vnd.github+json", "x-github-api-version": "2022-11-28" };
+      const repo = await this.http("https://api.github.com/repos/IR35careers/IR35", { redirect: "error", signal: AbortSignal.timeout(15_000), headers });
+      if (repo.status !== 200) throw new Error();
+      z.object({ full_name: z.literal("IR35careers/IR35"), private: z.literal(false), default_branch: z.literal("main") })
+        .parse(await boundedJson(repo, 32_768));
+      // GitHub includes file patches only on page one. We need relationship
+      // metadata, not a potentially huge diff or the last paginated commit.
+      const comparison = await this.http(`https://api.github.com/repos/IR35careers/IR35/compare/${base}...${head}?per_page=1&page=2`, {
+        redirect: "error", signal: AbortSignal.timeout(15_000), headers,
+      });
+      if (comparison.status !== 200) throw new Error();
+      z.object({ status: z.literal("ahead"), ahead_by: z.number().int().positive(), behind_by: z.literal(0),
+        base_commit: z.object({ sha: z.literal(base) }), merge_base_commit: z.object({ sha: z.literal(base) }),
+      }).parse(await boundedJson(comparison, 131_072));
+      const main = await this.http(`https://api.github.com/repos/IR35careers/IR35/compare/${head}...main?per_page=1&page=2`, {
+        redirect: "error", signal: AbortSignal.timeout(15_000), headers,
+      });
+      if (main.status !== 200) throw new Error();
+      z.object({ status: z.enum(["ahead", "identical"]), ahead_by: z.number().int().nonnegative(), behind_by: z.literal(0),
+        base_commit: z.object({ sha: z.literal(head) }), merge_base_commit: z.object({ sha: z.literal(head) }),
+      }).refine(value => (value.status === "identical") === (value.ahead_by === 0)).parse(await boundedJson(main, 131_072));
+    } catch { throw new Error("Worker release ancestry is not a verified forward update; no selection changed."); }
+  }
 }

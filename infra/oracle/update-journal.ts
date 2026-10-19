@@ -18,11 +18,13 @@ const transactionSchema = z.strictObject({
     && (value.phase !== "draining" || value.phaseAt === value.startedAt)
     && (!["aborting", "rollback_starting", "rollback_activating", "failed"].includes(value.phase) || value.reason !== null);
 });
-export const updateJournalSchema = z.strictObject({ version: z.literal(1), revision: z.number().int().nonnegative(),
+export const updateJournalSchema = z.strictObject({ version: z.literal(2), revision: z.number().int().nonnegative(),
   mode: z.enum(["standby", "consumer"]), invariantsHash: z.string().regex(/^[a-f0-9]{64}$/),
-  stable: releaseSchema, previous: releaseSchema.nullable(), rejectedDigest: digestSchema.nullable(), transaction: transactionSchema.nullable(),
+  stable: releaseSchema, previous: releaseSchema.nullable(), highWater: updateArtifactSchema,
+  rejectedDigest: digestSchema.nullable(), transaction: transactionSchema.nullable(),
 }).refine(value => !value.transaction || (value.transaction.candidate.image !== value.stable.artifact.image
-  && ![value.stable.bootId, value.previous?.bootId].some(id => id !== null && id !== undefined
+    && value.highWater.image === value.transaction.candidate.image && value.highWater.revision === value.transaction.candidate.revision
+    && ![value.stable.bootId, value.previous?.bootId].some(id => id !== null && id !== undefined
     && [value.transaction!.drainId, value.transaction!.candidateBootId, value.transaction!.rollbackBootId].includes(id))));
 export type UpdateJournalState = z.infer<typeof updateJournalSchema>;
 export type UpdateArtifact = z.infer<typeof updateArtifactSchema>;
@@ -70,7 +72,10 @@ export class WorkerUpdateJournal {
     if (proof.observedAt > now || now - proof.observedAt > 5000 || proof.image !== image || proof.bootId !== bootId
       || proof.invariantsHash !== this.state.invariantsHash || proof.mode !== this.state.mode)
       throw new Error("Fresh unchanged physical worker proof is required.");
-    if (this.state.mode === "standby" && (proof.active !== 0 || proof.handlersActive !== 0 || proof.submitting !== 0))
+    // submitting is database-wide and may belong to the existing Vercel runner.
+    // Standby must have no LOCAL handlers; paused replacement still requires
+    // global submitting=0 below, regardless of which runner owns the work.
+    if (this.state.mode === "standby" && (proof.active !== 0 || proof.handlersActive !== 0))
       throw new Error("Standby must not report consuming work.");
     return proof;
   }
@@ -89,12 +94,13 @@ export class WorkerUpdateJournal {
 
   async begin(input: unknown, effect: () => Promise<void>) {
     const parsed = z.strictObject({ candidate: updateArtifactSchema, drainId: z.uuid(), candidateBootId: z.uuid(), rollbackBootId: z.uuid(), now: epoch }).parse(input);
-    if (this.state.transaction || parsed.candidate.image === this.state.stable.artifact.image || parsed.candidate.digest === this.state.rejectedDigest)
+    if (this.state.transaction || parsed.candidate.image === this.state.stable.artifact.image || parsed.candidate.digest === this.state.rejectedDigest
+      || (parsed.candidate.revision === this.state.highWater.revision && parsed.candidate.image !== this.state.highWater.image))
       throw new Error("Worker update is already active or this image is ineligible.");
     const { now, ...fields } = parsed;
     const tx = transactionSchema.parse({ ...fields, phase: "draining", startedAt: now,
       drainDeadline: now + 600_000, phaseAt: now, healthDeadline: null, reason: null });
-    return this.intent({ ...this.state, transaction: tx }, effect);
+    return this.intent({ ...this.state, highWater: parsed.candidate, transaction: tx }, effect);
   }
   async startCandidate(proof: unknown, now: number, effect: () => Promise<void>) {
     const tx = this.requireTransaction("draining"); epoch.parse(now);
@@ -143,8 +149,31 @@ export class WorkerUpdateJournal {
     return this.intent({ ...this.state, transaction: { ...tx, phase: "aborting", phaseAt: now, healthDeadline: null, reason } }, effect);
   }
   async confirmAbort(proof: unknown, now: number) {
-    this.requireTransaction("aborting"); this.resumed(proof, now, this.state.stable.artifact.image, this.state.stable.bootId);
-    await this.save({ ...this.state, transaction: null });
+    const tx = this.requireTransaction("aborting"); this.resumed(proof, now, this.state.stable.artifact.image, this.state.stable.bootId);
+    await this.save({ ...this.state, rejectedDigest: tx.reason === "launch_failed" ? tx.candidate.digest : this.state.rejectedDigest, transaction: null });
+  }
+  async abortUnselected(proof: unknown, now: number, effect: () => Promise<void>) {
+    const tx = this.requireTransaction("candidate_starting"); epoch.parse(now);
+    if (now < tx.phaseAt) throw new Error("Clock moved backwards; physical reconciliation required.");
+    // Driver additionally proves deploy.env still selects the stable image:
+    // Host.replace writes selection BEFORE dispatching Compose, never after it.
+    this.paused(proof, now, this.state.stable.artifact.image, this.state.stable.bootId, tx.drainId);
+    return this.intent({ ...this.state, transaction: { ...tx, phase: "aborting", phaseAt: now,
+      healthDeadline: null, reason: "launch_failed" } }, effect);
+  }
+  async retryUnselectedReplacement(now: number, effect: () => Promise<void>) {
+    const tx = this.requireTransaction("candidate_starting", "rollback_starting"); epoch.parse(now);
+    if (now < tx.phaseAt || now >= tx.healthDeadline!) throw new Error("Original replacement deadline expired.");
+    // Actual host guard must positively prove the pre-selection source image,
+    // its exact owned generation, pause and unchanged files before any effect.
+    return this.intent(this.state, effect);
+  }
+  async retryAbortResume(now: number, effect: () => Promise<void>) {
+    const tx = this.requireTransaction("aborting"); epoch.parse(now);
+    if (now < tx.phaseAt || now >= tx.phaseAt + 120_000) throw new Error("Original abort acknowledgement deadline expired.");
+    // Resume may need arming while the original offWork is still draining.
+    // This never authorises replacement or resets the original deadline.
+    return this.intent(this.state, effect);
   }
   async retryDrain(proof: unknown, now: number, effect: () => Promise<void>) {
     const tx = this.requireTransaction("draining");

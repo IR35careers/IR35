@@ -6,8 +6,8 @@ const now = 1_800_000_000_000;
 const artifact = (value: string) => ({ image: `${WORKER_IMAGE}@sha256:${value.repeat(64)}`, digest: `sha256:${value.repeat(64)}`, revision: value.repeat(40) });
 const old = artifact("a"); const candidate = artifact("b");
 const ids = { drainId: "00000000-0000-4000-8000-000000000001", candidateBootId: "00000000-0000-4000-8000-000000000002", rollbackBootId: "00000000-0000-4000-8000-000000000003" };
-const initial = (): UpdateJournalState => ({ version: 1, revision: 0, mode: "standby", invariantsHash: "c".repeat(64),
-  stable: { artifact: old, bootId: null }, previous: null, transaction: null, rejectedDigest: null });
+const initial = (): UpdateJournalState => ({ version: 2, revision: 0, mode: "standby", invariantsHash: "c".repeat(64),
+  stable: { artifact: old, bootId: null }, previous: null, highWater: old, transaction: null, rejectedDigest: null });
 const proof = (image = old.image, bootId: string | null = null, operationId: string | null = ids.drainId, at = now + 1) => ({
   observedAt: at, image, bootId, invariantsHash: "c".repeat(64), mode: "standby", ok: true, browserReady: true, databaseReady: true,
   active: 0, handlersActive: 0, submitting: 0,
@@ -23,6 +23,44 @@ function fixture(mode: "standby" | "consumer" = "standby") {
 const begin = (f: ReturnType<typeof fixture>) => f.journal.begin({ candidate, ...ids, now }, f.effect);
 
 describe("durable worker update journal before side effects", () => {
+  it("does not silently bootstrap a legacy journal without the release watermark", () => {
+    const legacy = { ...initial(), version: 1 }; Reflect.deleteProperty(legacy, "highWater");
+    expect(() => new WorkerUpdateJournal(legacy, async () => {})).toThrow();
+    expect(updateJournalSchema.safeParse({ ...initial(), highWater: null }).success).toBe(false);
+  });
+  it("a different digest cannot reuse the high-water release revision", async () => {
+    const f = fixture(), changed = { image: WORKER_IMAGE + "@sha256:" + "c".repeat(64), digest: "sha256:" + "c".repeat(64), revision: candidate.revision };
+    const journal = new WorkerUpdateJournal({ ...initial(), highWater: candidate }, f.persist);
+    await expect(journal.begin({ candidate: changed, ...ids, now }, f.effect)).rejects.toThrow("ineligible");
+    expect(f.effect).not.toHaveBeenCalled(); expect(f.persist).not.toHaveBeenCalled();
+  });
+  it("pre-selection retries retain the original launch deadline and persist before effects", async () => {
+    const f = fixture(); await begin(f); await f.journal.startCandidate(proof(), now + 1, f.effect);
+    const deadline = f.durable().transaction!.healthDeadline;
+    f.events.length = 0; await f.journal.retryUnselectedReplacement(now + 2, f.effect);
+    expect(f.events).toEqual(["save:candidate_starting", "effect"]); expect(f.durable().transaction!.healthDeadline).toBe(deadline);
+    f.effect.mockClear(); await expect(f.journal.retryUnselectedReplacement(deadline!, f.effect)).rejects.toThrow("deadline expired"); expect(f.effect).not.toHaveBeenCalled();
+  });
+  it("aborts a positively unselected launch only with fresh paused original-generation proof", async () => {
+    const f = fixture(); await begin(f); await f.journal.startCandidate(proof(), now + 1, f.effect);
+    f.effect.mockClear(); await expect(f.journal.abortUnselected(proof(candidate.image, ids.candidateBootId, ids.candidateBootId), now + 2, f.effect)).rejects.toThrow();
+    expect(f.effect).not.toHaveBeenCalled(); await f.journal.abortUnselected(proof(old.image, null, ids.drainId, now + 120_002), now + 120_002, f.effect);
+    await f.journal.confirmAbort(proof(old.image, null, null, now + 120_003), now + 120_003);
+    expect(f.durable()).toMatchObject({ transaction: null, stable: initial().stable, rejectedDigest: candidate.digest });
+  });
+  it("abort resume retries cannot reset their original two-minute acknowledgement bound", async () => {
+    const f = fixture(); await begin(f); await f.journal.abort(now + 600_000, "busy", f.effect);
+    f.events.length = 0; await f.journal.retryAbortResume(now + 600_001, f.effect);
+    expect(f.events).toEqual(["save:aborting", "effect"]); expect(f.durable().transaction?.phaseAt).toBe(now + 600_000);
+    f.effect.mockClear(); await expect(f.journal.retryAbortResume(now + 720_000, f.effect)).rejects.toThrow("deadline expired"); expect(f.effect).not.toHaveBeenCalled();
+  });
+  it("standby never has local handlers, but another runner's new global submission is not standby consumption", async () => {
+    const f = fixture(); await begin(f); await f.journal.startCandidate(proof(), now + 1, f.effect);
+    await f.journal.activateCandidate(proof(candidate.image, ids.candidateBootId, ids.candidateBootId, now + 2), now + 2, f.effect);
+    const resumed = { ...proof(candidate.image, ids.candidateBootId, null, now + 3), submitting: 1 };
+    await expect(f.journal.confirmCandidate({ ...resumed, active: 1 }, now + 3)).rejects.toThrow("Standby");
+    await f.journal.confirmCandidate(resumed, now + 3); expect(f.durable().mode).toBe("standby"); expect(f.durable().transaction).toBeNull();
+  });
   it("persists every decision before stop/replace/resume, then confirms the actual resumed candidate", async () => {
     const f = fixture("consumer"); await begin(f); // data-only test, no environment/acceptance change
     await f.journal.startCandidate({ ...proof(), mode: "consumer" }, now + 1, f.effect);

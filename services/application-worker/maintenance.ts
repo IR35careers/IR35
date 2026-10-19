@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 export const MAINTENANCE_BODY_LIMIT = 512;
+export const MAINTENANCE_COMMAND_MAX_AGE_MS = 30_000;
 const commandSchema = z.strictObject({ action: z.enum(["drain", "resume"]), operationId: z.uuid() });
 export type MaintenanceCommand = z.infer<typeof commandSchema>;
 type Phase = "idle" | "draining" | "drained" | "resuming" | "failed";
@@ -54,7 +55,7 @@ export function readMaintenanceCommand(input: unknown): MaintenanceCommand | nul
     now: z.number().int().nonnegative(),
   }).safeParse(input);
   if (!parsed.success || Buffer.byteLength(parsed.data.body) > MAINTENANCE_BODY_LIMIT
-    || Math.abs(parsed.data.now - Number(parsed.data.timestamp)) > 30_000) return null;
+    || Math.abs(parsed.data.now - Number(parsed.data.timestamp)) > MAINTENANCE_COMMAND_MAX_AGE_MS) return null;
   try {
     const expected = Buffer.from(signMaintenanceBody(parsed.data.secret, parsed.data.body, parsed.data.timestamp));
     const supplied = Buffer.from(parsed.data.signature);
