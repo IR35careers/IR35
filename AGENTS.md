@@ -2,6 +2,7 @@
 
 ## Current owner deployment constraints — 18 October 2026
 
+- **19 October human-only merge/release:** neither Codex nor any bot may approve, merge, auto-merge or close PRs. This supersedes earlier automatic-merge authority. Open new work as draft PRs for human review, preserve the production release hold, and do not enable deployment/update/acceptance flags. The bot-loop setup is pending human review in PR #37, not active authority to change production.
 - **Zero budget.** Do not upgrade Railway, Supabase, Oracle or any other plan/add-on. Never upgrade OCI to Pay As You Go. Stop and tell the owner before any potentially chargeable action. Leave the empty Railway trial project/service intact and undeployed.
 - Worker target is now **Oracle Cloud Always Free Ampere A1**, replacing the Railway deployment plan. Keep pg-boss on the existing Supabase session pooler (5432), least-privilege roles and standby mode. Infrastructure lives in `infra/oracle/`; verify actual Always Free eligibility/quotas before provisioning. The owner signs up first; the agent runs later commands.
 - No production runner switch (`APPLY_RUNNER=railway` or `oracle`) and no `APPLICATION_WORKER_ACCEPT_JOBS=true` without literal **YES CUTOVER**. Existing destructive-DB approval and verified-backup requirements remain. No real employer submissions; only mocks and the named test account.
