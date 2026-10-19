@@ -1,0 +1,1818 @@
+{
+  "catalogVersion": 1,
+  "checkedAt": "2026-10-19T15:38:15Z",
+  "serverVersion": "17.6",
+  "databaseBytes": 123514003,
+  "schemas": [
+    "auth",
+    "extensions",
+    "graphql",
+    "graphql_public",
+    "pgboss",
+    "pgbouncer",
+    "public",
+    "realtime",
+    "storage",
+    "supabase_migrations",
+    "vault"
+  ],
+  "extensions": [
+    {
+      "name": "pg_stat_statements",
+      "version": "1.11",
+      "schema": "extensions"
+    },
+    {
+      "name": "pgcrypto",
+      "version": "1.3",
+      "schema": "extensions"
+    },
+    {
+      "name": "plpgsql",
+      "version": "1.0",
+      "schema": "pg_catalog"
+    },
+    {
+      "name": "supabase_vault",
+      "version": "0.3.1",
+      "schema": "vault"
+    },
+    {
+      "name": "uuid-ossp",
+      "version": "1.1",
+      "schema": "extensions"
+    }
+  ],
+  "tables": [
+    {
+      "schema": "auth",
+      "name": "audit_log_entries",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "custom_oauth_providers",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 57344,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "flow_state",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 114688,
+      "rows": 47
+    },
+    {
+      "schema": "auth",
+      "name": "identities",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 196608,
+      "rows": 144
+    },
+    {
+      "schema": "auth",
+      "name": "instances",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 16384,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_amr_claims",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 90112,
+      "rows": 140
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_challenges",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_factors",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 57344,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_recovery_code_sets",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_recovery_codes",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_authorizations",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 40960,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_client_states",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_clients",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_consents",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 49152,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "one_time_tokens",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 147456,
+      "rows": 21
+    },
+    {
+      "schema": "auth",
+      "name": "refresh_tokens",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 688128,
+      "rows": 1397
+    },
+    {
+      "schema": "auth",
+      "name": "saml_providers",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "saml_relay_states",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 40960,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "schema_migrations",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 82
+    },
+    {
+      "schema": "auth",
+      "name": "scim_tokens",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 49152,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "scim_users",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 90112,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "sessions",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 163840,
+      "rows": 140
+    },
+    {
+      "schema": "auth",
+      "name": "sso_domains",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "sso_providers",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "users",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 409600,
+      "rows": 143
+    },
+    {
+      "schema": "auth",
+      "name": "webauthn_challenges",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 0
+    },
+    {
+      "schema": "auth",
+      "name": "webauthn_credentials",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 0
+    },
+    {
+      "schema": "public",
+      "name": "admin_members",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 98304,
+      "rows": 2
+    },
+    {
+      "schema": "public",
+      "name": "application_events",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 696320,
+      "rows": 783
+    },
+    {
+      "schema": "public",
+      "name": "application_packets",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 1892352,
+      "rows": 83
+    },
+    {
+      "schema": "public",
+      "name": "application_submissions",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 286720,
+      "rows": 60
+    },
+    {
+      "schema": "public",
+      "name": "application_worker_heartbeats",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 180224,
+      "rows": 461
+    },
+    {
+      "schema": "public",
+      "name": "application_worker_tasks",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 163840,
+      "rows": 60
+    },
+    {
+      "schema": "public",
+      "name": "articles",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "public",
+      "name": "automation_rules",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 73728,
+      "rows": 115
+    },
+    {
+      "schema": "public",
+      "name": "automation_runs",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 294912,
+      "rows": 13
+    },
+    {
+      "schema": "public",
+      "name": "contact_requests",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 65536,
+      "rows": 5
+    },
+    {
+      "schema": "public",
+      "name": "feedback_messages",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 49152,
+      "rows": 11
+    },
+    {
+      "schema": "public",
+      "name": "inbox_aliases",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 90112,
+      "rows": 113
+    },
+    {
+      "schema": "public",
+      "name": "inbox_messages",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 729088,
+      "rows": 273
+    },
+    {
+      "schema": "public",
+      "name": "job_alerts",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 5
+    },
+    {
+      "schema": "public",
+      "name": "jobs",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 101179392,
+      "rows": 22910
+    },
+    {
+      "schema": "public",
+      "name": "moderation_logs",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 1572864,
+      "rows": 4217
+    },
+    {
+      "schema": "public",
+      "name": "profiles",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 1359872,
+      "rows": 118
+    },
+    {
+      "schema": "public",
+      "name": "resume_versions",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 188416,
+      "rows": 12
+    },
+    {
+      "schema": "public",
+      "name": "saved_jobs",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 8
+    },
+    {
+      "schema": "public",
+      "name": "testimonials",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 16384,
+      "rows": 0
+    },
+    {
+      "schema": "public",
+      "name": "user_entitlements",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 16384,
+      "rows": 0
+    },
+    {
+      "schema": "public",
+      "name": "waitlist",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 65536,
+      "rows": 22
+    },
+    {
+      "schema": "realtime",
+      "name": "messages",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 0,
+      "rows": 0
+    },
+    {
+      "schema": "realtime",
+      "name": "schema_migrations",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 89
+    },
+    {
+      "schema": "realtime",
+      "name": "subscription",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 0
+    },
+    {
+      "schema": "storage",
+      "name": "buckets",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 49152,
+      "rows": 4
+    },
+    {
+      "schema": "storage",
+      "name": "buckets_analytics",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "storage",
+      "name": "buckets_vectors",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 16384,
+      "rows": 0
+    },
+    {
+      "schema": "storage",
+      "name": "migrations",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 73728,
+      "rows": 74
+    },
+    {
+      "schema": "storage",
+      "name": "objects",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 327680,
+      "rows": 69
+    },
+    {
+      "schema": "storage",
+      "name": "s3_multipart_uploads",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "storage",
+      "name": "s3_multipart_uploads_parts",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 16384,
+      "rows": 0
+    },
+    {
+      "schema": "storage",
+      "name": "vector_indexes",
+      "rls": true,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    },
+    {
+      "schema": "supabase_migrations",
+      "name": "schema_migrations",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 32768,
+      "rows": 1
+    },
+    {
+      "schema": "vault",
+      "name": "secrets",
+      "rls": false,
+      "force_rls": false,
+      "is_partition": false,
+      "bytes": 24576,
+      "rows": 0
+    }
+  ],
+  "policies": [
+    {
+      "schema": "public",
+      "table_name": "application_events",
+      "name": "Users manage own application events",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "0fbef624e7111946b3188611ca695e3e",
+      "check_hash": "0fbef624e7111946b3188611ca695e3e"
+    },
+    {
+      "schema": "public",
+      "table_name": "application_packets",
+      "name": "Users manage own application packets",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "application_submissions",
+      "name": "Users read own submission receipts",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "articles",
+      "name": "Published articles are public",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "9cd9264e8e18914b0fc9cc5a667b3795",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "automation_rules",
+      "name": "Users manage own automation rules",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "automation_runs",
+      "name": "Users manage own automation runs",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "inbox_aliases",
+      "name": "Users manage own inbox alias",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "inbox_messages",
+      "name": "Users read own inbox messages",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "inbox_messages",
+      "name": "Users update own inbox messages",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "job_alerts",
+      "name": "Users manage own alerts",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "jobs",
+      "name": "Public can read active jobs",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "10a142266f2685c9737e81a83e9e08de",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "profiles",
+      "name": "Users manage own profile",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "bc9c729a84690340789a4e4f01175335",
+      "check_hash": "bc9c729a84690340789a4e4f01175335"
+    },
+    {
+      "schema": "public",
+      "table_name": "resume_versions",
+      "name": "Users delete own resume versions",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "resume_versions",
+      "name": "Users insert own resume versions",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "using_hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "resume_versions",
+      "name": "Users read own resume versions",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "resume_versions",
+      "name": "Users update own resume versions",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "saved_jobs",
+      "name": "Users manage own saved jobs",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "19300d155780585259ede73ac370586c"
+    },
+    {
+      "schema": "public",
+      "table_name": "testimonials",
+      "name": "Approved testimonials are public",
+      "permissive": "PERMISSIVE",
+      "roles": "{anon,authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "6b8222e9b10b616d6ef363b345cc7052",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "user_entitlements",
+      "name": "Users read own entitlements",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "19300d155780585259ede73ac370586c",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "waitlist",
+      "name": "Allow service role read",
+      "permissive": "PERMISSIVE",
+      "roles": "{service_role}",
+      "cmd": "SELECT",
+      "using_hash": "b326b5062b2f0e69046810717534cb09",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "public",
+      "table_name": "waitlist",
+      "name": "Allow service role to read all",
+      "permissive": "PERMISSIVE",
+      "roles": "{service_role}",
+      "cmd": "SELECT",
+      "using_hash": "b326b5062b2f0e69046810717534cb09",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "storage",
+      "table_name": "objects",
+      "name": "CV owners delete",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "using_hash": "e0b7d69806097c1f9c227e073c9301e6",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "storage",
+      "table_name": "objects",
+      "name": "CV owners insert",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "using_hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "check_hash": "e0b7d69806097c1f9c227e073c9301e6"
+    },
+    {
+      "schema": "storage",
+      "table_name": "objects",
+      "name": "CV owners read",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "using_hash": "e0b7d69806097c1f9c227e073c9301e6",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "schema": "storage",
+      "table_name": "objects",
+      "name": "CV owners update",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "using_hash": "e0b7d69806097c1f9c227e073c9301e6",
+      "check_hash": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  ],
+  "functions": [
+    {
+      "schema": "auth",
+      "name": "email",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "bf3569f4ae1c7e250e74daf51d0311c7",
+      "extension_owned": false
+    },
+    {
+      "schema": "auth",
+      "name": "jwt",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "20054548ba2003f61a6bcb472175700b",
+      "extension_owned": false
+    },
+    {
+      "schema": "auth",
+      "name": "role",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "8a3e05459e07e0633d43c6fba2a2cdf4",
+      "extension_owned": false
+    },
+    {
+      "schema": "auth",
+      "name": "uid",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "ea3b41bf29e2ad573067939329aa088e",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "armor",
+      "identity_arguments": "bytea",
+      "security_definer": false,
+      "definition_hash": "8b26fd3b767373f628d8296b22c58569",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "armor",
+      "identity_arguments": "bytea, text[], text[]",
+      "security_definer": false,
+      "definition_hash": "f8332991aecc898370b20b7d68b3f08c",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "crypt",
+      "identity_arguments": "text, text",
+      "security_definer": false,
+      "definition_hash": "f92effa5862ce095a56289da31c7f2f2",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "dearmor",
+      "identity_arguments": "text",
+      "security_definer": false,
+      "definition_hash": "8e4be29a02a595ea10e204c070e18b75",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "decrypt",
+      "identity_arguments": "bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "18e4fb227e3460385309c2c880ce6346",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "decrypt_iv",
+      "identity_arguments": "bytea, bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "6378f3a8f61df6ae8edd0837fd8cb4d7",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "digest",
+      "identity_arguments": "bytea, text",
+      "security_definer": false,
+      "definition_hash": "85b88685f74a398b1ff164ad33eeaaca",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "digest",
+      "identity_arguments": "text, text",
+      "security_definer": false,
+      "definition_hash": "95de9cf8798b911a1fe38c27bdb570de",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "encrypt",
+      "identity_arguments": "bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "bd196881d3cc43555e5b197d6050cc68",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "encrypt_iv",
+      "identity_arguments": "bytea, bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "524e5bac5ae4a00c5a3ec1d72b98798f",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "gen_random_bytes",
+      "identity_arguments": "integer",
+      "security_definer": false,
+      "definition_hash": "a7569a34c9be929beb24ef5670d42636",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "gen_random_uuid",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "6504babb8130d35e393998bd2856ec61",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "gen_salt",
+      "identity_arguments": "text",
+      "security_definer": false,
+      "definition_hash": "0ab5bda2fff1fa217935db57c0fe0738",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "gen_salt",
+      "identity_arguments": "text, integer",
+      "security_definer": false,
+      "definition_hash": "60f792dd2967e22964c0ffcec9d34342",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "grant_pg_cron_access",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "53a44336da0ac1dd62d89dbd988e6d1d",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "grant_pg_graphql_access",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "4e6d7efe4aed1b3b92063b648aa7a0cf",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "grant_pg_net_access",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "1d06ef4fb47bb0ab6e6f8818a62013bb",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "hmac",
+      "identity_arguments": "bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "791ceef3f202e631f7cc11017fbf00de",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "hmac",
+      "identity_arguments": "text, text, text",
+      "security_definer": false,
+      "definition_hash": "361d12259351f9df05ddf92c6bfd4224",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pg_stat_statements",
+      "identity_arguments": "showtext boolean, OUT userid oid, OUT dbid oid, OUT toplevel boolean, OUT queryid bigint, OUT query text, OUT plans bigint, OUT total_plan_time double precision, OUT min_plan_time double precision, OUT max_plan_time double precision, OUT mean_plan_time double precision, OUT stddev_plan_time double precision, OUT calls bigint, OUT total_exec_time double precision, OUT min_exec_time double precision, OUT max_exec_time double precision, OUT mean_exec_time double precision, OUT stddev_exec_time double precision, OUT rows bigint, OUT shared_blks_hit bigint, OUT shared_blks_read bigint, OUT shared_blks_dirtied bigint, OUT shared_blks_written bigint, OUT local_blks_hit bigint, OUT local_blks_read bigint, OUT local_blks_dirtied bigint, OUT local_blks_written bigint, OUT temp_blks_read bigint, OUT temp_blks_written bigint, OUT shared_blk_read_time double precision, OUT shared_blk_write_time double precision, OUT local_blk_read_time double precision, OUT local_blk_write_time double precision, OUT temp_blk_read_time double precision, OUT temp_blk_write_time double precision, OUT wal_records bigint, OUT wal_fpi bigint, OUT wal_bytes numeric, OUT jit_functions bigint, OUT jit_generation_time double precision, OUT jit_inlining_count bigint, OUT jit_inlining_time double precision, OUT jit_optimization_count bigint, OUT jit_optimization_time double precision, OUT jit_emission_count bigint, OUT jit_emission_time double precision, OUT jit_deform_count bigint, OUT jit_deform_time double precision, OUT stats_since timestamp with time zone, OUT minmax_stats_since timestamp with time zone",
+      "security_definer": false,
+      "definition_hash": "507a52a27907a48b0018326a15b3c595",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pg_stat_statements_info",
+      "identity_arguments": "OUT dealloc bigint, OUT stats_reset timestamp with time zone",
+      "security_definer": false,
+      "definition_hash": "1ab5e3c4a7d6213abb0022730b9931ce",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pg_stat_statements_reset",
+      "identity_arguments": "userid oid, dbid oid, queryid bigint, minmax_only boolean",
+      "security_definer": false,
+      "definition_hash": "a3efe1fd4fbffb0c0f99da1ed283f7d8",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_armor_headers",
+      "identity_arguments": "text, OUT key text, OUT value text",
+      "security_definer": false,
+      "definition_hash": "a018f2bd7bcaae86efe1a9e7bd9a383b",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_key_id",
+      "identity_arguments": "bytea",
+      "security_definer": false,
+      "definition_hash": "622562b45d5a075400d293c5a48c18e9",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_decrypt",
+      "identity_arguments": "bytea, bytea",
+      "security_definer": false,
+      "definition_hash": "1d596379caf583a571a96539f01eb16b",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_decrypt",
+      "identity_arguments": "bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "85340917f0f739c0b8d6a6673e5012c3",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_decrypt",
+      "identity_arguments": "bytea, bytea, text, text",
+      "security_definer": false,
+      "definition_hash": "fc84f59fd544cf2c70a3e65dbfdff1e7",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_decrypt_bytea",
+      "identity_arguments": "bytea, bytea",
+      "security_definer": false,
+      "definition_hash": "9b91d112df744c646565d7e80ec151ea",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_decrypt_bytea",
+      "identity_arguments": "bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "00666f7e5e717d5ef4c7035a7858b380",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_decrypt_bytea",
+      "identity_arguments": "bytea, bytea, text, text",
+      "security_definer": false,
+      "definition_hash": "07ee5afa371340ba85ae1d93e9dc8ad1",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_encrypt",
+      "identity_arguments": "text, bytea",
+      "security_definer": false,
+      "definition_hash": "ef3c54e0a325783028c30a31d604253d",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_encrypt",
+      "identity_arguments": "text, bytea, text",
+      "security_definer": false,
+      "definition_hash": "bb91bfabebc1894a30d0f4fae6dccffe",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_encrypt_bytea",
+      "identity_arguments": "bytea, bytea",
+      "security_definer": false,
+      "definition_hash": "5ef5954cdbe5741e2c1906898a6057c7",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_pub_encrypt_bytea",
+      "identity_arguments": "bytea, bytea, text",
+      "security_definer": false,
+      "definition_hash": "3062cd7c3d17815975f8720cbeabf0b6",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_decrypt",
+      "identity_arguments": "bytea, text",
+      "security_definer": false,
+      "definition_hash": "bd9033545bf69e27880836cc8611fb46",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_decrypt",
+      "identity_arguments": "bytea, text, text",
+      "security_definer": false,
+      "definition_hash": "46b4eb4a8190cf3f5a7285f992ba7d87",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_decrypt_bytea",
+      "identity_arguments": "bytea, text",
+      "security_definer": false,
+      "definition_hash": "365cce063e993d3823812d7ed2eed4bd",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_decrypt_bytea",
+      "identity_arguments": "bytea, text, text",
+      "security_definer": false,
+      "definition_hash": "247ac244802a2c8c9db4747d2ae0f515",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_encrypt",
+      "identity_arguments": "text, text",
+      "security_definer": false,
+      "definition_hash": "89a109c79b6e5729b983220d745175c8",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_encrypt",
+      "identity_arguments": "text, text, text",
+      "security_definer": false,
+      "definition_hash": "51bcff8be418bd39d9a0e71cbaf6e42a",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_encrypt_bytea",
+      "identity_arguments": "bytea, text",
+      "security_definer": false,
+      "definition_hash": "43fc83685de8a47784c8891e0c7eaf40",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgp_sym_encrypt_bytea",
+      "identity_arguments": "bytea, text, text",
+      "security_definer": false,
+      "definition_hash": "f7f923af916f7b9c973ff303af271329",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "pgrst_ddl_watch",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "afaad7193dcf8f81e728d2bedb85e43e",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "pgrst_drop_watch",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "4357772baf5cfcd5c6d7049585b3a537",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "set_graphql_placeholder",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "8da9dff6b2ae47498209d341acaeb60b",
+      "extension_owned": false
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_generate_v1",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "f2a7d7708f4ce5e8429ee5e57fa19842",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_generate_v1mc",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "c404a846ca36b0d8f46d268dbc4be0c3",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_generate_v3",
+      "identity_arguments": "namespace uuid, name text",
+      "security_definer": false,
+      "definition_hash": "7992559096f41242be92bb50ac5fca6e",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_generate_v4",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "a3045e99488d2d755e53c33e5b0fb5d1",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_generate_v5",
+      "identity_arguments": "namespace uuid, name text",
+      "security_definer": false,
+      "definition_hash": "eac48925db03b4f5baa93a49e4e5c994",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_nil",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "d5bf098ffa5f31313539aed0d5b80b18",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_ns_dns",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "b1fb4043e40048f831decdb42d7c7e91",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_ns_oid",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "59d0fa7c59e1f7aa25dd2d1c7cb70090",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_ns_url",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "dffa53f4caafe3259e10923916be5802",
+      "extension_owned": true
+    },
+    {
+      "schema": "extensions",
+      "name": "uuid_ns_x500",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "c6106df49914220b7eba8704d9770c25",
+      "extension_owned": true
+    },
+    {
+      "schema": "graphql_public",
+      "name": "graphql",
+      "identity_arguments": "\"operationName\" text, query text, variables jsonb, extensions jsonb",
+      "security_definer": false,
+      "definition_hash": "dfa83944e7a73368d44e3ee4d2a1167c",
+      "extension_owned": false
+    },
+    {
+      "schema": "pgbouncer",
+      "name": "get_auth",
+      "identity_arguments": "p_usename text",
+      "security_definer": true,
+      "definition_hash": "ea716a894cc6ade82e6754c47336a307",
+      "extension_owned": false
+    },
+    {
+      "schema": "public",
+      "name": "add_to_waitlist",
+      "identity_arguments": "user_email text",
+      "security_definer": true,
+      "definition_hash": "7da948329581a94025fe8e9887f7b8b2",
+      "extension_owned": false
+    },
+    {
+      "schema": "public",
+      "name": "claim_application_worker_task",
+      "identity_arguments": "p_worker_id text",
+      "security_definer": true,
+      "definition_hash": "112b148fb0f09bbc618403060f71678f",
+      "extension_owned": false
+    },
+    {
+      "schema": "public",
+      "name": "fail_abandoned_application_tasks",
+      "identity_arguments": "",
+      "security_definer": true,
+      "definition_hash": "ba03ce42a4e4c650eea6d2d09b10a691",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "apply_rls",
+      "identity_arguments": "wal jsonb, max_record_bytes integer",
+      "security_definer": false,
+      "definition_hash": "d7b17bcce71440ab486770b53d15bd3d",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "authorize",
+      "identity_arguments": "role_name text, topic_name text, claims text, sub text, headers text, read_extensions text[], write_extensions text[], OUT read_allowed boolean[], OUT write_allowed boolean[]",
+      "security_definer": false,
+      "definition_hash": "62e6e3eda7ef427d6d62c7a41479073e",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "broadcast_changes",
+      "identity_arguments": "topic_name text, event_name text, operation text, table_name text, table_schema text, new record, old record, level text",
+      "security_definer": false,
+      "definition_hash": "ed087c81e8e1cf26699bc89b9352dd97",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "build_prepared_statement_sql",
+      "identity_arguments": "prepared_statement_name text, entity regclass, columns realtime.wal_column[]",
+      "security_definer": false,
+      "definition_hash": "063be385f49a345d2f3c89dc5dcf7fa3",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "cast",
+      "identity_arguments": "val text, type_ regtype",
+      "security_definer": false,
+      "definition_hash": "2d38c9a2b85fe787afe48a12c02839e8",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "check_equality_op",
+      "identity_arguments": "op realtime.equality_op, type_ regtype, val_1 text, val_2 text",
+      "security_definer": false,
+      "definition_hash": "dc96014b6232b30f11a6465db31bd20a",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "check_equality_op",
+      "identity_arguments": "op realtime.equality_op, type_ regtype, val_1 text, val_2 text, negate boolean",
+      "security_definer": false,
+      "definition_hash": "3db26de03f6feab4f7fc8f9a8a48c07e",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "is_visible_through_filters",
+      "identity_arguments": "columns realtime.wal_column[], filters realtime.user_defined_filter[]",
+      "security_definer": false,
+      "definition_hash": "5dff3ea0345e185330be6127d0dce0df",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "list_changes",
+      "identity_arguments": "publication name, slot_name name, max_changes integer, max_record_bytes integer",
+      "security_definer": false,
+      "definition_hash": "d2cd4e1195236fa92705bdba784719ae",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "list_changes_sync",
+      "identity_arguments": "publication name, slot_name name, max_changes integer, max_record_bytes integer",
+      "security_definer": false,
+      "definition_hash": "fcbc1eeaa0bd65e2d79fa397fb6f5834",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "quote_wal2json",
+      "identity_arguments": "entity regclass",
+      "security_definer": false,
+      "definition_hash": "441bd4aad4024c86ab1fafe7855b9cd4",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "send",
+      "identity_arguments": "payload jsonb, event text, topic text, private boolean",
+      "security_definer": false,
+      "definition_hash": "77afe4a67a0330f080cb562cec0898bd",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "send_binary",
+      "identity_arguments": "payload bytea, event text, topic text, private boolean",
+      "security_definer": false,
+      "definition_hash": "ccdcf82b70a4df521737be16ff40daee",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "settled_changes",
+      "identity_arguments": "slot_name name, max_changes integer, VARIADIC opts text[]",
+      "security_definer": false,
+      "definition_hash": "0460b15f876014713ccc4a997ebb3dbd",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "subscription_check_filters",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "ff71dc5fe6923e2a5b8b9f79f5ccbf0d",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "to_regrole",
+      "identity_arguments": "role_name text",
+      "security_definer": false,
+      "definition_hash": "06910e957a8215a4bd3cd66c8182052c",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "topic",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "cd1d746eed2ae8a6e309899adfe95988",
+      "extension_owned": false
+    },
+    {
+      "schema": "realtime",
+      "name": "wal2json_escape_identifier",
+      "identity_arguments": "name text",
+      "security_definer": false,
+      "definition_hash": "0efca81765a5fd58739e8eb42339d68d",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "allow_any_operation",
+      "identity_arguments": "expected_operations text[]",
+      "security_definer": false,
+      "definition_hash": "ccefb34283c346cc88e224d075bd5312",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "allow_only_operation",
+      "identity_arguments": "expected_operation text",
+      "security_definer": false,
+      "definition_hash": "e2f7d55adc027df69ec4b42c6c08f50f",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "can_insert_object",
+      "identity_arguments": "bucketid text, name text, owner uuid, metadata jsonb",
+      "security_definer": false,
+      "definition_hash": "73733c9319875273d5937b05d68a7930",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "enforce_bucket_lifecycle_service_role",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "b839722d462ea1003fbcf028bd6f6c01",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "enforce_bucket_name_length",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "11b3bd509f6b254ec1cd859e712e8c78",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "extension",
+      "identity_arguments": "name text",
+      "security_definer": false,
+      "definition_hash": "75d83971130753081a84c3270878d8e7",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "filename",
+      "identity_arguments": "name text",
+      "security_definer": false,
+      "definition_hash": "0e8171709dc2934861de959d743ff809",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "foldername",
+      "identity_arguments": "name text",
+      "security_definer": false,
+      "definition_hash": "93671af66e1fe108a56068ad4137d001",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "get_common_prefix",
+      "identity_arguments": "p_key text, p_prefix text, p_delimiter text",
+      "security_definer": false,
+      "definition_hash": "0dc62b74fb855d4f504f50f900f93927",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "get_size_by_bucket",
+      "identity_arguments": "noncurrent_versions text, delete_markers text",
+      "security_definer": false,
+      "definition_hash": "75dc6041ab2b273a08279126efecbcd0",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "list_multipart_uploads_with_delimiter",
+      "identity_arguments": "bucket_id text, prefix_param text, delimiter_param text, max_keys integer, next_key_token text, next_upload_token text, raw_prefix_param text",
+      "security_definer": false,
+      "definition_hash": "961eef74f03a12751abf768384b84371",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "list_objects_with_delimiter",
+      "identity_arguments": "_bucket_id text, prefix_param text, delimiter_param text, max_keys integer, start_after text, next_token text, sort_order text, noncurrent_versions text, delete_markers text, next_token_archived_at timestamp with time zone, next_token_version text",
+      "security_definer": false,
+      "definition_hash": "7747efec8583d78cd01449d9b99cd2eb",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "operation",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "0720a7c3d1b49f9a8eee19e90d73bb97",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "protect_bucket_control_columns",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "7c31ae406e2f6281ead4009fff69fc68",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "protect_delete",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "4371ae544fb1ef704f9c5d42265ac324",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "search",
+      "identity_arguments": "prefix text, bucketname text, limits integer, levels integer, offsets integer, search text, sortcolumn text, sortorder text, noncurrent_versions text, delete_markers text",
+      "security_definer": false,
+      "definition_hash": "fed15c85bb96faaa21ec40176026a0fd",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "search_by_timestamp",
+      "identity_arguments": "p_prefix text, p_bucket_id text, p_limit integer, p_level integer, p_start_after text, p_sort_order text, p_sort_column text, p_sort_column_after text, noncurrent_versions text, delete_markers text, p_start_after_version text",
+      "security_definer": false,
+      "definition_hash": "323c4e2739e9c9bcfc082f7f14289338",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "search_v2",
+      "identity_arguments": "prefix text, bucket_name text, limits integer, levels integer, start_after text, sort_order text, sort_column text, sort_column_after text, noncurrent_versions text, delete_markers text, start_after_archived_at timestamp with time zone, start_after_version text, start_after_is_continuation boolean",
+      "security_definer": false,
+      "definition_hash": "7a010a87c94770b1c8f0b49a616082f4",
+      "extension_owned": false
+    },
+    {
+      "schema": "storage",
+      "name": "update_updated_at_column",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "bfecc08a6034296258f0c3e10193076c",
+      "extension_owned": false
+    },
+    {
+      "schema": "vault",
+      "name": "_crypto_aead_det_decrypt",
+      "identity_arguments": "message bytea, additional bytea, key_id bigint, context bytea, nonce bytea",
+      "security_definer": false,
+      "definition_hash": "4c011d33059455a2046b6baaadf95134",
+      "extension_owned": true
+    },
+    {
+      "schema": "vault",
+      "name": "_crypto_aead_det_encrypt",
+      "identity_arguments": "message bytea, additional bytea, key_id bigint, context bytea, nonce bytea",
+      "security_definer": false,
+      "definition_hash": "c09967f7ad587d50825d20c0669a22b4",
+      "extension_owned": true
+    },
+    {
+      "schema": "vault",
+      "name": "_crypto_aead_det_noncegen",
+      "identity_arguments": "",
+      "security_definer": false,
+      "definition_hash": "847e31112efd29b794bca8ee8435cb12",
+      "extension_owned": true
+    },
+    {
+      "schema": "vault",
+      "name": "create_secret",
+      "identity_arguments": "new_secret text, new_name text, new_description text, new_key_id uuid",
+      "security_definer": true,
+      "definition_hash": "3cd3211da1236685869a58787071c534",
+      "extension_owned": true
+    },
+    {
+      "schema": "vault",
+      "name": "update_secret",
+      "identity_arguments": "secret_id uuid, new_secret text, new_name text, new_description text, new_key_id uuid",
+      "security_definer": true,
+      "definition_hash": "dab0a8cc49e4b57f27bfa5dca12a705c",
+      "extension_owned": true
+    }
+  ],
+  "triggers": [
+    {
+      "schema": "realtime",
+      "table_name": "subscription",
+      "name": "tr_check_filters",
+      "enabled": "O",
+      "function_name": "subscription_check_filters",
+      "definition_hash": "5b8936f1aa0adc9b448dfa768d78bd42"
+    },
+    {
+      "schema": "storage",
+      "table_name": "buckets",
+      "name": "enforce_bucket_name_length_trigger",
+      "enabled": "O",
+      "function_name": "enforce_bucket_name_length",
+      "definition_hash": "7774f4b5e39e4ad07a16a589aef6277c"
+    },
+    {
+      "schema": "storage",
+      "table_name": "buckets",
+      "name": "protect_bucket_control_insert",
+      "enabled": "O",
+      "function_name": "protect_bucket_control_columns",
+      "definition_hash": "5c2f86adf97481d45808f2ed4eb4673b"
+    },
+    {
+      "schema": "storage",
+      "table_name": "buckets",
+      "name": "protect_bucket_control_update",
+      "enabled": "O",
+      "function_name": "protect_bucket_control_columns",
+      "definition_hash": "ae169c5f8d35b69020459ddddbe65d7e"
+    },
+    {
+      "schema": "storage",
+      "table_name": "buckets",
+      "name": "protect_bucket_control_update_role",
+      "enabled": "O",
+      "function_name": "enforce_bucket_lifecycle_service_role",
+      "definition_hash": "34d64d2c71ac2a26720ae99bd0da100b"
+    },
+    {
+      "schema": "storage",
+      "table_name": "buckets",
+      "name": "protect_buckets_delete",
+      "enabled": "O",
+      "function_name": "protect_delete",
+      "definition_hash": "50288cfc0da92cd8f2f573c018c16382"
+    },
+    {
+      "schema": "storage",
+      "table_name": "objects",
+      "name": "protect_objects_delete",
+      "enabled": "O",
+      "function_name": "protect_delete",
+      "definition_hash": "45c5692d486583888bac16ef789d847f"
+    },
+    {
+      "schema": "storage",
+      "table_name": "objects",
+      "name": "update_objects_updated_at",
+      "enabled": "O",
+      "function_name": "update_updated_at_column",
+      "definition_hash": "7457963f6a733c584baf08e4e7a451d0"
+    }
+  ],
+  "buckets": [
+    {
+      "id": "application-browser-handoffs",
+      "public": false,
+      "objects": 9,
+      "object_bytes": 2602,
+      "missing_size_metadata": 0
+    },
+    {
+      "id": "application-portal-sessions",
+      "public": false,
+      "objects": 48,
+      "object_bytes": 500905,
+      "missing_size_metadata": 0
+    },
+    {
+      "id": "cvs",
+      "public": false,
+      "objects": 10,
+      "object_bytes": 555223,
+      "missing_size_metadata": 0
+    },
+    {
+      "id": "feedback-attachments",
+      "public": false,
+      "objects": 2,
+      "object_bytes": 141152,
+      "missing_size_metadata": 0
+    }
+  ],
+  "identityProvidersInUse": [
+    {
+      "provider": "email",
+      "identities": 105
+    },
+    {
+      "provider": "google",
+      "identities": 39
+    }
+  ],
+  "publications": [],
+  "migrationVersions": [
+    "024"
+  ]
+}

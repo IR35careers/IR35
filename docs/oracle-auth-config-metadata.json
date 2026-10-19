@@ -1,0 +1,110 @@
+{
+  "dryRun": true,
+  "wrote": false,
+  "scope": "changed remote config fields, not all settings or secret validity",
+  "fields": [
+    {
+      "field": "auth.additional_redirect_urls",
+      "type": "array"
+    },
+    {
+      "field": "auth.email.enable_confirmations",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "auth.email.max_frequency",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "auth.email.otp_length",
+      "type": "number"
+    },
+    {
+      "field": "auth.email.smtp.admin_email",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "auth.email.smtp.enabled",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "auth.email.smtp.host",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "auth.email.smtp.port",
+      "type": "number"
+    },
+    {
+      "field": "auth.email.smtp.sender_name",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "auth.email.smtp.user",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "auth.external.google.client_id",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "auth.external.google.enabled",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "auth.mfa.totp.enroll_enabled",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "auth.mfa.totp.verify_enabled",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "auth.rate_limit.email_sent",
+      "type": "number"
+    },
+    {
+      "field": "auth.site_url",
+      "type": "string",
+      "configured": true
+    },
+    {
+      "field": "db.pooler.default_pool_size",
+      "type": "number"
+    },
+    {
+      "field": "db.pooler.max_client_conn",
+      "type": "number"
+    },
+    {
+      "field": "storage.analytics.enabled",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "storage.analytics.max_namespaces",
+      "type": "number"
+    },
+    {
+      "field": "storage.image_transformation.enabled",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "field": "storage.vector.enabled",
+      "type": "boolean",
+      "value": false
+    }
+  ]
+}

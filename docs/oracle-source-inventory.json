@@ -1,0 +1,1554 @@
+{
+  "sourceFiles": 436,
+  "environmentNames": [
+    {
+      "name": "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "ACTIONS_ID_TOKEN_REQUEST_URL",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "ADMIN_EMAILS",
+      "files": [
+        ".env.local.example",
+        "src/lib/admin-session.ts"
+      ]
+    },
+    {
+      "name": "ADMIN_SESSION_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/admin-session.ts",
+        "src/lib/application-internal-resume.ts",
+        "src/lib/application-runner/test-token.ts",
+        "src/lib/automation/internal-auth.ts",
+        "src/lib/security/privacy-hash.ts"
+      ]
+    },
+    {
+      "name": "ADZUNA_APP_ID",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "src/lib/integration-status.ts",
+        "src/lib/pipeline/run-fetch.ts"
+      ]
+    },
+    {
+      "name": "ADZUNA_APP_KEY",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "src/lib/integration-status.ts",
+        "src/lib/pipeline/run-fetch.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_ACCOUNT_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-portal-account.ts",
+        "src/lib/application-portal-session.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_RUNNER_ALLOWED_HOSTS",
+      "files": [
+        ".env.example",
+        "services/application-worker/dist/server.mjs",
+        "src/lib/application-runner/ats.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_RUNNER_BUDGET_MS",
+      "files": [
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/server.ts",
+        "src/lib/application-runner/run.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_RUNNER_HEADLESS",
+      "files": [
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/railway.ts",
+        "services/application-worker/server.ts",
+        "src/lib/application-runner/run.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_SUBMISSION_PROVIDER_API_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-submission.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_SUBMISSION_PROVIDER_NAME",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-submission.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_SUBMISSION_PROVIDER_URL",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-submission.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_ACCEPT_JOBS",
+      "files": [
+        ".env.example",
+        "infra/oracle/deploy.env.example",
+        "infra/oracle/docker-compose.yml",
+        "services/application-worker/verify-maintenance.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_CONCURRENCY",
+      "files": [
+        ".env.example",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/server.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_ENABLED",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-worker-auth.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_POLL_MS",
+      "files": [
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/server.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_SECRET",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "scripts/run-application-worker.ps1",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/verify-maintenance.ts",
+        "src/lib/application-worker-auth.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_UPDATE_OPERATION",
+      "files": [
+        "services/application-worker/verify-maintenance.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_URL",
+      "files": [
+        "src/lib/application-worker-auth.ts"
+      ]
+    },
+    {
+      "name": "APPLICATION_WORKER_VERSION",
+      "files": [
+        ".env.example",
+        "scripts/run-application-worker.ps1",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/server.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "APPLY_RUNNER",
+      "files": [
+        ".env.example",
+        "infra/oracle/deploy.env.example",
+        "infra/oracle/docker-compose.yml",
+        "services/application-worker/verify-maintenance.ts",
+        "src/lib/application-runner-selection.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "AUTO_APPLY_DAILY_BATCH_LIMIT",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "src/lib/automation/scheduled-runner.ts"
+      ]
+    },
+    {
+      "name": "BILLING_PROVIDER_SECRET_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "BILLING_RELEASE_APPROVED",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "BILLING_WEBHOOK_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "BOT_PREVIEW_ENABLED",
+      "files": [
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "BOT_PREVIEW_LOCAL",
+      "files": [
+        "playwright.preview.config.ts"
+      ]
+    },
+    {
+      "name": "BOT_PREVIEW_PROJECT_PREFIX",
+      "files": [
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "BOT_PREVIEW_URL",
+      "files": [
+        "playwright.preview.config.ts"
+      ]
+    },
+    {
+      "name": "CHROME_EXECUTABLE_PATH",
+      "files": [
+        "scripts/run-application-worker.ps1",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/railway.ts",
+        "services/application-worker/server.ts",
+        "src/lib/application-runner/run.ts"
+      ]
+    },
+    {
+      "name": "CI",
+      "files": [
+        "playwright.config.ts",
+        "playwright.preview.config.ts"
+      ]
+    },
+    {
+      "name": "CRON_SECRET",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        ".github/workflows/fetch-jobs.yml",
+        "services/application-worker/railway.ts",
+        "src/app/api/automation/run/route.ts",
+        "src/app/api/pipeline/fetch/route.ts",
+        "src/lib/application-internal-resume.ts",
+        "src/lib/automation/internal-auth.ts"
+      ]
+    },
+    {
+      "name": "DOCKER_CONFIG",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "EMAIL_FROM",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/transactional.ts"
+      ]
+    },
+    {
+      "name": "EMAIL_PROVIDER_API_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/resend.ts",
+        "src/lib/email/transactional.ts"
+      ]
+    },
+    {
+      "name": "EMAIL_REPLY_TO",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/transactional.ts"
+      ]
+    },
+    {
+      "name": "ENABLE_APPLICATION_PREP",
+      "files": [
+        ".env.local.example"
+      ]
+    },
+    {
+      "name": "ENABLE_APPLICATION_SUBMISSION",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-submission.ts"
+      ]
+    },
+    {
+      "name": "ENABLE_BILLING",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "ENABLE_INBOUND_MAIL",
+      "files": [
+        ".env.local.example",
+        "src/app/api/integrations/email/inbound/route.ts",
+        "src/lib/email/inbox-alias.ts",
+        "src/lib/integration-status.ts"
+      ]
+    },
+    {
+      "name": "ENABLE_WAITLIST_LAUNCH_EMAIL",
+      "files": [
+        ".env.local.example",
+        "src/app/api/admin/route.ts"
+      ]
+    },
+    {
+      "name": "ENABLE_WELCOME_EMAIL",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/transactional.ts"
+      ]
+    },
+    {
+      "name": "GHCR_TOKEN",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_ACTIONS",
+      "files": [
+        "infra/oracle/publish-cli.ts",
+        "playwright.preview.config.ts",
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_ACTOR",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_EVENT_PATH",
+      "files": [
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_OUTPUT",
+      "files": [
+        "infra/oracle/publish-cli.ts",
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_REF",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_REPOSITORY",
+      "files": [
+        "infra/oracle/publish-cli.ts",
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "GITHUB_TOKEN",
+      "files": [
+        ".github/workflows/worker-publish.yml",
+        "scripts/bots/cli.ts"
+      ]
+    },
+    {
+      "name": "GOOGLE_ANALYTICS_CLIENT_EMAIL",
+      "files": [
+        ".env.local.example",
+        "src/lib/google-analytics.ts"
+      ]
+    },
+    {
+      "name": "GOOGLE_ANALYTICS_PRIVATE_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/google-analytics.ts"
+      ]
+    },
+    {
+      "name": "GOOGLE_ANALYTICS_PROPERTY_ID",
+      "files": [
+        ".env.local.example",
+        "src/lib/google-analytics.ts"
+      ]
+    },
+    {
+      "name": "INBOUND_AUDIT_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/app/api/internal/inbound-email-audit/route.ts"
+      ]
+    },
+    {
+      "name": "INBOUND_EMAIL_DOMAIN",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/resend.ts"
+      ]
+    },
+    {
+      "name": "INBOUND_MAIL_SIGNING_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/resend.ts"
+      ]
+    },
+    {
+      "name": "IR35_WORKER_IMAGE",
+      "files": [
+        ".env.example",
+        "infra/oracle/deploy.env.example",
+        "infra/oracle/docker-compose.yml"
+      ]
+    },
+    {
+      "name": "IR35CAREERS_API_BASE",
+      "files": [
+        "integrations/ir35careers-mcp/server.mjs"
+      ]
+    },
+    {
+      "name": "IR35CAREERS_APP_URL",
+      "files": [
+        ".env.example",
+        "scripts/run-application-worker.ps1",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/server.ts",
+        "services/application-worker/verify-maintenance.ts",
+        "src/app/api/applications/worker/drain/route.ts",
+        "src/app/api/automation/run/route.ts",
+        "src/lib/application-cloud-verification.ts",
+        "src/lib/application-cloud-worker.ts",
+        "src/lib/application-worker-kick.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "IR35CAREERS_BASE_URL",
+      "files": [
+        "public/downloads/ir35careers-cli.mjs"
+      ]
+    },
+    {
+      "name": "IR35CAREERS_BOT_PREVIEW",
+      "files": [
+        "src/proxy.ts"
+      ]
+    },
+    {
+      "name": "IR35CAREERS_E2E_DEMO_DATA",
+      "files": [
+        "src/lib/demo-jobs.ts",
+        "src/lib/security/privacy-hash.ts"
+      ]
+    },
+    {
+      "name": "JOB_DECIMAL_RATES_ENABLED",
+      "files": [
+        ".env.example",
+        "src/lib/processing/job-rate-storage.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_COMPANY_NUMBER",
+      "files": [
+        ".env.local.example",
+        "src/lib/legal/operator.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_COUNTDOWN_DAYS",
+      "files": [
+        "src/components/CountdownTimer.tsx"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID",
+      "files": [
+        ".env.local.example",
+        "src/components/GoogleAnalytics.tsx",
+        "src/lib/google-analytics.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+      "files": [
+        ".env.example",
+        "src/lib/google-identity.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_GOOGLE_REDIRECT_FALLBACK_ENABLED",
+      "files": [
+        ".env.example",
+        "src/lib/google-identity.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_ICO_NUMBER",
+      "files": [
+        ".env.local.example",
+        "src/lib/legal/operator.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_LAUNCH_DATE",
+      "files": [
+        "src/components/CountdownTimer.tsx"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_LEGAL_ADDRESS",
+      "files": [
+        ".env.local.example",
+        "src/lib/legal/operator.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_LEGAL_NAME",
+      "files": [
+        ".env.local.example",
+        "src/lib/legal/operator.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_PRIVACY_EMAIL",
+      "files": [
+        ".env.local.example",
+        "src/lib/legal/operator.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_PRO_PLAN_FEATURES",
+      "files": [
+        ".env.local.example",
+        "src/components/workspace/BillingManager.tsx",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_PRO_PLAN_PRICE_LABEL",
+      "files": [
+        ".env.local.example",
+        "src/components/workspace/BillingManager.tsx",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_SITE_URL",
+      "files": [
+        ".env.local.example",
+        "src/app/api/admin/route.ts",
+        "src/app/api/email/welcome/route.ts",
+        "src/lib/billing/stripe.ts",
+        "src/lib/employer-onboarding.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "files": [
+        ".env.local.example",
+        "src/app/api/applications/submission-status/route.ts",
+        "src/app/api/jobs/search/route.ts",
+        "src/app/applications/new/[jobId]/page.tsx",
+        "src/app/jobs/[id]/resume/page.tsx",
+        "src/app/stories/page.tsx",
+        "src/lib/integration-status.ts",
+        "src/lib/public-jobs.ts",
+        "src/lib/supabase-config.ts",
+        "src/lib/supabase.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "scripts/audit-launch-audience.ts",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/railway.ts",
+        "services/application-worker/verify-maintenance.ts",
+        "src/app/api/applications/submission-status/route.ts",
+        "src/app/api/auth/google/route.ts",
+        "src/app/api/contact/route.ts",
+        "src/app/api/jobs/search/route.ts",
+        "src/app/applications/new/[jobId]/page.tsx",
+        "src/app/jobs/[id]/resume/page.tsx",
+        "src/app/stories/page.tsx",
+        "src/lib/application-runner/run.ts",
+        "src/lib/integration-status.ts",
+        "src/lib/public-jobs.ts",
+        "src/lib/security/rate-limit.ts",
+        "src/lib/supabase-admin.ts",
+        "src/lib/supabase-config.ts",
+        "src/lib/supabase.ts",
+        "src/proxy.ts"
+      ]
+    },
+    {
+      "name": "NEXT_PUBLIC_VAT_NUMBER",
+      "files": [
+        ".env.local.example",
+        "src/lib/legal/operator.ts"
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "files": [
+        ".env.example",
+        "services/application-worker/queue-permission-config.ts",
+        "services/application-worker/verify-maintenance.ts",
+        "src/app/api/contact/route.ts",
+        "src/app/api/employers/onboard/route.ts",
+        "src/components/PwaRegister.tsx",
+        "src/components/workspace/ApplicationStudio.tsx",
+        "src/lib/admin-session.ts",
+        "src/lib/demo-jobs.ts",
+        "src/lib/google-oauth.ts",
+        "src/lib/queue/config.ts",
+        "src/lib/security/privacy-hash.ts",
+        "src/lib/security/rate-limit.ts",
+        "src/proxy.ts"
+      ]
+    },
+    {
+      "name": "OPENROUTER_API_KEY",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "services/application-worker/dist/server.mjs",
+        "src/lib/ai/openrouter-tailoring.ts"
+      ]
+    },
+    {
+      "name": "OPENROUTER_MODEL",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "services/application-worker/dist/server.mjs",
+        "src/lib/ai/openrouter-tailoring.ts"
+      ]
+    },
+    {
+      "name": "OPENROUTER_REQUESTS_PER_USER_PER_HOUR",
+      "files": [
+        ".env.local.example",
+        "src/app/api/applications/tailor/route.ts"
+      ]
+    },
+    {
+      "name": "OPENROUTER_TAILORING_TIMEOUT_MS",
+      "files": [
+        "src/lib/ai/openrouter-tailoring.ts"
+      ]
+    },
+    {
+      "name": "P",
+      "files": [
+        "scripts/install-application-worker-task.ps1",
+        "scripts/run-application-worker.ps1"
+      ]
+    },
+    {
+      "name": "PG_BOSS_DATABASE_URL",
+      "files": [
+        ".env.example",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "PG_BOSS_LOCAL_TEST",
+      "files": [
+        "services/application-worker/queue-permission-config.ts",
+        "services/application-worker/verify-maintenance.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "PG_BOSS_PRODUCER_TEST_DATABASE_URL",
+      "files": [
+        "services/application-worker/queue-permission-config.ts"
+      ]
+    },
+    {
+      "name": "PG_BOSS_SSL_CA",
+      "files": [
+        ".env.example",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "PLAYWRIGHT_BASE_URL",
+      "files": [
+        "playwright.config.ts"
+      ]
+    },
+    {
+      "name": "PLAYWRIGHT_BROWSERS_PATH",
+      "files": [
+        ".env.example"
+      ]
+    },
+    {
+      "name": "PLAYWRIGHT_PRODUCTION",
+      "files": [
+        "playwright.config.ts"
+      ]
+    },
+    {
+      "name": "PORT",
+      "files": [
+        ".env.example",
+        "scripts/run-application-worker.ps1",
+        "services/application-worker/dist/server.mjs",
+        "services/application-worker/server.ts",
+        "src/lib/queue/config.ts"
+      ]
+    },
+    {
+      "name": "PORTAL_SESSION_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-portal-session.ts"
+      ]
+    },
+    {
+      "name": "RAILWAY_DEPLOYMENT_DRAINING_SECONDS",
+      "files": [
+        ".env.example"
+      ]
+    },
+    {
+      "name": "REED_API_KEY",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "src/lib/integration-status.ts",
+        "src/lib/pipeline/run-fetch.ts",
+        "src/lib/public-jobs.ts"
+      ]
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/resend.ts",
+        "src/lib/email/transactional.ts"
+      ]
+    },
+    {
+      "name": "RESEND_WEBHOOK_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/email/resend.ts"
+      ]
+    },
+    {
+      "name": "SOURCE_SHA",
+      "files": [
+        "infra/oracle/publish-cli.ts"
+      ]
+    },
+    {
+      "name": "STRIPE_PORTAL_CONFIGURATION_ID",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "STRIPE_PRO_PRICE_ID",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "STRIPE_SECRET_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "files": [
+        ".env.local.example",
+        "src/lib/billing/stripe.ts"
+      ]
+    },
+    {
+      "name": "SUPABASE_SECRET_KEY",
+      "files": [
+        ".env.example",
+        ".env.local.example",
+        "scripts/audit-launch-audience.ts",
+        "services/application-worker/railway.ts",
+        "services/application-worker/verify-maintenance.ts",
+        "src/app/api/contact/route.ts",
+        "src/lib/application-portal-account.ts",
+        "src/lib/application-portal-session.ts",
+        "src/lib/integration-status.ts",
+        "src/lib/security/privacy-hash.ts",
+        "src/lib/security/rate-limit.ts",
+        "src/lib/supabase-admin.ts"
+      ]
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "files": [
+        "src/lib/application-portal-account.ts",
+        "src/lib/application-portal-session.ts"
+      ]
+    },
+    {
+      "name": "TSENTA_API_KEY",
+      "files": [
+        ".env.local.example",
+        "src/lib/application-submission.ts"
+      ]
+    },
+    {
+      "name": "USERDOMAIN",
+      "files": [
+        "scripts/install-application-worker-task.ps1"
+      ]
+    },
+    {
+      "name": "USERNAME",
+      "files": [
+        "scripts/install-application-worker-task.ps1"
+      ]
+    },
+    {
+      "name": "VERCEL",
+      "files": [
+        "src/app/api/applications/submit/route.ts",
+        "src/app/api/applications/worker/callback/route.ts",
+        "src/lib/application-cloud-queue.ts",
+        "src/lib/application-runner-selection.ts",
+        "src/lib/integration-status.ts"
+      ]
+    },
+    {
+      "name": "VERCEL_DEPLOYMENT_ID",
+      "files": [
+        "src/lib/application-cloud-worker.ts"
+      ]
+    },
+    {
+      "name": "VERCEL_GIT_COMMIT_SHA",
+      "files": [
+        "src/app/api/applications/worker/drain/route.ts",
+        "src/lib/application-cloud-worker.ts"
+      ]
+    },
+    {
+      "name": "VERCEL_REGION",
+      "files": [
+        "src/app/api/applications/worker/drain/route.ts"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "file": "package.json",
+      "line": 43,
+      "feature": "vercel-runtime-import"
+    },
+    {
+      "file": "src/app/admin/login/page.tsx",
+      "line": 3,
+      "feature": "next-image"
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "line": 4,
+      "feature": "next-image"
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "line": 55,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "line": 304,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "line": 1556,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/api/account/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/admin/route.ts",
+      "line": 73,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/api/admin/route.ts",
+      "line": 76,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/admin/route.ts",
+      "line": 77,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/admin/route.ts",
+      "line": 78,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/admin/route.ts",
+      "line": 556,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/api/admin/session/route.ts",
+      "line": 12,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/admin/session/route.ts",
+      "line": 13,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/applications/automation-consent/route.ts",
+      "line": 6,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/browser-handoff/route.ts",
+      "line": 9,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/browser-handoff/route.ts",
+      "line": 10,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/dry-run/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/prepare/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/submission-status/route.ts",
+      "line": 6,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/submission-status/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 67,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 68,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 336,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 469,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 567,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 570,
+      "feature": "next-after"
+    },
+    {
+      "file": "src/app/api/applications/submit/route.ts",
+      "line": 572,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/app/api/applications/tailor/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/tailor/route.ts",
+      "line": 8,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/callback/route.ts",
+      "line": 36,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/callback/route.ts",
+      "line": 37,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/callback/route.ts",
+      "line": 353,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/app/api/applications/worker/callback/route.ts",
+      "line": 354,
+      "feature": "next-after"
+    },
+    {
+      "file": "src/app/api/applications/worker/claim/route.ts",
+      "line": 32,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/claim/route.ts",
+      "line": 33,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/drain/route.ts",
+      "line": 17,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/drain/route.ts",
+      "line": 18,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/email-action/route.ts",
+      "line": 14,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/email-action/route.ts",
+      "line": 15,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/portal-probe/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/portal-probe/route.ts",
+      "line": 8,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/recover/route.ts",
+      "line": 12,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/recover/route.ts",
+      "line": 13,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/status/route.ts",
+      "line": 13,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/status/route.ts",
+      "line": 14,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/verification-code/route.ts",
+      "line": 17,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/applications/worker/verification-code/route.ts",
+      "line": 18,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/auth/google/route.ts",
+      "line": 4,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/automation/apply-next/route.ts",
+      "line": 25,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/automation/apply-next/route.ts",
+      "line": 26,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/automation/run/route.ts",
+      "line": 8,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/automation/run/route.ts",
+      "line": 9,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/billing/checkout/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/billing/checkout/route.ts",
+      "line": 8,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/billing/portal/route.ts",
+      "line": 5,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/billing/portal/route.ts",
+      "line": 6,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/contact/route.ts",
+      "line": 6,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/email/welcome/route.ts",
+      "line": 13,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/email/welcome/route.ts",
+      "line": 14,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/employer-destinations/verify/route.ts",
+      "line": 13,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/employer-destinations/verify/route.ts",
+      "line": 14,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/employers/onboard/route.ts",
+      "line": 13,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/employers/onboard/route.ts",
+      "line": 14,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/employers/onboard/route.ts",
+      "line": 15,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/feedback/route.ts",
+      "line": 10,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/feedback/route.ts",
+      "line": 11,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/integrations/billing/webhook/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/billing/webhook/route.ts",
+      "line": 8,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/integrations/email/alias/route.ts",
+      "line": 6,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/email/inbound/route.ts",
+      "line": 35,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/email/inbound/route.ts",
+      "line": 36,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/email/inbound/route.ts",
+      "line": 281,
+      "feature": "next-after"
+    },
+    {
+      "file": "src/app/api/integrations/email/inbox-sync/route.ts",
+      "line": 12,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/email/send/route.ts",
+      "line": 9,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/email/send/route.ts",
+      "line": 10,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/integrations/github/profile/route.ts",
+      "line": 12,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/integrations/github/profile/route.ts",
+      "line": 13,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/integrations/status/route.ts",
+      "line": 5,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/internal/inbound-email-audit/route.ts",
+      "line": 6,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/internal/inbound-email-audit/route.ts",
+      "line": 7,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/internal/inbound-email-audit/route.ts",
+      "line": 8,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/jobs/[id]/route.ts",
+      "line": 3,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/jobs/preview/route.ts",
+      "line": 9,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/jobs/search/route.ts",
+      "line": 36,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/pipeline/fetch/route.ts",
+      "line": 24,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/api/pipeline/fetch/route.ts",
+      "line": 25,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/queues/applications/route.ts",
+      "line": 1,
+      "feature": "vercel-runtime-import"
+    },
+    {
+      "file": "src/app/api/queues/applications/route.ts",
+      "line": 7,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/queues/applications/route.ts",
+      "line": 8,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/resume/export/route.ts",
+      "line": 9,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/resume/parse/route.ts",
+      "line": 10,
+      "feature": "runtime-limit"
+    },
+    {
+      "file": "src/app/api/testing/application-runner-resume/route.ts",
+      "line": 3,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/applications/new/[jobId]/page.tsx",
+      "line": 9,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/auth/callback/page.tsx",
+      "line": 4,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/blog/[slug]/page.tsx",
+      "line": 16,
+      "feature": "static-params"
+    },
+    {
+      "file": "src/app/connections/page.tsx",
+      "line": 9,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/contracts/[slug]/page.tsx",
+      "line": 11,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/contracts/[slug]/page.tsx",
+      "line": 12,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/jobs/[id]/page.tsx",
+      "line": 24,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/jobs/[id]/resume/page.tsx",
+      "line": 10,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/layout.tsx",
+      "line": 8,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/layout.tsx",
+      "line": 91,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/app/page.tsx",
+      "line": 6,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/sitemap.ts",
+      "line": 8,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/stories/page.tsx",
+      "line": 9,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/app/testing/application-form/page.tsx",
+      "line": 6,
+      "feature": "route-cache"
+    },
+    {
+      "file": "src/components/CookieNotice.tsx",
+      "line": 6,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/components/FeedbackBubble.tsx",
+      "line": 4,
+      "feature": "next-image"
+    },
+    {
+      "file": "src/components/GoogleAnalytics.tsx",
+      "line": 28,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/components/GoogleAnalytics.tsx",
+      "line": 60,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/components/GoogleAnalytics.tsx",
+      "line": 62,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/components/ui/brand.tsx",
+      "line": 2,
+      "feature": "next-image"
+    },
+    {
+      "file": "src/components/ui/company-logo.tsx",
+      "line": 3,
+      "feature": "next-image"
+    },
+    {
+      "file": "src/lib/application-cloud-queue.ts",
+      "line": 22,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/lib/application-runner-selection.ts",
+      "line": 19,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/lib/application-worker-kick.ts",
+      "line": 33,
+      "feature": "vercel-runtime-import"
+    },
+    {
+      "file": "src/lib/google-analytics.ts",
+      "line": 6,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/lib/google-analytics.ts",
+      "line": 56,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/lib/google-analytics.ts",
+      "line": 121,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/lib/integration-status.ts",
+      "line": 112,
+      "feature": "vercel-runtime-branch"
+    },
+    {
+      "file": "src/lib/pipeline/invalidate-public-jobs.ts",
+      "line": 1,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/pipeline/invalidate-public-jobs.ts",
+      "line": 5,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/pipeline/invalidate-public-jobs.ts",
+      "line": 6,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/public-job-inventory.ts",
+      "line": 2,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/public-job-inventory.ts",
+      "line": 13,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/public-jobs.ts",
+      "line": 4,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/public-jobs.ts",
+      "line": 21,
+      "feature": "next-cache"
+    },
+    {
+      "file": "src/lib/security/rate-limit.ts",
+      "line": 10,
+      "feature": "vercel-forwarded-header"
+    },
+    {
+      "file": "src/proxy.ts",
+      "line": 27,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/proxy.ts",
+      "line": 35,
+      "feature": "google-analytics"
+    },
+    {
+      "file": "src/proxy.ts",
+      "line": 40,
+      "feature": "google-analytics"
+    }
+  ],
+  "valuesIncluded": false
+}
