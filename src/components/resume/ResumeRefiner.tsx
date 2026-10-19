@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { JobDescriptionText } from "@/components/JobDescription";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { ArrowRight, Check, CheckCircle2, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import type { JobDetail } from "@/lib/job-types";
@@ -100,7 +101,7 @@ export function ResumeRefiner({ job, resumeText, disabled = false, autoStart = f
         <details className="rounded-xl border border-slate-200 bg-white p-3"><summary className="ir35-focus min-h-11 cursor-pointer text-sm font-semibold text-slate-800">Job description &amp; requirements</summary>
           <div className="mt-3 grid gap-4 lg:grid-cols-2"><div><p className="text-xs font-bold text-emerald-800">Priority requirements</p><ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-5 text-slate-700">{result.mustHaveRequirements.map((item) => <li key={item}>{item}</li>)}</ul>
             {result.niceToHaveRequirements.length > 0 && <><p className="mt-3 text-xs font-bold text-slate-700">Preferred</p><ul className="mt-1 list-inside list-disc text-xs leading-5">{result.niceToHaveRequirements.map((item) => <li key={item}>{item}</li>)}</ul></>}</div>
-            <p className="max-h-80 overflow-y-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">{job.description || "No full description was supplied. Review the original posting before applying."}</p></div>
+            <JobDescriptionText description={job.description} kind={job.description_kind} sourceUrl={job.source_domain === "demo.ir35careers.local" ? undefined : job.apply_url} /></div>
         </details>
         {result.baseline.missingKeywords.length > 0 && <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3"><p className="text-xs font-bold text-amber-900">Not evidenced — never added automatically</p><p className="mt-1 text-xs leading-5 text-amber-900">{result.baseline.missingKeywords.join(" · ")}</p><p className="mt-2 text-xs leading-5 text-amber-800">Better wording cannot make you qualified for a different occupation, licence or clearance. Only add experience you genuinely have.</p></div>}
         <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="text-sm font-semibold text-slate-950">Choose the changes you want</h4>

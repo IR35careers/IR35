@@ -21,6 +21,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { JobDescriptionText } from "@/components/JobDescription";
 import { ResumeDocumentPreview } from "@/components/resume/ResumeDocumentPreview";
 import { ResumeRefiner } from "@/components/resume/ResumeRefiner";
 import { useAuth } from "@/lib/auth-context";
@@ -874,7 +875,7 @@ export function ApplicationRecordWorkspace({
                     <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">IR35</p><p className="mt-2 font-semibold capitalize">{job.ir35_status === "unknown" ? "To be confirmed" : job.ir35_status}</p></div>
                   </div>
                   <h2 className="mt-6 text-xl font-semibold">Contract description</h2>
-                  <div className="mt-4 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-7 text-slate-700">{job.description || "The full contract description is available from the original posting."}</div>
+                  <div className="mt-4 min-w-0 rounded-2xl border border-slate-200 bg-white p-5"><JobDescriptionText description={job.description} kind={job.description_kind} sourceUrl={job.source_domain === "demo.ir35careers.local" ? undefined : job.apply_url} /></div>
                 </section>
               )}
             </div>
