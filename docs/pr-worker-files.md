@@ -12,6 +12,8 @@ The reviewed loopback-only Compose policy is canonical-JSON hash-bound to its so
 
 Final local combined source passes **897 unit tests/137 files + 199 legacy checks, TypeScript and ESLint**, including strict override/host-token segregation regressions. Final source and Linux CI remain required.
 
+Source/history scan passes for 705 tracked files; audit retains only the two existing exact approved exceptions until 29 October. Push CI **39203602184** at **266dc864ccdef312eccecabc66ad480986561112** passes code/build on Ubuntu, executing the actual POSIX file/race/mode/link tests above, plus real Docker/Postgres standby/security; native ARM **39203602186** also passes. Full final-head PR/browser checks are still required. These are disposable CI fixtures, not an Oracle host or live secret transfer.
+
 This is a dormant storage module, not an installed/running updater. A shared exclusive flock for updater **and operator configuration edits**, durable transaction journal, signed pull orchestration, ten-minute drain/two-minute health/rollback recovery, install/service/timer and actual standby verification remain required before use. Rechecks do not claim atomic cross-file CAS against a malicious same-UID/root writer; those principals can control Docker already. No live private files, image selection or live env were changed by this PR.
 
 ## Migrations, environment and manual steps
