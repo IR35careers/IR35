@@ -2,7 +2,7 @@ import { PgBoss } from "pg-boss";
 import { WORK_QUEUES, pgBossOptions, queueName, workQueueOptions } from "../../src/lib/queue/config";
 
 async function setup() {
-  const boss = new PgBoss(pgBossOptions("setup"));
+  const boss = new PgBoss(await pgBossOptions("setup"));
   boss.on("error", () => console.error("queue_setup_database_error"));
   try {
     await boss.start();

@@ -3,7 +3,7 @@ import { APPLY_QUEUE, applicationKickSchema, pgBossOptions, queueName, scheduled
 
 /** Short-lived producer: no worker, timers, migrations or browser in Vercel. */
 async function publish(name: string, data: object, delaySeconds = 0): Promise<void> {
-  const boss = new PgBoss(pgBossOptions("producer"));
+  const boss = new PgBoss(await pgBossOptions("producer"));
   boss.on("error", () => { /* Caller receives a redacted publication failure. */ });
   try {
     await boss.start();

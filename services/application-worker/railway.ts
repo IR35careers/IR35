@@ -20,7 +20,7 @@ async function main() {
   const accepting = config.APPLICATION_WORKER_ACCEPT_JOBS === "true";
   if (accepting && (!process.env.SUPABASE_SECRET_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || (process.env.CRON_SECRET?.length || 0) < 32))
     throw new Error("Consuming work requires Supabase server credentials and the shared scheduler secret.");
-  const boss = new PgBoss(pgBossOptions("worker"));
+  const boss = new PgBoss(await pgBossOptions("worker"));
   const hostLabel = config.APPLY_RUNNER === "vercel" ? "queue" : config.APPLY_RUNNER;
   const workerId = `${hostLabel}-${hostname().replace(/[^a-z0-9-]/gi, "-").slice(0, 45)}-${randomUUID().slice(0, 8)}`;
   const startedAt = new Date().toISOString();
