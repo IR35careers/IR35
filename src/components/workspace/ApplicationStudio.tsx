@@ -34,6 +34,7 @@ import {
   StatusPill,
 } from "@/components/workspace/WorkspacePage";
 import { ApplicationRecordWorkspace } from "@/components/workspace/ApplicationRecordWorkspace";
+import { JobDescriptionDisclosure } from "@/components/JobDescription";
 import { ApplicationProgressDialog } from "@/components/ui/application-progress-dialog";
 import { applyAiTailoringSuggestions } from "@/lib/ai/tailoring";
 import { buildLocalTailoringResult } from "@/lib/ai/local-tailoring";
@@ -1723,35 +1724,9 @@ export function ApplicationStudio({ job }: { job: JobDetail }) {
         </div>
       )}
 
-      <details
-        open
-        className="group mt-4 rounded-2xl border border-slate-200 bg-white shadow-sm"
-      >
-        <summary className="ir35-focus flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-slate-900 sm:px-5">
-          <span>
-            Full contract description
-            <span className="ml-2 text-xs font-normal text-slate-500">
-              shown in full
-            </span>
-          </span>
-          <ChevronDown
-            size={17}
-            className="shrink-0 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <div className="border-t border-slate-200 px-4 py-4 sm:px-5">
-          <div className="whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">
-            {job.description ||
-              "The source did not provide a readable description. Open Role details to review the original listing."}
-          </div>
-          <Link
-            href={`/jobs/${job.id}`}
-            className="ir35-focus mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-          >
-            Open role details <ArrowRight size={14} />
-          </Link>
-        </div>
-      </details>
+      <JobDescriptionDisclosure description={job.description} kind={job.description_kind} sourceUrl={job.source_domain === "demo.ir35careers.local" ? undefined : job.apply_url}>
+        <Link href={`/jobs/${job.id}`} className="ir35-focus mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Open role details <ArrowRight size={14} /></Link>
+      </JobDescriptionDisclosure>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <main className="min-w-0 space-y-5">

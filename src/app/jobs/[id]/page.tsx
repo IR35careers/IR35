@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { headers } from "next/headers";
-import { buildJobPosting, isTruncatedJobDescription, jobMetadata } from "@/lib/job-seo";
+import { buildJobPosting, jobMetadata } from "@/lib/job-seo";
+import { JobDescriptionText } from "@/components/JobDescription";
 import { structuredDataJson } from "@/lib/seo";
 import { ArrowLeft, ArrowUpRight, MapPin, Clock, PoundSterling, Briefcase, Sparkles, WandSparkles } from "lucide-react";
 import { ApplyButton } from "@/components/ApplyButton";
@@ -128,10 +129,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><Briefcase size={18} /></span>
                 <div><p className="text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-700">The contract</p><h2 className="text-xl font-bold tracking-tight text-slate-950">Role description</h2></div>
               </div>
-              <div className="mt-6 whitespace-pre-line text-[15px] leading-7 text-slate-700 sm:text-base sm:leading-8">
-                {job.description || "Full details are on the original listing."}
-              </div>
-              {isTruncatedJobDescription(job.description) && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">The provider supplied a summary of this role. Read the complete advert using “View original posting” before applying.</p>}
+              <div className="mt-6"><JobDescriptionText description={job.description} kind={job.description_kind} sourceUrl={isDemo ? undefined : job.apply_url} /></div>
               {job.skills.length > 0 && (
                 <div className="mt-7 border-t border-slate-200 pt-6">
                   <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Skills in this listing</h2>
