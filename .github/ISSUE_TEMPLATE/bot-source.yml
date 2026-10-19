@@ -1,0 +1,29 @@
+name: Bot job-source proposal
+description: Propose lawful public APIs, licensed feeds or employer sources.
+title: "[Source] "
+labels: [source, triage, new-sources]
+body:
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources table
+      description: Include permission/terms and robots/rate-limit evidence. Never scrape LinkedIn or Indeed.
+      value: "| Source | API/feed URL | UK contract evidence | Permission/terms | Rate limit |\n| --- | --- | --- | --- | --- |\n| | | | | |"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: JSON config
+      description: Proposed public configuration only; never include API keys or credentials.
+      render: json
+      value: '{"name":"","type":"api","url":"","allowed":false,"schedule":"","permissionEvidence":""}'
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and verification steps
+      description: Recorded public sample, UK/contract checks and deduplication considerations.
+    validations:
+      required: true

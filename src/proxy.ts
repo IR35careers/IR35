@@ -49,13 +49,27 @@ function contentSecurityPolicy(nonce: string, allowGoogleIdentity: boolean): str
 }
 
 export function proxy(request: NextRequest) {
+  // Separate credential-free bot project only. No application/auth/mail/billing
+  // writes, worker hooks or external URL importer can run in this mock preview.
+  if (process.env.IR35CAREERS_BOT_PREVIEW === "1" && request.nextUrl.pathname.startsWith("/api/")) {
+    const publicFixtureRead = request.method === "GET" && /^\/api\/jobs\/(?:search|[a-f0-9-]{36})$/.test(request.nextUrl.pathname);
+    if (!publicFixtureRead) return NextResponse.json({ error: "Mock-only preview: this service is disabled." }, {
+      status: 503, headers: { "cache-control": "no-store", "x-ir35-bot-preview": "mock-only-v1", "x-robots-tag": "noindex, nofollow" },
+    });
+  }
   const nonce = requestNonce();
   const allowGoogleIdentity = request.nextUrl.pathname === "/account" || request.nextUrl.pathname === "/admin/login"
     || (request.headers.get("host")?.split(":")[0].toLowerCase() === ADMIN_HOST && request.nextUrl.pathname === "/login");
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.set("x-nonce", nonce);
   const protect = (response: NextResponse) => {
-    response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce, allowGoogleIdentity));
+    if (process.env.IR35CAREERS_BOT_PREVIEW === "1") {
+      response.headers.set("X-IR35-Bot-Preview", "mock-only-v1");
+      response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    }
+    response.headers.set("Content-Security-Policy", process.env.IR35CAREERS_BOT_PREVIEW === "1"
+      ? contentSecurityPolicy(nonce, false).replace(/connect-src [^;]+/, "connect-src 'self'")
+      : contentSecurityPolicy(nonce, allowGoogleIdentity));
     if (request.nextUrl.pathname === "/auth/callback" || request.nextUrl.pathname === "/account" || request.nextUrl.pathname.startsWith("/account/")) {
       response.headers.set("Cache-Control", "no-store, private");
       response.headers.set("Referrer-Policy", "no-referrer");
