@@ -38,12 +38,15 @@ jobs:
       - name: Check the pinned native ARM verifier's real command interface without registry writes
         run: |
           cosign version
-          cosign verify --help > /tmp/ir35-cosign-verify-help.txt
-          for flag in certificate-identity certificate-oidc-issuer annotations output; do
-            grep -F -- "--$flag " /tmp/ir35-cosign-verify-help.txt > /dev/null
-          done
-          cosign sign --help > /tmp/ir35-cosign-sign-help.txt
-          grep -F -- '--annotations ' /tmp/ir35-cosign-sign-help.txt > /dev/null
+          # Exercise the actual argument parser rather than matching help layout.
+          # --help prevents any registry/signing request, but must not hide bad flags.
+          cosign verify --certificate-identity https://example.test/workflow \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --annotations repository=IR35careers/IR35 --output json --help > /dev/null
+          cosign sign --annotations repository=IR35careers/IR35 --yes --help > /dev/null
+          if cosign verify --definitely-not-an-ir35-option --help > /dev/null 2>&1; then
+            echo 'Invalid cosign option unexpectedly accepted'; exit 1
+          fi
       - name: Build the same pinned image natively for Oracle A1
         run: docker build --platform linux/arm64 -f services/application-worker/Dockerfile -t ir35-worker:arm-ci .
       - name: Verify native image architecture
