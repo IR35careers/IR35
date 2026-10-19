@@ -29,6 +29,10 @@ First prerequisite: `maintenance.ts` provides the domain-separated HMAC command 
 
 ## Primary sources checked
 
+`worker-host.ts` now provides the actual fixed-directory Docker/cosign/loopback/private-file boundary for the journal's effects: selected non-secret inspection, two-sided generation/config checks, exact signed pull/local-byte verification, bounded authenticated control, and unchanged-flag paused replacement/rollback. Its real HTTP-handler test is not an actual Docker or Oracle result. It has no automatic entry point or timer; the serial interpreter, reconciliation/anti-replay/lock/install and hosted recovery matrix remain required. See `pr-worker-host.md`.
+
+The host adapter now pins Docker's local Unix socket explicitly, rejecting ambient variables AND saved-context redirection. Clock validity/monotonic rechecks and invalidation after a failed repeat verifier are tested. The new native ARM probe checks actual Docker field selection/local socket behavior and rejection of an unsigned local image; it is not a positive signed-artifact/replacement proof. It is CI-only, not a live Oracle command or an enabled updater.
+
 Transaction core now exists in `update-journal.ts`: write-ahead decisions, distinct drain/candidate/rollback generations, unchanged physical proof, fixed original deadlines, acknowledgement-loss reload and same-ID recovery. It refuses rollback after a durable candidate-resume decision and records failed candidate digests after confirmed rollback. Its isolated tests do not install a host interpreter, exclusive lock, registry/health integration or timer; those remain required. See `pr-worker-update-journal.md` for limits and verification. Storage PR #34 is now merged after all 17 final-head checks, including actual Linux I/O; this is still not an Oracle deployment.
 
 - [Oracle Bastion network requirements](https://docs.oracle.com/en-us/iaas/Content/Bastion/Tasks/connectingtosessions.htm): exact private endpoint /32 on target SSH22.
