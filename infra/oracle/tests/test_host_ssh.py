@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+import json
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -10,6 +11,22 @@ from key_ceremony import KeySafetyError
 
 
 class HostTests(unittest.TestCase):
+    def test_nonroot_login_keeps_pinning_and_never_uses_sudo_or_root_ssh(self):
+        with self.assertRaises(KeySafetyError):
+            host_ssh.run_remote("print('ignored')", [], user="root")
+        state = {"verified": True, "knownHostsLine": "fixture", "publicIP": "8.8.8.8"}
+        def private(path):
+            return json.dumps(state) if path == host_ssh.HOST_JOURNAL else "fixture"
+        result = subprocess.CompletedProcess([], 0, '{"uid":1001}', "")
+        with patch.object(host_ssh, "private_file", side_effect=private), \
+                patch.object(host_ssh, "ensure_agent", return_value={"keyLoaded": True, "socket": "/fixture/agent"}), \
+                patch.object(host_ssh.subprocess, "run", return_value=result) as ssh:
+            self.assertEqual(host_ssh.run_remote("public_script", [], user="ir35"), {"uid": 1001})
+            args = ssh.call_args.args[0]
+            self.assertIn("ir35@8.8.8.8", args)
+            self.assertIn("StrictHostKeyChecking=yes", args)
+            self.assertIn("ForwardAgent=no", args)
+            self.assertNotIn("sudo", args[-1])
     def test_only_connection_transport_is_reboot_transient_not_auth_or_changed_keys(self):
         self.assertTrue(host_ssh.connection_not_ready(255, "Connection refused"))
         self.assertTrue(host_ssh.connection_not_ready(255, "Connection reset by peer"))

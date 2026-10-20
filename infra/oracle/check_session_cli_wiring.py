@@ -19,6 +19,7 @@ if _FINISH:
     _prefix = {"attachment": ["compute", "volume-attachment"], "topic": ["ons", "topic"], "subscription": ["ons", "subscription"], "bucket": ["os", "bucket"]}[_kind]
     sys.argv = ["oci", *_prefix, "attach-paravirtualized-volume" if _kind == "attachment" and _operation == "create" else _operation]
 _EXTRA_OPERATIONS = {
+    "instance-softreset": ["compute", "instance", "action", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--action", "SOFTRESET"],
     "owner-history-content": ["compute", "console-history", "get-content", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01", "--length", "10000000", "--offset", "0", "--file", "-"],
     "history-delete": ["compute", "console-history", "delete", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01", "--force"],
     "history-list": ["compute", "console-history", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],

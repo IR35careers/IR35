@@ -115,7 +115,9 @@ def enroll(journal, cp, client):
     return state
 
 
-def run_remote(source, arguments, *, timeout=65):
+def run_remote(source, arguments, *, timeout=65, user="ubuntu"):
+    if user not in ("ubuntu", "ir35"):
+        raise KeySafetyError("Only approved ubuntu administration or non-root ir35 SSH is permitted.")
     state = json.loads(private_file(HOST_JOURNAL))
     if not state.get("verified") or private_file(KNOWN_HOSTS) != state["knownHostsLine"]:
         raise KeySafetyError("Authenticated SSH host enrollment required.")
@@ -125,8 +127,9 @@ def run_remote(source, arguments, *, timeout=65):
     options = ["BatchMode=yes", "IdentitiesOnly=yes", "StrictHostKeyChecking=yes", "PasswordAuthentication=no", "KbdInteractiveAuthentication=no",
                "ForwardAgent=no", "ClearAllForwardings=yes", "ConnectTimeout=10", "ServerAliveInterval=10", "ServerAliveCountMax=3",
                "UserKnownHostsFile=" + str(KNOWN_HOSTS), "GlobalKnownHostsFile=/dev/null", "IdentityAgent=" + agent["socket"]]
+    remote = (["sudo", "-n"] if user == "ubuntu" else []) + ["/usr/bin/python3", "-u", "-", *arguments]
     args = ["ssh", "-F", "/dev/null", *[item for option in options for item in ("-o", option)], "-i", str(KEY_DIRECTORY / "ssh_ed25519"),
-            "ubuntu@" + state["publicIP"], shlex.join(["sudo", "-n", "/usr/bin/python3", "-u", "-", *arguments])]
+            user + "@" + state["publicIP"], shlex.join(remote)]
     environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE")}
     environment["SSH_AUTH_SOCK"] = agent["socket"]
     result = subprocess.run(args, input=source, capture_output=True, text=True, timeout=call_timeout(timeout), env=environment, check=False)
