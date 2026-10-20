@@ -20,6 +20,17 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(report["resources"][0]["visibility"], [{"result": "NOT_YET_VISIBLE", "status": 404}])
         self.assertFalse(report["phaseComplete"])
 
+    def test_encryption_and_host_hold_are_allowlisted_not_raw_console(self):
+        report = public_report({}, {"created": {}, "stop": {"kind": "sshHostTrust", "code": "ConsoleFingerprintMissing", "realFailure": True},
+            "encryptionRepair": {"complete": True, "instanceEncryptionEnabled": True, "attachmentEncryptionEnabled": True,
+                                 "bootEncryption": {"isPvEncryptionInTransitEnabled": True}, "secret": "private-sentinel"},
+            "sshHostTrust": {"status": "FAIL", "consoleFingerprintCount": 0, "console": "private-sentinel"}})
+        self.assertTrue(report["encryptionRepair"]["complete"])
+        self.assertTrue(report["bootEncryption"]["isPvEncryptionInTransitEnabled"])
+        self.assertEqual(report["blocker"]["code"], "ConsoleFingerprintMissing")
+        self.assertEqual(report["sshHostTrust"]["consoleFingerprintCount"], 0)
+        self.assertNotIn("private-sentinel", json.dumps(report))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,24 @@
 """Bounded post-create reads only; never retries a mutation or a real error."""
 import re
 import time
+import json
 from contextvars import ContextVar
 
 from key_ceremony import KeySafetyError
 
 _READ_DEADLINE = ContextVar("oci_visibility_deadline", default=None)
+
+
+def service_error_detail(stderr, error):
+    """Only structured service diagnostics; never headers, signed args or body."""
+    match = re.search(r'"message"\s*:\s*("(?:[^"\\]|\\.)*")', stderr)
+    message = json.loads(match[1]) if match else "Provider message unavailable"
+    message = re.sub(r"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?(?:-----END [^-]*PRIVATE KEY-----|$)", "[REDACTED PRIVATE KEY]", message)
+    message = re.sub(r"(?i)\bBearer\s+[^\s,;]+", "Bearer [REDACTED]", message)
+    message = re.sub(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", "[REDACTED JWT]", message)
+    message = re.sub(r"(?i)([\"']?(?:password|passphrase|secret|token|authorization|api[_ -]?key|client[_ -]?secret)[\"']?\s*[:=]\s*)(\"(?:\\.|[^\"\\])*\"|'[^']*'|[^\s,;]+)", r"\1[REDACTED]", message)
+    message = re.sub(r"([a-z][a-z0-9+.-]*://)[^\s/@:]+:[^\s/@]+@", r"\1[REDACTED]@", message, flags=re.I)
+    return {"code": error.code, "status": error.status, "message": message[:8000]}
 
 
 def call_timeout(maximum=65):

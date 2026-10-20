@@ -1,5 +1,7 @@
 # Whole-stack Oracle migration — inventory and phased execution plan
 
+**Latest execution checkpoint, 20 October:** the instance prerequisite repair and approved reboot passed. Instance/boot PV-encryption read true; the same 100 GB data volume is ATTACHED, encrypted and paravirtualized, with one attachment. P1 remains incomplete at a new authenticated SSH host-key gate: the full OCI console snapshot has no SHA256 fingerprint. No trusted SSH command, filesystem mutation, backup bucket/topic or P2 work ran. Preserve the journal hold; next repair must obtain the public guest host fingerprint through an authenticated source, never TOFU or a host-check bypass. [Current evidence](evidence/oracle-p1-visibility.md). The historical first-400 stop below is retained for traceability, not a remaining encryption failure. No production/cutover authority change.
+
 20 October 2026, updated for the owner's FINAL MIGRATION ORDER. **P1 incomplete: quota/network/Bastion/A1VM2/12/boot50GB/block100GB created and independently verified. STOPPED on the first encrypted attachment InvalidParameter/400, not a transient404.** PublicIP132.145.28.134. Pending intent retained; no retry or unencrypted fallback. Full [evidence and proposed repair](evidence/oracle-p1-visibility.md). This supersedes conflicting historical snapshots below. Original product requirements remain in `spec.md`. Draft PR #47 is P0; #48 is the separate queue validator. None is a deployment or merge approval.
 
 ## 0. Final order: execution and go/no-go standard

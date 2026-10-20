@@ -33,13 +33,19 @@ def public_report(control_journal, infrastructure):
             "publicIP": infrastructure.get("computeReadback", {}).get("publicIP"),
             "bootVolumeId": infrastructure.get("computeReadback", {}).get("bootVolumeId"),
             "security": infrastructure.get("computeReadback", {}).get("network"),
-            "blocker": {key: infrastructure["stop"][key] for key in ("kind", "code", "status", "operation", "realFailure")}
+            "blocker": {key: infrastructure["stop"].get(key) for key in ("kind", "code", "status", "operation", "realFailure")}
                        if infrastructure.get("stop") else None,
+            "encryptionRepair": {key: infrastructure.get("encryptionRepair", {}).get(key) for key in
+                                 ("instanceEncryptionEnabled", "attachmentEncryptionEnabled", "complete")},
+            "bootEncryption": {key: infrastructure.get("encryptionRepair", {}).get("bootEncryption", {}).get(key) for key in
+                               ("isPvEncryptionInTransitEnabled", "lifecycleState")},
+            "sshHostTrust": {key: infrastructure.get("sshHostTrust", {}).get(key) for key in
+                             ("status", "reason", "consoleHistoryId", "snapshotCharacters", "consoleFingerprintCount", "sshAttempted", "formatAttempted")},
             "attachmentDiagnostic": {key: infrastructure["attachmentDiagnostic"][key] for key in
                                      ("matchingAttachmentCount", "instanceState", "volumeState", "volumeGB", "instancePvEncryptionEnabled", "requestedAttachmentEncryption", "cloudWrites", "createRetried")}
                                     if infrastructure.get("attachmentDiagnostic") else None,
             "productionChanges": 0, "realTimeZeroBillProven": False,
-            "note": "Journal readback evidence, not new cloud calls or a full P1/health signoff. Private specs and SSH source addresses omitted."}
+            "note": "Journal readback evidence, not new cloud calls or a full P1/health signoff. Private specs, console content and SSH source addresses omitted. attachmentDiagnostic is the historical pre-repair observation."}
 
 
 def main():

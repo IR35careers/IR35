@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## Owner-specific instance encryption repair —20October2026
+
+- **Current live checkpoint:** in-place instance update/reboot passed; instance and boot attachment report PV encryption enabled, and the same 100 GB volume is attached once, paravirtualized and encrypted. Do not repeat that update or recreate resources. P1 is now held before guest access: the authenticated full OCI console snapshot has no SHA256 host fingerprint, so no SSH host key was enrolled. No SSH command, format, mount or P2 action ran. Preserve the durable `sshHostTrust` failure; do not bypass verification or retry provisioning. See `docs/evidence/oracle-p1-visibility.md` for the read-only diagnosis and proposed authenticated guest-key source.
+- Owner reopened the attachment400 with an in-place prerequisite repair. Verify Oracle platform image and paravirtualized data type; enable only instance launchOptions.isPvEncryptionInTransitEnabled=true, owner-approved empty-staging reboot, wait RUNNING/true. Record boot attachment encryption even if not true; never recreate VM. Reconcile the same100GBvolume, never duplicate or fall back to unencrypted. New400 stops with structured full service error, secrets redacted. False instance flag must fail before attach API; happy path tested.
+- After encrypted attachment, verify the exact new blank data disk before ext4 formatting, UUID/nofail mount /opt/ir35/data, reboot/persistence/df evidence. No formatting an existing/ambiguous/nonblank disk. Continue empty private Standard/version-off backup bucket (8GB cap, age-encrypted uploads only), existing budget/Notifications checks, then P2 on a new draft PR. All production/cutover/free-envelope/key/merge holds remain.
+
 ## Latest owner eventual-consistency continuation — 20 October 2026
 
 - Post-create GET/LIST visibility uses one shared bounded wait:5s/10s/20s/40s/60s capped backoff, maximum10minutes. Only404/NotAuthorizedOrNotFound inside that window is NOT_YET_VISIBLE and exempt from failure-stop counting; record each observation.401/500/other errors fail immediately, except the separately approved exact Compute OutOfHostCapacity launch policy. A timeout is a real stop, never permission for another create.

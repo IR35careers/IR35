@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-20T10:14:23.296436+00:00",
+  "checkedAt": "2026-10-20T12:11:32.123030+00:00",
   "phase": "P1",
   "phaseComplete": false,
   "resources": [
@@ -296,9 +296,32 @@
           "result": "VISIBLE"
         }
       ]
+    },
+    {
+      "kind": "attachment",
+      "id": "ocid1.volumeattachment.oc1.uk-london-1.anwgiljrr72xucycxrovxjhm7q2aoudyr55wnguk6uaivoguk73cj27uwkfa",
+      "verifiedAt": "2026-10-20T11:58:54.071652+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 5.741,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 5
+        },
+        {
+          "resource": "attachment",
+          "attempt": 2,
+          "elapsedSeconds": 14.159,
+          "result": "VISIBLE"
+        }
+      ]
     }
   ],
-  "pendingKind": "attachment",
+  "pendingKind": null,
   "capacityAttempts": 1,
   "publicIP": "132.145.28.134",
   "bootVolumeId": "ocid1.bootvolume.oc1.uk-london-1.abwgiljrb6mkmzdedzxo2bg6mukon3xpax5jei6l32qyu25l7wehajwu6bdq",
@@ -313,11 +336,29 @@
     "noDefaultSecurityListAttached": true
   },
   "blocker": {
-    "kind": "attachment",
-    "code": "InvalidParameter",
-    "status": 400,
-    "operation": "attach-paravirtualized-volume",
+    "kind": "sshHostTrust",
+    "code": "ConsoleFingerprintMissing",
+    "status": null,
+    "operation": "authenticated-host-key-check",
     "realFailure": true
+  },
+  "encryptionRepair": {
+    "instanceEncryptionEnabled": true,
+    "attachmentEncryptionEnabled": true,
+    "complete": true
+  },
+  "bootEncryption": {
+    "isPvEncryptionInTransitEnabled": true,
+    "lifecycleState": null
+  },
+  "sshHostTrust": {
+    "status": "FAIL",
+    "reason": "Full OCI console snapshot contains no SHA256 host fingerprint; no authenticated pin available.",
+    "consoleHistoryId": "ocid1.consolehistory.oc1.uk-london-1.anwgiljrr72xucycm6e5gfyzhguq3ukagiihfogvvmegthjrajmixsea5cdq",
+    "snapshotCharacters": 120684,
+    "consoleFingerprintCount": 0,
+    "sshAttempted": false,
+    "formatAttempted": false
   },
   "attachmentDiagnostic": {
     "matchingAttachmentCount": 0,
@@ -331,5 +372,5 @@
   },
   "productionChanges": 0,
   "realTimeZeroBillProven": false,
-  "note": "Journal readback evidence, not new cloud calls or a full P1/health signoff. Private specs and SSH source addresses omitted."
+  "note": "Journal readback evidence, not new cloud calls or a full P1/health signoff. Private specs, console content and SSH source addresses omitted. attachmentDiagnostic is the historical pre-repair observation."
 }

@@ -20,7 +20,7 @@ import p1_control_plane as control
 from resource_audit import ReadOnlyOci, inventory, session_account_audit, SHAPE, number
 from security_session import atomic_metadata, clean_environment, command, ensure_session, private_file
 from storage_budget import reconcile
-from visibility import OciError, wait_for_visible, call_timeout
+from visibility import OciError, wait_for_visible, call_timeout, service_error_detail
 
 JOURNAL = KEY_DIRECTORY / "p1-infrastructure.json"
 KINDS = {
@@ -92,6 +92,7 @@ def specification(kind, journal, child, ad, image=None, public_key=None):
                        imageId=ocid(image, "image"), bootVolumeSizeInGbs=50, assignPublicIp=True, assignIpv6Ip=False,
                        subnetId=identifier(journal, "subnet"), nsgIds=[identifier(journal, "nsg")],
                        instanceOptions={"areLegacyImdsEndpointsDisabled": True}, metadata={"ssh_authorized_keys": public_key})
+        payload["launchOptions"] = {"isPvEncryptionInTransitEnabled": True}
     elif kind == "volume":
         payload.update(availabilityDomain=ad, sizeInGbs=100, vpusPerGb=10, isAutoTuneEnabled=False)
     return payload
@@ -123,6 +124,8 @@ def invoke(args):
     result = subprocess.run(command(args), capture_output=True, text=True, timeout=call_timeout(), env=clean_environment(), check=False)
     if result.returncode:
         error = OciError.from_stderr("infrastructure-" + args[2], result.stderr)
+        if error.status == 400 and args[:3] in (["compute", "instance", "update"], ["compute", "volume-attachment", "attach-paravirtualized-volume"]):
+            error.detail = service_error_detail(result.stderr, error)
         # Only exact Compute capacity rejection permits launch backoff. Never
         # retain the raw message or generalize other500s into capacity failures.
         error.capacity = bool(args[:3] == ["compute", "instance", "launch"] and error.status == 500

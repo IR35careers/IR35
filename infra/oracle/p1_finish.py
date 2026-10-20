@@ -21,6 +21,29 @@ from visibility import wait_for_visible
 KINDS = {"attachment": "volumeattachment", "topic": "onstopic", "subscription": "onssubscription", "bucket": "bucket"}
 
 
+def check_attachment_prerequisite(instance, image, payload):
+    if ("compartment-id" not in image or image["compartment-id"] is not None
+            or image.get("id") != instance.get("image-id") or image.get("listing-type") not in (None, "NONE")
+            or image.get("operating-system") != "Canonical Ubuntu" or image.get("operating-system-version") != "24.04"
+            or "aarch64" not in image.get("display-name", "")):
+        raise KeySafetyError("Encrypted attachment requires the verified Oracle Ubuntu24.04 ARM platform image, not a custom image.")
+    options = instance.get("launch-options", {})
+    if options.get("remote-data-volume-type") != "PARAVIRTUALIZED":
+        raise KeySafetyError("Encrypted data attachment requires PARAVIRTUALIZED, never iSCSI.")
+    if options.get("is-pv-encryption-in-transit-enabled") is not True:
+        raise KeySafetyError("Attachment blocked before API call: instance launchOptions.isPvEncryptionInTransitEnabled must be true.")
+    if payload.get("isPvEncryptionInTransitEnabled") is not True or payload.get("instanceId") != instance.get("id"):
+        raise KeySafetyError("Only an encrypted attachment to the verified existing instance is permitted.")
+    return True
+
+
+def attachment_prerequisite(journal, payload):
+    instance = infra.invoke(infra.cli_arguments("instance", "get", resource_id=infra.identifier(journal, "instance")))
+    infra.verify("instance", journal["created"]["instance"], instance)
+    image = infra.invoke(["compute", "image", "get", "--image-id", ocid(instance.get("image-id"), "image")])
+    return check_attachment_prerequisite(instance, image, payload)
+
+
 def spec(kind, journal, child, namespace):
     tags = {"ir35-phase": "P1", "ir35-intent": journal["intent"]}
     common = {"compartmentId": child, "freeformTags": tags}
@@ -115,7 +138,10 @@ def verify(kind, payload, result):
     return resource_id(kind, result)
 
 
-def create_one(kind, journal, child, payload, eligibility):
+def create_one(kind, journal, child, payload, eligibility, *, prerequisite=None):
+    if kind == "attachment":
+        if prerequisite is None or prerequisite() is not True:
+            raise KeySafetyError("Encrypted instance prerequisite must PASS before any attachment API call.")
     pending = journal.get("pending")
     entry = journal["created"].get(kind) or pending
     if pending and pending.get("kind") != kind:
@@ -188,7 +214,9 @@ def main():
         if not isinstance(namespace, str) or not re.fullmatch(r"[a-z0-9]{1,63}", namespace):
             raise KeySafetyError("Invalid private bucket namespace metadata.")
         for kind in ("attachment", "topic", "subscription", "bucket"):
-            create_one(kind, journal, child, spec(kind, journal, child, namespace), lambda: infra.fresh_eligibility(client, journal, ad))
+            payload = spec(kind, journal, child, namespace)
+            create_one(kind, journal, child, payload, lambda: infra.fresh_eligibility(client, journal, ad),
+                       prerequisite=(lambda: attachment_prerequisite(journal, payload)) if kind == "attachment" else None)
         objects = infra.invoke(["os", "object", "list", "--namespace-name", namespace, "--bucket-name", "ir35-backups", "--all"])
         if isinstance(objects, dict) and "objects" in objects:
             objects = objects["objects"]

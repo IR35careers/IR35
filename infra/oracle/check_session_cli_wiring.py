@@ -18,6 +18,12 @@ if _FINISH:
     _prefix = {"attachment": ["compute", "volume-attachment"], "topic": ["ons", "topic"], "subscription": ["ons", "subscription"], "bucket": ["os", "bucket"]}[_kind]
     sys.argv = ["oci", *_prefix, "attach-paravirtualized-volume" if _kind == "attachment" and _operation == "create" else _operation]
 _EXTRA_OPERATIONS = {
+    "history-list": ["compute", "console-history", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],
+    "history-capture": ["compute", "console-history", "capture", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--display-name", "ir35-ssh-hostkey-bootstrap", "--freeform-tags", '{"ir35-phase":"P1"}'],
+    "history-get": ["compute", "console-history", "get", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01"],
+    "history-content": ["compute", "console-history", "get-content", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01", "--file", "-", "--offset", "0", "--length", "1048576"],
+    "instance-encryption": ["compute", "instance", "update", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--launch-options", '{"isPvEncryptionInTransitEnabled":true}', "--force"],
+    "image-get": ["compute", "image", "get", "--image-id", "ocid1.image.oc1.uk-london-1.controlledfixture01"],
     "security-update": ["network", "security-list", "update", "--security-list-id", "ocid1.securitylist.oc1.uk-london-1.controlledfixture01", "--force", "--ingress-security-rules", "[]", "--egress-security-rules", "[]"],
     "nsg-rules": ["network", "nsg", "rules", "list", "--nsg-id", "ocid1.networksecuritygroup.oc1.uk-london-1.controlledfixture01", "--all"],
     "vnics": ["compute", "vnic-attachment", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],
@@ -75,9 +81,12 @@ class CliWiringTests(unittest.TestCase):
             self.assertEqual(child.returncode, 0, name + ": isolated parser failed; raw output suppressed.")
 
     def check_extra(self, name):
+        # The real get-content --file - command requires stdout.buffer. Use a
+        # binary-capable private sink, not StringIO; retain client interception.
+        captured = io.TextIOWrapper(io.BytesIO(), encoding="utf-8")
         with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
             try:
-                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                with contextlib.redirect_stdout(captured), contextlib.redirect_stderr(io.StringIO()):
                     cli.main(args=security_session.command(_EXTRA_OPERATIONS[name])[1:], standalone_mode=False)
             except BaseException:
                 pass
@@ -182,6 +191,8 @@ if __name__ == "__main__":
             import p1_infrastructure
             import p1_compute
             import p1_finish
+            import p1_encryption
+            import host_ssh
             import hashlib
             import time
             from key_ceremony import private_directory
@@ -191,5 +202,7 @@ if __name__ == "__main__":
                  "infrastructureSHA256": hashlib.sha256(Path(p1_infrastructure.__file__).read_bytes()).hexdigest(),
                  "computeSHA256": hashlib.sha256(Path(p1_compute.__file__).read_bytes()).hexdigest(),
                  "finishSHA256": hashlib.sha256(Path(p1_finish.__file__).read_bytes()).hexdigest(),
+                 "encryptionSHA256": hashlib.sha256(Path(p1_encryption.__file__).read_bytes()).hexdigest(),
+                 "hostSSHSHA256": hashlib.sha256(Path(host_ssh.__file__).read_bytes()).hexdigest(),
                  "sourceSHA256": hashlib.sha256(Path(p1_control_plane.__file__).read_bytes()).hexdigest()})
         raise SystemExit(0 if result.wasSuccessful() else 1)

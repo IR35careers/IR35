@@ -1,5 +1,43 @@
 # P1 visibility and idempotency continuation —20October2026
 
+## Latest checkpoint: encryption PASS, SSH identity check STOP
+
+Owner-authorised in-place repair executed on the existing Always Free A1 (2 OCPU / 12 GB, London), not a replacement VM:
+
+- Signed image GET verifies the original Oracle platform image: Canonical Ubuntu 24.04 aarch64, no custom compartment/Marketplace listing. Boot and remote-data launch types are PARAVIRTUALIZED.
+- One instance update set only `launchOptions.isPvEncryptionInTransitEnabled=true`. Approved empty-staging reboot completed; shared bounded polling independently verified RUNNING and the flag true. No second instance update.
+- Complete signed boot-attachment LIST verifies the exact instance/boot-volume pair, ATTACHED and `is-pv-encryption-in-transit-enabled=true`. OCI returned the instance OCID as this attachment's ID; a local OCID-type assertion was narrowly repaired to use the actual parent pair, without recreating the VM or repeating update.
+- After reconciling the earlier definitive rejected 400 and zero matching attachments, exactly one new encrypted attachment request succeeded for the **same 100 GB volume**. Independent GET verifies ATTACHED, paravirtualized and encryption true. Attachment OCID: `ocid1.volumeattachment.oc1.uk-london-1.anwgiljrr72xucycxrovxjhm7q2aoudyr55wnguk6uaivoguk73cj27uwkfa`. The API device hint is null, so guest disk inspection is mandatory before identifying a format target. No unencrypted fallback, detach/recreate or additional allocation.
+- Fresh normal-browser SecurityToken sign-in passed after refresh failed. Owner alone completed login/MFA. No API/SSH passphrase was requested; the existing SSH key remains agent-loaded and encrypted on disk.
+
+### New failed check and read-only diagnosis
+
+One tagged OCI console-history capture succeeded. Only fingerprints/metadata were extracted in RAM; raw console content was never published or retained in source. Public SSH keyscan is reachable, but the initial content slice has no SHA256 fingerprint. The documented full bounded read (`offset=0`, `length=1048576`) returned **120,684 characters, zero SHA256 fingerprints**. Consequently **no authenticated SSH host key was enrolled**. This is missing evidence, not a proven changed/mismatched key. No StrictHostKeyChecking bypass, password login or TOFU fallback.
+
+The private durable journal records `sshHostTrust / ConsoleFingerprintMissing`, real failure. No authenticated SSH command, guest `lsblk`, disk format/mount, persistence reboot, bucket/topic create or P2 hardening ran after this hold. The successful encrypted attachment remains intact. Source tests cannot turn this live check into PASS.
+
+**Proposed next specific repair:** inspect whether the existing OCI Run Command agent can return only the public Ed25519 host-key fingerprint through authenticated OCI, with no IAM expansion, paid service or raw secret output. If unavailable, use an owner-authenticated serial-console fingerprint. Compare the authenticated fingerprint to keyscan before pinning SSH, then inspect the unique blank 100 GB guest disk. Do not create another console capture, disable verification, format an ambiguous disk, clear the failure generically or restart provisioning blindly.
+
+| Latest check | Result |
+| --- | --- |
+| Oracle platform image / boot+data PV launch type | PASS live |
+| In-place instance update / RUNNING / encryption true | PASS live, one update |
+| Boot attachment PV encryption | PASS live, true |
+| Same 100 GB encrypted PV attachment | PASS live, one attachment |
+| Authenticated SSH host-key fingerprint | FAIL: absent from full console snapshot |
+| Guest inspection / ext4 / UUID mount / reboot persistence / df | NOT RUN, blocked before SSH |
+| Backup bucket / Notifications topic / final P1 signoff | NOT RUN after new failure |
+| P2 | NOT STARTED, separate draft PR required after P1 PASS |
+| Production / DNS / Vercel / Supabase / worker / acceptance changes | NONE |
+
+Public IP remains **132.145.28.134**. Live allocation remains **50 GB boot + 100 GB data = 150 GB**; no extra compute/volume or paid plan. Existing £1 budget/ACTUAL alert remain; prior signed eligibility/budget/cost read-backs preceded the narrow repair and console capture. Lagging cost data is **not** real-time £0 billing proof. Full created-resource IDs plus the new hold are in [allowlisted JSON evidence](oracle-p1-visibility-resources.json); prior `attachmentDiagnostic` is explicitly historical. Health/browser/database readiness is not yet available because no application is deployed.
+
+References checked: [Oracle instance launch prerequisite](https://docs.oracle.com/en-us/iaas/tools/python/latest/api/core/models/oci.core.models.UpdateLaunchOptions.html), [platform/paravirtualized volume encryption](https://docs.oracle.com/en-us/iaas/Content/Block/Concepts/blockvolumeencryption.htm), [console snapshot length/offset and stdout](https://docs.oracle.com/en-us/iaas/tools/oci-cli/latest/oci_cli_docs/cmdref/compute/console-history/get-content.html). No claim that Oracle guarantees fingerprints in every snapshot.
+
+Final local verification: **93 Linux unit tests PASS**, including false instance flag before any API, encrypted attachment/reuse, new unrelated failure cannot be cleared by the old repair, missing/mismatched console fingerprint refusal, exact boot parent pair and credential-redacted service messages. **Six installed-CLI suites PASS** with cloud clients intercepted; the updated full-snapshot length/offset command also passed its isolated real-parser probe. One local harness failure (`StringIO` missing binary stdout) was repaired to a private binary-capable sink without removing the client-call assertion. **32 TypeScript capacity tests, strict TypeScript, zero-warning ESLint, whitespace and source/history secret scan (798 tracked files) PASS**. These tests use fixtures, not real cloud creates or employer submissions. Vercel main/Oracle deployment holds remain disabled. Draft [PR #49](https://github.com/IR35careers/IR35/pull/49) remains unmerged; final-head hosted checks are separate, not claimed PASS here.
+
+## Historical first attachment failure (resolved by the repair above)
+
 ## Verified checkpoint
 
 **FINAL STOP —real API400, not eventual consistency:** the A1 VM is independently RUNNING on the first launch,2OCPU/12GB, official Ubuntu24.04aarch64; boot50GB and separate block100GB independently verified. PublicIP **132.145.28.134**. Exact owner/public and Bastion/private SSH /32s, no broadIPv4/IPv6SSH, only explicit SL/empty NSG attached; public80/443 only. Full resource OCIDs/visibility/readback metadata are in the [JSON evidence](oracle-p1-visibility-resources.json), including the boot volume ID. One capacity attempt, no capacity failure/retry. No host/application/data/worker deployment.
