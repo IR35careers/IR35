@@ -27,3 +27,7 @@ Preview URL / screenshots: not applicable to local infrastructure tooling; do no
 No migrations or new app env vars. G1 owner hidden passphrase entry; G2 if public API-key upload requires console login/MFA. G3 Auth settings, G4 Google, G5 DNS and G6 exact YES CUTOVER remain later gates. Vercel, Supabase, DNS, Stripe and mail settings unchanged. Never merge, auto-merge, publish a production image, deploy production or enable a real worker from this PR.
 
 See `docs/evidence/oracle-p1-tooling.md` for actual local results and explicit outstanding gates. P1 remains DRAFT/INCOMPLETE until guarded provisioning and read-back evidence pass.
+
+## G1 follow-up
+
+Owner completed key creation; encrypted-file mode/round-trip metadata verified. Fresh signed account/region/ACTIVE FREE_TRIAL checks and actual two-of-three key usage preceded **one requested public-key upload**. Durable intent was persisted first, independent ACTIVE read-back passed, old registered key remains and three total keys are now present. No private upload, key revoke, policy/user/plan upgrade, VM/network/volume/bucket creation or production mutation. The earlier no-cloud-call preparation bullets describe the first commit only. New narrow bootstrap/registration/unlock helpers have **22 passing Linux tests**, including unknown-outcome no-retry and error redaction. The next hidden prompt unlocks the existing API key once for read-only signed authentication, not another generation. New-head hosted checks are required; earlier release results are not claimed as final-head tests for the new helpers.
