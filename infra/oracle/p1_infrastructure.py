@@ -136,7 +136,16 @@ def invoke(args):
             raise ValueError()
         if result.stdout == "" and "--all" in args:
             return []
-        data = json.loads(result.stdout)["data"]
+        envelope = json.loads(result.stdout)
+        # Pinned OCI CLI's full empty Object Storage listing omits data and
+        # emits only prefixes:[]. This is not a generic missing-data fallback:
+        # require the exact unfiltered --all command/envelope. The caller also
+        # independently checks full bucket GET count/size/versioning.
+        if (len(args) == 8 and args[:3] == ["os", "object", "list"]
+                and args[3] == "--namespace-name" and args[5] == "--bucket-name"
+                and args[7] == "--all" and envelope == {"prefixes": []}):
+            return []
+        data = envelope["data"]
         if not isinstance(data, (dict, list)):
             raise ValueError()
         return data

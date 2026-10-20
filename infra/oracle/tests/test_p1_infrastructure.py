@@ -4,6 +4,7 @@ import io
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from datetime import datetime, timezone
@@ -25,6 +26,19 @@ def fixture():
 
 
 class InfrastructureTests(unittest.TestCase):
+    def test_exact_cli_empty_object_envelope_only_for_unfiltered_full_object_list(self):
+        arguments = ["os", "object", "list", "--namespace-name", "fixture", "--bucket-name", "fixture", "--all"]
+        result = SimpleNamespace(returncode=0, stdout='{"prefixes": []}', stderr="")
+        with patch.object(infra, "ensure_session"), patch.object(infra, "command", side_effect=lambda a: a), \
+                patch.object(infra.subprocess, "run", return_value=result):
+            self.assertEqual(infra.invoke(arguments), [])
+            for bad in (arguments[:-1], [*arguments, "--prefix", "partial"], ["network", "vcn", "list", "--all"]):
+                with self.assertRaisesRegex(KeySafetyError, "Incomplete infrastructure response"):
+                    infra.invoke(bad)
+            for malformed in ('{}', '{"data":null}', '{"prefixes":["partial"]}', '{"prefixes":[],"next-start-with":"more"}'):
+                result.stdout = malformed
+                with self.assertRaises(KeySafetyError):
+                    infra.invoke(arguments)
     def test_fixed_envelope_and_no_broad_ssh(self):
         journal = fixture()
         journal["created"]["vcn"] = {"id": "ocid1.vcn.oc1.uk-london-1.controlledfixture01"}

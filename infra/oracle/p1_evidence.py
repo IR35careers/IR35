@@ -56,7 +56,10 @@ def public_report(control_journal, infrastructure, identity=None):
             "capacityAttempts": len(infrastructure.get("capacity", {}).get("attempts", [])),
             "publicIP": infrastructure.get("computeReadback", {}).get("publicIP"),
             "bootVolumeId": infrastructure.get("computeReadback", {}).get("bootVolumeId"),
-            "security": infrastructure.get("computeReadback", {}).get("network"),
+            "security": infrastructure.get("finalNetworkReadback") or infrastructure.get("computeReadback", {}).get("network"),
+            "storageBudget": {key: infrastructure.get("finalStorageReadback", {}).get(key) for key in
+                              ("storageEnvelope", "proposedLiveVolumeGB", "proposedVolumeBackups", "proposedObjectBytes", "ownerObjectByteCap", "tier")},
+            "ownerReopenedRepair": {key: infrastructure.get("bucketReadbackOwnerReopen", {}).get(key) for key in ("attempts", "failures")},
             "blocker": {key: infrastructure["stop"].get(key) for key in ("kind", "code", "status", "operation", "realFailure")}
                        if infrastructure.get("stop") else None,
             "encryptionRepair": {key: infrastructure.get("encryptionRepair", {}).get(key) for key in

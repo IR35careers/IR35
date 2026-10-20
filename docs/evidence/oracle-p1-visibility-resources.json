@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-20T14:43:55.246810+00:00",
+  "checkedAt": "2026-10-20T15:07:11.216651+00:00",
   "phase": "P1",
-  "phaseComplete": false,
+  "phaseComplete": true,
   "resources": [
     {
       "kind": "compartment",
@@ -300,7 +300,7 @@
     {
       "kind": "attachment",
       "id": "ocid1.volumeattachment.oc1.uk-london-1.anwgiljrr72xucycxrovxjhm7q2aoudyr55wnguk6uaivoguk73cj27uwkfa",
-      "verifiedAt": "2026-10-20T14:27:29.415813+00:00",
+      "verifiedAt": "2026-10-20T15:05:05.176502+00:00",
       "readback": "PASS",
       "visibility": [
         {
@@ -323,13 +323,25 @@
           "attempt": 1,
           "elapsedSeconds": 2.176,
           "result": "VISIBLE"
+        },
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 2.631,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 2.643,
+          "result": "VISIBLE"
         }
       ]
     },
     {
       "kind": "topic",
       "id": "ocid1.onstopic.oc1.uk-london-1.amaaaaaar72xucyaza6ptxuckfqx6fo5zmahujcmb4kppa5lq7api63x3wnq",
-      "verifiedAt": "2026-10-20T14:28:08.883827+00:00",
+      "verifiedAt": "2026-10-20T15:05:07.220955+00:00",
       "readback": "PASS",
       "visibility": [
         {
@@ -337,13 +349,25 @@
           "attempt": 1,
           "elapsedSeconds": 1.917,
           "result": "VISIBLE"
+        },
+        {
+          "resource": "topic",
+          "attempt": 1,
+          "elapsedSeconds": 4.445,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "topic",
+          "attempt": 1,
+          "elapsedSeconds": 2.03,
+          "result": "VISIBLE"
         }
       ]
     },
     {
       "kind": "subscription",
       "id": "ocid1.onssubscription.oc1.uk-london-1.aaaaaaaa527jk72peqpttzhzpeiyw7jdnfkspi5tnw2yqpbhbd2yoap5olpa",
-      "verifiedAt": "2026-10-20T14:28:48.342678+00:00",
+      "verifiedAt": "2026-10-20T15:05:08.894359+00:00",
       "readback": "PASS",
       "visibility": [
         {
@@ -351,11 +375,43 @@
           "attempt": 1,
           "elapsedSeconds": 1.679,
           "result": "VISIBLE"
+        },
+        {
+          "resource": "subscription",
+          "attempt": 1,
+          "elapsedSeconds": 1.657,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "subscription",
+          "attempt": 1,
+          "elapsedSeconds": 1.649,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "bucket",
+      "id": "ocid1.bucket.oc1.uk-london-1.aaaaaaaarepsvqvrmkeefefbjothko6pkbnh7cw7y5gholfab7muq5yaqfva",
+      "verifiedAt": "2026-10-20T15:05:10.526206+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "bucket",
+          "attempt": 1,
+          "elapsedSeconds": 1.712,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "bucket",
+          "attempt": 1,
+          "elapsedSeconds": 1.606,
+          "result": "VISIBLE"
         }
       ]
     }
   ],
-  "pendingKind": "bucket",
+  "pendingKind": null,
   "capacityAttempts": 1,
   "publicIP": "132.145.28.134",
   "bootVolumeId": "ocid1.bootvolume.oc1.uk-london-1.abwgiljrb6mkmzdedzxo2bg6mukon3xpax5jei6l32qyu25l7wehajwu6bdq",
@@ -369,13 +425,19 @@
     "broadIpv4OrIpv6Ssh": false,
     "noDefaultSecurityListAttached": true
   },
-  "blocker": {
-    "kind": "bucketReadback",
-    "code": "BucketSummaryIdentifierMissing",
-    "status": null,
-    "operation": "os-bucket-readback",
-    "realFailure": true
+  "storageBudget": {
+    "storageEnvelope": "PASS",
+    "proposedLiveVolumeGB": "150",
+    "proposedVolumeBackups": 0,
+    "proposedObjectBytes": "0",
+    "ownerObjectByteCap": 8000000000,
+    "tier": "Standard"
   },
+  "ownerReopenedRepair": {
+    "attempts": 3,
+    "failures": 2
+  },
+  "blocker": null,
   "encryptionRepair": {
     "instanceEncryptionEnabled": true,
     "attachmentEncryptionEnabled": true,
@@ -406,7 +468,7 @@
     "bootIdChanged": true,
     "reusedRecordedFilesystem": true
   },
-  "resourceProvisioningComplete": false,
+  "resourceProvisioningComplete": true,
   "notificationSubscriptionState": "ACTIVE",
   "ownerAction": null,
   "attachmentDiagnostic": {

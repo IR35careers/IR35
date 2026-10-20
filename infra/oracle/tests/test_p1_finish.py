@@ -26,6 +26,50 @@ def fixture():
 
 
 class FinishTests(unittest.TestCase):
+    def test_bucket_get_requests_optional_evidence_and_rejects_unset_or_enabled_tiering(self):
+        payload = finish.spec("bucket", fixture(), CHILD, "controlledfixture")
+        row = {infra.re.sub(r"[A-Z]", lambda m: "-" + m[0].lower(), key): value for key, value in payload.items()}
+        row["namespace"] = row.pop("namespace-name")
+        row.update(id="ocid1.bucket.oc1.uk-london-1.controlledfixture01", **{"auto-tiering": None})
+        arguments = finish.args("bucket", "get", payload, CHILD)
+        self.assertEqual([arguments[index + 1] for index, item in enumerate(arguments) if item == "--fields"],
+                         ["autoTiering", "approximateCount", "approximateSize"])
+        for bad in (None, "InfrequentAccess", "UNKNOWN_ENUM_VALUE", "unexpected"):
+            with self.assertRaises(KeySafetyError):
+                finish.verify("bucket", payload, {**row, "auto-tiering": bad})
+        row["auto-tiering"] = "Disabled"
+        self.assertEqual(finish.verify("bucket", payload, row), row["id"])
+        for changed in ({"storage-tier": "Archive"},):
+            with self.assertRaises(KeySafetyError):
+                finish.verify("bucket", payload, {**row, **changed})
+        row.pop("auto-tiering")
+        with self.assertRaises(KeySafetyError):
+            finish.verify("bucket", payload, row)
+    def test_reopen_is_exact_hold_only_and_get_identity_required_before_clearing(self):
+        journal = fixture()
+        journal["created"]["attachment"] = {"id": "ocid1.volumeattachment.oc1.uk-london-1.controlledfixture01"}
+        journal["created"]["subscription"] = {"id": "ocid1.onssubscription.oc1.uk-london-1.controlledfixture01"}
+        payload = finish.spec("bucket", journal, CHILD, "controlledfixture")
+        identifier = "ocid1.bucket.oc1.uk-london-1.controlledfixture01"
+        journal["pending"] = {"kind": "bucket", "spec": payload, "id": identifier}
+        journal["stop"] = {"kind": "bucketReadback", "code": "BucketSummaryIdentifierMissing"}
+        row = {infra.re.sub(r"[A-Z]", lambda m: "-" + m[0].lower(), key): value for key, value in payload.items()}
+        row["namespace"] = row.pop("namespace-name")
+        row["id"] = "ocid1.bucket.oc1.uk-london-1.differentfixture01"
+        with patch.object(infra, "invoke", return_value=row) as invoke, patch.object(finish, "atomic_metadata") as write:
+            with self.assertRaisesRegex(KeySafetyError, "identity mismatch"):
+                finish.reopen_bucket_readback(journal, payload, CHILD)
+            self.assertIn("stop", journal)
+            write.assert_not_called()
+            self.assertEqual(invoke.call_args.args[0][2], "get")
+            row["id"] = identifier
+            with contextlib.redirect_stdout(io.StringIO()):
+                finish.reopen_bucket_readback(journal, payload, CHILD)
+            self.assertNotIn("stop", journal)
+            self.assertEqual(journal["pending"]["id"], identifier)
+            self.assertEqual(len(journal["history"]), 1)
+            with self.assertRaisesRegex(KeySafetyError, "no generic hold reset"):
+                finish.reopen_bucket_readback(journal, payload, CHILD)
     def test_pending_bucket_reconciles_before_completed_associations(self):
         self.assertEqual(finish.reconciliation_order({"pending": {"kind": "bucket"}}),
                          ("bucket", "attachment", "topic", "subscription"))

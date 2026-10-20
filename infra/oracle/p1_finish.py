@@ -73,7 +73,10 @@ def args(kind, operation, payload, child, resource_id=None):
         return result
     if operation == "get":
         if kind == "bucket":
-            return [*prefix, "get", "--namespace-name", payload["namespaceName"], "--bucket-name", payload["name"]]
+            # These optional GET fields are null unless explicitly requested.
+            # Request evidence instead of treating null as an observed default.
+            return [*prefix, "get", "--namespace-name", payload["namespaceName"], "--bucket-name", payload["name"],
+                    "--fields", "autoTiering", "--fields", "approximateCount", "--fields", "approximateSize"]
         selector = {"attachment": "volume-attachment-id", "topic": "topic-id", "subscription": "subscription-id"}[kind]
         return [*prefix, "get", "--" + selector, ocid(resource_id, KINDS[kind])]
     if operation == "list":
@@ -206,9 +209,31 @@ def create_one(kind, journal, child, payload, eligibility, *, prerequisite=None)
     print("PASS: " + kind + " independent read-back; OCID=" + identifier, flush=True)
 
 
+def reopen_bucket_readback(journal, payload, child):
+    stop = journal.get("stop", {})
+    pending = journal.get("pending", {})
+    if (stop.get("kind") != "bucketReadback" or stop.get("code") != "BucketSummaryIdentifierMissing"
+            or pending.get("kind") != "bucket" or pending.get("spec") != payload
+            or "bucket" in journal["created"]
+            or not all(kind in journal["created"] for kind in ("attachment", "topic", "subscription"))):
+        raise KeySafetyError("Only the owner-reopened existing bucket readback may resume; no generic hold reset.")
+    identifier = ocid(pending.get("id"), "bucket")
+    observed = infra.invoke(args("bucket", "get", payload, child, identifier))
+    if verify("bucket", payload, observed) != identifier:
+        raise KeySafetyError("Existing pending bucket identity mismatch; hold preserved.")
+    from datetime import datetime, timezone
+    journal.setdefault("history", []).append({"resolvedFailure": stop,
+        "resolution": "Owner reopened ID-less BucketSummary binding; independent full GET identity/spec PASS",
+        "resolvedAt": datetime.now(timezone.utc).isoformat()})
+    journal.pop("stop")
+    atomic_metadata(infra.JOURNAL, journal)
+    print("PASS: owner-reopened bucket full GET matches recorded OCID/spec; no create.", flush=True)
+
+
 def main():
-    if sys.argv[1:] != ["provision"]:
+    if sys.argv[1:] not in (["provision"], ["reconcile-existing-bucket"]):
         raise KeySafetyError("Fixed finish provisioning only.")
+    repair = sys.argv[1:] == ["reconcile-existing-bucket"]
     receipt = json.loads(private_file(control.PREFLIGHT_RECEIPT))
     if (receipt.get("status") != "PASS" or not 0 <= time.time() - receipt["checkedAt"] <= 1800
             or receipt.get("finishSHA256") != hashlib.sha256(Path(__file__).read_bytes()).hexdigest()):
@@ -218,7 +243,7 @@ def main():
     try:
         fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
         journal = json.loads(private_file(infra.JOURNAL))
-        if journal.get("stop"):
+        if journal.get("stop") and not repair:
             raise KeySafetyError("P1 held on recorded real failure; no further create or automatic retry.")
         if journal.get("guestMountComplete") is not True:
             raise KeySafetyError("Verified UUID mount and reboot persistence required before remaining P1 creates.")
@@ -235,10 +260,19 @@ def main():
         namespace = client.read("namespace")
         if not isinstance(namespace, str) or not re.fullmatch(r"[a-z0-9]{1,63}", namespace):
             raise KeySafetyError("Invalid private bucket namespace metadata.")
+        if repair:
+            reopen_bucket_readback(journal, spec("bucket", journal, child, namespace), child)
         for kind in reconciliation_order(journal):
             payload = spec(kind, journal, child, namespace)
             create_one(kind, journal, child, payload, lambda: infra.fresh_eligibility(client, journal, ad),
                        prerequisite=(lambda: attachment_prerequisite(journal, payload)) if kind == "attachment" else None)
+        bucket = journal["created"]["bucket"]
+        observed_bucket = infra.invoke(args("bucket", "get", bucket["spec"], child, bucket["id"]))
+        if verify("bucket", bucket["spec"], observed_bucket) != bucket["id"]:
+            raise KeySafetyError("Final bucket identity mismatch; no signoff.")
+        if any(type(observed_bucket.get(field)) is not int or observed_bucket[field] != 0
+               for field in ("approximate-count", "approximate-size")):
+            raise KeySafetyError("Independent bucket zero count/bytes required before exact empty listing.")
         objects = infra.invoke(["os", "object", "list", "--namespace-name", namespace, "--bucket-name", "ir35-backups", "--all"])
         if isinstance(objects, dict) and "objects" in objects:
             objects = objects["objects"]

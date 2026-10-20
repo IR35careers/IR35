@@ -1,5 +1,13 @@
 # P1 visibility and idempotency continuation —20October2026
 
+## Superseding final P1 PASS
+
+Owner explicitly reopened the bucket read-back and authorised two tested self-heal retries. Final execution **PASS**, no creates/updates: bucket OCID/spec matched, `autoTiering` was requested explicitly and read **Disabled** (no null-to-default inference), Standard/private/versioning Disabled/events off; independent GET count0/bytes0 plus full unfiltered empty object listing PASS. The pinned CLI represents that exact empty listing as `{"prefixes":[]}` without a data key; only that exact envelope/command is accepted, with independent zero-count/size proof. Missing/malformed/filtered/paginated responses still fail. Final signed account/all-compartment/all-AD volume/cost/budget and attached network verification PASS. Envelope: one A1 2OCPU/12GB, 50GB boot +100GB block, zero volume backups, zero object bytes; caps150GB/five/8GB preserved. Budget/ACTUAL alert active; lagging zero cost is **not** real-time £0 proof.
+
+[Resource evidence](oracle-p1-visibility-resources.json) now records **15 verified resources, phaseComplete=true, no pending or blocker**, Notifications ACTIVE, host cleanup/fingerprint and post-reboot mount proof. Owner-reopened attempt count3/failures2 is retained rather than reset. Both failures were read-only helper representation bugs, not data/configuration changes or resource retries. Original IDs, format and IAM cleanup are unchanged. **126 Linux units, six actual installed-CLI suites plus final bucket-GET binding probe PASS**. Current-head CI remains separate. P1 draft49 stays open/unmerged; P2 gets its own draft. No app/database migration/production/DNS/provider/real-employer/runner/cutover change.
+
+Oracle's [GET documentation](https://docs.oracle.com/en-us/iaas/tools/oci-cli/latest/oci_cli_docs/cmdref/os/bucket/get.html) explicitly lists optional `autoTiering`, `approximateCount` and `approximateSize` fields. The prepared null-normalisation idea was discarded **before any live execution** in favour of requesting actual evidence. Historical blocked checkpoints below explain prior attempts, not current state or an instruction to recreate resources.
+
 ## Current checkpoint: owner email ACTIVE; P1 held on bucket read-back
 
 The owner confirmed the Notifications email. An independent signed subscription GET now reports **ACTIVE** and exact topic/EMAIL endpoint/spec match; no second subscription or confirmation-token capture. Topic and subscription OCIDs are in the allowlisted [resource evidence](oracle-p1-visibility-resources.json). This proves confirmation, not a P8 alarm-delivery drill.
