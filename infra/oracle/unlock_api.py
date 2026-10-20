@@ -16,7 +16,8 @@ from key_ceremony import KeySafetyError, private_directory, validate_passphrase,
 from register_api_key import check_public_key, require_free_credential_gate
 
 
-def unlock_and_verify(passphrase):
+def encrypted_profile(passphrase):
+    """Unlock only in memory; reusable by the separately scoped resource audit."""
     fingerprint = check_public_key(KEY_DIRECTORY)
     private_directory(KEY_DIRECTORY)
     path = KEY_DIRECTORY / "oci_api.pem"
@@ -33,7 +34,11 @@ def unlock_and_verify(passphrase):
         raise KeySafetyError("Unlocked API key does not match the registered public key.")
     del private
     original = read_profile()
-    profile = {**original, "key_file": str(path), "fingerprint": fingerprint}
+    return {**original, "key_file": str(path), "fingerprint": fingerprint}
+
+
+def unlock_and_verify(passphrase):
+    profile = encrypted_profile(passphrase)
     report = audit(profile=profile, passphrase=passphrase)
     require_free_credential_gate(report, needs_slot=False)
     if report.get("newPublicKeyRegistered") is not True or report.get("newPublicKeyState") != "ACTIVE":

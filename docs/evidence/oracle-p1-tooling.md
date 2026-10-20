@@ -1,6 +1,6 @@
 # P1 tooling / G1 checkpoint — 20 October 2026
 
-Status: **P1 INCOMPLETE — G1 creation and encrypted-key authentication PASS; G2 console handoff required**. No Compute/network/volume create, shape eligibility or hosted health result is implied.
+Status: **P1 INCOMPLETE — G1 creation/authentication and G2 handoff PASS; current tenancy-wide resource/cost reconciliation required**. [New Console evidence](oracle-p1-console.md) records actual A1/Ubuntu free labels and the unreconciled gross£1.60 boot estimate. No Compute/network/volume create or hosted health result. Earlier G2 statements below are historical, superseded by this owner-completed handoff.
 
 Draft [PR#49](https://github.com/IR35careers/IR35/pull/49), stacked on unmerged P0#47; no merge or deployment. Final-head hosted checks are not a local-test claim.
 
