@@ -26,6 +26,29 @@ def fixture():
 
 
 class FinishTests(unittest.TestCase):
+    def test_pending_bucket_reconciles_before_completed_associations(self):
+        self.assertEqual(finish.reconciliation_order({"pending": {"kind": "bucket"}}),
+                         ("bucket", "attachment", "topic", "subscription"))
+        self.assertEqual(finish.reconciliation_order({}), ("attachment", "topic", "subscription", "bucket"))
+        with self.assertRaisesRegex(KeySafetyError, "Unknown pending"):
+            finish.reconciliation_order({"pending": {"kind": "unknown"}})
+    def test_unproven_mount_blocks_remaining_creates_before_auth(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            receipt = root / "receipt.json"
+            receipt.write_text(json.dumps({"status": "PASS", "checkedAt": time.time(), "finishSHA256": hashlib.sha256(Path(finish.__file__).read_bytes()).hexdigest()}))
+            receipt.chmod(0o600)
+            journal = root / "journal.json"
+            journal.write_text(json.dumps({"guestMountComplete": False}))
+            journal.chmod(0o600)
+            with patch.object(finish, "KEY_DIRECTORY", root), patch.object(infra, "JOURNAL", journal), \
+                    patch.object(finish.control, "PREFLIGHT_RECEIPT", receipt), patch.object(finish.sys, "argv", ["finish.py", "provision"]), \
+                    patch.object(finish, "ensure_session") as auth, patch.object(infra, "invoke") as invoke:
+                with self.assertRaisesRegex(KeySafetyError, "reboot persistence required"):
+                    finish.main()
+                auth.assert_not_called()
+                invoke.assert_not_called()
+
     def test_real_failure_hold_blocks_entrypoint_before_auth_or_any_oci_call(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -39,7 +62,7 @@ class FinishTests(unittest.TestCase):
             with patch.object(finish, "KEY_DIRECTORY", root), patch.object(infra, "JOURNAL", journal), \
                     patch.object(finish.control, "PREFLIGHT_RECEIPT", receipt), patch.object(finish.sys, "argv", ["finish.py", "provision"]), \
                     patch.object(finish, "ensure_session") as auth, patch.object(infra, "invoke") as invoke:
-                with self.assertRaisesRegex(KeySafetyError, "held on recorded real attachment400"):
+                with self.assertRaisesRegex(KeySafetyError, "held on recorded real failure"):
                     finish.main()
                 auth.assert_not_called()
                 invoke.assert_not_called()
@@ -48,6 +71,45 @@ class FinishTests(unittest.TestCase):
         self.assertEqual((payload["publicAccessType"], payload["storageTier"], payload["versioning"], payload["autoTiering"]),
                          ("NoPublicAccess", "Standard", "Disabled", "Disabled"))
         self.assertFalse(payload["objectEventsEnabled"])
+    def test_pending_bucket_requests_tags_and_reuses_without_create(self):
+        journal = fixture()
+        payload = finish.spec("bucket", journal, CHILD, "controlledfixture")
+        identifier = "ocid1.bucket.oc1.uk-london-1.controlledfixture01"
+        journal["pending"] = {"kind": "bucket", "spec": payload, "id": identifier}
+        row = {infra.re.sub(r"[A-Z]", lambda m: "-" + m[0].lower(), key): value for key, value in payload.items()}
+        row["namespace"] = row.pop("namespace-name")
+        row["id"] = identifier
+        def invoke(arguments):
+            self.assertIn(arguments[2], ("list", "get"))
+            if arguments[2] == "list":
+                self.assertEqual(arguments[arguments.index("--fields") + 1], "tags")
+                # OCI BucketSummary omits id and the full bucket configuration.
+                return [{key: row[key] for key in ("name", "namespace", "compartment-id", "freeform-tags")}]
+            return row
+        with tempfile.TemporaryDirectory() as directory, patch.object(infra, "JOURNAL", Path(directory) / "journal.json"), \
+                patch.object(infra, "invoke", side_effect=invoke), contextlib.redirect_stdout(io.StringIO()):
+            finish.create_one("bucket", journal, CHILD, payload, lambda: self.fail("No duplicate create"))
+        self.assertEqual(journal["created"]["bucket"]["id"], identifier)
+        self.assertIsNone(journal["pending"])
+    def test_bucket_summary_without_ocid_never_creates_and_get_must_match_pending_id(self):
+        journal = fixture()
+        payload = finish.spec("bucket", journal, CHILD, "controlledfixture")
+        identifier = "ocid1.bucket.oc1.uk-london-1.controlledfixture01"
+        row = {infra.re.sub(r"[A-Z]", lambda m: "-" + m[0].lower(), key): value for key, value in payload.items()}
+        row["namespace"] = row.pop("namespace-name")
+        row["id"] = identifier
+        summary = {key: row[key] for key in ("name", "namespace", "compartment-id", "freeform-tags")}
+        def invoke(arguments):
+            self.assertIn(arguments[2], ("list", "get"))
+            return [summary] if arguments[2] == "list" else row
+        with tempfile.TemporaryDirectory() as directory, patch.object(infra, "JOURNAL", Path(directory) / "journal.json"), \
+                patch.object(infra, "invoke", side_effect=invoke), contextlib.redirect_stdout(io.StringIO()):
+            finish.create_one("bucket", journal, CHILD, payload, lambda: self.fail("Existing bucket cannot create"))
+            self.assertEqual(journal["created"]["bucket"]["id"], identifier)
+            journal["created"]["bucket"]["id"] = "ocid1.bucket.oc1.uk-london-1.differentfixture01"
+            with self.assertRaisesRegex(KeySafetyError, "identity mismatch"):
+                finish.create_one("bucket", journal, CHILD, payload, lambda: self.fail("Cannot create"))
+        self.assertIsNone(journal["pending"])
     def test_attachment_is_exact_tagged_parent_pair_not_a_new_volume(self):
         journal = fixture()
         payload = finish.spec("attachment", journal, CHILD, "controlledfixture")

@@ -1,6 +1,28 @@
-# P1 draft: safe Oracle tooling/key gate and bounded capacity retries
+# P1 draft: verified host identity and data mount; bucket reconciliation held
+
+## Current result (supersedes historical checkpoints below)
+
+P1 remains **INCOMPLETE**, P2 **NOT STARTED**. No merge, production deployment, DNS/env/provider/data/runner/acceptance change. Existing resources are reused, never recreated. Owner-confirmed Notifications email independently reads **ACTIVE**. Console-first missing fingerprint led only to the exact conditional temporary IAM permission approved by the owner. One public-fingerprint command succeeded; policy/group deleted and independently absent; guest key matched over Bastion and was pinned, verification session deleted. Recorded ext4 UUID mount survived reboot, single format only. All IDs/statuses and the current hold are in `docs/evidence/oracle-p1-visibility-resources.json`; explanation is `docs/evidence/oracle-p1-visibility.md`.
+
+**Failed-check gate:** one existing bucket remains pending final read-back. Oracle's BucketSummary omits tags by default and has no OCID. `--fields tags` and pending-first reconciliation repaired the first bindings; the next actual read stopped with `Invalid local public OCI identifier; no request made.` before the follow-up full GET. Failed-step limit reached: further provisioning stopped. The final narrow full-GET identity patch is prepared and unit-tested, **not run live**. Durable bucketReadback hold/pending ID remain; renew current-source CLI proof and explicitly reopen only that repair before any later OCI continuation. Do not infer a capacity/auth/paid-tier problem, re-create the bucket or clear the hold generically.
+
+**Security review:** signed Bastion Session API returned no gateway public key. Isolated outer first-use recording was restricted to public guest keyscan, no guest login/commands/secrets/agent forwarding. Guest fingerprint still required the independent authenticated OCI source; actual guest SSH uses pinned `StrictHostKeyChecking=yes`. Outer gateway key is not claimed out-of-band verified. This is documented explicitly, not a blanket host-check exception. No CSP/RLS/application-auth change.
+
+**Verification:** 123 Linux units PASS with actual ID-less BucketSummary/no-second-create/wrong-GET-ID, fingerprint mismatch/cleanup, blank-disk/exact-UUID/no-reformat/reboot cases. Six actual pinned-CLI suites PASS again on the final BucketSummary/hold source (98.010s), cloud/socket/browser clients intercepted. Source/history scan 806 tracked files/whitespace PASS. Full release checks in this delivery: 930 unit tests/141 files + 199 legacy, strict TS/zero-warning lint PASS. These source-only checks do not clear the live hold. Earlier implementation 06cea4a had ten green hosted checks; this head needs fresh CI.
+
+### Current test plan / manual steps
+
+1. Run Linux key/infrastructure units and `npm run verify:release`; source/history audit must show no private keys/state/credentials. All fixtures are disposable, no real employer calls.
+2. Review the exact IAM group/policy scope, independent cleanup absence, gateway bootstrap limitation, actual pinned guest fingerprint and recorded UUID/no-second-format evidence. No screenshots required: infrastructure-only and raw Console/auth capture forbidden.
+3. Reproduce ID-less BucketSummary using the test fixture; full GET identity/spec must match the persisted pending ID, otherwise fail; no `create` path allowed for the existing bucket. Current stop must prevent auth/API calls.
+4. Do not run provisioning while held. An authorised next specific continuation renews source-bound CLI proof, reconciles only that recorded bucket, verifies exact empty bytes/final network/free totals, and only then may mark P1 PASS/start separate P2 draft.
+5. No migrations/new app env names. Notification confirmation is done. Supabase/Google/DNS/SMTP/config-value owner gates remain for later phases; exact YES CUTOVER remains mandatory. Preview/production test-account checks wait for protected mock staging, never production or a real employer.
+
+## Historical checkpoints (not current status or retry authority)
 
 ## What and why
+
+**Resume follow-up (read-only, permission decision pending):** fresh owner browser SecurityToken login verified. VM/Run Command plugin are RUNNING, but the tenancy has zero dynamic groups and no relevant execution policy in root/ir35. No remote command or IAM expansion submitted. Explicitly awaiting approval for an exact-VM temporary dynamic group plus compartment-only command-execution permission with instance equality, public SSH fingerprint only and cleanup, or owner-assisted authenticated console verification. Current SSH identity hold remains; no formatting/provisioning/P2/production work. All ten hosted checks on implementation head `06cea4a` passed; this documentation follow-up is not a new implementation/runtime PASS.
 
 **Latest status — encryption fixed, P1 incomplete at SSH identity verification:** verified platform image/PV types, enabled only the existing VM's encryption flag once, waited through its owner-approved reboot, verified instance/boot encryption true and attached the same 100 GB volume once with encryption. False instance flag blocks before any attachment API; encrypted reuse and redacted service diagnostics are tested. No VM/volume recreation or unencrypted fallback. Boot LIST's actual instance-typed ID is handled by checking the exact instance/boot pair, without repeating update.
 

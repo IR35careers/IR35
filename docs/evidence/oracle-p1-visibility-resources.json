@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-20T12:11:32.123030+00:00",
+  "checkedAt": "2026-10-20T14:43:55.246810+00:00",
   "phase": "P1",
   "phaseComplete": false,
   "resources": [
@@ -300,7 +300,7 @@
     {
       "kind": "attachment",
       "id": "ocid1.volumeattachment.oc1.uk-london-1.anwgiljrr72xucycxrovxjhm7q2aoudyr55wnguk6uaivoguk73cj27uwkfa",
-      "verifiedAt": "2026-10-20T11:58:54.071652+00:00",
+      "verifiedAt": "2026-10-20T14:27:29.415813+00:00",
       "readback": "PASS",
       "visibility": [
         {
@@ -317,11 +317,45 @@
           "attempt": 2,
           "elapsedSeconds": 14.159,
           "result": "VISIBLE"
+        },
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 2.176,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "topic",
+      "id": "ocid1.onstopic.oc1.uk-london-1.amaaaaaar72xucyaza6ptxuckfqx6fo5zmahujcmb4kppa5lq7api63x3wnq",
+      "verifiedAt": "2026-10-20T14:28:08.883827+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "topic",
+          "attempt": 1,
+          "elapsedSeconds": 1.917,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "subscription",
+      "id": "ocid1.onssubscription.oc1.uk-london-1.aaaaaaaa527jk72peqpttzhzpeiyw7jdnfkspi5tnw2yqpbhbd2yoap5olpa",
+      "verifiedAt": "2026-10-20T14:28:48.342678+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "subscription",
+          "attempt": 1,
+          "elapsedSeconds": 1.679,
+          "result": "VISIBLE"
         }
       ]
     }
   ],
-  "pendingKind": null,
+  "pendingKind": "bucket",
   "capacityAttempts": 1,
   "publicIP": "132.145.28.134",
   "bootVolumeId": "ocid1.bootvolume.oc1.uk-london-1.abwgiljrb6mkmzdedzxo2bg6mukon3xpax5jei6l32qyu25l7wehajwu6bdq",
@@ -336,10 +370,10 @@
     "noDefaultSecurityListAttached": true
   },
   "blocker": {
-    "kind": "sshHostTrust",
-    "code": "ConsoleFingerprintMissing",
+    "kind": "bucketReadback",
+    "code": "BucketSummaryIdentifierMissing",
     "status": null,
-    "operation": "authenticated-host-key-check",
+    "operation": "os-bucket-readback",
     "realFailure": true
   },
   "encryptionRepair": {
@@ -348,18 +382,33 @@
     "complete": true
   },
   "bootEncryption": {
-    "isPvEncryptionInTransitEnabled": true,
-    "lifecycleState": null
+    "isPvEncryptionInTransitEnabled": true
   },
   "sshHostTrust": {
-    "status": "FAIL",
-    "reason": "Full OCI console snapshot contains no SHA256 host fingerprint; no authenticated pin available.",
-    "consoleHistoryId": "ocid1.consolehistory.oc1.uk-london-1.anwgiljrr72xucycm6e5gfyzhguq3ukagiihfogvvmegthjrajmixsea5cdq",
-    "snapshotCharacters": 120684,
-    "consoleFingerprintCount": 0,
-    "sshAttempted": false,
-    "formatAttempted": false
+    "status": "PASS",
+    "fingerprint": "SHA256:LXG3TxAqJf2PT3Y8Zf0mi7mE0UeXd9BUYApmptWVX4o",
+    "viaBastion": true
   },
+  "gatewayTrustMethod": "first-use-gateway-public-scan-only;not-out-of-band-verified",
+  "diagnosticCleanup": {
+    "consoleCaptureDeleted": true,
+    "temporaryPolicyDeleted": true,
+    "temporaryGroupDeleted": true,
+    "verificationSessionDeleted": true
+  },
+  "guestMount": {
+    "mounted": true,
+    "uuid": "ccf200ea-4ebb-4775-b7ce-75f5074de79d",
+    "device": "/dev/sdb",
+    "filesystem": "ext4",
+    "mountpoint": "/opt/ir35/data",
+    "df": "Filesystem     Type  Size  Used Avail Use% Mounted on\n/dev/sdb       ext4   98G   24K   97G   1% /opt/ir35/data",
+    "bootIdChanged": true,
+    "reusedRecordedFilesystem": true
+  },
+  "resourceProvisioningComplete": false,
+  "notificationSubscriptionState": "ACTIVE",
+  "ownerAction": null,
   "attachmentDiagnostic": {
     "matchingAttachmentCount": 0,
     "instanceState": "RUNNING",

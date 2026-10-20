@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import re
 import sys
 
 from bootstrap_audit import ocid
@@ -13,7 +14,8 @@ import p1_finish as finish
 from security_session import private_file
 
 
-def public_report(control_journal, infrastructure):
+def public_report(control_journal, infrastructure, identity=None):
+    identity = identity or {}
     resources = []
     for source, journal in (("control", control_journal), ("infrastructure", infrastructure)):
         for kind, entry in journal.get("created", {}).items():
@@ -27,7 +29,29 @@ def public_report(control_journal, infrastructure):
                 row["effectiveLimits"] = entry.get("effectiveReadback", {}).get("limits")
             resources.append(row)
     pending = infrastructure.get("pending") or control_journal.get("pending")
-    return {"checkedAt": datetime.now(timezone.utc).isoformat(), "phase": "P1", "phaseComplete": False,
+    trust = infrastructure.get("sshHostTrust", {})
+    fingerprint = trust.get("fingerprint")
+    if fingerprint is not None and not re.fullmatch(r"SHA256:[A-Za-z0-9+/]{43}", fingerprint):
+        raise KeySafetyError("Invalid public fingerprint metadata; no export.")
+    mount = infrastructure.get("dataMountIntent", {})
+    reboot = mount.get("rebootVerified", {})
+    boot_changed = bool(mount.get("prepared", {}).get("bootId") and reboot.get("bootId")
+                        and mount["prepared"]["bootId"] != reboot["bootId"])
+    cleanup = {"consoleCaptureDeleted": identity.get("console", {}).get("deleted") is True,
+               "temporaryPolicyDeleted": identity.get("temporaryIam", {}).get("policy", {}).get("deleted") is True,
+               "temporaryGroupDeleted": identity.get("temporaryIam", {}).get("group", {}).get("deleted") is True,
+               "verificationSessionDeleted": identity.get("bastionVerification", {}).get("deleted") is True}
+    gateway = identity.get("bastionVerification", {}).get("gatewayTrustMethod")
+    if gateway not in (None, "signed-API-public-key", "first-use-gateway-public-scan-only;not-out-of-band-verified"):
+        raise KeySafetyError("Unexpected gateway trust metadata; no export.")
+    subscription = infrastructure.get("created", {}).get("subscription", {}).get("subscriptionState")
+    mount_verified = (reboot.get("mounted") is True and reboot.get("uuid") == mount.get("uuid")
+                      and bool(mount.get("uuid")) and reboot.get("filesystem") == "ext4"
+                      and reboot.get("mountpoint") == "/opt/ir35/data")
+    complete = (infrastructure.get("resourceProvisioningComplete") is True and infrastructure.get("guestMountComplete") is True
+                and trust.get("status") == "PASS" and bool(fingerprint) and boot_changed and mount_verified and all(cleanup.values())
+                and subscription == "ACTIVE" and not infrastructure.get("stop") and not pending)
+    return {"checkedAt": datetime.now(timezone.utc).isoformat(), "phase": "P1", "phaseComplete": complete,
             "resources": resources, "pendingKind": pending.get("kind") if pending else None,
             "capacityAttempts": len(infrastructure.get("capacity", {}).get("attempts", [])),
             "publicIP": infrastructure.get("computeReadback", {}).get("publicIP"),
@@ -38,9 +62,16 @@ def public_report(control_journal, infrastructure):
             "encryptionRepair": {key: infrastructure.get("encryptionRepair", {}).get(key) for key in
                                  ("instanceEncryptionEnabled", "attachmentEncryptionEnabled", "complete")},
             "bootEncryption": {key: infrastructure.get("encryptionRepair", {}).get("bootEncryption", {}).get(key) for key in
-                               ("isPvEncryptionInTransitEnabled", "lifecycleState")},
+                               ("isPvEncryptionInTransitEnabled",)},
             "sshHostTrust": {key: infrastructure.get("sshHostTrust", {}).get(key) for key in
-                             ("status", "reason", "consoleHistoryId", "snapshotCharacters", "consoleFingerprintCount", "sshAttempted", "formatAttempted")},
+                             ("status", "fingerprint", "viaBastion")},
+            "gatewayTrustMethod": gateway,
+            "diagnosticCleanup": cleanup,
+            "guestMount": {**{key: reboot.get(key) for key in ("mounted", "uuid", "device", "filesystem", "mountpoint", "df")},
+                           "bootIdChanged": boot_changed, "reusedRecordedFilesystem": mount.get("prepared", {}).get("formatPerformed") is False},
+            "resourceProvisioningComplete": infrastructure.get("resourceProvisioningComplete") is True,
+            "notificationSubscriptionState": subscription,
+            "ownerAction": "Confirm Oracle Notifications email subscription" if subscription == "PENDING" else None,
             "attachmentDiagnostic": {key: infrastructure["attachmentDiagnostic"][key] for key in
                                      ("matchingAttachmentCount", "instanceState", "volumeState", "volumeGB", "instancePvEncryptionEnabled", "requestedAttachmentEncryption", "cloudWrites", "createRetried")}
                                     if infrastructure.get("attachmentDiagnostic") else None,
@@ -53,7 +84,9 @@ def main():
         raise KeySafetyError("Fixed metadata export only.")
     control_journal = json.loads(private_file(control.JOURNAL))
     infrastructure = json.loads(private_file(infra.JOURNAL)) if infra.JOURNAL.exists() else {}
-    report = public_report(control_journal, infrastructure)
+    from host_identity_repair import STATE
+    identity = json.loads(private_file(STATE)) if STATE.exists() else {}
+    report = public_report(control_journal, infrastructure, identity)
     target = Path(__file__).resolve().parents[2] / "docs/evidence/oracle-p1-visibility-resources.json"
     target.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("PASS: allowlisted P1 evidence exported; verified resource count=" + str(len(report["resources"])))

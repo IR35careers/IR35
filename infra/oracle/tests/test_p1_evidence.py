@@ -28,8 +28,35 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(report["encryptionRepair"]["complete"])
         self.assertTrue(report["bootEncryption"]["isPvEncryptionInTransitEnabled"])
         self.assertEqual(report["blocker"]["code"], "ConsoleFingerprintMissing")
-        self.assertEqual(report["sshHostTrust"]["consoleFingerprintCount"], 0)
+        self.assertEqual(report["sshHostTrust"]["status"], "FAIL")
         self.assertNotIn("private-sentinel", json.dumps(report))
+
+    def test_phase_pass_requires_reboot_cleanup_and_confirmed_email_not_just_resource_flag(self):
+        infrastructure = {"created": {"subscription": {"id": "ocid1.onssubscription.oc1.uk-london-1.controlledfixture01",
+            "verifiedAt": "2026-10-20T00:00:00Z", "subscriptionState": "PENDING"}}, "resourceProvisioningComplete": True, "guestMountComplete": True,
+            "sshHostTrust": {"status": "PASS", "fingerprint": "SHA256:" + "a" * 43},
+            "dataMountIntent": {"uuid": "controlled-uuid", "prepared": {"bootId": "old"}, "rebootVerified": {
+                "bootId": "new", "mounted": True, "uuid": "controlled-uuid", "filesystem": "ext4", "mountpoint": "/opt/ir35/data"}}}
+        identity = {"console": {"deleted": True}, "temporaryIam": {"policy": {"deleted": True}, "group": {"deleted": True}},
+                    "bastionVerification": {"deleted": True, "gatewayTrustMethod": "first-use-gateway-public-scan-only;not-out-of-band-verified"}}
+        self.assertFalse(public_report({}, infrastructure, identity)["phaseComplete"])
+        infrastructure["created"]["subscription"]["subscriptionState"] = "ACTIVE"
+        self.assertTrue(public_report({}, infrastructure, identity)["phaseComplete"])
+        with self.subTest("a recorded failure always prevents signoff"):
+            infrastructure["stop"] = {"code": "BucketSummaryIdentifierMissing"}
+            self.assertFalse(public_report({}, infrastructure, identity)["phaseComplete"])
+            infrastructure.pop("stop")
+        with self.subTest("a pending bucket always prevents signoff"):
+            infrastructure["pending"] = {"kind": "bucket"}
+            self.assertFalse(public_report({}, infrastructure, identity)["phaseComplete"])
+            infrastructure.pop("pending")
+        with self.subTest("wrong filesystem identity cannot pass"):
+            infrastructure["dataMountIntent"]["rebootVerified"]["uuid"] = "different"
+            self.assertFalse(public_report({}, infrastructure, identity)["phaseComplete"])
+            infrastructure["dataMountIntent"]["rebootVerified"]["uuid"] = "controlled-uuid"
+        with self.subTest("missing fingerprint cannot pass"):
+            infrastructure["sshHostTrust"].pop("fingerprint")
+            self.assertFalse(public_report({}, infrastructure, identity)["phaseComplete"])
 
 
 if __name__ == "__main__":

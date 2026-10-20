@@ -12,19 +12,31 @@ from key_ceremony import KeySafetyError, write_new
 import p1_infrastructure as infra
 from security_session import atomic_metadata, clean_environment, command, ensure_session, private_file
 from ssh_agent_session import ensure_agent
-from visibility import OciError, wait_for_visible
+from visibility import OciError, wait_for_visible, call_timeout
 
 HOST_JOURNAL = KEY_DIRECTORY / "p1-ssh-hostkey.json"
 KNOWN_HOSTS = KEY_DIRECTORY / "oracle-staging-known-hosts"
 
 
-def match_host_key(ip, keyscan, console):
+class SshNotReady(KeySafetyError):
+    """Connection transport only; authentication/key errors are never transient."""
+
+
+def connection_not_ready(code, stderr):
+    if code != 255 or re.search(r"(?i)permission denied|host key verification failed|identification has changed|no .*host key is known", stderr):
+        return False
+    return bool(re.search(r"(?i)connection refused|connection timed out|connection reset|connection closed by|no route to host", stderr))
+
+
+def match_host_key(ip, keyscan, console, algorithm="ed25519"):
     console_fingerprints = re.findall(r"SHA256:[A-Za-z0-9+/]{43}", console)
     if not console_fingerprints:
         raise KeySafetyError("Oracle console snapshot contains no SHA256 host fingerprint; SSH identity is unverified, not a proven changed key. No trust bypass.")
     rows = [line for line in keyscan.splitlines() if line and not line.startswith("#")]
-    if len(rows) != 1 or not re.fullmatch(re.escape(ip) + r" ssh-ed25519 [A-Za-z0-9+/=]{68}", rows[0]):
-        raise KeySafetyError("Expected one exact public-IP Ed25519 host key; no host trust enrolled.")
+    key_pattern = {"ed25519": r"ssh-ed25519 [A-Za-z0-9+/=]{68}",
+                   "ecdsa": r"ecdsa-sha2-nistp(?:256|384|521) [A-Za-z0-9+/=]{80,512}"}.get(algorithm)
+    if not key_pattern or len(rows) != 1 or not re.fullmatch(re.escape(ip) + " " + key_pattern, rows[0]):
+        raise KeySafetyError("Expected one exact public-IP supported host key; no host trust enrolled.")
     result = subprocess.run(["ssh-keygen", "-lf", "-", "-E", "sha256"], input=rows[0] + "\n", capture_output=True, text=True, timeout=5, check=False)
     match = re.search(r"SHA256:[A-Za-z0-9+/]{43}(?=\s|$)", result.stdout)
     if result.returncode or not match or match[0] not in console_fingerprints:
@@ -113,12 +125,14 @@ def run_remote(source, arguments, *, timeout=65):
     options = ["BatchMode=yes", "IdentitiesOnly=yes", "StrictHostKeyChecking=yes", "PasswordAuthentication=no", "KbdInteractiveAuthentication=no",
                "ForwardAgent=no", "ClearAllForwardings=yes", "ConnectTimeout=10", "ServerAliveInterval=10", "ServerAliveCountMax=3",
                "UserKnownHostsFile=" + str(KNOWN_HOSTS), "GlobalKnownHostsFile=/dev/null", "IdentityAgent=" + agent["socket"]]
-    args = ["ssh", *[item for option in options for item in ("-o", option)], "-i", str(KEY_DIRECTORY / "ssh_ed25519"),
+    args = ["ssh", "-F", "/dev/null", *[item for option in options for item in ("-o", option)], "-i", str(KEY_DIRECTORY / "ssh_ed25519"),
             "ubuntu@" + state["publicIP"], shlex.join(["sudo", "-n", "/usr/bin/python3", "-u", "-", *arguments])]
     environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE")}
     environment["SSH_AUTH_SOCK"] = agent["socket"]
-    result = subprocess.run(args, input=source, capture_output=True, text=True, timeout=timeout, env=environment, check=False)
+    result = subprocess.run(args, input=source, capture_output=True, text=True, timeout=call_timeout(timeout), env=environment, check=False)
     if result.returncode:
+        if connection_not_ready(result.returncode, result.stderr):
+            raise SshNotReady("SSH transport unavailable; only an explicit reboot wait may poll this condition.")
         # Only the controlled remote program's JSON errors are safe to retain.
         try:
             error = json.loads(result.stdout.splitlines()[-1])["error"]

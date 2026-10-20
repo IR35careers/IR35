@@ -1,6 +1,55 @@
 # P1 visibility and idempotency continuation —20October2026
 
+## Current checkpoint: owner email ACTIVE; P1 held on bucket read-back
+
+The owner confirmed the Notifications email. An independent signed subscription GET now reports **ACTIVE** and exact topic/EMAIL endpoint/spec match; no second subscription or confirmation-token capture. Topic and subscription OCIDs are in the allowlisted [resource evidence](oracle-p1-visibility-resources.json). This proves confirmation, not a P8 alarm-delivery drill.
+
+| Check | Current result |
+| --- | --- |
+| Instance, boot and same 100 GB PV data encryption | PASS; no repeated instance update/attach |
+| Fresh console-first capture, 10 MB bounded RAM read | No fingerprint block; owned fresh capture deleted, GET404 |
+| Conditional exact-VM temporary group/policy | Public-fingerprint command succeeded once; both deleted, GET404 and LIST absence |
+| Guest ED25519 fingerprint over approved Bastion path | PASS, independently matched and pinned |
+| Verification Bastion session cleanup | PASS, DELETED |
+| Unique blank 100 GiB disk / ext4 / UUID / nofail / reboot | PASS; one format only, boot ID changed, mount present without manual mount |
+| Notifications topic and owner-confirmed email | PASS; ACTIVE |
+| Existing backup bucket final identity/empty listing | HELD; bucket exists, final reconciliation incomplete |
+| Whole P1 / P2 | NOT PASS / NOT STARTED |
+| Production, DNS, Vercel, Supabase, real employers, runner/acceptance | Unchanged / no actions |
+
+Public guest fingerprint only: **`SHA256:LXG3TxAqJf2PT3Y8Zf0mi7mE0UeXd9BUYApmptWVX4o`**. No raw console, host public-key material, private keys or command output containing credentials is exported. Temporary group, policy and short-lived verification session IDs remain in the private cleanup journal, not published as live resources. The older initial diagnostic console snapshot is not claimed deleted by cleanup of the new owner-requested capture.
+
+**Gateway trust limitation:** signed Session GET (including a raw signed HTTPS check) returned a null Bastion public gateway key. The only outer-gateway first-use recording was an isolated **public keyscan**, with no guest login, guest command, password, secrets or agent forwarding. Guest identity still had to match the authenticated OCI Run Command fingerprint before enrollment. Subsequent guest commands use the pinned key and `StrictHostKeyChecking=yes`. The outer gateway key is **not** claimed independently/out-of-band verified. Changed/mismatched guest or gateway keys never get overwritten. This narrowly scoped bootstrap decision and tests must remain visible in review.
+
+Guest data disk `/dev/sdb`, recorded UUID `ccf200ea-4ebb-4775-b7ce-75f5074de79d`; final `df -hT`: ext4, **98G size, 24K used, 97G available, 1%, /opt/ir35/data**. A post-mkfs lsblk read-back lag stopped before mount; direct blkid proved the recorded UUID, udev was refreshed, and the resumed preparation reported **formatPerformed=false**. No second format. Fstab uses UUID/nofail; reboot verification did not invoke mount. Host hardening/Docker/app deployment remains P2+.
+
+### Failed-step stop and prepared repair (not executed live)
+
+1. After exactly one bucket create, `os bucket list` omitted tags by default. Strict ownership validation correctly stopped. Official [BucketSummary documentation](https://docs.oracle.com/en-us/iaas/tools/oci-cli/latest/oci_cli_docs/cmdref/os/bucket/list.html) requires `--fields tags`; requesting that does not weaken collision checks.
+2. The first resumed finish run stopped locally at `Pending finish resource must reconcile before any create.` It revisited completed associations before the pending bucket. No create call ran. Pending-first ordering and a unit regression were added; six actual installed-CLI suites passed again.
+3. The next resumed read-back stopped at **`Invalid local public OCI identifier; no request made.`** Specifically, BucketSummary also has **no OCID**; the local ID check failed before the follow-up full bucket GET, not before every read-only LIST. No duplicate create or configuration change ran. This reached the failed-step limit; no more provisioning attempt, P2 start or automatic loop.
+
+The proposed narrow fix is now source-prepared: exact LIST name/tags/parent existence, then **independent full bucket GET** for OCID and full spec, comparing it with the persisted pending ID. Tests now model an actual ID-less BucketSummary, reject mismatched GET identity and prove no create for an existing bucket. **123 Linux units PASS**. The private durable stop is `bucketReadback / BucketSummaryIdentifierMissing`, pending ID preserved. This repair has **not** been executed against OCI, and final-current-source CLI proof must be renewed before any authorised continuation. No cloud API retry was made after recording this hold.
+
+Full release checks earlier in this delivery passed strict TS/zero-warning lint, **930 unit tests/141 files + 199 legacy checks**. After the final source-only BucketSummary/hold patch, **all six actual installed-CLI suites PASS again (98.010 seconds)**, clients intercepted before cloud/socket/browser operations. All **123 Linux units PASS**; source/history scan passes **806 tracked files**, whitespace check PASS. This is offline verification, not permission to clear the live hold or a bucket read-back PASS. All ten hosted checks were successful on earlier implementation `06cea4a`; the next pushed head needs its own CI. Public evidence exports only metadata, names/counts/hashes/allowed public OCIDs, with 14 independently verified resources and a pending bucket, **phaseComplete=false**.
+
+Allocation remains one A1 **2 OCPU / 12 GB**, **50 GB boot + 100 GB block**, public IP **132.145.28.134**, London. Fresh signed free/account/tenancy usage/cost/budget checks preceded actual creates. Existing £1 budget/100% ACTUAL alert remains; a budget is not a cap and lagging zero cost rows are not real-time £0 billing proof. Final bucket bytes/network/aggregate phase read-back remains outstanding. No upgrade, paid plan, extra volume, data migration or production change.
+
+## Historical checkpoints (not current status or retry authority)
+
 ## Latest checkpoint: encryption PASS, SSH identity check STOP
+
+**Active owner-specific continuation:** fresh console-first capture/retrieval completed; no explicit fingerprint block; new capture deleted with independent GET404. Owner's conditional exact-VM IAM fallback is now approved and executing. Exact group and restricted policy read back correctly; one public-fingerprint command remains ACCEPTED during the documented propagation window. Temporary IAM cleanup is not yet proven, and no guest host key is pinned. New tests pass 113 Linux units; no disk format/mount/P2/production work. Do not interpret the historical “permission decision pending” paragraph below as current. Final results will supersede this in-flight checkpoint.
+
+### Resume audit: Run Command prerequisite absent; no IAM expansion
+
+After the owner requested resume, SecurityToken refresh failed before the first instance read. One normal browser sign-in completed and was verified, with owner confirmation; no API/SSH passphrase. Signed instance GET and complete plugin LIST confirm RUNNING VM and **Compute Instance Run Command: RUNNING**. Signed tenancy dynamic-group LIST contains **zero groups**. Root and ir35 policy LISTs contain **zero relevant dynamic-group/instance-agent execution grants**. These calls are read-only; no command was created, no IAM permission changed and no instance/volume/console capture was repeated.
+
+Oracle's [Run Command IAM instructions](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/instances.htm#Run) require an instance dynamic group plus command-execution permission. Plugin RUNNING alone is not execution proof. The requested permission repair is **not yet approved or executed**: one temporary group matching only this existing staging VM, one ir35-only `instance-agent-command-execution-family` permission constrained by `request.instance.id=target.instance.id`, no Object Storage/admin/database grants, and removal of the temporary group/policy after authenticated public host-key retrieval and comparison. Existing owner caller privileges remain unchanged. Owner-assisted authenticated console verification is the alternative; no insecure SSH fallback. Dynamic-group propagation may take up to 30 minutes according to Oracle; no remote command result or timeout is claimed.
+
+All ten hosted checks on implementation commit `06cea4ade0e2e1ffe0d84e8c48ef642635563d6d` passed, including native ARM mock, Docker/Postgres standby and three responsive browser projects. It remains draft/unmerged. That is not P1 success, VM health or new-head documentation CI. No GitHub deployment was recorded for that implementation head at read-back. P1 resource/guest work remains paused awaiting the new narrow IAM decision or authenticated owner console evidence.
+
+### Completed encryption repair (unchanged)
 
 Owner-authorised in-place repair executed on the existing Always Free A1 (2 OCPU / 12 GB, London), not a replacement VM:
 

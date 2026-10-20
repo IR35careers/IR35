@@ -83,7 +83,9 @@ def args(kind, operation, payload, child, resource_id=None):
         if kind == "subscription":
             result += ["--topic-id", payload["topicId"]]
         if kind == "bucket":
-            result += ["--namespace-name", payload["namespaceName"]]
+            # BucketSummary excludes tags unless explicitly requested. Keep the
+            # collision check strict rather than treating absent tags as owned.
+            result += ["--namespace-name", payload["namespaceName"], "--fields", "tags"]
         return result
     raise KeySafetyError("Unsupported finish operation.")
 
@@ -94,6 +96,20 @@ def rows(value):
     if not isinstance(value, list) or not all(isinstance(row, dict) for row in value):
         raise KeySafetyError("Incomplete resource list; no second create.")
     return value
+
+
+def reconciliation_order(journal):
+    kinds = ("attachment", "topic", "subscription", "bucket")
+    pending = journal.get("pending")
+    if not pending:
+        return kinds
+    kind = pending.get("kind")
+    if kind not in kinds:
+        raise KeySafetyError("Unknown pending finish resource; no create.")
+    # Resolve the durable pending intent before revisiting completed parents.
+    # create_one still rejects any different pending kind, preserving no-duplicate
+    # protection when the previous process stopped after a successful create.
+    return (kind, *(item for item in kinds if item != kind))
 
 
 def matches(kind, payload, child):
@@ -152,7 +168,11 @@ def create_one(kind, journal, child, payload, eligibility, *, prerequisite=None)
         found = matches(kind, payload, child)
         entry = {"kind": kind, "spec": payload}
         if found:
-            entry["id"] = resource_id(kind, found[0])
+            # BucketSummary has no OCID. Its strict name/tags/compartment
+            # match proves existence, not the full identity: get that below
+            # from an independent bucket GET, never create another bucket.
+            if kind != "bucket":
+                entry["id"] = resource_id(kind, found[0])
         else:
             entry["eligibility"] = eligibility()
         journal["pending"] = entry
@@ -165,15 +185,15 @@ def create_one(kind, journal, child, payload, eligibility, *, prerequisite=None)
     def read():
         found = matches(kind, payload, child)
         identifier = entry.get("id")
-        if found:
+        if found and kind != "bucket":
             found_id = resource_id(kind, found[0])
             if identifier and identifier != found_id:
                 raise KeySafetyError("Finish identity changed; no create.")
             identifier = found_id
-        if not identifier:
+        if not identifier and not (kind == "bucket" and found):
             return None
         observed = infra.invoke(args(kind, "get", payload, child, identifier))
-        if resource_id(kind, observed) != identifier:
+        if identifier and resource_id(kind, observed) != identifier:
             raise KeySafetyError("Independent finish GET identity mismatch.")
         if kind == "subscription":
             entry["subscriptionState"] = observed.get("lifecycle-state")
@@ -199,7 +219,9 @@ def main():
         fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
         journal = json.loads(private_file(infra.JOURNAL))
         if journal.get("stop"):
-            raise KeySafetyError("P1 held on recorded real attachment400; no further create or automatic retry.")
+            raise KeySafetyError("P1 held on recorded real failure; no further create or automatic retry.")
+        if journal.get("guestMountComplete") is not True:
+            raise KeySafetyError("Verified UUID mount and reboot persistence required before remaining P1 creates.")
         cp = json.loads(private_file(control.JOURNAL))
         child = cp["created"]["compartment"]["id"]
         ad = journal["created"]["instance"]["spec"]["availabilityDomain"]
@@ -213,7 +235,7 @@ def main():
         namespace = client.read("namespace")
         if not isinstance(namespace, str) or not re.fullmatch(r"[a-z0-9]{1,63}", namespace):
             raise KeySafetyError("Invalid private bucket namespace metadata.")
-        for kind in ("attachment", "topic", "subscription", "bucket"):
+        for kind in reconciliation_order(journal):
             payload = spec(kind, journal, child, namespace)
             create_one(kind, journal, child, payload, lambda: infra.fresh_eligibility(client, journal, ad),
                        prerequisite=(lambda: attachment_prerequisite(journal, payload)) if kind == "attachment" else None)
@@ -228,6 +250,8 @@ def main():
         # Empty full listing + never-versioned bucket is exact zero byte proof.
         report["objectStorage"]["exactBytesProven"] = True
         journal["finalStorageReadback"] = reconcile(report)
+        from p1_compute import verify_network
+        journal["finalNetworkReadback"] = verify_network(journal)
         journal["resourceProvisioningComplete"] = True
         atomic_metadata(infra.JOURNAL, journal)
         print("P1 resources PASS: one2/12VM, live150GB, emptyprivateStandardbucket0bytes, no broadSSH. Email subscription confirmation/delivery remains owner/P8 check. No production/app deploy.", flush=True)

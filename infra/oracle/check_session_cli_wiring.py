@@ -1,5 +1,6 @@
 """Actual pinned CLI parser, stopped before socket, browser or cloud operations."""
 import contextlib
+import base64
 import io
 import tempfile
 from pathlib import Path
@@ -18,6 +19,8 @@ if _FINISH:
     _prefix = {"attachment": ["compute", "volume-attachment"], "topic": ["ons", "topic"], "subscription": ["ons", "subscription"], "bucket": ["os", "bucket"]}[_kind]
     sys.argv = ["oci", *_prefix, "attach-paravirtualized-volume" if _kind == "attachment" and _operation == "create" else _operation]
 _EXTRA_OPERATIONS = {
+    "owner-history-content": ["compute", "console-history", "get-content", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01", "--length", "10000000", "--offset", "0", "--file", "-"],
+    "history-delete": ["compute", "console-history", "delete", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01", "--force"],
     "history-list": ["compute", "console-history", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],
     "history-capture": ["compute", "console-history", "capture", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--display-name", "ir35-ssh-hostkey-bootstrap", "--freeform-tags", '{"ir35-phase":"P1"}'],
     "history-get": ["compute", "console-history", "get", "--instance-console-history-id", "ocid1.consolehistory.oc1.uk-london-1.controlledfixture01"],
@@ -31,6 +34,28 @@ _EXTRA_OPERATIONS = {
     "boots": ["compute", "boot-volume-attachment", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--availability-domain", "fixture:UK-LONDON-1-AD-1", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],
     "boot": ["bv", "boot-volume", "get", "--boot-volume-id", "ocid1.bootvolume.oc1.uk-london-1.controlledfixture01"],
 }
+import host_identity_iam
+_iam_specs = host_identity_iam.specs("ocid1.instance.oc1.uk-london-1.controlledfixture01", "ocid1.compartment.oc1..controlledfixture01",
+                                      "ocid1.tenancy.oc1..controlledfixture01", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+for _iam_kind in ("group", "policy"):
+    for _iam_operation in ("create", "get", "list", "delete"):
+        _EXTRA_OPERATIONS["hostkey-" + _iam_kind + "-" + _iam_operation] = host_identity_iam.args(_iam_kind, _iam_operation, _iam_specs[_iam_kind],
+            "ocid1." + ("dynamicgroup" if _iam_kind == "group" else "policy") + ".oc1..controlledfixture01")
+_EXTRA_OPERATIONS.update({
+    "hostkey-command-create": host_identity_iam.command_args(host_identity_iam.command_payload("ocid1.instance.oc1.uk-london-1.controlledfixture01", "ocid1.compartment.oc1..controlledfixture01")),
+    "hostkey-command-get": ["instance-agent", "command", "get", "--command-id", "ocid1.instanceagentcommand.oc1.uk-london-1.controlledfixture01"],
+    "hostkey-command-list": ["instance-agent", "command", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--all"],
+    "hostkey-command-execution": ["instance-agent", "command-execution", "get", "--command-id", "ocid1.instanceagentcommand.oc1.uk-london-1.controlledfixture01", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01"],
+})
+import host_identity_bastion
+_bastion_spec = host_identity_bastion.payload("ocid1.bastion.oc1.uk-london-1.controlledfixture01", "ocid1.instance.oc1.uk-london-1.controlledfixture01",
+    "10.35.1.8", "ssh-ed25519 " + base64.b64encode(b"\0\0\0\x0bssh-ed25519\0\0\0\x20" + b"\0" * 32).decode())
+_EXTRA_OPERATIONS.update({
+    "bastion-session-create": host_identity_bastion.create_args(_bastion_spec),
+    "bastion-session-get": ["bastion", "session", "get", "--session-id", "ocid1.bastionsession.oc1.uk-london-1.controlledfixture01"],
+    "bastion-session-delete": ["bastion", "session", "delete", "--session-id", "ocid1.bastionsession.oc1.uk-london-1.controlledfixture01", "--force"],
+    "bastion-session-list": ["bastion", "session", "list", "--bastion-id", "ocid1.bastion.oc1.uk-london-1.controlledfixture01", "--all"],
+})
 _EXTRA = sys.argv[2] if len(sys.argv) == 3 and sys.argv[1] == "--extra-wiring" and sys.argv[2] in _EXTRA_OPERATIONS else None
 if _EXTRA:
     sys.argv = ["oci", *_EXTRA_OPERATIONS[_EXTRA][:3]]
@@ -84,10 +109,15 @@ class CliWiringTests(unittest.TestCase):
         # The real get-content --file - command requires stdout.buffer. Use a
         # binary-capable private sink, not StringIO; retain client interception.
         captured = io.TextIOWrapper(io.BytesIO(), encoding="utf-8")
-        with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
+        with tempfile.TemporaryDirectory() as directory, patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
+            operation = _EXTRA_OPERATIONS[name][:]
+            if name == "bastion-session-create":
+                public_key = Path(directory) / "fixture.pub"
+                public_key.write_text(_bastion_spec["keyDetails"]["publicKeyContent"])
+                operation[operation.index("--ssh-public-key-file") + 1] = str(public_key)
             try:
                 with contextlib.redirect_stdout(captured), contextlib.redirect_stderr(io.StringIO()):
-                    cli.main(args=security_session.command(_EXTRA_OPERATIONS[name])[1:], standalone_mode=False)
+                    cli.main(args=security_session.command(operation)[1:], standalone_mode=False)
             except BaseException:
                 pass
             self.assertEqual(client.call_count, 1, name + ": parser failed; raw output suppressed.")
