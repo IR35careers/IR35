@@ -1,0 +1,102 @@
+{
+  "phase": "P3",
+  "phaseComplete": false,
+  "checkedAt": "2026-10-20T19:30:42.625527+00:00",
+  "image": "supabase/postgres:17.6.1.136@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+  "nativeImage": {
+    "status": "PASS",
+    "platform": "linux/arm64",
+    "image": "supabase/postgres:17.6.1.136@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+    "imageId": "sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+    "sizeBytes": 1746666817,
+    "elapsedSeconds": 35.499
+  },
+  "extensionProbe": {
+    "serverVersion": "17.6",
+    "serverVersionNum": 170006,
+    "encoding": "UTF8",
+    "collation": "C.UTF-8",
+    "extensions": [
+      {
+        "name": "pg_stat_statements",
+        "version": "1.11",
+        "available": true,
+        "loaded": true,
+        "exercised": true,
+        "sqlstate": null
+      },
+      {
+        "name": "pgcrypto",
+        "version": "1.3",
+        "available": true,
+        "loaded": true,
+        "exercised": true,
+        "sqlstate": null
+      },
+      {
+        "name": "plpgsql",
+        "version": "1.0",
+        "available": true,
+        "loaded": true,
+        "exercised": true,
+        "sqlstate": null
+      },
+      {
+        "name": "supabase_vault",
+        "version": "0.3.1",
+        "available": true,
+        "loaded": true,
+        "exercised": true,
+        "sqlstate": null
+      },
+      {
+        "name": "uuid-ossp",
+        "version": "1.1",
+        "available": true,
+        "loaded": true,
+        "exercised": true,
+        "sqlstate": null
+      }
+    ],
+    "status": "PASS",
+    "network": "none",
+    "publicPorts": [],
+    "customerRows": 0,
+    "probeContainer": "ir35-p3-extension-probe",
+    "elapsedSeconds": 1.414
+  },
+  "remainingGates": [
+    "Official slim Compose review/pins and fresh target migrations/schema diff",
+    "Protected staging DNS and Caddy runtime-secret custody",
+    "Private Auth configuration export later in P7"
+  ],
+  "stages": {
+    "pull": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "152c57fdd90e7247855fa86859d333de7392d3c62b18c28eb2a374758bb3b282"
+    },
+    "probe": {
+      "status": "PASS",
+      "attempts": 2,
+      "sourceSHA256": "717c6b8526fa262cd5fb60723f98c60335fa985b6ce1482f706bee2cabe1ee3f"
+    },
+    "diagnose": {
+      "status": "DIAGNOSED",
+      "attempts": 2,
+      "sourceSHA256": "6296cff7c7683eb7da181d0c690f5e23861a3f6e389fec436cec440fdbc21aa2"
+    }
+  },
+  "productionChanges": 0,
+  "cloudDataReads": 0,
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  }
+}

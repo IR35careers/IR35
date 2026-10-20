@@ -5,8 +5,8 @@
   "indexDigest": "sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00",
   "platformDigest": "sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
   "pinnedImage": "supabase/postgres:17.6.1.136@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
-  "verification": "Docker Hub index body SHA256 matches Docker-Content-Digest; exactly one linux/arm64 manifest selected. No image downloaded or executed.",
-  "extensionCompatibility": "UNVERIFIED: P3 must run the exact ARM image and check pg_available_extension_versions before any data restore.",
+  "verification": "Docker Hub index body SHA256 matches Docker-Content-Digest; exactly one linux/arm64 manifest selected. Native Oracle ARM image pull and execution PASS on 20 October 2026; see docs/evidence/oracle-p3-native.json.",
+  "extensionCompatibility": "Native empty-database availability, exact-version load and basic operation probes PASS for all five source extensions. Full Compose schema parity and data restore remain UNVERIFIED; P3 is incomplete.",
   "requiredExtensions": {
     "pg_stat_statements": "1.11",
     "pgcrypto": "1.3",

@@ -1,5 +1,7 @@
 # Current architecture and target mapping
 
+**P3 native compatibility:** exact pinned ARM Postgres17.6 and all five source extension versions now execute/load/basic-probe PASS on the isolated empty Oracle test container. [Evidence](evidence/oracle-p3-native.json) is intentionally full-phase incomplete. Full slim Compose, fresh migrations/schema parity and protected HTTPS staging await the Caddy runtime-key custody/staging DNS gate; no source data restored or production changed.
+
 **Latest staging P2 PASS:** hardened existing A1 2/12/150GB, Docker29.9.1/Compose5.6.0 with data-volume fail-closed guard/log rotation, exact restricted SSH/root-password off, unprivileged ir35 login, 4GiB swap, UTC/NTP and security services independently verified. Twelve external private-port negatives pass; zero containers. [Evidence](evidence/oracle-p2-hardening.json). P3 extension compatibility begins next; no Supabase/app/data/production deployment yet. Older “no Docker/P2 pending” checkpoints are historical.
 
 **Superseding P1 PASS:** fifteen resources now verified, no pending/hold, bucket full-GET configuration plus exact empty listing, final allocation/network/budget/cost checks PASS. London staging only, unchanged single A1 2/12 and 150GB volumes. Notifications ACTIVE; pinned guest identity, temporary IAM cleanup and mount/reboot proofs retained. No Docker/app/database/production deployed yet; P2 starts next. [Evidence](evidence/oracle-p1-visibility-resources.json). No real-time £0 billing guarantee is inferred.
