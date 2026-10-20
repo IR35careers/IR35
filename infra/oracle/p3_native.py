@@ -22,7 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 
 def main():
-    if sys.argv[1:] not in (["pull"], ["probe"], ["diagnose"]):
+    if sys.argv[1:] not in (["pull"], ["probe"], ["diagnose"], ["inspect-static"]):
         raise KeySafetyError("Fixed P3 native compatibility gate only")
     stage = sys.argv[1]
     descriptor = os.open(KEY_DIRECTORY / "p1-control-plane.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
@@ -53,7 +53,7 @@ def main():
             raise
         atomic_metadata(STATE, state)
         report = {"phase": "P3", "phaseComplete": False, "checkedAt": entry["checkedAt"], "image": state["image"],
-            "nativeImage": state["stages"]["pull"].get("result"), "extensionProbe": result if stage == "probe" else None,
+            "nativeImage": state["stages"]["pull"].get("result"), "extensionProbe": state["stages"].get("probe", {}).get("result"),
             "remainingGates": ["Official slim Compose review/pins and fresh target migrations/schema diff", "Protected staging DNS and Caddy runtime-secret custody", "Private Auth configuration export later in P7"],
             "stages": {key: {field: value[field] for field in ("status", "attempts", "sourceSHA256")} for key, value in state["stages"].items()},
             "productionChanges": 0, "cloudDataReads": 0, "network": network}

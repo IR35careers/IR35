@@ -107,7 +107,7 @@ def repairable_empty_probe(row, config, logs):
 
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] not in ("pull", "probe", "diagnose"):
+    if len(sys.argv) != 3 or sys.argv[1] not in ("pull", "probe", "diagnose", "inspect-static"):
         raise RuntimeError("Fixed image pull or disposable probe only")
     config = validate(json.loads(sys.argv[2]))
     if os.geteuid() != 0 or os.uname().machine != "aarch64":
@@ -124,6 +124,14 @@ def main():
         if image.get("Architecture") != "arm64" or image.get("Os") != "linux" or config["image"].split("@", 1)[1] not in " ".join(image.get("RepoDigests", [])):
             raise RuntimeError("Image digest/architecture mismatch; no execution")
         result = {"status": "PASS", "platform": "linux/arm64", "image": config["image"], "imageId": image["Id"], "sizeBytes": image["Size"]}
+    elif sys.argv[1] == "inspect-static":
+        # Only immutable public image startup/configuration text; never run its
+        # database entrypoint or read a key/data directory.
+        script = "grep -nE 'pgsodium|vault|shared_preload|PGDATA|initdb|docker_process|docker_setup' /usr/local/bin/docker-entrypoint.sh /etc/postgresql/postgresql.conf 2>/dev/null || true"
+        output = command(["docker", "run", "--rm", "--network", "none", "--read-only", "--memory", "128m", "--entrypoint", "/bin/sh", config["image"], "-c", script])
+        if len(output) > 20000:
+            raise RuntimeError("Static image inspection exceeds bound")
+        result = {"status": "PASS", "publicImageCodeReferences": output.splitlines()}
     elif sys.argv[1] == "diagnose":
         row = json.loads(command(["docker", "inspect", NAME]))[0]
         if row.get("Config", {}).get("Labels", {}).get(LABEL) != "P3-native-arm" or row["Config"].get("Image") != config["image"]:

@@ -1,0 +1,354 @@
+{
+  "phase": "P3",
+  "phaseComplete": false,
+  "checkedAt": "2026-10-20T20:16:12.120575+00:00",
+  "upstreamCommit": "bc27d2661edd09a5d0b8d76ce33da6d4071a756e",
+  "assetSHA256": {
+    "realtime.sql": "7e9e442e7fc4dae05544c07b67bede37a00d84644304dfce4d937134cb4c8f88",
+    "roles.sql": "3ad717b225daa38aa982da26750f35641eb404e1eb5e69a763c22236ab96c1b2",
+    "jwt.sql": "c1d3f5c01e44646c2e533c5a1c111821cc49cb5a4c2534e08cddad61d8fb0339",
+    "_supabase.sql": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f"
+  },
+  "stages": {
+    "prepare": {
+      "status": "PASS",
+      "attempts": 2,
+      "sourceSHA256": "d4588bb23ab5659448dee941575cb7f5db7ef8733d413a5a38fd7b19bd17d4e5",
+      "result": {
+        "status": "PASS",
+        "secretPaths": [
+          "/opt/ir35/.env*"
+        ],
+        "secretMode": "600",
+        "secretOwner": "ir35",
+        "caddyState": {
+          "path": "/opt/ir35/data/caddy",
+          "directoryMode": "700",
+          "ownerUID": 1002,
+          "excludedFromBackups": true
+        },
+        "services": [
+          "db",
+          "auth",
+          "rest",
+          "realtime",
+          "storage",
+          "kong",
+          "meta",
+          "smtp",
+          "caddy",
+          "studio"
+        ],
+        "studioProfile": "off",
+        "publicBindings": [
+          80,
+          443
+        ],
+        "certificateRequests": 0,
+        "APPLY_RUNNER": "mock",
+        "APPLICATION_WORKER_ACCEPT_JOBS": false
+      }
+    },
+    "diagnose-prepare": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "e6742e6f1ffd17abad3ec65c0b3cdbb4a772e0c2f39c1978e760825fc8383f16",
+      "result": {
+        "status": "PASS",
+        "imagesPresent": {
+          "db": true,
+          "auth": true,
+          "rest": true,
+          "realtime": true,
+          "storage": true,
+          "kong": true,
+          "meta": true,
+          "studio": false,
+          "caddy": true,
+          "smtp": true
+        },
+        "envExists": false,
+        "prepareMarkerExists": true,
+        "composeExists": false,
+        "publicFixtureHashTests": [
+          {
+            "stdinAttached": false,
+            "exitCode": 1,
+            "bcryptOutputShape": false,
+            "inputReadError": true
+          },
+          {
+            "stdinAttached": true,
+            "exitCode": 0,
+            "bcryptOutputShape": true,
+            "inputReadError": false
+          }
+        ]
+      }
+    },
+    "install-launcher": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "d4287a7342b0be4ef3e1c1094f61aeb87eda454ba094ef6ac2fcb040feb15561",
+      "result": {
+        "status": "PASS",
+        "staticNativeLauncher": true,
+        "dockerSecretEnvValues": false,
+        "envFileMode": "600",
+        "runtimeValuesLogged": false
+      }
+    },
+    "internal-up": {
+      "status": "FAIL",
+      "attempts": 1,
+      "sourceSHA256": "d4eb9e7b04bd65e4617e068b5ea2f4da6f1a31b9ce553d6569dd67b989ddb265"
+    },
+    "diagnose-health": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "db3442fd79ab891914456e9ae68fae45dfa614b6c3cefed5cfeba1da90114a63",
+      "result": {
+        "status": "PASS",
+        "diagnostic": {
+          "db": {
+            "state": "running",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "healthy",
+            "restartCount": 1,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "smtp": {
+            "state": "running",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "healthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "auth": {
+            "state": "restarting",
+            "exitCode": 1,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 10,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "rest": {
+            "state": "running",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "storage": {
+            "state": "restarting",
+            "exitCode": 1,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 10,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "kong": {
+            "state": "restarting",
+            "exitCode": 1,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 10,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "realtime": {
+            "state": "restarting",
+            "exitCode": 1,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 10,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          },
+          "meta": {
+            "state": "running",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "healthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false
+          }
+        },
+        "privateValuesInDockerEnvironment": false,
+        "rawLogsExported": false
+      }
+    },
+    "quarantine-diagnose": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "ff556f3a6c613dd0a253895344b4d06cb68e7086bbb049ad001b8e4321b4579c",
+      "result": {
+        "status": "PASS",
+        "quarantinedServices": [
+          "auth",
+          "rest",
+          "storage",
+          "kong",
+          "realtime",
+          "meta"
+        ],
+        "backgroundRestartLoopsStopped": true,
+        "diagnostic": {
+          "auth": {
+            "exitCode": 1,
+            "classes": [
+              "migration"
+            ],
+            "sqlstates": [
+              "42501"
+            ],
+            "knownRoles": [],
+            "knownPaths": []
+          },
+          "storage": {
+            "exitCode": 1,
+            "classes": [
+              "password authentication failed"
+            ],
+            "sqlstates": [],
+            "knownRoles": [
+              "supabase_storage_admin"
+            ],
+            "knownPaths": [
+              "/app"
+            ]
+          },
+          "kong": {
+            "exitCode": 1,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": [
+              "/usr/local/kong"
+            ]
+          },
+          "realtime": {
+            "exitCode": 1,
+            "classes": [
+              "does not exist",
+              "migration"
+            ],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": [
+              "/app"
+            ]
+          }
+        },
+        "rawOutputStoredOrExported": false
+      }
+    },
+    "database-metadata": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "667e0bc51173abf91e2e7082015afeb26fc55daba8d705b01a47ccd9a45b37d7",
+      "result": {
+        "status": "PASS",
+        "metadata": {
+          "roles": [
+            {
+              "name": "postgres",
+              "login": true,
+              "passwordSet": true
+            },
+            {
+              "name": "supabase_admin",
+              "login": true,
+              "passwordSet": true
+            },
+            {
+              "name": "supabase_storage_admin",
+              "login": true,
+              "passwordSet": false
+            },
+            {
+              "name": "authenticator",
+              "login": true,
+              "passwordSet": true
+            },
+            {
+              "name": "supabase_auth_admin",
+              "login": true,
+              "passwordSet": true
+            }
+          ],
+          "schemas": [
+            {
+              "name": "public",
+              "owner": "pg_database_owner"
+            },
+            {
+              "name": "auth",
+              "owner": "supabase_admin"
+            },
+            {
+              "name": "storage",
+              "owner": "supabase_admin"
+            }
+          ],
+          "databases": [
+            "postgres"
+          ],
+          "authUserRows": 0
+        },
+        "freshRoleConnectionChecks": {
+          "supabase_auth_admin": {
+              "loopbackConnectionCompleted": true,
+              "passwordAuthenticationProven": false,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": []
+          },
+          "authenticator": {
+              "loopbackConnectionCompleted": true,
+              "passwordAuthenticationProven": false,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": []
+          },
+          "supabase_storage_admin": {
+              "loopbackConnectionCompleted": true,
+              "passwordAuthenticationProven": false,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": []
+          }
+        },
+        "passwordHashesExported": false
+      }
+    }
+  },
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "productionChanges": 0,
+  "sourceDataReads": 0,
+  "remaining": [
+    "DNS/CAA PASS, staging then trusted ACME HTTP-01",
+    "Fresh ordered migrations and source schema parity"
+  ]
+}

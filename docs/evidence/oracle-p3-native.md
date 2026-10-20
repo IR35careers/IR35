@@ -1,5 +1,7 @@
 # Oracle P3 — native compatibility PASS; full phase at owner gate
 
+Superseding continuation: owner approved Caddy custody/staging DNS. Native proof below remains historical PASS; the full phase now has a DNS timeout and private bootstrap hold, not an unresolved key-storage approval. See [actual staging execution](oracle-p3-staging.md); no full P3/P4/P5 PASS is claimed.
+
 20 October 2026. Stacked on P2 draft [#50](https://github.com/IR35careers/IR35/pull/50); no merge or production deployment. [Machine-readable evidence](oracle-p3-native.json) deliberately has **phaseComplete=false**.
 
 | Check | Actual result |

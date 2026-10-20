@@ -1,7 +1,7 @@
 {
   "phase": "P3",
   "phaseComplete": false,
-  "checkedAt": "2026-10-20T19:30:42.625527+00:00",
+  "checkedAt": "2026-10-20T19:48:52.858298+00:00",
   "image": "supabase/postgres:17.6.1.136@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
   "nativeImage": {
     "status": "PASS",
@@ -85,6 +85,11 @@
       "status": "DIAGNOSED",
       "attempts": 2,
       "sourceSHA256": "6296cff7c7683eb7da181d0c690f5e23861a3f6e389fec436cec440fdbc21aa2"
+    },
+    "inspect-static": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "39b99804c62540850d09447107b810606a6ed438453afcb7b39da406ed20060c"
     }
   },
   "productionChanges": 0,
