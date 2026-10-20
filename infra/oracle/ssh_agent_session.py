@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""WSL per-boot SSH agent. Private key remains encrypted, never read here."""
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import sys
+
+from bootstrap_audit import KEY_DIRECTORY
+from key_ceremony import KeySafetyError, private_directory, write_new
+from security_session import private_file
+
+
+def boot_directory():
+    boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    if not re.fullmatch(r"[a-f0-9-]{36}", boot):
+        raise KeySafetyError("Cannot identify the current WSL boot; no agent/prompt.")
+    parent = Path.home() / ".ir35"
+    private_directory(parent)
+    directory = parent / ("ssh-agent-" + boot)
+    if not directory.exists():
+        directory.mkdir(mode=0o700)
+    private_directory(directory)
+    return directory
+
+
+def expected_fingerprint():
+    public = KEY_DIRECTORY / "ssh_ed25519.pub"
+    private_file(public)
+    result = subprocess.run(["ssh-keygen", "-l", "-f", str(public)], capture_output=True, text=True, timeout=5, check=False)
+    match = re.search(r"^256 (SHA256:[A-Za-z0-9+/]{43}) .*\(ED25519\)$", result.stdout.strip())
+    if result.returncode or not match:
+        raise KeySafetyError("Existing Ed25519 public fingerprint could not be verified.")
+    return match[1]
+
+
+def ensure_agent(*, load=False):
+    directory = boot_directory()
+    descriptor = os.open(directory / "lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        socket = directory / "agent.sock"
+        state = directory / "agent.json"
+        if not state.exists():
+            if socket.exists() or socket.is_symlink():
+                raise KeySafetyError("Unreconciled agent socket; stop, do not replace a running agent.")
+            result = subprocess.run(["ssh-agent", "-a", str(socket), "-s"], capture_output=True, text=True, timeout=10, check=False)
+            match = re.search(r"SSH_AGENT_PID=(\d+);", result.stdout)
+            if result.returncode or not match:
+                raise KeySafetyError("SSH agent start failed; raw output suppressed, no retry.")
+            write_new(state, json.dumps({"pid": int(match[1])}).encode())
+        private_file(state)
+        info = socket.lstat()
+        if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600:
+            raise KeySafetyError("SSH agent socket must be owner-only mode600.")
+        environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE", "SSH_AUTH_SOCK", "SSH_AGENT_PID")}
+        environment["SSH_AUTH_SOCK"] = str(socket)
+        result = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True, env=environment, timeout=5, check=False)
+        fingerprint = expected_fingerprint()
+        loaded = result.returncode == 0 and any(len(line.split()) >= 2 and line.split()[1] == fingerprint for line in result.stdout.splitlines())
+        if result.returncode not in (0, 1):
+            raise KeySafetyError("Existing agent is unreachable; no restart or repeated passphrase prompt.")
+        if load and not loaded:
+            if not sys.stdin.isatty() or not sys.stdout.isatty():
+                raise KeySafetyError("SSH key loading needs the native terminal's hidden prompt, never chat/pipes.")
+            attempt = directory / "load-attempt.json"
+            if attempt.exists():
+                raise KeySafetyError("SSH passphrase already requested this boot; no repeat prompt.")
+            write_new(attempt, b'{"promptAttempted":true}\n')
+            # ssh-add owns native hidden input. Never obtain/pass/store the passphrase.
+            result = subprocess.run(["ssh-add", str(KEY_DIRECTORY / "ssh_ed25519")], env=environment, timeout=300, check=False)
+            if result.returncode:
+                raise KeySafetyError("SSH key was not loaded; no repeat prompt this boot.")
+            result = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True, env=environment, timeout=5, check=False)
+            loaded = result.returncode == 0 and any(len(line.split()) >= 2 and line.split()[1] == fingerprint for line in result.stdout.splitlines())
+            if not loaded:
+                raise KeySafetyError("Agent fingerprint verification failed; do not repeat the prompt.")
+        return {"agentReady": True, "keyLoaded": loaded, "socket": str(socket)}
+    finally:
+        os.close(descriptor)
+
+
+if __name__ == "__main__":
+    try:
+        if sys.argv[1:] not in (["check"], ["load"]):
+            raise KeySafetyError("Use check or load only.")
+        result = ensure_agent(load=sys.argv[1] == "load")
+        print(json.dumps({key: value for key, value in result.items() if key != "socket"}))
+    except KeySafetyError as error:
+        print("STOP: " + str(error), file=sys.stderr)
+        raise SystemExit(1)
+    except Exception:
+        print("STOP: agent operation failed; raw output suppressed, no retry.", file=sys.stderr)
+        raise SystemExit(1)

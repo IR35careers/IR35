@@ -1,5 +1,12 @@
 # IR35Careers engineering instructions
 
+## Latest owner authentication and batched gates — 20 October 2026
+
+- Routine OCI uses browser SecurityToken only: profile `ir35`, region `uk-london-1`, CLI `--profile ir35 --auth security_token`; Terraform `auth = "SecurityToken"`, `config_file_profile = "ir35"`. Never fall back to either registered API key or repeatedly request its passphrase. Refresh before active operations when less than ten minutes remain, single-flight, until the original browser session is24h old; only failed refresh or the daily limit opens another owner browser gate. Session token/temporary signer stay owner-only outside Git; existing encrypted API/SSH keys remain unchanged.
+- SSH uses an agent, loading the existing encrypted Ed25519 key once per reboot through native hidden input. No passphrase in config, files, environment, arguments, repository or logs; never remove key encryption. No routine legacy API-unlock launcher.
+- Batch owner actions once per phase: browser login/MFA when needed, Supabase dashboard values once, Google URI changes once, DNS TTL then DNS cutover, and exact **YES CUTOVER**. Read-only audits, free eligibility/storage/cost reconciliation and provisioning within the approved envelope need no extra confirmation. Existing failed-check and zero-cost rules still apply.
+- Storage is three separate ceilings: live boot+block allocation<=150GB within the200GB free home-region allowance; <=5 combined boot/block backups; <=8,000,000,000 Object Storage bytes including upload overlap. Standard tier only, no auto-tiering: conservative trial Standard allowance10GB, post-trial20GB combined. Spare live-volume GB is not backup entitlement. Fresh authenticated usage plus per-resource free evidence and durable create/read-back remain mandatory.
+
 ## Final owner migration order — 20 October 2026 (supersedes conflicts below)
 
 - Execute whole-stack migration P1–P10 in order, automatically advancing only after an evidenced phase PASS. Report each phase; do not stop merely for another “continue”. Stop at owner gates G1–G6 or a failed check. One small **draft** PR per phase, no merge/approval/auto-merge/PR closure or production CI deployment. Preserve deployment holds and the original product spec.

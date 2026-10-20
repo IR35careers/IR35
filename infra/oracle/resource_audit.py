@@ -3,7 +3,6 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-import getpass
 import json
 import os
 from pathlib import Path
@@ -11,12 +10,10 @@ import re
 import resource
 import subprocess
 import sys
-import warnings
 
-from bootstrap_audit import CLI, KEY_DIRECTORY, audit, ocid, prepare_config, rows
+from bootstrap_audit import KEY_DIRECTORY, ocid, rows
 from key_ceremony import KeySafetyError, write_new
-from register_api_key import require_free_credential_gate
-from unlock_api import encrypted_profile
+from security_session import clean_environment, command, ensure_session
 
 
 REGION = "uk-london-1"
@@ -45,10 +42,8 @@ def safe_name(value):
 class ReadOnlyOci:
     """Exact operation builders, never a caller-supplied CLI argument array."""
 
-    def __init__(self, profile, passphrase):
+    def __init__(self, profile):
         self.profile = profile
-        self.passphrase = passphrase
-        self.config = prepare_config(profile, "encrypted-api-config")
         self.compartments = {ocid(profile["tenancy"], "tenancy")}
         self.domains = set()
         self.namespace = None
@@ -63,6 +58,14 @@ class ReadOnlyOci:
         if compartment not in self.compartments:
             raise KeySafetyError("Resource read must use an inventoried compartment.")
         common = ["--compartment-id", compartment]
+        if operation == "accountTenancy" and not selectors:
+            return ["iam", "tenancy", "get", "--tenancy-id", self.profile["tenancy"]]
+        if operation == "accountUser" and not selectors:
+            return ["iam", "user", "get", "--user-id", self.profile["user"]]
+        if operation == "accountRegions" and not selectors:
+            return ["iam", "region-subscription", "list", "--tenancy-id", self.profile["tenancy"], "--all"]
+        if operation == "accountSubscriptions" and not selectors:
+            return ["organizations", "subscription", "list", *common, "--all"]
         if operation == "compartments" and not selectors:
             return ["iam", "compartment", "list", *common, "--compartment-id-in-subtree", "true", "--access-level", "ANY", "--all"]
         if operation == "domains" and not selectors:
@@ -77,12 +80,14 @@ class ReadOnlyOci:
         }
         if operation in lists and set(selectors) <= {"compartment"}:
             return [*lists[operation], *common, "--all"]
-        if operation in ("bootVolumes", "a1Availability"):
+        if operation in ("bootVolumes", "a1Availability", "shapes"):
             ad = selectors.get("ad")
             if ad not in self.domains or not isinstance(ad, str) or not re.fullmatch(AD_PATTERN, ad):
                 raise KeySafetyError("Resource read must use an inventoried London AD.")
             if operation == "bootVolumes" and set(selectors) <= {"compartment", "ad"}:
                 return ["bv", "boot-volume", "list", *common, "--availability-domain", ad, "--all"]
+            if operation == "shapes" and set(selectors) == {"ad"}:
+                return ["compute", "shape", "list", *common, "--availability-domain", ad, "--all"]
             limit = selectors.get("limit")
             if operation == "a1Availability" and set(selectors) == {"ad", "limit"} and limit in ("standard-a1-core-count", "standard-a1-memory-count"):
                 return ["limits", "resource-availability", "get", *common, "--service-name", "compute", "--limit-name", limit, "--availability-domain", ad]
@@ -116,22 +121,29 @@ class ReadOnlyOci:
 
     def read(self, operation, **selectors):
         args = self.arguments(operation, **selectors)
-        environment = {key: value for key, value in os.environ.items() if not key.startswith("OCI_")}
-        environment["OCI_CLI_PASSPHRASE"] = self.passphrase  # Child RAM only.
-        command = [str(CLI), "--config-file", str(self.config), "--profile", "DEFAULT", "--cli-rc-file", "/dev/null",
-                   "--region", REGION, "--no-retry", "--connection-timeout", "5", "--read-timeout", "30", "--output", "json", *args]
-        result = subprocess.run(command, capture_output=True, text=True, env=environment, timeout=65, check=False)
+        fresh = ensure_session()  # Includes single-flight automatic pre-expiry refresh.
+        if fresh["tenancy"] != self.profile["tenancy"] or fresh["user"] != self.profile["user"]:
+            raise KeySafetyError("Browser identity changed during resource audit; no request.")
+        result = subprocess.run(command(args), capture_output=True, text=True, env=clean_environment(), timeout=65, check=False)
         if result.returncode:
             code = re.search(r'"code"\s*:\s*"([A-Za-z][A-Za-z0-9_]{0,63})"', result.stderr)
             status = re.search(r'"status"\s*:\s*(\d{3})', result.stderr)
             message = "OCI read failed: operation=" + operation + "; code=" + (code[1] if code else "CLIError") + "; status=" + (status[1] if status else "unknown") + "; no automatic retry."
-            raise KeySafetyError(message.replace(self.passphrase, "[REDACTED]"))
+            raise KeySafetyError(message)
         if len(result.stdout) > 8_000_000:
             raise KeySafetyError("Resource inventory exceeded its bounded response size.")
+        # Pinned OCI CLI 3.95 cli_util.render deliberately emits NOTHING for an
+        # empty successful list. Only these --all list commands permit that
+        # representation; required objects, cost results and partial JSON do not.
+        empty_lists = {"compartments", "domains", "instances", "volumes", "blockBackups", "bootBackups",
+                       "vcns", "quotas", "bootVolumes", "images", "budgets", "budgetAlerts", "buckets",
+                       "accountRegions", "accountSubscriptions", "shapes"}
+        if result.stdout == "" and operation in empty_lists:
+            return []
         try:
             value = json.loads(result.stdout)
         except (ValueError, TypeError):
-            raise KeySafetyError("OCI read returned invalid JSON; raw response suppressed.") from None
+            raise KeySafetyError("OCI read returned invalid JSON: operation=" + operation + "; raw response suppressed.") from None
         if not isinstance(value, dict) or "data" not in value:
             raise KeySafetyError("OCI read returned incomplete metadata; raw response suppressed.")
         if operation == "costSummary" and value.get("opc-next-page"):
@@ -148,9 +160,7 @@ def active(items):
 
 
 def inventory(client, account):
-    require_free_credential_gate(account, needs_slot=False)
-    if not account.get("newPublicKeyRegistered") or account.get("newPublicKeyState") != "ACTIVE":
-        raise KeySafetyError("New encrypted signing identity must be verified before resource reads.")
+    require_free_session_gate(account)
     compartments = active(client.read("compartments"))
     for row in compartments:
         client.compartments.add(ocid(row.get("id"), "compartment"))
@@ -278,28 +288,51 @@ def inventory(client, account):
             "note": "Trial quota is not free entitlement. Gross Console estimates are not actual bills or proof of free-tier application."}
 
 
+def require_free_session_gate(report):
+    if (report.get("signedTenancyMatch") is not True or report.get("activeUserMatch") is not True
+            or report.get("homeRegion") != REGION or report.get("regionStatus") != "READY"
+            or report.get("auth") != "security_token"):
+        raise KeySafetyError("Live SecurityToken account/home-region gate did not pass.")
+    subscriptions = report.get("subscriptions")
+    if (not isinstance(subscriptions, list) or not subscriptions
+            or any(s.get("state") != "ACTIVE" or s.get("paymentModel") not in ("FREE_TRIAL", "FREE_AND_TRIAL") for s in subscriptions)):
+        raise KeySafetyError("Live subscription is not proven ACTIVE Free Trial; no free-tier conclusion.")
+
+
+def session_account_audit(client):
+    tenancy = client.read("accountTenancy")
+    user = client.read("accountUser")
+    regions = rows(client.read("accountRegions"))
+    subscriptions = rows(client.read("accountSubscriptions"))
+    if (tenancy.get("id") != client.profile["tenancy"] or str(tenancy.get("name", "")).lower() != "ir35careers"
+            or user.get("id") != client.profile["user"] or user.get("lifecycle-state") != "ACTIVE"):
+        raise KeySafetyError("Signed browser identity is not the expected ACTIVE owner.")
+    if (len(regions) != 1 or regions[0].get("region-name") != REGION
+            or regions[0].get("is-home-region") is not True or regions[0].get("status") != "READY"):
+        raise KeySafetyError("Signed account is not exclusively READY London home region.")
+    result = {"auth": "security_token", "signedTenancyMatch": True, "activeUserMatch": True,
+              "homeRegion": REGION, "regionStatus": "READY", "subscriptions": [
+                  {"state": row.get("lifecycle-state"), "paymentModel": row.get("payment-model")} for row in subscriptions]}
+    require_free_session_gate(result)
+    return result
+
+
 def main():
     try:
-        if len(sys.argv) != 1 or not sys.stdin.isatty() or not sys.stdout.isatty():
-            raise KeySafetyError("Use the dedicated native terminal; no arguments or piped secret input.")
+        if len(sys.argv) != 1:
+            raise KeySafetyError("No arbitrary arguments for the fixed read-only audit.")
         os.umask(0o077)
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
         receipt = KEY_DIRECTORY / "resource-audit-status.json"
         if receipt.exists() or receipt.is_symlink():
             raise KeySafetyError("An audit result already exists; inspect it before another run.")
-        print("IR35 P1: existing encrypted API key, read-only resource inventory only.", flush=True)
+        print("IR35 P1: browser SecurityToken, read-only resource inventory only.", flush=True)
         print("No key generation, infrastructure create, production change, upgrade or cutover.", flush=True)
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", getpass.GetPassWarning)
-            passphrase = getpass.getpass("Existing OCI API passphrase (hidden; once): ")
-        profile = encrypted_profile(passphrase)
-        account = audit(profile=profile, passphrase=passphrase)
-        client = ReadOnlyOci(profile, passphrase)
+        client = ReadOnlyOci(ensure_session())
+        account = session_account_audit(client)
         report = inventory(client, account)
-        del client, passphrase
         write_new(receipt, (json.dumps(report, indent=2) + "\n").encode())
         print("PASS: read-only resource inventory saved. This is NOT approval to create resources.", flush=True)
-        print("Tell Codex: Resource audit done. No passphrase in chat.", flush=True)
         return 0
     except (KeyboardInterrupt, EOFError):
         print("STOP: input cancelled; no retry.", file=sys.stderr)

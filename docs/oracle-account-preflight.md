@@ -1,5 +1,11 @@
 # Oracle account preflight — historical evidence, 19 October 2026
 
+## Current superseding access policy — 20 October
+
+Latest signed audit08:06:43UTC **PASS**: zeroCompute/boot/block/backups/VCNs/buckets across root/all active compartments and threeLondonADs; existingGBP1budget+ACTUALalert re-read active; laggingcurrentmonthcostreport0rows, not real-timezero guarantee. A1billingtype `LIMITED_FREE` inAD-1/3 and quotaavailability sufficient for the2/12 target, never proof of host capacity. SSHagentkeyloaded/fingerprintverified. **P1 now stopped on local quota-parser verification failure**, not credentials or a request for another API passphrase. The one documented repair did not pass; actual bootstrap entrypoint held, no resources created. [Current evidence](evidence/oracle-p1-storage.md).
+
+Owner browser sign-in completed successfully through `oci session authenticate` for profile `ir35`. The session token and its new temporary signer are owner600 outside Git, with directory700; existing encrypted long-lived SSH/API files unchanged. Routine resource audit now explicitly uses SecurityToken, checks/refreshes before operations and has no API-key/passphrase fallback. Original browser time limits refresh to24h. This is authentication evidence, not a current resource/cost/create PASS. Old hidden-API-prompt instructions below are historical and superseded; the obsolete prompt was closed and its launcher retired. Native WSL Windows execution failed twice; documented repair uses a native Windows parent to open the normal browser, not a headless/stealth/credential workaround. Actual login then completed; no password/MFA/token was captured or printed. See [storage/access evidence](evidence/oracle-p1-storage.md).
+
 These authenticated checks were completed **before the new P0 inventory task**. No OCI resource or setting was changed during P0. Recheck eligibility and usage before P1; these results are not a deployment approval.
 
 - Official OCI CLI 3.95.0 / SDK 2.188.0 are installed outside Git. Registered key authentication, matching tenancy/user identifiers and ACTIVE user were verified without printing private material. Local OCI files have owner/SYSTEM-only ACLs.

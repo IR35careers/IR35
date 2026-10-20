@@ -2,6 +2,10 @@
 
 ## What and why
 
+**Current status: P1 HELD, no resources created.** Authenticated audit and SSH-agent load verified, snapshot in docs/evidence/oracle-p1-resource-inventory.json.50Linux unit tests/types/32capacity tests pass before final hold regression; actual additional installed-CLI quota wiring test fails NoSuchCommand before any client/cloud call. Two failures plus one isolated-parser repair still FAIL, so stopped per owner rule. Prototype compartment/quota entrypoint is explicitly disabled; no live executor, createdOCIDs, capacity attempt, phasePASS or production change. Proposed next fix is vendor sys.argv/dynamic-loader alignment, not skipping tests. Full failure/evidence is docs/evidence/oracle-p1-storage.md. Do not interpret green generic CI as this local P1 gate passing.
+
+Latest owner amendment: routine OCI now uses browser SecurityToken profile ir35, active-operation pre-expiry refresh with original24h limit, no API passphrase/env/fallback; batch owner gates per phase. Actual browser login plus safe session check PASS. Native Windows parent/private pipe repaired disabled WSL Windows interop after two failures; existing encrypted keys unchanged. Old API launcher retired. Storage guard/docs separate150GB live, five backups and8GB Standard-only objects (trial Standard10GB); prospective checks never claim actual billing/create PASS.41Linux tests plus two installed-CLI wiring tests pass. Current signed resource reconciliation is pending; no resource create or production change. New source requires its own hosted checks.
+
 Starts P1 under the owner's final migration order, stacked on the P0 inventory/plan PR #47. This is **not a completed provisioning phase or a release**. Preserves the original dirty checkout and separate validator PR #48.
 
 - Repaired the pinned OCI CLI in isolated WSL2 Ubuntu24.04, avoiding Windows MAX_PATH; no cloud request or resource create.

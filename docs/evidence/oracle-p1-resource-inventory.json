@@ -1,0 +1,80 @@
+{
+  "checkedAt": "2026-10-20T08:06:43.580020+00:00",
+  "mode": "read-only-resource-inventory",
+  "region": "uk-london-1",
+  "accountPaymentModel": "FREE_TRIAL",
+  "compartmentsInspected": 1,
+  "availabilityDomains": [
+    {
+      "domain": "wMKU:UK-LONDON-1-AD-1",
+      "ocpus": {
+        "used": "0",
+        "available": "41"
+      },
+      "memoryGB": {
+        "used": "0",
+        "available": "277"
+      }
+    },
+    {
+      "domain": "wMKU:UK-LONDON-1-AD-2",
+      "ocpus": {
+        "used": "0",
+        "available": "0"
+      },
+      "memoryGB": {
+        "used": "0",
+        "available": "0"
+      }
+    },
+    {
+      "domain": "wMKU:UK-LONDON-1-AD-3",
+      "ocpus": {
+        "used": "0",
+        "available": "41"
+      },
+      "memoryGB": {
+        "used": "0",
+        "available": "277"
+      }
+    }
+  ],
+  "usage": {
+    "instances": 0,
+    "bootVolumes": 0,
+    "blockVolumes": 0,
+    "volumeBackups": 0,
+    "vcns": 0,
+    "a1Ocpus": "0",
+    "a1MemoryGB": "0",
+    "liveVolumeGB": "0"
+  },
+  "compatiblePlatformImageNames": [
+    "Canonical-Ubuntu-24.04-aarch64-2026.06.29-0",
+    "Canonical-Ubuntu-24.04-aarch64-2026.08.25-0",
+    "Canonical-Ubuntu-24.04-aarch64-2026.09.18-0"
+  ],
+  "activeBudget": "ir35careers-free-tier-gbp1",
+  "budgetAlertVerified": true,
+  "quotaPolicyCount": 0,
+  "objectStorage": {
+    "buckets": 0,
+    "approximateBytes": "0",
+    "exactBytesProven": true
+  },
+  "costReport": {
+    "rows": 0,
+    "amounts": {},
+    "covers": "current month up to previous UTC midnight",
+    "mayLag": true,
+    "realTimeZeroBillProven": false
+  },
+  "infrastructureCreates": 0,
+  "productionChanges": 0,
+  "freeTierCreateGate": "NOT_PASSED",
+  "remainingGates": [
+    "per-resource Console eligibility, limits, exact byte/request usage and current cost refresh",
+    "guarded whole-stack create/read-back journal"
+  ],
+  "note": "Trial quota is not free entitlement. Gross Console estimates are not actual bills or proof of free-tier application."
+}

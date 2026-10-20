@@ -16,6 +16,7 @@ COMPARTMENT = "ocid1.compartment.oc1..controlledfixture01"
 BUDGET = "ocid1.budget.oc1..controlledfixture01"
 DOMAINS = ["mock:UK-LONDON-1-AD-" + str(index) for index in (1, 2, 3)]
 ACCOUNT = {"checkedAt": "2026-10-20T00:00:00+00:00", "signedTenancyMatch": True, "activeUserMatch": True,
+           "auth": "security_token",
            "homeRegion": "uk-london-1", "regionStatus": "READY", "registeredApiKeys": 3,
            "newPublicKeyRegistered": True, "newPublicKeyState": "ACTIVE", "oldPublicKeyStillRegistered": True,
            "newKeyEncryptedRoundTrip": True, "subscriptions": [{"state": "ACTIVE", "paymentModel": "FREE_TRIAL"}]}
@@ -54,8 +55,10 @@ class FixtureClient:
 
 class ResourceAuditTests(unittest.TestCase):
     def client(self):
-        with patch.object(audit, "prepare_config", return_value=Path("/mock/config")):
-            client = audit.ReadOnlyOci(PROFILE, "mock-passphrase-never-write")
+        client = audit.ReadOnlyOci(PROFILE)
+        self.session = patch.object(audit, "ensure_session", return_value=PROFILE)
+        self.session.start()
+        self.addCleanup(self.session.stop)
         client.domains.update(DOMAINS)
         client.compartments.add(COMPARTMENT)
         client.namespace = "controlledfixture"
@@ -90,18 +93,19 @@ class ResourceAuditTests(unittest.TestCase):
         self.assertIn("--all", client.arguments("buckets", compartment=COMPARTMENT))
         self.assertIn("--fields", client.arguments("bucket", bucket="controlled-bucket"))
 
-    def test_cli_no_retry_bounded_redacted_and_memory_only_unlock(self):
+    def test_cli_no_retry_bounded_redacted_security_token_only(self):
         client = self.client()
-        secret = client.passphrase
+        secret = "mock-credential-never-write"
         result = subprocess.CompletedProcess([], 0, '{"data":[]}', "")
         with patch.dict(os.environ, {"OCI_CLI_DEBUG": "true"}), patch.object(audit.subprocess, "run", return_value=result) as run:
             self.assertEqual(client.read("instances"), [])
             args, options = run.call_args
             self.assertNotIn(secret, " ".join(args[0]))
             self.assertIn("--no-retry", args[0])
+            self.assertIn("security_token", args[0])
+            self.assertEqual(args[0][args[0].index("--profile") + 1], "ir35")
             self.assertEqual(options["timeout"], 65)
-            self.assertEqual({key for key in options["env"] if key.startswith("OCI_")}, {"OCI_CLI_PASSPHRASE"})
-            self.assertEqual(options["env"]["OCI_CLI_PASSPHRASE"], secret)
+            self.assertEqual({key for key in options["env"] if key.startswith("OCI_")}, set())
         result = subprocess.CompletedProcess([], 1, secret, '{"code":"NotAuthenticated","status":401,"message":"' + secret + '"}')
         with patch.object(audit.subprocess, "run", return_value=result):
             with self.assertRaises(KeySafetyError) as error:
@@ -116,6 +120,11 @@ class ResourceAuditTests(unittest.TestCase):
                 with self.assertRaises(KeySafetyError) as error:
                     client.read("costSummary")
                 self.assertNotIn("secret-sentinel", str(error.exception))
+        with patch.object(audit.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")):
+            self.assertEqual(client.read("instances"), [])
+            for operation in ("namespace", "costSummary", "a1Availability"):
+                with self.assertRaises(KeySafetyError):
+                    client.read(operation)
         for bad in (True, None, "NaN", "Infinity", -1, {"secret": "sentinel"}):
             with self.assertRaises(KeySafetyError):
                 audit.number(bad)
@@ -151,7 +160,7 @@ class ResourceAuditTests(unittest.TestCase):
                           {"costSummary": {"items": [], "next-page": "next"}}):
             with self.assertRaises(KeySafetyError):
                 audit.inventory(FixtureClient(overrides), ACCOUNT)
-        for patch_values in ({"newPublicKeyState": "ABSENT"}, {"homeRegion": "other"}, {"subscriptions": []}):
+        for patch_values in ({"auth": "api_key"}, {"homeRegion": "other"}, {"subscriptions": []}):
             fixture = FixtureClient()
             with self.assertRaises(KeySafetyError):
                 audit.inventory(fixture, {**ACCOUNT, **patch_values})
