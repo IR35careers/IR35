@@ -2,6 +2,8 @@
 
 Status: **P1 INCOMPLETE — owner G1 required**. No fresh OCI eligibility/create/VM or hosted health result is implied.
 
+Draft [PR#49](https://github.com/IR35careers/IR35/pull/49), stacked on unmerged P0#47; no merge or deployment. Final-head hosted checks are not a local-test claim.
+
 | Check | Observed result |
 | --- | --- |
 | WSL | Ubuntu24.04.1 / WSL2, local user anvesh. |
