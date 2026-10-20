@@ -1,6 +1,6 @@
 # Whole-stack Oracle migration — inventory and phased execution plan
 
-20 October 2026, updated for the owner's FINAL MIGRATION ORDER. **P1 in progress: WSL2 CLI verified, new encrypted keys generated and requested public API key registered; existing-key unlock/authentication next. No Compute/network/storage resource created.** The new section below supersedes conflicting historical notes (including stop-after-each-phase, preserving an unencrypted key instead of generating new protected keys, and session deletion before zero-loss verification). Original product requirements remain in `spec.md`. Draft PR #47 is P0; #48 is the separate queue validator. Neither is a deployment or merge approval.
+20 October 2026, updated for the owner's FINAL MIGRATION ORDER. **P1 in progress: WSL2 CLI/new encrypted keys/public registration/authentication verified; G2 Console handoff next. No Compute/network/storage resource created.** The new section below supersedes conflicting historical notes (including stop-after-each-phase, preserving an unencrypted key instead of generating new protected keys, and session deletion before zero-loss verification). Original product requirements remain in `spec.md`. Draft PR #47 is P0; #48 is the separate queue validator. Neither is a deployment or merge approval.
 
 ## 0. Final order: execution and go/no-go standard
 
@@ -33,7 +33,7 @@ Phase completion checkpoints (the detailed inventory/risks below remain applicab
 
 Hard running memory limits remain **8.875 GiB** (Postgres3GiB; auth/rest/kong/meta/storage combined1.5GiB; Realtime256MiB; Next1.5GiB; worker2.5GiB; Caddy128MiB), leaving nominal3.125GiB for the OS. This is a budget, not load evidence. Swap is not extra RAM. No second instance or paid capacity workaround.
 
-**Current P1 evidence:** [tooling/G1 checkpoint](evidence/oracle-p1-tooling.md). WSL CLI3.95.0/SDK2.188.0, encrypted new keys/modes and ACTIVE public-key registration verified. Fresh signed bootstrap confirms ACTIVE/FREE_TRIAL and London; new encrypted-key authentication needs its existing-passphrase unlock, not another key generation. No current Compute quota/shape/cost result or VM/public IP/health output claimed. Old registered key/config retained untouched. Existing £1 budget is historical and must be re-read, not duplicated.
+**Current P1 evidence:** [tooling/G1–G2 checkpoint](evidence/oracle-p1-tooling.md). WSL CLI3.95.0/SDK2.188.0, encrypted new keys/modes, ACTIVE public registration and **new encrypted-key authentication PASS** verified. Signed receipt at20October03:36:29UTC confirms ACTIVE/FREE_TRIAL and London. No current Compute quota/shape/cost result or VM/public IP/health output claimed. Browser recovery failed; owner G2 must leave authenticated London Console home visible, then current eligibility/usage checks resume. Old registered key/config retained untouched. Existing £1 budget is historical and must be re-read, not duplicated. Authentication receipt is evidence, not a retained plaintext passphrase or an unlimited unlocked session.
 
 ## 1. Evidence and limits of this inventory
 
