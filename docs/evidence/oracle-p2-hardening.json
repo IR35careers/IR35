@@ -1,0 +1,132 @@
+{
+  "phase": "P2",
+  "checkedAt": "2026-10-20T19:21:52.646867+00:00",
+  "instanceId": "ocid1.instance.oc1.uk-london-1.anwgiljrr72xucychx35t4jbeiaep4qncwolllegqazy3krrryoz7pxqusya",
+  "host": {
+    "status": "PASS",
+    "architecture": "aarch64",
+    "os": "Ubuntu24.04",
+    "dataMount": true,
+    "rootLogin": false,
+    "passwordLogin": false,
+    "sshSourcesExactSlash32": true,
+    "ufw": "active",
+    "swapBytes": 4294967296,
+    "swappiness": 10,
+    "services": {
+      "docker": "active",
+      "fail2ban": "active",
+      "unattended-upgrades": "active",
+      "chrony": "active"
+    },
+    "timezone": "UTC",
+    "ntpSynchronized": true,
+    "dockerVersion": "29.9.1",
+    "composeVersion": "5.6.0",
+    "dockerRootOnDataVolume": true,
+    "dockerMountFailClosed": true,
+    "dockerLogs": {
+      "maxSize": "10m",
+      "maxFiles": 3
+    },
+    "publicTCPPorts": [
+      22
+    ],
+    "containers": 0,
+    "ir35Groups": [
+      "ir35"
+    ],
+    "productionChanges": 0
+  },
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "phaseComplete": true,
+  "deployUserLogin": {
+    "status": "PASS",
+    "uid": 1002,
+    "groups": [
+      "ir35"
+    ],
+    "sudoAvailable": false,
+    "dockerSocketWritable": false
+  },
+  "externalExposure": {
+    "status": "PASS",
+    "sshPositiveControl": true,
+    "privateTCPPortsUnreachable": [
+      111,
+      2375,
+      2376,
+      3000,
+      5432,
+      8000,
+      8001,
+      8025,
+      8080,
+      8443,
+      9090,
+      1025
+    ]
+  },
+  "remainingCheck": null,
+  "stages": {
+    "audit": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "298120ad68165a0768d27c7ddaae596f4b1b11c0e18daa2c136be59f28081220"
+    },
+    "install": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "298120ad68165a0768d27c7ddaae596f4b1b11c0e18daa2c136be59f28081220"
+    },
+    "configure": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "298120ad68165a0768d27c7ddaae596f4b1b11c0e18daa2c136be59f28081220"
+    },
+    "verify": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "264037aae19d772358189a4605b4c20eadeb0ceba0e109fa21a6add80b034c29"
+    },
+    "repair-firewall-order": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "eade13f6b2931e9191613b75cbf31d8f0a5ecac917e6daffd45dcc7eb4b6446f"
+    },
+    "diagnose-firewall": {
+      "status": "PASS",
+      "attempts": 2,
+      "sourceSHA256": "73dea556b214f29b0675f611d954f43749a95545391b431b8259c67fa8a2a218"
+    },
+    "diagnose-controls": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "e90abf4c4bfb50a448d150c846087034331325399ab970e6fa5fcb8667197733"
+    },
+    "disable-unused-rpc": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "264037aae19d772358189a4605b4c20eadeb0ceba0e109fa21a6add80b034c29"
+    },
+    "verify-user": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "f256f65f9d31269584016f88c32fa5be1de181f4d0217dbb14bd87fe3b3d24ca"
+    },
+    "verify-exposure": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "c8f4267cca094b2ea806b867776887ad0d8fe9b3357aeac6a20357749c5b3229"
+    }
+  }
+}
