@@ -14,6 +14,7 @@ import sys
 from bootstrap_audit import KEY_DIRECTORY, ocid, rows
 from key_ceremony import KeySafetyError, write_new
 from security_session import clean_environment, command, ensure_session
+from visibility import OciError, call_timeout
 
 
 REGION = "uk-london-1"
@@ -133,12 +134,9 @@ class ReadOnlyOci:
         fresh = ensure_session()  # Includes single-flight automatic pre-expiry refresh.
         if fresh["tenancy"] != self.profile["tenancy"] or fresh["user"] != self.profile["user"]:
             raise KeySafetyError("Browser identity changed during resource audit; no request.")
-        result = subprocess.run(command(args), capture_output=True, text=True, env=clean_environment(), timeout=65, check=False)
+        result = subprocess.run(command(args), capture_output=True, text=True, env=clean_environment(), timeout=call_timeout(), check=False)
         if result.returncode:
-            code = re.search(r'"code"\s*:\s*"([A-Za-z][A-Za-z0-9_]{0,63})"', result.stderr)
-            status = re.search(r'"status"\s*:\s*(\d{3})', result.stderr)
-            message = "OCI read failed: operation=" + operation + "; code=" + (code[1] if code else "CLIError") + "; status=" + (status[1] if status else "unknown") + "; no automatic retry."
-            raise KeySafetyError(message)
+            raise OciError.from_stderr(operation, result.stderr)
         if len(result.stdout) > 8_000_000:
             raise KeySafetyError("Resource inventory exceeded its bounded response size.")
         # Pinned OCI CLI 3.95 cli_util.render deliberately emits NOTHING for an

@@ -8,6 +8,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import p1_control_plane as control
 from key_ceremony import KeySafetyError
+from visibility import OciError, wait_for_visible
 
 ROOT = "ocid1.tenancy.oc1..controlledfixture01"
 CHILD = "ocid1.compartment.oc1..controlledfixture01"
@@ -41,6 +42,14 @@ class ControlPlaneTests(unittest.TestCase):
             item = patch.object(control, target, value) if target != "fresh_evidence" else patch.object(control, target, return_value={"selectedAD": AD})
             item.start()
             self.addCleanup(item.stop)
+        self.elapsed = 0
+        def sleep(delay):
+            self.elapsed += delay
+        def virtual_wait(read, **kwargs):
+            return wait_for_visible(read, **{"clock": lambda: self.elapsed, "sleep": sleep, **kwargs})
+        item = patch.object(control, "wait_for_visible", side_effect=virtual_wait)
+        item.start()
+        self.addCleanup(item.stop)
 
     def test_only_compartment_and_quota_specs_no_generic_operation(self):
         for kind in ("instance", "bucket", "vcn", "raw-request", "delete", "update"):
@@ -85,7 +94,7 @@ class ControlPlaneTests(unittest.TestCase):
                 control.verify_quota_names(client)
 
     def quota_fixture(self):
-        self.journal["created"] = {"compartment": {"id": CHILD}, "quota": {"id": "ocid1.quota.oc1..controlledfixture01"}}
+        self.journal["created"] = {"compartment": {"id": CHILD}, "quota": {"id": "ocid1.quota.oc1..controlledfixture01", "spec": control.spec("quota", ROOT, CHILD, AD, INTENT)}}
         self.journal["selectedAD"] = AD
         class Effective:
             profile = {"tenancy": ROOT}
@@ -98,6 +107,7 @@ class ControlPlaneTests(unittest.TestCase):
                 inner.calls.append((operation, selectors))
                 if operation == "quotas":
                     return [{"id": self.journal["created"]["quota"]["id"], "name": control.QUOTA_NAME,
+                             "freeform-tags": self.journal["created"]["quota"]["spec"]["freeformTags"],
                              "compartment-id": ROOT, "lifecycle-state": "ACTIVE"}]
                 self.assertEqual(selectors["compartment"], CHILD)
                 self.assertEqual(selectors["ad"], AD)
@@ -112,7 +122,7 @@ class ControlPlaneTests(unittest.TestCase):
         elapsed = [0]
         result = control.wait_for_quota(self.journal, client, clock=lambda: elapsed[0], sleep=lambda delay: elapsed.__setitem__(0, elapsed[0] + delay))
         self.assertEqual(result["polls"], 2)
-        self.assertEqual(elapsed[0], 30)
+        self.assertEqual(elapsed[0], 5)
         self.assertEqual(client.calls[0], ("quotas", {"compartment": ROOT}))
         self.assertEqual(result["limits"]["total-storage-gb"], "150")
         self.assertIn("aggregate executor guards still required", result["scope"])
@@ -153,6 +163,58 @@ class ControlPlaneTests(unittest.TestCase):
             with self.assertRaises(KeySafetyError):
                 control.create_one("compartment", self.journal, Client())
             self.assertEqual(invoke.call_count, 1)
+
+    def test_transient_404_then_success_never_creates_twice(self):
+        calls = []
+        def invoke(args):
+            calls.append(args)
+            if args[2] == "get" and len(calls) == 2:
+                raise OciError("get", "NotAuthorizedOrNotFound", 404)
+            intent = self.journal["pending"]
+            return {"id": CHILD, "name": "ir35", "compartment-id": ROOT, "freeform-tags": intent["spec"]["freeformTags"], "lifecycle-state": "ACTIVE"}
+        with patch.object(control, "invoke", side_effect=invoke):
+            self.assertEqual(control.create_one("compartment", self.journal, Client()), CHILD)
+        self.assertEqual(sum(args[2] == "create" for args in calls), 1)
+        self.assertEqual(self.elapsed, 5)
+        self.assertEqual(self.journal["created"]["compartment"]["visibility"][0]["status"], 404)
+
+    def test_404_timeout_keeps_intent_no_second_create(self):
+        calls = []
+        def invoke(args):
+            calls.append(args)
+            if args[2] == "get":
+                raise OciError("get", "NotAuthorizedOrNotFound", 404)
+            return {"id": CHILD}
+        with patch.object(control, "invoke", side_effect=invoke):
+            with self.assertRaisesRegex(KeySafetyError, "Visibility timeout"):
+                control.create_one("compartment", self.journal, Client())
+        self.assertEqual(sum(args[2] == "create" for args in calls), 1)
+        self.assertEqual(self.elapsed, 600)
+        self.assertEqual(self.journal["pending"]["responseId"], CHILD)
+
+    def test_pending_exact_tag_lookup_reuses_without_mutation(self):
+        payload = control.spec("compartment", ROOT, None, AD, INTENT)
+        row = {"id": CHILD, "name": "ir35", "compartment-id": ROOT, "freeform-tags": payload["freeformTags"], "lifecycle-state": "ACTIVE"}
+        self.journal["pending"] = {"kind": "compartment", "spec": payload}
+        with patch.object(control, "invoke", return_value=row) as invoke:
+            self.assertEqual(control.create_one("compartment", self.journal, Client([row])), CHILD)
+            self.assertEqual(invoke.call_count, 1)
+            self.assertEqual(invoke.call_args.args[0][2], "get")
+
+    def test_existing_exact_name_and_tags_reused_without_create(self):
+        payload = control.spec("compartment", ROOT, None, AD, INTENT)
+        row = {"id": CHILD, "name": "ir35", "compartment-id": ROOT, "freeform-tags": payload["freeformTags"], "lifecycle-state": "ACTIVE"}
+        with patch.object(control, "invoke", return_value=row) as invoke:
+            self.assertEqual(control.create_one("compartment", self.journal, Client([row])), CHILD)
+            self.assertEqual(invoke.call_count, 1)
+            self.assertEqual(invoke.call_args.args[0][2], "get")
+
+    def test_iam_writes_and_reads_fixed_to_home_region_security_token(self):
+        from security_session import command
+        args = command(control.arguments("quota", control.spec("quota", ROOT, CHILD, AD, INTENT)))
+        self.assertEqual(args[args.index("--region") + 1], "uk-london-1")
+        self.assertEqual(args[args.index("--profile") + 1], "ir35")
+        self.assertEqual(args[args.index("--auth") + 1], "security_token")
 
     def test_collision_and_mismatched_readback_are_hard_stops(self):
         with patch.object(control, "invoke") as invoke:

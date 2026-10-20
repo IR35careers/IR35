@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## Latest owner eventual-consistency continuation — 20 October 2026
+
+- Post-create GET/LIST visibility uses one shared bounded wait:5s/10s/20s/40s/60s capped backoff, maximum10minutes. Only404/NotAuthorizedOrNotFound inside that window is NOT_YET_VISIBLE and exempt from failure-stop counting; record each observation.401/500/other errors fail immediately, except the separately approved exact Compute OutOfHostCapacity launch policy. A timeout is a real stop, never permission for another create.
+- Every create first looks up exact name and intent tags; reuse a verified match. Persist intent before the single mutation, reconcile pending/unknown outcomes by name/tags/recorded ID and never blindly recreate. IAM compartment/quota/policy operations stay pinned to London home region. Existingir35 compartment must be reused. Root quota must list/get correctly and show effective2/12/150 child/AD limits before launches. No production/cutover/paid authority change.
+
 ## Owner-specific quota repair — 20 October 2026
 
 - The owner reopened the failed quota step as a new specific fix. Quota CRUD must use `oci limits quota` with profileir35/SecurityToken. Create policy `ir35-always-free-cap` at the tenancy root, targeting compartmentir35 with the approved three documented2OCPU/12GB/150GB statements. Verify names/support/scope against live definitions/docs, list at root, and prove effective child limits within10minutes before any launch. These quota names are AD-scoped: keep independent tenancy-wide aggregate2/12/150 and five-backup/8GB object guards; do not claim the root policy alone is a regional spending cap.

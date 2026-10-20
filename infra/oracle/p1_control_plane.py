@@ -22,6 +22,7 @@ from resource_audit import ReadOnlyOci, inventory, session_account_audit, SHAPE
 from resource_audit import number
 from security_session import atomic_metadata, clean_environment, command, ensure_session, private_file
 from storage_budget import reconcile
+from visibility import OciError, wait_for_visible, call_timeout
 
 JOURNAL = KEY_DIRECTORY / "p1-control-plane.json"
 PREFLIGHT_RECEIPT = KEY_DIRECTORY / "quota-cli-wiring-status.json"
@@ -73,12 +74,9 @@ def quota_read_arguments(operation, *, root=None, identifier=None):
 def invoke(args):
     # Only fixed internally built create/get arrays reach this private function.
     ensure_session()
-    result = subprocess.run(command(args), capture_output=True, text=True, timeout=65, env=clean_environment(), check=False)
+    result = subprocess.run(command(args), capture_output=True, text=True, timeout=call_timeout(), env=clean_environment(), check=False)
     if result.returncode:
-        code = re.search(r'"code"\s*:\s*"([A-Za-z][A-Za-z0-9_]{0,63})"', result.stderr)
-        status = re.search(r'"status"\s*:\s*(\d{3})', result.stderr)
-        raise KeySafetyError("OCI bootstrap failed: code=" + (code[1] if code else "CLIError")
-                             + "; status=" + (status[1] if status else "unknown") + "; pending intent retained; no retry.")
+        raise OciError.from_stderr("bootstrap-" + args[2], result.stderr)
     try:
         if len(result.stdout) > 1_000_000:
             raise ValueError()
@@ -137,23 +135,33 @@ def verify_quota_names(client):
 
 
 def wait_for_quota(journal, client, *, clock=time.monotonic, sleep=time.sleep):
-    """Expected propagation polling only, never a create retry; max10minutes."""
+    """Root visibility AND child enforcement share one ten-minute deadline."""
     quota = journal["created"]["quota"]
     root = client.profile["tenancy"]
-    listed = client.read("quotas", compartment=root)
-    matches = [row for row in listed if row.get("id") == quota["id"] and row.get("name") == QUOTA_NAME
-               and row.get("compartment-id") == root and row.get("lifecycle-state") == "ACTIVE"]
-    if len(matches) != 1:
-        raise KeySafetyError("Root limits quota list did not verify the unique ACTIVE policy; no launch.")
     child = journal["created"]["compartment"]["id"]
     client.compartments.add(child)
     if not client.domains:
         client.domains = {row["name"] for row in client.read("domains")}
-    deadline = clock() + 600
     checks = {"standard-a1-core-count": 2, "standard-a1-memory-count": 12, "total-storage-gb": 150}
     polls = 0
-    while True:
+    def read():
+        nonlocal polls
         polls += 1
+        listed = client.read("quotas", compartment=root)
+        matches = [row for row in listed if row.get("name") == QUOTA_NAME]
+        if not matches:
+            return None
+        if len(matches) != 1 or matches[0].get("id") != quota["id"] or matches[0].get("compartment-id") != root:
+            raise KeySafetyError("Root quota list identity mismatch; no launch.")
+        if "spec" in quota:
+            # OCI QuotaSummary has no statements field. The independent GET
+            # already verifies statements; list verifies identity/tags/state.
+            if matches[0].get("freeform-tags") != quota["spec"]["freeformTags"]:
+                raise KeySafetyError("Root quota list tags differ; no launch.")
+            if matches[0].get("lifecycle-state") != "ACTIVE":
+                return None
+        elif matches[0].get("lifecycle-state") != "ACTIVE":
+            return None
         values = {}
         for name, target in checks.items():
             result = client.read("quotaAvailability", compartment=child, ad=journal["selectedAD"], limit=name)
@@ -162,54 +170,100 @@ def wait_for_quota(journal, client, *, clock=time.monotonic, sleep=time.sleep):
             observed = result.get("effective-quota-value")
             values[name] = None if observed is None else str(number(observed))
         if all(values[name] is not None and number(values[name]) == target for name, target in checks.items()):
-            quota["effectiveReadback"] = {"limits": values, "polls": polls, "verifiedAt": datetime.now(timezone.utc).isoformat(),
-                                          "scope": "selected AD within ir35; aggregate executor guards still required"}
-            atomic_metadata(JOURNAL, journal)
-            print("PASS: root quota listed ACTIVE and effective child/AD limits are2/12/150; aggregate free envelope unchanged.", flush=True)
-            return quota["effectiveReadback"]
-        remaining = deadline - clock()
-        if remaining <= 0:
-            raise KeySafetyError("Quota propagation did not reach2/12/150 within10minutes; no launch, no create retry.")
-        print("WAIT: quota propagation pending; no launch or extra create.", flush=True)
-        sleep(min(30, remaining))
+            return {"limits": values, "polls": polls, "verifiedAt": datetime.now(timezone.utc).isoformat(),
+                    "scope": "selected AD within ir35; aggregate executor guards still required"}
+        return None
+    result = wait_for_visible(read, label="quota-effective", record=journal_recorder(journal, quota, "effectiveVisibility"),
+                              clock=clock, sleep=sleep)
+    quota["effectiveReadback"] = result
+    atomic_metadata(JOURNAL, journal)
+    print("PASS: root quota listed ACTIVE and effective child/AD limits are2/12/150; aggregate free envelope unchanged.", flush=True)
+    return result
+
+
+def journal_recorder(journal, entry, field="visibility"):
+    def record(event):
+        entry.setdefault(field, []).append(event)
+        atomic_metadata(JOURNAL, journal)
+    return record
+
+
+def lookup(kind, client):
+    if kind == "compartment":
+        return [row for row in client.read("compartments") if row.get("name") == "ir35" and row.get("lifecycle-state") != "DELETED"]
+    if kind == "quota":
+        return [row for row in client.read("quotas", compartment=client.profile["tenancy"]) if row.get("name") == QUOTA_NAME]
+    raise KeySafetyError("Unimplemented lookup kind.")
+
+
+def visible_resource(kind, entry, client):
+    # Always name+tag lookup first; a list that has not propagated may be empty.
+    matches = lookup(kind, client)
+    if len(matches) > 1 or any(row.get("freeform-tags") != entry["spec"]["freeformTags"] for row in matches):
+        raise KeySafetyError("Duplicate or unowned target name; no adoption or second create.")
+    identifier = entry.get("id") or entry.get("responseId")
+    if matches:
+        found = ocid(matches[0].get("id"), kind)
+        if identifier is not None and found != identifier:
+            raise KeySafetyError("Recorded resource and name/tag lookup disagree; no create.")
+        identifier = found
+    if identifier is None:
+        return None
+    args = ["iam", "compartment", "get", "--compartment-id", identifier] if kind == "compartment" else quota_read_arguments("get", identifier=identifier)
+    result = invoke(args)
+    if (result.get("id") != identifier or result.get("name") != entry["spec"]["name"]
+            or result.get("compartment-id") != entry["spec"]["compartmentId"]
+            or result.get("freeform-tags") != entry["spec"]["freeformTags"]):
+        raise KeySafetyError("Resource identity/tags differ; no create.")
+    if result.get("lifecycle-state") in ("CREATING", "UPDATING"):
+        return None
+    return check_readback(kind, entry["spec"], result)
 
 
 def create_one(kind, journal, client):
     if kind in journal["created"]:
         previous = journal["created"][kind]
-        payload = previous["spec"]
-        args = ["iam", "compartment", "get", "--compartment-id", previous["id"]] if kind == "compartment" else quota_read_arguments("get", identifier=previous["id"])
-        check_readback(kind, payload, invoke(args))
-        return previous["id"]
+        return wait_for_visible(lambda: visible_resource(kind, previous, client), label=kind,
+                                record=journal_recorder(journal, previous))
     if journal.get("pending"):
-        raise KeySafetyError("A pending create exists: reconcile its resource, never reset or retry blindly.")
-    evidence = fresh_evidence(client, journal.get("selectedAD"))
-    journal["selectedAD"] = evidence["selectedAD"]
-    # Refuse name collisions; never adopt/edit an unrelated existing resource.
-    if kind == "compartment":
-        collisions = [row for row in client.read("compartments") if row.get("name") == "ir35" and row.get("lifecycle-state") != "DELETED"]
+        if journal["pending"].get("kind") != kind:
+            raise KeySafetyError("Different pending create must reconcile first; no create.")
+        entry = journal["pending"]
     else:
-        child = journal["created"]["compartment"]["id"]
-        client.compartments.add(child)
-        collisions = [row for row in client.read("quotas", compartment=client.profile["tenancy"]) if row.get("name") == QUOTA_NAME]
-    if collisions:
-        raise KeySafetyError("Unowned target resource name already exists; no create/adoption.")
-    payload = spec(kind, client.profile["tenancy"], journal["created"].get("compartment", {}).get("id"),
-                   journal["selectedAD"], str(uuid.uuid4()))
-    digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
-    print("CREATE CHECK: " + kind + "; IAM/quota control-plane, no VM/shape/volume allocation. "
-          "Always Free/no service charge; London ACTIVE Free Trial freshly verified; future ceiling A1 2OCPU/12GB, live150GB, five backups, Standard object8GB. "
-          "Existing GBP1 budget verified; no production/upgrade/cutover. specSHA256=" + digest, flush=True)
-    print("Eligibility: https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm", flush=True)
-    journal["pending"] = {"kind": kind, "spec": payload, "specSHA256": digest, "evidence": evidence}
-    atomic_metadata(JOURNAL, journal)  # fsync durable intent BEFORE mutation.
-    result = invoke(arguments(kind, payload))
-    identifier = ocid(result.get("id"), kind)
-    journal["pending"]["responseId"] = identifier
-    atomic_metadata(JOURNAL, journal)
-    args = ["iam", "compartment", "get", "--compartment-id", identifier] if kind == "compartment" else quota_read_arguments("get", identifier=identifier)
-    check_readback(kind, payload, invoke(args))  # Independent GET, never just create response.
-    journal["created"][kind] = {"id": identifier, "spec": payload, "verifiedAt": datetime.now(timezone.utc).isoformat()}
+        matches = lookup(kind, client)
+        if len(matches) > 1:
+            raise KeySafetyError("Duplicate target name; no create/adoption.")
+        intent = str(uuid.uuid4())
+        if matches:
+            tags = matches[0].get("freeform-tags", {})
+            try:
+                intent = str(uuid.UUID(tags["ir35-intent"]))
+            except (KeyError, TypeError, ValueError):
+                raise KeySafetyError("Unowned target resource name already exists; no create/adoption.") from None
+        payload = spec(kind, client.profile["tenancy"], journal["created"].get("compartment", {}).get("id"), journal["selectedAD"], intent)
+        if matches:
+            if (matches[0].get("freeform-tags") != payload["freeformTags"]
+                    or matches[0].get("compartment-id") != payload["compartmentId"]):
+                raise KeySafetyError("Existing name/tags/parent mismatch; no create/adoption.")
+            entry = {"kind": kind, "spec": payload, "responseId": matches[0]["id"], "reusedByNameAndTags": True}
+            journal["pending"] = entry
+            atomic_metadata(JOURNAL, journal)
+        else:
+            evidence = fresh_evidence(client, journal.get("selectedAD"))
+            journal["selectedAD"] = evidence["selectedAD"]
+            digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+            print("CREATE CHECK: " + kind + "; IAM/quota control-plane, no VM/shape/volume allocation. "
+                  "Always Free/no service charge; London ACTIVE Free Trial freshly verified; future ceiling A1 2OCPU/12GB, live150GB, five backups, Standard object8GB. "
+                  "Existing GBP1 budget verified; no production/upgrade/cutover. specSHA256=" + digest, flush=True)
+            entry = {"kind": kind, "spec": payload, "specSHA256": digest, "evidence": evidence}
+            journal["pending"] = entry
+            atomic_metadata(JOURNAL, journal)  # fsync intent BEFORE exactly one mutation.
+            result = invoke(arguments(kind, payload))
+            entry["responseId"] = ocid(result.get("id"), kind)
+            atomic_metadata(JOURNAL, journal)
+    identifier = wait_for_visible(lambda: visible_resource(kind, entry, client), label=kind,
+                                  record=journal_recorder(journal, entry))
+    journal["created"][kind] = {**entry, "id": identifier, "verifiedAt": datetime.now(timezone.utc).isoformat()}
     journal["pending"] = None
     atomic_metadata(JOURNAL, journal)
     print("PASS: " + kind + " independently read back ACTIVE; owner-only journal saved. OCID=" + identifier, flush=True)

@@ -11,6 +11,28 @@ from unittest.mock import patch
 # OCI's dynamic loader runs at import and inspects sys.argv, not Click args.
 # Mirror the real CLI process BEFORE importing it; retain the probe selector.
 _PAYLOAD_KIND = sys.argv[2] if len(sys.argv) == 3 and sys.argv[1] == "--payload-wiring" and sys.argv[2] in ("compartment", "quota") else None
+_INFRA = sys.argv[2].split(":") if len(sys.argv) == 3 and sys.argv[1] == "--infra-wiring" else None
+_FINISH = sys.argv[2].split(":") if len(sys.argv) == 3 and sys.argv[1] == "--finish-wiring" else None
+if _FINISH:
+    _kind, _operation = _FINISH
+    _prefix = {"attachment": ["compute", "volume-attachment"], "topic": ["ons", "topic"], "subscription": ["ons", "subscription"], "bucket": ["os", "bucket"]}[_kind]
+    sys.argv = ["oci", *_prefix, "attach-paravirtualized-volume" if _kind == "attachment" and _operation == "create" else _operation]
+_EXTRA_OPERATIONS = {
+    "security-update": ["network", "security-list", "update", "--security-list-id", "ocid1.securitylist.oc1.uk-london-1.controlledfixture01", "--force", "--ingress-security-rules", "[]", "--egress-security-rules", "[]"],
+    "nsg-rules": ["network", "nsg", "rules", "list", "--nsg-id", "ocid1.networksecuritygroup.oc1.uk-london-1.controlledfixture01", "--all"],
+    "vnics": ["compute", "vnic-attachment", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],
+    "vnic": ["network", "vnic", "get", "--vnic-id", "ocid1.vnic.oc1.uk-london-1.controlledfixture01"],
+    "boots": ["compute", "boot-volume-attachment", "list", "--compartment-id", "ocid1.compartment.oc1..controlledfixture01", "--availability-domain", "fixture:UK-LONDON-1-AD-1", "--instance-id", "ocid1.instance.oc1.uk-london-1.controlledfixture01", "--all"],
+    "boot": ["bv", "boot-volume", "get", "--boot-volume-id", "ocid1.bootvolume.oc1.uk-london-1.controlledfixture01"],
+}
+_EXTRA = sys.argv[2] if len(sys.argv) == 3 and sys.argv[1] == "--extra-wiring" and sys.argv[2] in _EXTRA_OPERATIONS else None
+if _EXTRA:
+    sys.argv = ["oci", *_EXTRA_OPERATIONS[_EXTRA][:3]]
+if _INFRA:
+    import p1_infrastructure
+    _kind, _operation = _INFRA
+    _prefix = p1_infrastructure.KINDS[_kind][0].split()
+    sys.argv = ["oci", *_prefix, "launch" if _kind == "instance" and _operation == "create" else _operation]
 if _PAYLOAD_KIND:
     sys.argv = ["oci", *( ["limits", "quota", "create"] if _PAYLOAD_KIND == "quota" else ["iam", "compartment", "create"] )]
 
@@ -22,6 +44,69 @@ import p1_control_plane
 
 
 class CliWiringTests(unittest.TestCase):
+    def test_finish_payloads_parse_before_any_cloud_call(self):
+        import p1_finish
+        for kind in p1_finish.KINDS:
+            for operation in ("create", "get", "list"):
+                child = subprocess.run([sys.executable, __file__, "--finish-wiring", kind + ":" + operation], capture_output=True, text=True, timeout=20)
+                self.assertEqual(child.returncode, 0, kind + ":" + operation + ": finish parser failed; raw output suppressed.")
+
+    def check_finish(self, kind, operation):
+        import p1_finish as finish
+        import p1_infrastructure as infra
+        child = "ocid1.compartment.oc1..controlledfixture01"
+        journal = {"intent": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "created": {
+            key: {"id": "ocid1." + value[2] + ".oc1.uk-london-1.controlledfixture01"} for key, value in infra.KINDS.items()}}
+        journal["created"]["topic"] = {"id": "ocid1.onstopic.oc1.uk-london-1.controlledfixture01"}
+        payload = finish.spec(kind, journal, child, "controlledfixture")
+        identifier = "ocid1." + finish.KINDS[kind] + ".oc1.uk-london-1.controlledfixture01"
+        command_args = finish.args(kind, operation, payload, child, identifier)
+        with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    cli.main(args=security_session.command(command_args)[1:], standalone_mode=False)
+            except BaseException:
+                pass
+            self.assertEqual(client.call_count, 1, kind + ":" + operation + ": parser failed; raw output suppressed.")
+
+    def test_compute_inspection_and_narrow_ingress_update_wiring(self):
+        for name in _EXTRA_OPERATIONS:
+            child = subprocess.run([sys.executable, __file__, "--extra-wiring", name], capture_output=True, text=True, timeout=20)
+            self.assertEqual(child.returncode, 0, name + ": isolated parser failed; raw output suppressed.")
+
+    def check_extra(self, name):
+        with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    cli.main(args=security_session.command(_EXTRA_OPERATIONS[name])[1:], standalone_mode=False)
+            except BaseException:
+                pass
+            self.assertEqual(client.call_count, 1, name + ": parser failed; raw output suppressed.")
+
+    def test_infrastructure_payloads_parse_before_any_cloud_call(self):
+        import p1_infrastructure
+        for kind in p1_infrastructure.KINDS:
+            for operation in ("create", "get", "list"):
+                child = subprocess.run([sys.executable, __file__, "--infra-wiring", kind + ":" + operation], capture_output=True, text=True, timeout=20)
+                self.assertEqual(child.returncode, 0, kind + ":" + operation + ": isolated parser failed; raw output suppressed.")
+
+    def check_infrastructure(self, kind, operation):
+        import p1_infrastructure as infra
+        child = "ocid1.compartment.oc1..controlledfixture01"
+        journal = {"intent": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "ownerCIDR": "8.8.8.8/32",
+                   "created": {key: {"id": "ocid1." + value[2] + ".oc1.uk-london-1.controlledfixture01"} for key, value in infra.KINDS.items()}}
+        payload = infra.specification(kind, journal, child, "fixture:UK-LONDON-1-AD-1",
+                                      "ocid1.image.oc1.uk-london-1.controlledfixture01", "ssh-ed25519 " + "A" * 68)
+        args = security_session.command(infra.cli_arguments(kind, operation, payload=payload, child=child, journal=journal,
+                                        resource_id=journal["created"][kind]["id"]))[1:]
+        with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    cli.main(args=args, standalone_mode=False)
+            except BaseException:
+                pass
+            self.assertEqual(client.call_count, 1, kind + ":" + operation + ": parser failed; raw output suppressed.")
+
     def test_control_plane_payloads_parse_before_any_cloud_call(self):
         for kind in ("compartment", "quota"):
             # OCI lazily mutates its command registry; actual operations each
@@ -83,16 +168,28 @@ class CliWiringTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if _PAYLOAD_KIND:
+    if _FINISH:
+        CliWiringTests().check_finish(*_FINISH)
+    elif _EXTRA:
+        CliWiringTests().check_extra(_EXTRA)
+    elif _INFRA:
+        CliWiringTests().check_infrastructure(*_INFRA)
+    elif _PAYLOAD_KIND:
         CliWiringTests().check_payload(_PAYLOAD_KIND)
     else:
         result = unittest.main(exit=False).result
         if result.wasSuccessful():
+            import p1_infrastructure
+            import p1_compute
+            import p1_finish
             import hashlib
             import time
             from key_ceremony import private_directory
             private_directory(p1_control_plane.KEY_DIRECTORY)
             security_session.atomic_metadata(p1_control_plane.PREFLIGHT_RECEIPT,
                 {"status": "PASS", "checkedAt": time.time(), "group": "limits quota", "auth": "security_token",
+                 "infrastructureSHA256": hashlib.sha256(Path(p1_infrastructure.__file__).read_bytes()).hexdigest(),
+                 "computeSHA256": hashlib.sha256(Path(p1_compute.__file__).read_bytes()).hexdigest(),
+                 "finishSHA256": hashlib.sha256(Path(p1_finish.__file__).read_bytes()).hexdigest(),
                  "sourceSHA256": hashlib.sha256(Path(p1_control_plane.__file__).read_bytes()).hexdigest()})
         raise SystemExit(0 if result.wasSuccessful() else 1)
