@@ -22,6 +22,23 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  oracle-key-safety:
+    name: Oracle local key custody tests
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Install isolated key-test dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ir35-key-tests"
+          "$RUNNER_TEMP/ir35-key-tests/bin/python" -m pip install -r infra/oracle/key-requirements.txt
+      - name: Test local encryption, refusal and redaction with disposable mock keys
+        run: |
+          "$RUNNER_TEMP/ir35-key-tests/bin/python" -m unittest discover -s infra/oracle/tests -v
+
   worker-standby:
     name: Worker Docker build and Postgres standby health
     runs-on: ubuntu-latest

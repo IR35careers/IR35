@@ -22,7 +22,7 @@ const secretPatterns = [
   ["GitHub token", /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g],
   ["Google API key", /\bAIza[0-9A-Za-z_-]{35}\b/g],
   ["AWS access key", /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g],
-  ["Private key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g],
+  ["Private key", /-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY-----/g],
 ];
 
 function detectedSecretKinds(content) {

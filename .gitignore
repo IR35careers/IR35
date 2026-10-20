@@ -31,6 +31,14 @@ yarn-error.log*
 .env
 infra/oracle/deploy.env
 
+# Oracle credentials/state never belong in this public repository.
+*.tfstate
+*.tfstate.*
+.terraform/
+infra/oracle/**/__pycache__/
+infra/oracle/**/*.pyc
+infra/oracle/.venv/
+
 # Vercel
 .vercel
 

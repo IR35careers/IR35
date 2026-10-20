@@ -1,0 +1,3 @@
+# Isolated local/CI tooling only; no application runtime dependency.
+cryptography==50.0.2
+bcrypt==5.0.0

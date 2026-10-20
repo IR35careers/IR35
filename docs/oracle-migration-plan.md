@@ -1,6 +1,39 @@
-# Whole-stack Oracle migration — P0 inventory and approval plan
+# Whole-stack Oracle migration — inventory and phased execution plan
 
-19 October 2026, revised with the owner's P0 decisions. **Guarded P1 provisioning authorised; stopped at local CLI/key preflight, no resources created.** Target includes self-hosted Supabase, Caddy and fourteen-day cloud retention with the approved 48-hour reverse-sync rollback window. The corrected free envelope supersedes the earlier larger proposal. Original product requirements remain in `spec.md`; each phase needs its own draft PR, tests and stop/report gate. The queue-host validator is a separate draft PR, not a deployment or production flag change.
+20 October 2026, updated for the owner's FINAL MIGRATION ORDER. **P1 in progress: WSL2 CLI repair verified; G1 hidden key entry next, no new resource created.** The new section below supersedes conflicting historical notes (including stop-after-each-phase, preserving an unencrypted key instead of generating new protected keys, and session deletion before zero-loss verification). Original product requirements remain in `spec.md`. Draft PR #47 is P0; #48 is the separate queue validator. Neither is a deployment or merge approval.
+
+## 0. Final order: execution and go/no-go standard
+
+Proceed P1 through P10 automatically **only after each phase passes**, retaining one small draft PR, tests, `progress.md` update and evidence file per phase. Never merge or deploy production from CI. Stop on a failed check or the numbered owner gates: **G1** hidden new SSH/API passphrases; **G2** Oracle login/MFA/agreement; **G3** unavailable Auth settings/templates in a private local file; **G4** Google Console changes; **G5** DNS TTL/records; **G6** exact `YES CUTOVER`. Give numbered steps and WAIT at each gate. Historical account evidence is not a fresh eligibility check.
+
+Always Free envelope: London A1 **2 OCPU/12 GB**, Ubuntu24.04arm64, **50 GB boot +100 GB block**, aggregate live volumes <=150 GB, encrypted backups <=8 GB. Before **every create**, record live account/free shape label and Limits/Quotas/Usage evidence, print the resource specification/free checklist, then read back actual resource OCIDs. No spending trial credits, no PAYG, no paid fallback. Persist intent before calls, reconcile unknown outcomes, never retry an ambiguous create. Capacity ceiling is one initial launch plus **three** proven-capacity retries with backoff across ADs. Other failures: after two failures one documented repair, then STOP if still failing. No capacity-sniping loops or fake CPU load.
+
+**Zero-loss Verification Standard — P4, P9 and reverse-sync:** `scripts/verify-migration.ts` and reviewed SQL must compare source/target and emit only names/counts/hashes to `docs/evidence/`. A PASS requires **every** check below; missing/unreadable checks are not PASS.
+
+- All P0 app schemas plus public/auth/storage: objects, columns/types/defaults, constraints/indexes, RLS enabled/forced flags, policy name/definition hash, triggers, function hashes, grants, extensions and exact compatible versions. Platform-only exceptions must be named/reviewed, never hide an app-schema mismatch.
+- Every table: exact row count and MD5 over **all** rows using the identical deterministic ordered text-cast algorithm, PK ordering or all-column ordering when no PK. Stable encoding/NULL/byte framing, session parameters and snapshot/object-write consistency are mandatory. Any character difference fails; no sampling-only substitute.
+- Every sequence: `last_value` and `is_called`, set after load. Auth users/identities/MFA and password-hash bytes compared by hash only. Never publish those values or a row. Preserve all copied data before any separately reviewed session policy; fresh JWTs plus sign-in-again UX must not be implemented by silently deleting Auth rows to pass a comparison.
+- Every bucket/object: exact count/total bytes, SHA256 of every downloaded object, deterministic manifest with **hashed paths only** in reports, and public/private/file-size/MIME restrictions. SQL metadata bytes are not object-byte proof.
+- UTF8, collation, emoji/accented/non-Latin exact round-trip. Any mismatch is **FAIL**, naming the table/bucket; do not skip, truncate, dedupe or edit data to manufacture equivalence.
+
+Phase completion checkpoints (the detailed inventory/risks below remain applicable):
+
+| Phase | Evidence required before advancing |
+| --- | --- |
+| P1 | WSL2/short-path CLI; G1 new encrypted Ed25519/RSA keys verified, public uploads only; per-create free evidence, compartment/VCN/subnet/NSG/A1/volumes/Bastion/private bucket/notification/quota OCIDs and budget read-back. SSH owner-/32+Bastion-/32 only, no IPv6/broad SSH. |
+| P2 | ir35 nonroot/key-only/root-off, UTC/NTP, ufw/fail2ban/updates, 4 GB swap/swappiness10, UUID/nofail data mount with service fail-closed when absent, Docker/Compose/log rotation and private-port tests. |
+| P3 | Official slim ARM Supabase17>=17.6 pinned by digest, all source extensions loadable; fresh JWT/keys; Realtime retained; Studio off-profile/SSH-only; protected staging/API; ordered fresh-target migrations plus cloud schema diff. Missing extension or unexplained diff stops. |
+| P4 | Read-only TLS pg_dump17/custom + full objects; dry-run/idempotent destination-guarded migrate/reverse scripts; full Verification Standard **PASS twice consecutively**, each cycle timed against <30min target; reverse rehearsal on isolated staging; prove staging-only wipe after each. |
+| P5 | Standalone ARM Next image, V8 heap1024, portable queue/cron adapters, persistent image/ISR/cache; write503 maintenance/banner/worker pause; SEO#40–46 rechecked; health DB/Auth/Storage/Realtime/heartbeat/buildSHA; protected staging only. |
+| P6 | PR#48 validator preserved, pg-boss one Chromium, strict mock runner; durable queued/running/submitted-or-failed with visible error, no silent Ready; stuck-job watchdog tests. |
+| P7 | G3 Auth checklist mapping completed privately, G4 exact origins/redirects, test-account email/password/Google/magic-link/recovery/email-change; sink-safe staging SMTP, port587 for approved live provider; fresh-key sign-in notice without password resets. |
+| P8 | Full E2E incl Google/manual owner gate, llms/sitemap/robots/headers; 50 concurrent users p95/peakRSS/memory limits plus >=2GiB OS headroom; age-public-only encrypted 7daily+4weekly <=8GB; full restore drill PASS with owner-held private identity; free alarms/email and `docs/evidence/staging-signoff.md`. |
+| P9 | `docs/cutover.md`, exact owners/timeline/go-no-go/abort/reverse commands; G5 TTL300 >=24h ahead; then STOP at G6. After exact YES CUTOVER, freeze all writers, prove2min quiet, final dump/objects/verify PASS or abort to Vercel; start Oracle/mock worker, G5 records, live smoke, Oracle maintenance off. |
+| P10 | After cutover only: 14days daily health/backup/error evidence, retain cloud intact; first48h verified reverse-sync before DNS rollback (<15min target), afterwards roll forward; day14 decommission checklist, delete nothing. Real worker requires separate owner approval. |
+
+Hard running memory limits remain **8.875 GiB** (Postgres3GiB; auth/rest/kong/meta/storage combined1.5GiB; Realtime256MiB; Next1.5GiB; worker2.5GiB; Caddy128MiB), leaving nominal3.125GiB for the OS. This is a budget, not load evidence. Swap is not extra RAM. No second instance or paid capacity workaround.
+
+**Current P1 evidence:** [tooling/G1 checkpoint](evidence/oracle-p1-tooling.md). WSL CLI3.95.0/SDK2.188.0 imports verified. No current authenticated quota/shape/cost result, no new key yet, no VM/public IP/health output claimed. The old working registered API key is retained untouched; the new public key will be registered only after G1 succeeds. Existing £1 budget is historical and must be re-read, not duplicated.
 
 ## 1. Evidence and limits of this inventory
 

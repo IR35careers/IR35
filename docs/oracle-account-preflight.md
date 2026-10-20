@@ -14,7 +14,13 @@ No VM, public VM IP, network, SSH deployment key, registry publication, updater 
 
 Current requirements and blockers are in [the superseding whole-stack migration plan](oracle-migration-plan.md). The owner resolved the size conflict: **2 OCPU/12 GB total**, 50 GB boot plus one 100 GB data volume, not the superseded larger trial-sized proposal. Verify current tenancy-wide usage and actual Always Free eligibility before every create; higher trial quota is not permission. [Oracle Always Free documentation](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm)
 
-## Guarded P1 start — local tool/key gate, no cloud calls
+## 20 October P1 local repair — current checkpoint
+
+The FINAL MIGRATION ORDER authorises the WSL2 repair and new encrypted keys. OCI CLI **3.95.0** / SDK **2.188.0** now install and import correctly in Ubuntu24.04 WSL2 at `/home/anvesh/.ir35/oci`; no Windows long-path policy was changed. The isolated key helper uses pinned cryptography50.0.2/bcrypt5.0.0 and refuses piped/argument secrets, existing destinations and unsafe directory permissions. G1 hidden owner passphrase entry remains required before generating the new SSH Ed25519/API RSA3072 keys. Preserve the old registered key, no revocation or silent replacement.
+
+This is local tooling evidence only: **no new authenticated OCI quota/eligibility/cost request, no create, no capacity attempt, no production change**. Recheck the earlier budget and all free entitlements live after G1; do not recreate a historical existing budget. See [P1 evidence](evidence/oracle-p1-tooling.md). The older failed Windows attempt below is retained as history, not an instruction to retry it or a current unresolved CLI failure.
+
+## Historical guarded P1 start — local tool/key gate, no cloud calls
 
 After the owner approved the P0 decisions and guarded P1, local checks found the installed OCI CLI 3.95.0 incomplete (`oci_cli.util` missing). One same-version reinstall into the existing isolated tool environment failed on a Windows long-path package filename. **Two failures: stop and report, no further repair loop or SDK substitution.** The earlier successful account evidence above is historical, not a fresh live eligibility result. No authenticated OCI request, capacity launch attempt, resource create or cost assertion was made during this P1 start. Three permitted capacity retries have not been consumed; this is a local tool failure, not OutOfHostCapacity.
 

@@ -8,7 +8,7 @@ import {
   type ResourceIds, type ResourceName,
 } from "../../infra/oracle/provision-plan";
 import {
-  beginCapacityAttempt, capacityDecision, CAPACITY_INTERVAL_MS, CAPACITY_WINDOW_MS, isOracleCapacityError,
+  beginCapacityAttempt, capacityDecision, CAPACITY_INTERVAL_MS, CAPACITY_WINDOW_MS, MAX_CAPACITY_ATTEMPTS, isOracleCapacityError,
   newCapacityJournal, recordCapacityResult, runCapacityAttempt,
 } from "../../infra/oracle/capacity-retry";
 import { main } from "../../infra/oracle/plan";
@@ -149,18 +149,23 @@ describe("Oracle fixed offline provisioning plan", () => {
 });
 
 describe("Oracle bounded capacity retry and unknown-outcome safety", () => {
-  it("rotates ADs at ten-minute intervals, stops at two hours and does not reset on restart", () => {
+  it("rotates ADs with backoff, stops after initial plus three retries and persists the ceiling across restart", () => {
     let current = journal();
     const domains: string[] = [];
-    for (let attempt = 0; attempt < 12; attempt++) {
+    expect(MAX_CAPACITY_ATTEMPTS).toBe(4);
+    for (let attempt = 0; attempt < MAX_CAPACITY_ATTEMPTS; attempt++) {
       const time = startedAt + attempt * CAPACITY_INTERVAL_MS;
       const decision = capacityDecision(JSON.parse(JSON.stringify(current)), plan.hash, time);
       expect(decision.action).toBe("launch");
       if (decision.action === "launch") domains.push(decision.ad);
       current = recordCapacityResult(beginCapacityAttempt(current, plan.hash, time), { serviceError: capacityError });
-      if (attempt < 11) expect(capacityDecision(current, plan.hash, time + 1)).toEqual({ action: "wait", until: time + CAPACITY_INTERVAL_MS });
+      if (attempt < 3) expect(capacityDecision(current, plan.hash, time + 1)).toEqual({ action: "wait", until: time + CAPACITY_INTERVAL_MS });
     }
-    expect(domains).toEqual([...input.availabilityDomains, ...input.availabilityDomains, ...input.availabilityDomains, ...input.availabilityDomains]);
+    expect(domains).toEqual([...input.availabilityDomains, input.availabilityDomains[0]]);
+    const exhausted = JSON.parse(JSON.stringify(current));
+    expect(capacityDecision(exhausted, plan.hash, startedAt + 3 * CAPACITY_INTERVAL_MS + 1))
+      .toEqual({ action: "stop", reason: "capacity_attempts_exhausted" });
+    expect(() => beginCapacityAttempt(exhausted, plan.hash, startedAt + 4 * CAPACITY_INTERVAL_MS)).toThrow("not permitted");
     expect(capacityDecision(current, plan.hash, startedAt + CAPACITY_WINDOW_MS)).toEqual({ action: "stop", reason: "capacity_window_exhausted" });
     expect(current.deadlineAt).toBe(startedAt + CAPACITY_WINDOW_MS);
     expect(() => beginCapacityAttempt(current, plan.hash, startedAt + CAPACITY_WINDOW_MS + 1)).toThrow("not permitted");

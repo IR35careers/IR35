@@ -3,14 +3,16 @@ import { ocidSchema } from "./provision-plan";
 
 export const CAPACITY_INTERVAL_MS = 10 * 60 * 1000;
 export const CAPACITY_WINDOW_MS = 2 * 60 * 60 * 1000;
+// Final owner order: one initial attempt plus at most three proven-capacity retries.
+export const MAX_CAPACITY_ATTEMPTS = 4;
 
-const attemptSchema = z.strictObject({ number: z.number().int().min(1).max(12), ad: z.string().min(1).max(100), at: z.number().int().nonnegative() });
+const attemptSchema = z.strictObject({ number: z.number().int().min(1).max(MAX_CAPACITY_ATTEMPTS), ad: z.string().min(1).max(100), at: z.number().int().nonnegative() });
 const journalSchema = z.strictObject({
   version: z.literal(1), planHash: z.string().regex(/^[a-f0-9]{64}$/),
   startedAt: z.number().int().nonnegative(), deadlineAt: z.number().int().nonnegative(),
   domains: z.array(z.string().regex(/^[A-Za-z0-9]{1,20}:UK-LONDON-1-AD-[1-3]$/)).min(1).max(3)
     .refine(value => new Set(value).size === value.length),
-  attempts: z.array(attemptSchema).max(12),
+  attempts: z.array(attemptSchema).max(MAX_CAPACITY_ATTEMPTS),
   pending: attemptSchema.nullable(),
   nextAttemptAt: z.number().int().nonnegative(),
   outcome: z.enum(["ready", "pending", "capacity", "created", "halted"]),
@@ -37,7 +39,7 @@ export type CapacityDecision =
   | { action: "wait"; until: number }
   | { action: "reconcile"; attempt: CapacityJournal["attempts"][number] }
   | { action: "created"; instanceId: string }
-  | { action: "stop"; reason: "capacity_window_exhausted" | "previous_error" };
+  | { action: "stop"; reason: "capacity_window_exhausted" | "capacity_attempts_exhausted" | "previous_error" };
 
 function readJournal(input: unknown): CapacityJournal {
   const result = journalSchema.safeParse(input);
@@ -59,7 +61,8 @@ export function capacityDecision(input: unknown, planHash: string, now: number):
   // even after the two-hour deadline or an empty eventually-consistent list response.
   if (journal.pending) return { action: "reconcile", attempt: journal.pending };
   if (journal.outcome === "halted") return { action: "stop", reason: "previous_error" };
-  if (now >= journal.deadlineAt || journal.attempts.length >= 12) return { action: "stop", reason: "capacity_window_exhausted" };
+  if (now >= journal.deadlineAt) return { action: "stop", reason: "capacity_window_exhausted" };
+  if (journal.attempts.length >= MAX_CAPACITY_ATTEMPTS) return { action: "stop", reason: "capacity_attempts_exhausted" };
   if (now < journal.nextAttemptAt) return { action: "wait", until: journal.nextAttemptAt };
   return { action: "launch", ad: journal.domains[journal.attempts.length % journal.domains.length] };
 }

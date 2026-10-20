@@ -1,6 +1,16 @@
 # IR35Careers delivery checklist
 
-Updated 19 October 2026. Source of truth: `spec.md` and the original Phase 0 brief, preserved below. `[x]` means evidenced completion; existing partial implementations stay unchecked. Continue with the first unchecked task. Update this file after each completed task. Never infer production success from UI copy or a deployment alone.
+Updated 20 October 2026. Source of truth: `spec.md`, the original Phase 0 brief and the superseding FINAL MIGRATION ORDER, preserved below/in `oracle-migration-plan.md`. `[x]` means evidenced completion; existing partial implementations stay unchecked. Automatically advance migration phases only after PASS; pause at owner gates or failed checks. Never infer production success from UI copy or a deployment alone.
+
+## 20 October final order / P1 local recovery
+
+The owner supplied the full final order: zero-loss schema/every-table/all-auth/sequences/every-object verification, London2/12/150GB and <=8GB backups, staged mock-only rehearsals, one draft PR per phase, automatic advancement after PASS and numbered G1–G6 owner pauses. AGENTS/plan now preserve it above conflicting historical instructions; no task scope or production gate was weakened.
+
+The authorised **WSL2 repair succeeded**: Ubuntu24.04.1, isolated OCI CLI3.95.0/SDK2.188.0 with `oci_cli.util` imports verified, no Windows MAX_PATH policy change. New local key helper/isolated dependency pins and real Linux encryption/redaction/permission tests are prepared. Retry state now caps initial launch plus three capacity retries and retains unknown-outcome reconciliation; it is still **not a live provisioning executor**. Tests/evidence follow actual execution, not preparation.
+
+Executed local P1 checks: **10 Linux key-custody tests** pass, including actual PTY hidden-input/ECHO-off proof; **32 capacity/provisioning tests** pass with four-total-attempt ceiling across restart. `npm run verify:release` exits0: TypeScript/zero-warning ESLint, **930unit/141files, zero skips +199legacy checks**. Source/history scan passes756tracked files and dependency audit has only the two prior exact owner-approved exceptions until29October. `pip check`, workflow YAML, launcher syntax and diff checks pass. No browser/provider/Oracle runtime result is inferred; hosted final-head CI remains required.
+
+**P1 remains incomplete at G1**, not a phase PASS: owner must enter new SSH/API passphrases in the dedicated hidden local prompts. Old registered key untouched; no real new key, live quota/Always Free read, OCI create/capacity attempt, public IP, VM, migration, DNS/Vercel/Supabase/runner change or production deployment. [Current evidence](evidence/oracle-p1-tooling.md). Existing historical £1 budget will be re-read, not duplicated. Subsequent phases cannot start until P1 actually passes.
 
 ## Active Phase 0 delivery authority — 15 October follow-up
 
