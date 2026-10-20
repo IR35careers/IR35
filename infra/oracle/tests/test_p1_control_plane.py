@@ -37,8 +37,8 @@ class ControlPlaneTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.path = Path(self.temporary.name) / "journal.json"
         self.journal = {"version": 1, "created": {}, "pending": None, "selectedAD": None}
-        for target, value in (("JOURNAL", self.path), ("fresh_evidence", None)):
-            item = patch.object(control, target, value) if target == "JOURNAL" else patch.object(control, target, return_value={"selectedAD": AD})
+        for target, value in (("JOURNAL", self.path), ("PREFLIGHT_RECEIPT", self.path.with_name("absent-preflight.json")), ("fresh_evidence", None)):
+            item = patch.object(control, target, value) if target != "fresh_evidence" else patch.object(control, target, return_value={"selectedAD": AD})
             item.start()
             self.addCleanup(item.stop)
 
@@ -54,19 +54,81 @@ class ControlPlaneTests(unittest.TestCase):
         self.assertIn("--compartment-id", args)
         self.assertIn("--freeform-tags", args)
 
-    def test_quota_families_zero_by_default_one_ad_only(self):
-        statements = control.quota_statements(AD)
-        self.assertEqual(statements[:3], ["zero compute-core quotas in compartment ir35",
-                                          "zero compute-memory quotas in compartment ir35",
-                                          "zero block-storage quotas in compartment ir35"])
-        self.assertIn(" to 2 in compartment ir35 where request.ad=" + AD, statements[3])
-        self.assertIn(" to 12 in compartment ir35 where request.ad=" + AD, statements[4])
-        self.assertIn(" to 150 in compartment ir35 where request.ad=" + AD, statements[5])
-        self.assertEqual(statements[6], "set block-storage quota backup-count to 5 in compartment ir35")
-        self.assertFalse(any(" in tenancy" in item for item in statements))
-        for ad in ("--debug", "fixture:OTHER-AD-1", "fixture:UK-LONDON-1-AD-1 or true"):
+    def test_owner_policy_is_at_root_targeting_ir35_exact_names(self):
+        payload = control.spec("quota", ROOT, CHILD, AD, INTENT)
+        self.assertEqual(payload["compartmentId"], ROOT)
+        self.assertEqual(payload["name"], "ir35-always-free-cap")
+        self.assertEqual(payload["description"], "Cap ir35 to Always Free envelope")
+        self.assertEqual(payload["statements"], ["set compute-core quota standard-a1-core-count to 2 in compartment ir35",
+            "set compute-memory quota standard-a1-memory-count to 12 in compartment ir35",
+            "set block-storage quota total-storage-gb to 150 in compartment ir35"])
+
+    def test_every_quota_crud_wire_is_limits_quota(self):
+        payload = control.spec("quota", ROOT, CHILD, AD, INTENT)
+        for args in (control.arguments("quota", payload), control.quota_read_arguments("list", root=ROOT),
+                     control.quota_read_arguments("get", identifier="ocid1.quota.oc1..controlledfixture01")):
+            self.assertEqual(args[:2], ["limits", "quota"])
+        with self.assertRaises(KeySafetyError):
+            control.quota_read_arguments("delete", root=ROOT)
+
+    def test_definition_proof_rejects_wrong_name_support_or_scope(self):
+        class Definitions:
+            def read(self, operation, **selectors):
+                names = ("standard-a1-core-count", "standard-a1-memory-count") if selectors["service"] == "compute" else ("total-storage-gb",)
+                return [{"name": name, "scope-type": "AD", "are-quotas-supported": True} for name in names]
+        self.assertEqual(len(control.verify_quota_names(Definitions())), 3)
+        for bad in ([], [{"name": "standard-a1-core-count", "scope-type": "REGION", "are-quotas-supported": True}],
+                    [{"name": "standard-a1-core-count", "scope-type": "AD", "are-quotas-supported": False}]):
+            client = Definitions()
+            client.read = lambda *args, **kwargs: bad
             with self.assertRaises(KeySafetyError):
-                control.quota_statements(ad)
+                control.verify_quota_names(client)
+
+    def quota_fixture(self):
+        self.journal["created"] = {"compartment": {"id": CHILD}, "quota": {"id": "ocid1.quota.oc1..controlledfixture01"}}
+        self.journal["selectedAD"] = AD
+        class Effective:
+            profile = {"tenancy": ROOT}
+            domains = {AD}
+            compartments = {ROOT, CHILD}
+            calls = []
+            polls = 0
+            delayed = True
+            def read(inner, operation, **selectors):
+                inner.calls.append((operation, selectors))
+                if operation == "quotas":
+                    return [{"id": self.journal["created"]["quota"]["id"], "name": control.QUOTA_NAME,
+                             "compartment-id": ROOT, "lifecycle-state": "ACTIVE"}]
+                self.assertEqual(selectors["compartment"], CHILD)
+                self.assertEqual(selectors["ad"], AD)
+                if selectors["limit"] == "standard-a1-core-count":
+                    inner.polls += 1
+                values = {"standard-a1-core-count": 2, "standard-a1-memory-count": 12, "total-storage-gb": 150}
+                return {"effective-quota-value": None if inner.delayed and inner.polls == 1 else values[selectors["limit"]]}
+        return Effective()
+
+    def test_wait_verifies_root_list_and_child_effective_limits_before_launch(self):
+        client = self.quota_fixture()
+        elapsed = [0]
+        result = control.wait_for_quota(self.journal, client, clock=lambda: elapsed[0], sleep=lambda delay: elapsed.__setitem__(0, elapsed[0] + delay))
+        self.assertEqual(result["polls"], 2)
+        self.assertEqual(elapsed[0], 30)
+        self.assertEqual(client.calls[0], ("quotas", {"compartment": ROOT}))
+        self.assertEqual(result["limits"]["total-storage-gb"], "150")
+        self.assertIn("aggregate executor guards still required", result["scope"])
+
+    def test_propagation_timeout_never_creates_or_silently_passes(self):
+        client = self.quota_fixture()
+        original = client.read
+        def never_ready(operation, **selectors):
+            return original(operation, **selectors) if operation == "quotas" else {"effective-quota-value": None}
+        client.read = never_ready
+        ticks = iter([0, 600])
+        with patch.object(control, "invoke") as mutate:
+            with self.assertRaises(KeySafetyError) as error:
+                control.wait_for_quota(self.journal, client, clock=lambda: next(ticks), sleep=lambda delay: self.fail("No sleep after deadline"))
+            self.assertIn("within10minutes", str(error.exception))
+            mutate.assert_not_called()
 
     def test_durable_intent_precedes_create_and_independent_get(self):
         calls = []

@@ -52,7 +52,7 @@ class ReadOnlyOci:
 
     def arguments(self, operation, **selectors):
         # Reject unknown fields even if the named operation would not use them.
-        if set(selectors) - {"compartment", "ad", "limit", "bucket", "budget"}:
+        if set(selectors) - {"compartment", "ad", "limit", "bucket", "budget", "service"}:
             raise KeySafetyError("Unsupported read selector; no OCI call.")
         compartment = selectors.get("compartment", self.profile["tenancy"])
         if compartment not in self.compartments:
@@ -70,6 +70,15 @@ class ReadOnlyOci:
             return ["iam", "compartment", "list", *common, "--compartment-id-in-subtree", "true", "--access-level", "ANY", "--all"]
         if operation == "domains" and not selectors:
             return ["iam", "availability-domain", "list", *common, "--all"]
+        if operation == "quotaDefinitions" and set(selectors) == {"service"} and selectors["service"] in ("compute", "block-storage"):
+            return ["limits", "definition", "list", *common, "--service-name", selectors["service"], "--all"]
+        if operation == "quotaAvailability" and set(selectors) == {"compartment", "ad", "limit"}:
+            services = {"standard-a1-core-count": "compute", "standard-a1-memory-count": "compute", "total-storage-gb": "block-storage"}
+            ad, limit = selectors["ad"], selectors["limit"]
+            if ad not in self.domains or not re.fullmatch(AD_PATTERN, ad) or limit not in services:
+                raise KeySafetyError("Quota availability must use known AD, child compartment and documented limit.")
+            return ["limits", "resource-availability", "get", *common, "--service-name", services[limit],
+                    "--limit-name", limit, "--availability-domain", ad]
         lists = {
             "instances": ["compute", "instance", "list"],
             "volumes": ["bv", "volume", "list"],
@@ -137,7 +146,7 @@ class ReadOnlyOci:
         # representation; required objects, cost results and partial JSON do not.
         empty_lists = {"compartments", "domains", "instances", "volumes", "blockBackups", "bootBackups",
                        "vcns", "quotas", "bootVolumes", "images", "budgets", "budgetAlerts", "buckets",
-                       "accountRegions", "accountSubscriptions", "shapes"}
+                       "accountRegions", "accountSubscriptions", "shapes", "quotaDefinitions"}
         if result.stdout == "" and operation in empty_lists:
             return []
         try:

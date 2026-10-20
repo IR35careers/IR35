@@ -87,6 +87,7 @@ class ResourceAuditTests(unittest.TestCase):
         self.assertEqual(client.arguments("budgets")[:5], ["budgets", "budget", "budget", "list", "--compartment-id"])
         self.assertIn("ALL", client.arguments("budgets"))
         self.assertEqual(client.arguments("budgetAlerts", budget=BUDGET)[:4], ["budgets", "budget", "alert-rule", "list"])
+        self.assertEqual(client.arguments("quotas", compartment=PROFILE["tenancy"])[:3], ["limits", "quota", "list"])
         for operation in ("compartments", "domains", "instances", "volumes", "bootBackups", "blockBackups", "vcns", "quotas", "images", "budgets"):
             self.assertIn("--all", client.arguments(operation))
         self.assertIn("--all", client.arguments("bootVolumes", compartment=COMPARTMENT, ad=DOMAINS[0]))

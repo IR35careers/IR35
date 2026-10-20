@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## Owner-specific quota repair — 20 October 2026
+
+- The owner reopened the failed quota step as a new specific fix. Quota CRUD must use `oci limits quota` with profileir35/SecurityToken. Create policy `ir35-always-free-cap` at the tenancy root, targeting compartmentir35 with the approved three documented2OCPU/12GB/150GB statements. Verify names/support/scope against live definitions/docs, list at root, and prove effective child limits within10minutes before any launch. These quota names are AD-scoped: keep independent tenancy-wide aggregate2/12/150 and five-backup/8GB object guards; do not claim the root policy alone is a regional spending cap.
+- If the real CLI path still fails, owner permits one reconciled `oci_limits_quota` Terraform fallback with the same statements and SecurityToken, no Console and no blind duplicate create. Stop once on a new unresolved failure. No production/paid/cutover authority changes. Actual vendor-parser proof must precede reopening the guarded bootstrap; old failed-harness hold is superseded only after that proof passes.
+
 ## Latest owner authentication and batched gates — 20 October 2026
 
 - Routine OCI uses browser SecurityToken only: profile `ir35`, region `uk-london-1`, CLI `--profile ir35 --auth security_token`; Terraform `auth = "SecurityToken"`, `config_file_profile = "ir35"`. Never fall back to either registered API key or repeatedly request its passphrase. Refresh before active operations when less than ten minutes remain, single-flight, until the original browser session is24h old; only failed refresh or the daily limit opens another owner browser gate. Session token/temporary signer stay owner-only outside Git; existing encrypted API/SSH keys remain unchanged.

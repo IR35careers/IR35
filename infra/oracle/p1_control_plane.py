@@ -13,30 +13,27 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 import uuid
 
 from bootstrap_audit import KEY_DIRECTORY, ocid
 from key_ceremony import KeySafetyError, private_directory, write_new
 from resource_audit import ReadOnlyOci, inventory, session_account_audit, SHAPE
+from resource_audit import number
 from security_session import atomic_metadata, clean_environment, command, ensure_session, private_file
 from storage_budget import reconcile
 
 JOURNAL = KEY_DIRECTORY / "p1-control-plane.json"
+PREFLIGHT_RECEIPT = KEY_DIRECTORY / "quota-cli-wiring-status.json"
+QUOTA_NAME = "ir35-always-free-cap"
 
 
-def quota_statements(ad):
-    if not re.fullmatch(r"[A-Za-z0-9]{1,20}:UK-LONDON-1-AD-[1-3]", ad):
-        raise KeySafetyError("Quota AD must be an authenticated London AD.")
-    # An AD-scoped limit of2 in EACH AD is not an aggregate ceiling of2.
-    # Deny each family, then allow only A1 in one selected AD. Nothing applies
-    # to root/other compartments. No paid shape/capacity reservation is enabled.
-    return ["zero compute-core quotas in compartment ir35",
-            "zero compute-memory quotas in compartment ir35",
-            "zero block-storage quotas in compartment ir35",
-            "set compute-core quota standard-a1-core-count to 2 in compartment ir35 where request.ad=" + ad,
-            "set compute-memory quota standard-a1-memory-count to 12 in compartment ir35 where request.ad=" + ad,
-            "set block-storage quota total-storage-gb to 150 in compartment ir35 where request.ad=" + ad,
-            "set block-storage quota backup-count to 5 in compartment ir35"]
+def quota_statements():
+    # Owner's exact root policy. These three quotas are AD-scoped: never claim
+    # they replace the executor's tenancy-wide2/12/150 and five-backup guards.
+    return ["set compute-core quota standard-a1-core-count to 2 in compartment ir35",
+            "set compute-memory quota standard-a1-memory-count to 12 in compartment ir35",
+            "set block-storage quota total-storage-gb to 150 in compartment ir35"]
 
 
 def spec(kind, root, child, ad, intent):
@@ -46,9 +43,10 @@ def spec(kind, root, child, ad, intent):
         return {"compartmentId": root, "name": "ir35", "description": "IR35 Always Free staging; no production cutover",
                 "freeformTags": tags}
     if kind == "quota":
-        return {"compartmentId": ocid(child, "compartment"), "name": "ir35-always-free-envelope",
-                "description": "Single-AD A1 2 OCPU 12 GB; live storage150GB and five backups maximum",
-                "statements": quota_statements(ad), "freeformTags": tags}
+        ocid(child, "compartment")  # Target must exist; policy itself lives at root.
+        return {"compartmentId": root, "name": QUOTA_NAME,
+                "description": "Cap ir35 to Always Free envelope",
+                "statements": quota_statements(), "freeformTags": tags}
     raise KeySafetyError("Only the approved compartment/quota bootstrap is implemented; no generic create.")
 
 
@@ -62,6 +60,14 @@ def arguments(kind, payload):
         option = "--" + re.sub(r"[A-Z]", lambda item: "-" + item[0].lower(), name)
         result.extend([option, json.dumps(value, separators=(",", ":")) if isinstance(value, (dict, list)) else value])
     return result
+
+
+def quota_read_arguments(operation, *, root=None, identifier=None):
+    if operation == "list" and identifier is None:
+        return ["limits", "quota", "list", "--compartment-id", ocid(root, "tenancy"), "--all"]
+    if operation == "get" and root is None:
+        return ["limits", "quota", "get", "--quota-id", ocid(identifier, "quota")]
+    raise KeySafetyError("Quota reads must use limits quota get/list with exact selectors.")
 
 
 def invoke(args):
@@ -111,14 +117,68 @@ def fresh_evidence(client, ad=None):
     if len(shapes) != 1 or shapes[0].get("billing-type") not in ("ALWAYS_FREE", "LIMITED_FREE") or shapes[0].get("is-flexible") is not True:
         raise KeySafetyError("Live A1 free billing/flexible metadata did not pass; no create.")
     return {"checkedAt": report["checkedAt"], "account": account, "inventory": report,
-            "storage": storage, "selectedAD": selected, "shapeBilling": shapes[0]["billing-type"]}
+            "storage": storage, "selectedAD": selected, "shapeBilling": shapes[0]["billing-type"],
+            "quotaDefinitions": verify_quota_names(client)}
+
+
+def verify_quota_names(client):
+    expected = {"compute": {"standard-a1-core-count", "standard-a1-memory-count"}, "block-storage": {"total-storage-gb"}}
+    proof = []
+    for service, names in expected.items():
+        definitions = client.read("quotaDefinitions", service=service)
+        if not isinstance(definitions, list):
+            raise KeySafetyError("Quota definitions are incomplete; no create.")
+        for name in sorted(names):
+            matches = [row for row in definitions if row.get("name") == name]
+            if len(matches) != 1 or matches[0].get("are-quotas-supported") is not True or matches[0].get("scope-type") != "AD":
+                raise KeySafetyError("Documented quota definition/support/scope unverified: " + name + "; no create.")
+            proof.append({"service": service, "name": name, "scope": "AD", "quotasSupported": True})
+    return proof
+
+
+def wait_for_quota(journal, client, *, clock=time.monotonic, sleep=time.sleep):
+    """Expected propagation polling only, never a create retry; max10minutes."""
+    quota = journal["created"]["quota"]
+    root = client.profile["tenancy"]
+    listed = client.read("quotas", compartment=root)
+    matches = [row for row in listed if row.get("id") == quota["id"] and row.get("name") == QUOTA_NAME
+               and row.get("compartment-id") == root and row.get("lifecycle-state") == "ACTIVE"]
+    if len(matches) != 1:
+        raise KeySafetyError("Root limits quota list did not verify the unique ACTIVE policy; no launch.")
+    child = journal["created"]["compartment"]["id"]
+    client.compartments.add(child)
+    if not client.domains:
+        client.domains = {row["name"] for row in client.read("domains")}
+    deadline = clock() + 600
+    checks = {"standard-a1-core-count": 2, "standard-a1-memory-count": 12, "total-storage-gb": 150}
+    polls = 0
+    while True:
+        polls += 1
+        values = {}
+        for name, target in checks.items():
+            result = client.read("quotaAvailability", compartment=child, ad=journal["selectedAD"], limit=name)
+            if not isinstance(result, dict):
+                raise KeySafetyError("Effective quota response is incomplete; no launch.")
+            observed = result.get("effective-quota-value")
+            values[name] = None if observed is None else str(number(observed))
+        if all(values[name] is not None and number(values[name]) == target for name, target in checks.items()):
+            quota["effectiveReadback"] = {"limits": values, "polls": polls, "verifiedAt": datetime.now(timezone.utc).isoformat(),
+                                          "scope": "selected AD within ir35; aggregate executor guards still required"}
+            atomic_metadata(JOURNAL, journal)
+            print("PASS: root quota listed ACTIVE and effective child/AD limits are2/12/150; aggregate free envelope unchanged.", flush=True)
+            return quota["effectiveReadback"]
+        remaining = deadline - clock()
+        if remaining <= 0:
+            raise KeySafetyError("Quota propagation did not reach2/12/150 within10minutes; no launch, no create retry.")
+        print("WAIT: quota propagation pending; no launch or extra create.", flush=True)
+        sleep(min(30, remaining))
 
 
 def create_one(kind, journal, client):
     if kind in journal["created"]:
         previous = journal["created"][kind]
         payload = previous["spec"]
-        args = ["iam", "compartment", "get", "--compartment-id", previous["id"]] if kind == "compartment" else ["limits", "quota", "get", "--quota-id", previous["id"]]
+        args = ["iam", "compartment", "get", "--compartment-id", previous["id"]] if kind == "compartment" else quota_read_arguments("get", identifier=previous["id"])
         check_readback(kind, payload, invoke(args))
         return previous["id"]
     if journal.get("pending"):
@@ -131,7 +191,7 @@ def create_one(kind, journal, client):
     else:
         child = journal["created"]["compartment"]["id"]
         client.compartments.add(child)
-        collisions = [row for row in client.read("quotas", compartment=child) if row.get("name") == "ir35-always-free-envelope"]
+        collisions = [row for row in client.read("quotas", compartment=client.profile["tenancy"]) if row.get("name") == QUOTA_NAME]
     if collisions:
         raise KeySafetyError("Unowned target resource name already exists; no create/adoption.")
     payload = spec(kind, client.profile["tenancy"], journal["created"].get("compartment", {}).get("id"),
@@ -147,7 +207,7 @@ def create_one(kind, journal, client):
     identifier = ocid(result.get("id"), kind)
     journal["pending"]["responseId"] = identifier
     atomic_metadata(JOURNAL, journal)
-    args = ["iam", "compartment", "get", "--compartment-id", identifier] if kind == "compartment" else ["limits", "quota", "get", "--quota-id", identifier]
+    args = ["iam", "compartment", "get", "--compartment-id", identifier] if kind == "compartment" else quota_read_arguments("get", identifier=identifier)
     check_readback(kind, payload, invoke(args))  # Independent GET, never just create response.
     journal["created"][kind] = {"id": identifier, "spec": payload, "verifiedAt": datetime.now(timezone.utc).isoformat()}
     journal["pending"] = None
@@ -157,13 +217,21 @@ def create_one(kind, journal, client):
 
 
 def main():
-    # Hard hold: actual installed-CLI quota wiring probe failed after its one
-    # documented repair. Do not execute any create until that check is repaired,
-    # passes and this hold is deliberately reviewed/removed in a later task.
-    raise KeySafetyError("P1 held: installed-CLI quota wiring check FAIL; no create operation enabled.")
+    # Owner explicitly reopened this one fix. Actual vendor-parser PASS receipt
+    # must bind the current adapter bytes, correct namespace and session auth.
+    try:
+        receipt = json.loads(private_file(PREFLIGHT_RECEIPT))
+        age = time.time() - receipt["checkedAt"]
+        if (receipt.get("status") != "PASS" or receipt.get("group") != "limits quota"
+                or receipt.get("auth") != "security_token" or not 0 <= age <= 1800
+                or receipt.get("sourceSHA256") != hashlib.sha256(Path(__file__).read_bytes()).hexdigest()):
+            raise ValueError()
+    except (OSError, ValueError, KeyError, TypeError):
+        raise KeySafetyError("P1 held: missing/stale/mismatched quota wiring PASS; no create enabled.") from None
+    bootstrap()
 
 
-def _disabled_bootstrap():
+def bootstrap():
     if sys.argv[1:] != ["bootstrap"]:
         raise KeySafetyError("Use bootstrap only. No general apply or arbitrary resource operation.")
     os.umask(0o077)
@@ -182,6 +250,7 @@ def _disabled_bootstrap():
         child = create_one("compartment", journal, client)
         client.compartments.add(child)
         create_one("quota", journal, client)
+        wait_for_quota(journal, client)
         print("Control-plane bootstrap PASS. P1 is NOT complete: VM/network/storage/Bastion adapters remain guarded/unexecuted.")
     finally:
         os.close(lock)

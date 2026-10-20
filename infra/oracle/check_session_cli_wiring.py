@@ -8,6 +8,12 @@ import sys
 import unittest
 from unittest.mock import patch
 
+# OCI's dynamic loader runs at import and inspects sys.argv, not Click args.
+# Mirror the real CLI process BEFORE importing it; retain the probe selector.
+_PAYLOAD_KIND = sys.argv[2] if len(sys.argv) == 3 and sys.argv[1] == "--payload-wiring" and sys.argv[2] in ("compartment", "quota") else None
+if _PAYLOAD_KIND:
+    sys.argv = ["oci", *( ["limits", "quota", "create"] if _PAYLOAD_KIND == "quota" else ["iam", "compartment", "create"] )]
+
 from oci_cli.cli import cli
 from oci_cli import cli_setup_bootstrap
 from oci_cli import cli_util
@@ -25,23 +31,26 @@ class CliWiringTests(unittest.TestCase):
             self.assertEqual(child.returncode, 0, kind + ": isolated parser failed; raw output suppressed.")
 
     def check_payload(self, kind):
-            payload = p1_control_plane.spec(kind, "ocid1.tenancy.oc1..controlledfixture01",
-                    "ocid1.compartment.oc1..controlledfixture01", "fixture:UK-LONDON-1-AD-1",
-                    "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
-            args = security_session.command(p1_control_plane.arguments(kind, payload))[1:]
-            diagnostic = "none"
-            with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
-                try:
-                    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                        cli.main(args=args, standalone_mode=False)
-                except BaseException as error:
-                    while error.__context__ is not None:
-                        error = error.__context__
-                    diagnostic = type(error).__name__
-                    option = getattr(error, "option_name", "")
-                    if isinstance(option, str) and option.startswith("--") and option.replace("-", "").isalpha():
-                        diagnostic += " " + option
-                self.assertEqual(client.call_count, 1, kind + ": " + diagnostic + "; no raw output published.")
+        payload = p1_control_plane.spec(kind, "ocid1.tenancy.oc1..controlledfixture01",
+                "ocid1.compartment.oc1..controlledfixture01", "fixture:UK-LONDON-1-AD-1",
+                "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+        operation = p1_control_plane.arguments(kind, payload)
+        if kind == "quota":
+            self.assertEqual(operation[:3], ["limits", "quota", "create"])
+        args = security_session.command(operation)[1:]
+        diagnostic = "none"
+        with patch.object(cli_util, "build_client", side_effect=RuntimeError("CONTROLLED_STOP")) as client:
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    cli.main(args=args, standalone_mode=False)
+            except BaseException as error:
+                while error.__context__ is not None:
+                    error = error.__context__
+                diagnostic = type(error).__name__
+                option = getattr(error, "option_name", "")
+                if isinstance(option, str) and option.startswith("--") and option.replace("-", "").isalpha():
+                    diagnostic += " " + option
+            self.assertEqual(client.call_count, 1, kind + ": " + diagnostic + "; no raw output published.")
 
     def test_browser_command_reaches_vendor_flow_without_config_or_api_unlock(self):
         captured = io.StringIO()
@@ -74,7 +83,16 @@ class CliWiringTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3 and sys.argv[1] == "--payload-wiring" and sys.argv[2] in ("compartment", "quota"):
-        CliWiringTests().check_payload(sys.argv[2])
+    if _PAYLOAD_KIND:
+        CliWiringTests().check_payload(_PAYLOAD_KIND)
     else:
-        unittest.main()
+        result = unittest.main(exit=False).result
+        if result.wasSuccessful():
+            import hashlib
+            import time
+            from key_ceremony import private_directory
+            private_directory(p1_control_plane.KEY_DIRECTORY)
+            security_session.atomic_metadata(p1_control_plane.PREFLIGHT_RECEIPT,
+                {"status": "PASS", "checkedAt": time.time(), "group": "limits quota", "auth": "security_token",
+                 "sourceSHA256": hashlib.sha256(Path(p1_control_plane.__file__).read_bytes()).hexdigest()})
+        raise SystemExit(0 if result.wasSuccessful() else 1)
