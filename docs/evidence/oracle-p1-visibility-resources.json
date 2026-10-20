@@ -1,0 +1,487 @@
+{
+  "checkedAt": "2026-10-20T15:07:11.216651+00:00",
+  "phase": "P1",
+  "phaseComplete": true,
+  "resources": [
+    {
+      "kind": "compartment",
+      "id": "ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq",
+      "verifiedAt": "2026-10-20T08:56:16.994292+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "compartment",
+          "attempt": 1,
+          "elapsedSeconds": 1.739,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "compartment",
+          "attempt": 1,
+          "elapsedSeconds": 2.263,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "compartment",
+          "attempt": 1,
+          "elapsedSeconds": 1.724,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "compartment",
+          "attempt": 1,
+          "elapsedSeconds": 2.088,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "quota",
+      "id": "ocid1.quota.oc1..aaaaaaaafepky5snnvksd25mi3jzwqg4rmxkwxaa575dbwb4uacn6sxgucrq",
+      "verifiedAt": "2026-10-20T09:40:55.352931+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "quota",
+          "attempt": 1,
+          "elapsedSeconds": 1.882,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota",
+          "attempt": 1,
+          "elapsedSeconds": 2.074,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota",
+          "attempt": 1,
+          "elapsedSeconds": 1.615,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota",
+          "attempt": 1,
+          "elapsedSeconds": 2.108,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota",
+          "attempt": 1,
+          "elapsedSeconds": 2.075,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota-effective",
+          "attempt": 1,
+          "elapsedSeconds": 4.025,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota-effective",
+          "attempt": 1,
+          "elapsedSeconds": 3.43,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota-effective",
+          "attempt": 1,
+          "elapsedSeconds": 3.575,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "quota-effective",
+          "attempt": 1,
+          "elapsedSeconds": 3.369,
+          "result": "VISIBLE"
+        }
+      ],
+      "effectiveLimits": {
+        "standard-a1-core-count": "2.0",
+        "standard-a1-memory-count": "12.0",
+        "total-storage-gb": "150.0"
+      }
+    },
+    {
+      "kind": "vcn",
+      "id": "ocid1.vcn.oc1.uk-london-1.amaaaaaar72xucyazidpl3j5q47rynmkowf2idrrb7wwnegpjxmmb42necmq",
+      "verifiedAt": "2026-10-20T09:54:46.895110+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "vcn",
+          "attempt": 1,
+          "elapsedSeconds": 2.383,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "gateway",
+      "id": "ocid1.internetgateway.oc1.uk-london-1.aaaaaaaaomvd6pz2dbmxdui3qsensgchkm2awecpoi7pl2vdpnedipgo4zjq",
+      "verifiedAt": "2026-10-20T09:55:36.273665+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "gateway",
+          "attempt": 1,
+          "elapsedSeconds": 3.217,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "routes",
+      "id": "ocid1.routetable.oc1.uk-london-1.aaaaaaaajakxuqvmyhwvdhi2jpsjfmakm2y5pg3vdoavvopxv4nulbv2mkka",
+      "verifiedAt": "2026-10-20T09:56:38.321667+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "routes",
+          "attempt": 1,
+          "elapsedSeconds": 2.477,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "security",
+      "id": "ocid1.securitylist.oc1.uk-london-1.aaaaaaaaoolccrgs7slzdoqzwxhhhm2t67c7sm65u3bmcugjhyec5jssxg4a",
+      "verifiedAt": "2026-10-20T09:57:22.764836+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "security",
+          "attempt": 1,
+          "elapsedSeconds": 2.316,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "bastion-ssh-ingress",
+          "attempt": 1,
+          "elapsedSeconds": 1.158,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "nsg",
+      "id": "ocid1.networksecuritygroup.oc1.uk-london-1.aaaaaaaame3g52hajwndyaenlsfptb7rxf2m3vdl34gqe6ltojutqxpok4ia",
+      "verifiedAt": "2026-10-20T09:58:09.941221+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "nsg",
+          "attempt": 1,
+          "elapsedSeconds": 2.507,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "subnet",
+      "id": "ocid1.subnet.oc1.uk-london-1.aaaaaaaa7vogkdq2ukcjcz2vn3b3eex54vsihj47wpkbbsou2stgibdqckha",
+      "verifiedAt": "2026-10-20T09:59:05.393466+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "subnet",
+          "attempt": 1,
+          "elapsedSeconds": 3.632,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "bastion",
+      "id": "ocid1.bastion.oc1.uk-london-1.amaaaaaar72xucyakmdyzbcyjvjrbslw67boejim7uojuxrhfukpovat6eka",
+      "verifiedAt": "2026-10-20T10:00:41.402770+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "bastion",
+          "attempt": 1,
+          "elapsedSeconds": 2.576,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 5
+        },
+        {
+          "resource": "bastion",
+          "attempt": 2,
+          "elapsedSeconds": 9.65,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 10
+        },
+        {
+          "resource": "bastion",
+          "attempt": 3,
+          "elapsedSeconds": 21.51,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 20
+        },
+        {
+          "resource": "bastion",
+          "attempt": 4,
+          "elapsedSeconds": 43.282,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "instance",
+      "id": "ocid1.instance.oc1.uk-london-1.anwgiljrr72xucychx35t4jbeiaep4qncwolllegqazy3krrryoz7pxqusya",
+      "verifiedAt": "2026-10-20T10:04:16.301938+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "instance",
+          "attempt": 1,
+          "elapsedSeconds": 2.385,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 5
+        },
+        {
+          "resource": "instance",
+          "attempt": 2,
+          "elapsedSeconds": 9.806,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 10
+        },
+        {
+          "resource": "instance",
+          "attempt": 3,
+          "elapsedSeconds": 22.245,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 20
+        },
+        {
+          "resource": "instance",
+          "attempt": 4,
+          "elapsedSeconds": 44.695,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "volume",
+      "id": "ocid1.volume.oc1.uk-london-1.abwgiljrd2c4npz62mya2vp5n32oo2asorkret6nclfcf5wbgo5wnhtjsxua",
+      "verifiedAt": "2026-10-20T10:05:23.333818+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "volume",
+          "attempt": 1,
+          "elapsedSeconds": 3.947,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 5
+        },
+        {
+          "resource": "volume",
+          "attempt": 2,
+          "elapsedSeconds": 11.566,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "attachment",
+      "id": "ocid1.volumeattachment.oc1.uk-london-1.anwgiljrr72xucycxrovxjhm7q2aoudyr55wnguk6uaivoguk73cj27uwkfa",
+      "verifiedAt": "2026-10-20T15:05:05.176502+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 5.741,
+          "result": "NOT_YET_VISIBLE",
+          "code": "PendingVisibility",
+          "status": null,
+          "nextDelaySeconds": 5
+        },
+        {
+          "resource": "attachment",
+          "attempt": 2,
+          "elapsedSeconds": 14.159,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 2.176,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 2.631,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "attachment",
+          "attempt": 1,
+          "elapsedSeconds": 2.643,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "topic",
+      "id": "ocid1.onstopic.oc1.uk-london-1.amaaaaaar72xucyaza6ptxuckfqx6fo5zmahujcmb4kppa5lq7api63x3wnq",
+      "verifiedAt": "2026-10-20T15:05:07.220955+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "topic",
+          "attempt": 1,
+          "elapsedSeconds": 1.917,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "topic",
+          "attempt": 1,
+          "elapsedSeconds": 4.445,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "topic",
+          "attempt": 1,
+          "elapsedSeconds": 2.03,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "subscription",
+      "id": "ocid1.onssubscription.oc1.uk-london-1.aaaaaaaa527jk72peqpttzhzpeiyw7jdnfkspi5tnw2yqpbhbd2yoap5olpa",
+      "verifiedAt": "2026-10-20T15:05:08.894359+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "subscription",
+          "attempt": 1,
+          "elapsedSeconds": 1.679,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "subscription",
+          "attempt": 1,
+          "elapsedSeconds": 1.657,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "subscription",
+          "attempt": 1,
+          "elapsedSeconds": 1.649,
+          "result": "VISIBLE"
+        }
+      ]
+    },
+    {
+      "kind": "bucket",
+      "id": "ocid1.bucket.oc1.uk-london-1.aaaaaaaarepsvqvrmkeefefbjothko6pkbnh7cw7y5gholfab7muq5yaqfva",
+      "verifiedAt": "2026-10-20T15:05:10.526206+00:00",
+      "readback": "PASS",
+      "visibility": [
+        {
+          "resource": "bucket",
+          "attempt": 1,
+          "elapsedSeconds": 1.712,
+          "result": "VISIBLE"
+        },
+        {
+          "resource": "bucket",
+          "attempt": 1,
+          "elapsedSeconds": 1.606,
+          "result": "VISIBLE"
+        }
+      ]
+    }
+  ],
+  "pendingKind": null,
+  "capacityAttempts": 1,
+  "publicIP": "132.145.28.134",
+  "bootVolumeId": "ocid1.bootvolume.oc1.uk-london-1.abwgiljrb6mkmzdedzxo2bg6mukon3xpax5jei6l32qyu25l7wehajwu6bdq",
+  "security": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "storageBudget": {
+    "storageEnvelope": "PASS",
+    "proposedLiveVolumeGB": "150",
+    "proposedVolumeBackups": 0,
+    "proposedObjectBytes": "0",
+    "ownerObjectByteCap": 8000000000,
+    "tier": "Standard"
+  },
+  "ownerReopenedRepair": {
+    "attempts": 3,
+    "failures": 2
+  },
+  "blocker": null,
+  "encryptionRepair": {
+    "instanceEncryptionEnabled": true,
+    "attachmentEncryptionEnabled": true,
+    "complete": true
+  },
+  "bootEncryption": {
+    "isPvEncryptionInTransitEnabled": true
+  },
+  "sshHostTrust": {
+    "status": "PASS",
+    "fingerprint": "SHA256:LXG3TxAqJf2PT3Y8Zf0mi7mE0UeXd9BUYApmptWVX4o",
+    "viaBastion": true
+  },
+  "gatewayTrustMethod": "first-use-gateway-public-scan-only;not-out-of-band-verified",
+  "diagnosticCleanup": {
+    "consoleCaptureDeleted": true,
+    "temporaryPolicyDeleted": true,
+    "temporaryGroupDeleted": true,
+    "verificationSessionDeleted": true
+  },
+  "guestMount": {
+    "mounted": true,
+    "uuid": "ccf200ea-4ebb-4775-b7ce-75f5074de79d",
+    "device": "/dev/sdb",
+    "filesystem": "ext4",
+    "mountpoint": "/opt/ir35/data",
+    "df": "Filesystem     Type  Size  Used Avail Use% Mounted on\n/dev/sdb       ext4   98G   24K   97G   1% /opt/ir35/data",
+    "bootIdChanged": true,
+    "reusedRecordedFilesystem": true
+  },
+  "resourceProvisioningComplete": true,
+  "notificationSubscriptionState": "ACTIVE",
+  "ownerAction": null,
+  "attachmentDiagnostic": {
+    "matchingAttachmentCount": 0,
+    "instanceState": "RUNNING",
+    "volumeState": "AVAILABLE",
+    "volumeGB": 100,
+    "instancePvEncryptionEnabled": false,
+    "requestedAttachmentEncryption": true,
+    "cloudWrites": 0,
+    "createRetried": false
+  },
+  "productionChanges": 0,
+  "realTimeZeroBillProven": false,
+  "note": "Journal readback evidence, not new cloud calls or a full P1/health signoff. Private specs, console content and SSH source addresses omitted. attachmentDiagnostic is the historical pre-repair observation."
+}
