@@ -1,0 +1,401 @@
+{
+  "migrations": [
+    {
+      "id": 0,
+      "name": "create-migrations-table",
+      "hash": "e18db593bcde2aca2a408c4d1100f6abba2195df"
+    },
+    {
+      "id": 1,
+      "name": "initialmigration",
+      "hash": "6ab16121fbaa08bbd11b712d05f358f9b555d777"
+    },
+    {
+      "id": 2,
+      "name": "storage-schema",
+      "hash": "f6a1fa2c93cbcd16d4e487b362e45fca157a8dbd"
+    },
+    {
+      "id": 3,
+      "name": "pathtoken-column",
+      "hash": "2cb1b0004b817b29d5b0a971af16bafeede4b70d"
+    },
+    {
+      "id": 4,
+      "name": "add-migrations-rls",
+      "hash": "427c5b63fe1c5937495d9c635c263ee7a5905058"
+    },
+    {
+      "id": 5,
+      "name": "add-size-functions",
+      "hash": "79e081a1455b63666c1294a440f8ad4b1e6a7f84"
+    },
+    {
+      "id": 6,
+      "name": "change-column-name-in-get-size",
+      "hash": "ded78e2f1b5d7e616117897e6443a925965b30d2"
+    },
+    {
+      "id": 7,
+      "name": "add-rls-to-buckets",
+      "hash": "e7e7f86adbc51049f341dfe8d30256c1abca17aa"
+    },
+    {
+      "id": 8,
+      "name": "add-public-to-buckets",
+      "hash": "fd670db39ed65f9d08b01db09d6202503ca2bab3"
+    },
+    {
+      "id": 9,
+      "name": "fix-search-function",
+      "hash": "af597a1b590c70519b464a4ab3be54490712796b"
+    },
+    {
+      "id": 10,
+      "name": "search-files-search-function",
+      "hash": "b595f05e92f7e91211af1bbfe9c6a13bb3391e16"
+    },
+    {
+      "id": 11,
+      "name": "add-trigger-to-auto-update-updated_at-column",
+      "hash": "7425bdb14366d1739fa8a18c83100636d74dcaa2"
+    },
+    {
+      "id": 12,
+      "name": "add-automatic-avif-detection-flag",
+      "hash": "8e92e1266eb29518b6a4c5313ab8f29dd0d08df9"
+    },
+    {
+      "id": 13,
+      "name": "add-bucket-custom-limits",
+      "hash": "cce962054138135cd9a8c4bcd531598684b25e7d"
+    },
+    {
+      "id": 14,
+      "name": "use-bytes-for-max-size",
+      "hash": "941c41b346f9802b411f06f30e972ad4744dad27"
+    },
+    {
+      "id": 15,
+      "name": "add-can-insert-object-function",
+      "hash": "934146bc38ead475f4ef4b555c524ee5d66799e5"
+    },
+    {
+      "id": 16,
+      "name": "add-version",
+      "hash": "76debf38d3fd07dcfc747ca49096457d95b1221b"
+    },
+    {
+      "id": 17,
+      "name": "drop-owner-foreign-key",
+      "hash": "f1cbb288f1b7a4c1eb8c38504b80ae2a0153d101"
+    },
+    {
+      "id": 18,
+      "name": "add_owner_id_column_deprecate_owner",
+      "hash": "e7a511b379110b08e2f214be852c35414749fe66"
+    },
+    {
+      "id": 19,
+      "name": "alter-default-value-objects-id",
+      "hash": "02e5e22a78626187e00d173dc45f58fa66a4f043"
+    },
+    {
+      "id": 20,
+      "name": "list-objects-with-delimiter",
+      "hash": "cd694ae708e51ba82bf012bba00caf4f3b6393b7"
+    },
+    {
+      "id": 21,
+      "name": "s3-multipart-uploads",
+      "hash": "8c804d4a566c40cd1e4cc5b3725a664a9303657f"
+    },
+    {
+      "id": 22,
+      "name": "s3-multipart-uploads-big-ints",
+      "hash": "9737dc258d2397953c9953d9b86920b8be0cdb73"
+    },
+    {
+      "id": 23,
+      "name": "optimize-search-function",
+      "hash": "9d7e604cddc4b56a5422dc68c9313f4a1b6f132c"
+    },
+    {
+      "id": 24,
+      "name": "operation-function",
+      "hash": "8312e37c2bf9e76bbe841aa5fda889206d2bf8aa"
+    },
+    {
+      "id": 25,
+      "name": "custom-metadata",
+      "hash": "d974c6057c3db1c1f847afa0e291e6165693b990"
+    },
+    {
+      "id": 26,
+      "name": "objects-prefixes",
+      "hash": "215cabcb7f78121892a5a2037a09fedf9a1ae322"
+    },
+    {
+      "id": 27,
+      "name": "search-v2",
+      "hash": "859ba38092ac96eb3964d83bf53ccc0b141663a6"
+    },
+    {
+      "id": 28,
+      "name": "object-bucket-name-sorting",
+      "hash": "c73a2b5b5d4041e39705814fd3a1b95502d38ce4"
+    },
+    {
+      "id": 29,
+      "name": "create-prefixes",
+      "hash": "ad2c1207f76703d11a9f9007f821620017a66c21"
+    },
+    {
+      "id": 30,
+      "name": "update-object-levels",
+      "hash": "2be814ff05c8252fdfdc7cfb4b7f5c7e17f0bed6"
+    },
+    {
+      "id": 31,
+      "name": "objects-level-index",
+      "hash": "b40367c14c3440ec75f19bbce2d71e914ddd3da0"
+    },
+    {
+      "id": 32,
+      "name": "backward-compatible-index-on-objects",
+      "hash": "e0c37182b0f7aee3efd823298fb3c76f1042c0f7"
+    },
+    {
+      "id": 33,
+      "name": "backward-compatible-index-on-prefixes",
+      "hash": "b480e99ed951e0900f033ec4eb34b5bdcb4e3d49"
+    },
+    {
+      "id": 34,
+      "name": "optimize-search-function-v1",
+      "hash": "ca80a3dc7bfef894df17108785ce29a7fc8ee456"
+    },
+    {
+      "id": 35,
+      "name": "add-insert-trigger-prefixes",
+      "hash": "458fe0ffd07ec53f5e3ce9df51bfdf4861929ccc"
+    },
+    {
+      "id": 36,
+      "name": "optimise-existing-functions",
+      "hash": "6ae5fca6af5c55abe95369cd4f93985d1814ca8f"
+    },
+    {
+      "id": 37,
+      "name": "add-bucket-name-length-trigger",
+      "hash": "3944135b4e3e8b22d6d4cbb568fe3b0b51df15c1"
+    },
+    {
+      "id": 38,
+      "name": "iceberg-catalog-flag-on-buckets",
+      "hash": "02716b81ceec9705aed84aa1501657095b32e5c5"
+    },
+    {
+      "id": 39,
+      "name": "add-search-v2-sort-support",
+      "hash": "6706c5f2928846abee18461279799ad12b279b78"
+    },
+    {
+      "id": 40,
+      "name": "fix-prefix-race-conditions-optimized",
+      "hash": "7ad69982ae2d372b21f48fc4829ae9752c518f6b"
+    },
+    {
+      "id": 41,
+      "name": "add-object-level-update-trigger",
+      "hash": "07fcf1a22165849b7a029deed059ffcde08d1ae0"
+    },
+    {
+      "id": 42,
+      "name": "rollback-prefix-triggers",
+      "hash": "771479077764adc09e2ea2043eb627503c034cd4"
+    },
+    {
+      "id": 43,
+      "name": "fix-object-level",
+      "hash": "84b35d6caca9d937478ad8a797491f38b8c2979f"
+    },
+    {
+      "id": 44,
+      "name": "vector-bucket-type",
+      "hash": "99c20c0ffd52bb1ff1f32fb992f3b351e3ef8fb3"
+    },
+    {
+      "id": 45,
+      "name": "vector-buckets",
+      "hash": "049e27196d77a7cb76497a85afae669d8b230953"
+    },
+    {
+      "id": 46,
+      "name": "buckets-objects-grants",
+      "hash": "fedeb96d60fefd8e02ab3ded9fbde05632f84aed"
+    },
+    {
+      "id": 47,
+      "name": "iceberg-table-metadata",
+      "hash": "649df56855c24d8b36dd4cc1aeb8251aa9ad42c2"
+    },
+    {
+      "id": 48,
+      "name": "iceberg-catalog-ids",
+      "hash": "e0e8b460c609b9999ccd0df9ad14294613eed939"
+    },
+    {
+      "id": 49,
+      "name": "buckets-objects-grants-postgres",
+      "hash": "072b1195d0d5a2f888af6b2302a1938dd94b8b3d"
+    },
+    {
+      "id": 50,
+      "name": "search-v2-optimised",
+      "hash": "6323ac4f850aa14e7387eb32102869578b5bd478"
+    },
+    {
+      "id": 51,
+      "name": "index-backward-compatible-search",
+      "hash": "2ee395d433f76e38bcd3856debaf6e0e5b674011"
+    },
+    {
+      "id": 52,
+      "name": "drop-not-used-indexes-and-functions",
+      "hash": "5cc44c8696749ac11dd0dc37f2a3802075f3a171"
+    },
+    {
+      "id": 53,
+      "name": "drop-index-lower-name",
+      "hash": "d0cb18777d9e2a98ebe0bc5cc7a42e57ebe41854"
+    },
+    {
+      "id": 54,
+      "name": "drop-index-object-level",
+      "hash": "6289e048b1472da17c31a7eba1ded625a6457e67"
+    },
+    {
+      "id": 55,
+      "name": "prevent-direct-deletes",
+      "hash": "262a4798d5e0f2e7c8970232e03ce8be695d5819"
+    },
+    {
+      "id": 56,
+      "name": "fix-optimized-search-function",
+      "hash": "b823ed1e418101032fa01374edc9a436e54e3ed4"
+    },
+    {
+      "id": 57,
+      "name": "s3-multipart-uploads-metadata",
+      "hash": "f127886e00d1b374fadbc7c6b31e09336aad5287"
+    },
+    {
+      "id": 58,
+      "name": "operation-ergonomics",
+      "hash": "00ca5d483b3fe0d522133d9002ccc5df98365120"
+    },
+    {
+      "id": 59,
+      "name": "drop-unused-functions",
+      "hash": "38456f13e39691c2bbb4b5151d0d1cdbabd4a8c4"
+    },
+    {
+      "id": 60,
+      "name": "optimize-existing-functions-again",
+      "hash": "db35e1c91a9201e59f4fef8d972c2f277d68b157"
+    },
+    {
+      "id": 61,
+      "name": "mark-filename-immutable",
+      "hash": "fe0096517ae9d60aaec1d110172ba9036dc66bb7"
+    },
+    {
+      "id": 62,
+      "name": "object-versioning-core",
+      "hash": "0b855f00ff3be0bfca91efee02a9858912491a9a"
+    },
+    {
+      "id": 63,
+      "name": "fix-search-name-relative-to-prefix",
+      "hash": "c7485e417624f795ce8bb2da21927f48e088904d"
+    },
+    {
+      "id": 64,
+      "name": "fix-search-by-timestamp-sqli",
+      "hash": "0af424ecd388a39bb1645184b222185a12149675"
+    },
+    {
+      "id": 65,
+      "name": "objects-key-version-index",
+      "hash": "da319c4b89ba800ce795d1b699f3a70675138058"
+    },
+    {
+      "id": 66,
+      "name": "objects-current-version-index",
+      "hash": "191466c93aa2c46a00e36505577c5fcab8d7cb4b"
+    },
+    {
+      "id": 67,
+      "name": "objects-null-version-index",
+      "hash": "15bfe8c35b66642b6c78ba60060fa8793bd2207a"
+    },
+    {
+      "id": 68,
+      "name": "bucket-lifecycle-configuration",
+      "hash": "3c08f6f889922f399519722a932b51007c11bebc"
+    },
+    {
+      "id": 69,
+      "name": "validate-bucket-lifecycle-constraints",
+      "hash": "4febacaaaa0e61e2b783bef081fe03a287e65eb3"
+    },
+    {
+      "id": 70,
+      "name": "list-objects-with-versions",
+      "hash": "5c17c3777616cd8d7b18b82835525fa3205af57b"
+    },
+    {
+      "id": 71,
+      "name": "objects-delete-marker-index",
+      "hash": "6d14858e66c66f8d6accf8a2630aefd1527fddba"
+    },
+    {
+      "id": 72,
+      "name": "drop-bucketid-objname-index",
+      "hash": "302beb09e1b469d7d4db19566f2389d280b64aa3"
+    },
+    {
+      "id": 73,
+      "name": "revoke-grants-to-unused-operations",
+      "hash": "ba9244051be09f22f714fc0170a2539f8b5f0e68"
+    }
+  ],
+  "nativePlatform": "linux/arm64",
+  "apiStarted": false,
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "status": "PASS",
+  "altered": [],
+  "missing": [],
+  "pending": [],
+  "image": {
+    "repository": "supabase/storage-api",
+    "tag": "v1.80.2",
+    "indexDigest": "sha256:95b217a9c59e0ac06c6dcb539df3189a1668a2445fb43dbf29660d6968ffd7d2",
+    "platformDigest": "sha256:5e290c10a57893024dea5b41764e2fd81d02b379e5853bdd1da11e74bd58783e",
+    "image": "supabase/storage-api:v1.80.2@sha256:5e290c10a57893024dea5b41764e2fd81d02b379e5853bdd1da11e74bd58783e",
+    "platform": "linux/arm64",
+    "user": "",
+    "entrypoint": [
+      "docker-entrypoint.sh"
+    ],
+    "command": [
+      "node",
+      "dist/start/server.js"
+    ]
+  },
+  "sourceCommit": "db42280506a07a165376219b2d6ac7bc92ccdfcc",
+  "archiveSHA256": "9a93fdc86e7c3a4611eefcb8b1d1ca30bc9c4ee31a7da28e2b6ee746ea91ed10",
+  "phaseComplete": false
+}

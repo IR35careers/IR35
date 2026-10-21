@@ -1,0 +1,21 @@
+{
+  "purpose": "ir35-readonly-cloud-storage-policy-snapshot",
+  "checkedAt": "2026-10-21T10:23:16.464980+00:00",
+  "metadataSHA256": "0e824f606919095a19c30b14035c480c1744fe985bd695cf5d3d6232ecae36ba",
+  "storageSecuritySHA256": "6d5a8068a460813f65c80cfc30f180007adbe26cee0ea750e286e416fd3a86dd",
+  "roles": {
+    "anon": {
+      "objectPathHashes": [],
+      "bucketNameHashes": []
+    },
+    "authenticated": {
+      "objectPathHashes": [],
+      "bucketNameHashes": []
+    }
+  },
+  "status": "PASS",
+  "sourceWrites": 0,
+  "stagingDataWrites": 0,
+  "cloudLogin": false,
+  "roleContexts": 2
+}

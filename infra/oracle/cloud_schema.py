@@ -300,6 +300,9 @@ except Exception:
 
 
 def main():
+    if sys.argv[1:]==['p4-storage-access']:
+        import storage_access
+        storage_access.capture();return
     if sys.argv[1:] in (['p4-rehearse-1'],['p4-rehearse-2']):
         from rehearsal import main as rehearse
         sys.argv=[sys.argv[0],'--staging','--cycle',sys.argv[1][-1]]
