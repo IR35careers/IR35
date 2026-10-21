@@ -1,0 +1,42 @@
+{
+  "status": "RESTORED",
+  "sourceWrites": 0,
+  "target": "ir35_p4_20261021t170139z_8be0fc2e",
+  "attempts": 1,
+  "normalization": {
+    "ownerRepairs": 51,
+    "aclObjectsReplayed": 2
+  },
+  "roleUsage": {
+    "status": "PASS",
+    "checkedAt": "2026-10-21T17:05:09Z",
+    "checks": 236,
+    "componentCount": 9,
+    "hostServiceDefinitions": 195,
+    "activeCLILogins": 0,
+    "componentDatabaseUsers": {
+      "auth": "supabase_auth_admin",
+      "meta": "postgres",
+      "rest": "authenticator",
+      "storage": "supabase_storage_admin",
+      "realtime": "supabase_admin"
+    },
+    "stagingMigrationRunnerUsers": [
+      "supabase_admin",
+      "postgres"
+    ],
+    "hits": [],
+    "sourceWrites": 0,
+    "stagingWrites": 0
+  },
+  "dumpSHA256": "3d758a94a09581902316bfa707982047230ac1cff45e7a6413c86a1071a917fd",
+  "stage": "02-restore",
+  "manifestSHA256": "db10b67ab95b10fe1ba0069eedf678246bb49641c959139a3247b550a6d164d3",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "projectionContainment": {
+    "originalBytes": 1443995,
+    "originalSHA256": "6730d93c935c1ebada9633bdfc26ed42e0d5177c9fd0f1631107b5dc0085e2a9",
+    "published": false,
+    "preservedOutsideGit": true
+  }
+}

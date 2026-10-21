@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "auditOnly": true,
+  "termWaitTimedOut": true,
+  "rootCause": "local docker attach CLI ignores TERM with signal proxy disabled",
+  "originalAuthUnchanged": true,
+  "failedFixtureStillStopped": true,
+  "authRequests": 0,
+  "sourceWrites": 0,
+  "databaseWrites": 0,
+  "stage": "08-synthetic-1-observer-audit",
+  "manifestSHA256": "5c9299c801f2e3cfb40071ab792d5995edd769402fbee2cc64a6b34ceab77f23",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

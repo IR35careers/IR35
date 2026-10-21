@@ -33,7 +33,7 @@ def response_diagnostic(status,body,headers,expected):
     code=row.get('error_code')
     if not isinstance(code,str) or code not in ERROR_CODES:code=None
     ids=[request_id(row.get(k)) for k in ('request_id','requestId','error_id')]
-    ids.extend(request_id(headers.get(k)) for k in ('x-request-id','X-Request-ID'))
+    ids.extend(request_id(value) for key,value in headers.items() if key.lower()=='x-request-id')
     return {'status':status,'error_code':code,'error':safe_text(row.get('error')),
             'msg':safe_text(row.get('msg',row.get('error_description'))),
             'requestId':next((x for x in ids if x),None),
@@ -57,3 +57,14 @@ def correlated_logs(raw,expected):
             elif key=='error_code' and isinstance(value,str) and value in ERROR_CODES:out[key]=value
         result.append(out)
     return result
+
+
+def redact_known_secrets(value,secrets):
+    """Even a credential equal to a known public error string must not escape."""
+    if isinstance(value,str):
+        for secret in secrets:
+            if isinstance(secret,str) and secret:value=value.replace(secret,'[redacted]')
+        return value
+    if isinstance(value,list):return [redact_known_secrets(item,secrets) for item in value]
+    if isinstance(value,dict):return {key:redact_known_secrets(item,secrets) for key,item in value.items()}
+    return value

@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('export','catalog-repair','effective-privileges','platform-diagnosis','verify-acl-repair','owner-security-preflight','owner-expiry-probe','p4-schema-preflight','p4-source-fingerprints','p4-source-storage','p4-storage-access','p4-auth-diagnosis','p4-rehearse-1','p4-rehearse-2')][string]$Operation = 'export')
+param([ValidateSet('export','catalog-repair','effective-privileges','platform-diagnosis','verify-acl-repair','owner-security-preflight','owner-expiry-probe','p4-schema-preflight','p4-source-fingerprints','p4-source-storage','p4-storage-access','p4-auth-diagnosis','p4-recovery-capture','p4-rehearse-1','p4-rehearse-2')][string]$Operation = 'export')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -34,7 +34,7 @@ try {
   $privateEnvironment.PGCONNECT_TIMEOUT = '15'
   $privateEnvironment.PGAPPNAME = 'ir35-readonly-schema-clone'
   $privateEnvironment.PGOPTIONS = '-c default_transaction_read_only=on -c statement_timeout=300000 -c lock_timeout=5000'
-  if ($Operation -in @('p4-source-storage','p4-auth-diagnosis','p4-rehearse-1','p4-rehearse-2')) {
+  if ($Operation -in @('p4-source-storage','p4-auth-diagnosis','p4-recovery-capture','p4-rehearse-1','p4-rehearse-2')) {
     Push-Location -LiteralPath $repository
     try {
       $keyText = npx --no-install supabase projects api-keys --project-ref kxcbgflleqnjzjbkevwd --output json 2>$null | Out-String
@@ -71,7 +71,9 @@ try {
     $code = if ($result.code -match '^[A-Za-z0-9_:.-]{1,160}$') { $result.code } else { 'withheld' }
     throw ('Schema operation stopped; code=' + $code + '; raw stdout/stderr withheld.')
   }
-  if ($result.PSObject.Properties.Name | Where-Object { $_ -notin @('status','operation','report','schemaBytes','rolesBytes','objects','sourceWrites','reused') }) { throw 'Unexpected public result fields; withheld.' }
+  if ($result.PSObject.Properties.Name | Where-Object { $_ -notin @('status','operation','report','schemaBytes','rolesBytes','objects','sourceWrites','reused','manifestSHA256','runId') }) { throw 'Unexpected public result fields; withheld.' }
+  if ($result.PSObject.Properties.Name -contains 'manifestSHA256' -and $result.manifestSHA256 -notmatch '^[a-f0-9]{64}$') { throw 'Invalid public manifest digest; withheld.' }
+  if ($result.PSObject.Properties.Name -contains 'runId' -and $result.runId -notmatch '^p4_[0-9]{8}T[0-9]{6}Z_[0-9a-f]{8}$') { throw 'Invalid public recovery identity; withheld.' }
   $result | ConvertTo-Json -Compress
 } finally {
   $plan = $null

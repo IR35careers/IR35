@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "incidentDirectory": "/opt/ir35/incident/20261021T170139Z_8be0fc2e",
+  "artifacts": [
+    {
+      "originalPath": ".env.p4-cycle1-source.json",
+      "archivedFile": "artifact-0.json",
+      "sha256": "ca442a732e6c0c9b53cb2d785cae8bb6a2ace45b9e05cec7aa4adc5d11f232d2",
+      "bytes": 540,
+      "mode": "400"
+    },
+    {
+      "originalPath": "config/p4-auth-authorized-2.json",
+      "archivedFile": "artifact-1.json",
+      "sha256": "486daeccdb2d0eda27ea7c6767ed02127d06b1d0d758965cb8be90b91e17d595",
+      "bytes": 537,
+      "mode": "400"
+    },
+    {
+      "originalPath": "config/p4-auth-login.json",
+      "archivedFile": "artifact-2.json",
+      "sha256": "a6d4d81f69b55711bd0009ddb0b8b222192140b9f41b5018b9b035f9dae4d76c",
+      "bytes": 274,
+      "mode": "400"
+    },
+    {
+      "originalPath": "config/p4-rehearsal.json",
+      "archivedFile": "artifact-3.json",
+      "sha256": "25ee2fdb7035118e82af8e0a350204fbbb17841b9226a26bcea29226dec3ccbf",
+      "bytes": 688,
+      "mode": "400"
+    },
+    {
+      "originalPath": ".env.p4-cycle1-restore.log",
+      "archivedFile": "artifact-4.log",
+      "sha256": "4a9006d0938bb3c5097251b20bfbb3cefa3d64c9f5c9985c44b347d56e1a5462",
+      "bytes": 54164,
+      "mode": "400"
+    },
+    {
+      "originalPath": ".env.p4-compat1-restore.log",
+      "archivedFile": "artifact-5.log",
+      "sha256": "4a9006d0938bb3c5097251b20bfbb3cefa3d64c9f5c9985c44b347d56e1a5462",
+      "bytes": 54164,
+      "mode": "400"
+    }
+  ],
+  "sourceWrites": 0,
+  "customerDataWrites": 0,
+  "unavailableLogs": "GoTrue Docker driver none; no historical raw response log exists",
+  "originalDumpUnmoved": true,
+  "originalQuarantineUnchanged": true,
+  "manifestSHA256": "7c1ddd164a3a4491c53f30cf279ca3e16edc9d2c38ee7fa7828539a4be7a359c",
+  "stage": "00-evidence",
+  "runId": "p4_20261021T170139Z_8be0fc2e"
+}

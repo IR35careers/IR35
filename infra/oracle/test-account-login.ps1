@@ -11,7 +11,8 @@ function New-IR35LoginStart([ValidateSet('--status','--stdin-secret')][string]$M
   $start.RedirectStandardInput = $true
   $start.RedirectStandardOutput = $true
   $start.RedirectStandardError = $true
-  foreach ($argument in @('-d','Ubuntu','--cd','/mnt/c/Users/anves/.codex/worktrees/bot-handoff/ir35careers','/home/anvesh/.ir35/oci/bin/python','infra/oracle/auth_retry.py',$Mode)) { $start.ArgumentList.Add($argument) }
+  $recoveryMode = if ($Mode -eq '--status') { '--named-status' } else { '--named-stdin-secret' }
+  foreach ($argument in @('-d','Ubuntu','--cd','/mnt/c/Users/anves/.codex/worktrees/bot-handoff/ir35careers','/home/anvesh/.ir35/oci/bin/python','infra/oracle/p4_recovery.py',$recoveryMode)) { $start.ArgumentList.Add($argument) }
   return $start
 }
 try {
@@ -38,7 +39,7 @@ try {
   if (-not $child.WaitForExit(420000)) { $child.Kill($true); throw 'Staging test timed out; reconcile the durable journal, never replay.' }
   $result = $stdout.GetAwaiter().GetResult() | ConvertFrom-Json
   if ($child.ExitCode -ne 0 -or $result.status -ne 'PASS') { throw 'Staging login stopped; secret and raw output withheld. Do not retry this window.' }
-  Write-Host 'PASS: staging-only password login and fresh JWT verified; test session logged out. No cloud login.'
+  Write-Host 'PASS: staging-only password login, fresh JWT, refresh and RLS verified; test session logged out. No cloud login.'
 } catch {
   Write-Host 'STOP: staging test did not pass; no credential output. Tell Codex to reconcile, not retry.'
 } finally {

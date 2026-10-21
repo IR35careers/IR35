@@ -1,0 +1,298 @@
+{
+  "status": "PASS",
+  "attempt": 2,
+  "namedPasswordAttempts": 0,
+  "sourceWrites": 0,
+  "phaseComplete": false,
+  "passwordDiagnostic": {
+    "path": "/auth/v1/token",
+    "method": "POST",
+    "requestHeaders": [
+      "X-Request-ID",
+      "apikey"
+    ],
+    "bodyFields": [
+      "email",
+      "password"
+    ],
+    "response": {
+      "status": 200,
+      "error_code": null,
+      "error": null,
+      "msg": null,
+      "requestId": null,
+      "requestIdFromBody": null,
+      "clientRequestId": "e9b6e892-3090-4b7a-8d9d-87a414019e5f",
+      "redaction": "strict known-message projection; all other fields withheld"
+    },
+    "requestLogs": [
+      {
+        "requestId": "e9b6e892-3090-4b7a-8d9d-87a414019e5f",
+        "msg": "request completed",
+        "error": null,
+        "status": 200,
+        "level": "info",
+        "method": "POST",
+        "path": "/token"
+      }
+    ],
+    "rawLogsPersisted": false,
+    "logBoundExceeded": false,
+    "observer": {
+      "cliKillRequired": true,
+      "containerSignalsProxied": false
+    }
+  },
+  "rls": {
+    "ownerRead": true,
+    "ownerRows": 1,
+    "crossOwnerDenied": true,
+    "anonymousDenied": true
+  },
+  "passwordLogin": true,
+  "sessionUserVerified": true,
+  "sessionRefresh": true,
+  "originalRequestBodyFields": [
+    "email",
+    "password"
+  ],
+  "newRequestBodyFields": [
+    "email",
+    "password"
+  ],
+  "originalRequestPath": "direct Auth /token; no Kong apikey",
+  "newRequestPath": "/auth/v1/token via isolated Kong with apikey",
+  "original400Cause": "unproven; original body/log unavailable",
+  "plainPasswordPersisted": false,
+  "syntheticUserDeleted": true,
+  "runtime": {
+    "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-2",
+    "containers": {
+      "auth": "3da4ac9add4e384051da03435ebb30b3cd238338d6f7f7ffb019d7601961ed13",
+      "rest": "f5806e1309fc5394d421a8393acc4680e2ef8e9f1db989c98c5ee694a114a56a",
+      "kong": "321ff9261109b88b980ba5165d757c9928b4b7a10c5a9d66bcfb37fcb0f16e0f"
+    },
+    "files": [
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-2/.env.auth",
+        "sha256": "297a4e506364d34be2410836f017f7bbad36191b7bd50d5a49f9b3066ca603c3",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-2/.env.rest",
+        "sha256": "601ca51244ed3a8aa88e5143c676b5bf56b9e1ee9d3c8d76e93726ff75ad9d50",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-2/.env.kong-config.json",
+        "sha256": "c3b270674eb3e2183cff0d7f23dd0f461980fbb80be36c343b69cc5b8dc1a1ac",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-2/.env.kong",
+        "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce",
+        "mode": "600"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email",
+        "password"
+      ],
+      "response": {
+        "status": 400,
+        "error_code": "validation_failed",
+        "error": null,
+        "msg": "missing email or phone",
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "eb70ae29-6bce-4c5b-a1bd-3e8bbcdee3e3",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "eb70ae29-6bce-4c5b-a1bd-3e8bbcdee3e3",
+          "msg": "request completed",
+          "error": "[withheld]",
+          "status": 400,
+          "level": "warning",
+          "method": "POST",
+          "path": "/token",
+          "error_code": "validation_failed"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/admin/users",
+      "method": "POST",
+      "requestHeaders": [
+        "Authorization",
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email",
+        "email_confirm",
+        "password"
+      ],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "9e70a5f2-4053-4a8a-a0f3-27cc6c1af490",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "9e70a5f2-4053-4a8a-a0f3-27cc6c1af490",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info",
+          "method": "POST"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email",
+        "password"
+      ],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "e9b6e892-3090-4b7a-8d9d-87a414019e5f",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "e9b6e892-3090-4b7a-8d9d-87a414019e5f",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info",
+          "method": "POST",
+          "path": "/token"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "refresh_token"
+      ],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "0b021377-e764-4f47-8096-0c0528465c1c",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "0b021377-e764-4f47-8096-0c0528465c1c",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info",
+          "method": "POST",
+          "path": "/token"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/admin/users/:test-user",
+      "method": "DELETE",
+      "requestHeaders": [
+        "Authorization",
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "13364b41-f654-4f35-938e-5405d7c91498",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "13364b41-f654-4f35-938e-5405d7c91498",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    }
+  ],
+  "containersStopped": true,
+  "pristineDatabaseUnchanged": true,
+  "stage": "08-synthetic-2",
+  "manifestSHA256": "f1838d5a32eaff1fbf2bc5bbe28706d8c38dccef38e31cf6fc365e8d8f479c94",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

@@ -1,0 +1,26 @@
+{
+  "status": "FAIL",
+  "sourceWrites": 0,
+  "databaseWrites": 0,
+  "phaseComplete": false,
+  "code": "PrivateServiceAddressRequired",
+  "runtime": {
+    "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-05-storage-api",
+    "containers": {
+      "rest": "fbeb7e01d137e2cd3bcf23d01e769dfa624a1c755759750b0fd33c369097ce81"
+    },
+    "files": [
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-05-storage-api/.env.rest",
+        "sha256": "b92b9fcf2b147534cb4bccdcc24428f2ec2ba851d8d2630117dfa54122cab734",
+        "mode": "600"
+      }
+    ]
+  },
+  "containersStopped": true,
+  "fullPostAPIFidelity": "PASS",
+  "stage": "05-storage-api",
+  "manifestSHA256": "4001ebb8bc76d967fcc19bc0bd8d3621364a10e2a4427239b19dd1b6d3f3445f",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}
