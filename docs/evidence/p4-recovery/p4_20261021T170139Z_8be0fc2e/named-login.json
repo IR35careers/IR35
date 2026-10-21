@@ -1,0 +1,98 @@
+{
+  "status": "FAIL",
+  "namedPasswordAttempts": 1,
+  "globalPasswordAttempts": 2,
+  "slotConsumed": true,
+  "sourceWrites": 0,
+  "phaseComplete": false,
+  "passwordDiagnostic": {
+    "path": "/auth/v1/token",
+    "method": "POST",
+    "requestHeaders": [
+      "X-Request-ID",
+      "apikey"
+    ],
+    "bodyFields": [
+      "email",
+      "password"
+    ],
+    "response": {
+      "status": 400,
+      "error_code": "invalid_credentials",
+      "error": null,
+      "msg": "Invalid login credentials",
+      "requestId": null,
+      "requestIdFromBody": null,
+      "clientRequestId": "e6d86c05-6982-450c-929f-148fee574b84",
+      "redaction": "strict known-message projection; all other fields withheld"
+    },
+    "requestLogs": [
+      {
+        "requestId": "e6d86c05-6982-450c-929f-148fee574b84",
+        "msg": "request completed",
+        "error": "[withheld]",
+        "status": 400,
+        "level": "warning",
+        "method": "POST",
+        "path": "/token",
+        "error_code": "invalid_credentials"
+      }
+    ],
+    "rawLogsPersisted": false,
+    "logBoundExceeded": false,
+    "observer": {
+      "cliKillRequired": true,
+      "containerSignalsProxied": false
+    }
+  },
+  "code": "NamedPasswordGrantDenied_StopNoRetry",
+  "diagnostics": [
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email",
+        "password"
+      ],
+      "response": {
+        "status": 400,
+        "error_code": "invalid_credentials",
+        "error": null,
+        "msg": "Invalid login credentials",
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "e6d86c05-6982-450c-929f-148fee574b84",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "e6d86c05-6982-450c-929f-148fee574b84",
+          "msg": "request completed",
+          "error": "[withheld]",
+          "status": 400,
+          "level": "warning",
+          "method": "POST",
+          "path": "/token",
+          "error_code": "invalid_credentials"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    }
+  ],
+  "containersStopped": true,
+  "runtimeStage": "09-named-ready",
+  "pristineDatabaseUnchanged": true,
+  "stage": "10-named-login",
+  "manifestSHA256": "6bad4d8f1f245ed80982698843c5e6f3f765942b7e376c5f77bbdaf4891ebdd7",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}
