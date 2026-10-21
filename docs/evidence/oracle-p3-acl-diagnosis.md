@@ -38,6 +38,8 @@ Fresh role definitions/attributes/memberships were exported read-only with `--ro
 
 ## Next authorised action
 
+**Subsequent coverage correction:** the original494 catalog omitted rolvaliduntil. Later supplemental read-only verification found a fourth residual repair finding after the catalog reduced to3: cli_login_postgres expires in cloud but not staging. This is a security STOP, not grant parity or a platform waiver. See [current repair result](oracle-p3-acl-repair.md). All494 entries here remain historical and unchanged; no untested all-role-attributes claim is made.
+
 Commit this diagnosis to draft PR51 **before** a role repair. Roles-first, dependency-checked staging alignment, supported extension owner creation and explicit source ACL replay must precede a new clean, unattached schema-only target restore, with owners/ACLs/defaults intact and a private full log. No schema filtering, skipped errors, temporary SUPERUSER or system-catalog patching. Expanded fidelity and effective privilege gates must both reach zero. Genuine platform-only remainder: individually propose it and stop; no self-approved exception. Draft52 remains unexecutable; P4/P5 and customer-data rehearsal remain blocked.
 
 Initial diagnostic tests: four Linux helper tests and one real PGlite inherited table/function privilege test PASS. Full final-source checks are reported separately, never inferred here. No production, cloud data/schema, Vercel, DNS, IAM, billing, runner acceptance or cutover change.

@@ -1,0 +1,46 @@
+{
+  "status": "FAIL",
+  "phaseComplete": false,
+  "sourceCheckedAt": "2026-10-21T05:04:39Z",
+  "targetCheckedAt": "2026-10-21T05:04:42Z",
+  "sourceObjects": 3752,
+  "targetObjects": 3752,
+  "encodingMatch": true,
+  "collationMatch": true,
+  "exceptions": [],
+  "differences": [
+    {
+      "object": "extension:pg_stat_statements",
+      "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+      "cloneHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+    },
+    {
+      "object": "extension:pgcrypto",
+      "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+      "cloneHash": "63652c33f708c5861e34f2218529562b"
+    },
+    {
+      "object": "extension:uuid-ossp",
+      "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+      "cloneHash": "f8a2ed32366bd20293b463f2bf1924dc"
+    }
+  ],
+  "note": "No implicit exceptions. Data/sequence-state/storage byte verification is P4, not this catalog comparison.",
+  "roleAttributeDifferences": [
+    {
+      "role": "cli_login_postgres",
+      "cloudHash": "c04417496ddc2437417190f2346c77b3",
+      "cloneHash": "6c3e226b4d4795d518ab341b0824ec29",
+      "cloudFiniteExpiry": true,
+      "cloneExpiryConfigured": false,
+      "morePermissive": true
+    }
+  ],
+  "totalUnwaivedDifferences": 4,
+  "securityRepairHold": true,
+  "inputSHA256": {
+    "source": "feb20503f7a1bdbd439f0aa6c1dddd3a87f995233b1575e15649c0e558e8238e",
+    "clone": "1b4f6e5046a82664c67ebe2b4b6d159fcb405818a7d385318ff6c3b8f72dce3d",
+    "security": "25bcf7d7ec39c110385d5abfd3c6e8ae5a27cb3981a5a3df10d3b9d1521240a7"
+  }
+}

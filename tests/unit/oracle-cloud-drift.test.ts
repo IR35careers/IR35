@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareCloudClone, originalDrift } from "../../scripts/oracle-cloud-drift";
+import { combineCatalogSecurity, compareCloudClone, originalDrift } from "../../scripts/oracle-cloud-drift";
 
 const object = { kind: "policy", name: "public.jobs.private", hash: "a".repeat(32), value: { using: "(auth.uid() = user_id)", check: "(auth.uid() = user_id)" } };
 const catalog = (objects: unknown[]) => ({ version: 1, checkedAt: "2026-10-21T00:00:00Z", serverVersion: "17.6", encoding: "UTF8", collation: { provider: "i", locale: "en-US" }, schemas: ["public"], objects });
@@ -14,6 +14,17 @@ describe("exact-cloud migration gates", () => {
   });
   it("never calls catalog equality full data verification", () => {
     expect(compareCloudClone(catalog([object]), catalog([object])).status).toBe("CATALOG_MATCH_ONLY");
+  });
+  it("halts on a missing role expiry even when all catalog hashes and app-role privileges match", () => {
+    const result = compareCloudClone(catalog([object]), catalog([object]));
+    const security = { rolesMatch: true, roleExpiry: { status: "PASS", differences: [] },
+      privileges: { status: "PASS" }, publicTablesWithoutRLS: [] };
+    expect(combineCatalogSecurity(result, security).status).toBe("CATALOG_MATCH_ONLY");
+    const mismatch = { role: "cli_login_postgres", cloudHash: "a".repeat(32), cloneHash: "b".repeat(32),
+      cloudFiniteExpiry: true, cloneExpiryConfigured: false, morePermissive: true };
+    // Inconsistent PASS labels must not conceal the actual difference either.
+    const failed = combineCatalogSecurity(result, { ...security, roleExpiry: { status: "PASS", differences: [mismatch] } });
+    expect(failed).toMatchObject({ status: "FAIL", securityRepairHold: true, totalUnwaivedDifferences: 1, exceptions: [] });
   });
   it("keeps every original drift entry and flags policy implication for security review", () => {
     const objects = Array.from({ length: 77 }, (_, i) => ({ ...object, name: `public.jobs.policy_${i}` }));

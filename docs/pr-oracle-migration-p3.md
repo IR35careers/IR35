@@ -1,5 +1,23 @@
 # Oracle P3: protected ARM staging and explicit schema mismatch gate
 
+## Latest staging ACL/role repair — actual FAIL4, security STOP / owner decision
+
+| Gate | Result |
+| --- | --- |
+| All494diagnosed and committed before mutation | PASS at81a1363; full category/value/hash report |
+| Roles-first flags/config/memberships, password-free export and dependency audit | PASS within original coverage; passwords unchanged |
+| Supplemental16-role expiry check | **FAIL1/security STOP**: cli_login_postgres finite cloud expiry/no staging expiry; omitted rolvaliduntil |
+| New unattached transactional schema restore with owners/ACL/default privileges/full private log | PASS once; ir35_acl_repair_20261021, original DBs retained |
+|51function/view owners and two missing GraphQL schema ACL sets | PASS; definitions unchanged, no broad role/catalog workaround |
+| Combined fidelity | **FAIL4**,3extension-owner records among3752catalog objects +1role expiry,0waivers |
+| Effective anon/authenticated/service_role access, RLS/policies/grants | PASS;552entries/0diff/0broader; no disabled public RLS |
+| Protected runtime | PASS; nine running/eight backend healthy; trusted TLS401/Basic/noindex/mock/sink/Studiooff |
+| Exceptions / baseline52 / P4 / P5 | **PENDING OWNER / BLOCKED**, no waivers, no executable baseline or data/app deployment |
+
+See docs/evidence/oracle-p3-acl-repair.md and oracle-p3-proposed-exceptions.json for all4findings. **Role expiry is a security repair omission, not an exception:** finite in cloud, absent on staging's initially password-null CLI role; no SQL write after discovery.552app-role PASS cannot conceal it. Owner batch: reopen exact expiry repair, then decide3cloudpostgres/native supabase_admin extension-owner proposals or direct exact-owner bootstrap. No temporary SUPERUSER, catalog writes or broad REASSIGN OWNED. Original494retained. Full restore log only /opt/ir35/.env.p3-acl-restore.log,600/ir35; no raw logs/configs/customer data in Git. No production/cloud/Vercel/DNS/IAM/billing/cutover changes.
+
+Tests: actual inherited has_table_privilege/has_function_privilege PGlite regression plus helper tests; complete final-source verification reported in evidence after execution. New failure gate refuses before SSH. One local WSL Git-pointer bug repaired before any remote action; actual VM restore attempts1. No Vercel preview needed, no real employer submissions. Draft52 remains unexecutable: actual fresh-baseline0not yet proved.
+
 ## Latest owner-approved exact-cloud-first sequence —21October
 
 | Gate | Actual result |

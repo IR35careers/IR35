@@ -1,0 +1,36 @@
+{
+  "status": "AUDIT_ONLY",
+  "privileges": {
+    "status": "PASS",
+    "sourceCheckedAt": "2026-10-21T05:04:39Z",
+    "targetCheckedAt": "2026-10-21T05:04:42Z",
+    "sourceEntries": 552,
+    "targetEntries": 552,
+    "differences": [],
+    "morePermissive": [],
+    "repairMustStop": false,
+    "sourceWrites": 0,
+    "stagingWrites": 0,
+    "exceptionsApproved": []
+  },
+  "roleExpiry": {
+    "status": "FAIL",
+    "roles": 16,
+    "differences": [
+      {
+        "role": "cli_login_postgres",
+        "cloudHash": "c04417496ddc2437417190f2346c77b3",
+        "cloneHash": "6c3e226b4d4795d518ab341b0824ec29",
+        "cloudFiniteExpiry": true,
+        "cloneExpiryConfigured": false,
+        "morePermissive": true
+      }
+    ]
+  },
+  "catalogRoleFlagsConfigMembershipMatch": true,
+  "rolesMatch": false,
+  "publicTablesWithoutRLS": [],
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "exceptionsApproved": []
+}

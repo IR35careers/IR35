@@ -33,6 +33,18 @@ export function compareCloudClone(sourceInput: unknown, targetInput: unknown) {
     encodingMatch, collationMatch, exceptions: [], differences,
     note: "No implicit exceptions. Data/sequence-state/storage byte verification is P4, not this catalog comparison." };
 }
+const securitySchema = z.object({ rolesMatch: z.boolean(), roleExpiry: z.object({ status: z.enum(["PASS", "FAIL"]),
+  differences: z.array(z.strictObject({ role: z.string(), cloudHash: hash.nullable(), cloneHash: hash.nullable(),
+    cloudFiniteExpiry: z.boolean(), cloneExpiryConfigured: z.boolean(), morePermissive: z.boolean() })) }),
+  privileges: z.object({ status: z.enum(["PASS", "FAIL"]) }), publicTablesWithoutRLS: z.array(z.string()) });
+export function combineCatalogSecurity(result: ReturnType<typeof compareCloudClone>, securityInput: unknown) {
+  const security = securitySchema.parse(securityInput);
+  const status = result.status === "CATALOG_MATCH_ONLY" && security.rolesMatch && security.roleExpiry.status === "PASS" &&
+    !security.roleExpiry.differences.length && security.privileges.status === "PASS" && !security.publicTablesWithoutRLS.length ? "CATALOG_MATCH_ONLY" : "FAIL";
+  return { ...result, status, roleAttributeDifferences: security.roleExpiry.differences,
+    totalUnwaivedDifferences: result.differences.length + security.roleExpiry.differences.length,
+    securityRepairHold: Boolean(security.roleExpiry.differences.length || security.privileges.status !== "PASS" || security.publicTablesWithoutRLS.length) };
+}
 export function originalDrift(originalInput: unknown, sourceInput: unknown, targetInput: unknown) {
   const original = originalSchema.parse(originalInput), source = index(catalogSchema.parse(sourceInput)), target = index(catalogSchema.parse(targetInput));
   return original.differences.map(row => {

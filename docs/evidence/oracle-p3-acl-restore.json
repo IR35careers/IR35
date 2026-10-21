@@ -1,0 +1,20 @@
+{
+  "status": "RESTORE_ONLY",
+  "phaseComplete": false,
+  "database": "ir35_acl_repair_20261021",
+  "rolesAligned": true,
+  "attempts": 1,
+  "ownerRepairs": 51,
+  "aclObjectsReplayed": 2,
+  "log": {
+    "path": "/opt/ir35/.env.p3-acl-restore.log",
+    "mode": "600",
+    "owner": "ir35",
+    "bytes": 77104,
+    "sha256": "b7d350133dc6991798e07b0c5681db688d5ca772a4608a2d198e9cb649d441ff"
+  },
+  "sourceWrites": 0,
+  "customerRowsImported": 0,
+  "zeroDifferenceGate": false,
+  "exceptionsApproved": []
+}

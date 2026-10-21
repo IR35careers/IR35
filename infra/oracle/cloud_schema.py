@@ -299,6 +299,10 @@ except Exception:
 
 
 def main():
+    if sys.argv[1:]==['verify-acl-repair']:
+        from acl_repair import verify
+        verify()
+        return
     if sys.argv[1:]==['platform-diagnosis']:
         from acl_diagnosis import platform_audit
         platform_audit()
