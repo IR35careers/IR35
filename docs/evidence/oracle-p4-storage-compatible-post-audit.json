@@ -3,7 +3,7 @@
   "schema": {
     "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
     "sourceCheckedAt": "2026-10-21T09:07:22Z",
-    "targetCheckedAt": "2026-10-21T10:25:48Z",
+    "targetCheckedAt": "2026-10-21T15:46:02Z",
     "sourceObjects": 3752,
     "targetObjects": 3752,
     "unexplainedDifferences": [],
@@ -38,7 +38,7 @@
     "sourceObjects": 327,
     "targetObjects": 327,
     "sourceCheckedAt": "2026-10-21T09:07:22Z",
-    "targetCheckedAt": "2026-10-21T10:25:49Z",
+    "targetCheckedAt": "2026-10-21T15:46:03Z",
     "differences": [],
     "exceptions": [],
     "sourceWrites": 0,
@@ -84,7 +84,7 @@
   "privileges": {
     "status": "PASS",
     "sourceCheckedAt": "2026-10-21T09:07:22Z",
-    "targetCheckedAt": "2026-10-21T10:25:48Z",
+    "targetCheckedAt": "2026-10-21T15:46:03Z",
     "sourceEntries": 552,
     "targetEntries": 552,
     "differences": [],

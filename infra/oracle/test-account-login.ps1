@@ -5,17 +5,29 @@ $ErrorActionPreference = 'Stop'
 $Host.UI.RawUI.WindowTitle = 'IR35 staging test-account login — NOT OCI or SSH'
 $credential = $null
 $pointer = [IntPtr]::Zero
-try {
-  Write-Host 'Staging-only login for anvesh.mannuru+ir35test@gmail.com. Never enter an OCI/SSH passphrase here.'
-  $credential = Read-Host 'Existing TEST ACCOUNT password (hidden)' -AsSecureString
-  $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($credential)
-  $text = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+function New-IR35LoginStart([ValidateSet('--status','--stdin-secret')][string]$Mode) {
   $start = [Diagnostics.ProcessStartInfo]::new('wsl.exe')
   $start.UseShellExecute = $false
   $start.RedirectStandardInput = $true
   $start.RedirectStandardOutput = $true
   $start.RedirectStandardError = $true
-  foreach ($argument in @('-d','Ubuntu','--cd','/mnt/c/Users/anves/.codex/worktrees/bot-handoff/ir35careers','/home/anvesh/.ir35/oci/bin/python','infra/oracle/auth_login.py','--stdin-secret')) { $start.ArgumentList.Add($argument) }
+  foreach ($argument in @('-d','Ubuntu','--cd','/mnt/c/Users/anves/.codex/worktrees/bot-handoff/ir35careers','/home/anvesh/.ir35/oci/bin/python','infra/oracle/auth_login.py',$Mode)) { $start.ArgumentList.Add($argument) }
+  return $start
+}
+try {
+  Write-Host 'Staging-only login for anvesh.mannuru+ir35test@gmail.com. Never enter an OCI/SSH passphrase here.'
+  # Check the durable state BEFORE asking the owner for any credential.
+  $check = [Diagnostics.Process]::Start((New-IR35LoginStart '--status'))
+  $check.StandardInput.Close()
+  $checkOutput = $check.StandardOutput.ReadToEndAsync()
+  $checkError = $check.StandardError.ReadToEndAsync()
+  if (-not $check.WaitForExit(120000)) { $check.Kill($true); throw 'Status check timed out; no password requested.' }
+  $state = $checkOutput.GetAwaiter().GetResult() | ConvertFrom-Json
+  if ($check.ExitCode -ne 0 -or $state.status -ne 'READY_STOPPED') { throw 'Attempt is not ready; no password requested. Reconcile the saved result.' }
+  $credential = Read-Host 'Existing TEST ACCOUNT password (hidden)' -AsSecureString
+  $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($credential)
+  $text = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+  $start = New-IR35LoginStart '--stdin-secret'
   $child = [Diagnostics.Process]::Start($start)
   $stdout = $child.StandardOutput.ReadToEndAsync()
   $stderr = $child.StandardError.ReadToEndAsync()

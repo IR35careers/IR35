@@ -1,5 +1,9 @@
 # Oracle P4: guarded full-copy rehearsal and every-row verification
 
+## Newest actual gate: password login FAIL HTTP400
+
+One hidden named-account credential attempt, durableLOGIN_DENIED/loginAttempts1; owned Auth stopped/private, no retry/reset/new secret prompt. Account confirmed/email/password hash present/not banned/deleted/SSO-only; staging DB/email/sink correct. Original Auth error_code/body not retained: exact cause unproven. Post-attempt full62table/2sequence/schema/security audit stillPASS0changes; Storage fix remainsPASS. See docs/evidence/oracle-p4-login-blocker.md and oracle-p4-login-denied.json. Local launcher/Python now both refuse before requesting/reading another credential after denial. Owner must choose the next permitted login step; no method substitution as password PASS. P4andP5blocked; all production/cutover/merge holds retained.
+
 ## Superseding exact Storage repair — PASS
 
 Official v1.80.2ARM digest/native loader matches all74exported IDs/names/hashes,0pending/altered/missing. New clean full restore and post-API62table/27Auth/2sequence/schema/security proofs PASS, only3approved owner fields. Actual API73files/1,241,375bytes SHA256,73signed URLs/invalid-token denial,73RLS checks per role plus buckets match read-only cloud SQL evaluation. Old quarantine/runtime unchanged. See docs/evidence/oracle-p4-storage-compatible.md and linked reports. No history edits/refresh/old-attempt replay/source/cloud/Vercel/DNS/production change. Full P4login/reverse/two complete cycles/wipes and P5 remain open; this draft is not phase signoff or cutover. Earlier FAIL2below retained as historical evidence.

@@ -1,0 +1,29 @@
+{
+  "status": "FAIL",
+  "readOnlyDiagnosticStatus": "PASS",
+  "loginStatus": "LOGIN_DENIED",
+  "httpStatus": 400,
+  "credentialAttempts": 1,
+  "account": {
+    "deleted": false,
+    "ssoOnly": false,
+    "accounts": 1,
+    "anonymous": false,
+    "confirmed": true,
+    "identities": [
+      "email"
+    ],
+    "currentlyBanned": false,
+    "passwordPresent": true
+  },
+  "config": {
+    "stagingDatabaseOnly": true,
+    "emailProviderEnabled": true,
+    "smtpSinkOnly": true
+  },
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "rawAuthErrorCaptured": false,
+  "passwordPersisted": false,
+  "phaseComplete": false
+}

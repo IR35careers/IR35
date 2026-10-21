@@ -11,6 +11,25 @@ import storage_compat
 
 REPORT=schema.REPO/'docs/evidence/oracle-p4-test-account-login.json'
 
+STATUS=r'''
+record=json.loads((ROOT/'config/p4-auth-login.json').read_text())
+if record.get('purpose')!='ir35-named-test-login-only' or record.get('target')!=TARGET:
+ raise RuntimeError('Owned staging Auth journal required')
+allowed={'READY_STOPPED','LOGIN_START_PENDING','HEALTH_FAILED','PRELOGIN_FIDELITY_FAIL','LOGIN_DENIED','PASS','INTENT','START_PENDING'}
+status=record.get('status')
+if status not in allowed:raise RuntimeError('Unrecognized Auth state; no credential request')
+result={'status':status,'credentialAttempts':record.get('loginAttempts',0),'passwordRequested':False,'sourceWrites':0,'stagingWrites':0}
+if 'httpStatus' in record:
+ if type(record['httpStatus']) is not int or not 100<=record['httpStatus']<=599:raise RuntimeError('Invalid redacted HTTP status')
+ result['httpStatus']=record['httpStatus']
+print(json.dumps(result))
+'''
+
+
+def get_status():
+    script=STATUS.replace('TARGET',repr(storage_compat.NAME))
+    return schema.run_guest(schema.guest_bundle(rehearsal=True)+owner_parity.BASE+script,timeout=90)
+
 START=r'''
 name=TARGET;login_path=ROOT/'config/p4-auth-login.json'
 if login_path.exists():raise RuntimeError('Auth login attempt already journalled; reconcile, never replay credentials')
@@ -141,7 +160,9 @@ def guest(password,pin,*,prepare=False):
 
 
 def main():
-    if sys.argv[1:] not in (['--stdin-secret'],['--prepare']):raise ValueError('Preparation or hidden stdin only; no credential arguments')
+    if sys.argv[1:]==['--status']:
+        print(json.dumps(get_status()));return
+    if sys.argv[1:] not in (['--stdin-secret'],['--prepare']):raise ValueError('Status/preparation or hidden stdin only; no credential arguments')
     preflight=json.loads((schema.REPO/'docs/evidence/oracle-p4-auth-startup-preflight.json').read_text())
     if preflight.get('status')!='PASS' or preflight.get('pending')!=[] or preflight.get('unexplained')!=[]:
         raise ValueError('Auth migration preflight required')
@@ -151,6 +172,8 @@ def main():
         path=schema.REPO/'docs/evidence/oracle-p4-auth-runtime-preflight.json'
         path.write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps({'status':result['status'],'authHealthPASS':result['authHealthPASS'],'passwordRequested':False,'sourceWrites':0}));return
+    if get_status().get('status')!='READY_STOPPED':
+        raise ValueError('Not ready for a credential attempt; never request/read/replay a password after denial')
     data=json.loads(sys.stdin.read(4097))
     if set(data)!={'password'} or not isinstance(data['password'],str) or not 1<=len(data['password'])<=512:
         raise ValueError('Bounded hidden test credential required')
