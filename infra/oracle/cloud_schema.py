@@ -277,7 +277,8 @@ try:
  if os.geteuid()!=0 or state.get('purpose')!='ir35-disposable-staging' or state.get('dataRehearsalStarted') or state.get('promotedToProduction'):
   raise RuntimeError('DestinationIdentityGuard')
  for name,record in payload.items():
-  if name not in ('.env.p3-source-schema.dump','.env.p3-source-roles.sql','.env.p3-source-catalog.json','.env.p3-source-catalog-v2.json'):
+  if name not in ('.env.p3-source-schema.dump','.env.p3-source-roles.sql','.env.p3-source-catalog.json','.env.p3-source-catalog-v2.json',
+                  '.env.p3-acl-source-roles.sql','.env.p3-acl-source-catalog.json'):
    raise RuntimeError('ArtifactPathGuard')
   body=base64.b64decode(record['body'],validate=True)
   if hashlib.sha256(body).hexdigest()!=record['sha256'] or len(body)>32000000:
@@ -298,6 +299,14 @@ except Exception:
 
 
 def main():
+    if sys.argv[1:]==['platform-diagnosis']:
+        from acl_diagnosis import platform_audit
+        platform_audit()
+        return
+    if sys.argv[1:]==['effective-privileges']:
+        from acl_diagnosis import effective_audit
+        effective_audit()
+        return
     if sys.argv[1:]==['catalog-repair']:
         repair_catalog()
         return
