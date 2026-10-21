@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "schemaOnly": true,
+  "sourceWrites": 0,
+  "objects": 3752,
+  "checkedAt": "2026-10-21T04:12:00Z",
+  "artifacts": {
+    ".env.p3-source-catalog-v2.json": {
+      "bytes": 970584,
+      "sha256": "6e4ee38027c9f73c99ff00a2b45a6cfbfba1177b26ec13085a6d8f07735d6739",
+      "mode": "600",
+      "owner": "ir35"
+    }
+  },
+  "reason": "Catalog helper name-type truncation repaired with explicit text; logical visible column ordering ignores dropped physical slots.",
+  "originalSchemaArchiveUnchanged": true,
+  "freshReadOnlyCatalogSnapshot": true,
+  "archiveCatalogShareSnapshot": false,
+  "phaseComplete": false
+}

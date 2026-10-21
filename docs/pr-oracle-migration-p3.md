@@ -1,5 +1,20 @@
 # Oracle P3: protected ARM staging and explicit schema mismatch gate
 
+## Latest owner-approved exact-cloud-first sequence —21October
+
+| Gate | Actual result |
+| --- | --- |
+| Live cloud read-only schema/roles export | PASS; all11schemas, role passwords excluded, verify-full, raw artifacts only VM.env600/ir35 |
+| New unattached clone schema restore | PASS once; original repo-built DB retained, no customer rows |
+| Expanded exact-clone fidelity | **FAIL494**:433grants/49functions/3extensions/4memberships/3roles/2views;0exceptions |
+| Tables/columns/constraints/indexes/RLS-policy/sequence definitions |0differences; not full parity |
+| Original77 drift report | Complete: RLS15/functions13/other49; original grant coverage absent;11policies security-flagged |
+| Pending upgrades / P4 / P5 | BLOCKED, not run |
+
+See docs/evidence/oracle-p3-cloud-clone.md, oracle-p3-clone-gate.json and oracle-p3-drift-77.md/JSON. Snapshot/archive/role/private-file hashes and new attempt history retained. Explicittext/logical visible ordinals and duplicate rejection fix catalog helper truncation; invalid first comparison not treated as PASS. Owner approvals did not authorise waiving494differences, source repair, production or cutover.
+
+Next is an explicitly reviewed isolated-target restore-fidelity repair (owners/ACL/default privileges/roles), not executed after this failed gate. Baseline reconciliation belongs in its own draft PR and cannot claim fresh-install zero differences yet. No raw schema/password/role config/customer data published; expanded nonsecret inputs are ignored local cache with public SHA256 bindings. Earlier77-only status below is history.
+
 ## What and why
 
 Stacked on P2 draft50; existing P3 draft51, **phase incomplete**. Pinned official slim Supabase ARM images/PG17.6 extensions, VM-only scoped secrets/static environment loader, private services/SMTP sink/Studio off, actual protected staging HTTPS. Repaired empty-target bootstrap, Kong prefix/config and stale env binds without data reset/cloud writes. All24 migrations+legacy baseline passed. Read-only definition-hash gate **FAIL295/361objects,77differences**, so migration stops before customer data/P4/P5.

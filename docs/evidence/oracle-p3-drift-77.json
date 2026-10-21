@@ -1,0 +1,1488 @@
+{
+  "originalDifferences": 77,
+  "groups": [
+    "RLS",
+    "grants",
+    "functions",
+    "other"
+  ],
+  "sourceCheckedAt": "2026-10-21T04:12:00Z",
+  "rows": [
+    {
+      "group": "other",
+      "object": "column:application_events.error_detail",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 12,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_events.failure_reason",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 11,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_events.from_status",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 9,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_events.to_status",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 10,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_packets.delivery_started_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4559f4438674696cfdf2ac2bf584ed85",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 27,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_packets.delivery_status",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d477598712ef4b973e926022fc96f43d",
+        "metadata": {
+          "type": "text",
+          "default": "'draft'::text",
+          "notNull": true,
+          "identity": "",
+          "position": 23,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_packets.delivery_version",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4d7ea344e23750ce2dc4938d53e32cdd",
+        "metadata": {
+          "type": "bigint",
+          "default": "1",
+          "notNull": true,
+          "identity": "",
+          "position": 24,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_packets.error_detail",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 26,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_packets.failure_reason",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 25,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.application_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a631f09f68290729d206353dda217c7a",
+        "metadata": {
+          "type": "uuid",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 1,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.created_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "ade0092c00e1d29dc01b2af6fd67bb3c",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notNull": true,
+          "identity": "",
+          "position": 6,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.destination_host",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 3,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.encrypted_state",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 4,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.expires_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "35fc91d3fe747695e15a434020e987a6",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 5,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.updated_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "ade0092c00e1d29dc01b2af6fd67bb3c",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notNull": true,
+          "identity": "",
+          "position": 7,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_portal_sessions.user_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a631f09f68290729d206353dda217c7a",
+        "metadata": {
+          "type": "uuid",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 2,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:application_worker_tasks.attempt_base",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "10498e143a72b3cb38f855a1bfa9adc9",
+        "metadata": {
+          "type": "integer",
+          "default": "0",
+          "notNull": true,
+          "identity": "",
+          "position": 16,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.checkout_request_key",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 3,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.consented_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "ade0092c00e1d29dc01b2af6fd67bb3c",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notNull": true,
+          "identity": "",
+          "position": 9,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "02da1d443117fee5b252f61bc87de111",
+        "metadata": {
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "notNull": true,
+          "identity": "",
+          "position": 1,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.immediate_access_requested",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4e6d9014746ff83358ce9b69b921e91b",
+        "metadata": {
+          "type": "boolean",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 6,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.policy_version",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 4,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.price_label",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 5,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.provider_checkout_session_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 8,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.status",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "b5b645015a9e32a4e9f68e83fa26530a",
+        "metadata": {
+          "type": "text",
+          "default": "'initiated'::text",
+          "notNull": true,
+          "identity": "",
+          "position": 7,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_consents.user_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a631f09f68290729d206353dda217c7a",
+        "metadata": {
+          "type": "uuid",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 2,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.attempts",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "11464d1a1fcb4280390b6b2ea5b2f43e",
+        "metadata": {
+          "type": "integer",
+          "default": "1",
+          "notNull": true,
+          "identity": "",
+          "position": 5,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.event_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 1,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.event_type",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 2,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.last_error",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "248e8cbb324d6e64defc1d6f97d3766e",
+        "metadata": {
+          "type": "text",
+          "default": "''::text",
+          "notNull": true,
+          "identity": "",
+          "position": 6,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.livemode",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4e6d9014746ff83358ce9b69b921e91b",
+        "metadata": {
+          "type": "boolean",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 3,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.processed_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4559f4438674696cfdf2ac2bf584ed85",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 8,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.received_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "ade0092c00e1d29dc01b2af6fd67bb3c",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notNull": true,
+          "identity": "",
+          "position": 7,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:billing_webhook_events.status",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "90e458ec2bf8925e42643a791cddeb41",
+        "metadata": {
+          "type": "text",
+          "default": "'processing'::text",
+          "notNull": true,
+          "identity": "",
+          "position": 4,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.attempts",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "11464d1a1fcb4280390b6b2ea5b2f43e",
+        "metadata": {
+          "type": "integer",
+          "default": "1",
+          "notNull": true,
+          "identity": "",
+          "position": 6,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.created_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "ade0092c00e1d29dc01b2af6fd67bb3c",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notNull": true,
+          "identity": "",
+          "position": 8,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.error_code",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "248e8cbb324d6e64defc1d6f97d3766e",
+        "metadata": {
+          "type": "text",
+          "default": "''::text",
+          "notNull": true,
+          "identity": "",
+          "position": 7,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.event_type",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d45fe5b63d667086016e994c2c419e95",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 3,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "02da1d443117fee5b252f61bc87de111",
+        "metadata": {
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "notNull": true,
+          "identity": "",
+          "position": 1,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.provider_message_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 5,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.sent_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4559f4438674696cfdf2ac2bf584ed85",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 10,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.status",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "90e458ec2bf8925e42643a791cddeb41",
+        "metadata": {
+          "type": "text",
+          "default": "'processing'::text",
+          "notNull": true,
+          "identity": "",
+          "position": 4,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.updated_at",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "ade0092c00e1d29dc01b2af6fd67bb3c",
+        "metadata": {
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "notNull": true,
+          "identity": "",
+          "position": 9,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:email_delivery_events.user_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a631f09f68290729d206353dda217c7a",
+        "metadata": {
+          "type": "uuid",
+          "default": null,
+          "notNull": true,
+          "identity": "",
+          "position": 2,
+          "collation": null,
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "column:user_entitlements.provider_subscription_id",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "a2f084434fbff651e9f5626aff55beca",
+        "metadata": {
+          "type": "text",
+          "default": null,
+          "notNull": false,
+          "identity": "",
+          "position": 7,
+          "collation": "\"default\"",
+          "generated": ""
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:add_to_waitlist(user_email text)",
+      "cloud": {
+        "presence": "present",
+        "definitionMd5": "7da948329581a94025fe8e9887f7b8b2",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "repo": {
+        "presence": "absent"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:application_delivery_can_transition(p_from text, p_to text, p_retry boolean)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "413bb33b0562e4c1f1f0310f3b8b9210",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:application_has_delivery_receipt(p_receipt jsonb, p_mode text)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "51bf1c5268cbff2ccd7a6a730a4095ca",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:audit_application_delivery()",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "51b647f0423d4752d3ece2c0ced35304",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:claim_application_delivery_task(p_worker_id text, p_application_id uuid)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "bac2682e92e880d9895d574cb6571c15",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:claim_application_worker_task(p_worker_id text)",
+      "cloud": {
+        "presence": "present",
+        "definitionMd5": "f07f1f391f07ea4e7d97c261d470265b",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "e00b7763ba172ab80adfeed238500323",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:commit_application_delivery_result(p_id uuid, p_user_id uuid, p_to text, p_receipt jsonb, p_questions jsonb, p_keep_approval boolean, p_reason text, p_detail text, p_task_id uuid, p_attempt integer)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "6f905dd0b55d180fcd4b76a430bed390",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:consume_security_rate_limit(p_scope text, p_rate_key text, p_limit integer, p_window_seconds integer)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "3dd50c809c443d5c5fa268d71e9c856f",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:guard_application_delivery()",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "bc12238ea51607c14bed53eec3804353",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:guard_application_task_attempt()",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "6d1287be1ce03c63449b4d846703f774",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:project_application_task_delivery()",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "34e6560cd3036e723e053040a44b8e84",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:save_application_draft(p_packet jsonb, p_expected_version bigint)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "833a374468c9027b7fd83bb2806f911b",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "functions",
+      "object": "function:transition_application_delivery(p_id uuid, p_user_id uuid, p_to text, p_reason text, p_detail text, p_retry boolean)",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "67c57208e1886ab3443812ca55e02314",
+        "plaintext": "withheld; exact original definition fingerprint shown"
+      },
+      "securityReview": null
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_events.Users add own preparation events",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "06f2659d157a674e2095fb3ef70f1978",
+        "metadata": {
+          "check": "((auth.uid() = user_id) AND (event_type = ANY (ARRAY['created'::text, 'prepared'::text, 'approved'::text, 'note'::text])) AND (EXISTS ( SELECT 1\n   FROM public.application_packets packet\n  WHERE ((packet.id = application_events.application_id) AND (packet.user_id = auth.uid())))))",
+          "roles": [
+            "authenticated"
+          ],
+          "using": null,
+          "command": "INSERT",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_events.Users manage own application events",
+      "cloud": {
+        "presence": "present",
+        "definitionMd5": "e7a9a9a1e21af77e758f94b887493e14",
+        "metadata": {
+          "check": "((auth.uid() = user_id) AND (EXISTS ( SELECT 1\n   FROM public.application_packets packet\n  WHERE ((packet.id = application_events.application_id) AND (packet.user_id = auth.uid())))))",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "((auth.uid() = user_id) AND (EXISTS ( SELECT 1\n   FROM public.application_packets packet\n  WHERE ((packet.id = application_events.application_id) AND (packet.user_id = auth.uid())))))",
+          "command": "ALL",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "repo": {
+        "presence": "absent"
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_events.Users read own application events",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "7b3de3169f8575e90ffb8a03339b7bc6",
+        "metadata": {
+          "check": null,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(auth.uid() = user_id)",
+          "command": "SELECT",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_packets.Users create own application drafts",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "6756271c9fb7496f4610a9ececbff55b",
+        "metadata": {
+          "check": "((auth.uid() = user_id) AND (status = ANY (ARRAY['draft'::text, 'ready'::text, 'needs_review'::text])) AND (mode = 'dry_run'::text) AND (receipt IS NULL))",
+          "roles": [
+            "authenticated"
+          ],
+          "using": null,
+          "command": "INSERT",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_packets.Users delete own application packets",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "0ed6aef66c77c6d3d24596df1ba26736",
+        "metadata": {
+          "check": null,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(auth.uid() = user_id)",
+          "command": "DELETE",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_packets.Users manage own application packets",
+      "cloud": {
+        "presence": "present",
+        "definitionMd5": "72d6608ef26f0fb9b4390b7306d18756",
+        "metadata": {
+          "check": "(auth.uid() = user_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(auth.uid() = user_id)",
+          "command": "ALL",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "repo": {
+        "presence": "absent"
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_packets.Users read own application packets",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "7b3de3169f8575e90ffb8a03339b7bc6",
+        "metadata": {
+          "check": null,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(auth.uid() = user_id)",
+          "command": "SELECT",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:application_packets.Users update own application drafts",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "22d94d9d43c7a589ac493691688a0191",
+        "metadata": {
+          "check": "((auth.uid() = user_id) AND (status = ANY (ARRAY['draft'::text, 'ready'::text, 'needs_review'::text])) AND (mode = 'dry_run'::text) AND (receipt IS NULL))",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "((auth.uid() = user_id) AND (status = ANY (ARRAY['draft'::text, 'ready'::text, 'needs_review'::text])))",
+          "command": "UPDATE",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:inbox_aliases.Users manage own inbox alias",
+      "cloud": {
+        "presence": "present",
+        "definitionMd5": "72d6608ef26f0fb9b4390b7306d18756",
+        "metadata": {
+          "check": "(auth.uid() = user_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(auth.uid() = user_id)",
+          "command": "ALL",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "repo": {
+        "presence": "absent"
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:inbox_aliases.Users read own inbox alias",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "7b3de3169f8575e90ffb8a03339b7bc6",
+        "metadata": {
+          "check": null,
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(auth.uid() = user_id)",
+          "command": "SELECT",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "policy:waitlist.Allow service role read",
+      "cloud": {
+        "presence": "present",
+        "definitionMd5": "4b3643dd79fceb6f230ef293fb2401d4",
+        "metadata": {
+          "check": null,
+          "roles": [
+            "service_role"
+          ],
+          "using": "true",
+          "command": "SELECT",
+          "permissive": "PERMISSIVE"
+        }
+      },
+      "repo": {
+        "presence": "absent"
+      },
+      "securityReview": "REVIEW: cloud-stricter possibility; effective USING/WITH CHECK policy-set implication is not automatically proven. Preserve cloud exactly, never broaden it."
+    },
+    {
+      "group": "RLS",
+      "object": "rls:application_portal_sessions",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "3154478ac268b0294052b64fe69e6b89",
+        "metadata": {
+          "forced": false,
+          "enabled": true
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "RLS",
+      "object": "rls:billing_consents",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "3154478ac268b0294052b64fe69e6b89",
+        "metadata": {
+          "forced": false,
+          "enabled": true
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "RLS",
+      "object": "rls:billing_webhook_events",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "3154478ac268b0294052b64fe69e6b89",
+        "metadata": {
+          "forced": false,
+          "enabled": true
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "RLS",
+      "object": "rls:email_delivery_events",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "3154478ac268b0294052b64fe69e6b89",
+        "metadata": {
+          "forced": false,
+          "enabled": true
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "trigger:application_packets.application_delivery_audit",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "790bbbec5fbabeb99f102c047242d155",
+        "metadata": {
+          "enabled": "O",
+          "definition": "CREATE TRIGGER application_delivery_audit AFTER INSERT OR UPDATE ON public.application_packets FOR EACH ROW EXECUTE FUNCTION public.audit_application_delivery()"
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "trigger:application_packets.application_delivery_guard",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "1ab83066fab2bcd5126422913f77a8cf",
+        "metadata": {
+          "enabled": "O",
+          "definition": "CREATE TRIGGER application_delivery_guard BEFORE INSERT OR UPDATE ON public.application_packets FOR EACH ROW EXECUTE FUNCTION public.guard_application_delivery()"
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "trigger:application_worker_tasks.application_task_attempt_guard",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "4625c4d7be901292740d585847fa8188",
+        "metadata": {
+          "enabled": "O",
+          "definition": "CREATE TRIGGER application_task_attempt_guard BEFORE UPDATE ON public.application_worker_tasks FOR EACH ROW EXECUTE FUNCTION public.guard_application_task_attempt()"
+        }
+      },
+      "securityReview": null
+    },
+    {
+      "group": "other",
+      "object": "trigger:application_worker_tasks.application_task_delivery",
+      "cloud": {
+        "presence": "absent"
+      },
+      "repo": {
+        "presence": "present",
+        "definitionMd5": "d5f994aac225403c37c2dda774eebb10",
+        "metadata": {
+          "enabled": "O",
+          "definition": "CREATE TRIGGER application_task_delivery AFTER INSERT OR UPDATE OF status ON public.application_worker_tasks FOR EACH ROW EXECUTE FUNCTION public.project_application_task_delivery()"
+        }
+      },
+      "securityReview": null
+    }
+  ],
+  "note": "Original77 public subset had no grant coverage. Expanded clone gate now compares grants separately; zero original grant entries is not grant parity."
+}

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "phaseComplete": false,
+  "database": "ir35_cloud_baseline_20261021",
+  "schemaOnly": true,
+  "sourceWrites": 0,
+  "customerRowsImported": 0,
+  "objects": 3812,
+  "zeroDifferenceGate": false,
+  "attempts": 1
+}
