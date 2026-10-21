@@ -1,18 +1,22 @@
 {
   "phase": "P3",
-  "status": "TIMEOUT",
-  "checkedAt": "2026-10-20T20:15:25.232737+00:00",
-  "elapsedSeconds": 1801.336,
+  "status": "PASS",
+  "checkedAt": "2026-10-20T20:37:14.180878+00:00",
+  "elapsedSeconds": 1.6,
   "observations": [
     {
       "resolver": "1.1.1.1",
       "host": "staging.ir35careers.com",
       "a": {
-        "status": "NXDOMAIN",
-        "records": []
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
       },
       "aaaa": {
-        "status": "NXDOMAIN",
+        "status": "NOERROR",
         "records": []
       },
       "effectiveCAAName": null,
@@ -23,11 +27,15 @@
       "resolver": "1.1.1.1",
       "host": "api-staging.ir35careers.com",
       "a": {
-        "status": "NXDOMAIN",
-        "records": []
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
       },
       "aaaa": {
-        "status": "NXDOMAIN",
+        "status": "NOERROR",
         "records": []
       },
       "effectiveCAAName": null,
@@ -38,11 +46,15 @@
       "resolver": "8.8.8.8",
       "host": "staging.ir35careers.com",
       "a": {
-        "status": "NXDOMAIN",
-        "records": []
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
       },
       "aaaa": {
-        "status": "NXDOMAIN",
+        "status": "NOERROR",
         "records": []
       },
       "effectiveCAAName": null,
@@ -53,11 +65,15 @@
       "resolver": "8.8.8.8",
       "host": "api-staging.ir35careers.com",
       "a": {
-        "status": "NXDOMAIN",
-        "records": []
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
       },
       "aaaa": {
-        "status": "NXDOMAIN",
+        "status": "NOERROR",
         "records": []
       },
       "effectiveCAAName": null,
@@ -67,5 +83,5 @@
   ],
   "certificateRequests": 0,
   "dnsWrites": 0,
-  "attempts": 33
+  "attempts": 1
 }

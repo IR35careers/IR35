@@ -1,29 +1,24 @@
-# Oracle P3: private staging preparation — incomplete
-
-## Current result
-
-Owner approved narrow Caddy state exception and staging-only DNS. Added dual-resolver30min/CAA gate, ten native digest pins, slim official Compose adaptation, fresh VM-only secret preparation, compiled static per-service dotenv launcher (no private values in saved Docker Env), public Vault env-key hook, SMTP sink/private networks, Studio off-profile, and prepared staging-then-trusted HTTP-01 controls. **P3 remains incomplete**: DNS timeout/NXDOMAIN; no certificate requests. Postgres/sink healthy, first internal-up failed; six dependents stopped, full migrations/schema parity not run. [Detailed actual evidence](evidence/oracle-p3-staging.md) records errors/attempts/next repair,155 Linux units PASS. New source-only restart=no/header-file controls are not misreported as deployed PASS. No cloud rows/objects or production change. Owner next action only publish the approved staging records; no repeated key approval or private-value request.
+# Oracle P3: protected ARM staging and explicit schema mismatch gate
 
 ## What and why
 
-Stacked on P2 draft50. Verify the approved ARM Postgres digest and all five exact cloud extension versions, then prepare the slim internal Supabase stack on the existing staging VM. Added fixed helpers, durable attempt counters, collision/reuse guards, strict public input, scoped VM-only secret files and a native environment launcher. No source cloud connection, customer-data restore, new OCI resource or production change.
+Stacked on P2 draft50; existing P3 draft51, **phase incomplete**. Pinned official slim Supabase ARM images/PG17.6 extensions, VM-only scoped secrets/static environment loader, private services/SMTP sink/Studio off, actual protected staging HTTPS. Repaired empty-target bootstrap, Kong prefix/config and stale env binds without data reset/cloud writes. All24 migrations+legacy baseline passed. Read-only definition-hash gate **FAIL295/361objects,77differences**, so migration stops before customer data/P4/P5.
 
-## Risk / current result
+## Risk
 
-Native image and all five extension probes PASS; **P3 overall incomplete**. The isolated native probe uses a readonly rootfs, network none, no ports/host mounts and a3GiB/2CPU limit; its exited container is retained for reconciliation. The subsequent internal stack has healthy Postgres and SMTP sink only. Auth/Storage/Kong/Realtime startup failed and six dependents were stopped; no failed service is left in a restart loop. Missing empty-target bootstrap prerequisites still need repair before another guarded startup attempt. No schema/data parity or restore PASS is claimed.
+Cloud still records024, target includes025 plus older schema/policy differences. Never waive app differences as platform-only, weaken RLS, install025 into cloud, or manufacture PASS. Subset gate is early rejection only, not full P4 verification. Proposed exact-cloud-clone-before-upgrade sequence needs owner direction, not executed.
 
-Root administration uses the existing pinned owner channel; ir35 gains no sudo or Docker socket privilege. No production RLS/CSP/grant change. Vault basic view-read is not secret encryption/restore evidence. Both staging DNS names timed out NXDOMAIN at both public resolvers after30min; Caddy/Studio/worker have not started and no ACME request ran.
+No new OCI/IAM/paid/production/provider/env/DNS/acceptance change, restore or employer submission. Old projects untouched; no YES CUTOVER. Caddy private state only approved path700/600/UID1002/backup-excluded. Secrets outside Docker Env/logs/argv/Git; private SSH/API/age keys not on VM. No production RLS/CSP change. Vite8.2.4 fixes GHSA-698v-4r3x-3vcv without new exceptions.
 
 ## Test plan
 
-- Linux unittest discovery covers fixed inputs, resource/network/port boundaries, PG17 catalog query, log redaction, dotenv launcher file protections, DNS/CAA and exact empty-probe repair refusing real mounts/running/wrong-network containers.
-- Vitest `tests/unit/oracle-image-pin.test.ts` checks exact source extension versions, native evidence/digest, zero customer data/ports, and phaseComplete=false; original readonly SQL guard retained.
-- Review `docs/evidence/oracle-p3-native.md` /JSON and public attempt counts. No test invokes an employer or cloud-data write. Do not rerun an existing successful probe or reset counters.
-- Actual local result:155 Linux units/four focused Vitest tests/strict TypeScript/scoped zero-warning ESLint/whitespace/source-history secret scan834files PASS. Hosted final-head CI remains separate.
-- Full Compose fresh migrations/schema parity, protected staging E2E and test-account auth remain outstanding; no preview/UI screenshot applicable. Production verification only after later gates using anvesh.mannuru+ir35test@gmail.com, mock ATS only.
+1. Run strict types/ESLint, full Vitest and Linux unittest discovery. Gate tests reject025/policy differences, duplicates/malformed input and promoted/incomplete target. Equality never claims full verification.
+2. Inspect docs/evidence/oracle-p3-staging.md/schema-gate.json: expect **FAIL**,295source/361target/77differences, phaseComplete=false/P4/P5 unstarted. Source catalogs contain metadata/names/counts/hashes only, not rows/passwords/object paths/live function bodies.
+3. Review runtime/DNS/TLS reports; never repeat PASS stages/reset counters. Owner-held staging credentials only: both unauthenticated hosts401/Basic/noindex with trusted TLS; authenticated app503 setup placeholder. No public DB/Studio. No Vercel preview deployment needed/authorised.
+4. Realtime health is not event replication proof; no browser login/load/restore/app readiness claim. Later E2E uses anvesh.mannuru+ir35test@gmail.com/mock ATS only, never customers/employers. Production verification waits for later gates.
 
-## Migrations / env / manual steps
+## Migrations / env / screenshots / manual steps
 
-No repository app migration executed. Fresh staging secrets were generated only on the VM in /opt/ir35/.env*600/ir35; no value was exported. Caddy's narrow private-state exception is approved and its data directory is empty700/ir35. Staging email is an internal sink; mock/acceptance=false flags are preserved. No live SMTP/Google/Supabase/Vercel/Stripe/DNS/billing change.
+Existing repo migrations executed **on fresh Oracle staging only**, none changed. No customer data copied. Generated secrets stay/opt/ir35/.env*600/ir35; mock/acceptance=false/SMTP sink/Basic/noindex. Private Auth exports remain P7. No new public env value. No UI screenshot: app not deployed. Local/hosted checks recorded honestly in evidence.
 
-Owner action: publish/save only staging.ir35careers.com and api-staging.ir35careers.com A132.145.28.134 TTL300 (DNS-only if proxying is offered), leaving @/www/api/admin unchanged. The Caddy-key approval is already complete; no password or repeated approval is requested. Bootstrap repair remains agent work. Private Auth exports occur later in P7. Human review only; no merge/auto-merge/approval/PR closure/production CI deployment, and no YES CUTOVER received.
+Owner decision: resolve exact-cloud-baseline versus all-migrations ordering before P4. Existing DNS/Caddy approvals complete, no repeated password/DNS request. Human review only; never merge/approve/auto-merge/close PR or deploy production from CI.

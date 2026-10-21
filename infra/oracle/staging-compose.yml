@@ -41,6 +41,7 @@
         "/opt/ir35/config/pgsodium-env-key.sh:/run/ir35/pgsodium-env-key.sh:ro",
         "/opt/ir35/config/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro",
         "/opt/ir35/config/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro",
+        "/opt/ir35/config/functions-role.sql:/docker-entrypoint-initdb.d/init-scripts/98-functions-role.sql:ro",
         "/opt/ir35/config/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro",
         "/opt/ir35/config/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro",
         "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
@@ -137,6 +138,8 @@
       "healthcheck": {
         "test": [
           "CMD",
+          "/run/ir35/env-exec",
+          "/opt/ir35/.env.rest",
           "postgrest",
           "--ready"
         ],
@@ -241,7 +244,7 @@
           "--quiet",
           "--tries=1",
           "--spider",
-          "http://localhost:5000/status"
+          "http://127.0.0.1:5000/status"
         ],
         "interval": "10s",
         "timeout": "5s",
@@ -271,7 +274,7 @@
         "/entrypoint.sh"
       ],
       "volumes": [
-        "/opt/ir35/.env.kong-config:/run/ir35/.env.kong-config:ro",
+        "/opt/ir35/.env.kong-config.json:/run/ir35/.env.kong-config.json:ro",
         "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
         "/opt/ir35/.env.kong:/opt/ir35/.env.kong:ro"
       ],
@@ -287,12 +290,20 @@
           "condition": "service_started"
         }
       },
+      "ulimits": {
+        "nofile": {
+          "soft": 4096,
+          "hard": 4096
+        }
+      },
       "tmpfs": [
-        "/usr/local/kong:rw,uid=1002,gid=1002,mode=0700"
+        "/run/kong:rw,uid=1002,gid=1002,mode=0700"
       ],
       "healthcheck": {
         "test": [
           "CMD",
+          "/run/ir35/env-exec",
+          "/opt/ir35/.env.kong",
           "kong",
           "health"
         ],

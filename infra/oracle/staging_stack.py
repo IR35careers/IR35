@@ -5,6 +5,14 @@ from pathlib import Path
 UPSTREAM = "bc27d2661edd09a5d0b8d76ce33da6d4071a756e"
 SQL_FILES = ("realtime.sql", "roles.sql", "jwt.sql", "_supabase.sql")
 
+# The omitted webhooks service normally creates this role before99-roles.sql.
+# Preserve that bootstrap prerequisite without enabling pg_net/webhook egress.
+FUNCTIONS_ROLE_SQL = """DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='supabase_functions_admin') THEN
+CREATE USER supabase_functions_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION;
+END IF; END $$;
+"""
+
 
 def compose(images):
     services = {}
@@ -21,6 +29,7 @@ def compose(images):
         "/opt/ir35/config/pgsodium-env-key.sh:/run/ir35/pgsodium-env-key.sh:ro",
         "/opt/ir35/config/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro",
         "/opt/ir35/config/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro",
+        "/opt/ir35/config/functions-role.sql:/docker-entrypoint-initdb.d/init-scripts/98-functions-role.sql:ro",
         "/opt/ir35/config/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro",
         "/opt/ir35/config/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro"],
         command=["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=fatal",
@@ -28,16 +37,17 @@ def compose(images):
             "-c", "pgsodium.getkey_script=/run/ir35/pgsodium-env-key.sh", "-c", "vault.getkey_script=/run/ir35/pgsodium-env-key.sh"],
         healthcheck={"test": ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"], "interval": "5s", "timeout": "5s", "retries": 10})
     services["auth"].update(depends_on=healthy, healthcheck={"test": ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:9999/health"], "interval": "10s", "timeout": "5s", "retries": 5})
-    services["rest"].update(depends_on=healthy, command=["postgrest"], healthcheck={"test": ["CMD", "postgrest", "--ready"], "interval": "10s", "timeout": "5s", "retries": 5})
+    services["rest"].update(depends_on=healthy, command=["postgrest"], healthcheck={"test": ["CMD", "/run/ir35/env-exec", "/opt/ir35/.env.rest", "postgrest", "--ready"], "interval": "10s", "timeout": "5s", "retries": 5})
     services["realtime"].update(container_name="realtime-dev.supabase-realtime", depends_on=healthy,
         volumes=["/opt/ir35/.env.realtime-health-header:/opt/ir35/.env.realtime-health-header:ro"],
         healthcheck={"test": ["CMD", "curl", "-sSf", "--head", "-o", "/dev/null", "-H", "@/opt/ir35/.env.realtime-health-header", "http://127.0.0.1:4000/api/tenants/realtime-dev/health"],
             "interval": "30s", "timeout": "5s", "retries": 5, "start_period": "30s"})
     services["storage"].update(depends_on={**healthy, "rest": {"condition": "service_started"}}, volumes=["/opt/ir35/data/storage:/var/lib/storage"],
-        healthcheck={"test": ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/status"], "interval": "10s", "timeout": "5s", "retries": 5})
+        healthcheck={"test": ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:5000/status"], "interval": "10s", "timeout": "5s", "retries": 5})
     services["kong"].update(user="1002:1002", depends_on={"auth": {"condition": "service_started"}, "rest": {"condition": "service_started"}},
-        volumes=["/opt/ir35/.env.kong-config:/run/ir35/.env.kong-config:ro"], tmpfs=["/usr/local/kong:rw,uid=1002,gid=1002,mode=0700"],
-        healthcheck={"test": ["CMD", "kong", "health"], "interval": "10s", "timeout": "5s", "retries": 5})
+        ulimits={"nofile": {"soft": 4096, "hard": 4096}},
+        volumes=["/opt/ir35/.env.kong-config.json:/run/ir35/.env.kong-config.json:ro"], tmpfs=["/run/kong:rw,uid=1002,gid=1002,mode=0700"],
+        healthcheck={"test": ["CMD", "/run/ir35/env-exec", "/opt/ir35/.env.kong", "kong", "health"], "interval": "10s", "timeout": "5s", "retries": 5})
     services["meta"].update(depends_on=healthy)
     services["smtp"].update(environment={"MP_DATABASE": "/tmp/mailpit.db", "MP_MAX_MESSAGES": "100", "MP_SMTP_BIND_ADDR": "0.0.0.0:1025", "MP_UI_BIND_ADDR": "0.0.0.0:8025"},
         read_only=True, tmpfs=["/tmp:rw,size=32m"], healthcheck={"test": ["CMD", "/mailpit", "readyz"], "interval": "10s", "timeout": "5s", "retries": 5})
@@ -123,13 +133,27 @@ api-staging.ir35careers.com {
     import staging_tls
     @not_allowed not remote_ip {$STAGING_OWNER_IP} 132.145.28.134 127.0.0.1 ::1 172.30.35.1 172.30.35.3
     respond @not_allowed "Forbidden" 403
-    @api path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/*
-    reverse_proxy @api kong:8000 {
-        header_up -X-Forwarded-For
-        header_up -X-Real-IP
-        header_up -X-Vercel-Forwarded-For
+    route {
+        vars original_auth ""
+        @bearer header Authorization "Bearer *"
+        vars @bearer original_auth "{http.request.header.Authorization}"
+        @staging_header header X-Staging-Authorization *
+        request_header @staging_header Authorization "{http.request.header.X-Staging-Authorization}"
+        basic_auth {
+            ir35 {$STAGING_BASIC_HASH}
+        }
+        request_header -Authorization
+        @restore_bearer expression `{vars.original_auth} != ""`
+        request_header @restore_bearer Authorization "{vars.original_auth}"
+        request_header -X-Staging-Authorization
+        @api path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/*
+        reverse_proxy @api kong:8000 {
+            header_up -X-Forwarded-For
+            header_up -X-Real-IP
+            header_up -X-Vercel-Forwarded-For
+        }
+        respond "Not found" 404
     }
-    respond "Not found" 404
 }
 """
 

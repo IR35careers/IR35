@@ -25,10 +25,28 @@ STATE = KEY_DIRECTORY / "p3-stack.json"
 REPO = Path(__file__).resolve().parents[2]
 
 
+def assert_schema_not_failed():
+    report = REPO / "docs/evidence/oracle-p3-schema-gate.json"
+    if report.exists():
+        if report.is_symlink() or report.stat().st_size > 2_000_000:
+            raise KeySafetyError("Unsafe schema comparison report; no VM operation")
+        status = json.loads(report.read_text()).get("status")
+        if status != "SUBSET_MATCH_ONLY":
+            raise KeySafetyError("P3 schema comparison FAIL/incomplete; owner baseline/order decision required before any VM operation")
+
+
 def public_bundle():
     # Code goes through stdin; only reviewed public source/config reaches argv.
-    source = Path(staging_stack.__file__).read_text()
+    source = Path(staging_stack.__file__).read_text() + "\nAPP_MIGRATIONS = " + repr(repo_migrations()) + "\n"
+    source += "SCHEMA_GATE_SQL = " + repr((REPO / "supabase/verification/oracle_p3_schema_gate.sql").read_text()) + "\n"
     return "import types,sys\nm=types.ModuleType('staging_stack')\nsys.modules['staging_stack']=m\nexec(" + repr(source) + ",m.__dict__)\n" + Path(stack_guest.__file__).read_text()
+
+
+def repo_migrations():
+    files = [REPO / "supabase/waitlist.sql", *sorted((REPO / "supabase/migrations").glob("*.sql"))]
+    if len(files) != 25 or any(path.is_symlink() or not path.is_file() for path in files):
+        raise KeySafetyError("Expected reviewed legacy waitlist baseline plus24 repository migrations")
+    return {path.relative_to(REPO).as_posix(): path.read_text() for path in files}
 
 
 def assets():
@@ -45,9 +63,10 @@ def assets():
 
 
 def main():
-    if sys.argv[1:] not in (["prepare"], ["install-launcher"], ["internal-up"], ["validate-caddy"], ["acme-staging"], ["acme-trusted"], ["diagnose-prepare"], ["diagnose-health"], ["quarantine-diagnose"], ["database-metadata"]):
+    if sys.argv[1:] not in (["prepare"], ["install-launcher"], ["internal-up"], ["validate-caddy"], ["acme-staging"], ["acme-trusted"], ["diagnose-prepare"], ["diagnose-health"], ["quarantine-diagnose"], ["database-metadata"], ["diagnose-bootstrap"], ["inspect-bootstrap-sql"], ["bootstrap-plan"], ["repair-bootstrap"], ["kong-preflight"], ["kong-nginx-preflight"], ["app-migrations"], ["migration-diagnose"], ["repair-env-binds"], ["runtime-audit"], ["realtime-recovery"], ["realtime-exit-diagnose"], ["schema-gate"]):
         raise KeySafetyError("Fixed P3 staging prepare/internal-up only")
     stage = sys.argv[1]
+    assert_schema_not_failed()
     descriptor = os.open(KEY_DIRECTORY / "p1-control-plane.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     try:
         fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -64,17 +83,21 @@ def main():
         state = json.loads(private_file(STATE)) if STATE.exists() else {"phase": "P3", "instanceId": target}
         if state["instanceId"] != target:
             raise KeySafetyError("Staging target changed; no replacement")
-        prerequisites = {"prepare": [], "diagnose-prepare": [], "install-launcher": ["prepare"], "internal-up": ["install-launcher"], "diagnose-health": ["install-launcher"], "quarantine-diagnose": ["install-launcher"], "database-metadata": ["install-launcher"], "validate-caddy": ["install-launcher"],
-            "acme-staging": ["internal-up", "validate-caddy"], "acme-trusted": ["internal-up", "acme-staging"]}
+        prerequisites = {"prepare": [], "diagnose-prepare": [], "install-launcher": ["prepare"], "internal-up": ["install-launcher"], "diagnose-health": ["install-launcher"], "quarantine-diagnose": ["install-launcher"], "database-metadata": ["install-launcher"], "diagnose-bootstrap": ["install-launcher"], "inspect-bootstrap-sql": ["install-launcher"], "bootstrap-plan": ["install-launcher"], "repair-bootstrap": ["bootstrap-plan"], "kong-preflight": ["install-launcher"], "kong-nginx-preflight": ["install-launcher"], "validate-caddy": ["install-launcher"],
+            "acme-staging": ["internal-up", "validate-caddy"], "acme-trusted": ["internal-up", "acme-staging"], "app-migrations": ["internal-up", "acme-trusted"], "migration-diagnose": ["internal-up"], "repair-env-binds": ["internal-up"], "runtime-audit": ["install-launcher"], "realtime-recovery": ["runtime-audit"], "realtime-exit-diagnose": ["install-launcher"], "schema-gate": ["app-migrations"]}
         for previous in prerequisites[stage]:
             if state.get("stages", {}).get(previous, {}).get("status") != "PASS":
                 raise KeySafetyError("Staging prerequisite not PASS: " + previous)
+        if stage == "internal-up" and (state.get("stages", {}).get("repair-bootstrap", {}).get("status") != "PASS" or state.get("stages", {}).get("kong-nginx-preflight", {}).get("result", {}).get("parseAndNginxValid") is not True):
+            raise KeySafetyError("Empty bootstrap repair and real Kong parse/nginx preflight must PASS before startup retry")
+        if stage == "app-migrations" and not any(state.get("stages", {}).get(name, {}).get("result", {}).get("runtimeHealthy") is True for name in ("runtime-audit", "realtime-recovery")):
+            raise KeySafetyError("Current bind identity and runtime health must PASS before repository migrations")
         if stage.startswith("acme-"):
             ready, observations = staging_dns.observe()
             if not ready:
                 raise KeySafetyError("Dual-resolver staging DNS/CAA not PASS; no ACME request")
             state["certificateDnsGateAt"] = datetime.now(timezone.utc).isoformat()
-        if state.get("stages", {}).get(stage, {}).get("status") == "PASS":
+        if state.get("stages", {}).get(stage, {}).get("status") == "PASS" and stage not in ("diagnose-health", "database-metadata", "kong-nginx-preflight"):
             print("PASS: existing verified staging stage reused; no repeat mutation: " + stage, flush=True)
             return
         source = public_bundle()
@@ -85,6 +108,12 @@ def main():
             result = host_ssh.run_remote(source, [stage, json.dumps(config, separators=(",", ":"))], timeout=1800 if stage == "prepare" else 650)
             if result.get("status") != "PASS":
                 raise KeySafetyError("Staging result not PASS")
+            if stage == "schema-gate":
+                catalog = result.pop("schemaCatalog")
+                (REPO / "docs/evidence/oracle-p3-target-schema.json").write_text(json.dumps(catalog, indent=2) + "\n")
+                result["catalogPath"] = "docs/evidence/oracle-p3-target-schema.json"
+                result["objects"] = len(catalog["objects"])
+                result["parityVerified"] = False
             entry.update(status="PASS", result=result, checkedAt=datetime.now(timezone.utc).isoformat())
         except Exception:
             entry["status"] = "FAIL"
@@ -94,8 +123,8 @@ def main():
         atomic_metadata(STATE, state)
         report = {"phase": "P3", "phaseComplete": False, "checkedAt": entry["checkedAt"], "upstreamCommit": pins["upstreamCommit"], "assetSHA256": proof,
             "stages": {name: {key: value[key] for key in ("status", "attempts", "sourceSHA256", "result") if key in value} for name, value in state["stages"].items()},
-            "network": network, "productionChanges": 0, "sourceDataReads": 0,
-            "remaining": ["DNS/CAA PASS, staging then trusted ACME HTTP-01", "Fresh ordered migrations and source schema parity"]}
+            "network": network, "productionChanges": 0, "sourceCustomerRowsExported": 0,
+            "remaining": ["Source/target full schema parity (ordered fresh-target migrations and trusted ACME already PASS)", "P4 full data/object verification and restore rehearsal not started"]}
         (REPO / "docs/evidence/oracle-p3-stack.json").write_text(json.dumps(report, indent=2) + "\n")
         print("PASS: " + stage + "; " + json.dumps(result), flush=True)
     finally:

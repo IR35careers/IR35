@@ -1,51 +1,59 @@
-# P3 protected staging preparation — PARTIAL / DNS hold
+# P3 Oracle staging —21 October 2026: schema FAIL, stopped
 
-20 October 2026. Existing draft [PR51](https://github.com/IR35careers/IR35/pull/51), stacked on P2 draft50; no merge/release. P3 is **not complete**, P4/P5 not started. Native PG17.6/five-extension proof remains PASS, not full stack/schema parity proof.
+P1/P2 remain PASS. **P3 is incomplete**: actual schema comparison failed. No customer data imported, P4/P5 not started, no production/DNS/provider/env change or cutover. Existing draft [PR51](https://github.com/IR35careers/IR35/pull/51) remains for human review; never merged/approved/closed by the agent.
 
-## Owner approvals and actual DNS result
+## Actual result
 
-Caddy-generated TLS/ACME state ONLY is approved under `/opt/ir35/data/caddy`, container UID1002, directories700/files600. Exclude it from backups unless age-encrypted. Other operational secrets stay `/opt/ir35/.env*`600 ownerir35. The [backup scope declaration](../../infra/oracle/staging-backup-scope.json) records the exclusion; no backup job/upload exists yet. No TLS key/certificate contents are exported.
-
-Owner is adding only staging/api-staging A132.145.28.134 TTL300; no owner DNS write is inferred from approval. [Actual dual-resolver evidence](oracle-p3-dns.json): both names remained **NXDOMAIN** through dig@1.1.1.1 and@8.8.8.8 throughout the30-minute backoff window (final query completed at1801.336s). No restrictive effective CAA was found, but this is **not** DNS PASS. Watcher exited1 and stopped; it is not running indefinitely. Status was reconciled to TIMEOUT from that actual exit, not another network query. **Zero certificate requests, zero agent DNS writes.** Do not start Caddy or request either CA until a fresh dual-resolver/CAA check passes.
-
-## Result table — do not infer PASS from configuration
-
-| Check | Actual result |
+| Check | Result and limitation |
 | --- | --- |
-| Native PG17.6 +five exact extension basic probes | PASS, previous native evidence |
-| Service images | Ten ARM64 manifest/config digests verified; nine runtime images pulled, on-demand Studio not pulled/started |
-| Official upstream | Pinned Supabase commit bc27d2661edd09a5d0b8d76ce33da6d4071a756e; official Kong override reviewed; four SQL-asset hashes in report |
-| VM-only secrets / mock flags | Prepared600/ir35; APPLY_RUNNER=mock, acceptance=false; no worker exists yet |
-| Secret custody hardening | Native static env launcher compiled; reads mounted600 files, execs without plaintext argv; independent Docker metadata check found no generated private values in saved Env |
-| Persistent log safety | Sensitive service log drivers disabled; filtered in-RAM diagnostics only; Caddy error-log rotation prepared, no access logs |
-| Private network | Backend internal-only, no DB/Kong/meta/SMTP/worker public ports; Studio off-profile/loopback-only declaration |
-| Postgres / SMTP sink | Actual healthy, no customer data imported; auth.users count0 |
-| First full internal startup | **FAIL**; Auth/Storage/Kong/Realtime failed; rest unhealthy; meta process healthy |
-| Cleanup after failure | Six dependent services stopped; automatic restart loops stopped, no failed service left retrying |
-| Fresh bootstrap metadata | auth/storage owned by supabase_admin, _realtime and _supabase absent; storage role has no password verifier. No password hashes exported |
-| Caddy config validation / ACME staging / trusted certificates | NOT EXECUTED; DNS gate blocks issuance |
-| Repo migrations / cloud schema parity / data rehearsal | NOT EXECUTED; no cloud-data read/write |
+| Existing Always Free target | Same London A1,2OCPU/12GB,50GB boot+100GB data; no new resource/plan/ingress/IAM change |
+| Native PG/extensions | PASS: pinned ARM PG17.6, all five exact source extension availability/load/basic-operation probes; [native evidence](oracle-p3-native.json) |
+| Slim private runtime | Nine services running, eight backend healthchecks healthy after documented recovery; Studio off, Next/worker absent |
+| Realtime | HTTP200/healthy=true on empty tenant; db_connected=false/replication_connected=false is not websocket/event replication proof |
+| Scoped secret custody | VM-only.env files600/ir35; static loader keeps generated credentials out of saved Docker Env; no secret value exported |
+| Env bind integrity | PASS: unchanged content preserves inode; existing containers rebound only where stale, current mounted inode/link identity verified |
+| DNS/CAA | PASS after owner publication through1.1.1.1 and8.8.8.8; no incompatible CAA/AAAA observed; [DNS report](oracle-p3-dns.json) |
+| HTTPS | PASS: actual Let's Encrypt staging HTTP-01 precedes trusted certificates on both staging hosts |
+| Protection | Both external hosts401+Basic challenge+noindex with trusted TLS; authenticated app remains503 setup placeholder, protected Auth health200 |
+| Caddy custody | /opt/ir35/data/caddy,UID1002,dirs700/files600; paths/permissions only exported, backup exclusion declared, no backup job yet |
+| Email/worker | Internal SMTP sink, APPLY_RUNNER=mock/acceptance=false; no worker deployed or employer/email submission |
+| Fresh-target app migrations | PASS: legacy waitlist prerequisite+all24 repository migrations in filename order, hashes/durable ledger; no public RLS-disabled table |
+| Live source metadata | Read-only snapshot21Oct03:23:58UTC:PG17.6,62tables,123,980,947bytes,25policies,106functions,8triggers;024 recorded,025 absent |
+| Actual P3 schema gate | **FAIL**:295 source/361 target objects,77 differences; no automatic exception or repair |
+| Full zero-loss standard/data/objects/restore | NOT RUN; this subset rejection is not the P4 full verifier |
 
-[Public stage report](oracle-p3-stack.json) retains prepare attempts2, launcher1, internal-up1 FAIL and diagnostic evidence. First prepare failed because Docker stdin was not attached to Caddy's hasher; synthetic no-stdin/attached-stdin tests reproduced/refuted it, fixed with `-i`, second prepare PASS. Plaintext was stdin-only, never argv/log/Git. The fresh OCI session refresh genuinely failed before preparation; owner completed one normal browser login, independently verified. No API/SSH passphrase repeated.
+[Runtime/attempt report](oracle-p3-stack.json), [fresh source catalog](oracle-p3-source-catalog.json), [source schema hashes](oracle-p3-source-schema.json), [target schema hashes](oracle-p3-target-schema.json), [comparison](oracle-p3-schema-gate.json). Source reports contain schema names/counts/hashes, not customer rows, password hashes, object paths, live function/policy bodies or secret values.
 
-The initial Compose restart policy caused implicit background restarts (observed ten on failing services) before diagnosis; these were explicitly stopped. Next-run manifest uses restart=no during setup, not an unattended retry loop. This does not reset the durable command-attempt counters. Runtime restart policy can be enabled only after verified healthy staging, not by file presence. Realtime's next-run health request reads its header from a600 `.env.*` file rather than putting a token into curl argv; this fix is source-tested, not claimed deployed/healthy.
+## Decisive schema blocker
 
-## Redacted failure evidence / next repair
+Identical read-only repeatable-read SQL hashes public columns/defaults/types, functions, policies, triggers and RLS flags in both databases. This is an **early rejection subset**; equality would be SUBSET_MATCH_ONLY, never full verification PASS. Constraints/indexes/grants/all app schemas/Auth/Storage/sequence/data/encoding checks still belong to P4's full standard.
 
-- Auth: migration SQLSTATE42501 (insufficient privilege); fresh auth schema ownership requires reconciliation with official bootstrap.
-- Storage: password-authentication failure for the fresh supabase_storage_admin role; its verifier is absent.
-- Realtime: missing-object/migration class; fresh _realtime/_supabase scaffolding absent.
-- Kong: exit1 referring to /usr/local/kong; exact prefix/config cause remains unproven, not guessed fixed.
-- Loopback psql probes completed, but may use a trust rule: **not proof password authentication works**. No claim that those probes contradict the real service failures.
+- **71 target-only objects:** delivery lifecycle025 columns/functions/triggers, application_portal_sessions, billing_consents, billing_webhook_events, email_delivery_events and related columns/policies.
+- **5 source-only objects:** add_to_waitlist(user_email text), waitlist policy Allow service role read, and the three Users manage own policies on application_events/application_packets/inbox_aliases.
+- **1 changed definition:** claim_application_worker_task(p_worker_id text).
 
-Next safe repair: inspect the pinned image's bootstrap ordering, explicitly reconcile the missing **empty disposable target** prerequisites/roles using reviewed upstream SQL, prove real network-role authentication and Kong prefix permissions with synthetic tests, then retry internal-up within its durable remaining budget. Never reinitialize/delete the data disk, overwrite real data, weaken RLS, change source cloud or manufacture parity. Ordered repo migrations/schema comparison follow only after internal services pass. No real-data comparison has been run or bypassed.
+Cloud metadata still records024 only. Differences also include older migration/manual drift; do not attribute every difference solely to025. RLS enabled on both sides does not mean policies match. These are application objects, not a justified platform-only exception. No cloud DDL, source-row change, target policy weakening, skip/dedupe/truncate or import was performed to manufacture PASS.
 
-## Prepared controls, not executed claims
+**Stopped before P4/P5. Proposed owner decision, not executed:** use a distinct exact cloud-clone baseline for lossless schema/data verification, then a separately reviewed staging-only application upgrade with compatibility/reverse-sync tests. This changes the requested migration order and needs owner direction. Do not install025 into cloud or silently exempt these77 differences.
 
-`staging-compose.yml` is generated from reviewed `staging_stack.py` plus digest pins: db3GiB, auth256MiB, rest256MiB, storage512MiB, kong384MiB, meta128MiB, realtime256MiB, Caddy128MiB; staging SMTP adds64MiB. Next/worker are absent. Studio512MiB profile is off. No 50-user/RSS fit claim. Public bindings are Caddy80/443 only, not currently listening.
+## Documented repairs and durable attempt history
 
-The static launcher keeps actual values out of Docker's persisted Env and reads each component's scoped file in-process. The public Vault hook reads inherited key material rather than writing a separate root-key file. Caddy disables admin/autosave/access logs, app Basic/noindex, API owner/private-source gate preserving Bearer Authorization; no public Studio/meta/functions routes. ACME commands require fresh DNS/CAA proof, staging-only HTTP-01 first, trusted-CA issuance second; credentials are never sent through untrusted staging TLS. These are source-tested controls awaiting actual Caddy execution, not TLS PASS.
+1. Prepare lacked attached Docker stdin for Caddy hashing. Synthetic tests reproduced/refuted it; -i repair, attempt2 PASS; plaintext stdin only.
+2. Initial private startup failed Auth42501/Storage authentication/Realtime missing bootstrap/Kong exit1. Original Compose caused implicit restarts (ten observed), then six dependents were stopped. Setup now uses restart=no. Counters/history retained, no hidden background loop.
+3. Slimming out webhook setup also omitted supabase_functions_admin, interrupting99-roles and later platform SQL. On proven empty disposable target only, added the upstream role-only prerequisite and completed pinned platform files transactionally in order (CREATE DATABASE outside a transaction). No pg_net/webhook egress, reinitialisation, disk reset, new broad IAM or cloud mutation.
+4. Kong tmpfs masked image libada under/usr/local/kong. Preserve libraries/use/run/kong; declarative file retains.json extension. Actual parse+nginx preflight PASS on attempt3. Internal-up attempt3 initially healthy; no fourth startup/preflight attempt.
+5. Atomic replacement of unchanged env files unlinked active bind-mount inodes. Native launcher correctly refused nlink0. Fix/test preserves unchanged inode, then reconcile stale existing mounts once. That repair's final health failed on already exited Realtime; do not label the whole repair PASS.
+6. Realtime exit1/non-OOM after DB restart independently diagnosed. Recovery attempt1 refused before starting due overstrict exit0 guard; tested narrow0/1 empty-target repair. Attempt2 started the existing container once, all-service/bind PASS. ERL_CRASH_DUMP_SECONDS=0/BYTES=0 and uploader=false prevent crash-secret persistence; no key rotation/recreation. Empty-tenant health limitations remain.
+7. First app-migrations failed before DDL/ledger due stale env binding. Diagnosis proved Auth0/publictables0/empty ledger. After recovery, attempt2 applied baseline+24files using the existing postgres loopback rule, no HBA change. Public RLS enabled. Schema retrieval attempt1 PASS means retrieval only; comparison FAIL.
 
-Local verification at this checkpoint: **155 Linux units PASS**, including a real compiled/static launcher, file-mode/symlink/duplicate/reserved-variable rejection, literal-not-shell interpretation, fixed DNS/CAA cases, exact manifest consistency and redaction. Four focused Vitest tests, strict TypeScript, scoped zero-warning ESLint, whitespace and source/history secret scan834files PASS; hosted final-head CI remains separate. Original product spec, production DNS/Vercel/Supabase/cloud data/providers, public-image publishing/update timers and live worker flags untouched. No paid service/resource created, no real-time billing-zero guarantee inferred.
+Durable counts include prepare2/internal-up3/kong-nginx-preflight3/runtime-audit3/realtime-recovery2/app-migrations2/schema-gate1. No reset, duplicate create, ambiguous replay or mutation after schema FAIL. The controller now refuses further VM operations locally whenever the comparison report is FAIL/incomplete; this guard is unit-tested before any credential/network access. Original30min NXDOMAIN timeout is history, superseded only by fresh dual-resolver PASS and certificate proofs.
 
-Owner action, one batch: publish/save the two approved A records (DNS-only if the provider offers proxying), then confirm. @/www/api/admin remain unchanged. No new Caddy-key approval or password is requested. Other private bootstrap repairs are agent work, not a request for the owner to run SQL.
+## Verification and review
+
+Tests cover actual static-launcher file/owner/mode/no-follow/duplicate/reserved-variable boundaries, redaction/no-secret argv/logs, unchanged inode, exact manifest/pins, empty-target migration refusals, read-only gate refusal/difference rejection. Durable errors are redacted; upstream public-image diagnostics are not customer function bodies. Sensitive backend Docker log drivers disabled; Caddy error logs rotated/access logs/admin/autosave off. Monitoring/retention remains later work.
+
+Vite build-tool advisory [GHSA-698v-4r3x-3vcv](https://github.com/advisories/GHSA-698v-4r3x-3vcv) fixed by pin8.2.4; no new exception, existing braces/sprintf-js exceptions unchanged.
+
+Current local checks: **935 Vitest tests/142files PASS**, **170 Linux units PASS**, **199 legacy checks PASS**, strict TypeScript/full zero-warning ESLint/dependency audit/whitespace PASS. **841-file source/history scan PASS**, including all newly staged metadata. No timeout/assertion weakened. Final-head hosted CI is separate, not inferred from an older head's9/10 result. Offline mocked OCI test CREATE/WAIT messages are fixtures, not live provisioning evidence.
+
+No owner login, SSH passphrase or DNS action pending. Only schema-baseline/order direction blocks progress. No real-time billing-zero guarantee, load/RSS fit, browser login/provider match, zero-loss restore, app deployment, worker acceptance or production readiness claimed.

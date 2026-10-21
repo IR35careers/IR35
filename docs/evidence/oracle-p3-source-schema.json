@@ -1,0 +1,1482 @@
+{
+  "scope": "P3 public schema subset; any difference is FAIL, equality alone is not full verification",
+  "checkedAt": "2026-10-21T03:44:57Z",
+  "serverVersion": "17.6",
+  "objects": [
+    {
+      "kind": "column",
+      "name": "admin_members.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.email",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.invited_by_email",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.last_login_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.role",
+      "hash": "ad742264cf6d8fabbd28fe5005d94d65"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.status",
+      "hash": "5ab4d01f564a7571c40ab0a2a50a4dd2"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "admin_members.user_id",
+      "hash": "519141d5ce2f6cf765d78873f4686008"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.application_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.event_type",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.idempotency_key",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.label",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.metadata",
+      "hash": "08476a7c8f35239b0fdd1cc3b15392b6"
+    },
+    {
+      "kind": "column",
+      "name": "application_events.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.cover_letter",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.idempotency_key",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.job_id",
+      "hash": "519141d5ce2f6cf765d78873f4686008"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.job_snapshot",
+      "hash": "c5bbba2d4644411f17f170548f10b5d4"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.match_score",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.matched_keywords",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.materials_approved",
+      "hash": "397380f94a91bc5ddb469f6361bc799c"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.missing_keywords",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.mode",
+      "hash": "88884d2a38dd8775f99adb8f8732b7a8"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.receipt",
+      "hash": "6cdf39cbe0a87473692908512d3536fb"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.resume_version_id",
+      "hash": "519141d5ce2f6cf765d78873f4686008"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.resume_version_label",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.screening_answers",
+      "hash": "1fd96bee81810ea023e1f06d58177f38"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.source_cv_text",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.status",
+      "hash": "d477598712ef4b973e926022fc96f43d"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.submission_approved",
+      "hash": "397380f94a91bc5ddb469f6361bc799c"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.tailored_cv_text",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.truth_approved",
+      "hash": "397380f94a91bc5ddb469f6361bc799c"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_packets.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.application_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.error_code",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.idempotency_key",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.payload_hash",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.provider_name",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.provider_submission_id",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.receipt",
+      "hash": "6cdf39cbe0a87473692908512d3536fb"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.status",
+      "hash": "f5e23eec76a7e27ddda4af9bbb8f5a01"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.submitted_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_submissions.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.active",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.completed",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.concurrency",
+      "hash": "11464d1a1fcb4280390b6b2ea5b2f43e"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.failed",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.last_seen_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.started_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.version",
+      "hash": "7e4a88ead026f49659ff2d84a4f417a7"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_heartbeats.worker_id",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.application_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.attempts",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.available_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.callback_url",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.completed_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.destination",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.idempotency_key",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.last_error",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.lease_expires_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.lease_owner",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.status",
+      "hash": "f5e23eec76a7e27ddda4af9bbb8f5a01"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "application_worker_tasks.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "articles.author_name",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "articles.body",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "articles.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "articles.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "articles.published_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "articles.reviewed_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "articles.reviewer",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "articles.slug",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "articles.sources",
+      "hash": "1fd96bee81810ea023e1f06d58177f38"
+    },
+    {
+      "kind": "column",
+      "name": "articles.status",
+      "hash": "d477598712ef4b973e926022fc96f43d"
+    },
+    {
+      "kind": "column",
+      "name": "articles.summary",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "articles.title",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "articles.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.daily_limit",
+      "hash": "7548fddcbf939e71d7220d1f9f89a3c8"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.dry_run_only",
+      "hash": "d6035b650c570ed4ccf75de7b1484df1"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.enabled",
+      "hash": "397380f94a91bc5ddb469f6361bc799c"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.excluded_companies",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.ir35_statuses",
+      "hash": "6e30acee8555c1c335c5b0761741ad18"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.minimum_day_rate",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.minimum_match",
+      "hash": "c7d1f9588eb7be55fbdd192d3b6a7e2f"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.prepare_cover_letter",
+      "hash": "d6035b650c570ed4ccf75de7b1484df1"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.require_human_approval",
+      "hash": "d6035b650c570ed4ccf75de7b1484df1"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "automation_rules.workplaces",
+      "hash": "56fed7e0a46c22fadba8e97fc5c311b1"
+    },
+    {
+      "kind": "column",
+      "name": "automation_runs.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "automation_runs.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "automation_runs.matching_job_ids",
+      "hash": "b466e9926c7e6348f04475eaefce68c3"
+    },
+    {
+      "kind": "column",
+      "name": "automation_runs.mode",
+      "hash": "88884d2a38dd8775f99adb8f8732b7a8"
+    },
+    {
+      "kind": "column",
+      "name": "automation_runs.skipped",
+      "hash": "1fd96bee81810ea023e1f06d58177f38"
+    },
+    {
+      "kind": "column",
+      "name": "automation_runs.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.acknowledged_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.attachment_path",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.browser_context",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.category",
+      "hash": "97f81370de2695a3b47b0044772d107f"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.company",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.email",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.message",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.name",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.page_url",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.resolution_summary",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.resolved_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.status",
+      "hash": "be9ccac83013d7be24f8bcc1c5f422cb"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.subject",
+      "hash": "a272ee623b560439ce59b47ca65ff56e"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "contact_requests.user_id",
+      "hash": "519141d5ce2f6cf765d78873f4686008"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.attachment_path",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.author_email",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.author_type",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.author_user_id",
+      "hash": "519141d5ce2f6cf765d78873f4686008"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.feedback_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.message",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "feedback_messages.read_by_user_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.alias",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.forwarding_email",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.forwarding_enabled",
+      "hash": "397380f94a91bc5ddb469f6361bc799c"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.provider_state",
+      "hash": "ca4b062e3788d93603d06a6103a68b51"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_aliases.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.application_id",
+      "hash": "519141d5ce2f6cf765d78873f4686008"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.body_text",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.classification",
+      "hash": "5b1722684c98182a8ac45e48915d3805"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.is_read",
+      "hash": "397380f94a91bc5ddb469f6361bc799c"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.preview",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.provider_message_id",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.received_at",
+      "hash": "35fc91d3fe747695e15a434020e987a6"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.recipient",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.sender",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.subject",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "inbox_messages.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.ir35",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.min_rate",
+      "hash": "2bc563648faac68bd64d9cb5bdac94a9"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.name",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.q",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.rate_type",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.remote",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.seniority",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.skills",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.sponsorship",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "job_alerts.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.apply_url",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.company_name",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.description",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.expired_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.first_seen_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.ir35_confidence",
+      "hash": "54b0659b3cb2a876bf533eff9138e697"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.ir35_status",
+      "hash": "7e4a88ead026f49659ff2d84a4f417a7"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.last_seen_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.location",
+      "hash": "361aa44b5855f136d84d5551603ff988"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.posted_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.posted_on",
+      "hash": "98dff46669ed7a46e0ebbd5076b061dc"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.rate_confidence",
+      "hash": "54b0659b3cb2a876bf533eff9138e697"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.rate_currency",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.rate_max",
+      "hash": "1cd21e848a6752dfb7e552fb3113335c"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.rate_min",
+      "hash": "1cd21e848a6752dfb7e552fb3113335c"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.rate_raw",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.rate_type",
+      "hash": "7e4a88ead026f49659ff2d84a4f417a7"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.raw_payload",
+      "hash": "6cdf39cbe0a87473692908512d3536fb"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.remote_type",
+      "hash": "7e4a88ead026f49659ff2d84a4f417a7"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.search_vector",
+      "hash": "b945b853b0ec2a734ac6ee17b87fdf64"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.skills",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.source_domain",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.source_identifier",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.source_type",
+      "hash": "7e4a88ead026f49659ff2d84a4f417a7"
+    },
+    {
+      "kind": "column",
+      "name": "jobs.title",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "moderation_logs.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "moderation_logs.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "moderation_logs.run_type",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "moderation_logs.summary",
+      "hash": "08476a7c8f35239b0fdd1cc3b15392b6"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.application_profile",
+      "hash": "08476a7c8f35239b0fdd1cc3b15392b6"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.cv_filename",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.cv_path",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.full_name",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.job_title",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.linkedin_url",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.phone",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.preferred_ir35",
+      "hash": "9e8afd6765aa3f90c6eb2b0568111e93"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.preferred_remote",
+      "hash": "17bdf89da3d9eeea44d9880098c358fe"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.skills",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.target_rate_min",
+      "hash": "2bc563648faac68bd64d9cb5bdac94a9"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "profiles.years_experience",
+      "hash": "2bc563648faac68bd64d9cb5bdac94a9"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.accepted_suggestion_ids",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.approved_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.company_name",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.confirmed_keyword_ids",
+      "hash": "50195d3255eacf9bb42ffdb1b6802da4"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.job_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.job_title",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.label",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.score",
+      "hash": "c5bbba2d4644411f17f170548f10b5d4"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.source_filename",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.source_text",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.status",
+      "hash": "d477598712ef4b973e926022fc96f43d"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.tailored_text",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "resume_versions.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "saved_jobs.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "saved_jobs.job_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "saved_jobs.status",
+      "hash": "efdff797a4806d325a8106641b2e8832"
+    },
+    {
+      "kind": "column",
+      "name": "saved_jobs.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.approved_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.consented_at",
+      "hash": "35fc91d3fe747695e15a434020e987a6"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.created_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.display_name",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.quote",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.role_label",
+      "hash": "248e8cbb324d6e64defc1d6f97d3766e"
+    },
+    {
+      "kind": "column",
+      "name": "testimonials.status",
+      "hash": "54dee30e982366f81419f25a9d6f7072"
+    },
+    {
+      "kind": "column",
+      "name": "user_entitlements.billing_state",
+      "hash": "ca4b062e3788d93603d06a6103a68b51"
+    },
+    {
+      "kind": "column",
+      "name": "user_entitlements.plan",
+      "hash": "500b4816ffc6cf7b22f09fed9947e707"
+    },
+    {
+      "kind": "column",
+      "name": "user_entitlements.preparation_credits",
+      "hash": "67ffb736f28728e426a19c6b1243f1ab"
+    },
+    {
+      "kind": "column",
+      "name": "user_entitlements.provider_customer_id",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "user_entitlements.updated_at",
+      "hash": "ade0092c00e1d29dc01b2af6fd67bb3c"
+    },
+    {
+      "kind": "column",
+      "name": "user_entitlements.user_id",
+      "hash": "a631f09f68290729d206353dda217c7a"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.created_at",
+      "hash": "f0de640842438aa0e30657dc7bd8b842"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.email",
+      "hash": "d45fe5b63d667086016e994c2c419e95"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.id",
+      "hash": "02da1d443117fee5b252f61bc87de111"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.launch_email_attempts",
+      "hash": "10498e143a72b3cb38f855a1bfa9adc9"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.launch_email_id",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.launch_last_error",
+      "hash": "a2f084434fbff651e9f5626aff55beca"
+    },
+    {
+      "kind": "column",
+      "name": "waitlist.launch_notified_at",
+      "hash": "4559f4438674696cfdf2ac2bf584ed85"
+    },
+    {
+      "kind": "function",
+      "name": "add_to_waitlist(user_email text)",
+      "hash": "7da948329581a94025fe8e9887f7b8b2"
+    },
+    {
+      "kind": "function",
+      "name": "claim_application_worker_task(p_worker_id text)",
+      "hash": "f07f1f391f07ea4e7d97c261d470265b"
+    },
+    {
+      "kind": "function",
+      "name": "fail_abandoned_application_tasks()",
+      "hash": "ba03ce42a4e4c650eea6d2d09b10a691"
+    },
+    {
+      "kind": "policy",
+      "name": "application_events.Users manage own application events",
+      "hash": "e7a9a9a1e21af77e758f94b887493e14"
+    },
+    {
+      "kind": "policy",
+      "name": "application_packets.Users manage own application packets",
+      "hash": "72d6608ef26f0fb9b4390b7306d18756"
+    },
+    {
+      "kind": "policy",
+      "name": "application_submissions.Users read own submission receipts",
+      "hash": "7b3de3169f8575e90ffb8a03339b7bc6"
+    },
+    {
+      "kind": "policy",
+      "name": "articles.Published articles are public",
+      "hash": "2444f65b96cac67506ab14afd41ae43e"
+    },
+    {
+      "kind": "policy",
+      "name": "automation_rules.Users manage own automation rules",
+      "hash": "72d6608ef26f0fb9b4390b7306d18756"
+    },
+    {
+      "kind": "policy",
+      "name": "automation_runs.Users manage own automation runs",
+      "hash": "72d6608ef26f0fb9b4390b7306d18756"
+    },
+    {
+      "kind": "policy",
+      "name": "inbox_aliases.Users manage own inbox alias",
+      "hash": "72d6608ef26f0fb9b4390b7306d18756"
+    },
+    {
+      "kind": "policy",
+      "name": "inbox_messages.Users read own inbox messages",
+      "hash": "7b3de3169f8575e90ffb8a03339b7bc6"
+    },
+    {
+      "kind": "policy",
+      "name": "inbox_messages.Users update own inbox messages",
+      "hash": "a4c85958054ed58e36eb9f248f6169bd"
+    },
+    {
+      "kind": "policy",
+      "name": "job_alerts.Users manage own alerts",
+      "hash": "72d6608ef26f0fb9b4390b7306d18756"
+    },
+    {
+      "kind": "policy",
+      "name": "jobs.Public can read active jobs",
+      "hash": "646a3e68b9a644deea22cd391dcd9ac8"
+    },
+    {
+      "kind": "policy",
+      "name": "profiles.Users manage own profile",
+      "hash": "2552ad00c76c1ba92176ed8397e89ec7"
+    },
+    {
+      "kind": "policy",
+      "name": "resume_versions.Users delete own resume versions",
+      "hash": "0ed6aef66c77c6d3d24596df1ba26736"
+    },
+    {
+      "kind": "policy",
+      "name": "resume_versions.Users insert own resume versions",
+      "hash": "d7f1b0f4413eecdd16a914e6abd3287b"
+    },
+    {
+      "kind": "policy",
+      "name": "resume_versions.Users read own resume versions",
+      "hash": "7b3de3169f8575e90ffb8a03339b7bc6"
+    },
+    {
+      "kind": "policy",
+      "name": "resume_versions.Users update own resume versions",
+      "hash": "a4c85958054ed58e36eb9f248f6169bd"
+    },
+    {
+      "kind": "policy",
+      "name": "saved_jobs.Users manage own saved jobs",
+      "hash": "72d6608ef26f0fb9b4390b7306d18756"
+    },
+    {
+      "kind": "policy",
+      "name": "testimonials.Approved testimonials are public",
+      "hash": "89103042058dd8d800739ad596a3f9fb"
+    },
+    {
+      "kind": "policy",
+      "name": "user_entitlements.Users read own entitlements",
+      "hash": "7b3de3169f8575e90ffb8a03339b7bc6"
+    },
+    {
+      "kind": "policy",
+      "name": "waitlist.Allow service role read",
+      "hash": "4b3643dd79fceb6f230ef293fb2401d4"
+    },
+    {
+      "kind": "policy",
+      "name": "waitlist.Allow service role to read all",
+      "hash": "4b3643dd79fceb6f230ef293fb2401d4"
+    },
+    {
+      "kind": "rls",
+      "name": "admin_members",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "application_events",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "application_packets",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "application_submissions",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "application_worker_heartbeats",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "application_worker_tasks",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "articles",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "automation_rules",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "automation_runs",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "contact_requests",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "feedback_messages",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "inbox_aliases",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "inbox_messages",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "job_alerts",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "jobs",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "moderation_logs",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "profiles",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "resume_versions",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "saved_jobs",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "testimonials",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "user_entitlements",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    },
+    {
+      "kind": "rls",
+      "name": "waitlist",
+      "hash": "3154478ac268b0294052b64fe69e6b89"
+    }
+  ]
+}

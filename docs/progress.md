@@ -1,6 +1,20 @@
 # IR35Careers delivery checklist
 
-Updated 20 October 2026. Source of truth: `spec.md`, the original Phase 0 brief and the superseding FINAL MIGRATION ORDER, preserved below/in `oracle-migration-plan.md`. `[x]` means evidenced completion; existing partial implementations stay unchecked. Automatically advance migration phases only after PASS; pause at owner gates or failed checks. Never infer production success from UI copy or a deployment alone.
+Updated 21 October 2026. Source of truth: `spec.md`, the original Phase 0 brief and the superseding FINAL MIGRATION ORDER, preserved below/in `oracle-migration-plan.md`. `[x]` means evidenced completion; existing partial implementations stay unchecked. Automatically advance migration phases only after PASS; pause at owner gates or failed checks. Never infer production success from UI copy or a deployment alone.
+
+## 21 October P3 continuation — actual schema FAIL, migration stopped
+
+Owner browser SecurityToken login and once-per-new-WSL-boot SSH agent load independently verified; no API passphrase, repeated same-boot prompt or outstanding login gate. Owner-published staging DNS now resolves through1.1.1.1/8.8.8.8, CAA allows Let's Encrypt, staging HTTP-01 then trusted certificates/Basic/noindex PASS. Both external unauthenticated hosts return401/noindex under normal certificate verification. Production names unchanged.
+
+Reconciled interrupted upstream bootstrap in place on proven empty staging: missing role-only prerequisite before99-roles; exact pinned platform SQL ordering retained, no data-directory reset. Fixed Kong's masked image-library prefix/config extension, scoped health env, and unchanged-env inode replacement. Realtime's exit1/non-OOM recovery started the existing container once; all nine services running/current env binds, eight backends healthy. Empty-tenant HTTP health is not websocket/replication proof. Durable failed attempts remain recorded; no counters reset or additional startup loop.
+
+Fresh target: legacy waitlist baseline plus all24 app migrations PASS in order, publicTablesWithoutRLS=[]. Fresh source metadata-only read reportsPG17.6/62tables/123,980,947bytes and migration024 only. Public-schema subset comparison **FAIL**:295 source/361 target objects,77 differences (71 target-only,5 source-only,1 changed function), including broader cloud policies, extra target tables and025. This is a decisive early failure, not the full P4 verifier. **P3 stays unchecked; P4/P5 not started; no customer rows/objects copied or cloud writes.** [Evidence](evidence/oracle-p3-staging.md), [names/hashes](evidence/oracle-p3-schema-gate.json), existing draft[51](https://github.com/IR35careers/IR35/pull/51).
+
+Proposed next owner decision: approve separate exact cloud-clone verification before a reviewed staging-only upgrade, preserving original policies/data for lossless comparison and rollback compatibility. Do not silently treat migration changes as platform-only exceptions, weaken RLS or install025 in cloud. No YES CUTOVER, merge, production/provider/env/DNS write, image publication, updater or real application.
+
+CI advisory repair: pin Vite8.2.4 for GHSA-698v-4r3x-3vcv instead of adding an exception. Existing two owner-approved advisory exceptions unchanged. **935 Vitest/142files,170 Linux units,199 legacy checks, strict types/full ESLint/dependency audit/whitespace and841-file source/history scan PASS**. Final-head hosted CI remains separate. Controller now refuses any further VM operation locally on schema FAIL/incomplete, before credentials/network; no continuation past the failed gate.
+
+## Historical 20 October checkpoints
 
 ## 20 October final order / P1 local recovery
 

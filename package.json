@@ -35,7 +35,8 @@
     "vercel-build": "npm run verify:release && next build"
   },
   "overrides": {
-    "postcss-selector-parser": "7.1.6"
+    "postcss-selector-parser": "7.1.6",
+    "vite": "8.2.4"
   },
   "dependencies": {
     "@sparticuz/chromium": "^149.0.0",
