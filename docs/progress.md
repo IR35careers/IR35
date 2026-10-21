@@ -2,7 +2,15 @@
 
 Updated 21 October 2026. Source of truth: `spec.md`, the original Phase 0 brief and the superseding FINAL MIGRATION ORDER, preserved below/in `oracle-migration-plan.md`. `[x]` means evidenced completion; existing partial implementations stay unchecked. Automatically advance migration phases only after PASS; pause at owner gates or failed checks. Never infer production success from UI copy or a deployment alone.
 
+**Separate baseline candidate:** codex/oracle-cloud-baseline binds the actual private cloud schema archive/hash and failed fresh-install494 result in supabase/baseline/cloud-20261021.json. No executable/public SQL, changed migration history, installer or ready claim; it is blocked until ownership/ACL/role fidelity is repaired and a fresh target proves0differences. Independent test rejects executable=true and requires manifest/export/gate agreement. This separate draft is a checkpoint, not completion of the owner's baseline requirement or permission to advance P4/P5. No further VM/source/production mutation.
+
+Baseline-only local guard test PASS, strict types/scoped zero-warning ESLint/whitespace and859-file source/history scan PASS. Base P3 full940Vitest/175Linux results retained; no claim of a new941-test full run or hosted final-head PASS. Public manifest is a blocked candidate, never ready-by-flag.
+
 ## 21 October P3 continuation — actual schema FAIL, migration stopped
+
+Baseline52 follow-up actual execution PASS: wrapper rerun verified both existing targets without restoring again (attempts remain1) or repeating the direct-owner probe. Focused Vitest1/Python2, strict TypeScript/scoped ESLint PASS; exact conditional-key coverage rejects missing security conditions. Native read-back remains0unexplained/3approved owner-only differences. Data rehearsal preparation follows automatically, full data PASS not claimed.
+
+**Separate baseline52 updated after actual independent fresh proof:** manifest STAGING_SCHEMA_VERIFIED/executable=true ONLY for guarded staging schema installation/reconciliation; public SQL/upgrades remain false. cloud_baseline.py requires both3752-object native proofs/all conditional security gates before SSH, then byte-hash/private-custody/durable-target/cluster-role guards; existing RESTORED targets read back without another restore/owner attempt. Independent fresh DB proof is on the already role-aligned cluster, not a claim of turnkey fresh-cluster bootstrap. Full data verification and service-on-clone integration remain P4, not implied. New focused runtime/tests and final check results follow after execution.
 
 Current owner-repair verification: **942Vitest/145files +199legacy checks,189Linux helpers, strict TypeScript/full zero-warning ESLint PASS**. Source/history887tracked files and dependency audit PASS (only existing two owner-approved exceptions through29October). Fresh runtime audit PASS: nine running services/eight healthy backends, both staging hosts trustedTLS401/Basic/noindex, SMTP sink/mock/acceptance=false/Studiooff, no service attached to a schema-only clone. Final-head hosted checks remain separate; no merge/release.
 

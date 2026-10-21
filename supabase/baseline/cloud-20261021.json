@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "state": "STAGING_SCHEMA_VERIFIED",
+  "executable": true,
+  "scope": "guarded-staging-schema-only",
+  "installer": "infra/oracle/cloud_baseline.py",
+  "clusterRolesPrerequisite": "source-matching flags, configs, memberships and snapshot-bound expiry; fresh staging passwords",
+  "generatedFrom": "live Supabase cloud read-only schema-only snapshot, 21 October 2026",
+  "sourceServerVersion": "17.6",
+  "clientVersion": "17.11",
+  "privateArchive": {
+    "path": "/opt/ir35/.env.p3-source-schema.dump",
+    "bytes": 428831,
+    "sha256": "f6dff9e929773530e8dbe315cb8a808e033260e2d8b7fbabfb7440621ed93ab9",
+    "schemaOnly": true,
+    "mode": "600",
+    "owner": "ir35"
+  },
+  "schemas": ["auth", "extensions", "graphql", "graphql_public", "pgboss", "pgbouncer", "public", "realtime", "storage", "supabase_migrations", "vault"],
+  "freshInstallProof": {
+    "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
+    "sourceObjects": 3752,
+    "targetObjects": 3752,
+    "unexplainedDifferences": 0,
+    "exceptions": ["extension:pg_stat_statements", "extension:pgcrypto", "extension:uuid-ossp"],
+    "database": "ir35_baseline_proof_20261021",
+    "evidence": "docs/evidence/oracle-p3-owner-fidelity.json"
+  },
+  "publicSqlPublished": false,
+  "upgradesTested": false,
+  "productionChanges": 0
+}
