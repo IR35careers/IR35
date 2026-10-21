@@ -66,6 +66,51 @@ def role_sql(source, target, extra_dependencies):
     return '\n'.join(statements)
 
 
+def normalize_restored_cloud(query,catalog,cloud,name,log):
+    restored=catalog(name)
+    source_objects={o['kind']+':'+o['name']:o for o in cloud['objects']}
+    owner_changes=[]
+    for obj in restored['objects']:
+     key=obj['kind']+':'+obj['name'];expected=source_objects.get(key)
+     if obj['kind'] not in ('function','view') or not expected or obj['value'].get('owner')==expected['value'].get('owner'):continue
+     if {k:v for k,v in obj['value'].items() if k!='owner'}!={k:v for k,v in expected['value'].items() if k!='owner'}:
+      raise RuntimeError('Non-owner function/view difference; do not rewrite')
+     owner_changes.append({'kind':obj['kind'],'name':obj['name'],'owner':expected['value']['owner']})
+    # Build supported ALTER FUNCTION/VIEW OWNER statements using server quoting.
+    changes=literal(json.dumps(owner_changes))+'::jsonb'
+    owner_sql="WITH wanted AS (SELECT * FROM jsonb_to_recordset("+changes+") AS x(kind text,name text,owner text)), commands AS (SELECT format('ALTER %s %I.%I(%s) OWNER TO %I;',CASE p.prokind WHEN 'p' THEN 'PROCEDURE' ELSE 'FUNCTION' END,n.nspname,p.proname,pg_get_function_identity_arguments(p.oid),w.owner) command FROM wanted w JOIN pg_proc p ON w.kind='function' JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')'=w.name UNION ALL SELECT format('ALTER %s %I.%I OWNER TO %I;',CASE c.relkind WHEN 'm' THEN 'MATERIALIZED VIEW' ELSE 'VIEW' END,n.nspname,c.relname,w.owner) FROM wanted w JOIN pg_class c ON w.kind='view' AND c.relkind IN ('v','m') JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname||'.'||c.relname=w.name) SELECT coalesce(json_agg(command),'[]'::json) FROM commands;"
+    statements=json.loads(query(owner_sql,name))
+    if len(statements)!=len(owner_changes):raise RuntimeError('Owner command coverage mismatch')
+    if statements:query('\n'.join(statements),name,log=log)
+    current=catalog(name)
+    source_grants={o['name']:o for o in cloud['objects'] if o['kind']=='grant'}
+    current_grants={o['name']:o for o in current['objects'] if o['kind']=='grant'}
+    changed={key.rsplit(':',3)[0] for key in source_grants.keys()|current_grants.keys() if source_grants.get(key,{}).get('hash')!=current_grants.get(key,{}).get('hash')}
+    commands_query="SELECT coalesce(json_agg(x),'[]'::json) FROM (SELECT 'schema:'||n.nspname key,format('SCHEMA %I',n.nspname) sql,pg_get_userbyid(n.nspowner) owner FROM pg_namespace n WHERE n.nspname IN ('graphql','graphql_public') UNION ALL SELECT 'function:'||n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')',format('FUNCTION %I.%I(%s)',n.nspname,p.proname,pg_get_function_identity_arguments(p.oid)),pg_get_userbyid(p.proowner) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='extensions' AND p.prokind='f' UNION ALL SELECT 'relation:'||n.nspname||'.'||c.relname,format('TABLE %I.%I',n.nspname,c.relname),pg_get_userbyid(c.relowner) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='extensions' AND c.relkind IN ('v','m')) x;"
+    objects={r['key']:r for r in json.loads(query(commands_query,name))}
+    acl_sql=[]
+    for key in sorted(changed):
+     if key not in objects:raise RuntimeError('ACL drift outside diagnosed extension/GraphQL scope')
+     obj=objects[key]
+     wanted=[o['value'] for k,o in source_grants.items() if k.rsplit(':',3)[0]==key]
+     existing=[o['value'] for k,o in current_grants.items() if k.rsplit(':',3)[0]==key]
+     if not wanted or any(r['grantor']!=obj['owner'] for r in wanted+existing):
+      raise RuntimeError('Multi-grantor ACL requires review; no flattening')
+     acl_sql.append('SET LOCAL ROLE '+identifier(obj['owner'])+';')
+     for grantee in sorted({r['grantee'] for r in wanted+existing}):
+      acl_sql.append('REVOKE ALL PRIVILEGES ON '+obj['sql']+' FROM '+('PUBLIC' if grantee=='PUBLIC' else identifier(grantee))+';')
+     for row in wanted:
+      if row['privilege'] not in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN','EXECUTE','USAGE','CREATE'):
+       raise RuntimeError('Privilege keyword guard')
+      acl_sql.append('GRANT '+row['privilege']+' ON '+obj['sql']+' TO '+('PUBLIC' if row['grantee']=='PUBLIC' else identifier(row['grantee']))+(' WITH GRANT OPTION' if row['grantable'] else '')+';')
+     acl_sql.append('RESET ROLE;')
+    if acl_sql:query('\n'.join(acl_sql),name,log=log)
+    final=catalog(name)
+    if any(o['kind']=='rls' and o['name'].startswith('public.') and not o['value']['enabled'] for o in final['objects']):
+     raise RuntimeError('Public RLS disabled; stop')
+    return {'ownerRepairs':len(owner_changes),'aclObjectsReplayed':len(changed),'catalog':final}
+
+
 GUEST = r'''
 import fcntl
 lock=os.open(ROOT/'config/p3-acl-repair.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW,0o600)
@@ -140,47 +185,8 @@ with os.fdopen(fd,'wb') as log:
   log.flush();os.fsync(log.fileno())
   if result.returncode:raise RuntimeError('Atomic schema restore failed; full private log retained, no skip/replay')
   record['schemaRestored']=True;write(marker,json.dumps(record),0o600)
-  restored=catalog(name)
-  source_objects={o['kind']+':'+o['name']:o for o in cloud['objects']}
-  owner_changes=[]
-  for obj in restored['objects']:
-   key=obj['kind']+':'+obj['name'];expected=source_objects.get(key)
-   if obj['kind'] not in ('function','view') or not expected or obj['value'].get('owner')==expected['value'].get('owner'):continue
-   if {k:v for k,v in obj['value'].items() if k!='owner'}!={k:v for k,v in expected['value'].items() if k!='owner'}:
-    raise RuntimeError('Non-owner function/view difference; do not rewrite')
-   owner_changes.append({'kind':obj['kind'],'name':obj['name'],'owner':expected['value']['owner']})
-  # Build supported ALTER FUNCTION/VIEW OWNER statements using server quoting.
-  changes=literal(json.dumps(owner_changes))+'::jsonb'
-  owner_sql="WITH wanted AS (SELECT * FROM jsonb_to_recordset("+changes+") AS x(kind text,name text,owner text)), commands AS (SELECT format('ALTER %s %I.%I(%s) OWNER TO %I;',CASE p.prokind WHEN 'p' THEN 'PROCEDURE' ELSE 'FUNCTION' END,n.nspname,p.proname,pg_get_function_identity_arguments(p.oid),w.owner) command FROM wanted w JOIN pg_proc p ON w.kind='function' JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')'=w.name UNION ALL SELECT format('ALTER %s %I.%I OWNER TO %I;',CASE c.relkind WHEN 'm' THEN 'MATERIALIZED VIEW' ELSE 'VIEW' END,n.nspname,c.relname,w.owner) FROM wanted w JOIN pg_class c ON w.kind='view' AND c.relkind IN ('v','m') JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname||'.'||c.relname=w.name) SELECT coalesce(json_agg(command),'[]'::json) FROM commands;"
-  statements=json.loads(query(owner_sql,name))
-  if len(statements)!=len(owner_changes):raise RuntimeError('Owner command coverage mismatch')
-  if statements:query('\n'.join(statements),name,log=log)
-  current=catalog(name)
-  source_grants={o['name']:o for o in cloud['objects'] if o['kind']=='grant'}
-  current_grants={o['name']:o for o in current['objects'] if o['kind']=='grant'}
-  changed={key.rsplit(':',3)[0] for key in source_grants.keys()|current_grants.keys() if source_grants.get(key,{}).get('hash')!=current_grants.get(key,{}).get('hash')}
-  commands_query="SELECT coalesce(json_agg(x),'[]'::json) FROM (SELECT 'schema:'||n.nspname key,format('SCHEMA %I',n.nspname) sql,pg_get_userbyid(n.nspowner) owner FROM pg_namespace n WHERE n.nspname IN ('graphql','graphql_public') UNION ALL SELECT 'function:'||n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')',format('FUNCTION %I.%I(%s)',n.nspname,p.proname,pg_get_function_identity_arguments(p.oid)),pg_get_userbyid(p.proowner) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='extensions' AND p.prokind='f' UNION ALL SELECT 'relation:'||n.nspname||'.'||c.relname,format('TABLE %I.%I',n.nspname,c.relname),pg_get_userbyid(c.relowner) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='extensions' AND c.relkind IN ('v','m')) x;"
-  objects={r['key']:r for r in json.loads(query(commands_query,name))}
-  acl_sql=[]
-  for key in sorted(changed):
-   if key not in objects:raise RuntimeError('ACL drift outside diagnosed extension/GraphQL scope')
-   obj=objects[key]
-   wanted=[o['value'] for k,o in source_grants.items() if k.rsplit(':',3)[0]==key]
-   existing=[o['value'] for k,o in current_grants.items() if k.rsplit(':',3)[0]==key]
-   if not wanted or any(r['grantor']!=obj['owner'] for r in wanted+existing):
-    raise RuntimeError('Multi-grantor ACL requires review; no flattening')
-   acl_sql.append('SET LOCAL ROLE '+identifier(obj['owner'])+';')
-   for grantee in sorted({r['grantee'] for r in wanted+existing}):
-    acl_sql.append('REVOKE ALL PRIVILEGES ON '+obj['sql']+' FROM '+('PUBLIC' if grantee=='PUBLIC' else identifier(grantee))+';')
-   for row in wanted:
-    if row['privilege'] not in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN','EXECUTE','USAGE','CREATE'):
-     raise RuntimeError('Privilege keyword guard')
-    acl_sql.append('GRANT '+row['privilege']+' ON '+obj['sql']+' TO '+('PUBLIC' if row['grantee']=='PUBLIC' else identifier(row['grantee']))+(' WITH GRANT OPTION' if row['grantable'] else '')+';')
-   acl_sql.append('RESET ROLE;')
-  if acl_sql:query('\n'.join(acl_sql),name,log=log)
-  final=catalog(name)
-  if any(o['kind']=='rls' and o['name'].startswith('public.') and not o['value']['enabled'] for o in final['objects']):
-   raise RuntimeError('Public RLS disabled; stop')
+  normalized=normalize_restored_cloud(query,catalog,cloud,name,log)
+  owner_changes=range(normalized['ownerRepairs']);changed=range(normalized['aclObjectsReplayed'])
   record.update(status='RESTORED',ownerRepairs=len(owner_changes),aclObjectsReplayed=len(changed),fullLogSHA256=hashlib.sha256(logpath.read_bytes()).hexdigest())
   write(marker,json.dumps(record),0o600)
  except Exception:

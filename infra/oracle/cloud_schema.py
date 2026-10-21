@@ -299,6 +299,14 @@ except Exception:
 
 
 def main():
+    if sys.argv[1:]==['owner-expiry-probe']:
+        from owner_parity import expiry_probe
+        expiry_probe()
+        return
+    if sys.argv[1:]==['owner-security-preflight']:
+        from owner_parity import security_preflight
+        security_preflight()
+        return
     if sys.argv[1:]==['verify-acl-repair']:
         from acl_repair import verify
         verify()

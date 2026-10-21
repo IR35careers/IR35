@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('export','catalog-repair','effective-privileges','platform-diagnosis','verify-acl-repair')][string]$Operation = 'export')
+param([ValidateSet('export','catalog-repair','effective-privileges','platform-diagnosis','verify-acl-repair','owner-security-preflight','owner-expiry-probe')][string]$Operation = 'export')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))

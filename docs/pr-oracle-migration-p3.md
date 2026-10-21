@@ -1,5 +1,17 @@
 # Oracle P3: protected ARM staging and explicit schema mismatch gate
 
+## Superseding owner decisions — native schema PASS, three conditional exceptions only
+
+| Gate | Result |
+| --- | --- |
+| Unused CLI role / expiry only / all other attributes unchanged | PASS:235 operational checks/0 references,16 expiry hashes match; no password change |
+| Exactly one clean direct-owner attempt | Completed as postgres/non-superuser; platform delegated to supabase_admin, rollback clean; no retry/catalog edits |
+| a admin owner; b all object ACLs; c app/DDL capability; d versions | PASS independently on both targets:62ACL incl4types/55members/198capability/552privilege entries/0broader, versions exact |
+| Final clone / independent fresh baseline | Both PASS:3752objects each,0unexplained differences, exactly3 owner-only exceptions |
+| Full customer-data verification / runtime-on-clone / app | Not yet run; schema-only, no data or full P3/P4/P5 signoff inferred |
+
+See docs/evidence/oracle-p3-owner-parity.md and oracle-p3-owner-fidelity.json for each approved exception and all gate results. Baseline52 may now expose only the guarded installer tested on the independent empty target. Original494/FAIL4 evidence retained below as history. Existing source cloud, Vercel, production, DNS, customer rows, runtime flags and old targets untouched. No merge/cutover/paid resource; secrets/full logs only protected.env600/ir35.189Linux tests PASS; full new-head checks are separate.
+
 ## Latest staging ACL/role repair — actual FAIL4, security STOP / owner decision
 
 | Gate | Result |
