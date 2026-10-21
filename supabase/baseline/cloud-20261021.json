@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "state": "BLOCKED",
+  "executable": false,
+  "generatedFrom": "live Supabase cloud read-only schema-only snapshot, 21 October 2026",
+  "sourceServerVersion": "17.6",
+  "clientVersion": "17.11",
+  "privateArchive": {
+    "path": "/opt/ir35/.env.p3-source-schema.dump",
+    "bytes": 428831,
+    "sha256": "f6dff9e929773530e8dbe315cb8a808e033260e2d8b7fbabfb7440621ed93ab9",
+    "schemaOnly": true,
+    "mode": "600",
+    "owner": "ir35"
+  },
+  "schemas": ["auth", "extensions", "graphql", "graphql_public", "pgboss", "pgbouncer", "public", "realtime", "storage", "supabase_migrations", "vault"],
+  "freshInstallProof": {
+    "status": "FAIL",
+    "sourceObjects": 3752,
+    "targetObjects": 3812,
+    "differences": 494,
+    "exceptions": 0,
+    "evidence": "docs/evidence/oracle-p3-clone-gate.json"
+  },
+  "publicSqlPublished": false,
+  "upgradesTested": false,
+  "productionChanges": 0
+}
