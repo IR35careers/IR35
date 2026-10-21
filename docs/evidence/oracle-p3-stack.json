@@ -1,0 +1,1881 @@
+{
+  "phase": "P3",
+  "phaseComplete": false,
+  "checkedAt": "2026-10-21T03:44:30.761711+00:00",
+  "upstreamCommit": "bc27d2661edd09a5d0b8d76ce33da6d4071a756e",
+  "assetSHA256": {
+    "realtime.sql": "7e9e442e7fc4dae05544c07b67bede37a00d84644304dfce4d937134cb4c8f88",
+    "roles.sql": "3ad717b225daa38aa982da26750f35641eb404e1eb5e69a763c22236ab96c1b2",
+    "jwt.sql": "c1d3f5c01e44646c2e533c5a1c111821cc49cb5a4c2534e08cddad61d8fb0339",
+    "_supabase.sql": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f"
+  },
+  "stages": {
+    "prepare": {
+      "status": "PASS",
+      "attempts": 2,
+      "sourceSHA256": "d4588bb23ab5659448dee941575cb7f5db7ef8733d413a5a38fd7b19bd17d4e5",
+      "result": {
+        "status": "PASS",
+        "secretPaths": [
+          "/opt/ir35/.env*"
+        ],
+        "secretMode": "600",
+        "secretOwner": "ir35",
+        "caddyState": {
+          "path": "/opt/ir35/data/caddy",
+          "directoryMode": "700",
+          "ownerUID": 1002,
+          "excludedFromBackups": true
+        },
+        "services": [
+          "db",
+          "auth",
+          "rest",
+          "realtime",
+          "storage",
+          "kong",
+          "meta",
+          "smtp",
+          "caddy",
+          "studio"
+        ],
+        "studioProfile": "off",
+        "publicBindings": [
+          80,
+          443
+        ],
+        "certificateRequests": 0,
+        "APPLY_RUNNER": "mock",
+        "APPLICATION_WORKER_ACCEPT_JOBS": false
+      }
+    },
+    "diagnose-prepare": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "e6742e6f1ffd17abad3ec65c0b3cdbb4a772e0c2f39c1978e760825fc8383f16",
+      "result": {
+        "status": "PASS",
+        "imagesPresent": {
+          "db": true,
+          "auth": true,
+          "rest": true,
+          "realtime": true,
+          "storage": true,
+          "kong": true,
+          "meta": true,
+          "studio": false,
+          "caddy": true,
+          "smtp": true
+        },
+        "envExists": false,
+        "prepareMarkerExists": true,
+        "composeExists": false,
+        "publicFixtureHashTests": [
+          {
+            "stdinAttached": false,
+            "exitCode": 1,
+            "bcryptOutputShape": false,
+            "inputReadError": true
+          },
+          {
+            "stdinAttached": true,
+            "exitCode": 0,
+            "bcryptOutputShape": true,
+            "inputReadError": false
+          }
+        ]
+      }
+    },
+    "install-launcher": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "d4287a7342b0be4ef3e1c1094f61aeb87eda454ba094ef6ac2fcb040feb15561",
+      "result": {
+        "status": "PASS",
+        "staticNativeLauncher": true,
+        "dockerSecretEnvValues": false,
+        "envFileMode": "600",
+        "runtimeValuesLogged": false
+      }
+    },
+    "internal-up": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "b364d13629115dcee71d6980d38f4e2f9db77774fec7d043e77f7c42df7c775b",
+      "result": {
+        "status": "PASS",
+        "services": {
+          "db": "healthy",
+          "smtp": "healthy",
+          "auth": "healthy",
+          "rest": "healthy",
+          "storage": "healthy",
+          "kong": "healthy",
+          "realtime": "healthy",
+          "meta": "healthy"
+        },
+        "publicContainersStarted": false,
+        "studioStarted": false,
+        "smtpNetworkInternal": true,
+        "certificateRequests": 0
+      }
+    },
+    "diagnose-health": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "79b5492c3769c611563c770ab730d4e6b658cc5ebf8d662d479eabe260212c8e",
+      "result": {
+        "status": "PASS",
+        "diagnostic": {
+          "db": {
+            "state": "running",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "healthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 0,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "smtp": {
+            "state": "running",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "healthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 0,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "auth": {
+            "state": "exited",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 0,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "rest": {
+            "state": "exited",
+            "exitCode": 255,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 0,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "storage": {
+            "state": "exited",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 0,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "kong": {
+            "state": "exited",
+            "exitCode": 1,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": null,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "realtime": {
+            "state": "exited",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 7,
+            "healthErrorClass": {
+              "classes": [
+                "could not connect"
+              ],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          },
+          "meta": {
+            "state": "exited",
+            "exitCode": 0,
+            "oomKilled": false,
+            "health": "unhealthy",
+            "restartCount": 0,
+            "healthConnectionRefused": false,
+            "healthMissingExecutable": false,
+            "healthLastExitCode": 0,
+            "healthErrorClass": {
+              "classes": [],
+              "sqlstates": [],
+              "knownRoles": [],
+              "knownPaths": []
+            },
+            "healthReferences": []
+          }
+        },
+        "privateValuesInDockerEnvironment": false,
+        "rawLogsExported": false
+      }
+    },
+    "quarantine-diagnose": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "ff556f3a6c613dd0a253895344b4d06cb68e7086bbb049ad001b8e4321b4579c",
+      "result": {
+        "status": "PASS",
+        "quarantinedServices": [
+          "auth",
+          "rest",
+          "storage",
+          "kong",
+          "realtime",
+          "meta"
+        ],
+        "backgroundRestartLoopsStopped": true,
+        "diagnostic": {
+          "auth": {
+            "exitCode": 1,
+            "classes": [
+              "migration"
+            ],
+            "sqlstates": [
+              "42501"
+            ],
+            "knownRoles": [],
+            "knownPaths": []
+          },
+          "storage": {
+            "exitCode": 1,
+            "classes": [
+              "password authentication failed"
+            ],
+            "sqlstates": [],
+            "knownRoles": [
+              "supabase_storage_admin"
+            ],
+            "knownPaths": [
+              "/app"
+            ]
+          },
+          "kong": {
+            "exitCode": 1,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": [
+              "/usr/local/kong"
+            ]
+          },
+          "realtime": {
+            "exitCode": 1,
+            "classes": [
+              "does not exist",
+              "migration"
+            ],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": [
+              "/app"
+            ]
+          }
+        },
+        "rawOutputStoredOrExported": false
+      }
+    },
+    "database-metadata": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "667e0bc51173abf91e2e7082015afeb26fc55daba8d705b01a47ccd9a45b37d7",
+      "result": {
+        "status": "PASS",
+        "metadata": {
+          "roles": [
+            {
+              "name": "postgres",
+              "login": true,
+              "passwordSet": true
+            },
+            {
+              "name": "supabase_admin",
+              "login": true,
+              "passwordSet": true
+            },
+            {
+              "name": "supabase_storage_admin",
+              "login": true,
+              "passwordSet": false
+            },
+            {
+              "name": "authenticator",
+              "login": true,
+              "passwordSet": true
+            },
+            {
+              "name": "supabase_auth_admin",
+              "login": true,
+              "passwordSet": true
+            }
+          ],
+          "schemas": [
+            {
+              "name": "public",
+              "owner": "pg_database_owner"
+            },
+            {
+              "name": "auth",
+              "owner": "supabase_admin"
+            },
+            {
+              "name": "storage",
+              "owner": "supabase_admin"
+            }
+          ],
+          "databases": [
+            "postgres"
+          ],
+          "authUserRows": 0
+        },
+        "freshRoleConnectionChecks": {
+          "supabase_auth_admin": {
+            "connectsWithFreshPassword": true,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": []
+          },
+          "authenticator": {
+            "connectsWithFreshPassword": true,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": []
+          },
+          "supabase_storage_admin": {
+            "connectsWithFreshPassword": true,
+            "classes": [],
+            "sqlstates": [],
+            "knownRoles": [],
+            "knownPaths": []
+          }
+        },
+        "passwordHashesExported": false
+      }
+    },
+    "diagnose-bootstrap": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "d7b97afc85597e0931351e4811d25e46ccfdd097a0adf5983468f8deff2d783f",
+      "result": {
+        "status": "PASS",
+        "publicImageCode": {
+          "db": [
+            "/docker-entrypoint-initdb.d/migrations/20221103090837_revoke_admin.sql",
+            "/docker-entrypoint-initdb.d/migrations/20260211120934_supabase_privileged_role.sql",
+            "/docker-entrypoint-initdb.d/migrations/20211115181400_update-auth-permissions.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250710151649_supabase_read_only_user_default_transaction_read_only.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250709135250_grant_storage_schema_to_postgres_with_grant_option.sql",
+            "/docker-entrypoint-initdb.d/migrations/20231130133139_set_lock_timeout_to_authenticator_role.sql",
+            "/docker-entrypoint-initdb.d/migrations/20221207154255_create_pgsodium_and_vault.sql",
+            "/docker-entrypoint-initdb.d/migrations/20260413000000_fix-authenticator-session-preload-libraries.sql",
+            "/docker-entrypoint-initdb.d/migrations/10000000000000_demote-postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250417190610_update_pgbouncer_get_auth.sql",
+            "/docker-entrypoint-initdb.d/migrations/20211122051245_update-realtime-permissions.sql",
+            "/docker-entrypoint-initdb.d/migrations/20231020085357_revoke_writes_on_cron_job_from_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220613123923_pg_graphql-pg-dump-perms.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220609081115_grant-supabase-auth-admin-and-supabase-storage-admin-to-postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20230306081037_grant_pg_monitor_to_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220713082019_pg_cron-pg_net-temp-perms-fix.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220404205710_pg_graphql-on-by-default.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250220051611_pg_net_perms_fix.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220317095840_pg_graphql.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250218031949_pgsodium_mask_role.sql",
+            "/docker-entrypoint-initdb.d/migrations/20251001204436_predefined_role_grants.sql",
+            "/docker-entrypoint-initdb.d/migrations/20230201083204_grant_auth_roles_to_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250402065937_alter_internal_event_triggers_owner_to_supabase_admin.sql",
+            "/docker-entrypoint-initdb.d/migrations/20240606060239_grant_predefined_roles_to_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20211130151719_update-realtime-permissions.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250205144616_move_orioledb_to_extensions_schema.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250402093753_grant_subscription_to_postgres_16_and_above.sql",
+            "/docker-entrypoint-initdb.d/migrations/20211124212715_update-auth-owner.sql",
+            "/docker-entrypoint-initdb.d/migrations/20240124080435_alter_lo_export_lo_import_owner.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220118070449_enable-safeupdate-postgrest.sql",
+            "/docker-entrypoint-initdb.d/migrations/20230529180330_alter_api_roles_for_inherit.sql",
+            "/docker-entrypoint-initdb.d/migrations/20251121132723_correct_search_path_pgbouncer.sql",
+            "/docker-entrypoint-initdb.d/migrations/20260421000001_rescope_pg_graphql_access_trigger.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250312095419_pgbouncer_ownership.sql",
+            "/docker-entrypoint-initdb.d/migrations/20230224042246_grant_extensions_perms_for_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20231013070755_grant_authenticator_to_supabase_storage_admin.sql",
+            "/docker-entrypoint-initdb.d/migrations/20241031003909_create_orioledb.sql",
+            "/docker-entrypoint-initdb.d/migrations/20260421000000_pg_graphql-off-by-default.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220321174452_fix-postgrest-alter-type-event-trigger.sql",
+            "/docker-entrypoint-initdb.d/migrations/20241215003910_backfill_pgmq_metadata.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250605172253_grant_with_admin_to_postgres_16_and_above.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250623125453_tmp_grant_storage_tables_to_postgres_with_grant_option.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220322085208_gotrue-session-limit.sql",
+            "/docker-entrypoint-initdb.d/migrations/20231017062225_grant_pg_graphql_permissions_for_custom_roles.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250421084701_revoke_admin_roles_from_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220224211803_fix-postgrest-supautils.sql",
+            "/docker-entrypoint-initdb.d/migrations/20220126121436_finer-postgrest-triggers.sql",
+            "/docker-entrypoint-initdb.d/migrations/20221028101028_set_authenticator_timeout.sql",
+            "/docker-entrypoint-initdb.d/migrations/20211118015519_create-realtime-schema.sql",
+            "/docker-entrypoint-initdb.d/migrations/20230327032006_grant_auth_roles_to_supabase_storage_admin.sql",
+            "/docker-entrypoint-initdb.d/migrations/20251105172723_grant_pg_reload_conf_to_postgres.sql",
+            "/docker-entrypoint-initdb.d/migrations/20250205060043_disable_log_statement_on_internal_roles.sql",
+            "/docker-entrypoint-initdb.d/migrations/00-extension.sql",
+            "/docker-entrypoint-initdb.d/migrate.sh",
+            "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql",
+            "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql",
+            "/docker-entrypoint-initdb.d/init-scripts/00000000000000-initial-schema.sql",
+            "/docker-entrypoint-initdb.d/init-scripts/README.md",
+            "/docker-entrypoint-initdb.d/init-scripts/00000000000002-storage-schema.sql",
+            "/docker-entrypoint-initdb.d/init-scripts/00-schema.sql",
+            "\t\t-w start",
+            "}",
+            "",
+            "# stop postgresql server after done setting up user and running scripts",
+            "docker_temp_server_stop() {",
+            "\tPGUSER=\"${PGUSER:-postgres}\" \\",
+            "\tpg_ctl -D \"$PGDATA\" -m fast -w stop",
+            "}",
+            "",
+            "# check arguments for an option that would cause postgres to stop",
+            "# return true if there is one",
+            "_pg_want_help() {",
+            "\tlocal arg",
+            "\tfor arg; do",
+            "\t\tcase \"$arg\" in",
+            "\t\t\t# postgres --help | grep 'then exit'",
+            "\t\t\t# leaving out -C on purpose since it always fails and is unhelpful:",
+            "\t\t\t# postgres: could not access the server configuration file \"/var/lib/postgresql/data/postgresql.conf\": No such file or directory",
+            "\t\t\t-'?'|--help|--describe-config|-V|--version)",
+            "\t\t\t\treturn 0",
+            "\t\t\t\t;;",
+            "\t\tesac",
+            "\tdone",
+            "\treturn 1",
+            "}",
+            "",
+            "_main() {",
+            "\t# if first arg looks like a flag, assume we want to run postgres server",
+            "\tif [ \"${1:0:1}\" = '-' ]; then",
+            "\t\tset -- postgres \"$@\"",
+            "\tfi",
+            "",
+            "\tif [ \"$1\" = 'postgres' ] && ! _pg_want_help \"$@\"; then",
+            "\t\tdocker_setup_env",
+            "\t\t# setup data directories and permissions (when run as root)",
+            "\t\tdocker_create_db_directories",
+            "\t\tif [ \"$(id -u)\" = '0' ]; then",
+            "\t\t\t# then restart script as postgres user",
+            "\t\t\texec gosu postgres \"$BASH_SOURCE\" \"$@\"",
+            "\t\tfi",
+            "",
+            "\t\t# only run initialization on an empty data directory",
+            "\t\tif [ -z \"$DATABASE_ALREADY_EXISTS\" ]; then",
+            "\t\t\tdocker_verify_minimum_env",
+            "\t\t\tdocker_error_old_databases",
+            "",
+            "\t\t\t# check dir permissions to reduce likelihood of half-initialized database",
+            "\t\t\tls /docker-entrypoint-initdb.d/ > /dev/null",
+            "",
+            "\t\t\tdocker_init_database_dir",
+            "\t\t\tpg_setup_hba_conf \"$@\"",
+            "",
+            "\t\t\t# PGPASSWORD is required for psql when authentication is required for 'local' connections via pg_hba.conf and is otherwise harmless",
+            "\t\t\t# e.g. when '--auth=md5' or '--auth-local=md5' is used in POSTGRES_INITDB_ARGS",
+            "\t\t\texport PGPASSWORD=\"${PGPASSWORD:-$POSTGRES_PASSWORD}\"",
+            "\t\t\tdocker_temp_server_start \"$@\"",
+            "",
+            "\t\t\tdocker_setup_db",
+            "\t\t\tdocker_process_init_files /docker-entrypoint-initdb.d/*",
+            "",
+            "\t\t\tdocker_temp_server_stop",
+            "\t\t\tunset PGPASSWORD",
+            "",
+            "\t\t\tcat <<-'EOM'",
+            "",
+            "\t\t\t\tPostgreSQL init process complete; ready for start up.",
+            "",
+            "\t\t\tEOM",
+            "\t\telse",
+            "\t\t\tcat <<-'EOM'",
+            "",
+            "\t\t\t\tPostgreSQL Database directory appears to contain a database; Skipping initialization",
+            "",
+            "\t\t\tEOM",
+            "\t\tfi",
+            "\tfi",
+            "",
+            "\texec \"$@\"",
+            "}",
+            "",
+            "if ! _is_sourced; then",
+            "\t_main \"$@\"",
+            "fi"
+          ],
+          "kong": [
+            "uid=1001(kong) gid=1001(kong) groups=1001(kong)",
+            "drwxrwxrwt 2 root root 4096 May  9 14:23 /tmp",
+            "drwxrwxr-x 6 kong root 4096 Jun 17 06:33 /usr/local/kong",
+            "#!/usr/bin/env bash",
+            "set -Eeo pipefail",
+            "",
+            "# usage: file_env VAR [DEFAULT]",
+            "#    ie: file_env 'XYZ_DB_PASSWORD' 'example'",
+            "# (will allow for \"$XYZ_DB_PASSWORD_FILE\" to fill in the value of",
+            "# \"$XYZ_DB_PASSWORD\" from a file, especially for Docker's secrets feature)",
+            "file_env() {",
+            "  local var=\"$1\"",
+            "  local fileVar=\"${var}_FILE\"",
+            "  local def=\"${2:-}\"",
+            "  # Do not continue if _FILE env is not set",
+            "  if ! [ \"${!fileVar:-}\" ]; then",
+            "    return",
+            "  elif [ \"${!var:-}\" ] && [ \"${!fileVar:-}\" ]; then",
+            "    echo >&2 \"error: both $var and $fileVar are set (but are exclusive)\"",
+            "    exit 1",
+            "  fi",
+            "  local val=\"$def\"",
+            "  if [ \"${!var:-}\" ]; then",
+            "    val=\"${!var}\"",
+            "  elif [ \"${!fileVar:-}\" ]; then",
+            "    val=\"$(< \"${!fileVar}\")\"",
+            "  fi",
+            "  export \"$var\"=\"$val\"",
+            "  unset \"$fileVar\"",
+            "}",
+            "",
+            "export KONG_NGINX_DAEMON=${KONG_NGINX_DAEMON:=off}",
+            "",
+            "if [[ \"$1\" == \"kong\" ]]; then",
+            "",
+            "  all_kong_options=\"/usr/local/share/lua/5.1/kong/templates/kong_defaults.lua\"",
+            "  set +Eeo pipefail",
+            "  while IFS='' read -r LINE || [ -n \"${LINE}\" ]; do",
+            "      opt=$(echo \"$LINE\" | grep \"=\" | sed \"s/=.*$//\" | sed \"s/ //\" | tr '[:lower:]' '[:upper:]')",
+            "      file_env \"KONG_$opt\"",
+            "  done < $all_kong_options",
+            "  set -Eeo pipefail",
+            "",
+            "  file_env KONG_PASSWORD",
+            "  PREFIX=${KONG_PREFIX:=/usr/local/kong}",
+            "",
+            "  if [[ \"$2\" == \"docker-start\" ]]; then",
+            "    kong prepare -p \"$PREFIX\" \"$@\"",
+            "",
+            "    # remove all dangling sockets in $PREFIX dir before starting Kong",
+            "    LOGGED_SOCKET_WARNING=0",
+            "    socket_path=$PREFIX/sockets",
+            "    for localfile in \"$socket_path\"/*; do",
+            "      if [ -S \"$localfile\" ]; then",
+            "        if (( LOGGED_SOCKET_WARNING == 0 )); then",
+            "          printf >&2 'WARN: found dangling unix sockets in the prefix directory '",
+            "          printf >&2 '(%q) ' \"$socket_path\"",
+            "          printf >&2 'while preparing to start Kong. This may be a sign that Kong '",
+            "          printf >&2 'was previously shut down uncleanly or is in an unknown state '",
+            "          printf >&2 'and could require further investigation.\\n'",
+            "          LOGGED_SOCKET_WARNING=1",
+            "        fi",
+            "        rm -f \"$localfile\"",
+            "      fi",
+            "    done",
+            "",
+            "    ln -sfn /dev/stdout $PREFIX/logs/access.log",
+            "    ln -sfn /dev/stdout $PREFIX/logs/admin_access.log",
+            "    ln -sfn /dev/stderr $PREFIX/logs/error.log",
+            "",
+            "    exec /usr/local/openresty/nginx/sbin/nginx \\",
+            "      -p \"$PREFIX\" \\",
+            "      -c nginx.conf",
+            "  fi",
+            "fi",
+            "",
+            "exec \"$@\""
+          ]
+        },
+        "secretMounts": 0,
+        "serviceRestarts": 0
+      }
+    },
+    "inspect-bootstrap-sql": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "37a91d34994688c87a2081246887f45389f247b7af6f3de9774a76d8bd9ebfaa",
+      "result": {
+        "status": "PASS",
+        "publicBootstrapSQL": [
+          "#!/bin/sh",
+          "set -eu",
+          "",
+          "#######################################",
+          "# Used by both ami and docker builds to initialise database schema.",
+          "# Env vars:",
+          "#   POSTGRES_DB        defaults to postgres",
+          "#   POSTGRES_HOST      defaults to localhost",
+          "#   POSTGRES_PORT      defaults to 5432",
+          "#   POSTGRES_PASSWORD  defaults to \"\"",
+          "#   USE_DBMATE         defaults to \"\"",
+          "# Exit code:",
+          "#   0 if migration succeeds, non-zero on error.",
+          "#######################################",
+          "",
+          "export PGDATABASE=\"${POSTGRES_DB:-postgres}\"",
+          "export PGHOST=\"${POSTGRES_HOST:-localhost}\"",
+          "export PGPORT=\"${POSTGRES_PORT:-5432}\"",
+          "export PGPASSWORD=\"${POSTGRES_PASSWORD:-}\"",
+          "",
+          "# if args are supplied, simply forward to dbmate",
+          "connect=\"$PGPASSWORD@$PGHOST:$PGPORT/$PGDATABASE?sslmode=disable\"",
+          "if [ \"$#\" -ne 0 ]; then",
+          "\texport DATABASE_URL=\"${DATABASE_URL:-postgres://supabase_admin:$connect}\"",
+          "\texec dbmate \"$@\"",
+          "\texit 0",
+          "fi",
+          "",
+          "db=$(cd -- \"$(dirname -- \"$0\")\" >/dev/null 2>&1 && pwd)",
+          "if [ -z \"${USE_DBMATE:-}\" ]; then",
+          "\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U supabase_admin <<EOSQL",
+          "do \\$\\$",
+          "begin",
+          "  -- postgres role is pre-created during AMI build",
+          "  if not exists (select from pg_roles where rolname = 'postgres') then",
+          "    create role postgres superuser login password '$PGPASSWORD';",
+          "    alter database postgres owner to postgres;",
+          "  end if;",
+          "end \\$\\$",
+          "EOSQL",
+          "\t# run init scripts as postgres user",
+          "\tfor sql in \"$db\"/init-scripts/*.sql; do",
+          "\t\techo \"$0: running $sql\"",
+          "\t\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U postgres -f \"$sql\"",
+          "\tdone",
+          "\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U postgres -c \"ALTER USER supabase_admin WITH PASSWORD '$PGPASSWORD'\"",
+          "\t# run migrations as super user - postgres user demoted in post-setup",
+          "\tfor sql in \"$db\"/migrations/*.sql; do",
+          "\t\techo \"$0: running $sql\"",
+          "\t\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U supabase_admin -f \"$sql\"",
+          "\tdone",
+          "else",
+          "\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U supabase_admin <<EOSQL",
+          "  create role postgres superuser login password '$PGPASSWORD';",
+          "  alter database postgres owner to postgres;",
+          "EOSQL",
+          "\t# run init scripts as postgres user",
+          "\tDBMATE_MIGRATIONS_DIR=\"$db/init-scripts\" DATABASE_URL=\"postgres://postgres:$connect\" dbmate --no-dump-schema migrate",
+          "\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U postgres -c \"ALTER USER supabase_admin WITH PASSWORD '$PGPASSWORD'\"",
+          "\t# run migrations as super user - postgres user demoted in post-setup",
+          "\tDBMATE_MIGRATIONS_DIR=\"$db/migrations\" DATABASE_URL=\"postgres://supabase_admin:$connect\" dbmate --no-dump-schema migrate",
+          "fi",
+          "",
+          "# run any post migration script to update role passwords",
+          "postinit=\"/etc/postgresql.schema.sql\"",
+          "if [ -e \"$postinit\" ]; then",
+          "\techo \"$0: running $postinit\"",
+          "\tpsql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U supabase_admin -f \"$postinit\"",
+          "fi",
+          "",
+          "# once done with everything, reset stats from init",
+          "psql -v ON_ERROR_STOP=1 --no-password --no-psqlrc -U supabase_admin -c 'SELECT extensions.pg_stat_statements_reset(); SELECT pg_stat_reset();' || true",
+          "/docker-entrypoint-initdb.d/init-scripts/00-schema.sql:22:GRANT EXECUTE ON FUNCTION pgbouncer.get_auth(p_usename TEXT) TO pgbouncer;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:76:-- auth.schema_migrations definition",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:78:CREATE TABLE auth.schema_migrations (",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:80:    CONSTRAINT schema_migrations_pkey PRIMARY KEY (\"version\")",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:82:comment on table auth.schema_migrations is 'Auth: Manages updates to the auth system.';",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:84:INSERT INTO auth.schema_migrations (version)",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:109:GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:113:GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:114:GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:115:GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:116:ALTER USER supabase_auth_admin SET search_path = \"auth\";",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:117:ALTER table \"auth\".users OWNER TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:118:ALTER table \"auth\".refresh_tokens OWNER TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:119:ALTER table \"auth\".audit_log_entries OWNER TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:120:ALTER table \"auth\".instances OWNER TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000001-auth-schema.sql:121:ALTER table \"auth\".schema_migrations OWNER TO supabase_auth_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000002-storage-schema.sql:6:ALTER USER supabase_storage_admin SET search_path = \"storage\";",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000002-storage-schema.sql:7:GRANT CREATE ON DATABASE postgres TO supabase_storage_admin;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:3:ALTER ROLE supabase_admin SET search_path TO \"\\$user\",public,auth,extensions;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:4:ALTER ROLE postgres SET search_path TO \"\\$user\",public,extensions;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:69:    GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:80:    GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:81:    GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:105:GRANT ALL ON DATABASE postgres TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:106:GRANT ALL ON SCHEMA auth TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:107:GRANT ALL ON SCHEMA extensions TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:108:GRANT ALL ON ALL TABLES IN SCHEMA auth TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:109:GRANT ALL ON ALL TABLES IN SCHEMA extensions TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:110:-- GRANT ALL ON ALL TABLES IN SCHEMA storage TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:111:GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:112:GRANT ALL ON ALL SEQUENCES IN SCHEMA extensions TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:113:GRANT ALL ON ALL ROUTINES IN SCHEMA auth TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:114:GRANT ALL ON ALL ROUTINES IN SCHEMA extensions TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:118:    GRANT ALL ON SCHEMA storage TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:119:    GRANT ALL ON ALL SEQUENCES IN SCHEMA storage TO dashboard_user;",
+          "/docker-entrypoint-initdb.d/init-scripts/00000000000003-post-setup.sql:120:    GRANT ALL ON ALL ROUTINES IN SCHEMA storage TO dashboard_user;"
+        ],
+        "syntheticKong": {
+          "exitCode": 0,
+          "publicOutput": [
+            "uid=1002 gid=1002 groups=1002",
+            "drwx------ 2 1002 1002 40 Oct 20 20:39 /usr/local/kong",
+            "",
+            "2026/10/20 20:39:04 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\"",
+            "2026/10/20 20:39:06 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\""
+          ]
+        },
+        "secretMounts": 0,
+        "serviceRestarts": 0
+      }
+    },
+    "bootstrap-plan": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "0b38de1f57ce3f2cfbad260079e4097759d5f855b1ac28a4269dafd809039e77",
+      "result": {
+        "status": "PASS",
+        "metadata": {
+          "authTables": [
+            {
+              "name": "users",
+              "owner": "supabase_auth_admin"
+            },
+            {
+              "name": "refresh_tokens",
+              "owner": "supabase_auth_admin"
+            },
+            {
+              "name": "audit_log_entries",
+              "owner": "supabase_auth_admin"
+            },
+            {
+              "name": "instances",
+              "owner": "supabase_auth_admin"
+            },
+            {
+              "name": "schema_migrations",
+              "owner": "supabase_auth_admin"
+            }
+          ],
+          "permissions": [
+            {
+              "role": "supabase_auth_admin",
+              "schemaCreate": true,
+              "dbCreate": false
+            },
+            {
+              "role": "supabase_storage_admin",
+              "schemaCreate": false,
+              "dbCreate": true
+            }
+          ],
+          "roles": [
+            {
+              "name": "postgres",
+              "superuser": true,
+              "inherit": true
+            },
+            {
+              "name": "supabase_admin",
+              "superuser": true,
+              "inherit": true
+            },
+            {
+              "name": "supabase_storage_admin",
+              "superuser": false,
+              "inherit": false
+            },
+            {
+              "name": "supabase_auth_admin",
+              "superuser": false,
+              "inherit": false
+            }
+          ],
+          "installedExtensions": [
+            {
+              "name": "plpgsql",
+              "version": "1.0"
+            },
+            {
+              "name": "uuid-ossp",
+              "version": "1.1"
+            },
+            {
+              "name": "pgcrypto",
+              "version": "1.3"
+            }
+          ],
+          "hbaMethods": [
+            {
+              "type": "local",
+              "method": "trust"
+            },
+            {
+              "type": "local",
+              "method": "peer"
+            },
+            {
+              "type": "host",
+              "method": "trust"
+            },
+            {
+              "type": "host",
+              "method": "trust"
+            },
+            {
+              "type": "host",
+              "method": "scram-sha-256"
+            },
+            {
+              "type": "host",
+              "method": "scram-sha-256"
+            },
+            {
+              "type": "host",
+              "method": "scram-sha-256"
+            },
+            {
+              "type": "host",
+              "method": "scram-sha-256"
+            },
+            {
+              "type": "host",
+              "method": "scram-sha-256"
+            }
+          ]
+        },
+        "publicReferenceSQL": [
+          "-- migrate:up",
+          "",
+          "-- Set up realtime",
+          "-- defaults to empty publication",
+          "create publication supabase_realtime;",
+          "",
+          "-- Supabase super admin",
+          "alter user  supabase_admin with superuser createdb createrole replication bypassrls;",
+          "",
+          "-- Supabase replication user",
+          "create user supabase_replication_admin with login replication;",
+          "",
+          "-- Supabase etl user",
+          "create user supabase_etl_admin with login replication bypassrls;",
+          "grant pg_read_all_data to supabase_etl_admin;",
+          "grant create on database postgres to supabase_etl_admin;",
+          "",
+          "-- Supabase read-only user",
+          "create role supabase_read_only_user with login bypassrls;",
+          "grant pg_read_all_data to supabase_read_only_user;",
+          "",
+          "-- Extension namespacing",
+          "create schema if not exists extensions;",
+          "create extension if not exists \"uuid-ossp\"      with schema extensions;",
+          "create extension if not exists pgcrypto         with schema extensions;",
+          "",
+          "",
+          "-- Set up auth roles for the developer",
+          "create role anon                nologin noinherit;",
+          "create role authenticated       nologin noinherit; -- \"logged in\" user: web_user, app_user, etc",
+          "create role service_role        nologin noinherit bypassrls; -- allow developers to create JWT's that bypass their policies",
+          "",
+          "create user authenticator noinherit;",
+          "grant anon              to authenticator;",
+          "grant authenticated     to authenticator;",
+          "grant service_role      to authenticator;",
+          "grant supabase_admin    to authenticator;",
+          "",
+          "grant usage                     on schema public to postgres, anon, authenticated, service_role;",
+          "alter default privileges in schema public grant all on tables to postgres, anon, authenticated, service_role;",
+          "alter default privileges in schema public grant all on functions to postgres, anon, authenticated, service_role;",
+          "alter default privileges in schema public grant all on sequences to postgres, anon, authenticated, service_role;",
+          "",
+          "-- Allow Extensions to be used in the API",
+          "grant usage                     on schema extensions to postgres, anon, authenticated, service_role;",
+          "",
+          "-- Set up namespacing",
+          "alter user supabase_admin SET search_path TO public, extensions; -- don't include the \"auth\" schema",
+          "",
+          "-- These are required so that the users receive grants whenever \"supabase_admin\" creates tables/function",
+          "alter default privileges for user supabase_admin in schema public grant all",
+          "    on sequences to postgres, anon, authenticated, service_role;",
+          "alter default privileges for user supabase_admin in schema public grant all",
+          "    on tables to postgres, anon, authenticated, service_role;",
+          "alter default privileges for user supabase_admin in schema public grant all",
+          "    on functions to postgres, anon, authenticated, service_role;",
+          "",
+          "-- Set short statement/query timeouts for API roles",
+          "alter role anon set statement_timeout = '3s';",
+          "alter role authenticated set statement_timeout = '8s';",
+          "",
+          "-- migrate:down",
+          "-- migrate:up",
+          "",
+          "CREATE SCHEMA IF NOT EXISTS storage AUTHORIZATION supabase_admin;",
+          "",
+          "CREATE USER supabase_storage_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION;",
+          "ALTER USER supabase_storage_admin SET search_path = \"storage\";",
+          "GRANT CREATE ON DATABASE postgres TO supabase_storage_admin;",
+          "",
+          "do $$",
+          "begin",
+          "  if exists (select from pg_namespace where nspname = 'storage') then",
+          "    grant usage on schema storage to postgres, anon, authenticated, service_role;",
+          "    alter default privileges in schema storage grant all on tables to postgres, anon, authenticated, service_role;",
+          "    alter default privileges in schema storage grant all on functions to postgres, anon, authenticated, service_role;",
+          "    alter default privileges in schema storage grant all on sequences to postgres, anon, authenticated, service_role;",
+          "",
+          "    grant all on schema storage to supabase_storage_admin with grant option;",
+          "  end if;",
+          "end $$;",
+          "",
+          "-- migrate:down",
+          "-- migrate:up",
+          "",
+          "-- update auth schema permissions",
+          "GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;",
+          "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;",
+          "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin;",
+          "",
+          "ALTER table IF EXISTS \"auth\".users OWNER TO supabase_auth_admin;",
+          "ALTER table IF EXISTS \"auth\".refresh_tokens OWNER TO supabase_auth_admin;",
+          "ALTER table IF EXISTS \"auth\".audit_log_entries OWNER TO supabase_auth_admin;",
+          "ALTER table IF EXISTS \"auth\".instances OWNER TO supabase_auth_admin;",
+          "ALTER table IF EXISTS \"auth\".schema_migrations OWNER TO supabase_auth_admin;",
+          "",
+          "GRANT USAGE ON SCHEMA auth TO postgres;",
+          "GRANT ALL ON ALL TABLES IN SCHEMA auth TO postgres, dashboard_user;",
+          "GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO postgres, dashboard_user;",
+          "GRANT ALL ON ALL ROUTINES IN SCHEMA auth TO postgres, dashboard_user;",
+          "ALTER DEFAULT PRIVILEGES FOR ROLE supabase_auth_admin IN SCHEMA auth GRANT ALL ON TABLES TO postgres, dashboard_user;",
+          "ALTER DEFAULT PRIVILEGES FOR ROLE supabase_auth_admin IN SCHEMA auth GRANT ALL ON SEQUENCES TO postgres, dashboard_user;",
+          "ALTER DEFAULT PRIVILEGES FOR ROLE supabase_auth_admin IN SCHEMA auth GRANT ALL ON ROUTINES TO postgres, dashboard_user;",
+          "",
+          "-- migrate:down",
+          "-- migrate:up",
+          "",
+          "-- create realtime schema for Realtime RLS (WALRUS)",
+          "CREATE SCHEMA IF NOT EXISTS realtime;",
+          "",
+          "-- migrate:down",
+          "-- migrate:up",
+          "",
+          "-- update owner for auth.uid, auth.role and auth.email functions",
+          "DO $$",
+          "BEGIN",
+          "    ALTER FUNCTION auth.uid owner to supabase_auth_admin;",
+          "EXCEPTION WHEN OTHERS THEN",
+          "    RAISE WARNING 'Error encountered when changing owner of auth.uid to supabase_auth_admin';",
+          "END $$;",
+          "",
+          "DO $$",
+          "BEGIN",
+          "    ALTER FUNCTION auth.role owner to supabase_auth_admin;",
+          "EXCEPTION WHEN OTHERS THEN",
+          "    RAISE WARNING 'Error encountered when changing owner of auth.role to supabase_auth_admin';",
+          "END $$;",
+          "",
+          "DO $$",
+          "BEGIN",
+          "    ALTER FUNCTION auth.email owner to supabase_auth_admin;",
+          "EXCEPTION WHEN OTHERS THEN",
+          "    RAISE WARNING 'Error encountered when changing owner of auth.email to supabase_auth_admin';",
+          "END $$;",
+          "-- migrate:down"
+        ],
+        "dataChanged": false
+      }
+    },
+    "repair-bootstrap": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "ffa137b81e4b335fc482b716cb17f41c6ac01a2593571e4e06a1d72de2e7aee1",
+      "result": {
+        "status": "PASS",
+        "emptyTablesChecked": 4,
+        "steps": {
+          "functions-role": {
+            "sha256": "40b60fd3d0e01cf90578a0b495d98ecfa8bd701a32e0faeec1a43ff6df0eb3a5",
+            "status": "PASS"
+          },
+          "roles": {
+            "sha256": "3ad717b225daa38aa982da26750f35641eb404e1eb5e69a763c22236ab96c1b2",
+            "status": "PASS"
+          },
+          "jwt": {
+            "sha256": "c1d3f5c01e44646c2e533c5a1c111821cc49cb5a4c2534e08cddad61d8fb0339",
+            "status": "PASS"
+          },
+          "00-extension.sql": {
+            "sha256": "a12e0eb4192d188e0dc5058e888ec981c1fd619d5542235d5b692ea0a1d751b2",
+            "status": "PASS"
+          },
+          "10000000000000_demote-postgres.sql": {
+            "sha256": "581edb76cba2aaf848585be462d07bff7182aa6c638f9365f08dd0c1fb1142ab",
+            "status": "PASS"
+          },
+          "20211115181400_update-auth-permissions.sql": {
+            "sha256": "bbaa44bc707538e6c67ae8c71a386c41e136cd30fcde563db39c9d0fbde9bdcb",
+            "status": "PASS"
+          },
+          "20211118015519_create-realtime-schema.sql": {
+            "sha256": "1d6cd4858a0fa50bf910bfd6c11a3436941a5fecdc4bdc02b9b067e8e0b7f566",
+            "status": "PASS"
+          },
+          "20211122051245_update-realtime-permissions.sql": {
+            "sha256": "9fd431e8f1a3fc0f2e1e427d4f526562c1fe8627e12302974215373885b5254b",
+            "status": "PASS"
+          },
+          "20211124212715_update-auth-owner.sql": {
+            "sha256": "9698f481ad9cb159df6cefd5cc4b94f4b9db0eda475317aaa057b1e9a54409e0",
+            "status": "PASS"
+          },
+          "20211130151719_update-realtime-permissions.sql": {
+            "sha256": "6b5d190c93b35a2f804703ed7872946b51fded3272bed0ef9a6585187b0dc2b4",
+            "status": "PASS"
+          },
+          "20220118070449_enable-safeupdate-postgrest.sql": {
+            "sha256": "2bffffbf1e5a677ef8c8cbba9afc5a66bc77113ee9b2e2b4d2a56629a381cea4",
+            "status": "PASS"
+          },
+          "20220126121436_finer-postgrest-triggers.sql": {
+            "sha256": "85dc26173d7254490d0c20389bc7e3ac7f7752b872c99bb714167cb01b231312",
+            "status": "PASS"
+          },
+          "20220224211803_fix-postgrest-supautils.sql": {
+            "sha256": "744ed5c5ae1527c6c73ad4214c11d903eafdc5803eb69183b3b3325b7a65c5bc",
+            "status": "PASS"
+          },
+          "20220317095840_pg_graphql.sql": {
+            "sha256": "31f5b997cba8d74936203a78613b5bda9b51e339c6c14f80c203440f82e95cf9",
+            "status": "PASS"
+          },
+          "20220321174452_fix-postgrest-alter-type-event-trigger.sql": {
+            "sha256": "674bfe11a9cb828c55ca7c9e00d4f4edcbcb0003d956d8866c9563810e7f0f0e",
+            "status": "PASS"
+          },
+          "20220322085208_gotrue-session-limit.sql": {
+            "sha256": "ab2f834addee3115c96edddda927ef9f5d8641c3939d2be82b8ce1e890cf4921",
+            "status": "PASS"
+          },
+          "20220404205710_pg_graphql-on-by-default.sql": {
+            "sha256": "02ef3e3e6c03032a6ccb828ef1e1b297d9b34ad1947a673756c3c95dd86a01d1",
+            "status": "PASS"
+          },
+          "20220609081115_grant-supabase-auth-admin-and-supabase-storage-admin-to-postgres.sql": {
+            "sha256": "ff540703d411416925a21553bead344a9cebdec4cb0e53fb93f99973874f1e59",
+            "status": "PASS"
+          },
+          "20220613123923_pg_graphql-pg-dump-perms.sql": {
+            "sha256": "ab244687d0123859d9d9c6a79b34897e8cdd8f1698bdccd1bef7f7e0ced82334",
+            "status": "PASS"
+          },
+          "20220713082019_pg_cron-pg_net-temp-perms-fix.sql": {
+            "sha256": "143d6e664f2f508f76964fbaaa018c6ee262464c8c7a881201ae56e025787c94",
+            "status": "PASS"
+          },
+          "20221028101028_set_authenticator_timeout.sql": {
+            "sha256": "393dd66aee71a99d3956c6c6655e3c010afe9bd3f9a819b03746850ba70f9680",
+            "status": "PASS"
+          },
+          "20221103090837_revoke_admin.sql": {
+            "sha256": "8fff945cd6f11ab68b2f300c64d43a38ef69d61987aaf596a1d00bfa225234e8",
+            "status": "PASS"
+          },
+          "20221207154255_create_pgsodium_and_vault.sql": {
+            "sha256": "cb8877c69b6913153776b865093e85768053daed283dec6835fdac728978d76c",
+            "status": "PASS"
+          },
+          "20230201083204_grant_auth_roles_to_postgres.sql": {
+            "sha256": "b06d2bdfe4d60e9e2183c2296511a4b83d97cebb71cb2d714cd863081990857e",
+            "status": "PASS"
+          },
+          "20230224042246_grant_extensions_perms_for_postgres.sql": {
+            "sha256": "9e1e777fb8317dcccdb88ead19201a5670c890fa69dfc51c8d7b369229c3ca8d",
+            "status": "PASS"
+          },
+          "20230306081037_grant_pg_monitor_to_postgres.sql": {
+            "sha256": "5d80fb49faaf96712ecb23896a36a03122ca352b5046ab8480fee914a054cdec",
+            "status": "PASS"
+          },
+          "20230327032006_grant_auth_roles_to_supabase_storage_admin.sql": {
+            "sha256": "9f8985b3676ff2c3709b3193736e17fcfd20264953eba7dcbc94056ea26bac0e",
+            "status": "PASS"
+          },
+          "20230529180330_alter_api_roles_for_inherit.sql": {
+            "sha256": "e78a67f8e6ae847765a80898824d404ab370daa3d6f6dbf61ea6d9e0a69144f3",
+            "status": "PASS"
+          },
+          "20231013070755_grant_authenticator_to_supabase_storage_admin.sql": {
+            "sha256": "48d9feb2734125f79eb67bd0522fee9ad3916888172c7023a84241260687620f",
+            "status": "PASS"
+          },
+          "20231017062225_grant_pg_graphql_permissions_for_custom_roles.sql": {
+            "sha256": "1833af7170c97bc444cfe9f823be73d3ff3f9b18e47c2ee1181ff33a1fbbb673",
+            "status": "PASS"
+          },
+          "20231020085357_revoke_writes_on_cron_job_from_postgres.sql": {
+            "sha256": "6c37208218a84c3ab40e5e0369b86d31a6ddc56fbfe95c03800776b3fa9ce4b7",
+            "status": "PASS"
+          },
+          "20231130133139_set_lock_timeout_to_authenticator_role.sql": {
+            "sha256": "5d2cc80fdb26cbda32d8398bf8486cccc4e2f6b911b5719f146d0167551f6a00",
+            "status": "PASS"
+          },
+          "20240124080435_alter_lo_export_lo_import_owner.sql": {
+            "sha256": "1060763d9f69d39c5027c632aa634b3b8d9d021dd7150f6efdbe1d9d7679e655",
+            "status": "PASS"
+          },
+          "20240606060239_grant_predefined_roles_to_postgres.sql": {
+            "sha256": "11b87064890ffe3f3d14336b712c310966d09458c5eef7203e7251cc9156f59e",
+            "status": "PASS"
+          },
+          "20241031003909_create_orioledb.sql": {
+            "sha256": "119405b66ee3c57cb81849e0cb20423ca059d9f54a4ef8607313ff4db48c8082",
+            "status": "PASS"
+          },
+          "20241215003910_backfill_pgmq_metadata.sql": {
+            "sha256": "4220830feda72a98a2ec804a6ef9250507ca22cd4ccf4f17a0036c4d771e6adf",
+            "status": "PASS"
+          },
+          "20250205060043_disable_log_statement_on_internal_roles.sql": {
+            "sha256": "720d2ecb3ae5d43eb8d0e071fa489dec472d54ff27e4fa46f8d17c8070cbb13f",
+            "status": "PASS"
+          },
+          "20250205144616_move_orioledb_to_extensions_schema.sql": {
+            "sha256": "9ea55607791aa8c8b55982cee9f006129149e3f4e10bd320bfedcbeb945e5230",
+            "status": "PASS"
+          },
+          "20250218031949_pgsodium_mask_role.sql": {
+            "sha256": "24cf783d3c039d90a67225eef1fbfe688fda8b3fd88610bea59abc6590db3382",
+            "status": "PASS"
+          },
+          "20250220051611_pg_net_perms_fix.sql": {
+            "sha256": "7e700959a7583b857a5738c71777682e509f4414272390f20ac5d86f999ae6c1",
+            "status": "PASS"
+          },
+          "20250312095419_pgbouncer_ownership.sql": {
+            "sha256": "fd95765def92461de68b550eb65587babd9944cee142cac0bec4df3c277adec8",
+            "status": "PASS"
+          },
+          "20250402065937_alter_internal_event_triggers_owner_to_supabase_admin.sql": {
+            "sha256": "1197d727fb7a8ddf8a61c992ff5698d81a5e908e677cc3a4d835b079aeacb8f1",
+            "status": "PASS"
+          },
+          "20250402093753_grant_subscription_to_postgres_16_and_above.sql": {
+            "sha256": "8232eb5b1d0d9e0e45dd58d18083f3dd03f0bd792cfa16ee0ec5e05ae2cb2a97",
+            "status": "PASS"
+          },
+          "20250417190610_update_pgbouncer_get_auth.sql": {
+            "sha256": "c7a26bdcb8b48941bbe5ead7c347a06b9261f7a461abeeea0bfe129f20625745",
+            "status": "PASS"
+          },
+          "20250421084701_revoke_admin_roles_from_postgres.sql": {
+            "sha256": "77679a5c54d2baccc445d79d3b66429181d37937c1c05627742d205e580441f6",
+            "status": "PASS"
+          },
+          "20250605172253_grant_with_admin_to_postgres_16_and_above.sql": {
+            "sha256": "1daa645828b02f85325a563c6a0b3d81e15e729fa3de442c8cdf9e43c174acf8",
+            "status": "PASS"
+          },
+          "20250623125453_tmp_grant_storage_tables_to_postgres_with_grant_option.sql": {
+            "sha256": "1289f81f7111147fc334fa44ec00c31c871f5ba325c16cc205646ff07507cf04",
+            "status": "PASS"
+          },
+          "20250709135250_grant_storage_schema_to_postgres_with_grant_option.sql": {
+            "sha256": "b0b7091cb8bddfb3c9c6794f3b2a70ecf3b51b1827d79bdbc4f34d4331937641",
+            "status": "PASS"
+          },
+          "20250710151649_supabase_read_only_user_default_transaction_read_only.sql": {
+            "sha256": "7d2d0e770b5198f5bbc571210a1afaf03ed6421d3cfeee85c694832f2582dc19",
+            "status": "PASS"
+          },
+          "20251001204436_predefined_role_grants.sql": {
+            "sha256": "46b35cd58c43d73d58242a3dfeb8a8c31b0a4981a7a609b043361dd304cfe886",
+            "status": "PASS"
+          },
+          "20251105172723_grant_pg_reload_conf_to_postgres.sql": {
+            "sha256": "d46bb05f79fc895f0a50b8a42e8507136c367bb67c03d7080ae7fd21680abc38",
+            "status": "PASS"
+          },
+          "20251121132723_correct_search_path_pgbouncer.sql": {
+            "sha256": "27293b64d94e42e3d4f2410c914c38a059f9df7bc5e287cf76c055e3bf822119",
+            "status": "PASS"
+          },
+          "20260211120934_supabase_privileged_role.sql": {
+            "sha256": "ebbb7a055ecf767568d6e9035f32f93397922e43ecabd0c588593ec3f8c5974f",
+            "status": "PASS"
+          },
+          "20260413000000_fix-authenticator-session-preload-libraries.sql": {
+            "sha256": "eee2f692ec9b1b9fea425b616761d5f6369b9c70148e58eaa186d3638d6efcbe",
+            "status": "PASS"
+          },
+          "20260421000000_pg_graphql-off-by-default.sql": {
+            "sha256": "17e120888bec3a4131959e39012c2a68b0eb0206805f4aa624cca8d9b6c1fb0b",
+            "status": "PASS"
+          },
+          "20260421000001_rescope_pg_graphql_access_trigger.sql": {
+            "sha256": "c9c3986d040d8f2545c5faf97ce57804408bf2465105cb8c7c6a6dcea8ec6535",
+            "status": "PASS"
+          },
+          "97-_supabase.sql": {
+            "sha256": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f",
+            "status": "PASS"
+          },
+          "99-realtime.sql": {
+            "sha256": "7e9e442e7fc4dae05544c07b67bede37a00d84644304dfce4d937134cb4c8f88",
+            "status": "PASS"
+          },
+          "storage-schema-grant": {
+            "sha256": "edce420d61dcd9fcac364c2d0b1112757934a0237a6d0db215b4f9f318b666a0",
+            "status": "PASS"
+          }
+        },
+        "dataReinitialized": false,
+        "customerRowsChanged": 0,
+        "secretValuesExported": false
+      }
+    },
+    "kong-preflight": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "11e41458e8c53b72f1a520422e48a56d71342938008bd57b2d01c4f34d6c831a",
+      "result": {
+        "status": "PASS",
+        "configurationValid": true,
+        "exitCode": 0,
+        "sanitizedError": [
+          " Container ir35-staging-kong-run-c7570dd9c409 Creating ",
+          " Container ir35-staging-kong-run-c7570dd9c409 Created ",
+          "2026/10/20 20:49:45 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\"",
+          "2026/10/20 20:49:46 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\""
+        ],
+        "serverStarted": false,
+        "secretValuesExported": false
+      }
+    },
+    "kong-nginx-preflight": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "4ba4648f76c06fe8ae587c75a025eb3756a75ab20c0b64028020a0832f6e49a3",
+      "result": {
+        "status": "PASS",
+        "parseAndNginxValid": true,
+        "exitCode": 0,
+        "imageLibAdaVisible": true,
+        "sanitizedError": [
+          " Container ir35-staging-kong-run-66b0623bc839 Creating ",
+          " Container ir35-staging-kong-run-66b0623bc839 Created ",
+          "2026/10/20 20:53:03 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\"",
+          "2026/10/20 20:53:03 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\"",
+          "2026/10/20 20:53:03 [warn] ulimit is currently set to \"1024\". For better performance set it to at least \"4096\" using \"ulimit -n\"",
+          "2026/10/20 20:53:03 [warn] 46#0: the \"user\" directive makes sense only if the master process runs with super-user privileges, ignored in /run/kong/nginx.conf:7",
+          "nginx: [warn] the \"user\" directive makes sense only if the master process runs with super-user privileges, ignored in /run/kong/nginx.conf:7",
+          "nginx: the configuration file /run/kong/nginx.conf syntax is ok",
+          "nginx: configuration file /run/kong/nginx.conf test is successful"
+        ],
+        "serverStarted": false,
+        "secretValuesExported": false
+      }
+    },
+    "validate-caddy": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "2f5ec3f547ca8c85a1193e9c11b9e4d0d381dd6e7775ef8b8727297b22a2ce8a",
+      "result": {
+        "status": "PASS",
+        "adminDisabled": true,
+        "autosaveDisabled": true,
+        "basicAuth": true,
+        "noindex": true,
+        "certificateRequests": 0
+      }
+    },
+    "acme-staging": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "2f5ec3f547ca8c85a1193e9c11b9e4d0d381dd6e7775ef8b8727297b22a2ce8a",
+      "result": {
+        "status": "PASS",
+        "issuer": "letsencrypt-staging",
+        "http01Only": true,
+        "appUnauthenticated": 401,
+        "apiNoKey": 401,
+        "noindex": true,
+        "privateState": {
+          "path": "/opt/ir35/data/caddy",
+          "directories": 12,
+          "files": 10,
+          "directoryMode": "700",
+          "fileMode": "600",
+          "ownerUID": 1002,
+          "backupExcluded": true
+        }
+      }
+    },
+    "acme-trusted": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "2f5ec3f547ca8c85a1193e9c11b9e4d0d381dd6e7775ef8b8727297b22a2ce8a",
+      "result": {
+        "status": "PASS",
+        "issuer": "letsencrypt-trusted",
+        "http01Only": true,
+        "appUnauthenticated": 401,
+        "apiNoKey": 401,
+        "noindex": true,
+        "privateState": {
+          "path": "/opt/ir35/data/caddy",
+          "directories": 19,
+          "files": 18,
+          "directoryMode": "700",
+          "fileMode": "600",
+          "ownerUID": 1002,
+          "backupExcluded": true
+        }
+      }
+    },
+    "app-migrations": {
+      "status": "PASS",
+      "attempts": 2,
+      "sourceSHA256": "53ddac08c23b22b8e83a3ba1419e78daa7c0d9063da25edea6d458bad3e2c4ac",
+      "result": {
+        "status": "PASS",
+        "baselineFiles": 1,
+        "orderedMigrationFiles": 24,
+        "migrations": {
+          "supabase/waitlist.sql": {
+            "status": "PASS",
+            "sha256": "f2522e29724a59c785024fbfa1a33d949b57c7754d01e42401b76eff9489e17d"
+          },
+          "supabase/migrations/001_jobs_schema.sql": {
+            "status": "PASS",
+            "sha256": "28322adb1992fba45d203fe5feae879b4e9fd6c56b1c04fe7c13d62828636194"
+          },
+          "supabase/migrations/002_posted_on.sql": {
+            "status": "PASS",
+            "sha256": "78046302c1a056c039fc9440ee68aa1f1637201d7eed247bb4856796a72e75ba"
+          },
+          "supabase/migrations/003_profiles.sql": {
+            "status": "PASS",
+            "sha256": "153e6d7283bf0dc896be58d504a8582ddebf36f6d37240719792f3195c614523"
+          },
+          "supabase/migrations/004_cleanup_junk.sql": {
+            "status": "PASS",
+            "sha256": "e4bbeb79f2feb898e97601e1592fc2fe9d0827002fde0ba8c45571f64a0ddc74"
+          },
+          "supabase/migrations/005_profile_details.sql": {
+            "status": "PASS",
+            "sha256": "1b3869e18d721427457c248f796a5c000d9246bc9e50251848e4ede7a736dcc5"
+          },
+          "supabase/migrations/006_cleanup_nonpro.sql": {
+            "status": "PASS",
+            "sha256": "e76f818acc652ee5e9e1bdb618ab24e7afa3deaf4b88bc04a8d3b2c230f434cb"
+          },
+          "supabase/migrations/007_job_alerts.sql": {
+            "status": "PASS",
+            "sha256": "e477ce7162dd4453396424cf8298e1be40d61e7bb270dbe6c18afc0a2fdca362"
+          },
+          "supabase/migrations/008_fix_bad_rates.sql": {
+            "status": "PASS",
+            "sha256": "f00ad96dfa9a7d6e80790f0e6a8f48d311c37543f055a4752a4a0e5096f4aeb3"
+          },
+          "supabase/migrations/009_resume_studio.sql": {
+            "status": "PASS",
+            "sha256": "3795627bbb6c79b381df6243e984618231c03012836e304e370ab83dd8c1fbd2"
+          },
+          "supabase/migrations/010_application_workspace.sql": {
+            "status": "PASS",
+            "sha256": "4d4475885b8ce0bbf23b078c900093f71ce6bc10bfd3000f4c19dad598f3d790"
+          },
+          "supabase/migrations/011_billing_provider.sql": {
+            "status": "PASS",
+            "sha256": "014fe0fa5b1c7c135210b8f80f671d54b160bb0a9a0987388ea8fa292a17107a"
+          },
+          "supabase/migrations/012_job_alert_discovery_filters.sql": {
+            "status": "PASS",
+            "sha256": "a1fcc48b6c63c0f049c0de1fdfd500c8db9231b63947ccc0ca1d98449266826b"
+          },
+          "supabase/migrations/013_application_submission_queue.sql": {
+            "status": "PASS",
+            "sha256": "e6fa4ecaa26cf8d49dcc3e4560bca02a4d23274898601c66e8a7ea4b7e03d18e"
+          },
+          "supabase/migrations/014_transactional_email_delivery.sql": {
+            "status": "PASS",
+            "sha256": "32c5f18baeeb902d14a0a31e557bdf06491a343988ed5c49274da86f3f29f70e"
+          },
+          "supabase/migrations/015_close_waitlist_and_prepare_launch_notice.sql": {
+            "status": "PASS",
+            "sha256": "f8e40bba53e74e75e945efbe74b5518d9600378e0dd72db0f32f52ea0fd046aa"
+          },
+          "supabase/migrations/016_expire_employee_ftc_false_positives.sql": {
+            "status": "PASS",
+            "sha256": "8690913a7c2d589c2ab7c1f792ab4907ad5db8b9a0cd3e42b47a25988112440a"
+          },
+          "supabase/migrations/017_security_hardening.sql": {
+            "status": "PASS",
+            "sha256": "81e70bac12f987f5870353ebd442e6e2bd43606bcfa41d4446ffe7ba69d1a0db"
+          },
+          "supabase/migrations/018_feedback_support.sql": {
+            "status": "PASS",
+            "sha256": "c638fdc597f6573c3401833aee693e574c0923b66976ab3da1ee2c3343f9aeb3"
+          },
+          "supabase/migrations/019_application_portal_sessions.sql": {
+            "status": "PASS",
+            "sha256": "4c9cb15bd7e32340bc682101dd337f280d07ab9962e08247e830d4e7a28aeb8e"
+          },
+          "supabase/migrations/020_application_worker_tasks.sql": {
+            "status": "PASS",
+            "sha256": "200cc86624d32c86faa2ae9b04c56d3b3ae133b1a0ed79879fa23606bcbaa6a0"
+          },
+          "supabase/migrations/021_admin_members.sql": {
+            "status": "PASS",
+            "sha256": "0539d96aa2188249e9774111269d24d28fd68232a8f76e8529984e2129cd9ed7"
+          },
+          "supabase/migrations/023_job_rate_precision.sql": {
+            "status": "PASS",
+            "sha256": "39c66e84b0a89dd60748ff363106a43d7ee1c78154f516edce18961663997f5d"
+          },
+          "supabase/migrations/024_railway_worker_watchdog.sql": {
+            "status": "PASS",
+            "sha256": "fadee8b16f100821e5d13142daa34853aeb52c6b2c8ab232c4530e2fce6d74c4"
+          },
+          "supabase/migrations/025_application_delivery_lifecycle.sql": {
+            "status": "PASS",
+            "sha256": "39fa06a4da6a8528ee0419d5fad65e36f759fd51581ec90182e6082bfce1a8e1"
+          }
+        },
+        "publicTablesWithoutRLS": [],
+        "customerRowsImported": 0,
+        "sourceCloudChanged": false
+      }
+    },
+    "migration-diagnose": {
+      "status": "FAIL",
+      "attempts": 1,
+      "sourceSHA256": "7f776f3c6559560010e52db736a8cc94b46d9c0bb7e2f011590723051e5397d8"
+    },
+    "repair-env-binds": {
+      "status": "FAIL",
+      "attempts": 1,
+      "sourceSHA256": "42d4037847e44c1500632fc244fe0e8732ae7b6aabef91397b0699547366a209"
+    },
+    "runtime-audit": {
+      "status": "PASS",
+      "attempts": 3,
+      "sourceSHA256": "14f5170d4cb89389c54d8d54ff2bafb3977111fa3907fc11b9b6053ccff5dba4",
+      "result": {
+        "status": "PASS",
+        "runtimeHealthy": false,
+        "services": {
+          "db": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [
+              "localhost:5432 - accepting connections"
+            ],
+            "currentEnvBind": true
+          },
+          "smtp": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "auth": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "rest": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [
+              "OK: http://localhost:3001/ready"
+            ],
+            "currentEnvBind": true
+          },
+          "storage": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "kong": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [
+              "nginx.......running",
+              "",
+              "Kong is healthy at /run/kong"
+            ],
+            "currentEnvBind": true
+          },
+          "realtime": {
+            "running": false,
+            "health": "unhealthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": []
+          },
+          "meta": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "caddy": {
+            "running": true,
+            "health": null,
+            "oomKilled": false,
+            "lastHealthExitCode": null,
+            "healthError": [],
+            "currentEnvBind": true
+          }
+        },
+        "realtimeHealth": {
+          "statusCode": 0,
+          "transportUnavailable": true
+        },
+        "migrationBaseline": {
+          "publicTableCount": 0,
+          "authUserRows": 0
+        },
+        "appMigrations": {},
+        "credentialValuesExported": false,
+        "mutations": 0
+      }
+    },
+    "realtime-recovery": {
+      "status": "PASS",
+      "attempts": 2,
+      "sourceSHA256": "53ddac08c23b22b8e83a3ba1419e78daa7c0d9063da25edea6d458bad3e2c4ac",
+      "result": {
+        "status": "PASS",
+        "runtimeHealthy": true,
+        "services": {
+          "db": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [
+              "localhost:5432 - accepting connections"
+            ],
+            "currentEnvBind": true
+          },
+          "smtp": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "auth": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "rest": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [
+              "OK: http://localhost:3001/ready"
+            ],
+            "currentEnvBind": true
+          },
+          "storage": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "kong": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [
+              "nginx.......running",
+              "",
+              "Kong is healthy at /run/kong"
+            ],
+            "currentEnvBind": true
+          },
+          "realtime": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "meta": {
+            "running": true,
+            "health": "healthy",
+            "oomKilled": false,
+            "lastHealthExitCode": 0,
+            "healthError": [],
+            "currentEnvBind": true
+          },
+          "caddy": {
+            "running": true,
+            "health": null,
+            "oomKilled": false,
+            "lastHealthExitCode": null,
+            "healthError": [],
+            "currentEnvBind": true
+          }
+        },
+        "realtimeHealth": {
+          "statusCode": 200,
+          "redactedResponse": [
+            "{\"data\":{\"node\":\"realtime@127.0.0.1\",\"region\":\"local\",\"replication_connected\":false,\"healthy\":true,\"db_connected\":false,\"connected_cluster\":0}}"
+          ]
+        },
+        "migrationBaseline": {
+          "publicTableCount": 0,
+          "authUserRows": 0
+        },
+        "appMigrations": {},
+        "credentialValuesExported": false,
+        "mutations": 0,
+        "existingContainerOnly": true,
+        "fullStartupAttemptsReset": false
+      }
+    },
+    "realtime-exit-diagnose": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "cfec97da991b273db4cc4724fca59267dbc60db677430bebe5bd4efeb700f521",
+      "result": {
+        "status": "PASS",
+        "containerState": {
+          "Status": "exited",
+          "Running": false,
+          "ExitCode": 1,
+          "OOMKilled": false,
+          "StartedAt": "2026-10-20T20:53:35.808927458Z",
+          "FinishedAt": "2026-10-20T21:06:06.64156036Z"
+        },
+        "exitEvents": [],
+        "immutablePublicEntrypoint": [
+          "#!/bin/bash",
+          "set -euo pipefail",
+          "set -x",
+          "ulimit -n",
+          "",
+          "if [ -n \"${RLIMIT_NOFILE:-}\" ]; then",
+          "    echo \"Setting RLIMIT_NOFILE to ${RLIMIT_NOFILE}\"",
+          "    ulimit -Sn \"$RLIMIT_NOFILE\"",
+          "fi",
+          "",
+          "export ERL_CRASH_DUMP=/tmp/erl_crash.dump",
+          "",
+          "upload_crash_dump_to_s3() {",
+          "    EXIT_CODE=${?:-0}",
+          "    bucket=$ERL_CRASH_DUMP_S3_BUCKET",
+          "    s3Host=$ERL_CRASH_DUMP_S3_HOST",
+          "    s3Port=$ERL_CRASH_DUMP_S3_PORT",
+          "",
+          "    if [ \"${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI-}\" ]; then",
+          "        response=$(curl -s \"http://169.254.170.2${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}\")",
+          "        s3Key=$(echo \"$response\" | grep -o '\"AccessKeyId\": *\"[^\"]*\"' | grep -o '\"[^\"]*\"$' | tr -d '\"')",
+          "        s3Secret=$(echo \"$response\" | grep -o '\"SecretAccessKey\": *\"[^\"]*\"' | grep -o '\"[^\"]*\"$' | tr -d '\"')",
+          "    else",
+          "        s3Key=$ERL_CRASH_DUMP_S3_KEY",
+          "        s3Secret=$ERL_CRASH_DUMP_S3_SECRET",
+          "    fi",
+          "",
+          "    filePath=${ERL_CRASH_DUMP_FOLDER:-tmp}/$(date +%s)_${ERL_CRASH_DUMP_FILE_NAME:-erl_crash.dump}",
+          "",
+          "    if [ -f \"${ERL_CRASH_DUMP_FOLDER:-tmp}/${ERL_CRASH_DUMP_FILE_NAME:-erl_crash.dump}\" ]; then",
+          "        mv \"${ERL_CRASH_DUMP_FOLDER:-tmp}/${ERL_CRASH_DUMP_FILE_NAME:-erl_crash.dump}\" \"$filePath\"",
+          "",
+          "        resource=\"/${bucket}/realtime/crash_dumps${filePath}\"",
+          "",
+          "        contentType=\"application/octet-stream\"",
+          "        dateValue=$(date -R)",
+          "        stringToSign=\"PUT\\n\\n${contentType}\\n${dateValue}\\n${resource}\"",
+          "",
+          "        signature=$(echo -en \"${stringToSign}\" | openssl sha1 -hmac \"${s3Secret}\" -binary | base64)",
+          "",
+          "        if [ \"${ERL_CRASH_DUMP_S3_SSL:-}\" = true ]; then",
+          "            protocol=\"https\"",
+          "        else",
+          "            protocol=\"http\"",
+          "        fi",
+          "",
+          "        curl -v -X PUT -T \"${filePath}\" \\",
+          "            -H \"Host: ${s3Host}\" \\",
+          "            -H \"Date: ${dateValue}\" \\",
+          "            -H \"Content-Type: ${contentType}\" \\",
+          "            -H \"Authorization: AWS ${s3Key}:${signature}\" \\",
+          "            \"${protocol}://${s3Host}:${s3Port}${resource}\"",
+          "    fi",
+          "",
+          "    exit \"$EXIT_CODE\"",
+          "}",
+          "",
+          "generate_certs() {",
+          "    aws secretsmanager get-secret-value --secret-id \"${CLUSTER_SECRET_ID}\" --region \"${CLUSTER_SECRET_REGION}\" | jq -r '.SecretString' > cert_secrets",
+          "    jq -r '.key' cert_secrets | base64 -d > ca.key",
+          "    jq -r '.cert' cert_secrets | base64 -d > ca.cert",
+          "    openssl req -new -nodes -out server.csr -keyout server.key -subj \"/C=US/ST=Delaware/L=New Castle/O=Supabase Inc/CN=$(hostname -f)\"",
+          "    openssl x509 -req -in server.csr -days 90 -CA ca.cert -CAkey ca.key -out server.cert",
+          "    rm -f ca.key",
+          "    CWD=$(pwd)",
+          "    export GEN_RPC_CACERTFILE=\"$CWD/ca.cert\"",
+          "    export GEN_RPC_KEYFILE=\"$CWD/server.key\"",
+          "    export GEN_RPC_CERTFILE=\"$CWD/server.cert\"",
+          "    chmod a+r \"$GEN_RPC_CACERTFILE\"",
+          "    chmod a+r \"$GEN_RPC_KEYFILE\"",
+          "    chmod a+r \"$GEN_RPC_CERTFILE\"",
+          "    cat > inet_tls.conf <<EOF",
+          "[",
+          "  {server, [",
+          "    {certfile, \"${GEN_RPC_CERTFILE}\"},",
+          "    {keyfile, \"${GEN_RPC_KEYFILE}\"},",
+          "    {secure_renegotiate, true}",
+          "  ]},",
+          "  {client, [",
+          "    {cacertfile, \"${GEN_RPC_CACERTFILE}\"},",
+          "    {verify, verify_none},",
+          "    {secure_renegotiate, true}",
+          "  ]}",
+          "].",
+          "EOF",
+          "    export ERL_AFLAGS=\"${ERL_AFLAGS} -proto_dist inet_tls -ssl_dist_optfile ${CWD}/inet_tls.conf\"",
+          "}",
+          "",
+          "if [ \"${ENABLE_ERL_CRASH_DUMP:-false}\" = true ]; then",
+          "    trap upload_crash_dump_to_s3 INT TERM EXIT",
+          "fi",
+          "",
+          "if [[ -n \"${GENERATE_CLUSTER_CERTS:-}\" ]] ; then",
+          "    generate_certs",
+          "fi",
+          "",
+          "echo \"Running migrations\"",
+          "/app/bin/migrate",
+          "",
+          "if [ \"${SEED_SELF_HOST-}\" = true ]; then",
+          "    echo \"Seeding selfhosted Realtime\"",
+          "    /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)'",
+          "fi",
+          "",
+          "echo \"Starting Realtime\"",
+          "ulimit -n",
+          "exec \"$@\"",
+          "drwxr-xr-x   1 nobody root 4096 Oct  9 05:21 /app",
+          "drwxr-xr-x   2 nobody root 4096 Oct  9 05:21 /app/bin",
+          "drwxr-xr-x 107 nobody root 4096 Oct  9 05:21 /app/lib",
+          "drwxr-xr-x   3 nobody root 4096 Oct  9 05:21 /app/releases"
+        ],
+        "restartCount": 0,
+        "mutations": 0
+      }
+    },
+    "schema-gate": {
+      "status": "PASS",
+      "attempts": 1,
+      "sourceSHA256": "a25398c5862955aa57bfc2313c5a0b3004c3145a3113e49681a1b9cedb3bdd16",
+      "result": {
+        "status": "PASS",
+        "readOnly": true,
+        "parityVerified": false,
+        "catalogPath": "docs/evidence/oracle-p3-target-schema.json",
+        "objects": 361
+      }
+    }
+  },
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "productionChanges": 0,
+  "sourceCustomerRowsExported": 0,
+  "remaining": [
+    "Source/target full schema parity (ordered fresh-target migrations and trusted ACME already PASS)",
+    "P4 full data/object verification and restore rehearsal not started"
+  ]
+}

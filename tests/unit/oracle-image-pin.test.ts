@@ -19,6 +19,19 @@ describe("owner-approved PostgreSQL restore target", () => {
     const extensions = z.array(z.object({ name: z.string(), version: z.string() })).parse(inventory.extensions);
     expect(pin.requiredExtensions).toEqual(Object.fromEntries(extensions.map(row => [row.name, row.version])));
   });
+  it("records native exact-version execution without confusing it with full P3 completion", () => {
+    const evidence = z.object({ phase: z.literal("P3"), phaseComplete: z.literal(false), image: z.string(),
+      nativeImage: z.object({ status: z.literal("PASS"), platform: z.literal("linux/arm64"), imageId: digest }),
+      extensionProbe: z.object({ status: z.literal("PASS"), serverVersionNum: z.number().int().min(170006).max(179999),
+        network: z.literal("none"), publicPorts: z.array(z.never()).length(0), customerRows: z.literal(0),
+        extensions: z.array(z.object({ name: z.string(), version: z.string(), available: z.literal(true),
+          loaded: z.literal(true), exercised: z.literal(true), sqlstate: z.null() })) }) })
+      .parse(JSON.parse(readFileSync(new URL("../../docs/evidence/oracle-p3-native.json", import.meta.url), "utf8")));
+    expect(evidence.image).toBe(pin.pinnedImage);
+    expect(evidence.nativeImage.imageId).toBe(pin.platformDigest);
+    expect(evidence.extensionProbe.extensions).toHaveLength(Object.keys(pin.requiredExtensions).length);
+    expect(Object.fromEntries(evidence.extensionProbe.extensions.map(row => [row.name, row.version]))).toEqual(pin.requiredExtensions);
+  });
   it("provides a read-only compatibility query instead of silently upgrading extensions", () => {
     const sql = readFileSync(new URL("../../supabase/verification/oracle_extension_compatibility.sql", import.meta.url), "utf8");
     expect(sql).toContain("BEGIN TRANSACTION READ ONLY;");

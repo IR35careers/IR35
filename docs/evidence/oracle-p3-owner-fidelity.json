@@ -1,0 +1,191 @@
+{
+  "status": "PASS",
+  "phaseComplete": false,
+  "schemaOnly": true,
+  "gates": {
+    "ir35_owner_parity_20261021": {
+      "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
+      "sourceCheckedAt": "2026-10-21T05:32:27Z",
+      "targetCheckedAt": "2026-10-21T08:27:09Z",
+      "sourceObjects": 3752,
+      "targetObjects": 3752,
+      "unexplainedDifferences": [],
+      "exceptions": [
+        {
+          "object": "extension:pg_stat_statements",
+          "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+          "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+        },
+        {
+          "object": "extension:pgcrypto",
+          "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+          "stagingHash": "63652c33f708c5861e34f2218529562b",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+        },
+        {
+          "object": "extension:uuid-ossp",
+          "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+          "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+        }
+      ],
+      "roleAttributesMatch": true,
+      "metadataMatch": true,
+      "conditionsPASS": true,
+      "fullDataVerification": false,
+      "phaseComplete": false,
+      "extensions": {
+        "status": "PASS",
+        "ownerDifferences": [
+          {
+            "object": "extension:pg_stat_statements",
+            "cloudOwner": "postgres",
+            "stagingOwner": "supabase_admin",
+            "version": "1.11"
+          },
+          {
+            "object": "extension:pgcrypto",
+            "cloudOwner": "postgres",
+            "stagingOwner": "supabase_admin",
+            "version": "1.3"
+          },
+          {
+            "object": "extension:uuid-ossp",
+            "cloudOwner": "postgres",
+            "stagingOwner": "supabase_admin",
+            "version": "1.1"
+          }
+        ],
+        "unapprovedDifferences": [],
+        "objectACLChecks": 62,
+        "capabilityChecks": 198,
+        "memberChecks": 55,
+        "typeACLChecks": 4,
+        "conditions": {
+          "adminOwner": true,
+          "allObjectACLs": true,
+          "ddlCapabilities": true,
+          "versions": true
+        },
+        "conditionalExceptionsOnly": true
+      },
+      "appRolePrivileges": {
+        "status": "PASS",
+        "sourceCheckedAt": "2026-10-21T05:32:27Z",
+        "targetCheckedAt": "2026-10-21T08:27:10Z",
+        "sourceEntries": 552,
+        "targetEntries": 552,
+        "differences": [],
+        "morePermissive": [],
+        "repairMustStop": false,
+        "sourceWrites": 0,
+        "stagingWrites": 0,
+        "exceptionsApproved": []
+      }
+    },
+    "ir35_baseline_proof_20261021": {
+      "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
+      "sourceCheckedAt": "2026-10-21T05:32:27Z",
+      "targetCheckedAt": "2026-10-21T08:27:13Z",
+      "sourceObjects": 3752,
+      "targetObjects": 3752,
+      "unexplainedDifferences": [],
+      "exceptions": [
+        {
+          "object": "extension:pg_stat_statements",
+          "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+          "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+        },
+        {
+          "object": "extension:pgcrypto",
+          "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+          "stagingHash": "63652c33f708c5861e34f2218529562b",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+        },
+        {
+          "object": "extension:uuid-ossp",
+          "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+          "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+        }
+      ],
+      "roleAttributesMatch": true,
+      "metadataMatch": true,
+      "conditionsPASS": true,
+      "fullDataVerification": false,
+      "phaseComplete": false,
+      "extensions": {
+        "status": "PASS",
+        "ownerDifferences": [
+          {
+            "object": "extension:pg_stat_statements",
+            "cloudOwner": "postgres",
+            "stagingOwner": "supabase_admin",
+            "version": "1.11"
+          },
+          {
+            "object": "extension:pgcrypto",
+            "cloudOwner": "postgres",
+            "stagingOwner": "supabase_admin",
+            "version": "1.3"
+          },
+          {
+            "object": "extension:uuid-ossp",
+            "cloudOwner": "postgres",
+            "stagingOwner": "supabase_admin",
+            "version": "1.1"
+          }
+        ],
+        "unapprovedDifferences": [],
+        "objectACLChecks": 62,
+        "capabilityChecks": 198,
+        "memberChecks": 55,
+        "typeACLChecks": 4,
+        "conditions": {
+          "adminOwner": true,
+          "allObjectACLs": true,
+          "ddlCapabilities": true,
+          "versions": true
+        },
+        "conditionalExceptionsOnly": true
+      },
+      "appRolePrivileges": {
+        "status": "PASS",
+        "sourceCheckedAt": "2026-10-21T05:32:27Z",
+        "targetCheckedAt": "2026-10-21T08:27:13Z",
+        "sourceEntries": 552,
+        "targetEntries": 552,
+        "differences": [],
+        "morePermissive": [],
+        "repairMustStop": false,
+        "sourceWrites": 0,
+        "stagingWrites": 0,
+        "exceptionsApproved": []
+      }
+    }
+  },
+  "logs": {
+    "ir35_owner_parity_20261021": {
+      "status": "RESTORED",
+      "attempts": 1,
+      "ownerRepairs": 51,
+      "aclObjectsReplayed": 2,
+      "logPath": "/opt/ir35/.env.p3-owner-clone.log",
+      "logSHA256": "9ed42d4ed2ad6d2145e530f996e80640d719cf8f5b2339edda73edec66b5d9c9"
+    },
+    "ir35_baseline_proof_20261021": {
+      "status": "RESTORED",
+      "attempts": 1,
+      "ownerRepairs": 51,
+      "aclObjectsReplayed": 2,
+      "logPath": "/opt/ir35/.env.p3-baseline-proof.log",
+      "logSHA256": "9ed42d4ed2ad6d2145e530f996e80640d719cf8f5b2339edda73edec66b5d9c9"
+    }
+  },
+  "sourceBundleSHA256": "6cd293c5b514747519a36c1c077d01084898bf45fd2d120354b79f8683e31938",
+  "sourceWrites": 0,
+  "customerRowsImported": 0,
+  "extensionAttempts": 1
+}

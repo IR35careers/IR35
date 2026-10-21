@@ -1,0 +1,80 @@
+{
+  "status": "FAIL",
+  "sourceCheckedAt": "2026-10-21T04:41:51Z",
+  "targetCheckedAt": "2026-10-21T04:41:55Z",
+  "sourceEntries": 552,
+  "targetEntries": 552,
+  "differences": [
+    {
+      "kind": "schema",
+      "name": "graphql",
+      "role": "anon",
+      "privilege": "USAGE",
+      "cloud": true,
+      "clone": false
+    },
+    {
+      "kind": "schema",
+      "name": "graphql",
+      "role": "authenticated",
+      "privilege": "USAGE",
+      "cloud": true,
+      "clone": false
+    },
+    {
+      "kind": "schema",
+      "name": "graphql",
+      "role": "service_role",
+      "privilege": "USAGE",
+      "cloud": true,
+      "clone": false
+    },
+    {
+      "kind": "schema",
+      "name": "graphql_public",
+      "role": "anon",
+      "privilege": "USAGE",
+      "cloud": true,
+      "clone": false
+    },
+    {
+      "kind": "schema",
+      "name": "graphql_public",
+      "role": "authenticated",
+      "privilege": "USAGE",
+      "cloud": true,
+      "clone": false
+    },
+    {
+      "kind": "schema",
+      "name": "graphql_public",
+      "role": "service_role",
+      "privilege": "USAGE",
+      "cloud": true,
+      "clone": false
+    }
+  ],
+  "morePermissive": [],
+  "repairMustStop": false,
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "exceptionsApproved": [],
+  "sourceCatalogUnchanged": true,
+  "sourceCatalogSHA256": "6a6b9654e1b6abcd3b0b50c81bfaa12a77a6923bb4bb695e86a7fda0f45abf1f",
+  "roleExportSHA256": "1d04619bf24e133701fcc1e9e9e2441c70c38083bf69b06fdaf38cf2e5458f62",
+  "rolePasswordsExported": false,
+  "privateArtifacts": {
+    ".env.p3-acl-source-roles.sql": {
+      "bytes": 5643,
+      "sha256": "1d04619bf24e133701fcc1e9e9e2441c70c38083bf69b06fdaf38cf2e5458f62",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    ".env.p3-acl-source-catalog.json": {
+      "bytes": 970584,
+      "sha256": "6a6b9654e1b6abcd3b0b50c81bfaa12a77a6923bb4bb695e86a7fda0f45abf1f",
+      "mode": "600",
+      "owner": "ir35"
+    }
+  }
+}

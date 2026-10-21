@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "phaseComplete": false,
+  "checkedAt": "2026-10-21T04:03:57.848051+00:00",
+  "sourceReadOnly": true,
+  "sourceTLS": "verify-full",
+  "schemaOnly": true,
+  "sourceWrites": 0,
+  "schemaSnapshotBound": true,
+  "rolePasswordsExported": false,
+  "preflight": {
+    "readOnly": true,
+    "pg17": true,
+    "clientVerifiedTLS": true,
+    "poolerBackendSSL": false
+  },
+  "schemas": [
+    "auth",
+    "extensions",
+    "graphql",
+    "graphql_public",
+    "pgboss",
+    "pgbouncer",
+    "public",
+    "realtime",
+    "storage",
+    "supabase_migrations",
+    "vault"
+  ],
+  "catalogObjects": 3752,
+  "artifacts": {
+    ".env.p3-source-schema.dump": {
+      "bytes": 428831,
+      "sha256": "f6dff9e929773530e8dbe315cb8a808e033260e2d8b7fbabfb7440621ed93ab9",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    ".env.p3-source-roles.sql": {
+      "bytes": 5643,
+      "sha256": "4ab3f676a23f3c66ed632c575fe448eba18590ce535a937857de05b20df2da34",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    ".env.p3-source-catalog.json": {
+      "bytes": 937466,
+      "sha256": "bd858fe8c93d41e23e58c653db50bd9b2b7d84a8b2cb717bfdddda8c77ffa35d",
+      "mode": "600",
+      "owner": "ir35"
+    }
+  },
+  "restoreExecuted": false,
+  "zeroDifferenceGate": false,
+  "notes": [
+    "Roles are cluster-global; separate roles-only dump, no passwords. Compare before any restore.",
+    "Raw schema/catalog only in RAM and VM.env paths600/ir35; no raw dump in repository."
+  ]
+}

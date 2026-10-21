@@ -1,0 +1,503 @@
+{
+  "name": "ir35-staging",
+  "services": {
+    "db": {
+      "image": "supabase/postgres:17.6.1.136@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "3g",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "postgres",
+        "-c",
+        "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "log_min_messages=fatal",
+        "-c",
+        "log_statement=none",
+        "-c",
+        "log_min_error_statement=panic",
+        "-c",
+        "shared_buffers=768MB",
+        "-c",
+        "effective_cache_size=2GB",
+        "-c",
+        "max_connections=60",
+        "-c",
+        "pgsodium.getkey_script=/run/ir35/pgsodium-env-key.sh",
+        "-c",
+        "vault.getkey_script=/run/ir35/pgsodium-env-key.sh"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.db",
+        "docker-entrypoint.sh"
+      ],
+      "volumes": [
+        "/opt/ir35/data/postgres:/var/lib/postgresql/data",
+        "/opt/ir35/config/pgsodium-env-key.sh:/run/ir35/pgsodium-env-key.sh:ro",
+        "/opt/ir35/config/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro",
+        "/opt/ir35/config/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro",
+        "/opt/ir35/config/functions-role.sql:/docker-entrypoint-initdb.d/init-scripts/98-functions-role.sql:ro",
+        "/opt/ir35/config/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro",
+        "/opt/ir35/config/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro",
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.db:/opt/ir35/.env.db:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "postgres",
+          "-h",
+          "localhost"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 10
+      }
+    },
+    "auth": {
+      "image": "supabase/gotrue:v2.197.0@sha256:3439d5affb9e96395d1348521f4c675eea7096d8d76d18d4e31fcc08df802116",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "256m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "auth"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.auth"
+      ],
+      "volumes": [
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.auth:/opt/ir35/.env.auth:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:9999/health"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5
+      },
+      "user": "1002:1002"
+    },
+    "rest": {
+      "image": "postgrest/postgrest:v14.18@sha256:dfa6464b877fa7b1b0be85740f6ce6985144b509a6edb5f09c5ee67e687e8c1f",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "256m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "postgrest"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.rest"
+      ],
+      "volumes": [
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.rest:/opt/ir35/.env.rest:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/run/ir35/env-exec",
+          "/opt/ir35/.env.rest",
+          "postgrest",
+          "--ready"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5
+      },
+      "user": "1002:1002"
+    },
+    "realtime": {
+      "image": "supabase/realtime:v2.143.3@sha256:39abd3593110424c8512ffdaefd6b3ef016a5867065a87c1658e9bc55199a464",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "256m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "/app/bin/server"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.realtime",
+        "/usr/bin/tini",
+        "-s",
+        "-g",
+        "--",
+        "/app/run.sh"
+      ],
+      "volumes": [
+        "/opt/ir35/.env.realtime-health-header:/opt/ir35/.env.realtime-health-header:ro",
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.realtime:/opt/ir35/.env.realtime:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "container_name": "realtime-dev.supabase-realtime",
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "curl",
+          "-sSf",
+          "--head",
+          "-o",
+          "/dev/null",
+          "-H",
+          "@/opt/ir35/.env.realtime-health-header",
+          "http://127.0.0.1:4000/api/tenants/realtime-dev/health"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "30s"
+      },
+      "user": "1002:1002"
+    },
+    "storage": {
+      "image": "supabase/storage-api:v1.81.0@sha256:a1249fe15965769752f81eec9313af1636cd2b1ff5622bf99ecf283a6a84c099",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "512m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "node",
+        "dist/start/server.js"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.storage",
+        "docker-entrypoint.sh"
+      ],
+      "volumes": [
+        "/opt/ir35/data/storage:/var/lib/storage",
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.storage:/opt/ir35/.env.storage:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        },
+        "rest": {
+          "condition": "service_started"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:5000/status"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5
+      },
+      "user": "1002:1002",
+      "environment": {
+        "NODE_OPTIONS": "--max-old-space-size=384"
+      }
+    },
+    "kong": {
+      "image": "kong/kong:3.9.3@sha256:593eb498a15df86e7753dc589aa84fdcec374598edd213ca9ab4d66c04a36813",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "384m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "kong",
+        "docker-start"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.kong",
+        "/entrypoint.sh"
+      ],
+      "volumes": [
+        "/opt/ir35/.env.kong-config.json:/run/ir35/.env.kong-config.json:ro",
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.kong:/opt/ir35/.env.kong:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "user": "1002:1002",
+      "depends_on": {
+        "auth": {
+          "condition": "service_started"
+        },
+        "rest": {
+          "condition": "service_started"
+        }
+      },
+      "ulimits": {
+        "nofile": {
+          "soft": 4096,
+          "hard": 4096
+        }
+      },
+      "tmpfs": [
+        "/run/kong:rw,uid=1002,gid=1002,mode=0700"
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/run/ir35/env-exec",
+          "/opt/ir35/.env.kong",
+          "kong",
+          "health"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5
+      }
+    },
+    "meta": {
+      "image": "supabase/postgres-meta:v0.100.0@sha256:e3e00f3d8315884717b9751cbf47888a0359c640097d96abff987de37a0edf81",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "128m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "node",
+        "dist/server/server.js"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.meta",
+        "docker-entrypoint.sh"
+      ],
+      "volumes": [
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.meta:/opt/ir35/.env.meta:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "user": "1002:1002"
+    },
+    "smtp": {
+      "image": "axllent/mailpit:v1.27.10@sha256:c5038049b8d996cff65c18ddc0b00a66ae887fb1ebff839e9c987852a97975b1",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "64m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.smtp",
+        "/mailpit"
+      ],
+      "volumes": [
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.smtp:/opt/ir35/.env.smtp:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "environment": {
+        "MP_DATABASE": "/tmp/mailpit.db",
+        "MP_MAX_MESSAGES": "100",
+        "MP_SMTP_BIND_ADDR": "0.0.0.0:1025",
+        "MP_UI_BIND_ADDR": "0.0.0.0:8025"
+      },
+      "read_only": true,
+      "tmpfs": [
+        "/tmp:rw,size=32m"
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/mailpit",
+          "readyz"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5
+      }
+    },
+    "caddy": {
+      "image": "library/caddy:2.10.2-alpine@sha256:8dbca3525dd8dce671e495665a0eb297a83ec87ee30f373947d0ea93115949db",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "128m",
+      "pids_limit": 256,
+      "networks": {
+        "edge": {
+          "ipv4_address": "172.30.35.2"
+        },
+        "backend": {}
+      },
+      "command": [
+        "caddy",
+        "run",
+        "--config",
+        "/etc/caddy/Caddyfile",
+        "--adapter",
+        "caddyfile"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.caddy"
+      ],
+      "volumes": [
+        "/opt/ir35/config/Caddyfile:/etc/caddy/Caddyfile:ro",
+        "/opt/ir35/data/caddy:/data",
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.caddy:/opt/ir35/.env.caddy:ro"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      },
+      "user": "1002:1002",
+      "cap_drop": [
+        "ALL"
+      ],
+      "cap_add": [
+        "NET_BIND_SERVICE"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "read_only": true,
+      "ports": [
+        "80:80/tcp",
+        "443:443/tcp"
+      ],
+      "tmpfs": [
+        "/tmp:rw,size=16m"
+      ],
+      "environment": {
+        "XDG_DATA_HOME": "/data",
+        "XDG_CONFIG_HOME": "/data/config"
+      }
+    },
+    "studio": {
+      "image": "supabase/studio:2026.10.12-sha-3699278@sha256:2262ab615e92c46c7cdc72629de91ad189950548666697ad393aaafba353e8a6",
+      "platform": "linux/arm64",
+      "restart": "no",
+      "mem_limit": "512m",
+      "pids_limit": 256,
+      "networks": [
+        "backend"
+      ],
+      "command": [
+        "node",
+        "apps/studio/server.js"
+      ],
+      "entrypoint": [
+        "/run/ir35/env-exec",
+        "/opt/ir35/.env.studio",
+        "docker-entrypoint.sh"
+      ],
+      "volumes": [
+        "/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro",
+        "/opt/ir35/.env.studio:/opt/ir35/.env.studio:ro"
+      ],
+      "logging": {
+        "driver": "none"
+      },
+      "profiles": [
+        "studio"
+      ],
+      "depends_on": {
+        "db": {
+          "condition": "service_healthy"
+        }
+      },
+      "ports": [
+        "127.0.0.1:54323:3000"
+      ],
+      "user": "1002:1002"
+    }
+  },
+  "networks": {
+    "backend": {
+      "internal": true
+    },
+    "edge": {
+      "ipam": {
+        "config": [
+          {
+            "subnet": "172.30.35.0/24"
+          }
+        ]
+      }
+    }
+  }
+}

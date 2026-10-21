@@ -1,0 +1,87 @@
+{
+  "phase": "P3",
+  "status": "PASS",
+  "checkedAt": "2026-10-20T20:37:14.180878+00:00",
+  "elapsedSeconds": 1.6,
+  "observations": [
+    {
+      "resolver": "1.1.1.1",
+      "host": "staging.ir35careers.com",
+      "a": {
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
+      },
+      "aaaa": {
+        "status": "NOERROR",
+        "records": []
+      },
+      "effectiveCAAName": null,
+      "caa": [],
+      "caaReady": true
+    },
+    {
+      "resolver": "1.1.1.1",
+      "host": "api-staging.ir35careers.com",
+      "a": {
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
+      },
+      "aaaa": {
+        "status": "NOERROR",
+        "records": []
+      },
+      "effectiveCAAName": null,
+      "caa": [],
+      "caaReady": true
+    },
+    {
+      "resolver": "8.8.8.8",
+      "host": "staging.ir35careers.com",
+      "a": {
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
+      },
+      "aaaa": {
+        "status": "NOERROR",
+        "records": []
+      },
+      "effectiveCAAName": null,
+      "caa": [],
+      "caaReady": true
+    },
+    {
+      "resolver": "8.8.8.8",
+      "host": "api-staging.ir35careers.com",
+      "a": {
+        "status": "NOERROR",
+        "records": [
+          [
+            "132.145.28.134"
+          ]
+        ]
+      },
+      "aaaa": {
+        "status": "NOERROR",
+        "records": []
+      },
+      "effectiveCAAName": null,
+      "caa": [],
+      "caaReady": true
+    }
+  ],
+  "certificateRequests": 0,
+  "dnsWrites": 0,
+  "attempts": 1
+}

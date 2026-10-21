@@ -1,0 +1,162 @@
+{
+  "upstreamCommit": "bc27d2661edd09a5d0b8d76ce33da6d4071a756e",
+  "images": {
+    "db": {
+      "repository": "supabase/postgres",
+      "tag": "17.6.1.136",
+      "indexDigest": "sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00",
+      "platformDigest": "sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+      "image": "supabase/postgres:17.6.1.136@sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+      "platform": "linux/arm64",
+      "user": "",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "postgres",
+        "-D",
+        "/etc/postgresql"
+      ]
+    },
+    "auth": {
+      "repository": "supabase/gotrue",
+      "tag": "v2.197.0",
+      "indexDigest": "sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b",
+      "platformDigest": "sha256:3439d5affb9e96395d1348521f4c675eea7096d8d76d18d4e31fcc08df802116",
+      "image": "supabase/gotrue:v2.197.0@sha256:3439d5affb9e96395d1348521f4c675eea7096d8d76d18d4e31fcc08df802116",
+      "platform": "linux/arm64",
+      "user": "supabase",
+      "entrypoint": [],
+      "command": [
+        "auth"
+      ]
+    },
+    "rest": {
+      "repository": "postgrest/postgrest",
+      "tag": "v14.18",
+      "indexDigest": "sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf",
+      "platformDigest": "sha256:dfa6464b877fa7b1b0be85740f6ce6985144b509a6edb5f09c5ee67e687e8c1f",
+      "image": "postgrest/postgrest:v14.18@sha256:dfa6464b877fa7b1b0be85740f6ce6985144b509a6edb5f09c5ee67e687e8c1f",
+      "platform": "linux/arm64",
+      "user": "1000",
+      "entrypoint": [],
+      "command": [
+        "postgrest"
+      ]
+    },
+    "realtime": {
+      "repository": "supabase/realtime",
+      "tag": "v2.143.3",
+      "indexDigest": "sha256:768b559241dd234c4e8852c5c0f504e598b80f1df2ad4dd78d5486fbed2f17a2",
+      "platformDigest": "sha256:39abd3593110424c8512ffdaefd6b3ef016a5867065a87c1658e9bc55199a464",
+      "image": "supabase/realtime:v2.143.3@sha256:39abd3593110424c8512ffdaefd6b3ef016a5867065a87c1658e9bc55199a464",
+      "platform": "linux/arm64",
+      "user": "nobody",
+      "entrypoint": [
+        "/usr/bin/tini",
+        "-s",
+        "-g",
+        "--",
+        "/app/run.sh"
+      ],
+      "command": [
+        "/app/bin/server"
+      ]
+    },
+    "storage": {
+      "repository": "supabase/storage-api",
+      "tag": "v1.81.0",
+      "indexDigest": "sha256:98ffec5d0678803783c30e404c27f4ec65e97efbe014088f2a86b4b8b54b9f54",
+      "platformDigest": "sha256:a1249fe15965769752f81eec9313af1636cd2b1ff5622bf99ecf283a6a84c099",
+      "image": "supabase/storage-api:v1.81.0@sha256:a1249fe15965769752f81eec9313af1636cd2b1ff5622bf99ecf283a6a84c099",
+      "platform": "linux/arm64",
+      "user": "",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "node",
+        "dist/start/server.js"
+      ]
+    },
+    "kong": {
+      "repository": "kong/kong",
+      "tag": "3.9.3",
+      "indexDigest": "sha256:9a2ae6699a2ce0d60592eb176555d3594a22782c20cc6557a61ff3a7e8b559a3",
+      "platformDigest": "sha256:593eb498a15df86e7753dc589aa84fdcec374598edd213ca9ab4d66c04a36813",
+      "image": "kong/kong:3.9.3@sha256:593eb498a15df86e7753dc589aa84fdcec374598edd213ca9ab4d66c04a36813",
+      "platform": "linux/arm64",
+      "user": "kong",
+      "entrypoint": [
+        "/entrypoint.sh"
+      ],
+      "command": [
+        "kong",
+        "docker-start"
+      ]
+    },
+    "meta": {
+      "repository": "supabase/postgres-meta",
+      "tag": "v0.100.0",
+      "indexDigest": "sha256:145325b7e39f8ef4931d6e8cfd3f6f4d655de09d72a2ccc96d9513542c2202bd",
+      "platformDigest": "sha256:e3e00f3d8315884717b9751cbf47888a0359c640097d96abff987de37a0edf81",
+      "image": "supabase/postgres-meta:v0.100.0@sha256:e3e00f3d8315884717b9751cbf47888a0359c640097d96abff987de37a0edf81",
+      "platform": "linux/arm64",
+      "user": "",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "node",
+        "dist/server/server.js"
+      ]
+    },
+    "studio": {
+      "repository": "supabase/studio",
+      "tag": "2026.10.12-sha-3699278",
+      "indexDigest": "sha256:948770ec467f00e6ae34c35018ef7cb23d7b30eb806b42c2cc0d7bcfdcf8a7a8",
+      "platformDigest": "sha256:2262ab615e92c46c7cdc72629de91ad189950548666697ad393aaafba353e8a6",
+      "image": "supabase/studio:2026.10.12-sha-3699278@sha256:2262ab615e92c46c7cdc72629de91ad189950548666697ad393aaafba353e8a6",
+      "platform": "linux/arm64",
+      "user": "",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "node",
+        "apps/studio/server.js"
+      ]
+    },
+    "caddy": {
+      "repository": "library/caddy",
+      "tag": "2.10.2-alpine",
+      "indexDigest": "sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+      "platformDigest": "sha256:8dbca3525dd8dce671e495665a0eb297a83ec87ee30f373947d0ea93115949db",
+      "image": "library/caddy:2.10.2-alpine@sha256:8dbca3525dd8dce671e495665a0eb297a83ec87ee30f373947d0ea93115949db",
+      "platform": "linux/arm64",
+      "user": "",
+      "entrypoint": [],
+      "command": [
+        "caddy",
+        "run",
+        "--config",
+        "/etc/caddy/Caddyfile",
+        "--adapter",
+        "caddyfile"
+      ]
+    },
+    "smtp": {
+      "repository": "axllent/mailpit",
+      "tag": "v1.27.10",
+      "indexDigest": "sha256:b1f1be18af530d939a11ee8820b379e0c88eeec204d904bfad68862adced3a5a",
+      "platformDigest": "sha256:c5038049b8d996cff65c18ddc0b00a66ae887fb1ebff839e9c987852a97975b1",
+      "image": "axllent/mailpit:v1.27.10@sha256:c5038049b8d996cff65c18ddc0b00a66ae887fb1ebff839e9c987852a97975b1",
+      "platform": "linux/arm64",
+      "user": "",
+      "entrypoint": [
+        "/mailpit"
+      ],
+      "command": []
+    }
+  }
+}

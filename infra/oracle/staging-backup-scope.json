@@ -1,0 +1,8 @@
+{
+  "purpose": "P8 backup implementation must enforce this scope; not an installed backup job",
+  "database": "Logical pg_dump of all inventoried schemas, including auth/storage, plus encrypted globals/grants",
+  "storageObjects": "/opt/ir35/data/storage",
+  "explicitlyExcluded": ["/opt/ir35/data/caddy", "/opt/ir35/data/docker", "/opt/ir35/.env*"],
+  "caddyPrivateState": "Never include in plaintext backup. Owner approved exclusion because certificates can be re-issued. Any later explicit inclusion requires age encryption.",
+  "operationalSecretRecovery": "Owner password manager only; never public artifacts"
+}

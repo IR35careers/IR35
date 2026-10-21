@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-21T05:26:36Z",
+  "checks": 233,
+  "componentCount": 9,
+  "hostServiceDefinitions": 195,
+  "activeCLILogins": 0,
+  "componentDatabaseUsers": {
+    "auth": "supabase_auth_admin",
+    "meta": "postgres",
+    "rest": "authenticator",
+    "storage": "supabase_storage_admin",
+    "realtime": "supabase_admin"
+  },
+  "stagingMigrationRunnerUsers": [
+    "supabase_admin",
+    "postgres"
+  ],
+  "hits": [],
+  "sourceWrites": 0,
+  "stagingWrites": 0
+}

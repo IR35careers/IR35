@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "extensions": {
+    "status": "PASS",
+    "ownerDifferences": [
+      {
+        "object": "extension:pg_stat_statements",
+        "cloudOwner": "postgres",
+        "stagingOwner": "supabase_admin",
+        "version": "1.11"
+      },
+      {
+        "object": "extension:pgcrypto",
+        "cloudOwner": "postgres",
+        "stagingOwner": "supabase_admin",
+        "version": "1.3"
+      },
+      {
+        "object": "extension:uuid-ossp",
+        "cloudOwner": "postgres",
+        "stagingOwner": "supabase_admin",
+        "version": "1.1"
+      }
+    ],
+    "unapprovedDifferences": [],
+    "objectACLChecks": 62,
+    "capabilityChecks": 198,
+    "memberChecks": 55,
+    "typeACLChecks": 4,
+    "conditions": {
+      "adminOwner": true,
+      "allObjectACLs": true,
+      "ddlCapabilities": true,
+      "versions": true
+    },
+    "conditionalExceptionsOnly": true
+  },
+  "appRolePrivileges": {
+    "status": "PASS",
+    "sourceCheckedAt": "2026-10-21T05:28:56Z",
+    "targetCheckedAt": "2026-10-21T05:28:59Z",
+    "sourceEntries": 552,
+    "targetEntries": 552,
+    "differences": [],
+    "morePermissive": [],
+    "repairMustStop": false,
+    "sourceWrites": 0,
+    "stagingWrites": 0,
+    "exceptionsApproved": []
+  },
+  "sourceWrites": 0,
+  "stagingWrites": 0
+}

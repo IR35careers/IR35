@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-21T08:31:20Z",
+  "services": {
+    "auth": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "caddy": {
+      "state": "running",
+      "health": ""
+    },
+    "db": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "kong": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "meta": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "rest": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "smtp": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "storage": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "realtime": {
+      "state": "running",
+      "health": "healthy"
+    }
+  },
+  "hosts": {
+    "staging.ir35careers.com": {
+      "status": 401,
+      "basicAuth": true,
+      "noindex": true,
+      "verifiedTLS": true
+    },
+    "api-staging.ir35careers.com": {
+      "status": 401,
+      "basicAuth": true,
+      "noindex": true,
+      "verifiedTLS": true
+    }
+  },
+  "applyRunner": "mock",
+  "applicationWorkerAcceptJobs": false,
+  "smtpSinkConfigured": true,
+  "studioRunning": false,
+  "newDatabaseAttachedToServices": false,
+  "componentEnvBindAndDatabaseChecks": true,
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "phaseComplete": false
+}
