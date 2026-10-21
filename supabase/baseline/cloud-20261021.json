@@ -1,7 +1,10 @@
 {
   "version": 1,
-  "state": "BLOCKED",
-  "executable": false,
+  "state": "STAGING_SCHEMA_VERIFIED",
+  "executable": true,
+  "scope": "guarded-staging-schema-only",
+  "installer": "infra/oracle/cloud_baseline.py",
+  "clusterRolesPrerequisite": "source-matching flags, configs, memberships and snapshot-bound expiry; fresh staging passwords",
   "generatedFrom": "live Supabase cloud read-only schema-only snapshot, 21 October 2026",
   "sourceServerVersion": "17.6",
   "clientVersion": "17.11",
@@ -15,12 +18,13 @@
   },
   "schemas": ["auth", "extensions", "graphql", "graphql_public", "pgboss", "pgbouncer", "public", "realtime", "storage", "supabase_migrations", "vault"],
   "freshInstallProof": {
-    "status": "FAIL",
+    "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
     "sourceObjects": 3752,
-    "targetObjects": 3812,
-    "differences": 494,
-    "exceptions": 0,
-    "evidence": "docs/evidence/oracle-p3-clone-gate.json"
+    "targetObjects": 3752,
+    "unexplainedDifferences": 0,
+    "exceptions": ["extension:pg_stat_statements", "extension:pgcrypto", "extension:uuid-ossp"],
+    "database": "ir35_baseline_proof_20261021",
+    "evidence": "docs/evidence/oracle-p3-owner-fidelity.json"
   },
   "publicSqlPublished": false,
   "upgradesTested": false,

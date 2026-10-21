@@ -6,7 +6,7 @@
     "ir35_owner_parity_20261021": {
       "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
       "sourceCheckedAt": "2026-10-21T05:32:27Z",
-      "targetCheckedAt": "2026-10-21T08:27:09Z",
+      "targetCheckedAt": "2026-10-21T08:34:54Z",
       "sourceObjects": 3752,
       "targetObjects": 3752,
       "unexplainedDifferences": [],
@@ -73,7 +73,7 @@
       "appRolePrivileges": {
         "status": "PASS",
         "sourceCheckedAt": "2026-10-21T05:32:27Z",
-        "targetCheckedAt": "2026-10-21T08:27:10Z",
+        "targetCheckedAt": "2026-10-21T08:34:55Z",
         "sourceEntries": 552,
         "targetEntries": 552,
         "differences": [],
@@ -87,7 +87,7 @@
     "ir35_baseline_proof_20261021": {
       "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
       "sourceCheckedAt": "2026-10-21T05:32:27Z",
-      "targetCheckedAt": "2026-10-21T08:27:13Z",
+      "targetCheckedAt": "2026-10-21T08:34:55Z",
       "sourceObjects": 3752,
       "targetObjects": 3752,
       "unexplainedDifferences": [],
@@ -154,7 +154,7 @@
       "appRolePrivileges": {
         "status": "PASS",
         "sourceCheckedAt": "2026-10-21T05:32:27Z",
-        "targetCheckedAt": "2026-10-21T08:27:13Z",
+        "targetCheckedAt": "2026-10-21T08:34:55Z",
         "sourceEntries": 552,
         "targetEntries": 552,
         "differences": [],
