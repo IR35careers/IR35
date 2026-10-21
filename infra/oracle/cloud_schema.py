@@ -300,6 +300,9 @@ except Exception:
 
 
 def main():
+    if sys.argv[1:]==['p4-auth-diagnosis']:
+        import auth_diagnostic
+        auth_diagnostic.capture();return
     if sys.argv[1:]==['p4-storage-access']:
         import storage_access
         storage_access.capture();return

@@ -1,5 +1,15 @@
 # Oracle P4: guarded full-copy rehearsal and every-row verification
 
+## Newest gate: verification-reference integrity FAIL — staging stopped
+
+Owner approved password-free diagnosis, ONE additional hidden test-password attempt and extra sink magic link. Actual read-only cloud/account/config diagnosis PASS (including bcrypt/password-MD5 equality, booleans only). No config/data cause for original400 established. The new isolated gateway preflight failed request-ID log capture before any password request. My helper's shared-global `path` collision then overwrote the private frozen source bundle with its failure journal. Full incident/root cause and recovery proposal: `docs/evidence/oracle-p4-auth-reference-incident.md`; redacted containment: `oracle-p4-auth-reference-integrity.json`.
+
+Independent read-only containment: original12,400,017-byte dump SHA256 intact, all62table fingerprints match previous restore proof, both sequence values match archive,73objects in EACH old/new copy match recorded manifests/0extras. Three new containers stopped/no public ports/restart=no. Original denied attempt1 preserved; new password attempts0, magic link not requested. Damaged source bundle is a hard FAIL, not waived by those data checks. No exact copy found in known P4 artifacts. P4andP5 stopped; no new capture/restore/reconstruction/reset/wipe or credential prompt without owner recovery decision.
+
+Local repair fixes the journal destination and isolates audit globals; regression exercises actual save AST with a colliding source path, and integrity hold refuses before SSH/stdin. Error capture uses strict allowlisted messages/codes and projected request-ID logs, never raw Auth bodies/email/tokens/hashes/passwords. No RLS/CSP/migration/env/production/provider/DNS/merge/cutover changes. All PRs stay draft; exactYES CUTOVER absent.
+
+Test plan: run225Linux helper tests plus full release/source checks; inspect the FAIL evidence and read-only containment separately. Launcher must NOT open a password prompt while the integrity hold exists. Next runtime action needs a reviewed NEW source snapshot and independent protected rehearsal, never rewriting the original reference. Password/session/RLS and sink magic-link tests remain unexecuted.
+
 ## Newest actual gate: password login FAIL HTTP400
 
 One hidden named-account credential attempt, durableLOGIN_DENIED/loginAttempts1; owned Auth stopped/private, no retry/reset/new secret prompt. Account confirmed/email/password hash present/not banned/deleted/SSO-only; staging DB/email/sink correct. Original Auth error_code/body not retained: exact cause unproven. Post-attempt full62table/2sequence/schema/security audit stillPASS0changes; Storage fix remainsPASS. See docs/evidence/oracle-p4-login-blocker.md and oracle-p4-login-denied.json. Local launcher/Python now both refuse before requesting/reading another credential after denial. Owner must choose the next permitted login step; no method substitution as password PASS. P4andP5blocked; all production/cutover/merge holds retained.

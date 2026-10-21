@@ -124,7 +124,13 @@ def replace_once(text, before, after):
     return text.replace(before,after,1)
 
 
+def check_reference_integrity():
+    if (schema.REPO/'docs/evidence/oracle-p4-auth-reference-integrity.json').exists():
+        raise ValueError('Source reference integrity hold; no restore, API or replay')
+
+
 def gates():
+    check_reference_integrity()
     image=json.loads(storage_release.PIN.read_text())
     fixture=json.loads(storage_release.FIXTURE_REPORT.read_text())
     exported=json.loads(storage_release.SOURCE_REPORT.read_text())

@@ -56,8 +56,13 @@ class CompatTests(unittest.TestCase):
             if path==compat.storage_release.FIXTURE_REPORT:return json.dumps(fixture)
             if path==compat.storage_release.SOURCE_REPORT:return json.dumps(exported)
             raise AssertionError('Unexpected path')
-        with patch.object(Path,'read_text',read):
+        with patch.object(compat,'check_reference_integrity'),patch.object(Path,'read_text',read):
             with self.assertRaisesRegex(ValueError,'do not match'):compat.gates()
+
+    def test_integrity_hold_refuses_before_image_or_remote_work(self):
+        with patch.object(Path,'exists',return_value=True),patch.object(compat.schema,'run_guest') as remote:
+            with self.assertRaisesRegex(ValueError,'Source reference integrity hold'):compat.gates()
+        remote.assert_not_called()
 
 
 if __name__=='__main__':unittest.main()

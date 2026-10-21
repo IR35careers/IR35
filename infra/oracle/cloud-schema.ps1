@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('export','catalog-repair','effective-privileges','platform-diagnosis','verify-acl-repair','owner-security-preflight','owner-expiry-probe','p4-schema-preflight','p4-source-fingerprints','p4-source-storage','p4-storage-access','p4-rehearse-1','p4-rehearse-2')][string]$Operation = 'export')
+param([ValidateSet('export','catalog-repair','effective-privileges','platform-diagnosis','verify-acl-repair','owner-security-preflight','owner-expiry-probe','p4-schema-preflight','p4-source-fingerprints','p4-source-storage','p4-storage-access','p4-auth-diagnosis','p4-rehearse-1','p4-rehearse-2')][string]$Operation = 'export')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -34,14 +34,16 @@ try {
   $privateEnvironment.PGCONNECT_TIMEOUT = '15'
   $privateEnvironment.PGAPPNAME = 'ir35-readonly-schema-clone'
   $privateEnvironment.PGOPTIONS = '-c default_transaction_read_only=on -c statement_timeout=300000 -c lock_timeout=5000'
-  if ($Operation -in @('p4-source-storage','p4-rehearse-1','p4-rehearse-2')) {
+  if ($Operation -in @('p4-source-storage','p4-auth-diagnosis','p4-rehearse-1','p4-rehearse-2')) {
     Push-Location -LiteralPath $repository
     try {
       $keyText = npx --no-install supabase projects api-keys --project-ref kxcbgflleqnjzjbkevwd --output json 2>$null | Out-String
       if ($LASTEXITCODE -ne 0) { throw 'Read-only source Storage credential lookup failed; output withheld.' }
-      $keyRows = @($keyText | ConvertFrom-Json | Where-Object { $_.name -eq 'service_role' })
+      $keyName = if ($Operation -eq 'p4-auth-diagnosis') { 'anon' } else { 'service_role' }
+      $keyRows = @($keyText | ConvertFrom-Json | Where-Object { $_.name -eq $keyName })
       if ($keyRows.Count -ne 1 -or $keyRows[0].api_key -notmatch '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$') { throw 'Unique source Storage read credential unavailable; no values printed.' }
-      $privateEnvironment.IR35_SOURCE_STORAGE_KEY = $keyRows[0].api_key
+      if ($Operation -eq 'p4-auth-diagnosis') { $privateEnvironment.IR35_SOURCE_ANON_KEY = $keyRows[0].api_key }
+      else { $privateEnvironment.IR35_SOURCE_STORAGE_KEY = $keyRows[0].api_key }
     } finally {
       $keyText = $null; $keyRows = $null
       Pop-Location

@@ -2,7 +2,7 @@
 param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$Host.UI.RawUI.WindowTitle = 'IR35 staging test-account login — NOT OCI or SSH'
+$Host.UI.RawUI.WindowTitle = 'IR35 staging test-account login — ONE authorised attempt 2 — NOT OCI or SSH'
 $credential = $null
 $pointer = [IntPtr]::Zero
 function New-IR35LoginStart([ValidateSet('--status','--stdin-secret')][string]$Mode) {
@@ -11,11 +11,12 @@ function New-IR35LoginStart([ValidateSet('--status','--stdin-secret')][string]$M
   $start.RedirectStandardInput = $true
   $start.RedirectStandardOutput = $true
   $start.RedirectStandardError = $true
-  foreach ($argument in @('-d','Ubuntu','--cd','/mnt/c/Users/anves/.codex/worktrees/bot-handoff/ir35careers','/home/anvesh/.ir35/oci/bin/python','infra/oracle/auth_login.py',$Mode)) { $start.ArgumentList.Add($argument) }
+  foreach ($argument in @('-d','Ubuntu','--cd','/mnt/c/Users/anves/.codex/worktrees/bot-handoff/ir35careers','/home/anvesh/.ir35/oci/bin/python','infra/oracle/auth_retry.py',$Mode)) { $start.ArgumentList.Add($argument) }
   return $start
 }
 try {
   Write-Host 'Staging-only login for anvesh.mannuru+ir35test@gmail.com. Never enter an OCI/SSH passphrase here.'
+  Write-Host 'ONE owner-authorised additional attempt. No automatic retries. The first failed attempt is retained.'
   # Check the durable state BEFORE asking the owner for any credential.
   $check = [Diagnostics.Process]::Start((New-IR35LoginStart '--status'))
   $check.StandardInput.Close()

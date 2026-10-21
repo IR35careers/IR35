@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "account": {
+    "aud": "authenticated",
+    "role": "authenticated",
+    "count": 1,
+    "bcrypt": true,
+    "ssoFalse": true,
+    "confirmed": true,
+    "bannedNull": true,
+    "deletedNull": true,
+    "emailIdentities": 1,
+    "passwordMD5EqualsCloud": true
+  },
+  "fieldParity": {
+    "aud": true,
+    "role": true,
+    "count": true,
+    "bcrypt": true,
+    "ssoFalse": true,
+    "confirmed": true,
+    "bannedNull": true,
+    "deletedNull": true,
+    "emailIdentities": true
+  },
+  "config": {
+    "emailEnabled": true,
+    "mailerAutoconfirm": false,
+    "siteURLStaging": true,
+    "externalURLStaging": true,
+    "jwtAudienceMatchesAccount": true,
+    "freshStagingJWTSecretConsistent": true,
+    "anonKeySignatureValid": true,
+    "serviceKeySignatureValid": true,
+    "smtpSink": true,
+    "isolatedDatabase": true,
+    "authStopped": true,
+    "noPublicPorts": true,
+    "originalLogDriverNone": true
+  },
+  "sourceSettings": {
+    "emailEnabled": true,
+    "mailerAutoconfirm": false,
+    "disableSignup": false,
+    "siteURLAndExternalURL": "source production URLs intentionally replaced by approved staging hosts",
+    "jwtSecret": "fresh staging-only; cloud secret never fetched"
+  },
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "passwordRequested": false,
+  "previousErrorRecoverable": false
+}
