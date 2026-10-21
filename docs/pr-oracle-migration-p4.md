@@ -1,5 +1,9 @@
 # Oracle P4: guarded full-copy rehearsal and every-row verification
 
+## Current result: DB and file bytes PASS, Storage image/history FAIL2 — stopped
+
+First native full restore PASS once/117.398s:62table counts+orderedMD5,27Auth tables/password-hash bytes,2sequence states; schema3752/only3owner exceptions,327supplemental/62ACL/198DDL/552privilege checks match.73physical Storage files/1,241,375bytes SHA256 and custody/set-coverage PASS. One private read-only/frozen API start exits1; pinned image has2historic migration hash differences(storage-schema2/object-versioning-core62). No copied records/hash refresh/schema upgrade/production change. Post-failure full rows/sequences/schema/security/runtime checks PASS unchanged. See docs/evidence/oracle-p4-rehearsal.md and linked JSON for each gate. Future mutation blocked locally before source credential/SSH. No full P4/P5 signoff, second cycle, wipe, login, reverse or cutover. Proposed next reviewed fix: compatible ARM64 image/history on a metadata-only fixture, not editing copied history. Older pending/source-only entries below are historical.
+
 Stacked draft on baseline52, staging only. No merge or production deployment. Source cloud/Vercel/DNS remain untouched and source access is read-only over verify-full TLS. No employer submissions; sink/mock/acceptance=false remain required.
 
 ## Current actual results

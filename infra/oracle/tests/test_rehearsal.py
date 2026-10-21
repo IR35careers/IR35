@@ -3,12 +3,17 @@ import sys
 import unittest
 from unittest.mock import patch
 import ast
+import json
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import rehearsal
 
 
 class RehearsalTests(unittest.TestCase):
+    def test_compatibility_hold_refuses_before_source_or_ssh(self):
+        with patch.object(sys,'argv',['rehearsal.py','--staging','--cycle','1']),patch.object(rehearsal.Path,'exists',return_value=True),patch.object(rehearsal.Path,'read_text',return_value=json.dumps({'status':'FAIL'})),patch.object(rehearsal,'capture') as capture,patch.object(rehearsal.schema,'run_guest') as remote:
+            with self.assertRaisesRegex(ValueError,'compatibility FAIL'):rehearsal.main()
+            capture.assert_not_called();remote.assert_not_called()
     def test_compiled_fixed_destination_keeps_failures_and_never_truncates_or_replays(self):
         with patch.object(rehearsal.schema,'guest_bundle',return_value=''):
             guest=rehearsal.guest_source(1,b'PGDMP-controlled-fixture',{})

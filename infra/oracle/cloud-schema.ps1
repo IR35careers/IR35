@@ -7,6 +7,12 @@ $context = 'C:\Users\anves\.oci\ir35-p0-readonly'
 $ca = 'C:\Users\anves\.codex\operations\ir35careers\supabase-prod-ca-2021.crt'
 $privateEnvironment = @{}
 try {
+  if ($Operation -in @('p4-rehearse-1','p4-rehearse-2')) {
+    $hold = Join-Path $repository 'docs/evidence/oracle-p4-storage-migrations.json'
+    if ((Test-Path -LiteralPath $hold) -and (Get-Content -LiteralPath $hold -Raw | ConvertFrom-Json).status -ne 'PASS') {
+      throw 'P4 Storage migration-history compatibility FAIL; stopped before credential lookup or VM mutation.'
+    }
+  }
   Push-Location -LiteralPath $repository
   try {
     # Capture privately: this vendor-generated plan includes temporary credentials.

@@ -1,0 +1,29 @@
+{
+  "status": "FAIL",
+  "appliedMigrations": 74,
+  "imageMigrations": 75,
+  "freezeName": "revoke-grants-to-unused-operations",
+  "freezeExistsInImage": true,
+  "differences": [
+    {
+      "name": "storage-schema",
+      "appliedId": 2,
+      "imageId": 2,
+      "appliedHash": "f6a1fa2c93cbcd16d4e487b362e45fca157a8dbd",
+      "imageHash": "cdc19a79b298ce37cc730487821a1a7b06b98105"
+    },
+    {
+      "name": "object-versioning-core",
+      "appliedId": 62,
+      "imageId": 62,
+      "appliedHash": "0b855f00ff3be0bfca91efee02a9858912491a9a",
+      "imageHash": "c6567e688f8c4a76887e7c1b117b2d58f4feccba"
+    }
+  ],
+  "image": "supabase/storage-api:v1.81.0@sha256:a1249fe15965769752f81eec9313af1636cd2b1ff5622bf99ecf283a6a84c099",
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "apiRestarted": false,
+  "migrationRunnerCalled": false,
+  "phaseComplete": false
+}

@@ -1,12 +1,16 @@
 import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
-import { expect, it } from "vitest";
+import { beforeAll, expect, it } from "vitest";
 
 const sql = readFileSync(new URL("../../supabase/verification/oracle_transport_catalog.sql", import.meta.url), "utf8");
 type ObjectHash = { kind: string; name: string; hash: string };
+let db: PGlite;
+beforeAll(async () => {
+  db = new PGlite();
+  await db.waitReady;
+});
 
 it("executes supplemental transport SQL and detects real type-ACL and publication changes without raw definitions", async () => {
-  const db = new PGlite();
   try {
     await db.exec("CREATE ROLE fixture_reader; CREATE TYPE public.fixture_kind AS ENUM ('safe'); CREATE TABLE public.fixture(id integer PRIMARY KEY); CREATE PUBLICATION fixture_pub FOR TABLE public.fixture;");
     const catalog = async () => {

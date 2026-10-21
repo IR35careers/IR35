@@ -25,6 +25,9 @@ EXPIRY_SQL="SELECT jsonb_object_agg(rolname,jsonb_build_object('hash',md5(coales
 
 
 def gates():
+    hold=schema.REPO/'docs/evidence/oracle-p4-storage-migrations.json'
+    if hold.exists() and json.loads(hold.read_text()).get('status')!='PASS':
+        raise ValueError('P4 Storage migration-history compatibility FAIL; no source lookup, restore or replay')
     native=json.loads((schema.REPO/'docs/evidence/oracle-p3-owner-fidelity.json').read_text())
     transport=json.loads((schema.REPO/'docs/evidence/oracle-p4-schema-preflight.json').read_text())
     if native.get('status')!='PASS' or transport.get('status')!='PASS':raise ValueError('P3 schema/extended transport gates required')
@@ -140,9 +143,12 @@ print(json.dumps({'status':'TABLES_VERIFIED','schema':schema_gate,'transport':tr
 '''
 
 
-def guest_source(cycle,archive,source):
+def verification_modules():
     align='\n\n'.join(inspect.getsource(fn) for fn in (acl_repair.identifier,acl_repair.literal,acl_repair.normalize_restored_cloud))
-    modules=Path(fp.__file__).read_text()+'\n'+align+'\n'+Path(extension_security.__file__).read_text()+'\nextension_compare=compare\n'+Path(effective_privileges.__file__).read_text()+'\nprivilege_compare=compare\n'+Path(fidelity_gate.__file__).read_text().replace('import extension_security','').replace('extension_security.EXTENSIONS','EXTENSIONS')+'\nfidelity_compare=compare\n'+inspect.getsource(p4_preflight.compare)+'\ntransport_compare=compare\n'
+    return Path(fp.__file__).read_text()+'\n'+align+'\n'+Path(extension_security.__file__).read_text()+'\nextension_compare=compare\n'+Path(effective_privileges.__file__).read_text()+'\nprivilege_compare=compare\n'+Path(fidelity_gate.__file__).read_text().replace('import extension_security','').replace('extension_security.EXTENSIONS','EXTENSIONS')+'\nfidelity_compare=compare\n'+inspect.getsource(p4_preflight.compare)+'\ntransport_compare=compare\n'
+
+
+def guest_source(cycle,archive,source):
     replacements={'CYCLE':repr(cycle),'TARGET':repr(TARGETS[cycle]),'SOURCE':repr(source),
       'ARCHIVE_HASH':repr(hashlib.sha256(archive).hexdigest()),'ARCHIVE':repr(base64.b64encode(archive).decode()),'EXPIRY_SQL':repr(EXPIRY_SQL)}
     for token,path in (('EXTENSION_SQL','oracle_extension_security.sql'),('PRIVILEGE_SQL','oracle_effective_privileges.sql'),('TRANSPORT_SQL','oracle_transport_catalog.sql'),('INVENTORY_SQL','oracle_data_inventory.sql')):
@@ -150,7 +156,7 @@ def guest_source(cycle,archive,source):
     # One pass only: never replace token-like text inside customer filenames or
     # base64 bytes inserted by another replacement.
     script=re.sub(r'\b('+'|'.join(replacements)+r')\b',lambda match:replacements[match[0]],GUEST)
-    return schema.guest_bundle(rehearsal=True)+owner_parity.BASE+modules+script
+    return schema.guest_bundle(rehearsal=True)+owner_parity.BASE+verification_modules()+script
 
 
 def main():
