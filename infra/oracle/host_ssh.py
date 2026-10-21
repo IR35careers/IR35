@@ -130,7 +130,8 @@ def run_remote(source, arguments, *, timeout=65, user="ubuntu"):
     remote = (["sudo", "-n"] if user == "ubuntu" else []) + ["/usr/bin/python3", "-u", "-", *arguments]
     args = ["ssh", "-F", "/dev/null", *[item for option in options for item in ("-o", option)], "-i", str(KEY_DIRECTORY / "ssh_ed25519"),
             user + "@" + state["publicIP"], shlex.join(remote)]
-    environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE")}
+    # Source DB/Storage read credentials are local-only, not needed by SSH.
+    environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE", "IR35_SOURCE_STORAGE_KEY") and not key.startswith("PG")}
     environment["SSH_AUTH_SOCK"] = agent["socket"]
     result = subprocess.run(args, input=source, capture_output=True, text=True, timeout=call_timeout(timeout), env=environment, check=False)
     if result.returncode:

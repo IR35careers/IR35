@@ -1,0 +1,464 @@
+{
+  "status": "SOURCE_CAPTURE_ONLY",
+  "phaseComplete": false,
+  "snapshotBound": true,
+  "sourceCheckedAt": "2026-10-21T08:50:29Z",
+  "tables": [
+    {
+      "name": "auth.audit_log_entries",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.custom_oauth_providers",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.flow_state",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "47",
+      "md5": "358ad650b328db71025b61931d4517f7",
+      "serializedBytes": "9268"
+    },
+    {
+      "name": "auth.identities",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "148",
+      "md5": "67af4006a7088b82f7e5d69baf174dfc",
+      "serializedBytes": "91893"
+    },
+    {
+      "name": "auth.instances",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.mfa_amr_claims",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "144",
+      "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+      "serializedBytes": "23650"
+    },
+    {
+      "name": "auth.mfa_challenges",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.mfa_factors",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.mfa_recovery_code_sets",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.mfa_recovery_codes",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.oauth_authorizations",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.oauth_client_states",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.oauth_clients",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.oauth_consents",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.one_time_tokens",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "21",
+      "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+      "serializedBytes": "5580"
+    },
+    {
+      "name": "auth.refresh_tokens",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "1456",
+      "md5": "1e2216d6dd3d8abce643d33705a72145",
+      "serializedBytes": "356848"
+    },
+    {
+      "name": "auth.saml_providers",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.saml_relay_states",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.schema_migrations",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "82",
+      "md5": "87a88933e7be6edec713b7a7f5a356ca",
+      "serializedBytes": "2058"
+    },
+    {
+      "name": "auth.scim_tokens",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.scim_users",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.sessions",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "144",
+      "md5": "3d541dffc9d34c0a0013e783a2434575",
+      "serializedBytes": "49615"
+    },
+    {
+      "name": "auth.sso_domains",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.sso_providers",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.users",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "147",
+      "md5": "86c5359853d3b4071915a847b45a87af",
+      "serializedBytes": "129226"
+    },
+    {
+      "name": "auth.webauthn_challenges",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "auth.webauthn_credentials",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "public.admin_members",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "2",
+      "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+      "serializedBytes": "446"
+    },
+    {
+      "name": "public.application_events",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "813",
+      "md5": "493136af17f6e7e8c9155c34e40fca9b",
+      "serializedBytes": "338288"
+    },
+    {
+      "name": "public.application_packets",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "87",
+      "md5": "949df7a51a9609a32b36a84bc11964df",
+      "serializedBytes": "2269643"
+    },
+    {
+      "name": "public.application_submissions",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "64",
+      "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+      "serializedBytes": "86590"
+    },
+    {
+      "name": "public.application_worker_heartbeats",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "479",
+      "md5": "077765c72ba9ff8921e6124ea5577eb6",
+      "serializedBytes": "65305"
+    },
+    {
+      "name": "public.application_worker_tasks",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "64",
+      "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+      "serializedBytes": "46559"
+    },
+    {
+      "name": "public.articles",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "public.automation_rules",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "119",
+      "md5": "cebec416b43c63fe050b78d00befeb84",
+      "serializedBytes": "20037"
+    },
+    {
+      "name": "public.automation_runs",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "13",
+      "md5": "2848dbf849c96d21f8042b133c93ba88",
+      "serializedBytes": "59729"
+    },
+    {
+      "name": "public.contact_requests",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "5",
+      "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+      "serializedBytes": "3435"
+    },
+    {
+      "name": "public.feedback_messages",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "11",
+      "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+      "serializedBytes": "3574"
+    },
+    {
+      "name": "public.inbox_aliases",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "117",
+      "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+      "serializedBytes": "24161"
+    },
+    {
+      "name": "public.inbox_messages",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "289",
+      "md5": "56cbb6d433b96ecf28cc865de9f0c244",
+      "serializedBytes": "552689"
+    },
+    {
+      "name": "public.job_alerts",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "5",
+      "md5": "f331f2304263b0cd3642c296b2676169",
+      "serializedBytes": "890"
+    },
+    {
+      "name": "public.jobs",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "24041",
+      "md5": "e647095d75414a442175f7fb3588caf4",
+      "serializedBytes": "77014823"
+    },
+    {
+      "name": "public.moderation_logs",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "4309",
+      "md5": "64cfd39693845616e0c1ace340580c88",
+      "serializedBytes": "1917320"
+    },
+    {
+      "name": "public.profiles",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "122",
+      "md5": "105ad53681c5a5a253464e250a4d4be2",
+      "serializedBytes": "1763445"
+    },
+    {
+      "name": "public.resume_versions",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "12",
+      "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+      "serializedBytes": "103861"
+    },
+    {
+      "name": "public.saved_jobs",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "8",
+      "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+      "serializedBytes": "1069"
+    },
+    {
+      "name": "public.testimonials",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "public.user_entitlements",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "public.waitlist",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "22",
+      "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+      "serializedBytes": "4184"
+    },
+    {
+      "name": "realtime.messages",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "realtime.schema_migrations",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "89",
+      "md5": "802700104fc0aed2f68c413f50637ba5",
+      "serializedBytes": "4382"
+    },
+    {
+      "name": "realtime.subscription",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "storage.buckets",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "4",
+      "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+      "serializedBytes": "838"
+    },
+    {
+      "name": "storage.buckets_analytics",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "storage.buckets_vectors",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "storage.migrations",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "74",
+      "md5": "55a444ce635336fa733a015fc4db877f",
+      "serializedBytes": "8715"
+    },
+    {
+      "name": "storage.objects",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "73",
+      "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+      "serializedBytes": "48321"
+    },
+    {
+      "name": "storage.s3_multipart_uploads",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "storage.s3_multipart_uploads_parts",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "storage.vector_indexes",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    },
+    {
+      "name": "supabase_migrations.schema_migrations",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "1",
+      "md5": "35d965e826914770a00b84c3d87dd610",
+      "serializedBytes": "2310"
+    },
+    {
+      "name": "vault.secrets",
+      "algorithm": "pg17-copy-binary-framed-text-v1",
+      "rows": "0",
+      "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+      "serializedBytes": "21"
+    }
+  ],
+  "sequences": [
+    {
+      "name": "auth.refresh_tokens_id_seq",
+      "hash": "76ecf775ed043809d08d28385ec916d9"
+    },
+    {
+      "name": "realtime.subscription_id_seq",
+      "hash": "9ac1665da4e52dbd5327ae8bfd726aea"
+    }
+  ],
+  "tableCount": 62,
+  "sequenceCount": 2,
+  "sequenceStable": true,
+  "encoding": "UTF8",
+  "unicodeRoundTripMD5": "421545983a00203423b1d57c90601a5d",
+  "durationSeconds": 54.321,
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "customerRowsImported": 0,
+  "storageBytesVerified": false,
+  "targetCompared": false,
+  "zeroLossVerified": false
+}
