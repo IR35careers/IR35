@@ -47,6 +47,7 @@ def build():
     path=repo/'docs/evidence/p5'/('build-'+str(attempt)+'.json');path.parent.mkdir(exist_ok=True)
     with path.open('x') as output:json.dump(result,output,indent=2);output.write('\n')
     print(json.dumps(result))
+    if result['status']!='PASS':sys.exit(1)
 
 
 if __name__=='__main__':

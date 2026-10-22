@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**P5 native build1 FAIL / bounded repair:** sealed [build1](evidence/p5/build-1.json),24.337s, npm-ci EUSAGE missing two optional NAPI root lock records after Windows normalization. No image/app clone/Caddy activation. Restored exactly their prior1.11.3 versions/integrities, no install fallback/CI bypass, added regression. Full private log/sealed failure preserved; attempt2 is repair1, max3 builds. No customer/source/production/DNS/cutover change.
+
 **P5 draft54 opened:** [PR54](https://github.com/IR35careers/IR35/pull/54), stacked on draft53, unmerged. First local build invocation failed Windows-gitdir interpretation in WSL BEFORE SSH/no VM mutation; one bounded mapped-gitdir/work-tree/CRLF repair and regression prepared, native build attempts0. No private key/password/production/DNS/cutover change. Continue staging after repair test; no P5 runtime PASS claimed.
 
 **P5 patched toolchain verification PASS:**963Vitest/152files +199legacy, strict types/full lint, and17focused current web/cron/security checks; audit only the two existing exceptions. Maintenance API GET surface fail-closed, private transport rejects malformed/credentialed/different-origin URLs without echoing values.263Linux helpers retained. Native image build/runtime/Caddy/app-clone/browser verification still pending, not phase PASS. No production/cutover change.

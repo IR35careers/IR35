@@ -9,6 +9,13 @@ describe("patched Vitest mocker boundary", () => {
     expect(lock.packages[""].devDependencies.vitest).toBe("4.1.12");
     expect(lock.packages["node_modules/@vitest/mocker"].version).toBe("4.1.12");
   });
+  it("retains cross-platform optional NAPI records required by clean ARM npm ci", () => {
+    const lock = JSON.parse(readFileSync(new URL("../../package-lock.json", import.meta.url), "utf8"));
+    for (const name of ["@emnapi/core", "@emnapi/runtime"]) {
+      expect(lock.packages[`node_modules/${name}`]).toMatchObject({ version: "1.11.3", optional: true });
+      expect(lock.packages[`node_modules/${name}`].integrity).toMatch(/^sha512-/);
+    }
+  });
   it("serializes untrusted mock URLs and export names as strings, not executable source", () => {
     const url = 'x"); globalThis.UNEXECUTED_CANARY = 1; void("';
     const name = 'field"]; globalThis.UNEXECUTED_CANARY = 2; //';

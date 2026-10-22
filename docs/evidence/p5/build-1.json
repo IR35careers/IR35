@@ -1,0 +1,12 @@
+{
+  "status": "FAIL",
+  "attempt": 1,
+  "sourceSHA": "d84fc4f32baf1fa49bcedbc4483d337e3567dacd",
+  "sourceWrites": 0,
+  "productionChanges": false,
+  "phaseComplete": false,
+  "code": "WebImageBuildFailed_PrivateLog",
+  "elapsedSeconds": 24.337,
+  "stage": "01-build",
+  "manifestSHA256": "ee959b10b8b6a6552bd6820f621dac35391702ce4feebd50a387895097bde2fb"
+}

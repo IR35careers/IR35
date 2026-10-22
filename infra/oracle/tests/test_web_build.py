@@ -4,9 +4,11 @@ import sys
 import tarfile
 import unittest
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from web_build_guest import safe_members,public_build_env
+import web_build
 from web_build import git_command
 
 
@@ -18,6 +20,11 @@ def archive(name,kind=tarfile.REGTYPE):
 
 
 class WebBuildTests(unittest.TestCase):
+    def test_dirty_source_refuses_before_ssh_or_build(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(web_build.schema,'REPO',Path(directory)),patch.object(web_build.subprocess,'check_output',return_value=' M package-lock.json\n'),patch.object(web_build.schema,'run_guest') as remote:
+            with self.assertRaisesRegex(RuntimeError,'CommittedCleanSourceRequired'):web_build.build()
+            remote.assert_not_called()
+
     def test_windows_worktree_pointer_is_mapped_without_rewriting_it(self):
         with tempfile.TemporaryDirectory() as directory:
             repo=Path(directory);pointer=repo/'.git'
