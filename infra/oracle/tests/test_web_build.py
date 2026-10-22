@@ -3,9 +3,11 @@ import json
 import sys
 import tarfile
 import unittest
+import tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from web_build_guest import safe_members,public_build_env
+from web_build import git_command
 
 
 def archive(name,kind=tarfile.REGTYPE):
@@ -16,6 +18,16 @@ def archive(name,kind=tarfile.REGTYPE):
 
 
 class WebBuildTests(unittest.TestCase):
+    def test_windows_worktree_pointer_is_mapped_without_rewriting_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo=Path(directory);pointer=repo/'.git'
+            body='gitdir: C:/approved/project/.git/worktrees/staging\n';pointer.write_text(body)
+            command=git_command(repo)
+            self.assertIn('--git-dir=/mnt/c/approved/project/.git/worktrees/staging',command)
+            self.assertIn('--work-tree='+str(repo),command)
+            self.assertEqual(pointer.read_text(),body)
+            self.assertIn('core.autocrlf=true',command)
+
     def test_exclusive_archive_boundary(self):
         for name,kind in [('../escape',tarfile.REGTYPE),('/absolute',tarfile.REGTYPE),('.env',tarfile.REGTYPE),('a/.vercel/project.json',tarfile.REGTYPE),('link',tarfile.SYMTYPE)]:
             with archive(name,kind) as value:

@@ -10,11 +10,23 @@ import host_ssh
 import immutable_artifacts
 
 
+def git_command(repo):
+    """Read a Windows-managed worktree from WSL without rewriting .git/index."""
+    pointer=repo/'.git'
+    if pointer.is_file():
+        gitdir=pointer.read_text().strip().removeprefix('gitdir: ')
+        if len(gitdir)>3 and gitdir[1:3]==':/':gitdir='/mnt/'+gitdir[0].lower()+gitdir[2:]
+        if not Path(gitdir).is_absolute():gitdir=str((repo/gitdir).resolve())
+        return ['git','--git-dir='+gitdir,'--work-tree='+str(repo),'-c','core.autocrlf=true']
+    return ['git','-C',str(repo)]
+
+
 def build():
     repo=schema.REPO
-    if subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True).strip():raise RuntimeError('CommittedCleanSourceRequired')
-    sha=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
-    branch=subprocess.check_output(['git','branch','--show-current'],cwd=repo,text=True).strip()
+    git=git_command(repo)
+    if subprocess.check_output(git+['status','--porcelain'],cwd=repo,text=True).strip():raise RuntimeError('CommittedCleanSourceRequired')
+    sha=subprocess.check_output(git+['rev-parse','HEAD'],cwd=repo,text=True).strip()
+    branch=subprocess.check_output(git+['branch','--show-current'],cwd=repo,text=True).strip()
     if branch!='codex/oracle-migration-p5':raise RuntimeError('P5BranchRequired')
     previous={}
     for path in sorted((repo/'docs/evidence/p5').glob('build-*.json')):
@@ -22,7 +34,7 @@ def build():
         if row['status']=='PASS':raise RuntimeError('BuildAlreadyPassed_NoReplay')
     attempt=len(previous)+1
     if attempt>3:raise RuntimeError('BuildRepairBudgetExhausted')
-    body=subprocess.check_output(['git','archive','--format=tar',sha],cwd=repo)
+    body=subprocess.check_output(git+['archive','--format=tar',sha],cwd=repo)
     if len(body)>100_000_000:raise RuntimeError('SourceArchiveLimit')
     data={'sourceSHA':sha,'attempt':attempt,'anchors':previous,'archiveSHA256':hashlib.sha256(body).hexdigest(),'archive':base64.b64encode(body).decode()}
     source=schema.guest_bundle(rehearsal=True)

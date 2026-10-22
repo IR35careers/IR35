@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**P5 draft54 opened:** [PR54](https://github.com/IR35careers/IR35/pull/54), stacked on draft53, unmerged. First local build invocation failed Windows-gitdir interpretation in WSL BEFORE SSH/no VM mutation; one bounded mapped-gitdir/work-tree/CRLF repair and regression prepared, native build attempts0. No private key/password/production/DNS/cutover change. Continue staging after repair test; no P5 runtime PASS claimed.
+
 **P5 patched toolchain verification PASS:**963Vitest/152files +199legacy, strict types/full lint, and17focused current web/cron/security checks; audit only the two existing exceptions. Maintenance API GET surface fail-closed, private transport rejects malformed/credentialed/different-origin URLs without echoing values.263Linux helpers retained. Native image build/runtime/Caddy/app-clone/browser verification still pending, not phase PASS. No production/cutover change.
 
 **P5 pre-build security repair:** audit found two newly listed @vitest/mocker4.1.11 advisories (GHSA-qxg6-89mg-rqv8 / GHSA-xp26-3454-mjgp); stopped BEFORE VM build/activation. Official patched4.1.12 verified, Vitest exact-pinned/lock refreshed with scripts disabled; audit now PASS with only existing braces/sprintf exceptions, no new waiver. Added quoting/path-normalization/version regressions; post-patch full suite pending. [P5 evidence](evidence/oracle-p5-staging.md). No production/cutover or cloud data change.

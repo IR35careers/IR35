@@ -18,6 +18,8 @@ Rationale: [Next nonce documentation](https://nextjs.org/docs/app/guides/content
 
 ## Actual runtime read-only preflight
 
+First local build-controller invocation STOPPED before SSH/archive: Linux Git interpreted the Windows-managed worktree's `C:/...` gitdir as a relative WSL path (CalledProcessError). No VM build/clone/route mutation ran. One documented tooling repair reuses the earlier ACL helper approach: explicit mapped `--git-dir` and `--work-tree`, matching CRLF normalization, without editing the worktree pointer or using broken WSL Windows-binary interop. Regression checks mapping and original pointer bytes. Native build attempt count remains0 before the repaired invocation; no counter reset or duplicate create.
+
 Existing pinned SSH-agent access PASS, no new login/passphrase. Guest reports aarch64,11927MiB physical RAM/9672MiB available,4095MiB swap (19MiB used), data volume98GiB/882MiB used/96GiB available. Docker root `/opt/ir35/data/docker`; existing Buildx0.38.0. No new OCI resources or authoritative billing-zero claim from these guest checks.
 
 ## Outstanding P5 gates
