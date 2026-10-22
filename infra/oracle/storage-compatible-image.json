@@ -1,0 +1,24 @@
+{
+  "status": "ARM64_MANIFEST_VERIFIED",
+  "release": "v1.80.2",
+  "sourceCommit": "db42280506a07a165376219b2d6ac7bc92ccdfcc",
+  "image": {
+    "repository": "supabase/storage-api",
+    "tag": "v1.80.2",
+    "indexDigest": "sha256:95b217a9c59e0ac06c6dcb539df3189a1668a2445fb43dbf29660d6968ffd7d2",
+    "platformDigest": "sha256:5e290c10a57893024dea5b41764e2fd81d02b379e5853bdd1da11e74bd58783e",
+    "image": "supabase/storage-api:v1.80.2@sha256:5e290c10a57893024dea5b41764e2fd81d02b379e5853bdd1da11e74bd58783e",
+    "platform": "linux/arm64",
+    "user": "",
+    "entrypoint": [
+      "docker-entrypoint.sh"
+    ],
+    "command": [
+      "node",
+      "dist/start/server.js"
+    ]
+  },
+  "sourceBuildRequired": false,
+  "apiStarted": false,
+  "migrationFixtureVerified": true
+}

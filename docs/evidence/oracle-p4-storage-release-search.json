@@ -1,0 +1,5548 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-21T10:13:18.370740+00:00",
+  "upstream": "https://github.com/supabase/storage.git",
+  "archiveSHA256": "9a93fdc86e7c3a4611eefcb8b1d1ca30bc9c4ee31a7da28e2b6ee746ea91ed10",
+  "sourceBundleSHA256": "5f12f3dce1ffc29f6ad17e9085d377d7fd2ece9fefeabc831eec933ef3eeed9e",
+  "cloudMigrations": [
+    {
+      "id": 0,
+      "hash": "e18db593bcde2aca2a408c4d1100f6abba2195df",
+      "name": "create-migrations-table"
+    },
+    {
+      "id": 1,
+      "hash": "6ab16121fbaa08bbd11b712d05f358f9b555d777",
+      "name": "initialmigration"
+    },
+    {
+      "id": 2,
+      "hash": "f6a1fa2c93cbcd16d4e487b362e45fca157a8dbd",
+      "name": "storage-schema"
+    },
+    {
+      "id": 3,
+      "hash": "2cb1b0004b817b29d5b0a971af16bafeede4b70d",
+      "name": "pathtoken-column"
+    },
+    {
+      "id": 4,
+      "hash": "427c5b63fe1c5937495d9c635c263ee7a5905058",
+      "name": "add-migrations-rls"
+    },
+    {
+      "id": 5,
+      "hash": "79e081a1455b63666c1294a440f8ad4b1e6a7f84",
+      "name": "add-size-functions"
+    },
+    {
+      "id": 6,
+      "hash": "ded78e2f1b5d7e616117897e6443a925965b30d2",
+      "name": "change-column-name-in-get-size"
+    },
+    {
+      "id": 7,
+      "hash": "e7e7f86adbc51049f341dfe8d30256c1abca17aa",
+      "name": "add-rls-to-buckets"
+    },
+    {
+      "id": 8,
+      "hash": "fd670db39ed65f9d08b01db09d6202503ca2bab3",
+      "name": "add-public-to-buckets"
+    },
+    {
+      "id": 9,
+      "hash": "af597a1b590c70519b464a4ab3be54490712796b",
+      "name": "fix-search-function"
+    },
+    {
+      "id": 10,
+      "hash": "b595f05e92f7e91211af1bbfe9c6a13bb3391e16",
+      "name": "search-files-search-function"
+    },
+    {
+      "id": 11,
+      "hash": "7425bdb14366d1739fa8a18c83100636d74dcaa2",
+      "name": "add-trigger-to-auto-update-updated_at-column"
+    },
+    {
+      "id": 12,
+      "hash": "8e92e1266eb29518b6a4c5313ab8f29dd0d08df9",
+      "name": "add-automatic-avif-detection-flag"
+    },
+    {
+      "id": 13,
+      "hash": "cce962054138135cd9a8c4bcd531598684b25e7d",
+      "name": "add-bucket-custom-limits"
+    },
+    {
+      "id": 14,
+      "hash": "941c41b346f9802b411f06f30e972ad4744dad27",
+      "name": "use-bytes-for-max-size"
+    },
+    {
+      "id": 15,
+      "hash": "934146bc38ead475f4ef4b555c524ee5d66799e5",
+      "name": "add-can-insert-object-function"
+    },
+    {
+      "id": 16,
+      "hash": "76debf38d3fd07dcfc747ca49096457d95b1221b",
+      "name": "add-version"
+    },
+    {
+      "id": 17,
+      "hash": "f1cbb288f1b7a4c1eb8c38504b80ae2a0153d101",
+      "name": "drop-owner-foreign-key"
+    },
+    {
+      "id": 18,
+      "hash": "e7a511b379110b08e2f214be852c35414749fe66",
+      "name": "add_owner_id_column_deprecate_owner"
+    },
+    {
+      "id": 19,
+      "hash": "02e5e22a78626187e00d173dc45f58fa66a4f043",
+      "name": "alter-default-value-objects-id"
+    },
+    {
+      "id": 20,
+      "hash": "cd694ae708e51ba82bf012bba00caf4f3b6393b7",
+      "name": "list-objects-with-delimiter"
+    },
+    {
+      "id": 21,
+      "hash": "8c804d4a566c40cd1e4cc5b3725a664a9303657f",
+      "name": "s3-multipart-uploads"
+    },
+    {
+      "id": 22,
+      "hash": "9737dc258d2397953c9953d9b86920b8be0cdb73",
+      "name": "s3-multipart-uploads-big-ints"
+    },
+    {
+      "id": 23,
+      "hash": "9d7e604cddc4b56a5422dc68c9313f4a1b6f132c",
+      "name": "optimize-search-function"
+    },
+    {
+      "id": 24,
+      "hash": "8312e37c2bf9e76bbe841aa5fda889206d2bf8aa",
+      "name": "operation-function"
+    },
+    {
+      "id": 25,
+      "hash": "d974c6057c3db1c1f847afa0e291e6165693b990",
+      "name": "custom-metadata"
+    },
+    {
+      "id": 26,
+      "hash": "215cabcb7f78121892a5a2037a09fedf9a1ae322",
+      "name": "objects-prefixes"
+    },
+    {
+      "id": 27,
+      "hash": "859ba38092ac96eb3964d83bf53ccc0b141663a6",
+      "name": "search-v2"
+    },
+    {
+      "id": 28,
+      "hash": "c73a2b5b5d4041e39705814fd3a1b95502d38ce4",
+      "name": "object-bucket-name-sorting"
+    },
+    {
+      "id": 29,
+      "hash": "ad2c1207f76703d11a9f9007f821620017a66c21",
+      "name": "create-prefixes"
+    },
+    {
+      "id": 30,
+      "hash": "2be814ff05c8252fdfdc7cfb4b7f5c7e17f0bed6",
+      "name": "update-object-levels"
+    },
+    {
+      "id": 31,
+      "hash": "b40367c14c3440ec75f19bbce2d71e914ddd3da0",
+      "name": "objects-level-index"
+    },
+    {
+      "id": 32,
+      "hash": "e0c37182b0f7aee3efd823298fb3c76f1042c0f7",
+      "name": "backward-compatible-index-on-objects"
+    },
+    {
+      "id": 33,
+      "hash": "b480e99ed951e0900f033ec4eb34b5bdcb4e3d49",
+      "name": "backward-compatible-index-on-prefixes"
+    },
+    {
+      "id": 34,
+      "hash": "ca80a3dc7bfef894df17108785ce29a7fc8ee456",
+      "name": "optimize-search-function-v1"
+    },
+    {
+      "id": 35,
+      "hash": "458fe0ffd07ec53f5e3ce9df51bfdf4861929ccc",
+      "name": "add-insert-trigger-prefixes"
+    },
+    {
+      "id": 36,
+      "hash": "6ae5fca6af5c55abe95369cd4f93985d1814ca8f",
+      "name": "optimise-existing-functions"
+    },
+    {
+      "id": 37,
+      "hash": "3944135b4e3e8b22d6d4cbb568fe3b0b51df15c1",
+      "name": "add-bucket-name-length-trigger"
+    },
+    {
+      "id": 38,
+      "hash": "02716b81ceec9705aed84aa1501657095b32e5c5",
+      "name": "iceberg-catalog-flag-on-buckets"
+    },
+    {
+      "id": 39,
+      "hash": "6706c5f2928846abee18461279799ad12b279b78",
+      "name": "add-search-v2-sort-support"
+    },
+    {
+      "id": 40,
+      "hash": "7ad69982ae2d372b21f48fc4829ae9752c518f6b",
+      "name": "fix-prefix-race-conditions-optimized"
+    },
+    {
+      "id": 41,
+      "hash": "07fcf1a22165849b7a029deed059ffcde08d1ae0",
+      "name": "add-object-level-update-trigger"
+    },
+    {
+      "id": 42,
+      "hash": "771479077764adc09e2ea2043eb627503c034cd4",
+      "name": "rollback-prefix-triggers"
+    },
+    {
+      "id": 43,
+      "hash": "84b35d6caca9d937478ad8a797491f38b8c2979f",
+      "name": "fix-object-level"
+    },
+    {
+      "id": 44,
+      "hash": "99c20c0ffd52bb1ff1f32fb992f3b351e3ef8fb3",
+      "name": "vector-bucket-type"
+    },
+    {
+      "id": 45,
+      "hash": "049e27196d77a7cb76497a85afae669d8b230953",
+      "name": "vector-buckets"
+    },
+    {
+      "id": 46,
+      "hash": "fedeb96d60fefd8e02ab3ded9fbde05632f84aed",
+      "name": "buckets-objects-grants"
+    },
+    {
+      "id": 47,
+      "hash": "649df56855c24d8b36dd4cc1aeb8251aa9ad42c2",
+      "name": "iceberg-table-metadata"
+    },
+    {
+      "id": 48,
+      "hash": "e0e8b460c609b9999ccd0df9ad14294613eed939",
+      "name": "iceberg-catalog-ids"
+    },
+    {
+      "id": 49,
+      "hash": "072b1195d0d5a2f888af6b2302a1938dd94b8b3d",
+      "name": "buckets-objects-grants-postgres"
+    },
+    {
+      "id": 50,
+      "hash": "6323ac4f850aa14e7387eb32102869578b5bd478",
+      "name": "search-v2-optimised"
+    },
+    {
+      "id": 51,
+      "hash": "2ee395d433f76e38bcd3856debaf6e0e5b674011",
+      "name": "index-backward-compatible-search"
+    },
+    {
+      "id": 52,
+      "hash": "5cc44c8696749ac11dd0dc37f2a3802075f3a171",
+      "name": "drop-not-used-indexes-and-functions"
+    },
+    {
+      "id": 53,
+      "hash": "d0cb18777d9e2a98ebe0bc5cc7a42e57ebe41854",
+      "name": "drop-index-lower-name"
+    },
+    {
+      "id": 54,
+      "hash": "6289e048b1472da17c31a7eba1ded625a6457e67",
+      "name": "drop-index-object-level"
+    },
+    {
+      "id": 55,
+      "hash": "262a4798d5e0f2e7c8970232e03ce8be695d5819",
+      "name": "prevent-direct-deletes"
+    },
+    {
+      "id": 56,
+      "hash": "b823ed1e418101032fa01374edc9a436e54e3ed4",
+      "name": "fix-optimized-search-function"
+    },
+    {
+      "id": 57,
+      "hash": "f127886e00d1b374fadbc7c6b31e09336aad5287",
+      "name": "s3-multipart-uploads-metadata"
+    },
+    {
+      "id": 58,
+      "hash": "00ca5d483b3fe0d522133d9002ccc5df98365120",
+      "name": "operation-ergonomics"
+    },
+    {
+      "id": 59,
+      "hash": "38456f13e39691c2bbb4b5151d0d1cdbabd4a8c4",
+      "name": "drop-unused-functions"
+    },
+    {
+      "id": 60,
+      "hash": "db35e1c91a9201e59f4fef8d972c2f277d68b157",
+      "name": "optimize-existing-functions-again"
+    },
+    {
+      "id": 61,
+      "hash": "fe0096517ae9d60aaec1d110172ba9036dc66bb7",
+      "name": "mark-filename-immutable"
+    },
+    {
+      "id": 62,
+      "hash": "0b855f00ff3be0bfca91efee02a9858912491a9a",
+      "name": "object-versioning-core"
+    },
+    {
+      "id": 63,
+      "hash": "c7485e417624f795ce8bb2da21927f48e088904d",
+      "name": "fix-search-name-relative-to-prefix"
+    },
+    {
+      "id": 64,
+      "hash": "0af424ecd388a39bb1645184b222185a12149675",
+      "name": "fix-search-by-timestamp-sqli"
+    },
+    {
+      "id": 65,
+      "hash": "da319c4b89ba800ce795d1b699f3a70675138058",
+      "name": "objects-key-version-index"
+    },
+    {
+      "id": 66,
+      "hash": "191466c93aa2c46a00e36505577c5fcab8d7cb4b",
+      "name": "objects-current-version-index"
+    },
+    {
+      "id": 67,
+      "hash": "15bfe8c35b66642b6c78ba60060fa8793bd2207a",
+      "name": "objects-null-version-index"
+    },
+    {
+      "id": 68,
+      "hash": "3c08f6f889922f399519722a932b51007c11bebc",
+      "name": "bucket-lifecycle-configuration"
+    },
+    {
+      "id": 69,
+      "hash": "4febacaaaa0e61e2b783bef081fe03a287e65eb3",
+      "name": "validate-bucket-lifecycle-constraints"
+    },
+    {
+      "id": 70,
+      "hash": "5c17c3777616cd8d7b18b82835525fa3205af57b",
+      "name": "list-objects-with-versions"
+    },
+    {
+      "id": 71,
+      "hash": "6d14858e66c66f8d6accf8a2630aefd1527fddba",
+      "name": "objects-delete-marker-index"
+    },
+    {
+      "id": 72,
+      "hash": "302beb09e1b469d7d4db19566f2389d280b64aa3",
+      "name": "drop-bucketid-objname-index"
+    },
+    {
+      "id": 73,
+      "hash": "ba9244051be09f22f714fc0170a2539f8b5f0e68",
+      "name": "revoke-grants-to-unused-operations"
+    }
+  ],
+  "hashAlgorithm": "sha1(basename + exact UTF8 SQL)",
+  "library": "postgres-migrations@5.3.0",
+  "loaderSHA256": "09d01c23bd5ad26b6e8a9d931875eee99880caae87470b3e304d6207f677bcee",
+  "tagsChecked": 776,
+  "matchingReleases": [
+    "v1.77.10",
+    "v1.77.7",
+    "v1.77.8",
+    "v1.77.9",
+    "v1.78.0",
+    "v1.79.0",
+    "v1.79.1",
+    "v1.79.10",
+    "v1.79.11",
+    "v1.79.12",
+    "v1.79.13",
+    "v1.79.14",
+    "v1.79.15",
+    "v1.79.16",
+    "v1.79.17",
+    "v1.79.18",
+    "v1.79.19",
+    "v1.79.2",
+    "v1.79.20",
+    "v1.79.21",
+    "v1.79.22",
+    "v1.79.23",
+    "v1.79.24",
+    "v1.79.25",
+    "v1.79.26",
+    "v1.79.27",
+    "v1.79.28",
+    "v1.79.29",
+    "v1.79.3",
+    "v1.79.30",
+    "v1.79.31",
+    "v1.79.32",
+    "v1.79.33",
+    "v1.79.34",
+    "v1.79.35",
+    "v1.79.36",
+    "v1.79.37",
+    "v1.79.38",
+    "v1.79.4",
+    "v1.79.5",
+    "v1.79.6",
+    "v1.79.7",
+    "v1.79.8",
+    "v1.79.9",
+    "v1.80.0",
+    "v1.80.1",
+    "v1.80.2"
+  ],
+  "releases": [
+    {
+      "tag": "v0.0.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.0.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.1.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.1.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.1.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.1.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.1.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.10.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.10.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.11.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.11.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.11.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.11.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.12.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.13.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.13.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.14.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.14.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.14.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.14.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.14.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.14.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.15.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 9,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 10,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 10,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 10,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 10,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 10,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 10,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.16.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.17.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.18.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.19.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.19.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.2.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.2.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.20.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.20.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.20.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.21.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.21.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.21.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.21.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.21.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.22.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.22.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.22.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.23.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.23.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.24.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.25.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.25.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.25.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.25.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.25.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.25.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.26.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.26.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.26.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.27.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.27.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.27.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.27.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.28.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.28.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.28.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 11,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.29.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 14,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.29.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 14,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.29.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 14,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.3.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.3.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.30.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 15,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.30.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 15,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.30.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 15,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.31.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 15,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.32.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 15,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.33.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 15,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.34.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.35.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.35.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.36.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.37.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 16,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.38.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.39.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.4.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.40.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.40.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.40.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.40.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.40.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 17,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.41.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.42.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.42.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.43.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.44.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 18,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.44.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 19,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.45.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 19,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.45.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.46.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.46.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.46.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.46.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.46.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.46.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.47.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.48.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.48.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.48.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.48.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.48.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 20,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.5.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.5.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.6.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.7.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.7.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.8.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.8.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.8.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.8.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.9.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.9.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.9.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v0.9.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 1,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.0.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.1.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.10.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.10.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.10.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.10.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.11.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.12.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.12.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.12.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.12.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.13.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.13.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.13.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.13.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.14.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.15.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.15.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.15.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.16.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.16.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.16.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.17.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.17.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.17.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.18.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.18.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.18.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.19.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.19.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.19.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.19.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.2.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.2.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 24,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.20.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.20.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.21.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.21.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 36,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.22.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 37,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.23.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.24.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 38,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.25.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.26.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 39,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 40,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 40,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 41,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 41,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 41,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 43,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.27.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.28.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.28.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.28.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.28.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.28.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.28.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 44,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.29.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 46,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.29.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 46,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.29.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 47,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.29.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 47,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.3.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.3.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.3.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.3.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.30.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 47,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.31.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 49,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.31.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 49,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.32.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.32.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.33.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.33.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.33.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.33.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.33.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.33.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 50,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.34.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 55,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.34.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 55,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.35.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.35.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.35.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.35.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.36.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.36.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.36.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.36.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.36.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 56,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.37.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.38.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.39.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.39.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.39.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.39.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.4.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.40.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.40.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.41.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.42.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.42.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.42.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.43.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.43.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.43.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.43.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.43.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.43.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.44.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 57,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.45.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 58,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.45.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 58,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.45.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 58,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.46.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 58,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.46.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 58,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.47.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.47.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.47.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.18",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.19",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.20",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.21",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.22",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.23",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.24",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.25",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.26",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.27",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.28",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.29",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.30",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.48.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.49.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.5.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.5.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.5.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.50.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.50.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.50.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.51.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.51.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.52.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.53.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.54.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.54.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.54.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.54.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.55.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.55.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.55.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 59,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.55.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.55.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.55.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.56.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.57.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.57.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.57.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 60,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.18",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.19",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.20",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.21",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.22",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.23",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.24",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.25",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.26",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.27",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.58.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.59.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.59.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.6.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 25,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.18",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.19",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.20",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.21",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.22",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.23",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.24",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.25",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.26",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.27",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.28",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.29",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.30",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.31",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.32",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.60.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.61.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.62.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.63.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.63.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.63.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.64.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.64.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.64.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.64.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.64.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.65.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.65.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.66.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.17",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.18",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.19",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.20",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.21",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.22",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.23",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.24",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.25",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.26",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.27",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.28",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.29",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.67.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.12",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.13",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.14",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.15",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.16",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 61,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.68.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.69.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 62,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.7.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.7.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 63,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 63,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 63,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 63,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 63,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 64,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 64,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.70.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 65,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.71.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 65,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.10",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.11",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.7",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.8",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.72.9",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.73.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.73.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 68,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.74.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.74.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.74.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.74.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.74.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.74.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.75.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.75.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 70,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.76.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 72,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.76.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 72,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.76.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 72,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.1-versions",
+      "commit": "8125712bc85d0b0eea353523102f50864e545fb4",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.77.1-versions-4",
+      "commit": "87b5516e509ebd9f275f08ada15b56ef7670b833",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.77.10",
+      "commit": "e07d10b23d7e644df6ee1133c2d14b679025edb6",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.77.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.6",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 73,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.77.7",
+      "commit": "36a3a23f69896201f62ecd711d6f648520484403",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.77.8",
+      "commit": "75d61f1572a4006b9203febb5693dfeedcd642d2",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.77.9",
+      "commit": "7f0c7c39122abbe6e41d232a22c3c21bd0b20094",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.78.0",
+      "commit": "2e6347010f68b473ae39afb634e27a8ff0a8e2a9",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.0",
+      "commit": "c45036c8c30b35029f199b0c598e452e144e6f9d",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.1",
+      "commit": "9473b24ddf736bf6b5ae3f48a2659922f5c249c0",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.10",
+      "commit": "98f4b6eafe9c71b7bf245f88bf91ef93feaaf985",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.11",
+      "commit": "a31dee77102eb2a5c4559ddbd878bed3ce175221",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.12",
+      "commit": "06576ab14107656f880e8bfb4f11001e72311c88",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.13",
+      "commit": "6b212c8aaaef70aad334085ed3b0af690801dfd5",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.14",
+      "commit": "7e0d8153cf015eecac1371d97d22e9ccd5550619",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.15",
+      "commit": "6129703a8d8cfb212df15919ffe0d2e018ced768",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.16",
+      "commit": "c50d6d2452ecec711201d875932d34d34f6e8caf",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.17",
+      "commit": "6cf702becea2a195709c8bef37134d4aa96f3b65",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.18",
+      "commit": "708cbbf6368e2b7e32316f272fc9c0e3ed496cf8",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.19",
+      "commit": "2a3e5f7812554d1c9cbd36237c14eb3df09a9bb5",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.2",
+      "commit": "778e5336c0ee683525d924ca01cef9c049bb17ad",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.20",
+      "commit": "70a1aab520a35604562a61d388b7a81572fbf71d",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.21",
+      "commit": "8ec87ec83dc2283165c4a5ab6b4b0e3349fccc2f",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.22",
+      "commit": "61acd3b8ae57c31698b9171f0f2dd77bdb0b4b68",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.23",
+      "commit": "c5a415594c066a7cf5430fe5c5a9c5e6878de8df",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.24",
+      "commit": "9e3e88e2cacc6719bae185c1baf4e50243a38974",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.25",
+      "commit": "d9f7499357950fcf7a162bec326bb6850cb316b9",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.26",
+      "commit": "8d061e31dc3ab46fefed947150bbd0f1778f5a56",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.27",
+      "commit": "6bd674a5a0cb133e20504f8c279e76d21b681031",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.28",
+      "commit": "5def1dfc15ab7f08fe271c7d1e70542424524e4e",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.29",
+      "commit": "e0933cea06537d1055789f0ea3e107d05e8b6cfd",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.3",
+      "commit": "01779b7fc66fc22886a9e951ce80f504f85b6f36",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.30",
+      "commit": "76b70ba80e7c171d6b534db3c65430467a82f4bd",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.31",
+      "commit": "eccef5e70a67fb4030e0646e5e22602c94f568bc",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.32",
+      "commit": "18aed9c7a4ad757f2ed96d7a892be8485ce922ba",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.33",
+      "commit": "2379ad5493f06bcf3bb5f044b844e292b98df4a0",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.34",
+      "commit": "b919141f82590cb86924272c0f036fdc697c8fb3",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.35",
+      "commit": "88cae8ab634398bea9e565f7f163c9d044ac629c",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.36",
+      "commit": "3c50b7c9e751a738d3c1769e4e857e8861605503",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.37",
+      "commit": "7de38fdff012502a1c128544cb10b667093b4f25",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.38",
+      "commit": "8db3ed61e0c5b27313c5c02d6a566d9e33b72713",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.4",
+      "commit": "5d79e291ef9017c57ef261afca0a16429d1c8240",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.5",
+      "commit": "5c44e7def586a1c0a2223b3e87f8881629956f4b",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.6",
+      "commit": "3933ba8f7b15147b9cc1b1b2a787d7d020f7f269",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.7",
+      "commit": "69bb55049357f5049bd9e1ee86d3937f41fec2b6",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.8",
+      "commit": "feb6aeda30a9e8d921522c65f96df01975c0189d",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.79.9",
+      "commit": "dd49dbfacd4a66d51644d52ef3d738fa70ba6d82",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.8.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.8.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.8.2",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.8.3",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.8.4",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.8.5",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.80.0",
+      "commit": "bc38cb97ef68377f3bce93edbcf5091bb436cc68",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.80.1",
+      "commit": "ba73b08b9b94b1d53fb14c8b34970e7121d4f09b",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.80.2",
+      "commit": "db42280506a07a165376219b2d6ac7bc92ccdfcc",
+      "status": "PASS",
+      "migrationCount": 74,
+      "alteredIds": [],
+      "missingIds": [],
+      "pendingIds": []
+    },
+    {
+      "tag": "v1.81.0",
+      "commit": "f31599e188d7c9c854b1daa76a11b41c6d179462",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.81.1",
+      "commit": "e00277ac176f777dd3d7e8e49fc7c35f53e0ccb1",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.81.2",
+      "commit": "0d447b137d48574a4e368b43dd456e202cb3d6ff",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.81.3",
+      "commit": "27c5b7ebebe08959be67be291b0fd7384529355c",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.81.4",
+      "commit": "e356ef87c31badd05e4419b2f59f73ace7fe0baa",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.81.5",
+      "commit": "03a68fa7d4871ac4c87b46d003863f0bee2b5337",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.82.0",
+      "commit": "ca25d797a18b5e511c759265d02e5dcdf6db907a",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.82.1",
+      "commit": "a3a588586b937a24d1a5a4f2a0197cca78990469",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.82.2",
+      "commit": "599d908f39d44cc35025baf1607f92874a60db08",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.0",
+      "commit": "d05b376aa7d0a0c2336767481e615af2a7e8959a",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.1",
+      "commit": "23f25e74de05119b8171fe704afb7422f5f106e8",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.2",
+      "commit": "33e67f8742c5d6f7c3a56ef6978b642e45c91697",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.3",
+      "commit": "222c56b4f132d24442edc3bdd40f3abe9513e454",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.4",
+      "commit": "1d0a86d4af4c0dc0633f6cc28eb6bf7cd65ef34e",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.5",
+      "commit": "c826a70ac6e6f56d3e6033ccb164fb1ff5282570",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.83.6",
+      "commit": "a5f1eb65850738fe9f980d88f08b9ef70a9811d5",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.0",
+      "commit": "85a31c2f3f7272f3c84e512af67c22929b37f968",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.1",
+      "commit": "d94a5aaee3b6fcaf644fe01b638f5a6585a5855b",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.10",
+      "commit": "e60b2f7c298c2cdb6ac9783d76211e7a7512c7e4",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.11",
+      "commit": "0fc9d8ef4b2e872b649af8c03985053a8dae897c",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.12",
+      "commit": "b06aa38c071a300e25c3f223d9f51d8bc6d882d0",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.13",
+      "commit": "e827dcb96742339ee38363335d0ae7127d1c76da",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.14",
+      "commit": "63a37b10622bb3c56789cab2a4c8bb6008ba2291",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.2",
+      "commit": "efcac18780909710ad94af0d07c76bb4c7fa8161",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.3",
+      "commit": "7aa5914857793d2e1d47e284cfd9664105c79e74",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.4",
+      "commit": "9c209b41e845815422a8d3ddb704de8492e1c998",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.5",
+      "commit": "a30223570351c16642a44b154f4987ebeeb27fb0",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.6",
+      "commit": "ed9119ed3b6b2e4a8251fa39db79a8d2716a8dbe",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.7",
+      "commit": "921b0111d1fd6014aa68b60aeb84ea8e169fbeb1",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.8",
+      "commit": "6eab6214b699d27d9503e7a8d5f03fc75a08238e",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.84.9",
+      "commit": "162f7e6cbdbc634b063105cd7ff35ccd20e4669a",
+      "status": "FAIL",
+      "migrationCount": 75,
+      "alteredIds": [
+        2,
+        62
+      ],
+      "missingIds": [],
+      "pendingIds": [
+        74
+      ]
+    },
+    {
+      "tag": "v1.9.0",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    },
+    {
+      "tag": "v1.9.1",
+      "status": "INELIGIBLE_MISSING_CLOUD_FINAL_MIGRATION",
+      "migrationCount": 26,
+      "missingId": 73
+    }
+  ],
+  "closestCandidates": [
+    {
+      "tag": "v1.77.10",
+      "commit": "e07d10b23d7e644df6ee1133c2d14b679025edb6",
+      "migrationCount": 74,
+      "status": "PASS",
+      "altered": [],
+      "missing": [],
+      "pending": []
+    },
+    {
+      "tag": "v1.77.7",
+      "commit": "36a3a23f69896201f62ecd711d6f648520484403",
+      "migrationCount": 74,
+      "status": "PASS",
+      "altered": [],
+      "missing": [],
+      "pending": []
+    },
+    {
+      "tag": "v1.77.8",
+      "commit": "75d61f1572a4006b9203febb5693dfeedcd642d2",
+      "migrationCount": 74,
+      "status": "PASS",
+      "altered": [],
+      "missing": [],
+      "pending": []
+    },
+    {
+      "tag": "v1.77.9",
+      "commit": "7f0c7c39122abbe6e41d232a22c3c21bd0b20094",
+      "migrationCount": 74,
+      "status": "PASS",
+      "altered": [],
+      "missing": [],
+      "pending": []
+    },
+    {
+      "tag": "v1.78.0",
+      "commit": "2e6347010f68b473ae39afb634e27a8ff0a8e2a9",
+      "migrationCount": 74,
+      "status": "PASS",
+      "altered": [],
+      "missing": [],
+      "pending": []
+    }
+  ],
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "apiStarted": false,
+  "imagePinChanged": false,
+  "migrationRunnerCalled": false,
+  "phaseComplete": false
+}

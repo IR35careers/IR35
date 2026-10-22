@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "phase": "P4",
+  "acceptance": "owner-revised-a-f-20261021",
+  "criteria": {
+    "aSyntheticGrantRefreshRLS": true,
+    "bEveryAuthPasswordHashMatchesSnapshot": true,
+    "cNamedUserAndIdentityAllFieldsMatchSnapshot": true,
+    "dRecoveryNewPasswordRefreshRLSAndRevocation": true,
+    "eSinkMagicLink": true,
+    "fFullSnapshotVerification": true,
+    "disposableAuthCloneDestroyed": true
+  },
+  "phaseComplete": true,
+  "sourceWrites": 0,
+  "pristineStagingWrites": 0,
+  "realPasswordAttempts": 0,
+  "authUsersChecked": 147,
+  "tablesChecked": 62,
+  "storageObjectsChecked": 73,
+  "appRolePrivilegesChecked": 552,
+  "originalDenialClassification": "user-entered password did not match the cloud hash; not a migration defect",
+  "classificationAuthority": "explicit owner decision; denial evidence and counters retained",
+  "stillRequiredBeforeCutover": [
+    "reverse-sync rehearsal",
+    "two complete timed end-to-end cycles and guarded wipes",
+    "P5-P8 staging app/worker/provider/load/backup gates",
+    "exact YES CUTOVER"
+  ],
+  "stage": "12-revised-p4-signoff",
+  "manifestSHA256": "6043fd966060f0b69b72f0237d984aa49245440f941e2600b7818091ede8c2df",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

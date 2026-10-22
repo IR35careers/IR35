@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "algorithm": "pg17-copy-binary-framed-text-v1",
+  "nativeARM": true,
+  "rows": "2",
+  "md5": "9244d1db1e093ad6723a61afd2e1e80a",
+  "serializedBytes": "74",
+  "transactionRolledBack": true,
+  "sourceWrites": 0,
+  "customerRowsImported": 0,
+  "phaseComplete": false
+}

@@ -1,0 +1,388 @@
+{
+  "status": "PASS",
+  "archiveSHA256": "9a93fdc86e7c3a4611eefcb8b1d1ca30bc9c4ee31a7da28e2b6ee746ea91ed10",
+  "sourceBundleSHA256": "5f12f3dce1ffc29f6ad17e9085d377d7fd2ece9fefeabc831eec933ef3eeed9e",
+  "tableFingerprint": {
+    "algorithm": "pg17-copy-binary-framed-text-v1",
+    "md5": "55a444ce635336fa733a015fc4db877f",
+    "name": "storage.migrations",
+    "rows": "74",
+    "serializedBytes": "8715"
+  },
+  "migrations": [
+    {
+      "id": 0,
+      "hash": "e18db593bcde2aca2a408c4d1100f6abba2195df",
+      "name": "create-migrations-table"
+    },
+    {
+      "id": 1,
+      "hash": "6ab16121fbaa08bbd11b712d05f358f9b555d777",
+      "name": "initialmigration"
+    },
+    {
+      "id": 2,
+      "hash": "f6a1fa2c93cbcd16d4e487b362e45fca157a8dbd",
+      "name": "storage-schema"
+    },
+    {
+      "id": 3,
+      "hash": "2cb1b0004b817b29d5b0a971af16bafeede4b70d",
+      "name": "pathtoken-column"
+    },
+    {
+      "id": 4,
+      "hash": "427c5b63fe1c5937495d9c635c263ee7a5905058",
+      "name": "add-migrations-rls"
+    },
+    {
+      "id": 5,
+      "hash": "79e081a1455b63666c1294a440f8ad4b1e6a7f84",
+      "name": "add-size-functions"
+    },
+    {
+      "id": 6,
+      "hash": "ded78e2f1b5d7e616117897e6443a925965b30d2",
+      "name": "change-column-name-in-get-size"
+    },
+    {
+      "id": 7,
+      "hash": "e7e7f86adbc51049f341dfe8d30256c1abca17aa",
+      "name": "add-rls-to-buckets"
+    },
+    {
+      "id": 8,
+      "hash": "fd670db39ed65f9d08b01db09d6202503ca2bab3",
+      "name": "add-public-to-buckets"
+    },
+    {
+      "id": 9,
+      "hash": "af597a1b590c70519b464a4ab3be54490712796b",
+      "name": "fix-search-function"
+    },
+    {
+      "id": 10,
+      "hash": "b595f05e92f7e91211af1bbfe9c6a13bb3391e16",
+      "name": "search-files-search-function"
+    },
+    {
+      "id": 11,
+      "hash": "7425bdb14366d1739fa8a18c83100636d74dcaa2",
+      "name": "add-trigger-to-auto-update-updated_at-column"
+    },
+    {
+      "id": 12,
+      "hash": "8e92e1266eb29518b6a4c5313ab8f29dd0d08df9",
+      "name": "add-automatic-avif-detection-flag"
+    },
+    {
+      "id": 13,
+      "hash": "cce962054138135cd9a8c4bcd531598684b25e7d",
+      "name": "add-bucket-custom-limits"
+    },
+    {
+      "id": 14,
+      "hash": "941c41b346f9802b411f06f30e972ad4744dad27",
+      "name": "use-bytes-for-max-size"
+    },
+    {
+      "id": 15,
+      "hash": "934146bc38ead475f4ef4b555c524ee5d66799e5",
+      "name": "add-can-insert-object-function"
+    },
+    {
+      "id": 16,
+      "hash": "76debf38d3fd07dcfc747ca49096457d95b1221b",
+      "name": "add-version"
+    },
+    {
+      "id": 17,
+      "hash": "f1cbb288f1b7a4c1eb8c38504b80ae2a0153d101",
+      "name": "drop-owner-foreign-key"
+    },
+    {
+      "id": 18,
+      "hash": "e7a511b379110b08e2f214be852c35414749fe66",
+      "name": "add_owner_id_column_deprecate_owner"
+    },
+    {
+      "id": 19,
+      "hash": "02e5e22a78626187e00d173dc45f58fa66a4f043",
+      "name": "alter-default-value-objects-id"
+    },
+    {
+      "id": 20,
+      "hash": "cd694ae708e51ba82bf012bba00caf4f3b6393b7",
+      "name": "list-objects-with-delimiter"
+    },
+    {
+      "id": 21,
+      "hash": "8c804d4a566c40cd1e4cc5b3725a664a9303657f",
+      "name": "s3-multipart-uploads"
+    },
+    {
+      "id": 22,
+      "hash": "9737dc258d2397953c9953d9b86920b8be0cdb73",
+      "name": "s3-multipart-uploads-big-ints"
+    },
+    {
+      "id": 23,
+      "hash": "9d7e604cddc4b56a5422dc68c9313f4a1b6f132c",
+      "name": "optimize-search-function"
+    },
+    {
+      "id": 24,
+      "hash": "8312e37c2bf9e76bbe841aa5fda889206d2bf8aa",
+      "name": "operation-function"
+    },
+    {
+      "id": 25,
+      "hash": "d974c6057c3db1c1f847afa0e291e6165693b990",
+      "name": "custom-metadata"
+    },
+    {
+      "id": 26,
+      "hash": "215cabcb7f78121892a5a2037a09fedf9a1ae322",
+      "name": "objects-prefixes"
+    },
+    {
+      "id": 27,
+      "hash": "859ba38092ac96eb3964d83bf53ccc0b141663a6",
+      "name": "search-v2"
+    },
+    {
+      "id": 28,
+      "hash": "c73a2b5b5d4041e39705814fd3a1b95502d38ce4",
+      "name": "object-bucket-name-sorting"
+    },
+    {
+      "id": 29,
+      "hash": "ad2c1207f76703d11a9f9007f821620017a66c21",
+      "name": "create-prefixes"
+    },
+    {
+      "id": 30,
+      "hash": "2be814ff05c8252fdfdc7cfb4b7f5c7e17f0bed6",
+      "name": "update-object-levels"
+    },
+    {
+      "id": 31,
+      "hash": "b40367c14c3440ec75f19bbce2d71e914ddd3da0",
+      "name": "objects-level-index"
+    },
+    {
+      "id": 32,
+      "hash": "e0c37182b0f7aee3efd823298fb3c76f1042c0f7",
+      "name": "backward-compatible-index-on-objects"
+    },
+    {
+      "id": 33,
+      "hash": "b480e99ed951e0900f033ec4eb34b5bdcb4e3d49",
+      "name": "backward-compatible-index-on-prefixes"
+    },
+    {
+      "id": 34,
+      "hash": "ca80a3dc7bfef894df17108785ce29a7fc8ee456",
+      "name": "optimize-search-function-v1"
+    },
+    {
+      "id": 35,
+      "hash": "458fe0ffd07ec53f5e3ce9df51bfdf4861929ccc",
+      "name": "add-insert-trigger-prefixes"
+    },
+    {
+      "id": 36,
+      "hash": "6ae5fca6af5c55abe95369cd4f93985d1814ca8f",
+      "name": "optimise-existing-functions"
+    },
+    {
+      "id": 37,
+      "hash": "3944135b4e3e8b22d6d4cbb568fe3b0b51df15c1",
+      "name": "add-bucket-name-length-trigger"
+    },
+    {
+      "id": 38,
+      "hash": "02716b81ceec9705aed84aa1501657095b32e5c5",
+      "name": "iceberg-catalog-flag-on-buckets"
+    },
+    {
+      "id": 39,
+      "hash": "6706c5f2928846abee18461279799ad12b279b78",
+      "name": "add-search-v2-sort-support"
+    },
+    {
+      "id": 40,
+      "hash": "7ad69982ae2d372b21f48fc4829ae9752c518f6b",
+      "name": "fix-prefix-race-conditions-optimized"
+    },
+    {
+      "id": 41,
+      "hash": "07fcf1a22165849b7a029deed059ffcde08d1ae0",
+      "name": "add-object-level-update-trigger"
+    },
+    {
+      "id": 42,
+      "hash": "771479077764adc09e2ea2043eb627503c034cd4",
+      "name": "rollback-prefix-triggers"
+    },
+    {
+      "id": 43,
+      "hash": "84b35d6caca9d937478ad8a797491f38b8c2979f",
+      "name": "fix-object-level"
+    },
+    {
+      "id": 44,
+      "hash": "99c20c0ffd52bb1ff1f32fb992f3b351e3ef8fb3",
+      "name": "vector-bucket-type"
+    },
+    {
+      "id": 45,
+      "hash": "049e27196d77a7cb76497a85afae669d8b230953",
+      "name": "vector-buckets"
+    },
+    {
+      "id": 46,
+      "hash": "fedeb96d60fefd8e02ab3ded9fbde05632f84aed",
+      "name": "buckets-objects-grants"
+    },
+    {
+      "id": 47,
+      "hash": "649df56855c24d8b36dd4cc1aeb8251aa9ad42c2",
+      "name": "iceberg-table-metadata"
+    },
+    {
+      "id": 48,
+      "hash": "e0e8b460c609b9999ccd0df9ad14294613eed939",
+      "name": "iceberg-catalog-ids"
+    },
+    {
+      "id": 49,
+      "hash": "072b1195d0d5a2f888af6b2302a1938dd94b8b3d",
+      "name": "buckets-objects-grants-postgres"
+    },
+    {
+      "id": 50,
+      "hash": "6323ac4f850aa14e7387eb32102869578b5bd478",
+      "name": "search-v2-optimised"
+    },
+    {
+      "id": 51,
+      "hash": "2ee395d433f76e38bcd3856debaf6e0e5b674011",
+      "name": "index-backward-compatible-search"
+    },
+    {
+      "id": 52,
+      "hash": "5cc44c8696749ac11dd0dc37f2a3802075f3a171",
+      "name": "drop-not-used-indexes-and-functions"
+    },
+    {
+      "id": 53,
+      "hash": "d0cb18777d9e2a98ebe0bc5cc7a42e57ebe41854",
+      "name": "drop-index-lower-name"
+    },
+    {
+      "id": 54,
+      "hash": "6289e048b1472da17c31a7eba1ded625a6457e67",
+      "name": "drop-index-object-level"
+    },
+    {
+      "id": 55,
+      "hash": "262a4798d5e0f2e7c8970232e03ce8be695d5819",
+      "name": "prevent-direct-deletes"
+    },
+    {
+      "id": 56,
+      "hash": "b823ed1e418101032fa01374edc9a436e54e3ed4",
+      "name": "fix-optimized-search-function"
+    },
+    {
+      "id": 57,
+      "hash": "f127886e00d1b374fadbc7c6b31e09336aad5287",
+      "name": "s3-multipart-uploads-metadata"
+    },
+    {
+      "id": 58,
+      "hash": "00ca5d483b3fe0d522133d9002ccc5df98365120",
+      "name": "operation-ergonomics"
+    },
+    {
+      "id": 59,
+      "hash": "38456f13e39691c2bbb4b5151d0d1cdbabd4a8c4",
+      "name": "drop-unused-functions"
+    },
+    {
+      "id": 60,
+      "hash": "db35e1c91a9201e59f4fef8d972c2f277d68b157",
+      "name": "optimize-existing-functions-again"
+    },
+    {
+      "id": 61,
+      "hash": "fe0096517ae9d60aaec1d110172ba9036dc66bb7",
+      "name": "mark-filename-immutable"
+    },
+    {
+      "id": 62,
+      "hash": "0b855f00ff3be0bfca91efee02a9858912491a9a",
+      "name": "object-versioning-core"
+    },
+    {
+      "id": 63,
+      "hash": "c7485e417624f795ce8bb2da21927f48e088904d",
+      "name": "fix-search-name-relative-to-prefix"
+    },
+    {
+      "id": 64,
+      "hash": "0af424ecd388a39bb1645184b222185a12149675",
+      "name": "fix-search-by-timestamp-sqli"
+    },
+    {
+      "id": 65,
+      "hash": "da319c4b89ba800ce795d1b699f3a70675138058",
+      "name": "objects-key-version-index"
+    },
+    {
+      "id": 66,
+      "hash": "191466c93aa2c46a00e36505577c5fcab8d7cb4b",
+      "name": "objects-current-version-index"
+    },
+    {
+      "id": 67,
+      "hash": "15bfe8c35b66642b6c78ba60060fa8793bd2207a",
+      "name": "objects-null-version-index"
+    },
+    {
+      "id": 68,
+      "hash": "3c08f6f889922f399519722a932b51007c11bebc",
+      "name": "bucket-lifecycle-configuration"
+    },
+    {
+      "id": 69,
+      "hash": "4febacaaaa0e61e2b783bef081fe03a287e65eb3",
+      "name": "validate-bucket-lifecycle-constraints"
+    },
+    {
+      "id": 70,
+      "hash": "5c17c3777616cd8d7b18b82835525fa3205af57b",
+      "name": "list-objects-with-versions"
+    },
+    {
+      "id": 71,
+      "hash": "6d14858e66c66f8d6accf8a2630aefd1527fddba",
+      "name": "objects-delete-marker-index"
+    },
+    {
+      "id": 72,
+      "hash": "302beb09e1b469d7d4db19566f2389d280b64aa3",
+      "name": "drop-bucketid-objname-index"
+    },
+    {
+      "id": 73,
+      "hash": "ba9244051be09f22f714fc0170a2539f8b5f0e68",
+      "name": "revoke-grants-to-unused-operations"
+    }
+  ],
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "apiStarted": false,
+  "migrationRunnerCalled": false
+}

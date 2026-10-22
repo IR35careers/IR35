@@ -1,0 +1,49 @@
+{
+  "status": "FAIL",
+  "reason": "SOURCE_REFERENCE_OVERWRITTEN_BY_HELPER",
+  "phaseComplete": false,
+  "archiveUnchanged": true,
+  "expectedBundleSHA256": "5f12f3dce1ffc29f6ad17e9085d377d7fd2ece9fefeabc831eec933ef3eeed9e",
+  "observedBundleSHA256": "ca442a732e6c0c9b53cb2d785cae8bb6a2ace45b9e05cec7aa4adc5d11f232d2",
+  "exactRecoveryCopiesInKnownP4Artifacts": [],
+  "originalDeniedAttemptPreserved": true,
+  "secondPasswordAttempts": 0,
+  "containers": {
+    "auth": {
+      "stopped": true,
+      "noPublicPorts": true,
+      "restartPolicy": "no"
+    },
+    "rest": {
+      "stopped": true,
+      "noPublicPorts": true,
+      "restartPolicy": "no"
+    },
+    "kong": {
+      "stopped": true,
+      "noPublicPorts": true,
+      "restartPolicy": "no"
+    }
+  },
+  "tableChecks": 62,
+  "dataDifferences": [],
+  "comparisonBaseline": "previous frozen-restore public fingerprints, not a recreated source bundle",
+  "sequenceChecks": 2,
+  "sequenceDifferencesVsUnchangedArchive": [],
+  "storage": {
+    "data/rehearsal/cycle1/storage": {
+      "objectCount": 73,
+      "manifestMatchesRecordedProof": true,
+      "extraFiles": 0
+    },
+    "data/storage-compat/cycle1/storage": {
+      "objectCount": 73,
+      "manifestMatchesRecordedProof": true,
+      "extraFiles": 0
+    }
+  },
+  "sourceWrites": 0,
+  "stagingDataWrites": 0,
+  "passwordRequested": false,
+  "newFullFidelityClaim": false
+}

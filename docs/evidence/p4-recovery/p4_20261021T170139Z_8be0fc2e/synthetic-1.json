@@ -1,0 +1,45 @@
+{
+  "status": "FAIL",
+  "attempt": 1,
+  "namedPasswordAttempts": 0,
+  "sourceWrites": 0,
+  "phaseComplete": false,
+  "code": "TimeoutExpired",
+  "runtime": {
+    "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-1",
+    "containers": {
+      "auth": "eca7a28d837762dc79050fa99c8c037d7d373240c551012e26f7ed8e7d3192b6",
+      "rest": "8053b5a95fd4ad1e7010db9997e18cb513cd1e8369d785511de271eeb6f756b4",
+      "kong": "16a48c347dacf4fc330b7b9f93766b7122807946d822b52ce2fadc9fa2e17d84"
+    },
+    "files": [
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-1/.env.auth",
+        "sha256": "8a9ed2049ed7c61cf9115a18f69bdce4f3002861b0bf3d7fefc2148365904ce6",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-1/.env.rest",
+        "sha256": "836cc867c382bfc27bfb69e6890548fae5d67f1a968582605a6e280abe5fb4f1",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-1/.env.kong-config.json",
+        "sha256": "49fa6dc6310fbb414f34f2ee9a68a0d9239f7789d24fae27f1e5b99207df593c",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-08-synthetic-1/.env.kong",
+        "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce",
+        "mode": "600"
+      }
+    ]
+  },
+  "diagnostics": [],
+  "containersStopped": true,
+  "pristineDatabaseUnchanged": true,
+  "stage": "08-synthetic-1",
+  "manifestSHA256": "c3a2a517364d301273de348cc04aaa51e0572f5c75b02a051097039b59d818cb",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

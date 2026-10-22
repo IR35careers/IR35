@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e",
+  "incidentManifestSHA256": "7c1ddd164a3a4491c53f30cf279ca3e16edc9d2c38ee7fa7828539a4be7a359c",
+  "writeOnce": true,
+  "sourceWrites": 0,
+  "customerDataWrites": 0,
+  "protocol": "owner-recovery-20261021-v1",
+  "stage": "00-run",
+  "manifestSHA256": "ed3e3c5b91425ce5edaa29ee999f3331b1b8a3681c039687bd7550c29a441ddc"
+}

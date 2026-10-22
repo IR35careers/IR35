@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "gates": {
+    "ir35_owner_parity_20261021": {
+      "status": "PASS",
+      "sourceObjects": 327,
+      "targetObjects": 327,
+      "sourceCheckedAt": "2026-10-21T08:39:56Z",
+      "targetCheckedAt": "2026-10-21T08:39:57Z",
+      "differences": [],
+      "exceptions": [],
+      "sourceWrites": 0,
+      "stagingWrites": 0,
+      "customerRowsImported": 0,
+      "fullDataVerification": false
+    },
+    "ir35_baseline_proof_20261021": {
+      "status": "PASS",
+      "sourceObjects": 327,
+      "targetObjects": 327,
+      "sourceCheckedAt": "2026-10-21T08:39:56Z",
+      "targetCheckedAt": "2026-10-21T08:39:57Z",
+      "differences": [],
+      "exceptions": [],
+      "sourceWrites": 0,
+      "stagingWrites": 0,
+      "customerRowsImported": 0,
+      "fullDataVerification": false
+    }
+  },
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "customerRowsImported": 0,
+  "phaseComplete": false
+}

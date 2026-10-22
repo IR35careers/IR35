@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "objectCount": 73,
+  "totalBytes": 1241375,
+  "allSHA256Match": true,
+  "physicalRoot": "/opt/ir35/data/p4-runs/p4_20261021T170139Z_8be0fc2e",
+  "sourceWrites": 0,
+  "databaseWrites": 0,
+  "bucketMetadataCoveredByDatabaseFingerprint": true,
+  "storageAPIProofPending": true,
+  "phaseComplete": false,
+  "stage": "04-storage",
+  "manifestSHA256": "d692ad0504a72aba1c985c330318de04211a04a90a6968ce9bbafe23a3fd1ad6",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

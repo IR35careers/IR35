@@ -32,7 +32,8 @@ def run_guest(source,timeout=120):
     return host_ssh.run_remote(wrapper,[],timeout=timeout)
 
 
-def guest_bundle():
+def guest_bundle(*, rehearsal=False):
+    if type(rehearsal) is not bool:raise ValueError('Explicit rehearsal boolean required')
     state=json.loads(private_file(STATE))
     if state.get("export",{}).get("status")!="PASS":
         raise KeySafetyError("VerifiedSchemaExportRequired")
@@ -45,7 +46,7 @@ def guest_bundle():
     current_catalog=".env.p3-source-catalog-v2.json" if (REPO/"docs/evidence/oracle-p3-catalog-repair.json").exists() else ".env.p3-source-catalog.json"
     source+=r'''
 state=json.loads(STATE.read_text())
-if state.get('purpose')!='ir35-disposable-staging' or state.get('dataRehearsalStarted') or state.get('promotedToProduction'):
+if state.get('purpose')!='ir35-disposable-staging' or (state.get('dataRehearsalStarted') and not APPROVED_REHEARSAL) or state.get('promotedToProduction'):
  raise RuntimeError('Disposable pre-rehearsal target only')
 cloud=json.loads((ROOT/CURRENT_CATALOG).read_text())
 CATALOG_SQL=SQL_TEXT
@@ -60,7 +61,7 @@ def safe(catalog):
    item['value']=value
   objects.append(item)
  return {k:catalog[k] for k in ('version','checkedAt','serverVersion','encoding','collation','schemas')}|{'objects':objects}
-'''.replace("SQL_TEXT",repr((REPO/"supabase/verification/oracle_schema_catalog.sql").read_text())).replace("CURRENT_CATALOG",repr(current_catalog))
+'''.replace("SQL_TEXT",repr((REPO/"supabase/verification/oracle_schema_catalog.sql").read_text())).replace("CURRENT_CATALOG",repr(current_catalog)).replace('APPROVED_REHEARSAL',repr(rehearsal))
     return source
 
 
@@ -299,6 +300,32 @@ except Exception:
 
 
 def main():
+    if sys.argv[1:]==['p4-recovery-capture']:
+        import p4_recovery
+        p4_recovery.capture();return
+    if sys.argv[1:]==['p4-auth-diagnosis']:
+        import auth_diagnostic
+        auth_diagnostic.capture();return
+    if sys.argv[1:]==['p4-storage-access']:
+        import storage_access
+        storage_access.capture();return
+    if sys.argv[1:] in (['p4-rehearse-1'],['p4-rehearse-2']):
+        from rehearsal import main as rehearse
+        sys.argv=[sys.argv[0],'--staging','--cycle',sys.argv[1][-1]]
+        rehearse()
+        return
+    if sys.argv[1:]==['p4-source-storage']:
+        from storage_source import run
+        run()
+        return
+    if sys.argv[1:]==['p4-source-fingerprints']:
+        from p4_source import run
+        run()
+        return
+    if sys.argv[1:]==['p4-schema-preflight']:
+        from p4_preflight import run
+        run()
+        return
     if sys.argv[1:]==['owner-expiry-probe']:
         from owner_parity import expiry_probe
         expiry_probe()

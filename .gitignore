@@ -33,6 +33,7 @@ infra/oracle/deploy.env
 
 # Oracle credentials/state never belong in this public repository.
 /.cache/oracle-schema/
+/.cache/storage-upstream/
 *.tfstate
 *.tfstate.*
 .terraform/

@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "testAccountPresent": true,
+  "passwordPresent": true,
+  "confirmed": true,
+  "sourceWrites": 0,
+  "stagingWrites": 0
+}

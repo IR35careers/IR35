@@ -1,0 +1,144 @@
+{
+  "status": "READY_STOPPED",
+  "namedPasswordAttempts": 0,
+  "globalPasswordAttempts": 1,
+  "sourceWrites": 0,
+  "phaseComplete": false,
+  "initialControls": {
+    "emailEnabled": true,
+    "confirmationRequired": true,
+    "missingApikeyDenied": true,
+    "invalidApikeyDenied": true,
+    "controlled400Captured": true
+  },
+  "restartControls": {
+    "emailEnabled": true,
+    "confirmationRequired": true,
+    "missingApikeyDenied": true,
+    "invalidApikeyDenied": true,
+    "controlled400Captured": true
+  },
+  "preloginFidelity": true,
+  "restartTested": true,
+  "remainingPasswordAttempts": 1,
+  "previousDenialPreserved": true,
+  "plainPasswordRequested": false,
+  "runtime": {
+    "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-09-named-ready",
+    "containers": {
+      "auth": "96ea3deada34de2695773c45c12744ade35d5fedf54dcade658f598c4c1c866b",
+      "rest": "67500c20c5fc0e6d1141e05ecd4b81d7b225cf43ce7a88c85b1b675b44f8f1af",
+      "kong": "368c305cd03754e9ad70c439bedec1a289e4112a095d09dd8156cb3c085aba83"
+    },
+    "files": [
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-09-named-ready/.env.auth",
+        "sha256": "c641c11fff1e166d809aa443c6f4d5d5004973b619cefe1877e5d58e98d0acbb",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-09-named-ready/.env.rest",
+        "sha256": "ab3d9d4b797753b94816438e04ebc24aa2d2c5c91529fa318ea55cf66a78602a",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-09-named-ready/.env.kong-config.json",
+        "sha256": "95835af2423cf0186d8c68bba7daca5ba11c7d9150e7dcef22356bef32d243f8",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-09-named-ready/.env.kong",
+        "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce",
+        "mode": "600"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email",
+        "password"
+      ],
+      "response": {
+        "status": 400,
+        "error_code": "validation_failed",
+        "error": null,
+        "msg": "missing email or phone",
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "d69769bb-bdcc-47c8-b437-5bbc75663d8b",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "d69769bb-bdcc-47c8-b437-5bbc75663d8b",
+          "msg": "request completed",
+          "error": "[withheld]",
+          "status": 400,
+          "level": "warning",
+          "method": "POST",
+          "path": "/token",
+          "error_code": "validation_failed"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/token",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email",
+        "password"
+      ],
+      "response": {
+        "status": 400,
+        "error_code": "validation_failed",
+        "error": null,
+        "msg": "missing email or phone",
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "042085ea-b9a0-4e4d-8155-0580b8633b42",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "042085ea-b9a0-4e4d-8155-0580b8633b42",
+          "msg": "request completed",
+          "error": "[withheld]",
+          "status": 400,
+          "level": "warning",
+          "method": "POST",
+          "path": "/token",
+          "error_code": "validation_failed"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    }
+  ],
+  "containersStopped": true,
+  "pristineDatabaseUnchanged": true,
+  "stage": "09-named-ready",
+  "manifestSHA256": "5bfea2ea26951382c280dab12b27ca73f5110cb9532486f1aa7cfb7784976d82",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

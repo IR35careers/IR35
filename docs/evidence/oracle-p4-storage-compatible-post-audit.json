@@ -1,0 +1,105 @@
+{
+  "status": "PASS",
+  "schema": {
+    "status": "PASS_WITH_OWNER_APPROVED_EXCEPTIONS",
+    "sourceCheckedAt": "2026-10-21T09:07:22Z",
+    "targetCheckedAt": "2026-10-21T15:46:02Z",
+    "sourceObjects": 3752,
+    "targetObjects": 3752,
+    "unexplainedDifferences": [],
+    "exceptions": [
+      {
+        "object": "extension:pg_stat_statements",
+        "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+        "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae",
+        "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+      },
+      {
+        "object": "extension:pgcrypto",
+        "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+        "stagingHash": "63652c33f708c5861e34f2218529562b",
+        "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+      },
+      {
+        "object": "extension:uuid-ossp",
+        "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+        "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc",
+        "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS"
+      }
+    ],
+    "roleAttributesMatch": true,
+    "metadataMatch": true,
+    "conditionsPASS": true,
+    "fullDataVerification": false,
+    "phaseComplete": false
+  },
+  "transport": {
+    "status": "PASS",
+    "sourceObjects": 327,
+    "targetObjects": 327,
+    "sourceCheckedAt": "2026-10-21T09:07:22Z",
+    "targetCheckedAt": "2026-10-21T15:46:03Z",
+    "differences": [],
+    "exceptions": [],
+    "sourceWrites": 0,
+    "stagingWrites": 0,
+    "customerRowsImported": 0,
+    "fullDataVerification": false
+  },
+  "extensionChecks": {
+    "status": "PASS",
+    "ownerDifferences": [
+      {
+        "object": "extension:pg_stat_statements",
+        "cloudOwner": "postgres",
+        "stagingOwner": "supabase_admin",
+        "version": "1.11"
+      },
+      {
+        "object": "extension:pgcrypto",
+        "cloudOwner": "postgres",
+        "stagingOwner": "supabase_admin",
+        "version": "1.3"
+      },
+      {
+        "object": "extension:uuid-ossp",
+        "cloudOwner": "postgres",
+        "stagingOwner": "supabase_admin",
+        "version": "1.1"
+      }
+    ],
+    "unapprovedDifferences": [],
+    "objectACLChecks": 62,
+    "capabilityChecks": 198,
+    "memberChecks": 55,
+    "typeACLChecks": 4,
+    "conditions": {
+      "adminOwner": true,
+      "allObjectACLs": true,
+      "ddlCapabilities": true,
+      "versions": true
+    },
+    "conditionalExceptionsOnly": true
+  },
+  "privileges": {
+    "status": "PASS",
+    "sourceCheckedAt": "2026-10-21T09:07:22Z",
+    "targetCheckedAt": "2026-10-21T15:46:03Z",
+    "sourceEntries": 552,
+    "targetEntries": 552,
+    "differences": [],
+    "morePermissive": [],
+    "repairMustStop": false,
+    "sourceWrites": 0,
+    "stagingWrites": 0,
+    "exceptionsApproved": []
+  },
+  "tableChecks": 62,
+  "dataDifferences": [],
+  "sequenceChecks": 2,
+  "storageMigrationFreeze": "revoke-grants-to-unused-operations",
+  "storageAPIAttempts": 1,
+  "sourceWrites": 0,
+  "stagingWrites": 0,
+  "phaseComplete": false
+}
