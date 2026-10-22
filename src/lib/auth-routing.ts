@@ -35,7 +35,11 @@ export function authCallbackPath(next?: string | null): string {
 }
 
 export function canonicalAuthCallbackUrl(next?: string | null): string {
-  return `https://www.ir35careers.com${authCallbackPath(next)}`;
+  // Staging must never send recovery/callback traffic to the live application.
+  // These exact origins only; never trust a caller-supplied return hostname.
+  const staging = process.env.IR35_STAGING === "true"
+    || (typeof window !== "undefined" && window.location.origin === "https://staging.ir35careers.com");
+  return `https://${staging ? "staging" : "www"}.ir35careers.com${authCallbackPath(next)}`;
 }
 
 export function accountSignInPath(next?: string | null): string {

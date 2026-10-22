@@ -9,6 +9,7 @@
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { supabaseTransport } from "@/lib/supabase-transport";
 
 let cached: SupabaseClient | null = null;
 
@@ -27,6 +28,7 @@ export function getSupabaseAdmin(): SupabaseClient {
   }
 
   cached = createClient(url, secretKey, {
+    global: { fetch: supabaseTransport() },
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return cached;

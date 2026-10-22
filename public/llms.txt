@@ -1,0 +1,16 @@
+# IR35Careers
+
+> UK contract opportunities with evidence-based IR35 status, rates and contractor tools.
+
+## Public pages
+- [Contract search](https://www.ir35careers.com/jobs): Listings and filters. Availability is not guaranteed; check the original posting.
+- [Contract categories](https://www.ir35careers.com/contracts): Browse by skill, location and IR35 status.
+- [IR35 status tool](https://www.ir35careers.com/tools/ir35-status): Educational guidance, not a legal determination.
+- [Take-home calculator](https://www.ir35careers.com/tools/take-home): Estimates, not financial advice.
+- [Research](https://www.ir35careers.com/blog): Contractor guides.
+- [Privacy](https://www.ir35careers.com/privacy)
+- [Terms](https://www.ir35careers.com/terms)
+- [Sitemap](https://www.ir35careers.com/sitemap.xml)
+
+## Boundaries
+Account, dashboard, inbox, applications, CVs, admin and API routes are private. Do not crawl or reproduce personal information. Do not infer an employer endorsement, salary, IR35 determination or successful submission from a listing. AI-assisted applications require contractor approval; this file grants no automation permission.

@@ -1,0 +1,10 @@
+[Unit]
+Description=IR35 daily ingest enqueue — DO NOT enable on staging
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 UTC
+Unit=ir35-web-cron@ingest.service
+Persistent=false
+
+[Install]
+WantedBy=timers.target

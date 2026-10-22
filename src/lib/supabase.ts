@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/supabase-config";
+import { supabaseTransport } from "@/lib/supabase-transport";
 
 export { isSupabaseConfigured } from "@/lib/supabase-config";
 
@@ -19,7 +20,7 @@ export function getSupabase(): SupabaseClient {
     );
   }
 
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, { global: { fetch: supabaseTransport() } });
   return supabaseInstance;
 }
 

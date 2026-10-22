@@ -1,4 +1,20 @@
 User-agent: *
 Allow: /
+Disallow: /account
+Disallow: /auth/
+Disallow: /admin
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /applications
+Disallow: /automation
+Disallow: /inbox
+Disallow: /profile
+Disallow: /settings
+Disallow: /saved
+Disallow: /billing
+Disallow: /onboarding
+Disallow: /testing
+Disallow: /alerts
+Disallow: /network
 
 Sitemap: https://www.ir35careers.com/sitemap.xml

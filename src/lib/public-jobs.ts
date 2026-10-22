@@ -1,7 +1,7 @@
 import { DEMO_JOBS, isDemoDataAvailable } from "@/lib/demo-jobs";
 import type { JobDetail, JobListing } from "@/lib/job-types";
 import { supabase } from "@/lib/supabase";
-import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { isTruncatedJobDescription } from "@/lib/job-seo";
 import { fetchReedDetail } from "@/lib/aggregators/reed-fetcher";
 import { HttpClient } from "@/lib/ats/http-client";
@@ -18,7 +18,7 @@ function hasLiveDatabase(): boolean {
   );
 }
 
-const readActiveJob = unstable_cache(async (id: string): Promise<JobDetail | null> => {
+const readActiveJob = cache(async (id: string): Promise<JobDetail | null> => {
   const { data, error } = await supabase
     .from("jobs")
     .select(`${JOB_DETAIL_COLUMNS},source_identifier`)
@@ -39,7 +39,7 @@ const readActiveJob = unstable_cache(async (id: string): Promise<JobDetail | nul
     if (text.length > job.description.length && !isTruncatedJobDescription(text)) job.description = text;
   }
   return job;
-}, ["public-job-detail-v3"], { revalidate: 300, tags: ["public-jobs"] });
+});
 
 /** Read one active public listing. Invalid identifiers never reach Postgres. */
 export async function getPublicJob(id: string): Promise<JobDetail | null> {

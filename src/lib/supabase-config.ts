@@ -1,3 +1,5 @@
+import { supabaseTransport } from "@/lib/supabase-transport";
+
 /** Safe to import in any client or server module; contains no Supabase SDK. */
 export function isSupabaseConfigured(): boolean {
   return Boolean(
@@ -20,7 +22,7 @@ export async function isSupabaseOAuthProviderEnabled(provider: string): Promise<
   if (!baseUrl || !anonKey) return false;
 
   try {
-    const response = await fetch(`${baseUrl}/auth/v1/settings`, {
+    const response = await supabaseTransport()(`${baseUrl}/auth/v1/settings`, {
       headers: { apikey: anonKey },
       cache: "no-store",
     });

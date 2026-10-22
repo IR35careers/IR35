@@ -10,12 +10,13 @@ import { isPrimarySapRole } from "@/lib/processing/skills-extractor";
 const BATCH = 500;
 // Cache public data, never HTML containing a per-request security nonce. Batches
 // stay below the Data Cache item limit and work around PostgREST's row cap.
-const readBatch = unstable_cache(async (offset: number) => {
+async function readLiveBatch(offset: number) {
   const { data, error } = await supabase.from("jobs").select(JOB_LIST_COLUMNS)
     .is("expired_at", null).order("id").range(offset, offset + BATCH - 1);
   if (error) throw new Error("Public contract inventory is temporarily unavailable");
   return (data ?? []) as unknown as JobListing[];
-}, ["public-job-inventory-v2"], { revalidate: 300, tags: ["public-jobs"] });
+}
+const readBatch = unstable_cache(readLiveBatch, ["public-job-inventory-v2"], { revalidate: 300, tags: ["public-jobs"] });
 
 export function isRelevantPublicJob(job: JobListing): boolean {
   return job.source_domain !== "demo.ir35careers.local" && isProfessionalRole(job.title, {
@@ -32,16 +33,19 @@ export function matchesSeoFilters(job: JobListing, filters: SeoFilters): boolean
     && (!filters.remote || job.remote_type === "remote");
 }
 
-export const getPublicJobInventory = cache(async (): Promise<JobListing[]> => {
+async function inventoryUsing(read: typeof readLiveBatch): Promise<JobListing[]> {
   if (!isSupabaseConfigured()) return [];
   const jobs: JobListing[] = [];
   for (let offset = 0; ; offset += BATCH) {
-    const batch = await readBatch(offset);
+    const batch = await read(offset);
     jobs.push(...batch.filter(isRelevantPublicJob));
     if (batch.length < BATCH) break;
   }
   return jobs.sort((a, b) => (b.posted_at ?? b.first_seen_at).localeCompare(a.posted_at ?? a.first_seen_at));
-});
+}
+export const getPublicJobInventory = cache(() => inventoryUsing(readBatch));
+/** Sitemap must not advertise a listing from an older inventory cache. */
+export const getFreshPublicJobInventory = cache(() => inventoryUsing(readLiveBatch));
 
 export async function getContractPageData(filters: SeoFilters) {
   const matches = (await getPublicJobInventory()).filter(job => matchesSeoFilters(job, filters));

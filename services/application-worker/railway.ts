@@ -13,11 +13,12 @@ import { runScheduledAutoApply } from "../../src/lib/automation/scheduled-runner
 import { reconcileCloudApplications } from "../../src/lib/application-cloud-reconcile";
 import { handleRailwayApplication, LeaseDeferred } from "./railway-handler";
 import { handleMaintenanceHttp, TrackedWorkerHandlers, WorkerDatabaseObservation, WorkerMaintenance } from "./maintenance";
+import { readOnlyMaintenance } from "../../src/lib/maintenance-mode";
 
 async function main() {
   const config = queueWorkerConfig();
   const origin = config.IR35CAREERS_APP_URL.replace(/\/$/, "");
-  const accepting = config.APPLICATION_WORKER_ACCEPT_JOBS === "true";
+  const accepting = config.APPLICATION_WORKER_ACCEPT_JOBS === "true" && !readOnlyMaintenance();
   if (accepting && (!process.env.SUPABASE_SECRET_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || (process.env.CRON_SECRET?.length || 0) < 32))
     throw new Error("Consuming work requires Supabase server credentials and the shared scheduler secret.");
   const boss = new PgBoss(pgBossOptions("worker"));
