@@ -7,17 +7,21 @@ import { z } from "zod";
 export function supabaseTransport(fetcher: typeof fetch = fetch): typeof fetch {
   const internal = typeof window === "undefined" ? process.env.SUPABASE_INTERNAL_URL : undefined;
   if (!internal) return fetcher;
-  const target = z.url().parse(internal);
-  const endpoint = new URL(target);
+  const target = z.url().safeParse(internal);
+  if (!target.success) throw new Error("Invalid private Supabase endpoint; value withheld.");
+  const endpoint = new URL(target.data);
   if (endpoint.protocol !== "http:" || !["kong", "ir35-p5-kong"].includes(endpoint.hostname)
     || endpoint.port !== "8000" || endpoint.pathname !== "/" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
     throw new Error("Invalid private Supabase endpoint; expected the isolated Kong service.");
   }
-  const publicURL = new URL(z.url().parse(process.env.NEXT_PUBLIC_SUPABASE_URL));
+  const parsed = z.url().safeParse(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  if (!parsed.success) throw new Error("Invalid public Supabase endpoint; value withheld.");
+  const publicURL = new URL(parsed.data);
+  if (publicURL.protocol !== "https:" || publicURL.username || publicURL.password || publicURL.search || publicURL.hash) throw new Error("Invalid public Supabase origin.");
   const prefix = publicURL.pathname.replace(/\/$/, "");
   return async (input, init) => {
     const original = new URL(input instanceof Request ? input.url : String(input));
-    if (original.origin !== publicURL.origin || !original.pathname.startsWith(`${prefix}/`)) {
+    if (original.username || original.password || original.hash || original.origin !== publicURL.origin || !original.pathname.startsWith(`${prefix}/`)) {
       throw new Error("Supabase transport refused a different origin/path; credentials withheld.");
     }
     const suffix = original.pathname.slice(prefix.length);

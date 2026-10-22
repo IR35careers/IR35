@@ -6,10 +6,12 @@ export function readOnlyMaintenance(env: Record<string, string | undefined> = pr
 }
 
 export function blockedByMaintenance(method: string, pathname: string, env: Record<string, string | undefined> = process.env): boolean {
-  return readOnlyMaintenance(env) && (
-    !["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())
-    || ["/api/pipeline/fetch", "/api/automation/run"].includes(pathname)
-  );
+  if (!readOnlyMaintenance(env)) return false;
+  if (!["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())) return true;
+  // GET alone is not proof of read-only behaviour (cron/verification endpoints
+  // can mutate). Permit only the explicitly audited public read surface.
+  return method.toUpperCase() !== "OPTIONS" && pathname.startsWith("/api/")
+    && !/^\/api\/(?:health|company-logo|jobs\/(?:search|[a-f0-9-]{36}))$/.test(pathname);
 }
 
 export const MAINTENANCE_MESSAGE = "Maintenance in progress. Your information is safe; please try again shortly.";

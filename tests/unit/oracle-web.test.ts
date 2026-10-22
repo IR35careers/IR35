@@ -19,6 +19,8 @@ describe("read-only maintenance", () => {
     }
     expect(blockedByMaintenance("GET", "/api/pipeline/fetch", { IR35_READ_ONLY: "true" })).toBe(true);
     expect(blockedByMaintenance("GET", "/api/automation/run", { IR35_READ_ONLY: "true" })).toBe(true);
+    expect(blockedByMaintenance("GET", "/api/employer-destinations/verify", { IR35_READ_ONLY: "true" })).toBe(true);
+    expect(blockedByMaintenance("GET", "/api/unknown-future-command", { IR35_READ_ONLY: "true" })).toBe(true);
     expect(blockedByMaintenance("GET", "/api/jobs/search", { IR35_READ_ONLY: "true" })).toBe(false);
   });
   it("refuses mock outside isolated staging or on Vercel", () => {
