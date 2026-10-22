@@ -1,12 +1,16 @@
 import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 const sql = readFileSync(new URL("../../supabase/verification/oracle_schema_catalog.sql", import.meta.url), "utf8");
 type Entry = { kind: string; name: string; hash: string; value: Record<string, unknown> };
 describe("expanded read-only Oracle schema catalog", () => {
+  let db: PGlite;
+  beforeAll(async () => {
+    db = new PGlite();
+    await db.waitReady;
+  });
   it("executes real catalog SQL and detects grants, both policy predicates and sequence definitions", async () => {
-    const db = new PGlite();
     try {
       await db.exec(`CREATE ROLE fixture_reader; CREATE TABLE public.fixture(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, dropped text, label text DEFAULT 'example');
         ALTER TABLE public.fixture DROP COLUMN dropped;

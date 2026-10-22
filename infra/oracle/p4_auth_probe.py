@@ -115,7 +115,7 @@ class PrivateStack:
         name='ir35-p4-'+self.r.run_id[-8:]+'-'+self.stage.name+'-'+service
         if self.runtime['run'](['docker','ps','-a','--filter','name=^/'+name+'$','--format','{{.ID}}']).strip():raise RecoveryError('TestContainerCollision_NoReplay')
         args=['docker','run','-d','--name',name,'--label','ir35.recovery='+self.r.run_id,'--network',self.network,'--user','1002:1002',
-              '--memory',{'auth':'256m','rest':'256m','kong':'384m','storage':'512m'}[service],'--pids-limit','128','--cap-drop','ALL',
+              '--memory',{'auth':'256m','rest':'256m','kong':'384m','storage':'512m','smtp':'64m'}[service],'--pids-limit','128','--cap-drop','ALL',
               '--security-opt','no-new-privileges','--restart','no','--log-driver','none',
               '--mount','type=bind,src='+str(env)+',dst='+container_env+',readonly',
               '--mount','type=bind,src=/opt/ir35/bin/env-exec,dst=/run/ir35/env-exec,readonly',*extra]
@@ -132,6 +132,7 @@ class PrivateStack:
         components['auth'].update(GOTRUE_LOG_LEVEL='info',GOTRUE_API_REQUEST_ID_HEADER='X-Request-ID',GOTRUE_DB_MAX_POOL_SIZE='3')
         components['rest']['PGRST_DB_POOL']='3'
         if components['auth'].get('GOTRUE_SMTP_HOST')!='smtp' or components['auth'].get('GOTRUE_SMTP_PORT')!='1025':raise RecoveryError('SMTPSinkRequired')
+        components['auth']['GOTRUE_SMTP_HOST']=self.smtp_host()
         self.start_service('auth',components['auth']);self.start_service('rest',components['rest'])
         gateway=self.runtime['kong_config'](self.values['ANON_KEY'],self.values['SERVICE_ROLE_KEY'])
         gateway['services']=[item for item in gateway['services'] if item['name'] in ('auth-v1','rest-v1') or item['name'].startswith('auth-open-')]
@@ -142,6 +143,8 @@ class PrivateStack:
         self.start_service('kong',components['kong'],['--tmpfs','/run/kong:rw,uid=1002,gid=1002,mode=0700','--ulimit','nofile=4096:4096',
                         '--mount','type=bind,src='+str(config)+',dst=/run/ir35/.env.kong-config.json,readonly'])
         self.wait_ready()
+
+    def smtp_host(self):return 'smtp'
 
     def resume(self):
         self.check_files()
@@ -233,7 +236,7 @@ class PrivateStack:
 
 def fixture(recovery,suffix):
     original=recovery.database;target=original+suffix
-    if suffix not in ('_syn1','_syn2','_syn3','_named'):raise RecoveryError('FixtureSuffixRefused')
+    if suffix not in ('_syn1','_syn2','_syn3','_named','_mail1','_mail2','_mail3'):raise RecoveryError('FixtureSuffixRefused')
     if recovery.query("SELECT 1 FROM pg_database WHERE datname='"+target+"';",'postgres').strip():raise RecoveryError('FixtureAlreadyExists_NoReplay')
     statement='CREATE DATABASE '+target+' WITH TEMPLATE '+original+' OWNER postgres;'
     recovery.command(recovery.base+['psql','-XqAt','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres','-f','-'],input=statement.encode())

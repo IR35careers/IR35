@@ -247,10 +247,42 @@ class Recovery:
                 'storageAPIProofPending':True,'phaseComplete':False}
         return self.seal(store,stage,result)
 
+    def revised_signoff(self):
+        """Owner's explicit a-f criteria; no original-password retry or waiver."""
+        self.verify_previous();store=self.store();stage=store.stage('12-revised-p4-signoff')
+        def latest(names):
+            found=[name for name in names if name in self.payload['anchors']]
+            if not found:raise RecoveryError('SignoffEvidenceMissing')
+            value=json.loads((self.run_root/found[-1]/'result.json').read_bytes())
+            if value.get('status')!='PASS':raise RecoveryError('SignoffPriorGateFailed')
+            return value
+        synthetic=latest(['08-synthetic-1','08-synthetic-2','08-synthetic-3'])
+        mail=latest(['11-mail-1','11-mail-2','11-mail-3'])
+        api=latest(['05-storage-api','07-storage-api-repair-1','07-storage-api-repair-2'])
+        fidelity=self.check_database();store.put(stage,'final-pristine-fidelity.json',json.dumps(fidelity).encode())
+        user_count=int(next(t['rows'] for t in fidelity['tables'] if t['name']=='auth.users'))
+        objects=len(self.source()['storage']['privateObjects'])
+        criteria={
+          'aSyntheticGrantRefreshRLS':all(synthetic.get(k) is True for k in ('passwordLogin','sessionRefresh','syntheticUserDeleted','pristineDatabaseUnchanged')) and all(synthetic.get('rls',{}).get(k) is True for k in ('ownerRead','crossOwnerDenied','anonymousDenied')),
+          'bEveryAuthPasswordHashMatchesSnapshot':fidelity['status']=='PASS' and mail.get('authParity',{}).get('everyPasswordMD5Matches') is True and mail['authParity']['usersChecked']==user_count,
+          'cNamedUserAndIdentityAllFieldsMatchSnapshot':all(mail.get('authParity',{}).get(k) is True for k in ('namedUserAllFieldsMatch','namedIdentityAllFieldsMatch')),
+          'dRecoveryNewPasswordRefreshRLSAndRevocation':all(mail.get('recovery',{}).get(k) is True for k in ('requestAccepted','sinkLinkExchanged','newRandomPasswordRAMOnly','passwordLogin','sessionRefresh','sessionUserVerified')) and all(mail.get('sessionRevocation',{}).get(k) is True for k in ('priorSessionRowsRemoved','oldRefreshDenied','currentRecoverySessionRetained')) and all(mail.get('recovery',{}).get('rls',{}).get(k) is True for k in ('ownerRead','crossOwnerDenied','anonymousDenied')),
+          'eSinkMagicLink':all(mail.get('magicLink',{}).get(k) is True for k in ('requestAccepted','sinkLinkExchanged','sessionUserVerified')) and mail.get('sinkRAMOnly') is True and mail.get('realMailboxRequests')==0,
+          'fFullSnapshotVerification':fidelity['status']=='PASS' and len(fidelity['schema']['exceptions'])==3 and not fidelity['schema']['unexplainedDifferences'] and fidelity['privileges']['sourceEntries']==552 and api.get('fullPostAPIFidelity')=='PASS' and api.get('objectCount')==objects and api.get('signedURLChecks')==objects,
+          'disposableAuthCloneDestroyed':mail.get('disposableDatabaseDestroyed') is True and mail.get('disposableContainersRemoved')==4 and mail.get('pristineDatabaseUnchanged') is True and mail.get('realPasswordAttempts')==0,
+        }
+        passed=all(criteria.values())
+        return self.seal(store,stage,{'status':'PASS' if passed else 'FAIL','phase':'P4','acceptance':'owner-revised-a-f-20261021',
+          'criteria':criteria,'phaseComplete':passed,'sourceWrites':0,'pristineStagingWrites':0,'realPasswordAttempts':0,
+          'authUsersChecked':user_count,'tablesChecked':len(fidelity['tables']),'storageObjectsChecked':objects,'appRolePrivilegesChecked':552,
+          'originalDenialClassification':'user-entered password did not match the cloud hash; not a migration defect',
+          'classificationAuthority':'explicit owner decision; denial evidence and counters retained',
+          'stillRequiredBeforeCutover':['reverse-sync rehearsal','two complete timed end-to-end cycles and guarded wipes','P5-P8 staging app/worker/provider/load/backup gates','exact YES CUTOVER']})
+
 
 def run(operation,payload,runtime):
     recovery=Recovery(payload,runtime)
-    if operation not in ('incident','initialize','receive','restore','verify','storage'):raise RecoveryError('OperationRefused')
+    if operation not in ('incident','initialize','receive','restore','verify','storage','revised_signoff'):raise RecoveryError('OperationRefused')
     try:return getattr(recovery,operation)()
     except Exception as error:
         code=str(error) if isinstance(error,RecoveryError) and re.fullmatch(r'[A-Za-z0-9_]+',str(error)) else type(error).__name__

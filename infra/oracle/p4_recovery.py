@@ -105,6 +105,8 @@ def guest(operation,data):
              ('p4_recovery_guest',(schema.REPO/'infra/oracle/p4_recovery_guest.py').read_text()),
              ('auth_redaction',Path(auth_redaction.__file__).read_text()),
              ('p4_auth_probe',(schema.REPO/'infra/oracle/p4_auth_probe.py').read_text())]
+    # Read-only / original credential entrypoints never receive DROP capability.
+    if operation.startswith('mail-'):modules.append(('p4_mail_probe',(schema.REPO/'infra/oracle/p4_mail_probe.py').read_text()))
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE
     script+='\nimport types\n'
     for name,body in modules:
@@ -113,6 +115,7 @@ def guest(operation,data):
     script+='verification_namespace={}\nexec('+repr(verification_source)+',verification_namespace)\n'
     script+='runtime={"run":run,"read_env":read_env,"role_usage":role_usage,"verifiers":verification_namespace,"component_env":component_env,"env_text":env_text,"kong_config":stack.kong_config}\n'
     module='p4_auth_probe' if operation in ('storage-api','runtime-audit','observer-audit') or operation.startswith(('synthetic-','storage-api-repair-','named-')) else 'p4_recovery_guest'
+    if operation.startswith('mail-'):module='p4_mail_probe'
     script+='result=sys.modules['+repr(module)+'].run('+repr(operation)+','+repr(data)+',runtime)\nprint(json.dumps(result))\n'
     return script
 
@@ -184,8 +187,8 @@ def main():
         publish('named-login',result)
         if result['status']!='PASS':raise SystemExit(1)
         return
-    if len(sys.argv)!=2 or sys.argv[1] not in ('--incident','--initialize','--restore','--verify','--storage','--storage-api','--storage-api-repair-1','--storage-api-repair-2','--runtime-audit','--observer-audit','--synthetic-1','--synthetic-2','--synthetic-3','--named-ready'):raise ValueError('Fixed recovery operation required')
-    operation=sys.argv[1][2:]
+    if len(sys.argv)!=2 or sys.argv[1] not in ('--incident','--initialize','--restore','--verify','--storage','--storage-api','--storage-api-repair-1','--storage-api-repair-2','--runtime-audit','--observer-audit','--synthetic-1','--synthetic-2','--synthetic-3','--named-ready','--mail-1','--mail-2','--mail-3','--revised-signoff'):raise ValueError('Fixed recovery operation required')
+    operation='revised_signoff' if sys.argv[1]=='--revised-signoff' else sys.argv[1][2:]
     expected={'initialize':'incident','restore':'receive','verify':'restore','storage':'verify','storage-api':'storage'}.get(operation)
     history=reports()
     if expected and history.get(expected,{}).get('status') not in ('PASS','RESTORED'):raise ValueError('Prior operation must pass')

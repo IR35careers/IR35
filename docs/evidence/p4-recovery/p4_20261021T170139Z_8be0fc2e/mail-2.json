@@ -1,0 +1,193 @@
+{
+  "status": "FAIL",
+  "attempt": 2,
+  "sourceWrites": 0,
+  "realPasswordAttempts": 0,
+  "realMailboxRequests": 0,
+  "phaseComplete": false,
+  "startedUTC": "2026-10-21T17:58:21.794052+00:00",
+  "authParity": {
+    "usersChecked": 147,
+    "everyPasswordMD5Matches": true,
+    "namedUserAllFieldsMatch": true,
+    "namedIdentityAllFieldsMatch": true,
+    "identityCount": 1,
+    "hashValuesPrinted": false,
+    "sourceBinding": "verified snapshot whole-row fingerprints plus identical Auth projections on fresh clone"
+  },
+  "magicLink": {
+    "requestAccepted": true,
+    "sinkLinkExchanged": true,
+    "sessionUserVerified": true,
+    "rls": {
+      "ownerRead": true,
+      "ownerRows": 1,
+      "crossOwnerDenied": true,
+      "anonymousDenied": true
+    }
+  },
+  "code": "RecoveryRequestFailed",
+  "runtime": {
+    "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-2",
+    "containers": {
+      "smtp": "90c7592dbdf726b9986fb7d144454fb15063d6abe20c7dc150481d0cc4cb9201",
+      "auth": "bed2dfb2bac2f0a5c3f2547a7b85858b3a968efa7fac222e87156d02dd5a3b46",
+      "rest": "82e9bc794bd7d57415e129d0711f9252d4b8dee4ae88d421efadeaf4a897a494",
+      "kong": "62c36636a1aead0c9cfe4011cfc8915158f8e2f66e8ca9217b9b3d77cf88e120"
+    },
+    "files": [
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-2/.env.smtp",
+        "sha256": "aa5f2748fd90fd1099c82929bcb39d6c96757f8e448092c272afeb0a1feadcff",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-2/.env.auth",
+        "sha256": "b9769ca3cb41a07614503bee209b136d5c08c49332a4fa8787e73dba4fd4f3f7",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-2/.env.rest",
+        "sha256": "5f19c69cf375a5db83948f18ff9bf075e7f03abfefecd453d8f278c55fe4eb86",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-2/.env.kong-config.json",
+        "sha256": "e31f3d3a0d25e2cc540e2da2d93cc80fb67be080ea1b37c2c299bca9bf0c2317",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-2/.env.kong",
+        "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce",
+        "mode": "600"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "path": "/auth/v1/otp",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "create_user",
+        "email"
+      ],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "a1800d75-0bc5-4c3b-bc21-34212f31348c",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "a1800d75-0bc5-4c3b-bc21-34212f31348c",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info",
+          "method": "POST",
+          "path": "/otp"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/verify",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "token_hash",
+        "type"
+      ],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "90bdaa9d-163c-4785-9790-d026e0931552",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "90bdaa9d-163c-4785-9790-d026e0931552",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info",
+          "method": "POST",
+          "path": "/verify"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    },
+    {
+      "path": "/auth/v1/recover",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "email"
+      ],
+      "response": {
+        "status": 429,
+        "error_code": "over_email_send_rate_limit",
+        "error": null,
+        "msg": "[withheld]",
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "d2018625-5ddc-47e4-aa68-dfd32a632e1a",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "d2018625-5ddc-47e4-aa68-dfd32a632e1a",
+          "msg": "request completed",
+          "error": "[withheld]",
+          "status": 429,
+          "level": "warning",
+          "method": "POST",
+          "error_code": "over_email_send_rate_limit"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    }
+  ],
+  "containersStopped": true,
+  "disposableContainersRemoved": 4,
+  "disposableDatabaseDestroyed": true,
+  "pristineDatabaseUnchanged": true,
+  "endedUTC": "2026-10-21T17:59:13.634126+00:00",
+  "stage": "11-mail-2",
+  "manifestSHA256": "f3ad871f1a970d88eea564673f29de3c5bfaeb2af4be965640ef4614300a5b83",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

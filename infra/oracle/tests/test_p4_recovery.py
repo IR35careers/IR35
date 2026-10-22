@@ -62,6 +62,28 @@ class RecoveryTests(unittest.TestCase):
         self.assertIn('check_runtime_files(name,runtime)',inspect.getsource(guest.Recovery.verify_previous))
         code=inspect.getsource(guest.Recovery.check_runtime_files)
         for check in ('st_nlink','0o600','sha256','UnmanifestedRuntimeArtifact'):self.assertIn(check,code)
+    def test_revised_signoff_requires_every_gate_and_disposable_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);obj=guest.Recovery.__new__(guest.Recovery);obj.run_root=root
+            obj.payload={'anchors':{'08-synthetic-2':'fixture','11-mail-3':'fixture','07-storage-api-repair-1':'fixture'}}
+            flags={'ownerRead':True,'crossOwnerDenied':True,'anonymousDenied':True}
+            mail={'status':'PASS','authParity':{'everyPasswordMD5Matches':True,'usersChecked':147,'namedUserAllFieldsMatch':True,'namedIdentityAllFieldsMatch':True},
+              'recovery':dict.fromkeys(('requestAccepted','sinkLinkExchanged','newRandomPasswordRAMOnly','passwordLogin','sessionRefresh','sessionUserVerified'),True)|{'rls':flags},
+              'magicLink':dict.fromkeys(('requestAccepted','sinkLinkExchanged','sessionUserVerified'),True),
+              'sessionRevocation':dict.fromkeys(('priorSessionRowsRemoved','oldRefreshDenied','currentRecoverySessionRetained'),True),
+              'sinkRAMOnly':True,'realMailboxRequests':0,'disposableDatabaseDestroyed':True,'disposableContainersRemoved':4,'pristineDatabaseUnchanged':True,'realPasswordAttempts':0}
+            values={'08-synthetic-2':dict.fromkeys(('passwordLogin','sessionRefresh','syntheticUserDeleted','pristineDatabaseUnchanged'),True)|{'status':'PASS','rls':flags},
+              '11-mail-3':mail,'07-storage-api-repair-1':{'status':'PASS','fullPostAPIFidelity':'PASS','objectCount':73,'signedURLChecks':73}}
+            for name,value in values.items():
+                (root/name).mkdir();(root/name/'result.json').write_text(json.dumps(value))
+            obj.verify_previous=Mock();obj.store=Mock(return_value=Mock());obj.seal=lambda store,stage,result:result
+            obj.source=Mock(return_value={'storage':{'privateObjects':[{}]*73}})
+            obj.check_database=Mock(return_value={'status':'PASS','tables':[{'name':'auth.users','rows':'147'}],
+              'schema':{'exceptions':[{}]*3,'unexplainedDifferences':[]},'privileges':{'sourceEntries':552}})
+            self.assertEqual(obj.revised_signoff()['status'],'PASS')
+            for key in ('disposableDatabaseDestroyed','pristineDatabaseUnchanged'):
+                bad=mail|{key:False};(root/'11-mail-3/result.json').write_text(json.dumps(bad))
+                self.assertEqual(obj.revised_signoff()['status'],'FAIL')
     def test_write_once_log_is_closed_readonly_and_never_reopened(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);os.chmod(root,0o700);store=Store(root);stage=store.stage('02-restore')

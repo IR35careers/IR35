@@ -1,0 +1,105 @@
+{
+  "status": "FAIL",
+  "attempt": 1,
+  "sourceWrites": 0,
+  "realPasswordAttempts": 0,
+  "realMailboxRequests": 0,
+  "phaseComplete": false,
+  "startedUTC": "2026-10-21T17:56:48.860202+00:00",
+  "authParity": {
+    "usersChecked": 147,
+    "everyPasswordMD5Matches": true,
+    "namedUserAllFieldsMatch": true,
+    "namedIdentityAllFieldsMatch": true,
+    "identityCount": 1,
+    "hashValuesPrinted": false,
+    "sourceBinding": "verified snapshot whole-row fingerprints plus identical Auth projections on fresh clone"
+  },
+  "code": "SinkVerificationLinkInvalid",
+  "runtime": {
+    "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-1",
+    "containers": {
+      "smtp": "badadb3312529d8d1fbdf11988657786dd04728e2cb0755b30ea0ac5bf1b65d1",
+      "auth": "bc4e6e442e2373fcb35db5703129422f56836e04d382a318ee5b786132f52190",
+      "rest": "95ec9e2fae57d63919e63da43371033c906109789ec29c7564e18552bf29e7ee",
+      "kong": "da8d1a099a2aebbebafb373420daa5fd9cc94b557edd661905a437a1b29738c5"
+    },
+    "files": [
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-1/.env.smtp",
+        "sha256": "aa5f2748fd90fd1099c82929bcb39d6c96757f8e448092c272afeb0a1feadcff",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-1/.env.auth",
+        "sha256": "6aac056917a97ac3629ecd2c2ecd5d370797610939f06f3e5880ac1dc0a10573",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-1/.env.rest",
+        "sha256": "eb942f96b3c87113b44d705e7fc8463468fc41bec629ac42164160c0ec062432",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-1/.env.kong-config.json",
+        "sha256": "a59df5116653a1002fda4544a0d2c1dd95a6095a85ec280f8764ae2c69b13b17",
+        "mode": "600"
+      },
+      {
+        "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-11-mail-1/.env.kong",
+        "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce",
+        "mode": "600"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "path": "/auth/v1/otp",
+      "method": "POST",
+      "requestHeaders": [
+        "X-Request-ID",
+        "apikey"
+      ],
+      "bodyFields": [
+        "create_user",
+        "email"
+      ],
+      "response": {
+        "status": 200,
+        "error_code": null,
+        "error": null,
+        "msg": null,
+        "requestId": null,
+        "requestIdFromBody": null,
+        "clientRequestId": "7662880b-3627-41d6-98f6-fbaab9f0ad14",
+        "redaction": "strict known-message projection; all other fields withheld"
+      },
+      "requestLogs": [
+        {
+          "requestId": "7662880b-3627-41d6-98f6-fbaab9f0ad14",
+          "msg": "request completed",
+          "error": null,
+          "status": 200,
+          "level": "info",
+          "method": "POST",
+          "path": "/otp"
+        }
+      ],
+      "rawLogsPersisted": false,
+      "logBoundExceeded": false,
+      "observer": {
+        "cliKillRequired": true,
+        "containerSignalsProxied": false
+      }
+    }
+  ],
+  "containersStopped": true,
+  "disposableContainersRemoved": 4,
+  "disposableDatabaseDestroyed": true,
+  "pristineDatabaseUnchanged": true,
+  "endedUTC": "2026-10-21T17:57:34.413933+00:00",
+  "stage": "11-mail-1",
+  "manifestSHA256": "2fd8f4fd90ab11871b6993d076d321547ab4f6e853c70e7b6a156d9cc07b5d2c",
+  "runId": "p4_20261021T170139Z_8be0fc2e",
+  "target": "ir35_p4_20261021t170139z_8be0fc2e"
+}

@@ -14,7 +14,8 @@ MESSAGES = frozenset((
 ERROR_CODES = frozenset(('invalid_credentials','email_not_confirmed','user_banned',
     'email_provider_disabled','validation_failed','unexpected_failure','request_timeout',
     'over_request_rate_limit','over_email_send_rate_limit','email_address_not_authorized',
-    'captcha_failed','bad_json','no_authorization','bad_jwt','otp_expired','email_exists'))
+    'captcha_failed','bad_json','no_authorization','bad_jwt','otp_expired','email_exists',
+    'session_not_found','refresh_token_not_found','refresh_token_already_used'))
 
 
 def safe_text(value):
