@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 24 October P6 native checkpoint — roles/image PASS, mock service pending
+
+- Owner unlocked SSH; keyLoaded=true in the retained per-boot agent. Do not prompt again. Two approved same-Postgres queue roles installed, real logins/6customer42501negatives/354additional privilege checks/full source containment PASS, seald3e50dd5. Source roles and552baseline unchanged, two role objects explicitly recorded separately. Native ARM mock-worker build1/source1d21c10 PASS, nonroot/image68e887e8d9a5/browserReady true/no credentials in browser, full post-build62tables/2sequences/Auth/schema3exceptions+2role additions/552/73Storage/manifests PASS. Build/journals/P5 images remain immutable; no P5 reactivation.
+- Next authorised P6 actions are guarded mock-only prepare/queue setup/start and lifecycle/health/Realtime/schedule proofs on the same existing VM, not real acceptance. New worker has no customer/provider credentials, localhost-only health/control, queue-only roles, one Chromium, freshVM-only600HMAC. Keep existing P5 app read-only and all cloud/production/DNS/provider/cutover settings untouched. P6 not complete; no merges. Follow bounded self-heal/counters and full containment after mutation/phase. P9prepare/dry-run only, exact YES CUTOVER still absent.
+
 ## 24 October owner-requested SSH handoff retry
 
 - Owner replied "retry" to the P6 SSH unlock handoff. Independent check: same WSL boot, keyLoaded=false, original prompt ended and load-attempt.json retained. Authorises ONE separately journalled native hidden SSH retry, not a journal reset, key regeneration, API unlock or automatic retry loop. Preserve original attempt; write a distinct load-owner-retry-1.json before ssh-add, refuse any further retry in this boot. Native terminal only; after success keep the WSL signal-wait hold, no stored passphrase or CPU load. No VM/production/cutover change implied.

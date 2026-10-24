@@ -1,5 +1,9 @@
 # P6 — guarded mock worker / queue / Realtime / schedule integration
 
+## Native ARM image/browser PASS — no consumer enabled yet
+
+[Build1](p6/worker-build-1.json), source1d21c10,346.658s, image68e887e8d9a5; actual ARM64/nonroot1002,Playwright1.61.0/pg-boss12.38.0; separate no-network/no-credential Chromium health PASS. Full before/after62table/2sequence/Auth/schema/552/73Storage/manifests PASS with two explicit minimal role additions. Image5,831,823,899bytes, no registry publication. Seal `d43a358991518953da47ca59cb86971c4b83ca708105a5c0b8aec5c8ddb0218a`. Startup/setup/lifecycle/Realtime/UI/schedules remain pending, not inferred from build success. No source/production/cutover change.
+
 ## Latest actual role gate PASS — worker still pending
 
 [Two approved additions and unchanged552baseline](oracle-p6-queue-roles.md). Preflight54a353c1/install d3e50dd5 PASS: both TCP logins,6actual customer-read42501denials,354additional all-object privilege checks with0access, full62table/2sequence/Auth/schema/73Storage/manifests unchanged. Source roles untouched, raw baseline differences retained, exact TWO new queue-only roles recorded separately from3oldextension-owner exceptions. VM-only600/ir35credentials, no real acceptance. Earlier transport/role-choice holds below are preserved history and no longer pending.
