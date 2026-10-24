@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "attempt": 2,
+  "sourceSHA": "e3c375f51aa23270998f14d141b6d5c5a1331b4b",
+  "sourceWrites": 0,
+  "productionChanges": false,
+  "phaseComplete": false,
+  "image": "sha256:08f0997deffef6cb7814cd57357988d832249c9e2ab85aaf76ac837c41ec9331",
+  "architecture": "linux/arm64",
+  "nonroot": true,
+  "buildEnvNames": [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  ],
+  "sourceArchiveSHA256": "244eaf71025c292a3c8799dad5e5784d1b3c7b66573eb046648c5bd7dd373448",
+  "imageBytes": 614298643,
+  "runtimeDeployed": false,
+  "elapsedSeconds": 157.695,
+  "stage": "02-build",
+  "manifestSHA256": "ed916ed8c7cd9413ba157e7a87a9eee433bd35cef17a202d57996a084c5402a7"
+}

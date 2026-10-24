@@ -8,6 +8,7 @@ import { DeferredFeedbackBubble } from "@/components/DeferredFeedbackBubble";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AppMotion } from "@/components/AppMotion";
 import { SITE_DESCRIPTION, SITE_ORIGIN } from "@/lib/seo";
+import { readOnlyMaintenance, MAINTENANCE_MESSAGE } from "@/lib/maintenance-mode";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -87,6 +88,8 @@ export default async function RootLayout({
   return (
     <html lang="en-GB" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
+        {readOnlyMaintenance() && <div role="status" className="bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950">{MAINTENANCE_MESSAGE}</div>}
+        {process.env.IR35_SESSION_MIGRATED === "true" && <div role="status" className="bg-emerald-50 px-4 py-2 text-center text-sm text-emerald-950">Please sign in again</div>}
         <AppMotion>{children}</AppMotion>
         <GoogleAnalytics nonce={nonce} />
         <DeferredFeedbackBubble />

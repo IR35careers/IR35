@@ -1,0 +1,37 @@
+{
+  "status": "FAIL",
+  "repair": 1,
+  "preparation": {
+    "status": "PASS",
+    "caddyActivated": false,
+    "phaseComplete": false,
+    "productionChanges": false,
+    "adapter": "PASS",
+    "envFile": {
+      "name": ".env.p5-caddy",
+      "sha256": "56b4b6d20fb05f1991fd024d0192b361eb28e3333abb46728b7b71ae276da316",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    "configSHA256": "e856be8beaa02aa59a770e81896bc3596c556e7a6ab83cd52edd0c044c5e3a1f",
+    "composeSHA256": "ac3f1b22947df3a6aa34e08a914631c4c1efdf61303a816e56c20f4723989e8c",
+    "originalConfigSHA256": "2cf8eee0b80f632c4a14462267489a62516b7cd7e6adadc6202e897ad49cf105",
+    "originalComposeSHA256": "7b6f361fb5fb7a79ece0574f4e26b30346e6eac44d557d46a7ef3aa7329d982a",
+    "originalEnvSHA256": "688cbcb2ff4667ae430d4c06b94c38e2bf6f31782c57f6b9c075433324b4914d",
+    "certificateRequests": 0,
+    "originalFilesUnchanged": true,
+    "stage": "05-edge-repair-1-prepare",
+    "manifestSHA256": "443e5865e8ed1593e9350b1a9895d9a83a957e54689e0b3a0416b306373802f8"
+  },
+  "activation": {
+    "status": "FAIL",
+    "phaseComplete": false,
+    "productionChanges": false,
+    "dnsWrites": 0,
+    "code": "P5ProtectedHeadersRequired",
+    "rollback": "original Caddy restored",
+    "stage": "06-edge-repair-1-activate",
+    "manifestSHA256": "4c9555c37b284559a9d25008b27e8e53f8f5a3416ecec784a0d64a31b242c749"
+  },
+  "phaseComplete": false
+}

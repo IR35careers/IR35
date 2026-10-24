@@ -1,0 +1,1 @@
+{"case": "sdk-fallback", "clientRequestId": "608875f0-4334-4092-8332-f049dba07927", "expectedStatus": 404, "method": "GET", "path": "/supabase/not-supported"}

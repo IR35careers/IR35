@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { applicationLifecycleSchema } from "@/lib/application-lifecycle";
 import { submissionAttentionFromRow } from "@/lib/workspace/submission-attention";
+import { supabaseTransport } from "@/lib/supabase-transport";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -16,7 +17,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     // Owner JWT + RLS rather than the service-role key for this read-only route.
     const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
+      global: { fetch: supabaseTransport(), headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const auth = await client.auth.getUser(token);

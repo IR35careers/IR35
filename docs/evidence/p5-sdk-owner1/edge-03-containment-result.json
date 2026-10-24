@@ -1,0 +1,1 @@
+{"appRolePrivilegesEach": 552, "approvedSchemaExceptionsEach": 3, "fixtureWrites": 0, "manifests": "PASS", "orderedMD5Each": true, "originalCaddyFilesUnchanged": true, "pristineWrites": 0, "privateFixtureRunningNoPorts": true, "sequencesEach": 2, "sourceWrites": 0, "status": "PASS", "storageObjectsEach": 73, "storageSHA256Match": true, "tablesEach": 62}

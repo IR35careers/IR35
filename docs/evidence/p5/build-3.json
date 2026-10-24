@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "attempt": 3,
+  "sourceSHA": "a35db403d3fbb57148247606234a9807f48ea8a0",
+  "sourceWrites": 0,
+  "productionChanges": false,
+  "phaseComplete": false,
+  "image": "sha256:cbc62c3a5c7383fe6eadc9353a3ad38c42b4afe115fec94349dce9bd2ea9fd06",
+  "architecture": "linux/arm64",
+  "nonroot": true,
+  "buildEnvNames": [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  ],
+  "sourceArchiveSHA256": "4e922ce1580972daaa099e95425c30462ae4123eccbdd99fc13e440a45340bd0",
+  "imageBytes": 613967303,
+  "runtimeDeployed": false,
+  "securityVersions": {
+    "next": "16.4.3",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "eslint-config-next": "16.4.3",
+    "sharp": "0.35.5"
+  },
+  "elapsedSeconds": 158.048,
+  "stage": "03-build",
+  "manifestSHA256": "3f7570dc27b10de7e1263b3fbea9a5c6bffaf21105b4fa05ce51434f6d8169ba"
+}

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { APPLICATION_CLOUD_TOPIC, managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
-import { isQueueApplyRunner } from "@/lib/application-runner-selection";
+import { managedApplicationQueueEnabled } from "@/lib/application-cloud-queue";
+import { isQueueApplyRunner, selectedApplyRunner } from "@/lib/application-runner-selection";
+import { readOnlyMaintenance } from "@/lib/maintenance-mode";
 import {
   applicationWorkerAppOrigin,
   applicationWorkerConfig,
@@ -12,7 +13,9 @@ export async function kickApplicationWorker(input?: {
   reason?: string;
   delaySeconds?: number;
 }): Promise<"disabled" | "accepted" | "idle"> {
-  if (!applicationWorkerConfig().enabled) return "disabled";
+  if (readOnlyMaintenance() || !applicationWorkerConfig().enabled) return "disabled";
+  // Mock consumption is a separately verified P6 path, never a real-drain fallback.
+  if (selectedApplyRunner() === "mock") return "disabled";
   const appOrigin = applicationWorkerAppOrigin(
     process.env.IR35CAREERS_APP_URL || "https://www.ir35careers.com",
   );
@@ -30,14 +33,8 @@ export async function kickApplicationWorker(input?: {
   if (managedApplicationQueueEnabled()) {
     // Publish only opaque IDs. Candidate evidence and browser credentials stay
     // in Supabase and are fetched through the existing signed claim API.
-    const { send } = await import("@vercel/queue");
-    const message = JSON.parse(body);
-    await send(APPLICATION_CLOUD_TOPIC, message, {
-      region: "iad1",
-      idempotencyKey: message.kickId,
-      retentionSeconds: 604_800,
-      delaySeconds: Math.max(0, Math.min(600, Math.ceil(input?.delaySeconds || 0))),
-    });
+    const { publishVercelKick } = await import("@/lib/queue/vercel-adapter");
+    await publishVercelKick(JSON.parse(body), input?.delaySeconds);
     return "accepted";
   }
   if (input?.delaySeconds) await new Promise((resolve) => setTimeout(resolve, input.delaySeconds! * 1_000));

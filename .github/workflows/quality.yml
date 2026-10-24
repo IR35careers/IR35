@@ -22,6 +22,28 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  sdk-gate:
+    name: Private Caddy SDK ordering regression
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # Public synthetic constants only. No Actions/cloud/app credentials are
+      # passed to these internal-network containers; no ports are published.
+      - name: Reproduce frozen defect, test literal SDK route, verify evidence
+        run: |
+          set -euo pipefail
+          fixture_root=$(mktemp -d)
+          evidence_root=$(mktemp -d)
+          python3 infra/oracle/sdk_gate_private.py --mode baseline --root "$fixture_root" --export "$evidence_root"
+          python3 infra/oracle/sdk_gate_private.py --mode fixed --root "$fixture_root" --export "$evidence_root"
+          python3 infra/oracle/sdk_gate_proof.py --root "$evidence_root" --attempt 1
+
   oracle-key-safety:
     name: Oracle local key custody tests
     if: github.event.repository.private == false

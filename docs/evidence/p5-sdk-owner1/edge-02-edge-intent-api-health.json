@@ -1,0 +1,1 @@
+{"case": "api-health", "clientRequestId": "6775fcce-2b22-4de4-8acd-d86f12d366bd", "expectedStatus": 200, "method": "GET", "path": "/auth/v1/health"}

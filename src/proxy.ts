@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { blockedByMaintenance, MAINTENANCE_MESSAGE } from "@/lib/maintenance-mode";
 
 const ADMIN_HOST = "admin.ir35careers.com";
 const PUBLIC_HOSTS = new Set(["ir35careers.com", "www.ir35careers.com"]);
@@ -49,6 +50,11 @@ function contentSecurityPolicy(nonce: string, allowGoogleIdentity: boolean): str
 }
 
 export function proxy(request: NextRequest) {
+  if (blockedByMaintenance(request.method, request.nextUrl.pathname)) {
+    return NextResponse.json({ error: MAINTENANCE_MESSAGE, code: "maintenance_read_only" }, {
+      status: 503, headers: { "cache-control": "no-store", "retry-after": "120", "x-robots-tag": "noindex" },
+    });
+  }
   // Separate credential-free bot project only. No application/auth/mail/billing
   // writes, worker hooks or external URL importer can run in this mock preview.
   if (process.env.IR35CAREERS_BOT_PREVIEW === "1" && request.nextUrl.pathname.startsWith("/api/")) {
@@ -62,6 +68,8 @@ export function proxy(request: NextRequest) {
     || (request.headers.get("host")?.split(":")[0].toLowerCase() === ADMIN_HOST && request.nextUrl.pathname === "/login");
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.set("x-nonce", nonce);
+  // Next reads this request header to nonce its own framework/streaming scripts.
+  forwardedHeaders.set("Content-Security-Policy", contentSecurityPolicy(nonce, allowGoogleIdentity));
   const protect = (response: NextResponse) => {
     if (process.env.IR35CAREERS_BOT_PREVIEW === "1") {
       response.headers.set("X-IR35-Bot-Preview", "mock-only-v1");

@@ -1,20 +1,21 @@
 import type { MetadataRoute } from "next";
 import { allSeoSlugs, getSeoPage } from "@/lib/seo-pages";
-import { getPublicJobInventory, matchesSeoFilters } from "@/lib/public-job-inventory";
+import { getFreshPublicJobInventory, matchesSeoFilters } from "@/lib/public-job-inventory";
 import { SITE_ORIGIN } from "@/lib/seo";
 import { BLOG_POSTS } from "@/lib/blog-posts";
 
 // Match the public inventory freshness window.
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const BASE = SITE_ORIGIN;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const inventory = await getPublicJobInventory();
+  const inventory = await getFreshPublicJobInventory();
 
   const entries: MetadataRoute.Sitemap = [
     { url: `${BASE}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/jobs`, changeFrequency: "hourly", priority: 0.9 },
+    { url: `${BASE}/contracts`, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE}/analyse-job`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tools`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tools/take-home`, changeFrequency: "monthly", priority: 0.7 },

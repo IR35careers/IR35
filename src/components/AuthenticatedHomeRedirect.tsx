@@ -21,7 +21,8 @@ export function AuthenticatedHomeRedirect() {
     }
   }, [configured, loading, router, user]);
 
-  if (!configured || (!loading && !user)) return null;
+  // Do not obscure public HTML while the browser checks its local session.
+  if (!configured || loading || !user) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex min-h-screen items-center justify-center bg-slate-50" role="status" aria-live="polite">

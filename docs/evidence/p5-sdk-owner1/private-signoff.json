@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "privateAttempt": 2,
+  "cases": 7,
+  "baselines": {
+    "baseline": "11b17fb9078b35cd28430fdff7d9bec933614ae7eddd80801d7ab2733a2940bf",
+    "fixed": "61cff6c32f3ed398495d81cd1bd4696a2569cf9b6270d5635e6c34ba97310016"
+  },
+  "diffSHA256": "e413cd4447a47aaf266136a417dba16cb68df96e7e9d9d46433a087fa1b78dca",
+  "privateProjectionOmission": "Caddyfile (public synthetic bcrypt only); fully verified by local Store",
+  "realDataOrSecretMounts": 0,
+  "publicPorts": 0
+}

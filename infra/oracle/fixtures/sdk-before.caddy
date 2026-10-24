@@ -1,0 +1,13 @@
+        handle @sdk {
+            @missing_gate not header_regexp Cookie "(^|;[ ]*)__Host-ir35-staging={$STAGING_GATE_TOKEN}(;|$)"
+            respond @missing_gate "Staging authentication required" 401
+            uri strip_prefix /supabase
+            @api path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/*
+            reverse_proxy @api ir35-p5-kong:8000 {
+                header_up -Cookie
+                header_up -X-Forwarded-For
+                header_up -X-Real-IP
+                header_up -X-Vercel-Forwarded-For
+            }
+            respond "Not found" 404
+        }

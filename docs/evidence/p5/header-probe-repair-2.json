@@ -1,0 +1,48 @@
+{
+  "status": "PASS",
+  "publicEdgeChanged": false,
+  "publicPorts": 0,
+  "certificateRequests": 0,
+  "phaseComplete": false,
+  "cases": {
+    "immediate": {
+      "unauthorized": {
+        "status": 401,
+        "noindex": true,
+        "noStoreExact": true
+      },
+      "authorized": {
+        "status": 200,
+        "noindex": true,
+        "noStoreExact": true
+      }
+    },
+    "deferred": {
+      "unauthorized": {
+        "status": 401,
+        "noindex": false,
+        "noStoreExact": false
+      },
+      "authorized": {
+        "status": 200,
+        "noindex": true,
+        "noStoreExact": true
+      }
+    },
+    "paired": {
+      "unauthorized": {
+        "status": 401,
+        "noindex": true,
+        "noStoreExact": true
+      },
+      "authorized": {
+        "status": 200,
+        "noindex": true,
+        "noStoreExact": true
+      }
+    }
+  },
+  "temporaryContainersRemoved": 3,
+  "stage": "03-header-probe-r2",
+  "manifestSHA256": "ffd4a6766ccbe416b8dcdf85839295bd3941ff909a054204ed860105cc6c9aca"
+}

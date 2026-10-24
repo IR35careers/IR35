@@ -1,0 +1,19 @@
+[Unit]
+Description=IR35 internal queue schedule %i (disabled pending cutover)
+Requires=docker.service
+After=docker.service
+ConditionPathIsMountPoint=/opt/ir35/data
+ConditionPathExists=/opt/ir35/.env.p5-web
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/docker compose --project-name ir35-p5 --file /opt/ir35/p5-compose.yml exec -T web /run/ir35/env-exec /opt/ir35/.env.p5-web node web-cron.mjs %i
+TimeoutStartSec=45
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+CapabilityBoundingSet=
+RestrictSUIDSGID=true
+UMask=0077

@@ -129,7 +129,7 @@ test("public search-to-detail journey is usable and truthful", async ({ page, re
   await expectNoSeriousA11yViolations(page);
 });
 
-test("contract search keeps a stable shell while initial results load", async ({ page }) => {
+test("contract search retains server-rendered results while its client refresh loads", async ({ page }) => {
   let releaseSearch: () => void = () => undefined;
   const searchGate = new Promise<void>((resolve) => { releaseSearch = resolve; });
   await page.route("**/api/jobs/search**", async (route) => {
@@ -137,13 +137,40 @@ test("contract search keeps a stable shell while initial results load", async ({
     await route.continue();
   });
 
-  await page.goto("/jobs", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Find your next contract" })).toBeVisible();
-  await expect(page.getByRole("status", { name: "Loading contracts" })).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  try {
+    await page.goto("/jobs", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Find your next contract" })).toBeVisible();
+    // SSR has real rows already: a slower browser refresh must not replace
+    // them with an empty skeleton. Still prove the pending/busy state.
+    await expect(page.locator(`a[href="/jobs/${DEMO_JOBS[0].id}"]`).first()).toBeVisible();
+    await expect(page.getByText("Searching…", { exact: true })).toBeVisible();
+    await expect(page.locator("main [aria-busy=true]")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+    releaseSearch();
+    await expect(page.getByText(/[\d,]+ contracts found/)).toBeVisible();
+  } finally {
+    releaseSearch();
+  }
+});
 
-  releaseSearch();
-  await expect(page.getByText(/[\d,]+ contracts found/)).toBeVisible();
+test("public contracts and deep-linked filters render without JavaScript", async ({ browser, baseURL }, info) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: info.project.use.viewport });
+  const page = await context.newPage();
+  try {
+    await page.goto("/jobs", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Find your next contract" })).toBeVisible();
+    await expect(page.locator(`a[href="/jobs/${DEMO_JOBS[0].id}"]`).first()).toBeVisible();
+    await expect(page.getByRole("status", { name: "Loading contracts" })).toHaveCount(0);
+    await page.goto("/jobs?ir35=outside", { waitUntil: "domcontentloaded" });
+    for (const job of DEMO_JOBS) {
+      const card = page.locator(`a[href="/jobs/${job.id}"]`);
+      if (job.ir35_status === "outside") await expect(card.first()).toBeVisible();
+      else await expect(card).toHaveCount(0);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
+  } finally {
+    await context.close();
+  }
 });
 
 test("contract results do not wait for facet aggregation", async ({ page }) => {

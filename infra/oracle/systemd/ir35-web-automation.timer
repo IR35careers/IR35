@@ -1,0 +1,10 @@
+[Unit]
+Description=IR35 daily automation enqueue — DO NOT enable on staging
+
+[Timer]
+OnCalendar=*-*-* 06:15:00 UTC
+Unit=ir35-web-cron@automation.service
+Persistent=false
+
+[Install]
+WantedBy=timers.target

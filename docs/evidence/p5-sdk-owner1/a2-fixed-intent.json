@@ -1,0 +1,1 @@
+{"network": "ir35-sdk-owner1-a2-fixed", "containers": ["ir35-sdk-owner1-a2-fixed-stub", "ir35-sdk-owner1-a2-fixed-caddy"], "internalOnly": true, "stubOnly": true, "attempt": 2, "mode": "fixed"}

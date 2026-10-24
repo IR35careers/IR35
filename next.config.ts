@@ -19,6 +19,7 @@ const PRIVATE_ROUTES = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   poweredByHeader: false,
   // A second lockfile exists above this repository on the workstation. Keep
   // output tracing bounded to this project so builds do not scan the user's

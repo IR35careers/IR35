@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "phaseComplete": false,
+  "sourceWrites": 0,
+  "pristineStagingWrites": 0,
+  "target": "ir35_p5_app",
+  "databaseCreated": true,
+  "containersCreated": false,
+  "caddyActivated": false,
+  "cloneFidelity": "PASS",
+  "tablesChecked": 62,
+  "privilegesChecked": 552,
+  "storageObjects": 73,
+  "storageBytes": 1241375,
+  "envFiles": [
+    {
+      "name": ".env.p5-auth",
+      "sha256": "e4e3397624cc6e031da02ecbf3abdb74f382b9ed75feeb2412656c204d3bc0b1",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    {
+      "name": ".env.p5-rest",
+      "sha256": "cec14e4cc85266e95e9be3621360321b2c79db586d74293a469ba498cd581456",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    {
+      "name": ".env.p5-storage",
+      "sha256": "d784c26f518bebda448d422be5f178a31b55302c89e901c694dfec07c2a8ff94",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    {
+      "name": ".env.p5-kong",
+      "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    {
+      "name": ".env.p5-kong-config",
+      "sha256": "2dcdd388cee9887bff8952702276d986e3cb43592ae00851ca9a654a5128e1d8",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    {
+      "name": ".env.p5-web",
+      "sha256": "c1c1e2974dd24ca0b11d070500306c35e46a9aa72e13f891c69ba32100257c44",
+      "mode": "600",
+      "owner": "ir35"
+    }
+  ],
+  "image": "sha256:cbc62c3a5c7383fe6eadc9353a3ad38c42b4afe115fec94349dce9bd2ea9fd06",
+  "sourceSHA": "a35db403d3fbb57148247606234a9807f48ea8a0",
+  "pristineUnchanged": true,
+  "readonlyDatabaseConnections": true,
+  "composeSHA256": "24a3fb188c31ac2ac645c598c0b1032ad17fab5a488dc472c47a9233d755b5de",
+  "stage": "01-prepare",
+  "manifestSHA256": "d4a47ed738d58151c9cb7e4f4b667b717a52274f4fad65296e2385f3239be8fc"
+}

@@ -1,0 +1,43 @@
+{
+  "status": "FAIL",
+  "repair": 2,
+  "preparation": {
+    "status": "PASS",
+    "caddyActivated": false,
+    "phaseComplete": false,
+    "productionChanges": false,
+    "adapter": "PASS",
+    "envFile": {
+      "name": ".env.p5-caddy",
+      "sha256": "56b4b6d20fb05f1991fd024d0192b361eb28e3333abb46728b7b71ae276da316",
+      "mode": "600",
+      "owner": "ir35"
+    },
+    "configSHA256": "d7d965531a155c2394ae4ef72b79689c00097ad07a9f4ca11f7940ef83affb42",
+    "composeSHA256": "56fc6a1e19186468d31b86fbd10f7bcb45720bf3752d399572221ea6adf9c0dc",
+    "originalConfigSHA256": "2cf8eee0b80f632c4a14462267489a62516b7cd7e6adadc6202e897ad49cf105",
+    "originalComposeSHA256": "7b6f361fb5fb7a79ece0574f4e26b30346e6eac44d557d46a7ef3aa7329d982a",
+    "originalEnvSHA256": "688cbcb2ff4667ae430d4c06b94c38e2bf6f31782c57f6b9c075433324b4914d",
+    "certificateRequests": 0,
+    "originalFilesUnchanged": true,
+    "stage": "07-edge-repair-2-prepare",
+    "manifestSHA256": "05c55d72d338efed158a13845645193f908c4bd3d3edec66f5c89b8410ab4818"
+  },
+  "activation": {
+    "status": "FAIL",
+    "phaseComplete": false,
+    "productionChanges": false,
+    "dnsWrites": 0,
+    "authenticatedJobs": {
+      "status": 200,
+      "noindex": true,
+      "noStoreExact": true,
+      "h1Present": true
+    },
+    "code": "P5SDKBoundaryMismatch",
+    "rollback": "original Caddy restored",
+    "stage": "08-edge-repair-2-activate",
+    "manifestSHA256": "6446d4c29d263e0c7f00b9ba69e6dbc11184ebb00c5ba0eb149eb0c6b6f3782a"
+  },
+  "phaseComplete": false
+}
