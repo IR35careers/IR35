@@ -1,0 +1,121 @@
+{
+  "status": "PASS",
+  "repairAttempt": 1,
+  "reason": "ReadbackSQL42601_ExtraClosingParenthesis",
+  "schemaWrites": 0,
+  "roleWrites": 0,
+  "serviceChanges": 0,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "setupReplayed": false,
+  "failedManifestSHA256": "7a6d417a56926f13765db249981b911e34ab160e21aceb3c7944a2e153b2d0a8",
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "queueACL": {
+    "owner": "ir35_queue",
+    "queues": [
+      "ir35-staging-mock-apply",
+      "ir35-staging-mock-schedule"
+    ],
+    "anonUsage": false,
+    "producerCreate": false,
+    "authenticatedUsage": false,
+    "producerUnexpectedMutation": false
+  },
+  "customerPrivilegeMatrix": [
+    {
+      "database": "postgres",
+      "checks": 126,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "checks": 114,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p5_app",
+      "checks": 114,
+      "unexpectedAccess": 0
+    }
+  ],
+  "actualDeniedReads": [
+    {
+      "role": "ir35_queue",
+      "table": "auth.users",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue",
+      "table": "public.profiles",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue",
+      "table": "storage.objects",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue_producer",
+      "table": "auth.users",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue_producer",
+      "table": "public.profiles",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue_producer",
+      "table": "storage.objects",
+      "passed": true,
+      "sqlstate": "42501"
+    }
+  ],
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "05-mock-setup-r1",
+  "manifestSHA256": "3ed701df01f7defbe51cf9d8183a3414b6e26792679d707fd9e365af6fcb3157"
+}
