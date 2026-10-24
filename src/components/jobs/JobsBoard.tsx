@@ -2,12 +2,11 @@
 
 /**
  * /jobs — contract search with a left filter sidebar (facet counts), matching
- * the reference layout. Auth-gated. Deep-linkable filters.
+ * the reference layout. Public SSR with deep-linkable interactive filters.
  */
 
 import Link from "next/link";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Check, Clock3, LayoutGrid, MapPin, PoundSterling, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { formatPosted, formatRate, type JobListing } from "@/lib/job-types";
 import {
@@ -89,12 +88,14 @@ function FilterOption({
   );
 }
 
-function JobsBoard({ initial }: { initial: InitialJobSearch | null }) {
+function JobsBoard({ initial, query }: { initial: InitialJobSearch | null; query: string }) {
   const { user, loading: authLoading } = useAuth();
   const memberView =
     !isSupabaseConfigured() ||
     (!authLoading && Boolean(user) && !isAdministratorEmail(user?.email));
-  const searchParams = useSearchParams();
+  // Use the server's bounded query, not a client-only navigation hook inside
+  // Suspense: no-JavaScript visitors must receive the actual list, not fallback.
+  const searchParams = new URLSearchParams(query);
   const spIr35 = searchParams.get("ir35");
   const spRemote = searchParams.get("remote");
   const spMinRate = parseInt(searchParams.get("min_rate") ?? "", 10);
@@ -407,31 +408,6 @@ function JobsBoard({ initial }: { initial: InitialJobSearch | null }) {
   );
 }
 
-export default function JobsPage({ initial }: { initial: InitialJobSearch | null }) {
-  return (
-    <Suspense fallback={<JobsPageSkeleton />}>
-      <JobsBoard initial={initial} />
-    </Suspense>
-  );
-}
-
-function JobsPageSkeleton() {
-  return (
-    <div className="ir35-workspace-canvas min-h-screen text-slate-900" aria-busy="true">
-      <PublicHeader />
-      <main className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 sm:py-7">
-        <section className="relative overflow-hidden rounded-[28px] border border-slate-800/70 bg-[#041922] p-5 text-white sm:p-8">
-          <div className="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
-          <div className="relative animate-pulse">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">UK contract search</p>
-            <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Find your next contract</p>
-            <div className="mt-6 h-14 max-w-3xl rounded-2xl border border-white/10 bg-white/10" aria-hidden="true" />
-          </div>
-        </section>
-        <div className="ir35-card ir35-aurora-panel mx-0 -mt-1 h-16 animate-pulse rounded-[24px] sm:mx-4" aria-hidden="true" />
-        <div className="mt-10 grid gap-5 lg:grid-cols-[278px_minmax(0,1fr)]"><div className="hidden h-[520px] animate-pulse rounded-[22px] border border-slate-200 bg-white lg:block" aria-hidden="true" /><div className="grid gap-4 md:grid-cols-2" role="status" aria-label="Loading contracts"><span className="sr-only">Loading contracts</span>{Array.from({ length: 6 }, (_, index) => <JobCardSkeleton key={index} />)}</div></div>
-      </main>
-      <PublicFooter />
-    </div>
-  );
+export default function JobsPage({ initial, query }: { initial: InitialJobSearch | null; query: string }) {
+  return <JobsBoard key={query} initial={initial} query={query} />;
 }

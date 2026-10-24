@@ -8,6 +8,7 @@ import sys
 import cloud_schema as schema
 import host_ssh
 import immutable_artifacts
+from web_security import security_versions
 
 
 def git_command(repo):
@@ -28,10 +29,11 @@ def build():
     sha=subprocess.check_output(git+['rev-parse','HEAD'],cwd=repo,text=True).strip()
     branch=subprocess.check_output(git+['branch','--show-current'],cwd=repo,text=True).strip()
     if branch!='codex/oracle-migration-p5':raise RuntimeError('P5BranchRequired')
+    security_versions(json.loads((repo/'package-lock.json').read_text()))
     previous={}
     for path in sorted((repo/'docs/evidence/p5').glob('build-*.json')):
         row=json.loads(path.read_text());previous[row['stage']]=row['manifestSHA256']
-        if row['status']=='PASS':raise RuntimeError('BuildAlreadyPassed_NoReplay')
+        if row['status']=='PASS' and row['sourceSHA']==sha:raise RuntimeError('BuildAlreadyPassed_NoReplay')
     attempt=len(previous)+1
     if attempt>3:raise RuntimeError('BuildRepairBudgetExhausted')
     body=subprocess.check_output(git+['archive','--format=tar',sha],cwd=repo)
@@ -39,7 +41,7 @@ def build():
     data={'sourceSHA':sha,'attempt':attempt,'anchors':previous,'archiveSHA256':hashlib.sha256(body).hexdigest(),'archive':base64.b64encode(body).decode()}
     source=schema.guest_bundle(rehearsal=True)
     source+='\nimport types\n'
-    for name in ('immutable_artifacts','web_build_guest'):
+    for name in ('immutable_artifacts','web_security','web_build_guest'):
         code=(repo/'infra/oracle'/(name+'.py')).read_text()
         source+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr(code)+',module.__dict__)\n'
     source+='result=sys.modules["web_build_guest"].run('+repr(data)+',{"run":run,"read_env":read_env,"env_text":env_text})\nprint(json.dumps(result))\n'

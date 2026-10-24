@@ -18,6 +18,34 @@ def compose(image,backend):
         'networks':{'backend':{'external':True,'name':backend}}}
 
 
+def app_compose(image,backend,pins):
+    """Additional app-fixture services use the EXISTING private Postgres host.
+    No new VM/volume/network/public listener; no verified-P4 service repointing.
+    """
+    result=compose(image,backend)
+    limits={'auth':'256m','rest':'256m','storage':'512m','kong':'384m'}
+    for name,limit in limits.items():
+        pin=pins[name]
+        if pin['platform']!='linux/arm64' or not re.fullmatch(r'[a-z0-9/_-]+:[A-Za-z0-9_.-]+@sha256:[0-9a-f]{64}',pin['image']):raise ValueError('Pinned native backend required')
+        env='/opt/ir35/.env.p5-'+name
+        service={'image':pin['image'],'platform':'linux/arm64','container_name':'ir35-p5-'+name,'user':'1002:1002',
+            'restart':'no','mem_limit':limit,'pids_limit':128,'read_only':True,'cap_drop':['ALL'],
+            'security_opt':['no-new-privileges:true'],'logging':{'driver':'none'},'networks':['backend'],
+            'entrypoint':['/run/ir35/env-exec',env,*pin['entrypoint']], 'command':pin['command'],
+            'volumes':['/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro',env+':'+env+':ro'],
+            'tmpfs':['/tmp:rw,size=64m,uid=1002,gid=1002,mode=0700']}
+        result['services'][name]=service
+    result['services']['rest']['command']=['postgrest']
+    # Exact-clone schema/migration history is separately verified. Serve the
+    # read-only P5 fixture; do not run root-command startup migrations on it.
+    result['services']['auth']['command']=['auth','serve']
+    result['services']['storage']['volumes'].append('/opt/ir35/data/p5-storage:/var/lib/storage:ro')
+    result['services']['kong']['volumes'].append('/opt/ir35/.env.p5-kong-config:/run/ir35/.env.kong-config.json:ro')
+    result['services']['kong']['tmpfs'].append('/run/kong:rw,uid=1002,gid=1002,mode=0700')
+    result['services']['kong']['ulimits']={'nofile':{'soft':4096,'hard':4096}}
+    return result
+
+
 def caddyfile(original):
     marker='staging.ir35careers.com {\n'
     start=original.index(marker);end=original.index('\napi-staging.ir35careers.com {',start)

@@ -24,6 +24,19 @@ class WebStackTests(unittest.TestCase):
         for image,network in [('node:latest','ir35-staging_backend'),('sha256:'+'a'*64,'bridge')]:
             with self.assertRaises(ValueError):web_stack.compose(image,network)
 
+    def test_app_backend_has_no_public_ports_or_secret_environment_values(self):
+        import json
+        pins=json.loads((Path(__file__).resolve().parents[1]/'staging-images.json').read_text())['images']
+        data=web_stack.app_compose('sha256:'+'b'*64,'ir35-staging_backend',pins)
+        self.assertEqual(set(data['services']),{'web','auth','rest','storage','kong'})
+        self.assertEqual(data['services']['auth']['command'],['auth','serve'])
+        for name,service in data['services'].items():
+            self.assertNotIn('ports',service)
+            self.assertNotIn('environment',service)
+            self.assertTrue(service['read_only'])
+            self.assertEqual(service['logging']['driver'],'none')
+        self.assertIn('/opt/ir35/data/p5-storage:/var/lib/storage:ro',data['services']['storage']['volumes'])
+
     def test_only_approved_staging_hosts_and_exact_cookie_gate(self):
         result=web_stack.caddyfile(staging_stack.CADDYFILE)
         self.assertIn('basic_auth',result)
