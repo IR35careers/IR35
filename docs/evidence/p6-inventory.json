@@ -1,0 +1,304 @@
+{
+  "status": "PASS",
+  "infraCreates": 0,
+  "roleWrites": 0,
+  "schemaWrites": 0,
+  "secretChanges": 0,
+  "serviceChanges": 0,
+  "productionChanges": false,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0
+  },
+  "queueRoles": [],
+  "queueSchema": {
+    "owner": "postgres",
+    "exists": true,
+    "tableCount": 0
+  },
+  "services": [
+    {
+      "name": "ir35-staging-caddy-1",
+      "state": "running",
+      "health": null,
+      "memoryLimitBytes": 134217728,
+      "restartPolicy": "no",
+      "portsPublished": true
+    },
+    {
+      "name": "ir35-p5-web",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 1610612736,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p5-rest",
+      "state": "running",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p5-storage",
+      "state": "running",
+      "health": null,
+      "memoryLimitBytes": 536870912,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p5-auth",
+      "state": "running",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p5-kong",
+      "state": "running",
+      "health": "unhealthy",
+      "memoryLimitBytes": 402653184,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-09-named-ready-kong",
+      "state": "exited",
+      "health": "unhealthy",
+      "memoryLimitBytes": 402653184,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-09-named-ready-rest",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-09-named-ready-auth",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-08-synthetic-2-kong",
+      "state": "exited",
+      "health": "unhealthy",
+      "memoryLimitBytes": 402653184,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-08-synthetic-2-rest",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-08-synthetic-2-auth",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-08-synthetic-1-kong",
+      "state": "exited",
+      "health": "unhealthy",
+      "memoryLimitBytes": 402653184,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-08-synthetic-1-rest",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-08-synthetic-1-auth",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-07-storage-api-repair-1-storage",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 536870912,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-07-storage-api-repair-1-rest",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-8be0fc2e-05-storage-api-rest",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-auth2-kong",
+      "state": "exited",
+      "health": "unhealthy",
+      "memoryLimitBytes": 402653184,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-auth2-rest",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-auth2-auth",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-auth-login",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p4-storage-1",
+      "state": "exited",
+      "health": null,
+      "memoryLimitBytes": 536870912,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-kong-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 402653184,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-storage-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 536870912,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "realtime-dev.supabase-realtime",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-meta-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 134217728,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-auth-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-rest-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 268435456,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-db-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 3221225472,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-staging-smtp-1",
+      "state": "running",
+      "health": "healthy",
+      "memoryLimitBytes": 67108864,
+      "restartPolicy": "no",
+      "portsPublished": false
+    },
+    {
+      "name": "ir35-p3-extension-probe",
+      "state": "exited",
+      "health": "unhealthy",
+      "memoryLimitBytes": 3221225472,
+      "restartPolicy": "no",
+      "portsPublished": false
+    }
+  ],
+  "memoryKiB": {
+    "MemTotal": 12213628,
+    "MemAvailable": 9113744,
+    "SwapTotal": 4194300,
+    "SwapFree": 4172080
+  },
+  "dataVolume": "1B-blocks       Used        Avail Use% Mounted on\n105089261568 1114009600 102884732928   2% /opt/ir35/data",
+  "queueRolesAvailable": false,
+  "limitations": [
+    "Current worker config rejects APPLY_RUNNER=mock",
+    "P5 branch does not yet include PR48 private-host validator",
+    "New roles must not silently invalidate exact cloud role parity"
+  ],
+  "stage": "01-inventory",
+  "manifestSHA256": "9fa0986a5f3f638758adbbe19e35f8dc7ae10b1495603f3ffd76a427a637d363"
+}
