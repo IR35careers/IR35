@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October private header matrix PASS:** sealedffd4a6766ccb; immediate+deferred pair passes401/200 noindex/no-store, deferred-only401failure reproduced,3diagnostic containers removed/no public edge change.24web testsPASS. Final edge repair2 now requires this exact seal, full data+DNS proof and new candidate; third edge failure stops, no reset. [Results](evidence/p5/header-probe-repair-2.json).
+
 **24October private probe FAIL2/actual cause isolated:** env read0/Caddy cap-dropALL111/samebaselineNET_BIND_SERVICE0. Final private repair2 uses only existing Caddy cap with no public ports, both journals preserved; no fourth private attempt.24web regression checks pending. No prod/DNS/data/cutover change. [Evidence](evidence/oracle-p5-staging.md).
 
 **24October private header probe FAIL1, public edge unchanged:** ValueError before HTTP cases; immutablee0f6ebb7 retained. Nonroot/read-only Caddy probe gets explicit writable RAM dirs/state wait and metadata-only frames in separately bounded repair1. No public retry or counter reset; final edge repair still unused.23web testsPASS. [Evidence](evidence/oracle-p5-staging.md).

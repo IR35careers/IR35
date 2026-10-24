@@ -9,7 +9,7 @@ import re
 import socket
 import ssl
 import stat
-from immutable_artifacts import digest
+from immutable_artifacts import Store,digest
 from p4_recovery_guest import Recovery,RecoveryError
 from web_fixture_guest import private_new
 from web_services_guest import require_prepared
@@ -197,8 +197,14 @@ def repair(data,runtime,index):
     previous_stage='04-edge-activate' if index==1 else '06-edge-repair-1-activate'
     store.verify(previous_stage,data['failedEdgeAnchor'])
     previous=json.loads((store.root/previous_stage/'result.json').read_bytes())
-    if previous.get('status')!='FAIL' or previous.get('code')not in ('P5ProtectedSSRRequired','P5SDKBoundaryMismatch','P5SecureSDKGateRequired','P5SeparateAPIProtectionMismatch') or previous.get('rollback')!='original Caddy restored':
+    if previous.get('status')!='FAIL' or previous.get('code')not in ('P5ProtectedSSRRequired','P5ProtectedHeadersRequired','P5SDKBoundaryMismatch','P5SecureSDKGateRequired','P5SeparateAPIProtectionMismatch') or previous.get('rollback')!='original Caddy restored':
         raise RecoveryError('DocumentedRolledBackConfigurationFailureRequired')
+    if index==2:
+        probes=Store(ROOT/'.env.p5-header-probes',uid=1002)
+        probes.verify('03-header-probe-r2',data['headerProbeAnchor'])
+        proof=json.loads((probes.root/'03-header-probe-r2/result.json').read_bytes())
+        if proof.get('status')!='PASS' or proof.get('publicEdgeChanged')is not False or proof.get('cases',{}).get('paired')!={'unauthorized':{'status':401,'noindex':True,'noStoreExact':True},'authorized':{'status':200,'noindex':True,'noStoreExact':True}}:
+            raise RecoveryError('PrivatePairedHeaderProofRequired')
     prepared=prepare(data,runtime,index)
     if prepared['status']!='PASS':return {'status':'FAIL','repair':index,'preparation':prepared,'phaseComplete':False}
     active=activate(data|{'edgeAnchor':prepared['manifestSHA256']},runtime,index)

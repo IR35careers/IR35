@@ -44,6 +44,8 @@ class WebStackTests(unittest.TestCase):
         self.assertIn('(^|;[ ]*)__Host-ir35-staging={$STAGING_GATE_TOKEN}(;|$)',result)
         self.assertIn('Secure; HttpOnly; SameSite=Strict',result)
         self.assertIn('header >Cache-Control "no-store"',result)
+        self.assertIn('header Cache-Control "no-store"',result)
+        self.assertIn('header X-Robots-Tag "noindex, nofollow, noarchive"',result)
         self.assertIn('header >X-Robots-Tag "noindex, nofollow, noarchive"',result)
         self.assertIn('header >Set-Cookie',result)
         self.assertIn('reverse_proxy ir35-p5-web:3000',result)

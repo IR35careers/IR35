@@ -87,6 +87,10 @@ def main():
             if previous_name=='edge-repair-1':failed=failed['activation']
             if failed.get('status')!='FAIL' or failed.get('rollback')!='original Caddy restored':raise RuntimeError('PriorRolledBackFailureRequired')
             data['failedEdgeAnchor']=failed['manifestSHA256']
+            if operation=='edge-repair-2':
+                probe=json.loads((schema.REPO/'docs/evidence/p5/header-probe-repair-2.json').read_text())
+                if probe.get('status')!='PASS':raise RuntimeError('PrivatePairedHeaderProofRequired')
+                data['headerProbeAnchor']=probe['manifestSHA256']
         ready,observations=staging_dns.observe()
         if not ready:raise RuntimeError('StagingDNSNotReady_NoActivation')
         data['dns']={'status':'PASS','observations':observations,'checkedAtUnix':time.time(),'dnsWrites':0}

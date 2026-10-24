@@ -88,7 +88,7 @@ def caddyfile(original):
 '''
     # Both approved STAGING hosts only. Production hostnames/routes are absent.
     result=(original[:start]+web+original[end:]).replace('header X-Robots-Tag "noindex, nofollow, noarchive"',
-        'header >X-Robots-Tag "noindex, nofollow, noarchive"\n    header >Cache-Control "no-store"')
+        'header X-Robots-Tag "noindex, nofollow, noarchive"\n    header Cache-Control "no-store"\n    header >X-Robots-Tag "noindex, nofollow, noarchive"\n    header >Cache-Control "no-store"')
     return result.replace('reverse_proxy @api kong:8000','reverse_proxy @api ir35-p5-kong:8000')
 
 
