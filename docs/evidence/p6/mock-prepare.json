@@ -1,0 +1,67 @@
+{
+  "status": "PASS",
+  "serviceChanges": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "customerWrites": 0,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "passwordRequiredControls": [
+    {
+      "role": "ir35_queue",
+      "passwordRequired": true,
+      "unexpectedUnauthenticatedLogin": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "passwordRequired": true,
+      "unexpectedUnauthenticatedLogin": false
+    }
+  ],
+  "privateFileHashes": {
+    ".env.p6-mock-worker": "dfac1b6629fc5a8246975eebd89e5b9ea557747bad5e3b441b03572f821403ab",
+    ".env.p6-mock-control": "a21a2eaba3161c779fb0d164d5da873d6937aae8a370ad3e6efc840953c9dbe2"
+  },
+  "composeSHA256": "38c8084ac1d164487d9e6abf7b3d2e0959a0713c744801d15efe337fc985cedb",
+  "envNames": [
+    "APPLICATION_WORKER_ACCEPT_JOBS",
+    "APPLICATION_WORKER_CONCURRENCY",
+    "APPLICATION_WORKER_SECRET",
+    "APPLY_RUNNER",
+    "IR35CAREERS_APP_URL",
+    "IR35_BUILD_SHA",
+    "IR35_READ_ONLY",
+    "IR35_SCHEDULER_ENABLED",
+    "IR35_STAGING",
+    "PG_BOSS_DATABASE_URL",
+    "PG_BOSS_PRODUCER_DATABASE_URL",
+    "PORT",
+    "QUEUE_DB_ALLOWED_HOSTS"
+  ],
+  "image": "sha256:68e887e8d9a5dfc18c0fd4421f41af318257340e25d611faee0c94f1305062fc",
+  "credentialsMode": "600",
+  "credentialsOwner": "ir35",
+  "mockOnlyMaintenanceOff": true,
+  "p5AppStillReadOnly": true,
+  "hostHealthBind": "127.0.0.1:8787",
+  "stage": "04-mock-prepare",
+  "manifestSHA256": "3775ade40f76895bc8db140d18eb54db0a4fa7f6f917019badd77f8b3c6dd28c"
+}
