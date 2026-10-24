@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October P5 Caddy candidate PASS:** native pinned adapter verifies protected staging-only config with unchanged original files/keys/ports and newenv600/ir35, no certificate requests/activation. [Sealed proof](evidence/p5/edge-prepare.json),b20a72acbd1d. Next guarded TLS/negative-cookie/SSR switch plus full post-data proof and automatic original-Caddy rollback on failure. No production/cutover.
+
 **24October private P5 services PASS:** five no-port nonroot/read-only containers healthy200, fixture/pristine full fidelity unchanged; truthful503partial health(DB/Auth/Storageready,Realtime/workernotconfigured). [Sealed result](evidence/p5/services.json), manifest42c086d1e1bb. All10hosted a35db40 checksSUCCESS. Dual-resolver staging DNS/CAA read-onlyPASS, no writes.21web helper testsPASS. Next staging-only Caddy candidate/adapt/TLS negative gates, old configuration retained; no production or cutover.
 
 **24October P5 separate app fixture PASS:** newir35_p5_app/73files exactly match verified snapshot (62tables/schema/2sequences/552privileges,1,241,375Storagebytes/xattrs); full pristine before/after unchanged. VM envs600/ir35/default read-only, sink/mock/acceptance=false. Prepare manifestd4a47ed738d5, [result](evidence/p5/prepare.json). No containers/Caddy activation; next private services/full post-start fidelity.18web helper tests PASS, no production/cutover.
