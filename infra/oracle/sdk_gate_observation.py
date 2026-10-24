@@ -12,7 +12,7 @@ def response_headers(headers):
         if name=='set-cookie':
             parts=value.split(';')
             safe[name]=parts[0].split('=',1)[0]+'=<redacted>;'+ ';'.join(parts[1:])
-        elif name in ('cache-control','x-robots-tag','content-type','content-length','date','server','www-authenticate','x-caddy-request-id','x-ir35-matched-route'):
+        elif name in ('cache-control','x-robots-tag','content-type','content-length','date','server','www-authenticate','x-caddy-request-id','x-ir35-matched-route','x-upstream-route'):
             safe[name]=value
         elif name=='content-security-policy':safe[name]={'sha256':hashlib.sha256(value.encode()).hexdigest(),'value':'<redacted>'}
         else:safe[name]='<redacted>'
@@ -53,6 +53,10 @@ def sdk_cases(observer,request,gate,*,headers=None,check_path=True):
     common=headers or {}
     for name,cookie,expected in [('missing',None,401),('suffix',gate+'extra',401),('valid',gate,200)]:
         extra={} if cookie is None else {'Cookie':'__Host-ir35-staging='+cookie}
+        def checks(h,b,name=name):
+            result={'exactRoute':h.get('x-ir35-matched-route')==('sdk-proxy' if name=='valid' else 'sdk-guard')}
+            if name=='valid' and check_path:result['upstreamPath']=json.loads(b).get('path')=='/auth/v1/health'
+            return result
         observer.case('sdk-'+name,'GET','/supabase/auth/v1/health',expected,
             lambda rid,extra=extra:request('GET','/supabase/auth/v1/health',common|extra|{'X-IR35-Client-Request-ID':rid}),
-            checks=(lambda h,b:{'upstreamPath':json.loads(b).get('path')=='/auth/v1/health'}) if name=='valid' and check_path else None)
+            checks=checks)

@@ -1,0 +1,337 @@
+{
+  "admin": {
+    "config": {
+      "persist": false
+    },
+    "disabled": true
+  },
+  "apps": {
+    "http": {
+      "servers": {
+        "srv0": {
+          "automatic_https": {
+            "disable": true
+          },
+          "listen": [
+            ":8080"
+          ],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "handler": "headers",
+                  "response": {
+                    "set": {
+                      "X-Robots-Tag": [
+                        "noindex, nofollow, noarchive"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "handler": "headers",
+                  "response": {
+                    "set": {
+                      "Cache-Control": [
+                        "no-store"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "handler": "headers",
+                  "response": {
+                    "deferred": true,
+                    "set": {
+                      "X-Robots-Tag": [
+                        "noindex, nofollow, noarchive"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "handler": "headers",
+                  "response": {
+                    "deferred": true,
+                    "set": {
+                      "Cache-Control": [
+                        "no-store"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "handler": "headers",
+                  "response": {
+                    "set": {
+                      "X-Caddy-Request-Id": [
+                        "{http.request.uuid}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "handler": "headers",
+                  "response": {
+                    "deferred": true,
+                    "set": {
+                      "X-Caddy-Request-Id": [
+                        "{http.request.uuid}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "group": "group3",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "deferred": true,
+                                    "set": {
+                                      "X-Ir35-Matched-Route": [
+                                        "sdk-guard"
+                                      ]
+                                    }
+                                  }
+                                }
+                              ],
+                              "match": [
+                                {
+                                  "not": [
+                                    {
+                                      "header_regexp": {
+                                        "Cookie": {
+                                          "pattern": "(^|;[ ]*)__Host-ir35-staging=<public-fixture-gate>(;|$)"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": {
+                                      "X-Ir35-Matched-Route": [
+                                        "sdk-proxy"
+                                      ]
+                                    }
+                                  }
+                                }
+                              ],
+                              "match": [
+                                {
+                                  "path": [
+                                    "/auth/v1/*",
+                                    "/rest/v1/*",
+                                    "/storage/v1/*",
+                                    "/realtime/v1/*"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "headers",
+                                  "response": {
+                                    "set": {
+                                      "X-Ir35-Matched-Route": [
+                                        "sdk-fallback"
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "handler": "rewrite",
+                                  "strip_path_prefix": "/supabase"
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "body": "Staging authentication required",
+                                  "handler": "static_response",
+                                  "status_code": 401
+                                }
+                              ],
+                              "match": [
+                                {
+                                  "not": [
+                                    {
+                                      "header_regexp": {
+                                        "Cookie": {
+                                          "pattern": "(^|;[ ]*)__Host-ir35-staging=<public-fixture-gate>(;|$)"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "body": "Not found",
+                                  "handler": "static_response",
+                                  "status_code": 404
+                                }
+                              ]
+                            },
+                            {
+                              "handle": [
+                                {
+                                  "handler": "reverse_proxy",
+                                  "headers": {
+                                    "request": {
+                                      "delete": [
+                                        "Cookie",
+                                        "X-Forwarded-For",
+                                        "X-Real-IP",
+                                        "X-Vercel-Forwarded-For"
+                                      ]
+                                    }
+                                  },
+                                  "upstreams": [
+                                    {
+                                      "dial": "sdk-stub:8081"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "match": [
+                                {
+                                  "path": [
+                                    "/auth/v1/*",
+                                    "/rest/v1/*",
+                                    "/storage/v1/*",
+                                    "/realtime/v1/*"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "match": [
+                        {
+                          "path": [
+                            "/supabase/*"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "group": "group3",
+                      "handle": [
+                        {
+                          "handler": "subroute",
+                          "routes": [
+                            {
+                              "handle": [
+                                {
+                                  "handler": "subroute",
+                                  "routes": [
+                                    {
+                                      "handle": [
+                                        {
+                                          "handler": "headers",
+                                          "response": {
+                                            "set": {
+                                              "X-Ir35-Matched-Route": [
+                                                "basic-auth-rejection"
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "handler": "authentication",
+                                          "providers": {
+                                            "http_basic": {
+                                              "accounts": [
+                                                {
+                                                  "password": "<public-fixture-bcrypt>",
+                                                  "username": "ir35"
+                                                }
+                                              ],
+                                              "hash": {
+                                                "algorithm": "bcrypt"
+                                              },
+                                              "hash_cache": {}
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "handler": "headers",
+                                          "response": {
+                                            "deferred": true,
+                                            "set": {
+                                              "Set-Cookie": [
+                                                "__Host-ir35-staging=<public-fixture-gate>; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800"
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "handler": "headers",
+                                          "request": {
+                                            "delete": [
+                                              "Authorization"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "handler": "headers",
+                                          "response": {
+                                            "set": {
+                                              "X-Ir35-Matched-Route": [
+                                                "page-proxy"
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "handler": "reverse_proxy",
+                                          "upstreams": [
+                                            {
+                                              "dial": "sdk-stub:8081"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "storage": {
+    "module": "file_system",
+    "root": "/tmp/caddy"
+  }
+}

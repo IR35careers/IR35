@@ -1,0 +1,1 @@
+{"case": "basic-rejection", "clientRequestId": "fe705e5e-1897-456a-ae4c-b1a401c67c6a", "expectedStatus": 401, "method": "GET", "path": "/jobs"}

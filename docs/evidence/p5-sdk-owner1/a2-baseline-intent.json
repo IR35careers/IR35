@@ -1,0 +1,1 @@
+{"network": "ir35-sdk-owner1-a2-baseline", "containers": ["ir35-sdk-owner1-a2-baseline-stub", "ir35-sdk-owner1-a2-baseline-caddy"], "internalOnly": true, "stubOnly": true, "attempt": 2, "mode": "baseline"}

@@ -1,0 +1,230 @@
+{
+  "status": "PASS",
+  "mode": "fixed",
+  "attempt": 2,
+  "publicPorts": 0,
+  "existingNetworkConnections": 0,
+  "dataOrSecretMounts": 0,
+  "stagingEdgeChanged": false,
+  "cases": [
+    {
+      "case": "sdk-missing",
+      "method": "GET",
+      "path": "/supabase/auth/v1/health",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "matchedRoute": "sdk-guard",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+        "server": "Caddy",
+        "x-caddy-request-id": "9a38845a-694f-49d4-8492-9efb30706a25",
+        "x-ir35-matched-route": "sdk-guard",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "date": "Sat, 24 Oct 2026 12:25:56 GMT",
+        "content-length": "31",
+        "connection": "<redacted>"
+      },
+      "caddyRequestId": "9a38845a-694f-49d4-8492-9efb30706a25",
+      "clientRequestId": "f341b576-e8dd-4461-9dc3-0aba79fd44dc",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true
+      },
+      "passed": true
+    },
+    {
+      "case": "sdk-suffix",
+      "method": "GET",
+      "path": "/supabase/auth/v1/health",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "matchedRoute": "sdk-guard",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+        "server": "Caddy",
+        "x-caddy-request-id": "1bf9e17f-11b6-4e0c-bb2d-94240cb0539f",
+        "x-ir35-matched-route": "sdk-guard",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "date": "Sat, 24 Oct 2026 12:25:56 GMT",
+        "content-length": "31",
+        "connection": "<redacted>"
+      },
+      "caddyRequestId": "1bf9e17f-11b6-4e0c-bb2d-94240cb0539f",
+      "clientRequestId": "4f355199-cc9c-4c1d-a58b-cb85bc05451d",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true
+      },
+      "passed": true
+    },
+    {
+      "case": "sdk-valid",
+      "method": "GET",
+      "path": "/supabase/auth/v1/health",
+      "expectedStatus": 200,
+      "actualStatus": 200,
+      "matchedRoute": "sdk-proxy",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "date": "Sat, 24 Oct 2026 12:25:56 GMT",
+        "via": "<redacted>",
+        "x-caddy-request-id": "8e00c73f-0ad4-4624-8148-88c790a095fd",
+        "x-ir35-matched-route": "sdk-proxy",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "x-upstream-route": "stub-auth-health",
+        "connection": "<redacted>",
+        "transfer-encoding": "<redacted>"
+      },
+      "caddyRequestId": "8e00c73f-0ad4-4624-8148-88c790a095fd",
+      "clientRequestId": "7e49b984-dd16-473b-899e-1820ffde37a5",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true,
+        "upstreamPath": true
+      },
+      "passed": true
+    },
+    {
+      "case": "jobs",
+      "method": "GET",
+      "path": "/jobs",
+      "expectedStatus": 200,
+      "actualStatus": 200,
+      "matchedRoute": "page-proxy",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "content-type": "text/html",
+        "date": "Sat, 24 Oct 2026 12:25:57 GMT",
+        "set-cookie": "__Host-ir35-staging=<redacted>; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800",
+        "via": "<redacted>",
+        "x-caddy-request-id": "a84341fc-c4d5-4e58-900a-832177c192b1",
+        "x-ir35-matched-route": "page-proxy",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "x-upstream-route": "stub-jobs",
+        "connection": "<redacted>",
+        "transfer-encoding": "<redacted>"
+      },
+      "caddyRequestId": "a84341fc-c4d5-4e58-900a-832177c192b1",
+      "clientRequestId": "e737f11e-a9e8-42ab-94e1-ed4564420e86",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true,
+        "h1": true,
+        "secureCookie": true
+      },
+      "passed": true
+    },
+    {
+      "case": "maintenance",
+      "method": "POST",
+      "path": "/api/jobs/search",
+      "expectedStatus": 503,
+      "actualStatus": 503,
+      "matchedRoute": "page-proxy",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "date": "Sat, 24 Oct 2026 12:25:57 GMT",
+        "set-cookie": "__Host-ir35-staging=<redacted>; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800",
+        "via": "<redacted>",
+        "x-caddy-request-id": "eff0799a-cd4c-48fa-a15e-f512335b9c59",
+        "x-ir35-matched-route": "page-proxy",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "x-upstream-route": "stub-maintenance",
+        "connection": "<redacted>",
+        "transfer-encoding": "<redacted>"
+      },
+      "caddyRequestId": "eff0799a-cd4c-48fa-a15e-f512335b9c59",
+      "clientRequestId": "3586a24f-ea58-4061-adfc-b5ae6ced7ab8",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true
+      },
+      "passed": true
+    },
+    {
+      "case": "basic-rejection",
+      "method": "GET",
+      "path": "/jobs",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "matchedRoute": "basic-auth-rejection",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "server": "Caddy",
+        "www-authenticate": "Basic realm=\"restricted\"",
+        "x-caddy-request-id": "495e9e50-00a4-4bcc-a9d9-5c824c8f063d",
+        "x-ir35-matched-route": "basic-auth-rejection",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "date": "Sat, 24 Oct 2026 12:25:57 GMT",
+        "content-length": "0",
+        "connection": "<redacted>"
+      },
+      "caddyRequestId": "495e9e50-00a4-4bcc-a9d9-5c824c8f063d",
+      "clientRequestId": "facc2a7c-4733-4ab8-bec1-787585a8916c",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true
+      },
+      "passed": true
+    },
+    {
+      "case": "sdk-fallback",
+      "method": "GET",
+      "path": "/supabase/not-supported",
+      "expectedStatus": 404,
+      "actualStatus": 404,
+      "matchedRoute": "sdk-fallback",
+      "responseHeaders": {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+        "server": "Caddy",
+        "x-caddy-request-id": "9afc46d7-81da-496e-96fd-a1a95cdc7bdf",
+        "x-ir35-matched-route": "sdk-fallback",
+        "x-robots-tag": "noindex, nofollow, noarchive",
+        "date": "Sat, 24 Oct 2026 12:25:57 GMT",
+        "content-length": "9",
+        "connection": "<redacted>"
+      },
+      "caddyRequestId": "9afc46d7-81da-496e-96fd-a1a95cdc7bdf",
+      "clientRequestId": "4df9291b-ab65-4b9c-8bc4-abb717db41a4",
+      "checks": {
+        "requestId": true,
+        "matchedRoute": true,
+        "noindex": true,
+        "noStore": true,
+        "exactRoute": true
+      },
+      "passed": true
+    }
+  ],
+  "validate": "PASS",
+  "adapt": "PASS",
+  "adaptedRawSHA256": "98ec493be5b7f4493e3b7c17c59606a1632faf3786de01014fa0e903fa09e2f8",
+  "networkInternal": true,
+  "temporaryContainersRemoved": 2,
+  "temporaryNetworkRemoved": true,
+  "stage": "02-fixed",
+  "manifestSHA256": "61cff6c32f3ed398495d81cd1bd4696a2569cf9b6270d5635e6c34ba97310016"
+}

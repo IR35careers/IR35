@@ -1,0 +1,1 @@
+{"case": "sdk-suffix", "clientRequestId": "19c5c2a1-cbda-4821-8218-9ba9935267ec", "expectedStatus": 401, "method": "GET", "path": "/supabase/auth/v1/health"}

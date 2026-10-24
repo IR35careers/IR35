@@ -1,6 +1,7 @@
 """Public P5 wiring only. New app fixture; never repoint the verified P4 DB."""
 import json
 import re
+from sdk_gate_config import sdk_block,literal_sdk
 
 NODE_IMAGE='node:22-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d'
 NODE_ARM_DIGEST='sha256:ceb43e5c219139035fb742900629e4abed89fe0997f7c03250c499e1f2710c9e'
@@ -89,7 +90,11 @@ def caddyfile(original):
     # Both approved STAGING hosts only. Production hostnames/routes are absent.
     result=(original[:start]+web+original[end:]).replace('header X-Robots-Tag "noindex, nofollow, noarchive"',
         'header X-Robots-Tag "noindex, nofollow, noarchive"\n    header Cache-Control "no-store"\n    header >X-Robots-Tag "noindex, nofollow, noarchive"\n    header >Cache-Control "no-store"')
-    return result.replace('reverse_proxy @api kong:8000','reverse_proxy @api ir35-p5-kong:8000')
+    result=result.replace('reverse_proxy @api kong:8000','reverse_proxy @api ir35-p5-kong:8000')
+    block=sdk_block(result)
+    # handle children are sorted; route children are literal. The guard must
+    # run before rewriting, the proxy before the terminal 404 (Caddy route docs).
+    return result.replace(block,literal_sdk(block),1)
 
 
 if __name__=='__main__':raise SystemExit('Imported by guarded P5 controller only')

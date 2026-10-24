@@ -55,15 +55,20 @@ def payload(*,readonly=False):
             'buildAnchors':{row['stage']:row['manifestSHA256'] for row in (json.loads(path.read_text()) for path in paths)}}
 
 
-def guest(data,operation='prepare'):
-    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe','header-probe-repair-1','header-probe-repair-2','containment-audit'):raise RuntimeError('FixedP5OperationRequired')
+def runtime_bundle():
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE+'\nimport types\n'
-    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest','web_header_probe_guest','web_containment_guest'):
+    for name in ('immutable_artifacts','p4_recovery_guest','web_security','sdk_gate_config','web_stack','web_fixture_guest','web_services_guest','web_edge_guest','web_header_probe_guest','web_containment_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
         script+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr(code)+',module.__dict__)\n'
     verifiers=rehearsal.verification_modules()+'\nfrom pathlib import PurePosixPath\n'+inspect.getsource(storage_target.backend_path)
     script+='verification_namespace={}\nexec('+repr(verifiers)+',verification_namespace)\n'
     script+='runtime={"run":run,"read_env":read_env,"verifiers":verification_namespace,"component_env":component_env,"env_text":env_text,"kong_config":stack.kong_config,"baseline_caddy":stack.CADDYFILE,"caddy_permissions":caddy_permissions}\n'
+    return script
+
+
+def guest(data,operation='prepare'):
+    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe','header-probe-repair-1','header-probe-repair-2','containment-audit'):raise RuntimeError('FixedP5OperationRequired')
+    script=runtime_bundle()
     if operation.startswith('header-probe-repair-'):
         script+='result=sys.modules["web_header_probe_guest"].run('+repr(data)+',runtime,'+operation[-1]+')\nprint(json.dumps(result))\n'
     elif operation.startswith('edge-repair-'):
