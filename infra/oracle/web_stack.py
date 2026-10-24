@@ -73,7 +73,7 @@ def caddyfile(original):
                 basic_auth {
                     ir35 {$STAGING_BASIC_HASH}
                 }
-                header Set-Cookie "__Host-ir35-staging={$STAGING_GATE_TOKEN}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800"
+                header >Set-Cookie "__Host-ir35-staging={$STAGING_GATE_TOKEN}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800"
                 @basic header Authorization "Basic *"
                 request_header @basic -Authorization
                 reverse_proxy ir35-p5-web:3000 {
@@ -88,7 +88,7 @@ def caddyfile(original):
 '''
     # Both approved STAGING hosts only. Production hostnames/routes are absent.
     result=(original[:start]+web+original[end:]).replace('header X-Robots-Tag "noindex, nofollow, noarchive"',
-        'header X-Robots-Tag "noindex, nofollow, noarchive"\n    header Cache-Control "no-store"')
+        'header >X-Robots-Tag "noindex, nofollow, noarchive"\n    header >Cache-Control "no-store"')
     return result.replace('reverse_proxy @api kong:8000','reverse_proxy @api ir35-p5-kong:8000')
 
 

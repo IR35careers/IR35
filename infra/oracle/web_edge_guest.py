@@ -54,7 +54,13 @@ def edge_compose(original):
     return result
 
 
-def prepare(data,runtime):
+def repair_paths(repair):
+    if type(repair)is not int or repair not in (0,1,2):raise RecoveryError('BoundedEdgeRepairRequired')
+    suffix='' if repair==0 else '-r'+str(repair)
+    return ROOT/('config/p5-Caddyfile'+suffix),ROOT/('p5-edge-compose'+suffix+'.yml')
+
+
+def prepare(data,runtime,repair=0):
     store,_=require_prepared(data)
     store.verify('02-services',data['servicesAnchor'])
     service=json.loads((store.root/'02-services/result.json').read_bytes())
@@ -64,18 +70,27 @@ def prepare(data,runtime):
     if old!=runtime['baseline_caddy']:raise RecoveryError('UnknownExistingCaddyConfiguration')
     values=private_env(ROOT/'.env.caddy')
     if values.get('ACME_CA')!=CA:raise RecoveryError('ExistingTrustedStagingCertificatesRequired')
-    stage=store.stage('03-edge-prepare')
+    config,destination=repair_paths(repair)
+    stage=store.stage('03-edge-prepare' if repair==0 else f'{3+2*repair:02d}-edge-repair-{repair}-prepare')
     result={'status':'FAIL','caddyActivated':False,'phaseComplete':False,'productionChanges':False}
     try:
+        if repair:
+            original_db=Recovery(data['p4'],runtime);fixture=copy.copy(original_db);fixture.database='ir35_p5_app'
+            pristine=original_db.check_database();after=fixture.check_database()
+            store.put(stage,'pristine-fidelity.json',json.dumps(pristine).encode());store.put(stage,'fixture-fidelity.json',json.dumps(after).encode())
+            if pristine['status']!='PASS' or after['status']!='PASS':raise RecoveryError('P5RepairDataMismatch_Abort')
         candidate=web_stack.caddyfile(old)
-        config=ROOT/'config/p5-Caddyfile'
         with config.open('x') as output:output.write(candidate)
         os.chmod(config,0o644)
-        values['STAGING_GATE_TOKEN']=runtime['run'](['openssl','rand','-hex','32']).strip()
-        secret=private_new(ROOT/'.env.p5-caddy',runtime['env_text'](values).encode())
+        if repair:
+            values=private_env(ROOT/'.env.p5-caddy')
+            secret={'name':'.env.p5-caddy','sha256':digest((ROOT/'.env.p5-caddy').read_bytes()),'mode':'600','owner':'ir35'}
+        else:
+            values['STAGING_GATE_TOKEN']=runtime['run'](['openssl','rand','-hex','32']).strip()
+            secret=private_new(ROOT/'.env.p5-caddy',runtime['env_text'](values).encode())
         original_compose=ROOT/'compose.yml';document=json.loads(original_compose.read_text())
         compose=edge_compose(document)
-        destination=ROOT/'p5-edge-compose.yml'
+        compose['services']['caddy']['volumes']=[part.replace('/opt/ir35/config/p5-Caddyfile:',str(config)+':') for part in compose['services']['caddy']['volumes']]
         with destination.open('x') as output:json.dump(compose,output,indent=2)
         os.chmod(destination,0o644)
         # Adapt output contains private gate/hash values: RAM only, no logs.
@@ -117,15 +132,17 @@ def tls_get(host,path,headers=None):
             return response.status,{key.lower():value for key,value in response.getheaders()},body
 
 
-def activate(data,runtime):
-    store,_=require_prepared(data);store.verify('03-edge-prepare',data['edgeAnchor'])
-    saved=json.loads((store.root/'03-edge-prepare/result.json').read_bytes())
+def activate(data,runtime,repair=0):
+    config,destination=repair_paths(repair)
+    store,_=require_prepared(data);prepared_stage='03-edge-prepare' if repair==0 else f'{3+2*repair:02d}-edge-repair-{repair}-prepare'
+    store.verify(prepared_stage,data['edgeAnchor'])
+    saved=json.loads((store.root/prepared_stage/'result.json').read_bytes())
     if saved.get('status')!='PASS':raise RecoveryError('P5AdaptedEdgeRequired')
-    for path,key in [(ROOT/'config/p5-Caddyfile','configSHA256'),(ROOT/'p5-edge-compose.yml','composeSHA256'),(ROOT/'config/Caddyfile','originalConfigSHA256'),(ROOT/'compose.yml','originalComposeSHA256'),(ROOT/'.env.caddy','originalEnvSHA256')]:
+    for path,key in [(config,'configSHA256'),(destination,'composeSHA256'),(ROOT/'config/Caddyfile','originalConfigSHA256'),(ROOT/'compose.yml','originalComposeSHA256'),(ROOT/'.env.caddy','originalEnvSHA256')]:
         if path.is_symlink() or digest(path.read_bytes())!=saved[key]:raise RecoveryError('P5EdgeFileIntegrityMismatch')
     if digest((ROOT/'.env.p5-caddy').read_bytes())!=saved['envFile']['sha256']:raise RecoveryError('P5EdgeSecretIntegrityMismatch')
     require_dns(data.get('dns',{}))
-    stage=store.stage('04-edge-activate');changed=False
+    stage=store.stage('04-edge-activate' if repair==0 else f'{4+2*repair:02d}-edge-repair-{repair}-activate');changed=False
     result={'status':'FAIL','phaseComplete':False,'productionChanges':False,'dnsWrites':0}
     def switch(file,log_name):
         import subprocess
@@ -134,7 +151,7 @@ def activate(data,runtime):
         if code:raise RecoveryError('P5CaddySwitchFailed_PrivateLog')
     try:
         store.put(stage,'intent.json',json.dumps({'onlyService':'caddy','edgeManifest':data['edgeAnchor'],'rollback':'original compose/env/config unchanged','dns':data['dns']}).encode())
-        changed=True;switch(ROOT/'p5-edge-compose.yml','activate.log')
+        changed=True;switch(destination,'activate.log')
         import time
         deadline=time.monotonic()+60
         while True:
@@ -148,6 +165,7 @@ def activate(data,runtime):
         values=runtime['read_env']();gate=private_env(ROOT/'.env.p5-caddy')['STAGING_GATE_TOKEN']
         basic='Basic '+base64.b64encode(('ir35:'+values['STAGING_BASIC_PASSWORD']).encode()).decode()
         status,headers,body=tls_get('staging.ir35careers.com','/jobs',{'Authorization':basic})
+        result['authenticatedJobs']={'status':status,'noindex':'noindex' in headers.get('x-robots-tag',''),'noStoreExact':headers.get('cache-control')=='no-store','h1Present':bool(re.search(br'<h1[^>]*>Find your next contract</h1>',body))}
         if status!=200 or 'noindex' not in headers.get('x-robots-tag','') or headers.get('cache-control')!='no-store' or not re.search(br'<h1[^>]*>Find your next contract</h1>',body):raise RecoveryError('P5ProtectedSSRRequired')
         cookie=headers.get('set-cookie','')
         if not cookie.startswith('__Host-ir35-staging='+gate+';') or not all(part in cookie for part in ('Secure','HttpOnly','SameSite=Strict')):raise RecoveryError('P5SecureSDKGateRequired')
@@ -170,3 +188,18 @@ def activate(data,runtime):
             switch(ROOT/'compose.yml','rollback.log');result['rollback']='original Caddy restored'
     store.put(stage,'result.json',json.dumps(result,sort_keys=True).encode())
     return {**result,'stage':stage.name,'manifestSHA256':store.seal(stage,previous=data['edgeAnchor'])}
+
+
+def repair(data,runtime,index):
+    repair_paths(index)
+    if index not in (1,2):raise RecoveryError('BoundedEdgeRepairRequired')
+    store,_=require_prepared(data)
+    previous_stage='04-edge-activate' if index==1 else '06-edge-repair-1-activate'
+    store.verify(previous_stage,data['failedEdgeAnchor'])
+    previous=json.loads((store.root/previous_stage/'result.json').read_bytes())
+    if previous.get('status')!='FAIL' or previous.get('code')not in ('P5ProtectedSSRRequired','P5SDKBoundaryMismatch','P5SecureSDKGateRequired','P5SeparateAPIProtectionMismatch') or previous.get('rollback')!='original Caddy restored':
+        raise RecoveryError('DocumentedRolledBackConfigurationFailureRequired')
+    prepared=prepare(data,runtime,index)
+    if prepared['status']!='PASS':return {'status':'FAIL','repair':index,'preparation':prepared,'phaseComplete':False}
+    active=activate(data|{'edgeAnchor':prepared['manifestSHA256']},runtime,index)
+    return {'status':active['status'],'repair':index,'preparation':prepared,'activation':active,'phaseComplete':False}

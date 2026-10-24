@@ -36,7 +36,7 @@ def payload():
 
 
 def guest(data,operation='prepare'):
-    if operation not in ('prepare','services','edge-prepare','edge-activate'):raise RuntimeError('FixedP5OperationRequired')
+    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2'):raise RuntimeError('FixedP5OperationRequired')
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE+'\nimport types\n'
     for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
@@ -44,15 +44,18 @@ def guest(data,operation='prepare'):
     verifiers=rehearsal.verification_modules()+'\nfrom pathlib import PurePosixPath\n'+inspect.getsource(storage_target.backend_path)
     script+='verification_namespace={}\nexec('+repr(verifiers)+',verification_namespace)\n'
     script+='runtime={"run":run,"read_env":read_env,"verifiers":verification_namespace,"component_env":component_env,"env_text":env_text,"kong_config":stack.kong_config,"baseline_caddy":stack.CADDYFILE,"caddy_permissions":caddy_permissions}\n'
-    module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate')}[operation]
-    script+='result=sys.modules['+repr(module)+'].'+function+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
+    if operation.startswith('edge-repair-'):
+        script+='result=sys.modules["web_edge_guest"].repair('+repr(data)+',runtime,'+operation[-1]+')\nprint(json.dumps(result))\n'
+    else:
+        module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate')}[operation]
+        script+='result=sys.modules['+repr(module)+'].'+function+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
     return script
 
 
 def main():
     if sys.argv[1:]==['--dry-run']:
         print(json.dumps({'status':'DRY_RUN','target':'ir35_p5_app','sourceWrites':0,'pristineWrites':0,'containersCreated':False,'caddyActivated':False}));return
-    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate']):raise RuntimeError('ExplicitStagingOperationRequired')
+    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2']):raise RuntimeError('ExplicitStagingOperationRequired')
     operation=sys.argv[1][2:]
     path=schema.REPO/('docs/evidence/p5/'+operation+'.json')
     if path.exists():raise RuntimeError('PreparationRecorded_NoReplay')
@@ -65,11 +68,18 @@ def main():
         services=json.loads((schema.REPO/'docs/evidence/p5/services.json').read_text())
         if services.get('status')!='PASS':raise RuntimeError('PrivateServicesRequired')
         data['servicesAnchor']=services['manifestSHA256']
-    if operation=='edge-activate':
+    if operation=='edge-activate' or operation.startswith('edge-repair-'):
         import staging_dns,time
-        edge=json.loads((schema.REPO/'docs/evidence/p5/edge-prepare.json').read_text())
-        if edge.get('status')!='PASS':raise RuntimeError('PreparedEdgeRequired')
-        data['edgeAnchor']=edge['manifestSHA256']
+        if operation=='edge-activate':
+            edge=json.loads((schema.REPO/'docs/evidence/p5/edge-prepare.json').read_text())
+            if edge.get('status')!='PASS':raise RuntimeError('PreparedEdgeRequired')
+            data['edgeAnchor']=edge['manifestSHA256']
+        else:
+            previous_name='edge-activate' if operation=='edge-repair-1' else 'edge-repair-1'
+            failed=json.loads((schema.REPO/('docs/evidence/p5/'+previous_name+'.json')).read_text())
+            if previous_name=='edge-repair-1':failed=failed['activation']
+            if failed.get('status')!='FAIL' or failed.get('rollback')!='original Caddy restored':raise RuntimeError('PriorRolledBackFailureRequired')
+            data['failedEdgeAnchor']=failed['manifestSHA256']
         ready,observations=staging_dns.observe()
         if not ready:raise RuntimeError('StagingDNSNotReady_NoActivation')
         data['dns']={'status':'PASS','observations':observations,'checkedAtUnix':time.time(),'dnsWrites':0}

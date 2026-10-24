@@ -1,0 +1,10 @@
+{
+  "status": "FAIL",
+  "phaseComplete": false,
+  "productionChanges": false,
+  "dnsWrites": 0,
+  "code": "P5ProtectedSSRRequired",
+  "rollback": "original Caddy restored",
+  "stage": "04-edge-activate",
+  "manifestSHA256": "12deb1c317096e520928c193c86ec564ed9b62aefda727fe0188ac3cb4269f57"
+}

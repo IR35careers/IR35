@@ -27,6 +27,14 @@ class WebEdgeTests(unittest.TestCase):
         value=web_stack.caddyfile(staging_stack.CADDYFILE)
         self.assertIn('handle {\n            route {\n                basic_auth',value)
         self.assertLess(value.index('basic_auth'),value.index('request_header @basic -Authorization'))
+        for name in ('Cache-Control','X-Robots-Tag','Set-Cookie'):
+            self.assertIn('header >'+name,value) # Applied after upstream response.
+
+    def test_bounded_repairs_get_new_paths_never_overwrite_first_candidate(self):
+        candidates=[edge.repair_paths(index) for index in (0,1,2)]
+        self.assertEqual(len(set(candidates)),3)
+        self.assertTrue(all(a!=b for a,b in zip(candidates[0],candidates[1])))
+        with self.assertRaisesRegex(RecoveryError,'BoundedEdgeRepairRequired'):edge.repair_paths(3)
 
     def test_dns_requires_fresh_exact_four_staging_resolver_results(self):
         proof={'status':'PASS','checkedAtUnix':time.time(),'dnsWrites':0,'observations':[
