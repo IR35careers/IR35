@@ -199,9 +199,9 @@ def prepare(*, repair_cli=False):
 
 
 @contextmanager
-def tunnel(agent, guest):
-    state = json.loads(private_file(STATE))
-    line = private_file(HOSTS)
+def tunnel(agent, guest, *, state_path=STATE, hosts_path=HOSTS):
+    state = json.loads(private_file(state_path))
+    line = private_file(hosts_path)
     if (not state.get('ready') or state['expiresAt'] - time.time() < 30
             or hashlib.sha256(line.encode()).hexdigest() != state['gatewayPinSHA256']
             or state['spec']['targetResourceDetails']['targetResourceId'] != guest['instanceId']):
@@ -215,7 +215,7 @@ def tunnel(agent, guest):
     with socket.socket() as listener:
         listener.bind(('127.0.0.1', 0))
         port = listener.getsockname()[1]
-    options = bastion.ssh_options(agent, HOSTS, ALIAS)
+    options = bastion.ssh_options(agent, hosts_path, ALIAS)
     target = spec['targetResourceDetails']['targetResourcePrivateIpAddress']
     args = ['ssh', '-F', '/dev/null', *[v for option in options for v in ('-o', option)], '-i', str(KEY_DIRECTORY / 'ssh_ed25519'),
             '-N', '-T', '-L', '127.0.0.1:' + str(port) + ':' + target + ':22', '-p', '22', state['sessionId'] + '@' + bastion.GATEWAY]

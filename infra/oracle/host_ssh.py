@@ -130,12 +130,15 @@ def run_remote(source, arguments, *, timeout=65, user="ubuntu"):
                "UserKnownHostsFile=" + str(KNOWN_HOSTS), "GlobalKnownHostsFile=/dev/null", "IdentityAgent=" + agent["socket"]]
     remote = (["sudo", "-n"] if user == "ubuntu" else []) + ["/usr/bin/python3", "-u", "-", *arguments]
     transport = os.environ.get("IR35_SSH_TRANSPORT", "direct")
-    if transport not in ("direct", "bastion"):
+    if transport not in ("direct", "bastion", "bastion-owner1"):
         raise KeySafetyError("Unknown SSH transport; no fallback or arbitrary proxy.")
     context = nullcontext(None)
     if transport == "bastion":
         import p6_bastion
         context = p6_bastion.tunnel(agent, state)
+    elif transport == "bastion-owner1":
+        import p6_bastion_owner1
+        context = p6_bastion_owner1.tunnel(agent, state)
     # Source DB/Storage read credentials are local-only, not needed by SSH.
     environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE", "IR35_SOURCE_STORAGE_KEY", "IR35_SOURCE_ANON_KEY") and not key.startswith("PG")}
     environment["SSH_AUTH_SOCK"] = agent["socket"]

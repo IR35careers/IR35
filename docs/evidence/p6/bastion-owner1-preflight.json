@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "ownerApprovalDate": "2026-10-25",
+  "scope": "existing Bastion and VM only",
+  "sessionCreates": 0,
+  "cloudUpdates": 0,
+  "cloudDeletes": 0,
+  "workerRestarts": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "steps": [
+    {
+      "step": "existing-intent",
+      "status": "PASS"
+    },
+    {
+      "step": "current-source",
+      "status": "PASS"
+    },
+    {
+      "step": "security-token",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-agent",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-bastion",
+      "status": "PASS"
+    },
+    {
+      "step": "unchanged-allowlist",
+      "status": "PASS"
+    },
+    {
+      "step": "unchanged-network",
+      "status": "PASS"
+    }
+  ],
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "next": "exact VM/VNIC, free eligibility, single session, strict guest pin; no mutations performed",
+  "manifestSHA256": "fa53223a933ce0db59b3b825abdacd82d30ec8c8f589fc6a9a032cffcf0d95c7",
+  "stage": "01-preflight"
+}

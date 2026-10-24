@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October ONE owner-approved Bastion recovery — NO retry or Bastion update
+
+- Owner reopens ONE independently journalled attempt, existing Bastion/VM132.145.28.134 only, session<=60min and close it afterwards. Existing failed controllers/logs remain held and unchanged; do not replay/reset them. Preflight first, every step write-once. The latest scope explicitly prohibits creating/changing/deleting Bastions, including client allowlists, as well as IAM, VCN/security lists or paid resources. Current owner /32 MUST already be allowed; otherwise stop, do not interpret recovery authority as permission to update it.
+- Reconcile exact23:40/native07 probe intent and actual owned no-mount fixture BEFORE worker restart; no blind create/replay. Full62table counts/orderedMD5/Auth/2sequences/schema3ownerexceptions+2approvedqueue-role additions/unchanged552privileges/73Storage hashes after work, no unsupported PASS if transport unavailable. One failed attempt or any data/security mismatch stops with evidence, NO retries. Mock+SMTPsink only, no secrets/production/DNS/Google/Vercel/cloud-Supabase/cutover. On actualPASS finishP6→P7→P8 automatically, P9prepareonly/STOP exactYES CUTOVER; all PRs draft/unmerged.
+
 ## 24 October P6 Bastion helper STOP — no fourth recovery attempt
 
 - Owner G2 sign-in PASS, existing SSH agent loaded; no API/SSH prompt needed. Exact network/VM read-only audit PASS. New recovery helper first failed on unsupported CLI option, then TWO parser-proof preflights failed on output-stream/exit-code assumptions. Actual vendor-only public-fixture probe proves exit2/stdout and correct `--client-cidr-list`; original Bastion allowlist unchanged, no session created, no IAM/SL/NSG/firewall/production mutation. Three failed preparations exhaust this bounded helper attempt: STOP, preserve private requested intent and public `p6/bastion-recovery-stop.json`; no reset/fourth live prepare without owner reopening. Offline fixed parser/strict transport tests permitted; helper hold must reject BEFORE auth/private/cloud access.
