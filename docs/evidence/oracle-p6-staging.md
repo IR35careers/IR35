@@ -1,5 +1,20 @@
 # P6 — guarded mock worker / queue / Realtime / schedule integration
 
+## 25 October current STOP — exact storage eligibility proof missing; data PASS
+
+[One-shot report](oracle-p6-bastion-owner1.md). Owner authorised ONE recovery,
+no retries or Bastion/access/IAM changes. Preflight/current original/32/VM/VNIC
+and gateway continuity PASS; fresh-free inventory fails on approximate Object
+Storage bytes before any session creation. No session to close, no retry.
+
+Requested after-stop read-only pinned directSSH verification PASS: 23:40probe
+NOT_RUN (durable07stage and owned fixture absent), worker still stopped with
+originalimage/restarts0, full pristine+app62counts/orderedMD5/Auth/2sequences/
+schema3exceptions+2approvedroles/unchanged552baseline/73Storage/manifests/Caddy
+PASS,354queue-role customer-access checks0unexpected. New native8075e63b and
+local7c91ac83 seals retained; all343helpersPASS. No worker/source/secret/config/
+production changes. P6 incomplete; no P7–P9 advancement, all PRs draft, no cutover.
+
 ## Latest stop — source IP changed; Oracle daily login required
 
 [Transport/G2 record](p6/transport-recovery-gate.json). SSH key is loaded, but current public IPv4 differs from the approved direct-SSH /32. Public staging still rejects unauthenticated access401. SecurityToken check requires owner daily browser sign-in; never use/re-prompt the API key. No cloud write/rule widening/IAM/production change occurred. The approved Bastion recovery route is next; reconcile any native07diagnostic stage/owned fixture before ANY replay because its SSH response was lost.
