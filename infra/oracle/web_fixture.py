@@ -35,25 +35,33 @@ def payload():
             'buildAnchors':{row['stage']:row['manifestSHA256'] for row in (json.loads(path.read_text()) for path in paths)}}
 
 
-def guest(data):
+def guest(data,operation='prepare'):
+    if operation not in ('prepare','services'):raise RuntimeError('FixedP5OperationRequired')
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE+'\nimport types\n'
-    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest'):
+    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
         script+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr(code)+',module.__dict__)\n'
     verifiers=rehearsal.verification_modules()+'\nfrom pathlib import PurePosixPath\n'+inspect.getsource(storage_target.backend_path)
     script+='verification_namespace={}\nexec('+repr(verifiers)+',verification_namespace)\n'
     script+='runtime={"run":run,"read_env":read_env,"verifiers":verification_namespace,"component_env":component_env,"env_text":env_text,"kong_config":stack.kong_config}\n'
-    script+='result=sys.modules["web_fixture_guest"].prepare('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
+    module,function=('web_fixture_guest','prepare') if operation=='prepare' else ('web_services_guest','start')
+    script+='result=sys.modules['+repr(module)+'].'+function+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
     return script
 
 
 def main():
     if sys.argv[1:]==['--dry-run']:
         print(json.dumps({'status':'DRY_RUN','target':'ir35_p5_app','sourceWrites':0,'pristineWrites':0,'containersCreated':False,'caddyActivated':False}));return
-    if sys.argv[1:]!=['--prepare']:raise RuntimeError('ExplicitStagingPrepareRequired')
-    path=schema.REPO/'docs/evidence/p5/prepare.json'
+    if sys.argv[1:] not in (['--prepare'],['--services']):raise RuntimeError('ExplicitStagingOperationRequired')
+    operation=sys.argv[1][2:]
+    path=schema.REPO/('docs/evidence/p5/'+operation+'.json')
     if path.exists():raise RuntimeError('PreparationRecorded_NoReplay')
-    result=schema.run_guest(guest(payload()),timeout=600)
+    data=payload()
+    if operation=='services':
+        prepare=json.loads((schema.REPO/'docs/evidence/p5/prepare.json').read_text())
+        if prepare.get('status')!='PASS':raise RuntimeError('PreparedFixtureRequired')
+        data['prepareAnchor']=prepare['manifestSHA256']
+    result=schema.run_guest(guest(data,operation),timeout=600)
     with path.open('x') as output:json.dump(result,output,indent=2);output.write('\n')
     print(json.dumps(result))
     if result['status']!='PASS':raise SystemExit(1)
