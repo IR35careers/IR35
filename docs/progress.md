@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October NEW patched native ARM build03 PASS:** sourcea35db40,158.048s, imagecbc62c3a5c73, sealed manifest3f7570dc27b1; actual standalone Next16.4.3/React19.2.9/Sharp0.35.5/user1002 confirmed. Both old journals verified intact; no replay/reset/fourth build.16web helper tests PASS after pre-execution libpq URI encoding repair. [Evidence](evidence/p5/build-3.json). App clone/service/Caddy not started, P5 not complete; next separate read-only fixture. No production/cutover.
+
 **24October final patched source PASS:**967Vitest/153files +199legacy, strict types/full lint,274Linux helpers (final16web subset),1022tracked-file source/history scan, fresh audit and9targeted browser cases/3viewports PASS. No assertion/timeout/exception weakening. Committing the clean patched P5 draft for NEW sealed ARM build03; historical images/journals retained, no app clone/Caddy activation/production/cutover yet. [Evidence](evidence/oracle-p5-staging.md).
 
 **24October patched browser/audit PASS:**9targeted phone/tablet/desktop tests pass, including actual no-JavaScript initial/filtered jobs. First6/3failure exposed client-only search-param/Suspense fallback; server bounded-query prop removes it, unchanged assertions/timeouts. Compatible transitive Zod repair installed (upstream v4 consumer, not v3 forced override); fresh audit PASS/no new exception. Full release/helper rerun and NEW patched ARM build remain required; no app clone/Caddy/production/cutover. [Evidence](evidence/oracle-p5-staging.md).

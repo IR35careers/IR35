@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import shutil
 import stat
-from urllib.parse import urlsplit,urlunsplit,urlencode
+from urllib.parse import urlsplit,urlunsplit,urlencode,quote
 from immutable_artifacts import Store,digest
 from p4_recovery_guest import Recovery,RecoveryError
 import web_stack
@@ -34,7 +34,7 @@ def fixture_components(runtime,values,source):
         if uri.hostname!='db' or uri.port!=5432:raise RecoveryError('P5PrivateDatabaseRequired')
         # P5 is a read-only app rehearsal. P6/P7 writes need their independently
         # reviewed mock/Auth fixture. Even direct SDK traffic cannot write here.
-        components[name][key]=urlunsplit((uri.scheme,uri.netloc,'/'+TARGET,urlencode({'options':'-c default_transaction_read_only=on'}),''))
+        components[name][key]=urlunsplit((uri.scheme,uri.netloc,'/'+TARGET,urlencode({'options':'-c default_transaction_read_only=on'},quote_via=quote),''))
     components['auth'].update(GOTRUE_DB_MAX_POOL_SIZE='3')
     components['rest'].update(PGRST_DB_POOL='3')
     components['storage'].update(POSTGREST_URL='http://ir35-p5-rest:3000',NODE_OPTIONS='--max-old-space-size=384',

@@ -40,6 +40,7 @@ class WebFixtureTests(unittest.TestCase):
             self.assertEqual(uri.hostname,'db');self.assertEqual(uri.port,5432)
             self.assertEqual(uri.path,'/'+fixture.TARGET)
             self.assertEqual(parse_qs(uri.query)['options'],['-c default_transaction_read_only=on'])
+            self.assertIn('options=-c%20',uri.query) # libpq URL, not form '+' encoding.
         self.assertEqual(result['storage']['DB_ALLOW_MIGRATION_REFRESH'],'false')
         self.assertEqual(result['storage']['DB_MIGRATIONS_FREEZE_AT'],'fixture-last')
 
