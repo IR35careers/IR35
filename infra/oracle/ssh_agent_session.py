@@ -38,7 +38,9 @@ def expected_fingerprint():
     return match[1]
 
 
-def ensure_agent(*, load=False):
+def ensure_agent(*, load=False, owner_retry=False):
+    if type(owner_retry)is not bool or owner_retry and not load:
+        raise KeySafetyError("Owner retry requires an explicit native load operation.")
     directory = boot_directory()
     descriptor = os.open(directory / "lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     try:
@@ -68,6 +70,13 @@ def ensure_agent(*, load=False):
             if not sys.stdin.isatty() or not sys.stdout.isatty():
                 raise KeySafetyError("SSH key loading needs the native terminal's hidden prompt, never chat/pipes.")
             attempt = directory / "load-attempt.json"
+            if owner_retry:
+                # 24 October owner replied "retry" to the failed SSH handoff.
+                # Keep the first journal; this is one separately recorded slot,
+                # never an automatic fallback or a reset of per-boot history.
+                if not attempt.exists():
+                    raise KeySafetyError("Owner retry requires the retained first attempt.")
+                attempt = directory / "load-owner-retry-1.json"
             if attempt.exists():
                 raise KeySafetyError("SSH passphrase already requested this boot; no repeat prompt.")
             write_new(attempt, b'{"promptAttempted":true}\n')
@@ -85,11 +94,11 @@ def ensure_agent(*, load=False):
 
 
 def cli(arguments):
-    if arguments not in (["check"], ["load"], ["load-and-hold"]):
-        raise KeySafetyError("Use check, load or load-and-hold only.")
-    result = ensure_agent(load=arguments != ["check"])
+    if arguments not in (["check"], ["load"], ["load-and-hold"], ["load-owner-retry-and-hold"]):
+        raise KeySafetyError("Use check, load, load-and-hold or the explicitly owner-requested retry only.")
+    result = ensure_agent(load=True,owner_retry=True) if arguments == ["load-owner-retry-and-hold"] else ensure_agent(load=arguments != ["check"])
     print(json.dumps({key: value for key, value in result.items() if key != "socket"}), flush=True)
-    if arguments == ["load-and-hold"]:
+    if arguments in (["load-and-hold"], ["load-owner-retry-and-hold"]):
         if not result["keyLoaded"]:
             raise KeySafetyError("Cannot hold an unloaded SSH identity.")
         print("SSH loaded. Keep this window open during staging work so WSL does not idle-stop the agent. Close it or press Ctrl+C when finished. No CPU load or VM operation is generated.", flush=True)

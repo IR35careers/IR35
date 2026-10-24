@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 24 October owner-requested SSH handoff retry
+
+- Owner replied "retry" to the P6 SSH unlock handoff. Independent check: same WSL boot, keyLoaded=false, original prompt ended and load-attempt.json retained. Authorises ONE separately journalled native hidden SSH retry, not a journal reset, key regeneration, API unlock or automatic retry loop. Preserve original attempt; write a distinct load-owner-retry-1.json before ssh-add, refuse any further retry in this boot. Native terminal only; after success keep the WSL signal-wait hold, no stored passphrase or CPU load. No VM/production/cutover change implied.
+
 ## 24 October queue-role owner decision — same Postgres, TWO recorded P6 additions
 
 - Owner explicitly approved SAME Postgres, minimal `ir35_queue` + `ir35_queue_producer`, grants only queue schema, NO superuser/CREATEROLE/BYPASSRLS, credentials VM-only/not Git, actual denied-read tests for auth/public/storage. Leave EVERY source role unchanged. Record TWO approved P6 additions SEPARATELY in privilege report; NEVER alter the552baseline or suppress unexpected catalog differences. P5 SDK401/401/200 must be confirmed/reported before proceeding: actual edge-summary proof verifies all3PASS, edge+containmentPASS, seal894c6408b8c4. Prior queue-role/isolation-choice hold below is now superseded for these exact additions, not another DB/topology or broader privileges.

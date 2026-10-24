@@ -16,6 +16,24 @@ FINGERPRINT = "SHA256:" + "A" * 43
 
 
 class AgentTests(unittest.TestCase):
+    def test_explicit_owner_retry_preserves_first_attempt_and_consumes_only_one_extra_slot(self):
+        write_new(self.directory/'load-attempt.json',b'{"promptAttempted":true}\n')
+        original=(self.directory/'load-attempt.json').read_bytes()
+        with patch.object(agent.sys.stdin,'isatty',return_value=True),patch.object(agent.sys.stdout,'isatty',return_value=True),patch.object(agent.subprocess,'run',side_effect=[self.result(1),self.result(1)]) as run:
+            with self.assertRaises(KeySafetyError):agent.ensure_agent(load=True,owner_retry=True)
+        self.assertEqual(run.call_count,2)
+        self.assertTrue((self.directory/'load-owner-retry-1.json').is_file())
+        self.assertEqual((self.directory/'load-attempt.json').read_bytes(),original)
+        with patch.object(agent.sys.stdin,'isatty',return_value=True),patch.object(agent.sys.stdout,'isatty',return_value=True),patch.object(agent.subprocess,'run',return_value=self.result(1)) as run:
+            with self.assertRaises(KeySafetyError):agent.ensure_agent(load=True,owner_retry=True)
+        self.assertEqual(run.call_count,1)
+
+    def test_owner_retry_cannot_silently_replace_the_normal_first_prompt(self):
+        with patch.object(agent.sys.stdin,'isatty',return_value=True),patch.object(agent.sys.stdout,'isatty',return_value=True),patch.object(agent.subprocess,'run',return_value=self.result(1)) as run:
+            with self.assertRaises(KeySafetyError):agent.ensure_agent(load=True,owner_retry=True)
+        self.assertEqual(run.call_count,1)
+        self.assertFalse((self.directory/'load-owner-retry-1.json').exists())
+
     def test_hold_only_after_verified_load_has_no_secret_input_or_polling(self):
         with patch.object(agent,'ensure_agent',return_value={'agentReady':True,'keyLoaded':True,'socket':'private-path'}) as ensure,patch.object(agent.signal,'pause') as pause,patch('builtins.print') as output:
             agent.cli(['load-and-hold'])
