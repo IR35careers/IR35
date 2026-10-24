@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October final edge repair held before SSH by transient DNS:** no third activation/candidate created. Independent DNS immediatelyPASS; implement already-owner-approved bounded30min backoff rather than premature one-shot stop.25web regressions pending. All previous journals/counters retained; no DNS/prod/cutover writes.
+
 **24October private header matrix PASS:** sealedffd4a6766ccb; immediate+deferred pair passes401/200 noindex/no-store, deferred-only401failure reproduced,3diagnostic containers removed/no public edge change.24web testsPASS. Final edge repair2 now requires this exact seal, full data+DNS proof and new candidate; third edge failure stops, no reset. [Results](evidence/p5/header-probe-repair-2.json).
 
 **24October private probe FAIL2/actual cause isolated:** env read0/Caddy cap-dropALL111/samebaselineNET_BIND_SERVICE0. Final private repair2 uses only existing Caddy cap with no public ports, both journals preserved; no fourth private attempt.24web regression checks pending. No prod/DNS/data/cutover change. [Evidence](evidence/oracle-p5-staging.md).

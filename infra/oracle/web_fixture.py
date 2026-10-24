@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 import cloud_schema as schema
 import owner_parity
 import p4_recovery
@@ -11,6 +12,19 @@ import rehearsal
 import storage_target
 from web_build import git_command
 from web_security import deployable_build
+
+
+def wait_staging_dns(observe,*,limit=1800,now=time.monotonic,pause=time.sleep,wall=time.time):
+    if type(limit)is not int or not 1<=limit<=1800:raise RuntimeError('BoundedDNSWindowRequired')
+    started=now();delay=5;count=0
+    while True:
+        ready,observations=observe();count+=1;elapsed=now()-started
+        if elapsed>limit:raise RuntimeError('StagingDNSWaitTimeout_NoActivation')
+        if ready:return {'status':'PASS','observations':observations,'checkedAtUnix':wall(),'dnsWrites':0,'observationsCount':count,'elapsedSeconds':round(elapsed,3)}
+        if elapsed>=limit:raise RuntimeError('StagingDNSWaitTimeout_NoActivation')
+        wait=min(delay,60,limit-elapsed)
+        print(json.dumps({'status':'WAIT_DNS','elapsedSeconds':round(elapsed,3),'nextReadSeconds':wait,'activationAttempts':0}),flush=True)
+        pause(wait);delay=min(60,delay*2)
 
 
 def payload():
@@ -76,7 +90,7 @@ def main():
         if services.get('status')!='PASS':raise RuntimeError('PrivateServicesRequired')
         data['servicesAnchor']=services['manifestSHA256']
     if operation=='edge-activate' or operation.startswith('edge-repair-'):
-        import staging_dns,time
+        import staging_dns
         if operation=='edge-activate':
             edge=json.loads((schema.REPO/'docs/evidence/p5/edge-prepare.json').read_text())
             if edge.get('status')!='PASS':raise RuntimeError('PreparedEdgeRequired')
@@ -91,9 +105,7 @@ def main():
                 probe=json.loads((schema.REPO/'docs/evidence/p5/header-probe-repair-2.json').read_text())
                 if probe.get('status')!='PASS':raise RuntimeError('PrivatePairedHeaderProofRequired')
                 data['headerProbeAnchor']=probe['manifestSHA256']
-        ready,observations=staging_dns.observe()
-        if not ready:raise RuntimeError('StagingDNSNotReady_NoActivation')
-        data['dns']={'status':'PASS','observations':observations,'checkedAtUnix':time.time(),'dnsWrites':0}
+        data['dns']=wait_staging_dns(staging_dns.observe)
     result=schema.run_guest(guest(data,operation),timeout=600)
     with path.open('x') as output:json.dump(result,output,indent=2);output.write('\n')
     print(json.dumps(result))

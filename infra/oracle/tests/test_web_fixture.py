@@ -19,6 +19,18 @@ def components():
 
 
 class WebFixtureTests(unittest.TestCase):
+    def test_transient_dns_waits_without_activation_and_permanent_failure_is_bounded(self):
+        clock=[0];calls=[0]
+        def pause(seconds):clock[0]+=seconds
+        def observe():calls[0]+=1;return calls[0]>1,[]
+        with patch('builtins.print'):
+            proof=controller.wait_staging_dns(observe,limit=12,now=lambda:clock[0],pause=pause,wall=lambda:100)
+        self.assertEqual(proof['observationsCount'],2);self.assertEqual(clock[0],5)
+        clock[0]=0
+        with patch('builtins.print'),self.assertRaisesRegex(RuntimeError,'StagingDNSWaitTimeout_NoActivation'):
+            controller.wait_staging_dns(lambda:(False,[]),limit=12,now=lambda:clock[0],pause=pause)
+        self.assertEqual(clock[0],12)
+
     def test_guest_namespaces_are_separate_and_default_dryrun_has_no_ssh(self):
         with patch.object(controller.schema,'guest_bundle',return_value=''):
             source=controller.guest({'fixture':'compile-only'})
