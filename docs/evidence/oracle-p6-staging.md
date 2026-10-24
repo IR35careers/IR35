@@ -1,5 +1,11 @@
 # P6 — guarded mock worker / queue / Realtime / schedule integration
 
+## Latest actual role gate PASS — worker still pending
+
+[Two approved additions and unchanged552baseline](oracle-p6-queue-roles.md). Preflight54a353c1/install d3e50dd5 PASS: both TCP logins,6actual customer-read42501denials,354additional all-object privilege checks with0access, full62table/2sequence/Auth/schema/73Storage/manifests unchanged. Source roles untouched, raw baseline differences retained, exact TWO new queue-only roles recorded separately from3oldextension-owner exceptions. VM-only600/ir35credentials, no real acceptance. Earlier transport/role-choice holds below are preserved history and no longer pending.
+
+Native ARM mock-worker build is now being prepared from committed source; no service has started. Isolated loopback browser child has no queue/HMAC/Supabase/provider/proxy environment. Real SQL tests cover atomic enqueue, duplicate/conflict/no-ack rollback, durable ordered states, explicit terminal failures, stale leases/watchdog and producer denials. Strong PR48 private-host validator is used by the NEW mock runtime; old production queue callsites remain unchanged for rollback, not falsely claimed migrated. P6/full UI/Realtime/timer/restart/native lifecycle gates remain open. Two local type-preparation errors (required NODE_ENV and tuple spread) were repaired without changing any assertions/timeouts; strict types and lint then PASS.
+
 ## Resume checkpoint — SSH transport owner gate, no VM change
 
 Prepared role bootstrap/preflight, actual password/SQLSTATE42501 probes, all-object privilege matrices on operational/pristine/app databases, and a P6-specific fidelity adapter. It leaves the old comparator, raw catalogs,62table/2sequence/Auth/73Storage algorithms and552baseline untouched, classifying ONLY the two approved nonprivileged role additions separately. Native role install has NOT executed. The first read-only preflight was refused on the laptop before SSH (`KeySafetyError`); independent agent check reports keyLoaded=false after WSL restarted. No native stage, role, grant, password, service or timer was created.

@@ -12,7 +12,7 @@ export const mockApplicationWorkSchema = z.strictObject({
   kind: z.literal("staging_mock_application"),
   applicationId: z.uuid(),
   actorEmail: z.literal(STAGING_TEST_ACCOUNT),
-  scenario: z.enum(["success", "server_error", "timeout"]),
+  scenario: z.enum(["success", "server_error", "timeout", "lost_ack", "captcha", "unknown_answer"]),
   requestedAt: z.iso.datetime(),
 });
 

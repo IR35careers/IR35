@@ -1,5 +1,7 @@
 ## What and why
 
+Current runtime checkpoint: [queue-role gate PASS](https://github.com/IR35careers/IR35/blob/codex/oracle-migration-p6/docs/evidence/oracle-p6-queue-roles.md), d3e50dd5. TWO approved nonprivileged roles added; source roles and552baseline unchanged,354extra privilege checks +6actual42501negatives PASS; full data/Auth/sequences/Storage/schema/manifests PASS. Credentials stay VM-only600/ir35. Prior SSH and role-choice handoffs below are resolved history. New mock runtime/store/browser/setup +native ARM build controller are prepared; not yet built/deployed or full P6PASS. No production changes or real acceptance. Actual native lifecycle/Realtime/UI/schedules/restart signoff remains mandatory.
+
 Latest owner decision supersedes the historical role-choice hold below: SAME Postgres, exactly two minimal queue-only roles, credentials VM-only, no changes to source roles or the552baseline. Actual sealed P5 SDK401/401/200 verified before continuing: [proof](https://github.com/IR35careers/IR35/blob/codex/oracle-migration-p6/docs/evidence/p5-sdk-owner1/edge-summary.json). New additive comparator retains raw catalog differences and the unmodified baseline result. Atomic DDL/preflight, all-object privilege matrices and actual TCP login/42501denial probes prepared; deployment NOT yet performed.
 
 Current gate: WSL restarted, SSH key not loaded. The preflight refused BEFORE SSH/VM changes. Owner's existing SSH passphrase is needed once at the labelled native hidden prompt; no OCI/API unlock. The reviewed launcher now keeps its WSL command open with signal.pause after successful ssh-add, no secret file/cache/CPU load. Do not replay a native stage or prompt twice this boot.
@@ -11,6 +13,8 @@ Owner-approved P6 staging continuation after P5 SDK gate PASS. This DRAFT curren
 Parent phase: draft #54 (`codex/oracle-migration-p5`), unmerged. No production deployment/merge/cutover authority.
 
 ## Current gates
+
+- Latest local source checks PASS:1057Vitest/157files,318Linuxhelpers, strict types/full zero-warninglint/source-history1203files. Nine added real-SQL/mock-boundary tests, existing assertions/timeouts untouched. Native ARM image/build/smoke pending; no queue service/setup/runtime has been enabled yet.
 
 - P5 SDK7/7private +10/10singleedge/full containment; current read-only runtime11/11/full containmentPASS. All11hosted b114123checksPASS; newer diagnostic heads have separate CI.
 - P6 inventory9fa0986a5f3f: full62table orderedMD5/Auth/two sequences/schema only3approved owner exceptions/552privileges/73Storage/manifests PASSunchanged. Roles `ir35_queue` and `ir35_queue_producer` ABSENT; pgboss exists but empty/postgres-owned.

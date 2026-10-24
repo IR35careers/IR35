@@ -1,0 +1,112 @@
+{
+  "status": "PASS",
+  "productionChanges": false,
+  "sourceRoleWrites": 0,
+  "sourceWrites": 0,
+  "roleWrites": 2,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "deniedReadChecks": [
+    {
+      "role": "ir35_queue",
+      "case": "password-login",
+      "passed": true
+    },
+    {
+      "role": "ir35_queue",
+      "case": "deny-auth.users",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue",
+      "case": "deny-public.profiles",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue",
+      "case": "deny-storage.objects",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue_producer",
+      "case": "password-login",
+      "passed": true
+    },
+    {
+      "role": "ir35_queue_producer",
+      "case": "deny-auth.users",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue_producer",
+      "case": "deny-public.profiles",
+      "passed": true,
+      "sqlstate": "42501"
+    },
+    {
+      "role": "ir35_queue_producer",
+      "case": "deny-storage.objects",
+      "passed": true,
+      "sqlstate": "42501"
+    }
+  ],
+  "approvedP6Additions": [
+    "ir35_queue",
+    "ir35_queue_producer"
+  ],
+  "customerPrivilegeMatrix": [
+    {
+      "database": "postgres",
+      "checks": 126,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "checks": 114,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p5_app",
+      "checks": 114,
+      "unexpectedAccess": 0
+    }
+  ],
+  "credentials": [
+    {
+      "path": "/opt/ir35/.env.p6-queue-owner",
+      "mode": "0o600",
+      "owner": "ir35"
+    },
+    {
+      "path": "/opt/ir35/.env.p6-queue-producer",
+      "mode": "0o600",
+      "owner": "ir35"
+    }
+  ],
+  "queueConsumerEnabled": false,
+  "realAcceptance": false,
+  "stage": "03-queue-roles",
+  "manifestSHA256": "d3e50dd54ef1ae243537629f75b4685e5955a8851e2b2d2fb06c69066f90a85a"
+}
