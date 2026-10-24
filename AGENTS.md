@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 24 October owner release — P6–P9 staging approved after P5 PASS
+
+- Owner explicitly approved remaining P5–P9 staging phases after the SDK gate passes; it now HAS passed (private7/7, one edge10/10, complete containment) and current read-only app11/11/full containment PASS too. The prior review-beforeP6 hold below is superseded ONLY for this staging continuation. Continue automatically phase-by-phase, one small DRAFT PR each, full62table orderedMD5/2sequences/Auth/schema only3approved exceptions/552privileges/73StorageSHA256 after EVERY phase. P9 is preparation and staging dry-run ONLY; stop for exact YES CUTOVER.
+- Preserve zero-cost London2OCPU/12GB/50+100GB/StandardObject8GB limits, all existing failed journals/counters, write-once evidence and at most2 low-risk tooling/config repairs per issue; never edit hashes/catalogs/assertions/timeouts to force PASS. No production/DNS/Vercel/cloud-Supabase/Google/real-secret changes, broadIAM, paid/nonfree resources, real email or employer submission. Staging workers/mock queues/Realtime/heartbeat/schedules remain mock/sink-only; no production runner/acceptance switch. Any data/security mismatch or third same-gate failure stops. Never merge any PR or delete old rollback projects. Do not replay the used SDK edge activation.
+
 ## 24 October SDK-owner1 complete — STOP for review before P6
 
 - New approval consumed: private round2 exact7/7 PASS after retained diagnostic-label repair; ONE protected staging activation10/10 PASS, seal894c6408b8c4. Post-activation all old/P4/build manifests, pristine+app62ordered-MD5 tables/2sequences/schema only3approved owner exceptions/552privileges/73StorageSHA256 PASS, seal490c14263655. Existing env/keys/original rollback files unchanged. SDK missing401/suffix401/valid200, jobs200/H1/noindex/exactno-store/Secure+HttpOnly+Strictcookie, maintenance503, Authhealth200. Whole-apphealth503 remains truthful with worker/Realtime not configured, not P6 approval.

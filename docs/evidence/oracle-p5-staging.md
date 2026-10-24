@@ -1,5 +1,9 @@
 # P5 — app staging preparation,22 October handoff
 
+## Latest24October: bounded SDK repair + read-only runtime PASS, review before P6
+
+The STOP/failed-repair sections below are preserved historical evidence. Owner subsequently authorised one separate isolated SDK-order repair: [signoff](oracle-p5-sdk-owner1.md), private7/7 + one protected activation10/10 + full containmentPASS. No earlier journal/counter was reset. [Current read-only runtime audit](oracle-p5-readonly-audit.md) adds11GET/CSP/SSR/filter/sitemap/assets/health checks + full unchanged-data proof, with no further activation. All11hosted b114123checksSUCCESS. Whole-stackhealth remains truthfully503 pending worker/Realtime, not a P6 or production signoff. Latest explicit owner review-before-P6 hold remains; broad persistent objective does not silently lift it. All phases/drafts/production/cutover gates remain in scope and incomplete where stated.
+
 ## 24 October continuation — critical dependency gate
 
 ### FINAL: P5 STOP, third edge failure — no further activation
