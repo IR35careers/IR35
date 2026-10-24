@@ -4,6 +4,8 @@ import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from p4_recovery_guest import RecoveryError
 from web_header_probe_guest import configuration
+import inspect
+import web_header_probe_guest
 
 
 class HeaderProbeTests(unittest.TestCase):
@@ -18,6 +20,12 @@ class HeaderProbeTests(unittest.TestCase):
         self.assertIn('header Cache-Control "no-store"',paired)
         self.assertIn('header >Cache-Control "no-store"',paired)
         with self.assertRaises(RecoveryError):configuration('arbitrary')
+
+    def test_probe_matches_existing_caddy_capability_without_public_port_mapping(self):
+        source=inspect.getsource(web_header_probe_guest.run)
+        self.assertIn("'--cap-drop','ALL','--cap-add','NET_BIND_SERVICE'",source)
+        self.assertNotIn("'--publish'",source)
+        self.assertNotIn("'--privileged'",source)
 
 
 if __name__=='__main__':unittest.main()

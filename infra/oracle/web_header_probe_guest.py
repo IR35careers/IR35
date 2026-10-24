@@ -53,7 +53,7 @@ def run(data,runtime,repair=0):
             store.put(stage,mode+'.caddy',configuration(mode).encode())
             current='ir35-p5-header-probe-'+mode
             runtime['run'](['docker','run','--detach','--pull','never','--name',current,'--restart','no','--network','ir35-staging_backend',
-                '--read-only','--memory','128m','--pids-limit','64','--user','1002:1002','--log-driver','none','--cap-drop','ALL','--security-opt','no-new-privileges:true',
+                '--read-only','--memory','128m','--pids-limit','64','--user','1002:1002','--log-driver','none','--cap-drop','ALL','--cap-add','NET_BIND_SERVICE','--security-opt','no-new-privileges:true',
                 '--tmpfs','/tmp:rw,size=16m,uid=1002,gid=1002,mode=0700','--tmpfs','/data:rw,size=16m,uid=1002,gid=1002,mode=0700',
                 '--tmpfs','/config:rw,size=16m,uid=1002,gid=1002,mode=0700','--volume','/opt/ir35/bin/env-exec:/run/ir35/env-exec:ro',
                 '--volume','/opt/ir35/.env.p5-caddy:/opt/ir35/.env.p5-caddy:ro','--volume',str(stage/(mode+'.caddy'))+':/probe.caddy:ro',

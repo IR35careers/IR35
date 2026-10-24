@@ -1,0 +1,17 @@
+{
+  "status": "FAIL",
+  "publicEdgeChanged": false,
+  "publicPorts": 0,
+  "certificateRequests": 0,
+  "phaseComplete": false,
+  "cases": {},
+  "code": "PrivateHeaderProbeExited_111",
+  "frames": [
+    {
+      "function": "run",
+      "line": 66
+    }
+  ],
+  "stage": "02-header-probe-r1",
+  "manifestSHA256": "f94fc21747706c39687d3aab541b18d3e3f9166a7529692052861bb58a777a3e"
+}
