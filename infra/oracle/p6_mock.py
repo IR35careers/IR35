@@ -9,7 +9,7 @@ from web_build import git_command
 
 
 def main():
-    if len(sys.argv)!=2 or sys.argv[1]not in ('--prepare','--setup','--start'):raise RuntimeError('ExplicitP6MockOperationRequired')
+    if len(sys.argv)!=2 or sys.argv[1]not in ('--prepare','--setup','--setup-verify-repair-1','--start'):raise RuntimeError('ExplicitP6MockOperationRequired')
     operation=sys.argv[1][2:];directory=schema.REPO/'docs/evidence/p6';destination=directory/('mock-'+operation+'.json')
     if destination.exists():raise RuntimeError('P6MockOperationRecorded_NoReplay')
     data=p6_context.context()
@@ -23,12 +23,16 @@ def main():
     changed=subprocess.run(git+['diff','--quiet',build['sourceSHA'],'HEAD','--','src/lib/queue','services/application-worker','package.json','package-lock.json','supabase/operations/pgboss-producer-grants.sql']).returncode
     if changed:raise RuntimeError('MockRuntimeSourceChanged_NewBuildRequired')
     if operation!='prepare':data['mockPrepare']=json.loads((directory/'mock-prepare.json').read_text())
-    if operation=='start':data['mockSetup']=json.loads((directory/'mock-setup.json').read_text())
+    if operation=='setup-verify-repair-1':data['failedSetup']=json.loads((directory/'mock-setup.json').read_text())
+    if operation=='start':
+        repair=directory/'mock-setup-verify-repair-1.json'
+        data['mockSetup']=json.loads((repair if repair.exists() else directory/'mock-setup.json').read_text())
     script=p6_worker_build.bundle()
     for name in ('p6_roles_guest','p6_mock_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
         script+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr(code)+',module.__dict__)\n'
-    script+='result=sys.modules["p6_mock_guest"].'+operation+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
+    function='verify_setup_repair' if operation=='setup-verify-repair-1' else operation
+    script+='result=sys.modules["p6_mock_guest"].'+function+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
     result=schema.run_guest(script,timeout=600)
     with destination.open('x') as output:json.dump(result,output,indent=2)
     print(json.dumps({'status':result['status'],'code':result.get('code'),'containment':result.get('containment',{}).get('status'),

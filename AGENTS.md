@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 24 October P6 queue read-back tooling repair — no DDL replay
+
+- Initial05-mock-setup FAIL1/StagingSQLFailed, sealed7a6d417a; full source containment PASS. Read-only diagnosis confirms pg-boss install DID complete (2mockqueues,3mocktables,53relations). Native +local exact-query reproduction prove SQLSTATE42601 from one extra closing parenthesis in the ACL verifier, not a data/privilege mismatch. Preserve failed stage; never run setup again or drop/recreate queue objects. Bounded self-heal repair1 may fix that SELECT and run verification-only05-mock-setup-r1, with unchanged ACL/denial/full-containment assertions. No worker service started or real acceptance enabled. Stop for any genuine privilege/data mismatch or exhausted repair budget.
+
 ## 24 October P6 native checkpoint — roles/image PASS, mock service pending
 
 - Owner unlocked SSH; keyLoaded=true in the retained per-boot agent. Do not prompt again. Two approved same-Postgres queue roles installed, real logins/6customer42501negatives/354additional privilege checks/full source containment PASS, seald3e50dd5. Source roles and552baseline unchanged, two role objects explicitly recorded separately. Native ARM mock-worker build1/source1d21c10 PASS, nonroot/image68e887e8d9a5/browserReady true/no credentials in browser, full post-build62tables/2sequences/Auth/schema3exceptions+2role additions/552/73Storage/manifests PASS. Build/journals/P5 images remain immutable; no P5 reactivation.

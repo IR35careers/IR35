@@ -53,6 +53,15 @@ beforeEach(async () => {
 afterEach(async () => { await owner?.stop({ graceful: false }); await producer?.stop({ graceful: false }); await database?.close(); vi.restoreAllMocks(); });
 
 describe("durable real-SQL mock lifecycle, private schema only", () => {
+  it("runs the exact native ACL read-back query against PostgreSQL before any service start", async () => {
+    const source = readFileSync("infra/oracle/p6_mock_guest.py", "utf8");
+    const sql = source.match(/privilege=json.loads\(original.query\("""([\s\S]*?)""",'postgres'/)?.[1];
+    expect(sql).toBeTruthy();
+    const result = await owner.getDb().executeSql(sql!);
+    expect(result.rows[0].jsonb_build_object).toEqual({ owner: "ir35_queue", anonUsage: false, authenticatedUsage: false,
+      producerCreate: false, producerUnexpectedMutation: false, queues: [MOCK_APPLY_QUEUE, MOCK_SCHEDULE_QUEUE] });
+  });
+
   it("atomically enqueues once, persists all transitions and reloads a confirmed receipt", async () => {
     const input = work(); expect(await store.enqueue(input)).toMatchObject({ state: "queued", receiptConfirmed: false });
     expect(await store.enqueue(input)).toMatchObject({ state: "queued" });

@@ -141,6 +141,15 @@ def setup(data,runtime):
           '/opt/ir35/.env.p6-mock-worker','node','--import','tsx','services/application-worker/mock-main.ts','--setup']
         reply=json.loads(runtime['run'](args,timeout=180))
         if reply!={'status':'PASS','queues':2,'mockOnly':True,'realAcceptance':False}:raise RecoveryError('MockQueueSetupAcknowledgementMissing_NoReplay')
+        result.update(status='PASS',**queue_access_proof(original,data,runtime))
+    except Exception as error:result['code']=str(error) if type(error)is RecoveryError else type(error).__name__
+    try:result['containment']=check_containment(data,runtime,store,stage,'post')
+    except Exception as error:result.update(status='FAIL',containmentError=type(error).__name__)
+    store.put(stage,'result.json',json.dumps(result,sort_keys=True).encode())
+    return result|{'stage':stage.name,'manifestSHA256':store.seal(stage)}
+
+
+def queue_access_proof(original,data,runtime):
         matrix=no_customer_access(original)
         privilege=json.loads(original.query("""SELECT jsonb_build_object(
          'owner',(SELECT pg_get_userbyid(nspowner) FROM pg_namespace WHERE nspname='pgboss'),
@@ -148,7 +157,7 @@ def setup(data,runtime):
          'producerCreate',has_schema_privilege('ir35_queue_producer','pgboss','CREATE'),
          'producerUnexpectedMutation',EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
            WHERE n.nspname='pgboss' AND c.relkind IN ('r','p') AND (has_any_column_privilege('ir35_queue_producer',c.oid,'UPDATE')
-           OR has_table_privilege('ir35_queue_producer',c.oid,'DELETE,TRUNCATE,REFERENCES,TRIGGER')))),
+           OR has_table_privilege('ir35_queue_producer',c.oid,'DELETE,TRUNCATE,REFERENCES,TRIGGER'))),
          'queues',(SELECT jsonb_agg(name ORDER BY name) FROM pgboss.queue));""",'postgres'))
         if privilege!={'owner':'ir35_queue','anonUsage':False,'authenticatedUsage':False,'producerCreate':False,'producerUnexpectedMutation':False,
                        'queues':['ir35-staging-mock-apply','ir35-staging-mock-schedule']}:raise RecoveryError('MockQueuePrivilegeMismatch_Abort')
@@ -160,7 +169,21 @@ def setup(data,runtime):
                 observed=probe(runtime,image,role,path,'SELECT * FROM '+table+' LIMIT 0;')
                 denied.append({'role':role,'table':table,'passed':observed['exitCode']!=0 and observed['denied42501'],'sqlstate':'42501' if observed['denied42501'] else 'unexpected'})
         if not all(row['passed'] for row in denied):raise RecoveryError('PostSetupCustomerReadDenialMismatch_Abort')
-        result.update(status='PASS',queueACL=privilege,customerPrivilegeMatrix=matrix,actualDeniedReads=denied)
+        return {'queueACL':privilege,'customerPrivilegeMatrix':matrix,'actualDeniedReads':denied}
+
+
+def verify_setup_repair(data,runtime):
+    prerequisites(data,runtime);store=prepared(data);failed=data['failedSetup'];store.verify(failed['stage'],failed['manifestSHA256'])
+    if failed['status']!='FAIL' or failed.get('code')!='StagingSQLFailed_RawPrivateOnly' or failed.get('containment',{}).get('status')!='PASS':raise RecoveryError('ExactFailedReadbackAndContainmentRequired')
+    stage=store.stage('05-mock-setup-r1')
+    result={'status':'FAIL','repairAttempt':1,'reason':'ReadbackSQL42601_ExtraClosingParenthesis','schemaWrites':0,'roleWrites':0,
+            'serviceChanges':0,'customerWrites':0,'productionChanges':False,'realAcceptance':False,'setupReplayed':False,
+            'failedManifestSHA256':failed['manifestSHA256']}
+    try:
+        store.put(stage,'intent.json',json.dumps({'operation':'verification-only','attempts':1,'replayDDL':False,'failedManifestSHA256':failed['manifestSHA256']}).encode())
+        result['preContainment']=check_containment(data,runtime,store,stage,'pre')
+        original=Recovery(data['p4'],runtime)
+        result.update(status='PASS',**queue_access_proof(original,data,runtime))
     except Exception as error:result['code']=str(error) if type(error)is RecoveryError else type(error).__name__
     try:result['containment']=check_containment(data,runtime,store,stage,'post')
     except Exception as error:result.update(status='FAIL',containmentError=type(error).__name__)

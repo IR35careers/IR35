@@ -3,7 +3,7 @@ import inspect
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch,Mock
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import p6_mock_guest as mock
 
@@ -16,6 +16,21 @@ def config():
 
 
 class P6MockTests(unittest.TestCase):
+    def test_setup_repair_is_verification_only_and_never_replays_installation(self):
+        failed={'status':'FAIL','code':'StagingSQLFailed_RawPrivateOnly','containment':{'status':'PASS'},'stage':'05-mock-setup','manifestSHA256':'a'*64}
+        store=Mock();store.stage.return_value=Path('/opt/ir35/.env.p6/05-mock-setup-r1');store.seal.return_value='b'*64
+        with patch.object(mock,'prerequisites'),patch.object(mock,'prepared',return_value=store),patch.object(mock,'check_containment',return_value={'status':'PASS'}),patch.object(mock,'Recovery'),patch.object(mock,'queue_access_proof',return_value={'queueACL':'strict unchanged probe'}) as proof,patch.object(mock.subprocess,'run') as native:
+            result=mock.verify_setup_repair({'failedSetup':failed,'p4':{}},{})
+        self.assertEqual(result['status'],'PASS');self.assertFalse(result['setupReplayed'])
+        self.assertEqual(result['schemaWrites'],0);self.assertEqual(result['serviceChanges'],0)
+        native.assert_not_called();proof.assert_called_once()
+        store.stage.assert_called_once_with('05-mock-setup-r1')
+        for change in ({'code':'ActualPrivilegeMismatch'},{'status':'PASS'},{'containment':{'status':'FAIL'}}):
+            store=Mock()
+            with patch.object(mock,'prerequisites'),patch.object(mock,'prepared',return_value=store):
+                with self.assertRaisesRegex(RuntimeError,'ExactFailedReadbackAndContainmentRequired'):mock.verify_setup_repair({'failedSetup':failed|change},{})
+            store.stage.assert_not_called()
+
     def test_missing_password_negative_control_has_no_secret_arguments_or_interactive_prompt(self):
         class Reply:
             returncode=2;stdout=b'';stderr=b'fe_sendauth: no password supplied'
