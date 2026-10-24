@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October edge repair1 FAIL2/rolled back:** deferred candidate passesadapt+full pre-data proof but401header gate fails; original Caddy restored. Preserve05/06manifests443e5865/4c9555c3. One final repair left; first run finite private header experiment, not another public switch. [Evidence](evidence/oracle-p5-staging.md). No production/cutover.
+
 **24October edge FAIL1/automatic rollback:** protected SSR/header assertion failed; original Caddy restored, failure manifest12deb1c31709 retained. App direct200/H1correct; likely documented non-deferred response header override. New bounded repair1 candidate/stages preserve old files/secret, defer no-store/noindex/cookie, collect safe booleans, repeat full pre-data+DNS/TLS checks.22web testsPASS. [Evidence](evidence/oracle-p5-staging.md). P5 not complete; no prod/DNS/cutover.
 
 **24October P5 Caddy candidate PASS:** native pinned adapter verifies protected staging-only config with unchanged original files/keys/ports and newenv600/ir35, no certificate requests/activation. [Sealed proof](evidence/p5/edge-prepare.json),b20a72acbd1d. Next guarded TLS/negative-cookie/SSR switch plus full post-data proof and automatic original-Caddy rollback on failure. No production/cutover.

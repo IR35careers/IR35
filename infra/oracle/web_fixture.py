@@ -36,9 +36,9 @@ def payload():
 
 
 def guest(data,operation='prepare'):
-    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2'):raise RuntimeError('FixedP5OperationRequired')
+    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe'):raise RuntimeError('FixedP5OperationRequired')
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE+'\nimport types\n'
-    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest'):
+    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest','web_header_probe_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
         script+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr(code)+',module.__dict__)\n'
     verifiers=rehearsal.verification_modules()+'\nfrom pathlib import PurePosixPath\n'+inspect.getsource(storage_target.backend_path)
@@ -47,7 +47,7 @@ def guest(data,operation='prepare'):
     if operation.startswith('edge-repair-'):
         script+='result=sys.modules["web_edge_guest"].repair('+repr(data)+',runtime,'+operation[-1]+')\nprint(json.dumps(result))\n'
     else:
-        module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate')}[operation]
+        module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate'),'header-probe':('web_header_probe_guest','run')}[operation]
         script+='result=sys.modules['+repr(module)+'].'+function+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
     return script
 
@@ -55,7 +55,7 @@ def guest(data,operation='prepare'):
 def main():
     if sys.argv[1:]==['--dry-run']:
         print(json.dumps({'status':'DRY_RUN','target':'ir35_p5_app','sourceWrites':0,'pristineWrites':0,'containersCreated':False,'caddyActivated':False}));return
-    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2']):raise RuntimeError('ExplicitStagingOperationRequired')
+    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2'],['--header-probe']):raise RuntimeError('ExplicitStagingOperationRequired')
     operation=sys.argv[1][2:]
     path=schema.REPO/('docs/evidence/p5/'+operation+'.json')
     if path.exists():raise RuntimeError('PreparationRecorded_NoReplay')
