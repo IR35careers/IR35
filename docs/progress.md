@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October private header probe FAIL1, public edge unchanged:** ValueError before HTTP cases; immutablee0f6ebb7 retained. Nonroot/read-only Caddy probe gets explicit writable RAM dirs/state wait and metadata-only frames in separately bounded repair1. No public retry or counter reset; final edge repair still unused.23web testsPASS. [Evidence](evidence/oracle-p5-staging.md).
+
 **24October edge repair1 FAIL2/rolled back:** deferred candidate passesadapt+full pre-data proof but401header gate fails; original Caddy restored. Preserve05/06manifests443e5865/4c9555c3. One final repair left; first run finite private header experiment, not another public switch. [Evidence](evidence/oracle-p5-staging.md). No production/cutover.
 
 **24October edge FAIL1/automatic rollback:** protected SSR/header assertion failed; original Caddy restored, failure manifest12deb1c31709 retained. App direct200/H1correct; likely documented non-deferred response header override. New bounded repair1 candidate/stages preserve old files/secret, defer no-store/noindex/cookie, collect safe booleans, repeat full pre-data+DNS/TLS checks.22web testsPASS. [Evidence](evidence/oracle-p5-staging.md). P5 not complete; no prod/DNS/cutover.

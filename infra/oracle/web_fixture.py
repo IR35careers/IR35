@@ -36,7 +36,7 @@ def payload():
 
 
 def guest(data,operation='prepare'):
-    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe'):raise RuntimeError('FixedP5OperationRequired')
+    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe','header-probe-repair-1','header-probe-repair-2'):raise RuntimeError('FixedP5OperationRequired')
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE+'\nimport types\n'
     for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest','web_header_probe_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
@@ -44,7 +44,9 @@ def guest(data,operation='prepare'):
     verifiers=rehearsal.verification_modules()+'\nfrom pathlib import PurePosixPath\n'+inspect.getsource(storage_target.backend_path)
     script+='verification_namespace={}\nexec('+repr(verifiers)+',verification_namespace)\n'
     script+='runtime={"run":run,"read_env":read_env,"verifiers":verification_namespace,"component_env":component_env,"env_text":env_text,"kong_config":stack.kong_config,"baseline_caddy":stack.CADDYFILE,"caddy_permissions":caddy_permissions}\n'
-    if operation.startswith('edge-repair-'):
+    if operation.startswith('header-probe-repair-'):
+        script+='result=sys.modules["web_header_probe_guest"].run('+repr(data)+',runtime,'+operation[-1]+')\nprint(json.dumps(result))\n'
+    elif operation.startswith('edge-repair-'):
         script+='result=sys.modules["web_edge_guest"].repair('+repr(data)+',runtime,'+operation[-1]+')\nprint(json.dumps(result))\n'
     else:
         module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate'),'header-probe':('web_header_probe_guest','run')}[operation]
@@ -55,11 +57,16 @@ def guest(data,operation='prepare'):
 def main():
     if sys.argv[1:]==['--dry-run']:
         print(json.dumps({'status':'DRY_RUN','target':'ir35_p5_app','sourceWrites':0,'pristineWrites':0,'containersCreated':False,'caddyActivated':False}));return
-    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2'],['--header-probe']):raise RuntimeError('ExplicitStagingOperationRequired')
+    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2'],['--header-probe'],['--header-probe-repair-1'],['--header-probe-repair-2']):raise RuntimeError('ExplicitStagingOperationRequired')
     operation=sys.argv[1][2:]
     path=schema.REPO/('docs/evidence/p5/'+operation+'.json')
     if path.exists():raise RuntimeError('PreparationRecorded_NoReplay')
     data=payload()
+    if operation.startswith('header-probe-repair-'):
+        previous_name='header-probe' if operation.endswith('-1') else 'header-probe-repair-1'
+        previous=json.loads((schema.REPO/('docs/evidence/p5/'+previous_name+'.json')).read_text())
+        if previous.get('status')!='FAIL' or previous.get('publicEdgeChanged')is not False:raise RuntimeError('FailedPrivateProbeRequired')
+        data['probeAnchor']=previous['manifestSHA256']
     if operation!='prepare':
         prepare=json.loads((schema.REPO/'docs/evidence/p5/prepare.json').read_text())
         if prepare.get('status')!='PASS':raise RuntimeError('PreparedFixtureRequired')

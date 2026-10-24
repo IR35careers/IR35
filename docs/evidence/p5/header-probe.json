@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "publicEdgeChanged": false,
+  "publicPorts": 0,
+  "certificateRequests": 0,
+  "phaseComplete": false,
+  "cases": {},
+  "code": "ValueError",
+  "stage": "01-header-probe",
+  "manifestSHA256": "e0f6ebb74a74ba79446c61c6f2b885ee1cd1660c1234e33ee89ea8eb78ac2723"
+}
