@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "phaseComplete": false,
+  "caddyActivated": false,
+  "productionChanges": false,
+  "sourceWrites": 0,
+  "pristineWrites": 0,
+  "privateReadiness": {
+    "auth": 200,
+    "database": 200,
+    "storage": 200,
+    "web": 200
+  },
+  "health": {
+    "ok": false,
+    "checks": {
+      "database": "ready",
+      "auth": "ready",
+      "storage": "ready",
+      "realtime": "not-configured",
+      "worker": "not-configured"
+    },
+    "buildSHA": "a35db403d3fbb57148247606234a9807f48ea8a0"
+  },
+  "fixtureUnchanged": true,
+  "pristineUnchanged": true,
+  "containersCreated": 5,
+  "publicPorts": 0,
+  "stage": "02-services",
+  "manifestSHA256": "42c086d1e1bbfd27c0f1170aff9eeacbe90d9b62844635ca43070b2990a2a216"
+}

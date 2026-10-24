@@ -69,16 +69,18 @@ def caddyfile(original):
             respond "Not found" 404
         }
         handle {
-            basic_auth {
-                ir35 {$STAGING_BASIC_HASH}
-            }
-            header Set-Cookie "__Host-ir35-staging={$STAGING_GATE_TOKEN}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800"
-            @basic header Authorization "Basic *"
-            request_header @basic -Authorization
-            reverse_proxy ir35-p5-web:3000 {
-                header_up -X-Forwarded-For
-                header_up -X-Real-IP
-                header_up -X-Vercel-Forwarded-For
+            route {
+                basic_auth {
+                    ir35 {$STAGING_BASIC_HASH}
+                }
+                header Set-Cookie "__Host-ir35-staging={$STAGING_GATE_TOKEN}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=1800"
+                @basic header Authorization "Basic *"
+                request_header @basic -Authorization
+                reverse_proxy ir35-p5-web:3000 {
+                    header_up -X-Forwarded-For
+                    header_up -X-Real-IP
+                    header_up -X-Vercel-Forwarded-For
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October private P5 services PASS:** five no-port nonroot/read-only containers healthy200, fixture/pristine full fidelity unchanged; truthful503partial health(DB/Auth/Storageready,Realtime/workernotconfigured). [Sealed result](evidence/p5/services.json), manifest42c086d1e1bb. All10hosted a35db40 checksSUCCESS. Dual-resolver staging DNS/CAA read-onlyPASS, no writes.21web helper testsPASS. Next staging-only Caddy candidate/adapt/TLS negative gates, old configuration retained; no production or cutover.
+
 **24October P5 separate app fixture PASS:** newir35_p5_app/73files exactly match verified snapshot (62tables/schema/2sequences/552privileges,1,241,375Storagebytes/xattrs); full pristine before/after unchanged. VM envs600/ir35/default read-only, sink/mock/acceptance=false. Prepare manifestd4a47ed738d5, [result](evidence/p5/prepare.json). No containers/Caddy activation; next private services/full post-start fidelity.18web helper tests PASS, no production/cutover.
 
 **24October NEW patched native ARM build03 PASS:** sourcea35db40,158.048s, imagecbc62c3a5c73, sealed manifest3f7570dc27b1; actual standalone Next16.4.3/React19.2.9/Sharp0.35.5/user1002 confirmed. Both old journals verified intact; no replay/reset/fourth build.16web helper tests PASS after pre-execution libpq URI encoding repair. [Evidence](evidence/p5/build-3.json). App clone/service/Caddy not started, P5 not complete; next separate read-only fixture. No production/cutover.
