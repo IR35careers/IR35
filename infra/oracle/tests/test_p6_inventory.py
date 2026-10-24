@@ -10,6 +10,18 @@ import p6_inventory_guest
 
 
 class P6InventoryTests(unittest.TestCase):
+    def test_actual_sdk_codes_and_containment_required_not_just_claimed_pass(self):
+        import copy
+        data={'status':'PASS','containment':{'status':'PASS'},'activation':{'cases':[
+            {'case':name,'expectedStatus':status,'actualStatus':status,'passed':True}
+            for name,status in [('sdk-missing',401),('sdk-suffix',401),('sdk-valid',200)]]}}
+        p6_context.require_sdk(data)
+        for index in range(3):
+            bad=copy.deepcopy(data);bad['activation']['cases'][index]['actualStatus']=404
+            with self.assertRaisesRegex(RuntimeError,'ActualP5SDK'):p6_context.require_sdk(bad)
+        bad=copy.deepcopy(data);bad['containment']['status']='FAIL'
+        with self.assertRaisesRegex(RuntimeError,'ActualP5SDK'):p6_context.require_sdk(bad)
+
     def test_wrong_branch_refuses_before_private_recovery_state(self):
         with patch.object(p6_context.subprocess,'check_output',return_value='main\n'),patch.object(p6_context.p4_recovery,'reports') as reports:
             with self.assertRaisesRegex(RuntimeError,'P6BranchRequired'):p6_context.context()

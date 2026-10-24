@@ -1,5 +1,11 @@
 # P6 — guarded mock worker / queue / Realtime / schedule integration
 
+## Latest owner decision / mandatory P5 SDK confirmation
+
+**CONFIRMED before further provisioning:** [P5 sealed SDK evidence](p5-sdk-owner1/edge-summary.json) has sdk-missing401/PASS, sdk-suffix401/PASS, sdk-valid200/PASS; edge10/10PASS +containmentPASS, edge seal894c6408b8c47329106d0061666e728a0224d92e6cc7e8410944722d60ce616c. This is the actual newly approved switch, not inference from the earlier failures.
+
+Owner now explicitly approved SAME Postgres with two minimal queue-only roles, VM-only credentials, denied-read tests for auth/public/storage, every source role unchanged, BOTH new roles listed as approvedP6additions separately from the untouched552baseline. The earlier choice hold below is historical, not a pending re-approval. No alternate queueDB will be deployed. Before actual role creation, test a P6 classifier that RETAINS raw catalog/baseline difference reports and identifies ONLY2exact nonprivileged new role objects; all other differences/source expiry/grants/memberships remain failures. No actual role/secret/queue/service change at this source-preparation checkpoint.
+
 Owner released P6–P9 staging after actual P5 SDK PASS. P5 SDK7/7private +10/10singleedge/full containment; follow-up11read-only runtime checks/full containment;298helpers; all11hosted b114123checksPASS. P9prepare/dry-run only. All phases stay draft/unmerged, zero paid/production/provider/DNS/real-secret changes. Mock ATS/test account and SMTP sink only. Existing immutable journals/counters and no real-password attempts remain binding.
 
 ## First gate: read-only runtime/resource/security inventory

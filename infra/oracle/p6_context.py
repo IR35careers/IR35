@@ -8,6 +8,17 @@ from web_build import git_command
 from web_security import deployable_build
 
 
+def require_sdk(edge):
+    cases=edge.get('activation',{}).get('cases',[])
+    expected={'sdk-missing':401,'sdk-suffix':401,'sdk-valid':200}
+    rows=[row for row in cases if row.get('case') in expected]
+    if (edge.get('status')!='PASS' or edge.get('containment',{}).get('status')!='PASS'
+        or len(rows)!=3 or len({row['case'] for row in rows})!=3
+        or not all(row.get('passed')is True and row.get('expectedStatus')==expected[row['case']]
+                   and row.get('actualStatus')==expected[row['case']] for row in rows)):
+        raise RuntimeError('ActualP5SDK401401200AndContainmentRequired')
+
+
 def context():
     git=git_command(schema.REPO)
     if subprocess.check_output(git+['branch','--show-current'],text=True).strip()!='codex/oracle-migration-p6':raise RuntimeError('P6BranchRequired')
@@ -16,6 +27,7 @@ def context():
     if signoff.get('status')!='PASS' or signoff.get('phaseComplete')is not True:raise RuntimeError('RevisedP4SignoffRequired')
     evidence=schema.REPO/'docs/evidence'
     edge=json.loads((evidence/'p5-sdk-owner1/edge-summary.json').read_text())
+    require_sdk(edge)
     audit=json.loads((evidence/'p5-runtime-audit.json').read_text())
     if edge.get('status')!='PASS' or edge.get('activation',{}).get('activationAttempts')!=1 or audit.get('status')!='PASS' or audit.get('containment',{}).get('status')!='PASS':raise RuntimeError('P5SDKAndRuntimePassRequired')
     paths=sorted((evidence/'p5').glob('build-*.json'));build=json.loads(paths[-1].read_text());deployable_build(build)
