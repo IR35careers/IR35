@@ -1,5 +1,7 @@
 # IR35Careers delivery checklist
 
+**24October FINAL P5 STOP/third edge failure:** repair2 `/jobs`200/H1/noindex/exactno-store +cookie issuance PASS, SDK boundary FAIL(P5SDKBoundaryMismatch), original Caddy restored. Manifest6446d4c29d26, [result](evidence/p5/edge-repair-2.json). No fourth attempt/P6/counter reset; mutating controller hard-held before private-state/SSH,26web helpersPASS. New SDK private-diagnostic repair needs explicit owner reopening; no gate/RLS weakening. Full read-only post-failure containment pending. Patched ARM/data/private-service proofs retained, P5 NOT complete, production/cutover untouched.
+
 **24October final edge repair held before SSH by transient DNS:** no third activation/candidate created. Independent DNS immediatelyPASS; implement already-owner-approved bounded30min backoff rather than premature one-shot stop.25web regressions pending. All previous journals/counters retained; no DNS/prod/cutover writes.
 
 **24October private header matrix PASS:** sealedffd4a6766ccb; immediate+deferred pair passes401/200 noindex/no-store, deferred-only401failure reproduced,3diagnostic containers removed/no public edge change.24web testsPASS. Final edge repair2 now requires this exact seal, full data+DNS proof and new candidate; third edge failure stops, no reset. [Results](evidence/p5/header-probe-repair-2.json).

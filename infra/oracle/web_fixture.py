@@ -27,7 +27,13 @@ def wait_staging_dns(observe,*,limit=1800,now=time.monotonic,pause=time.sleep,wa
         pause(wait);delay=min(60,delay*2)
 
 
-def payload():
+def migration_held():
+    path=schema.REPO/'docs/evidence/p5/edge-repair-2.json'
+    return path.exists() and json.loads(path.read_text()).get('status')!='PASS'
+
+
+def payload(*,readonly=False):
+    if type(readonly)is not bool or migration_held() and not readonly:raise RuntimeError('P5ThirdEdgeFailure_StopBeforeSSH')
     history=p4_recovery.reports();signoff=history.get('revised_signoff',{})
     if signoff.get('status')!='PASS' or signoff.get('phaseComplete')is not True or not all(signoff.get('criteria',{}).values()):
         raise RuntimeError('OwnerRevisedP4SignoffRequired')
@@ -50,9 +56,9 @@ def payload():
 
 
 def guest(data,operation='prepare'):
-    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe','header-probe-repair-1','header-probe-repair-2'):raise RuntimeError('FixedP5OperationRequired')
+    if operation not in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2','header-probe','header-probe-repair-1','header-probe-repair-2','containment-audit'):raise RuntimeError('FixedP5OperationRequired')
     script=schema.guest_bundle(rehearsal=True)+owner_parity.BASE+'\nimport types\n'
-    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest','web_header_probe_guest'):
+    for name in ('immutable_artifacts','p4_recovery_guest','web_security','web_stack','web_fixture_guest','web_services_guest','web_edge_guest','web_header_probe_guest','web_containment_guest'):
         code=(schema.REPO/'infra/oracle'/(name+'.py')).read_text()
         script+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr(code)+',module.__dict__)\n'
     verifiers=rehearsal.verification_modules()+'\nfrom pathlib import PurePosixPath\n'+inspect.getsource(storage_target.backend_path)
@@ -63,19 +69,25 @@ def guest(data,operation='prepare'):
     elif operation.startswith('edge-repair-'):
         script+='result=sys.modules["web_edge_guest"].repair('+repr(data)+',runtime,'+operation[-1]+')\nprint(json.dumps(result))\n'
     else:
-        module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate'),'header-probe':('web_header_probe_guest','run')}[operation]
+        module,function={'prepare':('web_fixture_guest','prepare'),'services':('web_services_guest','start'),'edge-prepare':('web_edge_guest','prepare'),'edge-activate':('web_edge_guest','activate'),'header-probe':('web_header_probe_guest','run'),'containment-audit':('web_containment_guest','run')}[operation]
         script+='result=sys.modules['+repr(module)+'].'+function+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
     return script
 
 
 def main():
     if sys.argv[1:]==['--dry-run']:
-        print(json.dumps({'status':'DRY_RUN','target':'ir35_p5_app','sourceWrites':0,'pristineWrites':0,'containersCreated':False,'caddyActivated':False}));return
-    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2'],['--header-probe'],['--header-probe-repair-1'],['--header-probe-repair-2']):raise RuntimeError('ExplicitStagingOperationRequired')
+        print(json.dumps({'status':'HELD' if migration_held() else 'DRY_RUN','target':'ir35_p5_app','sourceWrites':0,'pristineWrites':0,'containersCreated':False,'caddyActivated':False}));return
+    if sys.argv[1:] not in (['--prepare'],['--services'],['--edge-prepare'],['--edge-activate'],['--edge-repair-1'],['--edge-repair-2'],['--header-probe'],['--header-probe-repair-1'],['--header-probe-repair-2'],['--containment-audit']):raise RuntimeError('ExplicitStagingOperationRequired')
     operation=sys.argv[1][2:]
     path=schema.REPO/('docs/evidence/p5/'+operation+'.json')
     if path.exists():raise RuntimeError('PreparationRecorded_NoReplay')
-    data=payload()
+    data=payload(readonly=operation=='containment-audit')
+    if operation=='containment-audit':
+        data['p5Anchors']={}
+        for name in ('prepare','services','edge-prepare','edge-activate','edge-repair-1','edge-repair-2'):
+            record=json.loads((schema.REPO/('docs/evidence/p5/'+name+'.json')).read_text())
+            for item in (record.get('preparation'),record.get('activation')) if name.startswith('edge-repair-') else (record,):
+                data['p5Anchors'][item['stage']]=item['manifestSHA256']
     if operation.startswith('header-probe-repair-'):
         previous_name='header-probe' if operation.endswith('-1') else 'header-probe-repair-1'
         previous=json.loads((schema.REPO/('docs/evidence/p5/'+previous_name+'.json')).read_text())

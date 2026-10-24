@@ -19,6 +19,14 @@ def components():
 
 
 class WebFixtureTests(unittest.TestCase):
+    def test_third_edge_failure_blocks_mutations_before_private_state_or_ssh(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);path=root/'docs/evidence/p5/edge-repair-2.json';path.parent.mkdir(parents=True)
+            path.write_text('{"status":"FAIL","repair":2}')
+            with patch.object(controller.schema,'REPO',root),patch.object(controller.p4_recovery,'reports') as reports,patch.object(controller.schema,'run_guest') as remote:
+                with self.assertRaisesRegex(RuntimeError,'P5ThirdEdgeFailure_StopBeforeSSH'):controller.payload()
+            reports.assert_not_called();remote.assert_not_called()
+
     def test_transient_dns_waits_without_activation_and_permanent_failure_is_bounded(self):
         clock=[0];calls=[0]
         def pause(seconds):clock[0]+=seconds
