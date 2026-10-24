@@ -26,7 +26,28 @@ All cases have noindex, exact no-store and actual Caddy UUIDs. Both configs vali
 
 ## Staging activation and containment
 
-Pending at this checkpoint. ONLY one new activation is authorised after complete private proof and controller tests pass. New controller refuses existing journal/root (including incomplete runs); old mutation controller stays held. Reuses existing VM-only env and certificate directory unchanged. Switch failure or ANY edge-case failure triggers the retained original-compose rollback; no additional edge attempt. After pass/rollback: reverify every old manifest, pristine + app62table ordered fingerprints/2sequences/schema only3approved exceptions/552privileges/73Storage byte hashes. Any mismatch aborts, never waived.
+**PASS — the single new activation was consumed; no replay authorised.** New controller refuses existing journal/root (including incomplete runs); old mutation controller stays held. Existing VM-only env and certificate directory reused unchanged. Original-compose rollback remains intact; no rollback was needed. ALL10 edge cases passed over trusted TLS, with real request UUIDs and per-case write-once evidence. Separate API Basic rejection401/Auth health200 also passed. The maintenance POST was refused503 before data writes.
+
+Native prepare seal `11fdab674b57a759ab7084ce16650e4b053340a11a7bbf27fd9ad4192e3bb0d8`; edge seal `894c6408b8c47329106d0061666e728a0224d92e6cc7e8410944722d60ce616c`; post-containment seal `490c142636551da7a093791920b47b8562b65f1f4afb0501a1713fc9cbfe600b`. Native ARM Caddy validate/adapt passed; separately redacted native before/after JSON diff committed as `edge-01-prepare-adapted.diff`. Existing certificate dirs700/files600/ownerir35 preserved; no new/rotated operational secret or certificate-key copy.
+
+| Gate | Result |
+|---|---|
+| Write-once cases/intents, route/header/Caddy UUID diagnostics |PASS|
+| Private negative reproduction and final7case suite |PASS; two rounds, no third|
+| Native ARM validate + adapt + redacted JSON diff |PASS|
+| Single protected edge suite |10/10PASS; activationAttempts1|
+| All previous P5, P4 snapshot and build manifests |PASS|
+| Pristine + app DB ordered MD5/row counts |62/62each PASS; Auth included|
+| Sequences |2/2each PASS|
+| Full schema/security parity |PASS; only3already-approved extension-owner exceptions|
+| App-role privilege parity |552/552each PASS|
+| Original + app physical Storage byte SHA256 |73/73each PASS; original xattrs/locator set too|
+| Private app services/no public ports; original rollback files |PASS/unchanged|
+| Helper tests / source-history scan |295PASS /1167tracked files PASS including final evidence|
+
+Public results: `edge-summary.json`, all10 `edge-02-edge-case-*.json` and intents, native redacted adapted JSON/diff, `edge-03-containment-table-fingerprints.json` (names/counts/ordered hashes only). Sealed native manifests also cover private full-fidelity reports and activation log; these are deliberately not represented as wholly public bundles. Local source/app/dependencies remain identical to verified builda35db40/imagecbc62c3a; no rebuild or application-code change in this repair.
+
+No production/cloud-Supabase/Vercel/DNS/Google/provider/data/operational-secret/worker-acceptance/paid-resource/merge/cutover change. Staging remains Basic/IP/cookie protected, noindex/no-store, SMTP sink, mock/read-only/acceptancefalse. Earlier failures and counters remain unchanged. **STOP for owner review before P6.**
 
 Health terminology: existing Auth SDK `/auth/v1/health` is the200 gate. Whole-stack `/api/health` truthfully stays503 while Realtime/worker are intentionally not configured; this repair cannot enable P6 or turn partial health into a fake200.
 

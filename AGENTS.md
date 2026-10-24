@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 24 October SDK-owner1 complete — STOP for review before P6
+
+- New approval consumed: private round2 exact7/7 PASS after retained diagnostic-label repair; ONE protected staging activation10/10 PASS, seal894c6408b8c4. Post-activation all old/P4/build manifests, pristine+app62ordered-MD5 tables/2sequences/schema only3approved owner exceptions/552privileges/73StorageSHA256 PASS, seal490c14263655. Existing env/keys/original rollback files unchanged. SDK missing401/suffix401/valid200, jobs200/H1/noindex/exactno-store/Secure+HttpOnly+Strictcookie, maintenance503, Authhealth200. Whole-apphealth503 remains truthful with worker/Realtime not configured, not P6 approval.
+- Do NOT replay any old/new activation, reset journals/counters, advanceP6 or perform further runtime repair without owner review/explicit authority. Old global controller hold remains and new controller refuses recorded or incomplete journals. All PRs draft/unmerged; production/cloud-Supabase/Vercel/DNS/Google/operationalsecrets/paid resources/acceptance/cutover untouched. Exact YES CUTOVER absent. Evidence: docs/evidence/oracle-p5-sdk-owner1.md and p5-sdk-owner1/edge-summary.json.
+
 ## 24 October owner reopening — ONE isolated SDK-order repair, then review
 
 - Owner explicitly reopens ONLY PR54 SDK-gate repair: observability/write-once EVERY case first; private throwaway Caddy + stub upstreams on a NEW internal-only Docker network, no ports and NO P4/app DB/data/operational-secret mounts. Reproduce old routing, then config-only explicit guard→rewrite→proxy→404 order. Preserve Basic/RLS/noindex/no-store/cookie flags, record validate/adapt and redacted adapted JSON diff. At most TWO private tooling attempts, no resets of old journals/counters. Synthetic public fixture credentials only; do not create/rotate operational secrets.

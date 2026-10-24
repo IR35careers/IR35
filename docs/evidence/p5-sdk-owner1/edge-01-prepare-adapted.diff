@@ -1,0 +1,368 @@
+--- redacted-r2.json
++++ redacted-sdk-owner1.json
+@@ -65,6 +65,27 @@
+                         {
+                           "handler": "headers",
+                           "response": {
++                            "set": {
++                              "X-Caddy-Request-Id": [
++                                "{http.request.uuid}"
++                              ]
++                            }
++                          }
++                        },
++                        {
++                          "handler": "headers",
++                          "response": {
++                            "deferred": true,
++                            "set": {
++                              "X-Caddy-Request-Id": [
++                                "{http.request.uuid}"
++                              ]
++                            }
++                          }
++                        },
++                        {
++                          "handler": "headers",
++                          "response": {
+                             "deferred": true,
+                             "delete": [
+                               "Server"
+@@ -124,6 +145,16 @@
+                             },
+                             {
+                               "handle": [
++                                {
++                                  "handler": "headers",
++                                  "response": {
++                                    "set": {
++                                      "X-Ir35-Matched-Route": [
++                                        "api-basic-rejection"
++                                      ]
++                                    }
++                                  }
++                                },
+                                 {
+                                   "handler": "authentication",
+                                   "providers": {
+@@ -188,6 +219,16 @@
+                             {
+                               "handle": [
+                                 {
++                                  "handler": "headers",
++                                  "response": {
++                                    "set": {
++                                      "X-Ir35-Matched-Route": [
++                                        "api-proxy"
++                                      ]
++                                    }
++                                  }
++                                },
++                                {
+                                   "handler": "reverse_proxy",
+                                   "headers": {
+                                     "request": {
+@@ -218,6 +259,16 @@
+                             },
+                             {
+                               "handle": [
++                                {
++                                  "handler": "headers",
++                                  "response": {
++                                    "set": {
++                                      "X-Ir35-Matched-Route": [
++                                        "api-fallback"
++                                      ]
++                                    }
++                                  }
++                                },
+                                 {
+                                   "body": "Not found",
+                                   "handler": "static_response",
+@@ -320,6 +371,27 @@
+                         {
+                           "handler": "headers",
+                           "response": {
++                            "set": {
++                              "X-Caddy-Request-Id": [
++                                "{http.request.uuid}"
++                              ]
++                            }
++                          }
++                        },
++                        {
++                          "handler": "headers",
++                          "response": {
++                            "deferred": true,
++                            "set": {
++                              "X-Caddy-Request-Id": [
++                                "{http.request.uuid}"
++                              ]
++                            }
++                          }
++                        },
++                        {
++                          "handler": "headers",
++                          "response": {
+                             "deferred": true,
+                             "delete": [
+                               "Server"
+@@ -330,95 +402,7 @@
+                           "handler": "subroute",
+                           "routes": [
+                             {
+-                              "group": "group3",
+-                              "handle": [
+-                                {
+-                                  "handler": "subroute",
+-                                  "routes": [
+-                                    {
+-                                      "handle": [
+-                                        {
+-                                          "handler": "rewrite",
+-                                          "strip_path_prefix": "/supabase"
+-                                        }
+-                                      ]
+-                                    },
+-                                    {
+-                                      "handle": [
+-                                        {
+-                                          "body": "Staging authentication required",
+-                                          "handler": "static_response",
+-                                          "status_code": 401
+-                                        }
+-                                      ],
+-                                      "match": [
+-                                        {
+-                                          "not": [
+-                                            {
+-                                              "header_regexp": {
+-                                                "Cookie": {
+-                                                  "pattern": "(^|;[ ]*)__Host-ir35-staging=<existing-staging-gate>(;|$)"
+-                                                }
+-                                              }
+-                                            }
+-                                          ]
+-                                        }
+-                                      ]
+-                                    },
+-                                    {
+-                                      "handle": [
+-                                        {
+-                                          "body": "Not found",
+-                                          "handler": "static_response",
+-                                          "status_code": 404
+-                                        }
+-                                      ]
+-                                    },
+-                                    {
+-                                      "handle": [
+-                                        {
+-                                          "handler": "reverse_proxy",
+-                                          "headers": {
+-                                            "request": {
+-                                              "delete": [
+-                                                "Cookie",
+-                                                "X-Forwarded-For",
+-                                                "X-Real-IP",
+-                                                "X-Vercel-Forwarded-For"
+-                                              ]
+-                                            }
+-                                          },
+-                                          "upstreams": [
+-                                            {
+-                                              "dial": "ir35-p5-kong:8000"
+-                                            }
+-                                          ]
+-                                        }
+-                                      ],
+-                                      "match": [
+-                                        {
+-                                          "path": [
+-                                            "/auth/v1/*",
+-                                            "/rest/v1/*",
+-                                            "/storage/v1/*",
+-                                            "/realtime/v1/*"
+-                                          ]
+-                                        }
+-                                      ]
+-                                    }
+-                                  ]
+-                                }
+-                              ],
+-                              "match": [
+-                                {
+-                                  "path": [
+-                                    "/supabase/*"
+-                                  ]
+-                                }
+-                              ]
+-                            },
+-                            {
+-                              "group": "group3",
++                              "group": "group4",
+                               "handle": [
+                                 {
+                                   "handler": "subroute",
+@@ -430,6 +414,144 @@
+                                           "routes": [
+                                             {
+                                               "handle": [
++                                                {
++                                                  "handler": "headers",
++                                                  "response": {
++                                                    "deferred": true,
++                                                    "set": {
++                                                      "X-Ir35-Matched-Route": [
++                                                        "sdk-guard"
++                                                      ]
++                                                    }
++                                                  }
++                                                },
++                                                {
++                                                  "body": "Staging authentication required",
++                                                  "handler": "static_response",
++                                                  "status_code": 401
++                                                }
++                                              ],
++                                              "match": [
++                                                {
++                                                  "not": [
++                                                    {
++                                                      "header_regexp": {
++                                                        "Cookie": {
++                                                          "pattern": "(^|;[ ]*)__Host-ir35-staging=<existing-staging-gate>(;|$)"
++                                                        }
++                                                      }
++                                                    }
++                                                  ]
++                                                }
++                                              ]
++                                            },
++                                            {
++                                              "handle": [
++                                                {
++                                                  "handler": "rewrite",
++                                                  "strip_path_prefix": "/supabase"
++                                                }
++                                              ]
++                                            },
++                                            {
++                                              "handle": [
++                                                {
++                                                  "handler": "headers",
++                                                  "response": {
++                                                    "set": {
++                                                      "X-Ir35-Matched-Route": [
++                                                        "sdk-proxy"
++                                                      ]
++                                                    }
++                                                  }
++                                                },
++                                                {
++                                                  "handler": "reverse_proxy",
++                                                  "headers": {
++                                                    "request": {
++                                                      "delete": [
++                                                        "Cookie",
++                                                        "X-Forwarded-For",
++                                                        "X-Real-IP",
++                                                        "X-Vercel-Forwarded-For"
++                                                      ]
++                                                    }
++                                                  },
++                                                  "upstreams": [
++                                                    {
++                                                      "dial": "ir35-p5-kong:8000"
++                                                    }
++                                                  ]
++                                                }
++                                              ],
++                                              "match": [
++                                                {
++                                                  "path": [
++                                                    "/auth/v1/*",
++                                                    "/rest/v1/*",
++                                                    "/storage/v1/*",
++                                                    "/realtime/v1/*"
++                                                  ]
++                                                }
++                                              ]
++                                            },
++                                            {
++                                              "handle": [
++                                                {
++                                                  "handler": "headers",
++                                                  "response": {
++                                                    "set": {
++                                                      "X-Ir35-Matched-Route": [
++                                                        "sdk-fallback"
++                                                      ]
++                                                    }
++                                                  }
++                                                },
++                                                {
++                                                  "body": "Not found",
++                                                  "handler": "static_response",
++                                                  "status_code": 404
++                                                }
++                                              ]
++                                            }
++                                          ]
++                                        }
++                                      ]
++                                    }
++                                  ]
++                                }
++                              ],
++                              "match": [
++                                {
++                                  "path": [
++                                    "/supabase/*"
++                                  ]
++                                }
++                              ]
++                            },
++                            {
++                              "group": "group4",
++                              "handle": [
++                                {
++                                  "handler": "subroute",
++                                  "routes": [
++                                    {
++                                      "handle": [
++                                        {
++                                          "handler": "subroute",
++                                          "routes": [
++                                            {
++                                              "handle": [
++                                                {
++                                                  "handler": "headers",
++                                                  "response": {
++                                                    "set": {
++                                                      "X-Ir35-Matched-Route": [
++                                                        "basic-auth-rejection"
++                                                      ]
++                                                    }
++                                                  }
++                                                },
+                                                 {
+                                                   "handler": "authentication",
+                                                   "providers": {
+@@ -483,6 +605,16 @@
+                                             },
+                                             {
+                                               "handle": [
++                                                {
++                                                  "handler": "headers",
++                                                  "response": {
++                                                    "set": {
++                                                      "X-Ir35-Matched-Route": [
++                                                        "page-proxy"
++                                                      ]
++                                                    }
++                                                  }
++                                                },
+                                                 {
+                                                   "handler": "reverse_proxy",
+                                                   "headers": {

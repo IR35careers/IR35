@@ -1,0 +1,1 @@
+{"case": "api-basic-rejection", "clientRequestId": "f20bf4f0-b79b-4732-8a24-cd629cd0e1e6", "expectedStatus": 401, "method": "GET", "path": "/auth/v1/health"}
