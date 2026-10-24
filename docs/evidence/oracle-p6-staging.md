@@ -1,5 +1,11 @@
 # P6 — guarded mock worker / queue / Realtime / schedule integration
 
+## Resume checkpoint — SSH transport owner gate, no VM change
+
+Prepared role bootstrap/preflight, actual password/SQLSTATE42501 probes, all-object privilege matrices on operational/pristine/app databases, and a P6-specific fidelity adapter. It leaves the old comparator, raw catalogs,62table/2sequence/Auth/73Storage algorithms and552baseline untouched, classifying ONLY the two approved nonprivileged role additions separately. Native role install has NOT executed. The first read-only preflight was refused on the laptop before SSH (`KeySafetyError`); independent agent check reports keyLoaded=false after WSL restarted. No native stage, role, grant, password, service or timer was created.
+
+All1048Vitest/155files and312Linuxhelpers PASS; new fourteenP6helper checks PASS; strict types/full lint/source/history PASS. The SSH launcher now retains an active WSL command with signal.pause after one existing-key hidden ssh-add, so Windows-only test runs do not idle-stop the RAM-only agent. Five focused agent tests (including this regression) PASS; no global WSL settings, key encryption or passphrase custody changed. Native hidden window opened; owner unlock is the only current handoff. Full P6 remains in progress, PR57draft/unmerged, P7–P9 still pending, exact YES CUTOVER absent.
+
 ## Latest owner decision / mandatory P5 SDK confirmation
 
 **CONFIRMED before further provisioning:** [P5 sealed SDK evidence](p5-sdk-owner1/edge-summary.json) has sdk-missing401/PASS, sdk-suffix401/PASS, sdk-valid200/PASS; edge10/10PASS +containmentPASS, edge seal894c6408b8c47329106d0061666e728a0224d92e6cc7e8410944722d60ce616c. This is the actual newly approved switch, not inference from the earlier failures.

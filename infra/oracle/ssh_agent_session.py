@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import signal
 import subprocess
 import sys
 
@@ -83,12 +84,25 @@ def ensure_agent(*, load=False):
         os.close(descriptor)
 
 
+def cli(arguments):
+    if arguments not in (["check"], ["load"], ["load-and-hold"]):
+        raise KeySafetyError("Use check, load or load-and-hold only.")
+    result = ensure_agent(load=arguments != ["check"])
+    print(json.dumps({key: value for key, value in result.items() if key != "socket"}), flush=True)
+    if arguments == ["load-and-hold"]:
+        if not result["keyLoaded"]:
+            raise KeySafetyError("Cannot hold an unloaded SSH identity.")
+        print("SSH loaded. Keep this window open during staging work so WSL does not idle-stop the agent. Close it or press Ctrl+C when finished. No CPU load or VM operation is generated.", flush=True)
+        # An active WSL command retains the agent through Windows-only tests.
+        # No polling, secret input, passphrase cache/file or Oracle keepalive.
+        signal.pause()
+
+
 if __name__ == "__main__":
     try:
-        if sys.argv[1:] not in (["check"], ["load"]):
-            raise KeySafetyError("Use check or load only.")
-        result = ensure_agent(load=sys.argv[1] == "load")
-        print(json.dumps({key: value for key, value in result.items() if key != "socket"}))
+        cli(sys.argv[1:])
+    except KeyboardInterrupt:
+        print("SSH terminal hold ended. The key remains encrypted on disk; no passphrase was stored.")
     except KeySafetyError as error:
         print("STOP: " + str(error), file=sys.stderr)
         raise SystemExit(1)

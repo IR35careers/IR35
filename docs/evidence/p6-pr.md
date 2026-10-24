@@ -1,5 +1,11 @@
 ## What and why
 
+Latest owner decision supersedes the historical role-choice hold below: SAME Postgres, exactly two minimal queue-only roles, credentials VM-only, no changes to source roles or the552baseline. Actual sealed P5 SDK401/401/200 verified before continuing: [proof](https://github.com/IR35careers/IR35/blob/codex/oracle-migration-p6/docs/evidence/p5-sdk-owner1/edge-summary.json). New additive comparator retains raw catalog differences and the unmodified baseline result. Atomic DDL/preflight, all-object privilege matrices and actual TCP login/42501denial probes prepared; deployment NOT yet performed.
+
+Current gate: WSL restarted, SSH key not loaded. The preflight refused BEFORE SSH/VM changes. Owner's existing SSH passphrase is needed once at the labelled native hidden prompt; no OCI/API unlock. The reviewed launcher now keeps its WSL command open with signal.pause after successful ssh-add, no secret file/cache/CPU load. Do not replay a native stage or prompt twice this boot.
+
+Current-source validation:1048Vitest/155files,312Linuxhelpers before the launcher-only repair,14P6helper checks, fiveSSH-agent tests including the new hold regression, types/full zero-warninglint/source-historyPASS. Full helper recheck for the final launcher head is separate. No role/secret/queue/service/timer changes or P6complete claim.
+
 Owner-approved P6 staging continuation after P5 SDK gate PASS. This DRAFT currently provides an immutable read-only inventory/full fidelity gate, phase-specific context and the candidate PR48 host/TLS/DNS boundary with direct tests. It does not claim a deployed worker or complete P6.
 
 Parent phase: draft #54 (`codex/oracle-migration-p5`), unmerged. No production deployment/merge/cutover authority.

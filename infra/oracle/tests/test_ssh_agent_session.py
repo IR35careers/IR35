@@ -16,6 +16,15 @@ FINGERPRINT = "SHA256:" + "A" * 43
 
 
 class AgentTests(unittest.TestCase):
+    def test_hold_only_after_verified_load_has_no_secret_input_or_polling(self):
+        with patch.object(agent,'ensure_agent',return_value={'agentReady':True,'keyLoaded':True,'socket':'private-path'}) as ensure,patch.object(agent.signal,'pause') as pause,patch('builtins.print') as output:
+            agent.cli(['load-and-hold'])
+        ensure.assert_called_once_with(load=True);pause.assert_called_once_with()
+        self.assertNotIn('private-path',str(output.call_args_list))
+        with patch.object(agent,'ensure_agent',return_value={'agentReady':True,'keyLoaded':False}),patch.object(agent.signal,'pause') as pause,patch('builtins.print'):
+            with self.assertRaises(KeySafetyError):agent.cli(['load-and-hold'])
+        pause.assert_not_called()
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
