@@ -1,0 +1,19 @@
+{
+  "status": "OWNER_GATE",
+  "phase": "P6",
+  "reason": "Public source IP changed; approved direct SSH /32 no longer matches this machine.",
+  "currentPublicIPv4MatchesApprovedOwner": false,
+  "sshAgentKeyLoaded": true,
+  "stagingUnauthenticatedHTTPSStatus": 401,
+  "securityTokenGate": "Daily browser sign-in required",
+  "cloudWrites": 0,
+  "lastVerifiedWorkerState": "stopped after failed localhost health gate",
+  "lastVerifiedContainment": "PASS",
+  "lastVerifiedContainmentManifestSHA256": "b664ca0803a5978b6846833c4edac58383cfe83aa4eb725cdee44f919c999ef9",
+  "networkDiagnosisOutcome": "UNKNOWN: SSH transport lost, independently reconcile native stage before any replay.",
+  "neverReplayDiagnosticCreate": true,
+  "next": "Owner browser SecurityToken sign-in; use approved exact-VM Bastion route, reconcile any diagnostic artifact/fixture, then finish bounded health repair.",
+  "productionChanges": false,
+  "realAcceptance": false,
+  "phaseComplete": false
+}

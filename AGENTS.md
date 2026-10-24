@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 24 October current P6 transport/G2 gate — RECONCILE, never replay diagnosis
+
+- Direct SSH lost during07-network-diagnose (SshNotReady); read-only local audit proves machine public IPv4 no longer equals approved ownerCIDR, while SSH key remains loaded and stagingHTTPS returns401. SecurityToken check requires DAILY browser sign-in; no API-key fallback or repeat SSH prompt. No cloud rule/IAM/production change has run. Use the approved Bastion backup route after G2, keep exact-/32-only access; never broaden SSH or change IAM to bypass it.
+- Native07diagnostic outcome is UNKNOWN because SSH response was lost. It may be absent, partial or sealed; independently read back the stage/owned credential-free no-mount probe before ANY create/start/retry. Preserve all journals/counters, recover authenticated result if complete, no blind replay or made-up PASS. Last known actual worker is STOPPED after first health failure b664ca08; last full source containment PASS. Five internal health probes succeeded; Docker internal-only host publication is a hypothesis pending isolated proof, not repaired/waived. Remaining bounded repair/full lifecycle/Realtime/UI/schedules/phase signoff outstanding. Queue roles/build/setup evidence remains PASS, all PRs draft/unmerged, real acceptance false, exact YES CUTOVER absent.
+
 ## 24 October P6 queue read-back tooling repair — no DDL replay
 
 - Initial05-mock-setup FAIL1/StagingSQLFailed, sealed7a6d417a; full source containment PASS. Read-only diagnosis confirms pg-boss install DID complete (2mockqueues,3mocktables,53relations). Native +local exact-query reproduction prove SQLSTATE42601 from one extra closing parenthesis in the ACL verifier, not a data/privilege mismatch. Preserve failed stage; never run setup again or drop/recreate queue objects. Bounded self-heal repair1 may fix that SELECT and run verification-only05-mock-setup-r1, with unchanged ACL/denial/full-containment assertions. No worker service started or real acceptance enabled. Stop for any genuine privilege/data mismatch or exhausted repair budget.

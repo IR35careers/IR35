@@ -1,5 +1,11 @@
 # P6 — guarded mock worker / queue / Realtime / schedule integration
 
+## Latest stop — source IP changed; Oracle daily login required
+
+[Transport/G2 record](p6/transport-recovery-gate.json). SSH key is loaded, but current public IPv4 differs from the approved direct-SSH /32. Public staging still rejects unauthenticated access401. SecurityToken check requires owner daily browser sign-in; never use/re-prompt the API key. No cloud write/rule widening/IAM/production change occurred. The approved Bastion recovery route is next; reconcile any native07diagnostic stage/owned fixture before ANY replay because its SSH response was lost.
+
+Queue roles/nativeARM build/setup-verification PASS remain valid. First actual mock startup failed localhost health and was stopped automatically, full containmentPASS, sealb664ca08. Read-only stopped metadata has5internal health exit0/noOOM/no restarts; Docker internal-only port publication is a hypothesis supported by [Docker's issue36174](https://github.com/moby/moby/issues/36174), awaiting actual isolated proof. Do not call this a runtime PASS or relax network isolation/assertions. No customer data, live employer, provider, DNS, production or cutover change. Full P6 remains incomplete; P7–P9 not started.
+
 ## Native ARM image/browser PASS — no consumer enabled yet
 
 [Build1](p6/worker-build-1.json), source1d21c10,346.658s, image68e887e8d9a5; actual ARM64/nonroot1002,Playwright1.61.0/pg-boss12.38.0; separate no-network/no-credential Chromium health PASS. Full before/after62table/2sequence/Auth/schema/552/73Storage/manifests PASS with two explicit minimal role additions. Image5,831,823,899bytes, no registry publication. Seal `d43a358991518953da47ca59cb86971c4b83ca708105a5c0b8aec5c8ddb0218a`. Startup/setup/lifecycle/Realtime/UI/schedules remain pending, not inferred from build success. No source/production/cutover change.
