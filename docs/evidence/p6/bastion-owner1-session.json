@@ -1,0 +1,71 @@
+{
+  "status": "FAIL",
+  "sessionCreates": 0,
+  "bastionUpdates": 0,
+  "iamChanges": 0,
+  "networkChanges": 0,
+  "workerRestarts": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "steps": [
+    {
+      "step": "existing-intent",
+      "status": "PASS"
+    },
+    {
+      "step": "current-source",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-bastion",
+      "status": "PASS"
+    },
+    {
+      "step": "unchanged-source",
+      "status": "PASS"
+    },
+    {
+      "step": "unchanged-network",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-vm",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-vnic-attachment",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-vnic",
+      "status": "PASS"
+    },
+    {
+      "step": "gateway-continuity",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-sessions",
+      "status": "PASS"
+    },
+    {
+      "step": "fresh-free-eligibility",
+      "status": "FAIL",
+      "code": "Approximate Object Storage metadata is not exact byte evidence."
+    }
+  ],
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "code": "Approximate Object Storage metadata is not exact byte evidence.",
+  "sessionClosed": true,
+  "stage": "02-session",
+  "manifestSHA256": "b18e0a69a7039beb80d561ab0900e6323f0a910d76c8aadc33c3c815e9eb3b3f"
+}

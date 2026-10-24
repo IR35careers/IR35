@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October owner1 STOP — Object Storage exact-byte eligibility not proven
+
+- The ONE reopened attempt stopped on `Approximate Object Storage metadata is not exact byte evidence.` before any session create. Preflight/VM/network/VNIC/gateway-continuity PASS; all zero: session creates, Bastion/IAM/network/secret changes, worker restarts, production changes. No session exists to close. Preserve01preflightfa53223a and02failureb18e0a69; old held controllers remain unchanged. NO retry, eligibility bypass/waiver, worker action or P6–P9 advancement under this consumed approval.
+- Static root-cause read: legacy `resource_audit.inventory` records only approximate bucket bytes and sets `exactBytesProven = bucket_count == 0`; therefore an existing bucket cannot pass the create guard. This is missing exact object enumeration, NOT evidence of paid usage or a data mismatch. Do not relabel approximate bytes as exact or alter limits/assertions. Proposed future repair needs full paginated exact object/byte/tier accounting, independently tested and owner-reopened before another live attempt.
+- Only after-stop evidence preservation and the owner's explicitly requested READ-ONLY probe/full containment check may run over the already-reverified existing owner-/32/pinned direct SSH (no OCI call/session/retry, no restart/create/delete/config/secret change). Record actual23:40 probe outcome and full62table/2sequence/Auth/schema3exceptions+2roles/unchanged552privileges/73Storage result; if unreachable/mismatch, preserve/stop/report, never manufacture PASS. No further recovery attempt without owner instruction.
+
 ## 25 October ONE owner-approved Bastion recovery — NO retry or Bastion update
 
 - Owner reopens ONE independently journalled attempt, existing Bastion/VM132.145.28.134 only, session<=60min and close it afterwards. Existing failed controllers/logs remain held and unchanged; do not replay/reset them. Preflight first, every step write-once. The latest scope explicitly prohibits creating/changing/deleting Bastions, including client allowlists, as well as IAM, VCN/security lists or paid resources. Current owner /32 MUST already be allowed; otherwise stop, do not interpret recovery authority as permission to update it.

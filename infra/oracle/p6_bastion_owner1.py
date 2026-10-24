@@ -272,11 +272,47 @@ def execute():
     return result
 
 
+def containment_after_stop():
+    """Requested safety verification only, NOT another recovery attempt.
+
+    Current direct owner /32 was independently verified. There are no OCI
+    calls, sessions, worker operations, secret/config changes or probe replay.
+    """
+    import cloud_schema as schema
+    failed = json.loads((PUBLIC.parent / 'bastion-owner1-session.json').read_text())
+    store = Store(ROOT)
+    store.verify(failed['stage'], failed['manifestSHA256'])
+    if (failed.get('status') != 'FAIL' or failed.get('sessionCreates') != 0 or failed.get('workerRestarts') != 0
+            or failed.get('sessionClosed') is not True or failed.get('cloudUpdates', 0) != 0):
+        raise KeySafetyError('ExactStoppedNoSessionStateRequired_NoWorkaroundOrRetry')
+    if os.environ.get('IR35_SSH_TRANSPORT', 'direct') != 'direct':
+        raise KeySafetyError('OnlyExistingPinnedDirectSSHForReadOnlyContainment')
+    script = work_bundle()
+    stage = store.stage('03-readonly-containment')
+    result = {'status': 'FAIL', 'purpose': 'owner-requested containment after stopped attempt, not a recovery retry',
+              'ociCalls': 0, 'sessionCreates': 0, 'workerRestarts': 0, 'probeCreates': 0, 'secretChanges': 0, 'productionChanges': False}
+    store.put(stage, 'intent.json', json.dumps(result | {'operation': 'one pinned direct SSH read-only reconciliation and full containment'}).encode())
+    try:
+        work = schema.run_guest(script, timeout=600)
+        store.put(stage, 'observation.json', json.dumps(work, sort_keys=True).encode())
+        result['work'] = work
+        if work.get('status') != 'PASS' or work.get('containment', {}).get('status') != 'PASS':
+            raise KeySafetyError('PostStopContainmentOrProbeMismatch_NoRetry')
+        result['status'] = 'PASS'
+    except Exception as error:
+        result['code'] = str(error) if isinstance(error, KeySafetyError) else type(error).__name__
+    store.put(stage, 'result.json', json.dumps(result, sort_keys=True).encode())
+    result.update(stage=stage.name, manifestSHA256=store.seal(stage))
+    with (PUBLIC.parent / 'bastion-owner1-post-stop-containment.json').open('x', encoding='utf-8') as output:
+        json.dump(result, output, indent=2)
+    return result
+
+
 if __name__ == '__main__':
     try:
-        if sys.argv[1:] not in (['--preflight'], ['--execute']):
+        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--containment-after-stop']):
             raise KeySafetyError('ExplicitReadOnlyOwnerPreflightRequired')
-        result = run_preflight() if sys.argv[1:] == ['--preflight'] else execute()
+        result = run_preflight() if sys.argv[1:] == ['--preflight'] else (execute() if sys.argv[1:] == ['--execute'] else containment_after_stop())
         print(json.dumps(result))
         raise SystemExit(0 if result['status'] == 'PASS' else 1)
     except Exception as error:

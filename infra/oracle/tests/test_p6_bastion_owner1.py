@@ -69,6 +69,35 @@ class OwnerRecoveryTests(unittest.TestCase):
         for forbidden in ("['docker', 'start'", "['docker', 'restart'", "['docker', 'run'", "['docker', 'rm'", 'unlink(', 'rmtree('):
             self.assertNotIn(forbidden, source)
 
+    def test_post_stop_check_is_only_pinned_read_only_containment_not_another_attempt(self):
+        import os
+        import cloud_schema
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'journal'
+            root.mkdir(mode=0o700)
+            public = Path(temporary) / 'preflight.json'
+            store = Store(root)
+            stage = store.stage('02-session')
+            store.put(stage, 'result.json', b'{"status":"FAIL"}')
+            anchor = store.seal(stage)
+            report = {'status': 'FAIL', 'sessionCreates': 0, 'workerRestarts': 0, 'sessionClosed': True,
+                      'stage': stage.name, 'manifestSHA256': anchor}
+            (public.parent / 'bastion-owner1-session.json').write_text(json.dumps(report))
+            with patch.object(recovery, 'ROOT', root), patch.object(recovery, 'PUBLIC', public), \
+                    patch.object(recovery, 'work_bundle', return_value='read-only fixture'), \
+                    patch.dict(os.environ, {'IR35_SSH_TRANSPORT': 'direct'}), \
+                    patch.object(cloud_schema, 'run_guest', return_value={'status': 'PASS', 'containment': {'status': 'PASS'}}) as ssh, \
+                    patch.object(recovery.infra, 'invoke') as api:
+                result = recovery.containment_after_stop()
+                self.assertEqual(result['status'], 'PASS')
+                self.assertEqual(result['sessionCreates'], 0)
+                api.assert_not_called()
+                ssh.assert_called_once()
+                store.verify(result['stage'], result['manifestSHA256'])
+                with self.assertRaises(FileExistsError):
+                    recovery.containment_after_stop()
+                ssh.assert_called_once()
+
     def test_execute_always_closes_only_its_one_session_when_ssh_work_fails(self):
         from datetime import datetime, timezone
         from contextlib import ExitStack
