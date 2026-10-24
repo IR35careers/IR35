@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 24 October P6 Bastion helper STOP — no fourth recovery attempt
+
+- Owner G2 sign-in PASS, existing SSH agent loaded; no API/SSH prompt needed. Exact network/VM read-only audit PASS. New recovery helper first failed on unsupported CLI option, then TWO parser-proof preflights failed on output-stream/exit-code assumptions. Actual vendor-only public-fixture probe proves exit2/stdout and correct `--client-cidr-list`; original Bastion allowlist unchanged, no session created, no IAM/SL/NSG/firewall/production mutation. Three failed preparations exhaust this bounded helper attempt: STOP, preserve private requested intent and public `p6/bastion-recovery-stop.json`; no reset/fourth live prepare without owner reopening. Offline fixed parser/strict transport tests permitted; helper hold must reject BEFORE auth/private/cloud access.
+- Native07diagnostic remains UNKNOWN; no replay/create/worker restart or new full-containment PASS is claimed. After any explicitly reopened recovery, independently reconcile exact stage and owned no-mount probe first. Gateway's historical key is continuity-only (not authenticated Oracle provenance); never silently enroll a replacement, use passwords/agent forwarding or weaken original OCI-verified INNER guest pin. Public SSH stays original exact/32 plus approved Bastion private/32. All PRs draft, realacceptancefalse, exact YES CUTOVER absent.
+
 ## 24 October current P6 transport/G2 gate — RECONCILE, never replay diagnosis
 
 - Direct SSH lost during07-network-diagnose (SshNotReady); read-only local audit proves machine public IPv4 no longer equals approved ownerCIDR, while SSH key remains loaded and stagingHTTPS returns401. SecurityToken check requires DAILY browser sign-in; no API-key fallback or repeat SSH prompt. No cloud rule/IAM/production change has run. Use the approved Bastion backup route after G2, keep exact-/32-only access; never broaden SSH or change IAM to bypass it.
