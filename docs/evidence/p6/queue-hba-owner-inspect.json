@@ -1,0 +1,110 @@
+{
+  "status": "PASS",
+  "mutations": 0,
+  "functionCalls": 0,
+  "information": {
+    "port": "5432",
+    "hbaFile": "/etc/postgresql/pg_hba.conf",
+    "databases": [
+      {
+        "name": "_supabase",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_acl_repair_20261021",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_baseline_proof_20261021",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_cloud_baseline_20261021",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_owner_parity_20261021",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_p4_20261021t170139z_8be0fc2e",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_p4_20261021t170139z_8be0fc2e_named",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_p5_app",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_rehearsal_a_20261021",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "ir35_storage_compat_a_20261021",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "postgres",
+        "template": false,
+        "allowConnections": true
+      },
+      {
+        "name": "template0",
+        "template": true,
+        "allowConnections": false
+      },
+      {
+        "name": "template1",
+        "template": true,
+        "allowConnections": true
+      }
+    ],
+    "configLoaded": "2026-10-20 21:06:04.875164+00",
+    "queueSessions": [
+      {
+        "role": "ir35_queue",
+        "database": "postgres"
+      }
+    ],
+    "listenAddresses": "*",
+    "postmasterStart": "2026-10-20 21:06:04.934492+00",
+    "socketDirectories": "/var/run/postgresql"
+  },
+  "originalHbaSHA256": "a925911753f4975548eb4079177441c886aa22b6dd69f2b0cff98f779fb0b66a",
+  "custody": {
+    "uid": 100,
+    "gid": 101,
+    "mode": 493
+  },
+  "originalRuleMethods": [
+    "peer",
+    "scram-sha-256",
+    "trust"
+  ],
+  "originalParseErrors": 0,
+  "stage": "10-hba-owner-inspect",
+  "manifestSHA256": "70e023e0b15976a652ec2cf0778ddc7dddd022d0ea506f579b576f75027fb938"
+}
