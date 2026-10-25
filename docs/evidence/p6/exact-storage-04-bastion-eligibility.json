@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "readOnly": true,
+  "mutations": 0,
+  "purpose": "04-bastion-eligibility",
+  "startedAt": "2026-10-25T08:07:11.470053+00:00",
+  "accountingVersion": 1,
+  "checkedAt": "2026-10-25T08:07:14.549751+00:00",
+  "buckets": 1,
+  "bucketReports": [
+    {
+      "bucket": "ir35-backups",
+      "objectCount": 0,
+      "versionCount": 0,
+      "deleteMarkerCount": 0,
+      "versionBytesIncludingCurrent": 0,
+      "unfinishedUploadCount": 0,
+      "unfinishedPartCount": 0,
+      "unfinishedPartBytes": 0,
+      "totalBytes": 0,
+      "manifestSHA256": "c3e89c3e12a0ec5d8faccefe85d5e4ab26671d99f1434965bac0c0a9349470a8",
+      "tier": "Standard"
+    }
+  ],
+  "exactBytes": 0,
+  "exactBytesProven": true,
+  "stableCompletePasses": 2,
+  "requests": 14,
+  "freeAllowanceBytes": 20000000000,
+  "eightyPercentBytes": 16000000000,
+  "overEightyPercent": false,
+  "ownerBackupCapBytes": 8000000000,
+  "standardOnly": true,
+  "bucketListingStable": true,
+  "compartmentsInspected": 2,
+  "attemptedObjectStorageRequests": 14,
+  "finishedAt": "2026-10-25T08:07:14.999825+00:00",
+  "stage": "04-bastion-eligibility",
+  "manifestSHA256": "191c12e7ca3e8d468e1ac81bf29e06b5db94a994120987131f13870921913b1a"
+}

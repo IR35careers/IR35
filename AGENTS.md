@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October FOUR-HOUR recovery PASS — P6 staging continuation released
+
+- Actual new06owner recovery PASS,a6626c6c: token2295seconds>=30min, loadedmatchingSSHkey14052seconds, unchanged originalpublicowner-/32+privateBastion-/32/no broadSSH, fresh LIMITED_FREE2/12/150 allocation/Standardexact0bytes. ExactlyONE1800s sessioncreated and independentlyclosed; NO Bastion/IAM/network/operational-secret/production changes. DO NOT create another recovery session/replay06. Existing pinned directowner-/32 route independentlyreverified afterclose.
+- Actual23:40probeNOT_RUN (durable07stage and ownedprobe bothabsent), stoppedoriginalworker/restarts0, fullinside+AFTER-close containmentPASS: pristine/app62orderedMD5/Auth/2seq/schema3exceptions+2queue-role additions/unchanged552baseline/73Storage SHA256;354additionalcustomer-access checks0unexpected. Nativefd882f4b/aa1f7af8. All historical STOP/failurejournals remain immutable but their phase hold is now superseded ONLY by owner's conditional continuation after this actualPASS.
+- FinishP6mock worker/private diagnosis/lifecycle/Realtime/heartbeat/schedules, thenP7→P8 automatically with fullVerificationStandard aftereach. P9prepare/dry-runonly; exactYES CUTOVER absent. Existingkeynativewindowheld/four-hourbounded, check verifiedkey/tokenlifetime BEFORE longruns; never automaticpassphraseprompt or realacceptance. No production/DNS/Google/Vercel/cloud-Supabase/realmail/realemployer/secret/billing/access-rule changes. Newfailed checks retain boundedself-heal rules and stop on anydata/security mismatch. AllPRsdraft/unmerged.
+
 ## 25 October owner-approved FOUR-HOUR unlock and ONE recovery
 
 - Owner explicitly approves one native hidden `ssh-add -t 4h` for the existing encrypted key, public-fingerprint verification only, then ONE reopened recovery. No retry if unlock/recovery fails. Preserve all earlier journals; a new exclusive per-boot four-hour prompt receipt may record only fingerprint/conservative expiry, never passphrase/private key. Keep the native window open without CPU load to retain WSL. Before long work prove key remains loaded and time budget is adequate.

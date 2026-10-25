@@ -1,0 +1,294 @@
+{
+  "status": "PASS",
+  "sessionCreates": 1,
+  "bastionUpdates": 0,
+  "iamChanges": 0,
+  "networkChanges": 0,
+  "workerRestarts": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "steps": [
+    {
+      "step": "fresh-token-30-minutes",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-agent",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-intent",
+      "status": "PASS"
+    },
+    {
+      "step": "read-only-compartment-auth",
+      "status": "PASS"
+    },
+    {
+      "step": "current-source",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-bastion",
+      "status": "PASS"
+    },
+    {
+      "step": "unchanged-source",
+      "status": "PASS"
+    },
+    {
+      "step": "unchanged-network",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-vm",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-vnic-attachment",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-vnic",
+      "status": "PASS"
+    },
+    {
+      "step": "gateway-continuity",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-sessions",
+      "status": "PASS"
+    },
+    {
+      "step": "fresh-free-eligibility",
+      "status": "PASS"
+    },
+    {
+      "step": "single-session-create",
+      "status": "PASS"
+    },
+    {
+      "step": "session-readback",
+      "status": "PASS"
+    },
+    {
+      "step": "probe-reconcile-full-containment",
+      "status": "PASS"
+    },
+    {
+      "step": "single-session-close",
+      "status": "PASS"
+    },
+    {
+      "step": "post-close-owner-source",
+      "status": "PASS"
+    },
+    {
+      "step": "post-close-full-containment",
+      "status": "PASS"
+    }
+  ],
+  "exactAuditManifestSHA256": "79389e16722f0a77172c5ca10a0892d5b6b9e23c1bc6380ab4dac68a88ecd47b",
+  "previousFailureManifestSHA256": "b18e0a69a7039beb80d561ab0900e6323f0a910d76c8aadc33c3c815e9eb3b3f",
+  "previousUnloadedAgentManifestSHA256": "3e48b186761c4a58226e3e9607849c95a574c89778d677e79efa7e97a8ff8351",
+  "tokenWindow": {
+    "status": "PASS",
+    "tokenSecondsRemaining": 2295,
+    "minimumSecondsRequired": 1800
+  },
+  "sshAgent": {
+    "status": "PASS",
+    "existingKeyLoaded": true,
+    "passphraseRequested": false,
+    "keyFingerprint": "SHA256:KMOIA3BjJ1b6L3ANngMkwgHka3DhGMbgJUEPHltk0Qg",
+    "keyLifetimeSecondsRemaining": 14052
+  },
+  "compartmentAuthentication": {
+    "status": "PASS",
+    "name": "ir35",
+    "state": "ACTIVE",
+    "mutations": 0
+  },
+  "network": {
+    "onlyPublicPorts": [
+      80,
+      443
+    ],
+    "sshOwnerSlash32": true,
+    "sshBastionPrivateSlash32": true,
+    "broadIpv4OrIpv6Ssh": false,
+    "noDefaultSecurityListAttached": true
+  },
+  "eligibility": {
+    "checkedAt": "2026-10-25T08:07:15.024344+00:00",
+    "account": "ACTIVE Free Trial / London home",
+    "shapeBilling": "LIMITED_FREE",
+    "usage": {
+      "instances": 1,
+      "bootVolumes": 1,
+      "blockVolumes": 1,
+      "volumeBackups": 0,
+      "vcns": 1,
+      "a1Ocpus": "2.0",
+      "a1MemoryGB": "12.0",
+      "liveVolumeGB": "150"
+    },
+    "storage": {
+      "storageEnvelope": "PASS",
+      "proposedLiveVolumeGB": "150",
+      "freeLiveAllowanceGB": 200,
+      "remainingOwnerLiveGB": "0",
+      "proposedVolumeBackups": 0,
+      "freeBackupCount": 5,
+      "proposedObjectBytes": "0",
+      "ownerObjectByteCap": 8000000000,
+      "trialStandardFreeGB": 10,
+      "postTrialCombinedFreeGB": 20,
+      "tier": "Standard",
+      "realTimeZeroBillProven": false,
+      "createAuthorised": false,
+      "remainingGate": "Fresh per-resource eligibility and durable create/read-back journal"
+    },
+    "costReport": {
+      "rows": 1,
+      "amounts": {
+        "GBP": {
+          "net": "0.0",
+          "positive": "0.0"
+        }
+      },
+      "covers": "current month up to previous UTC midnight",
+      "mayLag": true,
+      "realTimeZeroBillProven": false
+    },
+    "freeReference": "https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm"
+  },
+  "work": {
+    "status": "PASS",
+    "workerRestarts": 0,
+    "probeCreates": 0,
+    "probeDeletes": 0,
+    "secretChanges": 0,
+    "customerWrites": 0,
+    "productionChanges": false,
+    "realAcceptance": false,
+    "probe": {
+      "stageExists": false,
+      "probeExists": false,
+      "execution": "NOT_RUN",
+      "reachedProbeCreate": false,
+      "replayed": false
+    },
+    "worker": {
+      "state": "exited",
+      "running": false,
+      "imageMatches": true,
+      "restarts": 0
+    },
+    "queueRoleCustomerAccess": [
+      {
+        "database": "postgres",
+        "checks": 126,
+        "unexpectedAccess": 0
+      },
+      {
+        "database": "ir35_p4_20261021t170139z_8be0fc2e",
+        "checks": 114,
+        "unexpectedAccess": 0
+      },
+      {
+        "database": "ir35_p5_app",
+        "checks": 114,
+        "unexpectedAccess": 0
+      }
+    ],
+    "containment": {
+      "status": "PASS",
+      "manifests": "PASS",
+      "tablesEach": 62,
+      "orderedMD5Each": true,
+      "sequencesEach": 2,
+      "approvedSchemaExceptionsEach": 3,
+      "appRolePrivilegesEach": 552,
+      "storageObjectsEach": 73,
+      "storageSHA256Match": true,
+      "originalCaddyFilesUnchanged": true,
+      "privateFixtureRunningNoPorts": true,
+      "sourceWrites": 0,
+      "pristineWrites": 0,
+      "fixtureWrites": 0,
+      "approvedP6RolesEach": 2,
+      "baseline552Unchanged": true,
+      "sourceRolesUnchanged": true,
+      "rawCatalogDifferencesRetained": true
+    },
+    "stage": "01-reconcile",
+    "manifestSHA256": "fd882f4b5ea912ca748a1e21d847fe1ba0c56a317125230a01e7a881dec5919e"
+  },
+  "sessionClosed": true,
+  "postCloseContainment": {
+    "status": "PASS",
+    "workerRestarts": 0,
+    "probeCreates": 0,
+    "probeDeletes": 0,
+    "secretChanges": 0,
+    "customerWrites": 0,
+    "productionChanges": false,
+    "realAcceptance": false,
+    "probe": {
+      "stageExists": false,
+      "probeExists": false,
+      "execution": "NOT_RUN",
+      "reachedProbeCreate": false,
+      "replayed": false
+    },
+    "worker": {
+      "state": "exited",
+      "running": false,
+      "imageMatches": true,
+      "restarts": 0
+    },
+    "queueRoleCustomerAccess": [
+      {
+        "database": "postgres",
+        "checks": 126,
+        "unexpectedAccess": 0
+      },
+      {
+        "database": "ir35_p4_20261021t170139z_8be0fc2e",
+        "checks": 114,
+        "unexpectedAccess": 0
+      },
+      {
+        "database": "ir35_p5_app",
+        "checks": 114,
+        "unexpectedAccess": 0
+      }
+    ],
+    "containment": {
+      "status": "PASS",
+      "manifests": "PASS",
+      "tablesEach": 62,
+      "orderedMD5Each": true,
+      "sequencesEach": 2,
+      "approvedSchemaExceptionsEach": 3,
+      "appRolePrivilegesEach": 552,
+      "storageObjectsEach": 73,
+      "storageSHA256Match": true,
+      "originalCaddyFilesUnchanged": true,
+      "privateFixtureRunningNoPorts": true,
+      "sourceWrites": 0,
+      "pristineWrites": 0,
+      "fixtureWrites": 0,
+      "approvedP6RolesEach": 2,
+      "baseline552Unchanged": true,
+      "sourceRolesUnchanged": true,
+      "rawCatalogDifferencesRetained": true
+    },
+    "stage": "01-reconcile",
+    "manifestSHA256": "aa1f7af86a12a01b1dce64326513aea27bd4e1ab9fd0d68219b21c5285c6c342"
+  },
+  "stage": "06-owner-four-hour-reopen",
+  "manifestSHA256": "a6626c6c3cd032c1c5f619444d99e147a562066dc62a22ffe917a8a23f017de3"
+}
