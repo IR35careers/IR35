@@ -47,6 +47,22 @@ def inspect_only(data, runtime):
     return result | {'stage': stage.name, 'manifestSHA256': store.seal(stage)}
 
 
+def reconcile_inspection(data, runtime):
+    # Transport outcome was unknown. Never run inspect again or replace its
+    # files just because a local observation/token expired.
+    store = prepared(data)
+    stage = store.root / '10-hba-owner-inspect'
+    if not stage.exists():
+        return {'status': 'ABSENT', 'stage': stage.name, 'mutations': 0, 'hbaWrites': 0}
+    manifest = stage / 'manifest.json'
+    if not manifest.is_file() or manifest.is_symlink():
+        raise RecoveryError('PartialHBAInspectionJournal_PreserveAndStop')
+    anchor = digest(manifest.read_bytes())
+    store.verify(stage.name, anchor)
+    result = json.loads((stage / 'result.json').read_bytes())
+    return result | {'stage': stage.name, 'manifestSHA256': anchor, 'reconciledThroughPinnedSSH': True}
+
+
 def read_hba(path):
     # Docker archive API: no shell cat/write tricks, no raw file in logs/chat.
     if not isinstance(path, str) or not path.startswith('/') or any(item in path for item in ('..', '\n', '\x00', ':')):

@@ -109,6 +109,30 @@ class QueueHBATests(unittest.TestCase):
         self.assertIn("destination.open('x'", source)
         self.assertIn('AlreadyRecorded_NoReplay', source)
 
+    def test_expired_identity_stops_before_token_refresh_and_never_prompts(self):
+        for agent in ({'keyLoaded': False}, {'keyLoaded': True, 'keyLifetimeSecondsRemaining': 1700}):
+            with patch.object(controller, 'ensure_agent', return_value=agent) as identity, \
+                    patch.object(controller, 'ensure_session') as token:
+                with self.assertRaisesRegex(controller.KeySafetyError, 'OwnerSSHGate_'):
+                    controller.credential_gate()
+            identity.assert_called_once_with()
+            token.assert_not_called()
+        with patch.object(controller, 'ensure_agent', return_value={'keyLoaded': True, 'keyLifetimeSecondsRemaining': 3600}), \
+                patch.object(controller, 'ensure_session') as token:
+            controller.credential_gate()
+        token.assert_called_once_with(minimum_seconds=1800)
+
+    def test_missing_or_partial_inspection_never_replayed(self):
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as temporary:
+            store = Mock(root=Path(temporary))
+            with patch.object(guest, 'prepared', return_value=store):
+                self.assertEqual(guest.reconcile_inspection({}, {})['status'], 'ABSENT')
+                (store.root / '10-hba-owner-inspect').mkdir()
+                with self.assertRaisesRegex(guest.RecoveryError, 'PartialHBAInspectionJournal'):
+                    guest.reconcile_inspection({}, {})
+            store.stage.assert_not_called()
+
     def test_no_restart_or_privilege_mutation_and_backup_precedes_change(self):
         source = inspect.getsource(guest.run)
         self.assertLess(source.index("store.put(stage, 'pg_hba.original.conf'"), source.index('replace_hba(path, body, custody)'))
