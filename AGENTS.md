@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October owner reopens ONE read-only diagnostic audit
+
+- Owner approves offline per-step audit logging repair/tests in PR57 and exactly ONE new read-only audit, only because the captured failure was a command/logging failure, not a reported residue finding. Underlying Docker cause and no-residue proof remain unproven; never claim otherwise. If real queue/job/audit/SMTP/worker residue is found, preserve it and STOP without repairing it. Any new audit failure for any reason means STOP/no retry. No worker/status repair/build until prerequisite PASS.
+- New distinct operator-local `status-owner-audit-two` slot is write-once, preserving the first failure/stage16/history. Each step writes intent/result before checking/raising; checks prior hashes before next step, seals failure results, and refuses replay. VM execution is inspection/GET/READ ONLY SQL only, no VM journal/file/config/service writes. Command tracer identifies the failing read-only operation/exit/category/stderr digest without logging raw stdout/stderr, arguments, credentials or customer values; bootstrap failures are captured too.
+- Only after ALL prerequisite steps PASS may the separately approved ONE narrow status-only fix, ONE native image on this A1 and ONE full P6 rerun proceed. Keep exact validation/error body/valid202/idempotency/SDK401401200, old image rollback, full containment and P6 Realtime/schedule/heartbeat/restart scope. No fourth-slot reset of historical allowances, no used-stage replay, no production/DNS/IAM/network/secret/cutover change. All drafts/unmerged.
+
 ## 25 October HTTP-status repair approval — prerequisite audit stopped, no retry
 
 - Owner approved exactly one narrow status-mapping fix, one new native ARM image on the existing VM and one staging P6 rerun, first requiring a read-only no-side-effects audit (queue/jobs/audit/SMTP/worker). Invalid requests must return400 with unchanged error body; validation and valid202 response/queue behaviour unchanged, SDK401/401/200 preserved. Full P6 including Realtime/schedules/heartbeat/restart and full containment required; any failure means rollback/preserve/STOP with no retry. This superseded the earlier build/run review hold, not any data/security/production/cutover rule.
