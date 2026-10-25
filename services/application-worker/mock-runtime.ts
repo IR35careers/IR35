@@ -5,6 +5,7 @@ import { PgBoss, type ConstructorOptions, type Job } from "pg-boss";
 import { z } from "zod";
 import { MOCK_APPLY_QUEUE, MOCK_SCHEDULE_QUEUE, mockApplicationWorkSchema, mockScheduledWorkSchema, mockWorkerConfig, mockQueueOptions } from "../../src/lib/queue/mock-config";
 import { MockStore, mockFailure } from "./mock-store";
+import { browserGroupKiller } from "./mock-process-tree";
 
 const browserResult = z.object({ ok: z.boolean(), browserReady: z.boolean().optional(), receiptConfirmed: z.boolean().optional(),
   errorCode: mockFailure.optional(), submissions: z.number().int().min(0).max(1) });
@@ -30,24 +31,38 @@ export async function runMockBrowser(input: { operation: "health" | "apply"; sce
     const child = spawn(process.execPath, ["--import", "tsx", "services/application-worker/mock-browser.ts"], {
       env: browserEnvironment(process.env), stdio: ["pipe", "pipe", "ignore"], detached: process.platform !== "win32",
     });
-    let stdout = "", aborted = false, overflow = false;
+    let stdout = "", aborted = false, overflow = false, closed = false;
+    let force: NodeJS.Timeout | undefined;
+    const tree = process.platform === "linux" && child.pid ? browserGroupKiller(child.pid) : undefined;
     const stopGroup = (kind: NodeJS.Signals) => {
       if (!child.pid) return;
-      try { if (process.platform !== "win32") process.kill(-child.pid, kind); else child.kill(kind); } catch { /* Already closed. */ }
+      try { if (tree) tree.signal(kind); else if (process.platform !== "win32") process.kill(-child.pid, kind); else child.kill(kind); } catch { /* Already closed. */ }
     };
-    const abort = () => { aborted = true; stopGroup("SIGTERM"); };
-    signal?.addEventListener("abort", abort, { once: true });
-    if (signal?.aborted) abort();
+    const abort = () => {
+      if (aborted || closed) return;
+      aborted = true; stopGroup("SIGTERM");
+      // Do not release browser exclusion while a child ignoring SIGTERM can
+      // still run. Kill this child's NEW group, never another worker's group.
+      if (!closed) force = setTimeout(() => stopGroup("SIGKILL"), 5000).unref();
+    };
+    const deadline = setTimeout(abort, 60_000).unref();
+    const cleanup = () => {
+      closed = true; signal?.removeEventListener("abort", abort);
+      if (force) clearTimeout(force); clearTimeout(deadline);
+      stopGroup("SIGKILL");
+      tree?.close();
+    };
     child.stdout.on("data", part => { stdout += part; if (Buffer.byteLength(stdout) > 2048) { overflow = true; stopGroup("SIGKILL"); } });
-    child.on("error", () => reject(new Error("Mock browser child unavailable.")));
-    child.on("close", code => {
-      signal?.removeEventListener("abort", abort);
+    child.once("error", () => { cleanup(); reject(new Error("Mock browser child unavailable.")); });
+    child.once("close", code => {
       // Reap any orphan Chromium in this child's NEW process group before the
       // DB browser exclusion is released; never kill another worker's group.
-      stopGroup("SIGKILL");
+      cleanup();
       if (code === 0 && !aborted && !overflow) resolve(stdout); else reject(new Error("Mock browser child failed."));
     });
     child.stdin.on("error", () => { /* Exit/error above settles a closed pipe. */ });
+    signal?.addEventListener("abort", abort, { once: true });
+    if (signal?.aborted) abort();
     child.stdin.end(JSON.stringify(input));
   });
   return browserResult.parse(JSON.parse(result));
@@ -63,6 +78,7 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
   const sha = z.string().regex(/^[a-f0-9]{40}$/).parse(env.IR35_BUILD_SHA);
   const owner = new PgBoss(await mockOptions("worker", env)), producer = new PgBoss(await mockOptions("producer", env));
   let stopping = false, paused = !config.mockConsumerEnabled, browserReady = false, active = 0, peakActive = 0, lastDB = 0;
+  const applicationAborts = new Map<string, AbortController>();
   owner.on("error", () => { lastDB = 0; }); producer.on("error", () => { lastDB = 0; });
   await owner.start(); await producer.start();
   const store = new MockStore(owner, producer);
@@ -74,28 +90,47 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
   await observe();
   async function handle(job: Job<unknown>) {
     const value = mockApplicationWorkSchema.safeParse(job.data);
-    if (!value.success) throw new Error("Invalid isolated mock work.");
+    if (!value.success || value.data.applicationId !== job.id || !Number.isSafeInteger(job.retryCount) || job.retryCount < 0) throw new Error("Invalid isolated mock work.");
     const attempt = await store.claim(value.data.applicationId);
     if (!attempt) return { duplicate: true, noBrowser: true };
     active++; peakActive = Math.max(peakActive, active);
+    const controller = new AbortController();
+    applicationAborts.set(value.data.applicationId, controller);
+    const signal = AbortSignal.any([job.signal, controller.signal]);
+    let leaseLost = false, finished = false, renewal: Promise<void> | null = null;
+    let heartbeat: NodeJS.Timeout | undefined;
+    const renew = () => store.renew(value.data.applicationId, attempt, { id: job.id, retryCount: job.retryCount });
+    async function stopRenewal() { finished = true; if (heartbeat) clearInterval(heartbeat); await renewal; }
     let lease: Awaited<ReturnType<MockStore["browserLease"]>> | undefined;
     try {
+      await renew().catch(() => { leaseLost = true; throw new Error("Mock initial attempt lease lost."); });
+      if (signal.aborted) throw new Error("Mock work cancelled before browser start.");
+      heartbeat = setInterval(() => {
+        if (finished || renewal) return;
+        renewal = renew().catch(() => { leaseLost = true; controller.abort(); }).finally(() => { renewal = null; });
+      }, 5000).unref();
       lease = await store.browserLease();
       await store.transition(value.data.applicationId, attempt, "submitting");
-      const result = await runMockBrowser({ operation: "apply", scenario: value.data.scenario }, job.signal);
+      const result = await runMockBrowser({ operation: "apply", scenario: value.data.scenario }, signal);
+      await stopRenewal();
+      if (signal.aborted || leaseLost) throw new Error("Mock browser no longer owns its live attempt.");
       if (result.ok && result.receiptConfirmed && result.submissions === 1) await store.transition(value.data.applicationId, attempt, "submitted");
       else await store.transition(value.data.applicationId, attempt, "failed", result.errorCode ?? "mock_browser_failed");
       if (!result.ok) throw new Error("Mock application failed; persisted reason is authoritative.");
       return { mock: true, receiptConfirmed: true };
     } catch {
+      await stopRenewal();
       // Only an owned live lease can change state. Never replace an existing
       // terminal failure/unknown result or silently reset it to Ready.
       const saved = await store.get(value.data.applicationId);
       if (saved && ["running", "submitting"].includes(saved.state)) {
-        await store.transition(value.data.applicationId, attempt, "failed", job.signal.aborted ? "mock_cancelled" : "mock_browser_failed");
+        await store.transition(value.data.applicationId, attempt, "failed", leaseLost ? "runner_timeout" : signal.aborted ? "mock_cancelled" : "mock_browser_failed");
       }
       throw new Error("Controlled mock failed; inspect its durable error code.");
-    } finally { await lease?.release(); active--; }
+    } finally {
+      try { await stopRenewal(); await lease?.release(); }
+      finally { applicationAborts.delete(value.data.applicationId); active--; }
+    }
   }
   async function scheduled(job: Job<unknown>) {
     const value = mockScheduledWorkSchema.safeParse(job.data); if (!value.success) throw new Error("Invalid mock-only schedule.");
@@ -143,6 +178,13 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
       }
       const id = /^\/mock\/applications\/([0-9a-f-]{36})$/.exec(path)?.[1];
       if (method === "GET" && id) { const saved = await store.get(id); response.writeHead(saved ? 200 : 404).end(JSON.stringify(saved)); return; }
+      const cancelled = /^\/mock\/applications\/([0-9a-f-]{36})\/cancel$/.exec(path)?.[1];
+      if (method === "POST" && cancelled) {
+        z.strictObject({}).parse(JSON.parse(body));
+        const saved = await store.cancel(cancelled);
+        if (saved?.errorCode === "mock_cancelled") applicationAborts.get(cancelled)?.abort();
+        response.writeHead(saved ? 200 : 404).end(JSON.stringify(saved)); return;
+      }
       if (method === "POST" && path === "/mock/maintenance") {
         const action = z.strictObject({ action: z.enum(["pause", "resume"]) }).parse(JSON.parse(body));
         paused = action.action === "pause" || !config.mockConsumerEnabled;
@@ -161,6 +203,7 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
   server.requestTimeout = 10_000; server.headersTimeout = 10_000; server.listen(config.PORT, "0.0.0.0");
   for (const signal of ["SIGTERM", "SIGINT"] as const) process.once(signal, () => {
     stopping = true; paused = true; clearInterval(timer); clearInterval(consumer); server.close();
+    for (const controller of applicationAborts.values()) controller.abort();
     void Promise.resolve(currentTick).finally(async () => {
       await Promise.all([owner.stop({ graceful: true, timeout: 60_000 }), producer.stop({ graceful: false })]);
       process.exit(0);

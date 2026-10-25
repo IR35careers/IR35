@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Db, PgBoss } from "pg-boss";
+import type { Db, JobAttempt, PgBoss } from "pg-boss";
 import { z } from "zod";
 import { MOCK_APPLY_QUEUE, STAGING_TEST_ACCOUNT, mockApplicationWorkSchema } from "../../src/lib/queue/mock-config";
 
@@ -77,11 +77,58 @@ export class MockStore {
      WHERE id=$1 AND attempt=$2 AND state=ANY($5::text[]) AND lease_until>clock_timestamp() RETURNING id`, [id, attempt, next, errorCode, from]);
     if (result.rows.length !== 1) throw new Error("Mock outcome lease lost; terminal state is never overwritten.");
   }
+  async renew(id: string, attempt: string, job: JobAttempt) {
+    z.uuid().parse(id); z.uuid().parse(attempt);
+    const claim = z.object({ id: z.uuid(), retryCount: z.number().int().nonnegative() }).parse(job);
+    if (claim.id !== id) throw new Error("Mock heartbeat identity mismatch.");
+    // Warm pg-boss's public queue cache BEFORE reserving a transaction. A
+    // cache miss inside it could otherwise need a third pool connection while
+    // browserLease holds one of the two allowed connections.
+    const current = await this.owner.getJobById(MOCK_APPLY_QUEUE, id);
+    if (!current || current.state !== "active" || current.retryCount !== claim.retryCount) throw new Error("Mock queue attempt lease lost.");
+    const begin = this.owner.getDb().beginTransaction;
+    if (!begin) throw new Error("Atomic mock heartbeat transaction required.");
+    const transaction = await begin.call(this.owner.getDb());
+    try {
+      // App row BEFORE pg-boss row, like cancel(), avoids cross-table lock
+      // inversion. Neither an expired nor a terminal application can revive.
+      const updated = await transaction.db.executeSql(`UPDATE pgboss.ir35_mock_application
+       SET lease_until=clock_timestamp()+interval '45 seconds'
+       WHERE id=$1 AND attempt=$2 AND state IN ('running','submitting') AND lease_until>clock_timestamp() RETURNING id`, [id, attempt]);
+      if (updated.rows.length !== 1) throw new Error("Mock application lease lost.");
+      const touched = z.object({ affected: z.literal(1), settled: z.tuple([z.uuid()]) }).parse(
+        await this.owner.touch(MOCK_APPLY_QUEUE, claim, { db: transaction.db }));
+      if (touched.settled[0] !== id) throw new Error("Mock queue attempt lease lost.");
+      await transaction.commit();
+    } catch { await transaction.rollback(); throw new Error("Mock heartbeat lease lost; browser must stop."); }
+  }
+  async cancel(id: string): Promise<MockReceipt | null> {
+    z.uuid().parse(id);
+    await this.owner.getJobById(MOCK_APPLY_QUEUE, id);
+    const begin = this.owner.getDb().beginTransaction;
+    if (!begin) throw new Error("Atomic mock cancellation transaction required.");
+    const transaction = await begin.call(this.owner.getDb());
+    try {
+      const saved = await transaction.db.executeSql("SELECT state FROM pgboss.ir35_mock_application WHERE id=$1 FOR UPDATE", [id]);
+      if (saved.rows.length && ["queued", "running", "submitting"].includes(saved.rows[0].state)) {
+        await this.owner.cancel(MOCK_APPLY_QUEUE, id, { db: transaction.db });
+        await transaction.db.executeSql(`UPDATE pgboss.ir35_mock_application
+         SET state='failed',error_code='mock_cancelled',receipt_confirmed=false,updated_at=clock_timestamp(),
+         events=events||jsonb_build_object('state','failed','at',clock_timestamp(),'errorCode','mock_cancelled')
+         WHERE id=$1 AND state IN ('queued','running','submitting')`, [id]);
+      }
+      await transaction.commit();
+    } catch { await transaction.rollback(); throw new Error("Mock cancellation could not be confirmed."); }
+    return this.get(id);
+  }
   async watchdog() {
     const result = await this.owner.getDb().executeSql(`UPDATE pgboss.ir35_mock_application
      SET state='failed',error_code='runner_timeout',receipt_confirmed=false,updated_at=clock_timestamp(),
      events=events||jsonb_build_object('state','failed','at',clock_timestamp(),'errorCode','runner_timeout')
-     WHERE state IN ('running','submitting') AND lease_until<=clock_timestamp() RETURNING id`);
+     WHERE (state IN ('running','submitting') AND lease_until<=clock_timestamp())
+      OR (state='queued' AND updated_at<clock_timestamp()-interval '45 seconds' AND NOT EXISTS (
+       SELECT 1 FROM pgboss.job j WHERE j.name=$1 AND j.id=ir35_mock_application.id AND j.state IN ('created','retry','active')
+      )) RETURNING id`, [MOCK_APPLY_QUEUE]);
     return result.rows.length;
   }
   async heartbeat(sha: string, active: number) {
