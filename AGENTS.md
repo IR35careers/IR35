@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October owner approves ONE fresh SSH lease after expiry
+
+- Owner replied “Signed in; approve one new four-hour SSH unlock.” This authorises one distinct native hidden ssh-add -t 4h operation on the existing encrypted key after proving the first receipt expired. Preserve every old attempt/receipt; new owner-reopen slot is write-once, no retry. Fingerprint-only verification and conservative four-hour lifetime, no passphrase capture/file/env/log/key decryption on disk. Keep the native hold window alive without CPU load.
+- Oracle CLI authentication must be authenticated evidence, not the owner's browser statement. Prior launcher is now terminal/timed-out; read-only profile still expired. One fresh normal browser session may complete G2 (no API passphrase); no automatically repeated login or SSH prompt on failure. Then reconcile unknown HBA inspection, execute only approved staging reload/deny-login/full-containment boundary repair. No used Bastion replay, prod/ACL/password/OCI-network/cutover change. Existing bounded repair history and phase scope unchanged.
+
 ## 25 October owner-approved staging queue connection boundary
 
 - Access gate now pending: native read-only HBA inspection returned terminal KeySafetyError; existing four-hour SSH lease expired/keyLoaded=false and exactly one OCI refresh failed. No HBA apply was invoked, no new containment PASS. Preserve existing inspection journal (outcome unknown); `--reconcile-inspection` reads/verifies any sealed stage before another inspection, incomplete stage stops. New native SSH prompt requires owner-authorised fresh lease, never reset old prompt receipt or reopen used Bastion recovery. Normal Oracle browser login is the G2 gate, no API passphrase.
