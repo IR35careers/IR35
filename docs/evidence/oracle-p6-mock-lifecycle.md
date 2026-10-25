@@ -1,5 +1,7 @@
 # P6 native mock lifecycle — repair in progress
 
+**Latest:** [runtime repair1 handover PASS](p6/mock-receipt-repair-one-handover.json), native manifest `acdecfdded0c163b68f4a5412a6f0825df947c9e0cd37108a0627f1d1a5bb2e4`. Final image3 is now active as private v3; old v2 is stopped/retained, original secret files remain unchanged. Full HBA/data/Auth/schema/sequence/privilege/Storage containment PASS. Complete lifecycle repair1 remains pending, with all four original failed-run receipts protected.
+
 All evidence below is staging/mock only. No real employer submission, real email, production/DNS/provider change, role/grant/password change or cutover occurred. Full P6 app/Realtime/timer integration remains mandatory; this is not phase signoff.
 
 | Gate | Actual result |
