@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October stage16 G2 preflight hold — SSH remains loaded
+
+- Stage15actualPASS/v3healthy/fullsourcecontainment retained. Stage16CLI stoppedKeySafetyError before anynative16journal/newjobs; oldwrapper lostdetail so doNOT fabricate an OCIstatus. Independentreadonlylocalcontext/native15sealedproof/4oldreceiptchecksPASS, stage16ABSENT. Existingkeyloaded/9370seconds, token1583<mandatory1800longrunfloor; don'tlowerfloor or reattemptrefreshblindly. One read-only diagnostic quoting error was fixed locally (zeroVMmutation); successful anchoredread-onlyproof nowrecorded. No data/security mismatch orsourcecleanup.
+- FreshnormalOraclebrowserG2handoff only; no repeatedSSH/APIpassphrase, no newBastion. CLI safe gate-error observabilityfixed. Revalidatefresh token/key and native16absence before the still-unused lifecycle-repair1 execution; preserve oldjournals/counters. No native16replay/newsourcebuild/secret/HBA/role/OCI/network/production/cutover authority. All phasescopeunchanged; keep allPRsdraft/unmerged.
+
 ## 25 October final image3 PASS — no more build/source retries
 
 - Canonical source-helper repair2 PASS sealedf5399660280797e9f189affaaa6d3be5111b09083afa7cb34859bbde5b6f4393, sameintendedcaaf4bd/actualimagebea1c9a5840c1856aa613967fcba4dac509a9e23a4d1b31fa83be0162c1ed844, ARM/nonroot/Playwright1.61.0/pgboss12.38.0/nativeChromiumhealth/full62MD5/Auth/2seq/schema3exceptions+2roles/552/73StoragePASS.197.156s, registrypublicationfalse/servicechanges0. Original03+repair01 failures/partialdirs/all3slots retained; repair02 chains both. Native14 LF reference hashes and parentmax1 remain unchanged, no further build/source repair permitted.

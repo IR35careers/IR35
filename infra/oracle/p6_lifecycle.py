@@ -5,6 +5,7 @@ import cloud_schema as schema
 import p6_context
 import p6_worker_build
 from p6_hba import credential_gate
+from key_ceremony import KeySafetyError
 
 
 def main():
@@ -54,5 +55,6 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as error:
-        print(json.dumps({'status': 'STOP', 'code': str(error) if isinstance(error, RuntimeError) else type(error).__name__}))
+        safe = str(error) if isinstance(error, (RuntimeError, KeySafetyError)) else type(error).__name__
+        print(json.dumps({'status': 'STOP', 'code': safe}))
         raise SystemExit(1)

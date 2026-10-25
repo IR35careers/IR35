@@ -1,0 +1,21 @@
+{
+  "status": "OWNER_GATE",
+  "operation": "native lifecycle repair one preflight",
+  "originalTerminalExitCode": 1,
+  "originalReportedCode": "KeySafetyError",
+  "originalDetailedMessage": "Not captured by the prior CLI wrapper; do not invent an OCI HTTP error code.",
+  "localContextReadOnlyCheck": "PASS",
+  "nativeRuntimeProofReadOnlyCheck": "PASS",
+  "originalReceiptsVerified": 4,
+  "nativeLifecycleStage16Exists": false,
+  "newTestJobsInserted": 0,
+  "keyLoaded": true,
+  "keySecondsRemainingAtCheck": 9370,
+  "tokenSecondsRemainingAtCheck": 1583,
+  "requiredLongRunTokenSeconds": 1800,
+  "refreshRetriedDuringDiagnosis": false,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "mutationsDuringReadOnlyProofCheck": 0,
+  "nextOwnerGate": "Fresh Oracle browser authentication only; no SSH or OCI API passphrase. Preserve old journals and confirm stage16 absent again before executing it."
+}
