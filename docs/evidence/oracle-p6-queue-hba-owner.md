@@ -1,6 +1,8 @@
 # Owner-approved queue HBA boundary — prepared, auth gate
 
-Final local regression: **396 Linux helper tests PASS**, including 11 HBA/credential/reconciliation tests. Source-only validation does not substitute for the pending native denial/containment gates.
+Final local regression: **402 Linux helper tests PASS**, including 11 HBA/credential/reconciliation tests, 4 independent boundary-proof tests and 7 guarded handover tests. Source-only validation does not substitute for the pending native denial/containment gates.
+
+The distinct post-boundary handover remains disabled until an actual sealed HBA PASS exists. It verifies the native result bytes against the supplied report (an edited public PASS cannot replace a native FAIL), retains raw function ACLs as REVIEW_REQUIRED, and requires every role/database/transport proof, full containment, current HBA hash/custody/first-match ordering, unchanged inventory and queue-only active sessions before and after handover. Failed stage09 remains unchanged; the new slot is not executed and no runtime assertion is weakened. The queue database may never receive an application restore.
 
 The owner approved staging-only connection restrictions on 25 October 2026. This supersedes the earlier no-HBA-change hold **only for that repair**. The original [function finding](oracle-p6-function-scope-stop.md) and failed stage09 are retained; no function/ACL/RLS/role/password exception is introduced.
 

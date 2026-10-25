@@ -40,6 +40,22 @@ class MockUpdateTests(unittest.TestCase):
                 controller.main()
         context.assert_not_called()
 
+    def test_owner_boundary_flag_requires_native_hba_proof_before_context_or_ssh(self):
+        with patch.object(controller.sys, 'argv', ['p6_mock_update.py', '--activate-build-two-after-owner-boundary']), \
+                patch.object(Path, 'exists', return_value=False), \
+                patch.object(controller.p6_context, 'context') as context:
+            with self.assertRaisesRegex(RuntimeError, 'OwnerHBAActualProofRequiredBeforeActivationContext'):
+                controller.main()
+        context.assert_not_called()
+
+    def test_original_failed_slot_preserved_new_boundary_has_distinct_stage_and_live_pre_post_checks(self):
+        source = inspect.getsource(update.run)
+        self.assertIn("'11-mock-update-two-owner-hba' if owner_boundary else '09-mock-runtime-update-two'", source)
+        self.assertIn("result['queueFunctionScope'] = function_scope(recovery)", source)
+        self.assertIn("elif result['queueFunctionScope']['status'] != 'PASS'", source)
+        self.assertLess(source.index("result['queueConnectionBoundary'] = verify_live"), source.index("with NEW_COMPOSE.open('x')"))
+        self.assertLess(source.index("result['postQueueConnectionBoundary'] = verify_live"), source.index("result.update(status='PASS'"))
+
     def test_existing_activation_refuses_replay_before_any_mutation(self):
         build = {'status': 'PASS', 'attempt': 2, 'image': 'sha256:' + 'b' * 64}
         data = {'workerBuild': build, 'originalWorkerBuild': {'image': 'sha256:' + 'a' * 64},

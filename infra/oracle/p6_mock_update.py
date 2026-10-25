@@ -9,13 +9,27 @@ from web_build import git_command
 
 
 def main():
-    if sys.argv[1:] != ['--activate-build-two']:
+    if sys.argv[1:] not in (['--activate-build-two'], ['--activate-build-two-after-owner-boundary']):
         raise RuntimeError('ExplicitBuildTwoMockActivationRequired')
+    owner_boundary = sys.argv[1:] == ['--activate-build-two-after-owner-boundary']
     directory = schema.REPO / 'docs/evidence/p6'
-    destination = directory / 'mock-runtime-update-two.json'
+    destination = directory / ('mock-runtime-update-two-owner-boundary.json' if owner_boundary else 'mock-runtime-update-two.json')
     if destination.exists():
         raise RuntimeError('BuildTwoActivationRecorded_NoReplay')
+    if owner_boundary:
+        # No new native slot is available until the actual owner-approved HBA
+        # repair AND full native containment pass. Old failed09 is never reset.
+        proof_path = directory / 'queue-hba-owner-boundary.json'
+        if not proof_path.exists():
+            raise RuntimeError('OwnerHBAActualProofRequiredBeforeActivationContext')
+        proof = json.loads(proof_path.read_text())
+        if proof.get('status') != 'PASS' or proof.get('containment', {}).get('status') != 'PASS':
+            raise RuntimeError('OwnerHBAActualProofRequiredBeforeActivationContext')
+        from p6_hba import credential_gate
+        credential_gate()
     data = p6_context.context()
+    if owner_boundary:
+        data.update(ownerHBABoundary=proof, scopeFailure=json.loads((directory / 'mock-runtime-update-two.json').read_text()))
     build = json.loads((directory / 'worker-build-2.json').read_text())
     if build.get('status') != 'PASS' or build.get('attempt') != 2:
         raise RuntimeError('NativeBuildTwoMustPassBeforeActivation')
@@ -32,10 +46,11 @@ def main():
     if recovery.get('status') != 'PASS' or recovery.get('sessionClosed') is not True or recovery.get('postCloseContainment', {}).get('containment', {}).get('status') != 'PASS':
         raise RuntimeError('ClosedRecoveryAndPostCloseContainmentRequired')
     script = p6_worker_build.bundle()
-    for name in ('p6_roles_guest', 'p6_mock_guest', 'p6_health_repair_guest', 'p6_mock_control', 'p6_queue_function_scope', 'p6_mock_update_guest'):
+    for name in ('p6_roles_guest', 'p6_mock_guest', 'p6_health_repair_guest', 'p6_mock_control', 'p6_queue_function_scope',
+                 'p6_queue_hba', 'p6_hba_guest', 'p6_queue_boundary_gate', 'p6_mock_update_guest'):
         code = (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()
         script += 'module=types.ModuleType(' + repr(name) + ');sys.modules[' + repr(name) + ']=module\nexec(' + repr(code) + ',module.__dict__)\n'
-    script += 'result=sys.modules["p6_mock_update_guest"].run(' + repr(data) + ',runtime)\nprint(json.dumps(result))\n'
+    script += 'result=sys.modules["p6_mock_update_guest"].run(' + repr(data) + ',runtime,owner_boundary=' + repr(owner_boundary) + ')\nprint(json.dumps(result))\n'
     result = schema.run_guest(script, timeout=600)
     with destination.open('x', encoding='utf-8') as output:
         json.dump(result, output, indent=2)

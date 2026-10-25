@@ -34,7 +34,9 @@ def compose_two(image, sha):
     return value
 
 
-def run(data, runtime):
+def run(data, runtime, *, owner_boundary=False):
+    if type(owner_boundary) is not bool:
+        raise RecoveryError('ExplicitOwnerBoundaryBooleanRequired')
     prerequisites(data, runtime)
     store = prepared(data)
     health_proof = data['healthRepair']
@@ -44,7 +46,7 @@ def run(data, runtime):
     if (build.get('attempt') != 2 or build.get('status') != 'PASS' or build.get('image') == old_build.get('image')
             or health_proof.get('status') != 'PASS' or health_proof.get('containment', {}).get('status') != 'PASS'):
         raise RecoveryError('VerifiedDistinctBuildTwoAndHealthyOriginalRequired')
-    stage = store.stage('09-mock-runtime-update-two')
+    stage = store.stage('11-mock-update-two-owner-hba' if owner_boundary else '09-mock-runtime-update-two')
     result = {'status': 'FAIL', 'newWorkerStarts': 0, 'networkChanges': 0, 'secretChanges': 0,
               'sourceRoleChanges': 0, 'customerWrites': 0, 'productionChanges': False, 'realAcceptance': False}
     new_requested = False
@@ -108,7 +110,11 @@ def run(data, runtime):
         recovery = Recovery(data['p4'], runtime)
         result['queueFunctionScope'] = function_scope(recovery)
         store.put(stage, 'queue-function-scope.json', json.dumps(result['queueFunctionScope'], sort_keys=True).encode())
-        if result['queueFunctionScope']['status'] != 'PASS':
+        if owner_boundary:
+            from p6_queue_boundary_gate import verify_live
+            result['queueConnectionBoundary'] = verify_live(data, recovery, store, result['queueFunctionScope'])
+            store.put(stage, 'queue-connection-boundary.json', json.dumps(result['queueConnectionBoundary'], sort_keys=True).encode())
+        elif result['queueFunctionScope']['status'] != 'PASS':
             raise RecoveryError('QueueRoleDefinerAccessOutsideQueueSchema_SecurityStop')
         counts = json.loads(recovery.query("""SELECT jsonb_build_object(
           'ownerConnections',(SELECT count(*) FROM pg_stat_activity WHERE usename='ir35_queue'),
@@ -204,6 +210,10 @@ def run(data, runtime):
             raise RecoveryError('NewRuntimeDurableHeartbeatNotConfirmed')
         prepared(data)  # Original env, credentials and old Compose still match.
         result['queueRoleCustomerAccess'] = no_customer_access(recovery)
+        if owner_boundary:
+            # Re-read live hash/ordering/raw scope after handover too. A changed
+            # DB/session/rule must roll back, not rely on an old saved PASS.
+            result['postQueueConnectionBoundary'] = verify_live(data, recovery, store, function_scope(recovery))
         result.update(status='PASS', health=observed, oldWorkerStopped=True, oldArtifactsRetained=True,
                       loopbackOnly=True, noNewEgress=True, initReapsOrphans=True, originalEnvUnchanged=True,
                       hostMemoryAvailableKiB=available, oldImage=old_build['image'], image=build['image'], sourceSHA=build['sourceSHA'],
