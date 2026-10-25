@@ -79,7 +79,9 @@ def producer(value, *, orphan=False):
     return json.loads(observed.stdout)
 
 
-def probe_lost_ack(data, runtime):
+def probe_lost_ack(data, runtime, *, repair_one=False):
+    if type(repair_one) is not bool:
+        raise RecoveryError('ExplicitRepairBooleanRequired')
     store = prepared(data)
     failed = data['failureLifecycle']
     anchored_result(store, failed)
@@ -87,18 +89,33 @@ def probe_lost_ack(data, runtime):
             or failed.get('failureContainment', {}).get('status') != 'PASS'
             or failed.get('failurePause') != {'paused': True, 'realAcceptance': False}):
         raise RecoveryError('ExactPausedLifecycleFailureRequired_NoReplay')
-    stage = store.stage('13-isolated-lost-ack-probe')
+    stage = store.stage('14-isolated-receipt-repair-one' if repair_one else '13-isolated-lost-ack-probe')
     result = {'status': 'FAIL', 'queueWrites': 0, 'customerWrites': 0, 'workerStarts': 0,
               'secretMounts': 0, 'publicPorts': 0, 'network': 'none', 'realAcceptance': False}
     try:
         result['preContainment'] = check_containment(data, runtime, store, stage, 'pre')
-        for scenario in ('success', 'lost_ack'):
+        mounts = []
+        if repair_one:
+            previous = data['originalBrowserProbe']
+            anchored_result(store, previous)
+            if previous.get('status') != 'OBSERVED' or previous.get('lost_ack') != {'exitCode': 0, 'ok': False, 'errorCode': 'mock_unknown_outcome', 'submissions': 2}:
+                raise RecoveryError('ActualPreHeaderRetryReproductionRequired')
+            sources = data['publicRepairSources']
+            if set(sources) != {'mock-browser.ts', 'mock-ats.ts'} or not all(isinstance(code, str) and 0 < len(code) < 50000 for code in sources.values()):
+                raise RecoveryError('TwoPublicMockSourceFilesOnly')
+            result['publicSourceSHA256'] = {}
+            for filename, code in sources.items():
+                store.put(stage, filename, code.encode())
+                result['publicSourceSHA256'][filename] = digest(code.encode())
+                mounts += ['--volume', str(stage / filename) + ':/app/services/application-worker/' + filename + ':ro']
+        for scenario in EXPECTED if repair_one else ('success', 'lost_ack'):
             store.put(stage, scenario + '-intent.json', json.dumps({'operation': 'apply', 'scenario': scenario,
-                      'noCredentialsOrVolumes': True, 'workerImage': data['runtimeProof']['image']}).encode())
+                      'noCredentialsOrSecretMounts': True, 'publicSourceMounts': len(mounts) // 2,
+                      'workerImage': data['runtimeProof']['image']}).encode())
             args = ['docker', 'run', '--rm', '-i', '--init', '--network', 'none', '--read-only', '--user', '1002:1002',
                     '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--log-driver', 'none',
                     '--memory', '512m', '--pids-limit', '256', '--tmpfs', '/tmp:rw,size=512m,uid=1002,gid=1002,mode=1777',
-                    '--entrypoint', 'node', data['runtimeProof']['image'], '--import', 'tsx', 'services/application-worker/mock-browser.ts']
+                    *mounts, '--entrypoint', 'node', data['runtimeProof']['image'], '--import', 'tsx', 'services/application-worker/mock-browser.ts']
             observed = subprocess.run(args, input=json.dumps({'operation': 'apply', 'scenario': scenario}).encode(),
                                       capture_output=True, timeout=75)
             if len(observed.stdout) > 4096 or len(observed.stderr) > 16384:
@@ -107,8 +124,17 @@ def probe_lost_ack(data, runtime):
             store.put(stage, scenario + '-stderr.log', observed.stderr)
             parsed = json.loads(observed.stdout)
             result[scenario] = {'exitCode': observed.returncode, **parsed}
+            if repair_one:
+                expected_error = EXPECTED[scenario][1]
+                expected_submissions = 0 if scenario in ('captcha', 'unknown_answer') else 1
+                if (observed.returncode != 0 or parsed.get('ok') is not (scenario == 'success')
+                        or parsed.get('submissions') != expected_submissions or parsed.get('errorCode') != expected_error
+                        or (scenario == 'success' and parsed.get('receiptConfirmed') is not True)):
+                    raise RecoveryError('PrivateReceiptRepairScenarioMismatch_' + scenario)
         result['containment'] = check_containment(data, runtime, store, stage, 'post')
-        result.update(status='OBSERVED', phaseComplete=False, originalFailedJournalRetained=True)
+        result.update(status='PASS' if repair_one else 'OBSERVED', phaseComplete=False,
+                      repairAttempt=1 if repair_one else 0, originalFailedJournalRetained=True,
+                      parentOneSubmissionGuardUnchanged=True)
     except Exception as error:
         result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__
     store.put(stage, 'result.json', json.dumps(result, sort_keys=True).encode())
