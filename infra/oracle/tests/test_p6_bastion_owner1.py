@@ -13,6 +13,137 @@ from key_ceremony import KeySafetyError
 
 
 class OwnerRecoveryTests(unittest.TestCase):
+    def test_token_window_requires_forty_five_minutes_without_auth_retry(self):
+        self.assertEqual(recovery.require_token_window({'expiresAt': 2800}, now=100)['tokenSecondsRemaining'], 2700)
+        for expires in (2799, 0):
+            with self.assertRaisesRegex(KeySafetyError, 'TokenBelow45Minutes'):
+                recovery.require_token_window({'expiresAt': expires}, now=100)
+
+    def test_owner_reopening_accepts_only_the_preserved_zero_create_auth_gate(self):
+        previous = {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
+                    'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0, 'productionChanges': False,
+                    'code': 'G2: security-token refresh failed; browser sign-in required. Raw output suppressed.'}
+        recovery.require_auth_only_reopening(previous)
+        for change in ({'sessionCreates': 1}, {'sessionClosed': False}, {'iamChanges': 1}, {'code': 'data mismatch'}):
+            with self.assertRaises(KeySafetyError):
+                recovery.require_auth_only_reopening(previous | change)
+
+    def test_token_reopening_closes_one_session_before_full_post_close_containment(self):
+        self._token_run()
+
+    def test_token_refresh_failure_is_not_retried_in_cleanup_or_another_recovery(self):
+        self._token_run(auth_failure=True)
+
+    def _token_run(self, auth_failure=False):
+        import time
+        import subprocess
+        import cloud_schema
+        import exact_storage_audit
+        from datetime import datetime, timezone
+        from contextlib import ExitStack
+        ids = {kind: 'ocid1.' + kind + '.oc1.uk-london-1.controlledfixture01' for kind in ('bastion', 'instance', 'subnet', 'vnic', 'bastionsession')}
+        journal = {'ownerCIDR': '8.8.8.8/32', 'created': {'instance': {'spec': {'availabilityDomain': 'fixture-ad'}}}}
+        events = []
+        creates = []
+        deletes = []
+        refresh_failures = []
+        def auth():
+            if auth_failure and 'reconcile' in events:
+                refresh_failures.append(True)
+                raise KeySafetyError('G2: security-token refresh failed; browser sign-in required. Raw output suppressed.')
+            return {'expiresAt': time.time() + 3600}
+        def invoke(args):
+            if args[:3] == ['iam', 'compartment', 'get']:
+                return {'name': 'ir35', 'lifecycle-state': 'ACTIVE'}
+            if args[:3] == ['bastion', 'bastion', 'get']:
+                return {'id': ids['bastion']}
+            if args[:3] == ['compute', 'instance', 'get']:
+                return {'id': ids['instance'], 'lifecycle-state': 'RUNNING', 'shape': 'VM.Standard.A1.Flex', 'shape-config': {'ocpus': 2, 'memory-in-gbs': 12}}
+            if args[:3] == ['compute', 'vnic-attachment', 'list']:
+                return [{'lifecycle-state': 'ATTACHED', 'instance-id': ids['instance'], 'vnic-id': ids['vnic']}]
+            if args[:3] == ['network', 'vnic', 'get']:
+                return {'public-ip': '132.145.28.134', 'private-ip': '10.35.1.8', 'subnet-id': ids['subnet']}
+            if args[:3] == ['bastion', 'session', 'list']:
+                return []
+            if args[:3] == ['bastion', 'session', 'create-port-forwarding']:
+                creates.append(args)
+            elif args[:3] != ['bastion', 'session', 'get']:
+                self.fail('Unexpected operation')
+            return {'id': ids['bastionsession'], 'lifecycle-state': 'DELETED' if deletes else 'ACTIVE',
+                    'ssh-metadata': {'command': recovery.bastion.GATEWAY}, 'time-created': datetime.now(timezone.utc).isoformat()}
+        def cli(args, **kwargs):
+            self.assertEqual(args[:4], ['oci', 'bastion', 'session', 'delete'])
+            deletes.append(args)
+            events.append('close')
+            return subprocess.CompletedProcess(args, 0, '', '')
+        def guest(*args, **kwargs):
+            if events:
+                self.assertIn('close', events)
+                events.append('post-close-containment')
+            else:
+                events.append('reconcile')
+            return {'status': 'PASS', 'containment': {'status': 'PASS'}}
+        def private(path):
+            if path == recovery.infra.JOURNAL:
+                return json.dumps(journal)
+            if path == recovery.control.JOURNAL:
+                return json.dumps({'created': {'compartment': {'id': 'fixture-child'}}})
+            return 'public-fixture-key'
+        with tempfile.TemporaryDirectory() as temporary, ExitStack() as stack:
+            root = Path(temporary) / 'owner'
+            root.mkdir(mode=0o700)
+            public = root / 'preflight.json'
+            store = Store(root)
+            def seal(name, receipt, destination):
+                stage = store.stage(name)
+                store.put(stage, 'result.json', json.dumps(receipt).encode())
+                destination.write_text(json.dumps(receipt | {'stage': stage.name, 'manifestSHA256': store.seal(stage)}))
+            seal('01-preflight', {'status': 'PASS'}, public)
+            seal('02-session', {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
+                 'bastionUpdates': 0, 'networkChanges': 0, 'code': 'Approximate Object Storage metadata is not exact byte evidence.'}, root / 'bastion-owner1-session.json')
+            seal('04-session-after-exact', {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
+                 'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0, 'productionChanges': False,
+                 'code': 'G2: security-token refresh failed; browser sign-in required. Raw output suppressed.'}, root / 'bastion-owner1-session-after-exact.json')
+            for name, value in [('ROOT', root), ('PUBLIC', public), ('TRANSPORT', root / 'transport.json'), ('HOSTS', root / 'hosts')]:
+                stack.enter_context(patch.object(recovery, name, value))
+            stack.enter_context(patch.object(recovery, 'work_bundle', return_value='fixture'))
+            stack.enter_context(patch.object(exact_storage_audit, 'latest_pass', return_value={'status': 'PASS', 'exactBytesProven': True,
+                 'bucketListingStable': True, 'exactBytes': 0, 'standardOnly': True, 'stableCompletePasses': 2, 'manifestSHA256': 'fixture'}))
+            stack.enter_context(patch.object(recovery, 'private_file', side_effect=private))
+            stack.enter_context(patch.object(recovery.transport, 'current_cidr', return_value='8.8.8.8/32'))
+            stack.enter_context(patch.object(recovery.transport, 'continuity_key', return_value='fixture-pin'))
+            stack.enter_context(patch.object(recovery, 'allowed_source', return_value={'status': 'PASS'}))
+            stack.enter_context(patch.object(recovery.p1_compute, 'verify_network', return_value={'status': 'PASS'}))
+            stack.enter_context(patch.object(recovery.infra, 'identifier', side_effect=lambda _, kind: ids[kind]))
+            stack.enter_context(patch.object(recovery.infra, 'cli_arguments', return_value=['bastion', 'bastion', 'get']))
+            stack.enter_context(patch.object(recovery.infra, 'invoke', side_effect=invoke))
+            stack.enter_context(patch.object(recovery.infra, 'fresh_eligibility', return_value={'shapeBilling': 'LIMITED_FREE'}))
+            stack.enter_context(patch.object(recovery, 'ReadOnlyOci', return_value=object()))
+            stack.enter_context(patch.object(recovery, 'ensure_session', side_effect=auth))
+            stack.enter_context(patch.object(recovery, 'ensure_agent', return_value={'keyLoaded': True}))
+            stack.enter_context(patch.object(recovery.bastion, 'verify_session', return_value=ids['bastionsession']))
+            stack.enter_context(patch.object(recovery, 'wait_for_visible', side_effect=lambda action, **_: action()))
+            stack.enter_context(patch.object(recovery, 'command', side_effect=lambda args: ['oci', *args]))
+            stack.enter_context(patch.object(recovery.subprocess, 'run', side_effect=cli))
+            stack.enter_context(patch.object(cloud_schema, 'run_guest', side_effect=guest))
+            result = recovery.execute(after_exact=True, token_reopen=True)
+            self.assertEqual(len(creates), 1)
+            if auth_failure:
+                self.assertEqual(result['status'], 'FAIL')
+                self.assertEqual(len(refresh_failures), 1)
+                self.assertEqual(deletes, [])
+                self.assertFalse(result['sessionClosed'])
+                self.assertEqual(result['cleanupCode'], 'AuthRefreshFailed_NoRetry_SessionTTL1800')
+            else:
+                self.assertEqual(result['status'], 'PASS')
+                self.assertEqual(len(deletes), 1)
+                self.assertEqual(events, ['reconcile', 'close', 'post-close-containment'])
+                self.assertTrue(result['sessionClosed'])
+            store.verify(result['stage'], result['manifestSHA256'])
+            with self.assertRaises(FileExistsError):
+                recovery.execute(after_exact=True, token_reopen=True)
+            self.assertEqual(len(creates), 1)
+
     def test_only_proven_zero_creates_and_exact_complete_pass_can_reopen_unused_slot(self):
         failed = {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0, 'bastionUpdates': 0, 'networkChanges': 0,
                   'code': 'Approximate Object Storage metadata is not exact byte evidence.'}

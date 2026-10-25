@@ -107,7 +107,7 @@ def tunnel(agent, guest):
         yield port
 
 
-def work_bundle(*, after_exact=False):
+def work_bundle(*, after_exact=False, token_reopen=False, after_close=False):
     import cloud_schema as schema
     import p6_worker_build
     import p6_context
@@ -121,6 +121,9 @@ def work_bundle(*, after_exact=False):
     data['failedStart'] = json.loads((directory / 'mock-start.json').read_text())
     if after_exact is True:
         data['ownerSessionAfterExact'] = True
+    if token_reopen is True:
+        data['ownerTokenReopen'] = True
+        data['ownerContainmentAfterClose'] = after_close
     script = p6_worker_build.bundle()
     for name in ('p6_roles_guest', 'p6_mock_guest', 'p6_port_probe_guest', 'p6_bastion_owner1_guest'):
         code = (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()
@@ -140,7 +143,23 @@ def require_unused_after_exact(previous, proof):
         raise KeySafetyError('CompleteExactStoragePassRequired_NoEligibilityWaiver')
 
 
-def execute(*, after_exact=False):
+def require_token_window(profile, *, now=None):
+    remaining = profile.get('expiresAt', 0) - (time.time() if now is None else now)
+    if remaining < 2700:
+        raise KeySafetyError('TokenBelow45Minutes_StopBeforeRecovery')
+    return {'status': 'PASS', 'tokenSecondsRemaining': int(remaining), 'minimumSecondsRequired': 2700}
+
+
+def require_auth_only_reopening(previous):
+    if (previous.get('status') != 'FAIL' or previous.get('sessionCreates') != 0
+            or previous.get('sessionClosed') is not True or previous.get('workerRestarts') != 0
+            or previous.get('bastionUpdates') != 0 or previous.get('iamChanges') != 0
+            or previous.get('networkChanges') != 0 or previous.get('productionChanges') is not False
+            or previous.get('code') != 'G2: security-token refresh failed; browser sign-in required. Raw output suppressed.'):
+        raise KeySafetyError('ExactZeroCreateAuthFailureRequired_NoOtherReopening')
+
+
+def execute(*, after_exact=False, token_reopen=False):
     import cloud_schema as schema
     proof = json.loads(PUBLIC.read_text())
     store = Store(ROOT)
@@ -154,8 +173,15 @@ def execute(*, after_exact=False):
         store.verify(previous['stage'], previous['manifestSHA256'])
         exact = exact_storage_audit.latest_pass()
         require_unused_after_exact(previous, exact)
-    script = work_bundle(after_exact=after_exact)  # Before any cloud mutation, refuses dirty source.
-    stage = store.stage('04-session-after-exact' if after_exact else '02-session')  # Old slot never reset/replayed.
+    if token_reopen:
+        if not after_exact:
+            raise KeySafetyError('ExactAuditRequiredForTokenReopening')
+        auth_failure = json.loads((PUBLIC.parent / 'bastion-owner1-session-after-exact.json').read_text())
+        store.verify(auth_failure['stage'], auth_failure['manifestSHA256'])
+        require_auth_only_reopening(auth_failure)
+    script = work_bundle(after_exact=after_exact, **({'token_reopen': True} if token_reopen else {}))  # Refuses dirty source.
+    closed_script = work_bundle(after_exact=True, token_reopen=True, after_close=True) if token_reopen else None
+    stage = store.stage('05-owner-token-reopen' if token_reopen else ('04-session-after-exact' if after_exact else '02-session'))
     result = {'status': 'FAIL', 'sessionCreates': 0, 'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0,
               'workerRestarts': 0, 'productionChanges': False, 'realAcceptance': False, 'steps': []}
     if exact:
@@ -165,19 +191,27 @@ def execute(*, after_exact=False):
     spec = None
     counter = 0
     create_requested = False
+    auth_failed = False
 
     def step(name, action, project=lambda _: {'status': 'PASS'}):
-        nonlocal counter
+        nonlocal counter, auth_failed
         counter += 1
         filename = f'{counter:02d}-{name}'
         store.put(stage, filename + '-intent.json', json.dumps({'operation': name, 'atUTC': datetime.now(timezone.utc).isoformat()}).encode())
         try:
+            if token_reopen:
+                # Synchronous boundary: do not begin another operation while
+                # refresh is needed. ensure_session makes one refresh, never
+                # uses an API key, and raises immediately if refresh fails.
+                ensure_session()
             value = action()
             store.put(stage, filename + '-result.json', json.dumps(project(value), sort_keys=True).encode())
             result['steps'].append({'step': name, 'status': 'PASS'})
             return value
         except Exception as error:
             code = str(error) if isinstance(error, KeySafetyError) else type(error).__name__
+            if code.startswith('G2:'):
+                auth_failed = True
             store.put(stage, filename + '-result.json', json.dumps({'status': 'FAIL', 'code': code}).encode())
             result['steps'].append({'step': name, 'status': 'FAIL', 'code': code})
             raise
@@ -188,7 +222,22 @@ def execute(*, after_exact=False):
         return row
 
     try:
+        if token_reopen:
+            result['tokenWindow'] = step('fresh-token-45-minutes', lambda: require_token_window(ensure_session()), lambda value: value)
+            def agent_ready():
+                if not ensure_agent()['keyLoaded']:
+                    raise KeySafetyError('ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt')
+                return {'status': 'PASS', 'existingKeyLoaded': True, 'passphraseRequested': False}
+            result['sshAgent'] = step('existing-agent', agent_ready, lambda value: value)
         journal = step('existing-intent', lambda: json.loads(private_file(infra.JOURNAL)))
+        if token_reopen:
+            child_id = json.loads(private_file(control.JOURNAL))['created']['compartment']['id']
+            def compartment_ready():
+                value = infra.invoke(['iam', 'compartment', 'get', '--compartment-id', child_id])
+                if value.get('name') != 'ir35' or value.get('lifecycle-state') != 'ACTIVE':
+                    raise KeySafetyError('ReadOnlyCompartmentNotActive')
+                return {'status': 'PASS', 'name': 'ir35', 'state': 'ACTIVE', 'mutations': 0}
+            result['compartmentAuthentication'] = step('read-only-compartment-auth', compartment_ready, lambda value: value)
         current = step('current-source', transport.current_cidr)
         parent = step('existing-bastion', lambda: infra.invoke(infra.cli_arguments('bastion', 'get',
                       resource_id=infra.identifier(journal, 'bastion'))))
@@ -252,7 +301,7 @@ def execute(*, after_exact=False):
                 os.environ.pop('IR35_SSH_TRANSPORT', None)
             else:
                 os.environ['IR35_SSH_TRANSPORT'] = previous
-        with (PUBLIC.parent / ('bastion-owner1-reconcile-after-exact.json' if after_exact else 'bastion-owner1-reconcile.json')).open('x', encoding='utf-8') as output:
+        with (PUBLIC.parent / ('bastion-owner1-reconcile-token-reopen.json' if token_reopen else ('bastion-owner1-reconcile-after-exact.json' if after_exact else 'bastion-owner1-reconcile.json'))).open('x', encoding='utf-8') as output:
             json.dump(work, output, indent=2)
         result['work'] = work
         if work['status'] != 'PASS' or work.get('containment', {}).get('status') != 'PASS':
@@ -262,7 +311,13 @@ def execute(*, after_exact=False):
         result['code'] = str(error) if isinstance(error, KeySafetyError) else type(error).__name__
     finally:
         try:
-            if create_requested and session is None and spec:
+            if auth_failed:
+                # No second refresh in cleanup. The only possible session is
+                # short-lived (1800s); report it honestly if auth prevents close.
+                result['sessionClosed'] = not create_requested
+                if create_requested:
+                    result['cleanupCode'] = 'AuthRefreshFailed_NoRetry_SessionTTL1800'
+            elif create_requested and session is None and spec:
                 found = step('unknown-create-readback-only', lambda: infra.invoke(['bastion', 'session', 'list', '--bastion-id', spec['bastionId'], '--all']))
                 matches = [row for row in found if row.get('display-name') == SESSION_NAME]
                 if len(matches) == 1:
@@ -271,7 +326,7 @@ def execute(*, after_exact=False):
                     result['sessionCreates'] = 1
                 else:
                     result['sessionCreateOutcome'] = 'UNKNOWN; no duplicate create; TTL1800'
-            if session:
+            if session and not auth_failed:
                 def close_once():
                     row = get_session()
                     if row['lifecycle-state'] != 'DELETED':
@@ -289,13 +344,38 @@ def execute(*, after_exact=False):
                     return wait_for_visible(absent, label='p6-owner1-closed')
                 step('single-session-close', close_once)
                 result['sessionClosed'] = True
-            else:
+            elif not auth_failed:
                 result['sessionClosed'] = not create_requested
         except Exception as error:
-            result.update(status='FAIL', cleanupCode=str(error) if isinstance(error, KeySafetyError) else type(error).__name__, sessionClosed=False)
+            result.update(status='FAIL', cleanupCode=('AuthRefreshFailed_NoRetry_SessionTTL1800' if auth_failed
+                          else (str(error) if isinstance(error, KeySafetyError) else type(error).__name__)), sessionClosed=False)
+    if token_reopen and result.get('status') == 'PASS' and result.get('sessionClosed') is True:
+        try:
+            # The session is already independently DELETED. Reverify the
+            # original owner /32, then use only original pinned direct SSH for
+            # the expressly requested post-close READ-ONLY containment.
+            def same_source():
+                if transport.current_cidr() != journal['ownerCIDR']:
+                    raise KeySafetyError('PostCloseOwnerSourceChanged_NoSecondSessionOrRuleChange')
+                return {'status': 'PASS', 'originalOwnerSlash32': True}
+            step('post-close-owner-source', same_source, lambda value: value)
+            prior_transport = os.environ.get('IR35_SSH_TRANSPORT')
+            os.environ['IR35_SSH_TRANSPORT'] = 'direct'
+            try:
+                post = step('post-close-full-containment', lambda: schema.run_guest(closed_script, timeout=600), lambda value: value)
+            finally:
+                if prior_transport is None:
+                    os.environ.pop('IR35_SSH_TRANSPORT', None)
+                else:
+                    os.environ['IR35_SSH_TRANSPORT'] = prior_transport
+            result['postCloseContainment'] = post
+            if post.get('status') != 'PASS' or post.get('containment', {}).get('status') != 'PASS':
+                raise KeySafetyError('PostCloseFullContainmentFailed_NoRetry')
+        except Exception as error:
+            result.update(status='FAIL', code=str(error) if isinstance(error, KeySafetyError) else type(error).__name__)
     store.put(stage, 'result.json', json.dumps(result, sort_keys=True).encode())
     result.update(stage=stage.name, manifestSHA256=store.seal(stage))
-    with (PUBLIC.parent / ('bastion-owner1-session-after-exact.json' if after_exact else 'bastion-owner1-session.json')).open('x', encoding='utf-8') as output:
+    with (PUBLIC.parent / ('bastion-owner1-session-token-reopen.json' if token_reopen else ('bastion-owner1-session-after-exact.json' if after_exact else 'bastion-owner1-session.json'))).open('x', encoding='utf-8') as output:
         json.dump(result, output, indent=2)
     return result
 
@@ -338,9 +418,12 @@ def containment_after_stop():
 
 if __name__ == '__main__':
     try:
-        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--execute-after-exact-audit'], ['--containment-after-stop']):
+        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--execute-after-exact-audit'], ['--execute-owner-token-reopen'], ['--containment-after-stop']):
             raise KeySafetyError('ExplicitReadOnlyOwnerPreflightRequired')
-        result = run_preflight() if sys.argv[1:] == ['--preflight'] else (execute(after_exact=sys.argv[1:] == ['--execute-after-exact-audit']) if sys.argv[1:] in (['--execute'], ['--execute-after-exact-audit']) else containment_after_stop())
+        if sys.argv[1:] == ['--execute-owner-token-reopen']:
+            result = execute(after_exact=True, token_reopen=True)
+        else:
+            result = run_preflight() if sys.argv[1:] == ['--preflight'] else (execute(after_exact=sys.argv[1:] == ['--execute-after-exact-audit']) if sys.argv[1:] in (['--execute'], ['--execute-after-exact-audit']) else containment_after_stop())
         print(json.dumps(result))
         raise SystemExit(0 if result['status'] == 'PASS' else 1)
     except Exception as error:

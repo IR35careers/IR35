@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October owner token-gated ONE recovery reopening
+
+- Owner explicitly reopens ONE bounded recovery after fresh browser authentication, with a read-only compartment proof and >=45minutes token lifetime before starting. Earlier token expiry is not a tooling failure, but all previous failed/sealed slots remain intact. A new exclusive owner-token slot is permitted; no reset/replay of them. Routine SecurityToken checks pause between operations and refresh once below10minutes; refresh failure stops with no repeated refresh/recovery. Existing Bastion/VM132.145.28.134 only, one short-TTL session, no IAM/network/bucket/paid-resource changes.
+- Reconcile23:40 probe before any worker restart, close the owned session, then full containment (62tables/orderedMD5/Auth/2sequences/3ownerexceptions+2queue roles/unchanged552baseline/73Storage). Post-close read-only SSH may use only the existing reverified owner-/32 route and original guest pin; no second session or access-rule workaround. Mock/SMTPsink only, no operational-secret/production/DNS/Google/Vercel/cloud-Supabase/cutover changes. Any failure/mismatch stops this one attempt. On actualPASS finishP6→P7→P8; P9prepareonly/STOP exactYES CUTOVER. All PRs draft/unmerged.
+
 ## 25 October exact-audit continuation STOP — G2 before Bastion GET
 
 - Exact Object Storage audit previously PASS at24October23:46UTC (0bytes/two complete passes/12GETs), but the ONE reopened execution now STOPPED at `existing-bastion`: expired browser SecurityToken refresh failed BEFORE that API request. Sealed04-session-after-exact result4c7ac1fc; sessionCreates0/sessionClosedtrue, no Bastion/IAM/network/secret/worker/production mutation and no new guest/probe/full-containment run. Local read-only metadata at25October07:39UTC confirms browser age28415seconds/token expired24818seconds; zero cloud calls in diagnosis. No password/API/SSH passphrase needed or requested.

@@ -21,6 +21,8 @@ def run(data, runtime):
     if failed.get('status') != 'FAIL' or failed.get('stoppedAfterFailure') is not True:
         raise RecoveryError('OriginalStoppedHealthFailureRequired')
     journal = ROOT / '.env.p6-bastion-after-exact-20261025' if data.get('ownerSessionAfterExact') is True else JOURNAL
+    if data.get('ownerTokenReopen') is True:
+        journal = ROOT / ('.env.p6-bastion-token-post-close-20261025' if data.get('ownerContainmentAfterClose') is True else '.env.p6-bastion-token-reopen-20261025')
     journal.mkdir(mode=0o700)
     os.chown(journal, 1002, 1002)
     store = Store(journal, uid=1002)

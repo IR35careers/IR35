@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "auth": "SecurityToken",
+  "profile": "ir35",
+  "region": "uk-london-1",
+  "readOnlyCompartment": "ir35",
+  "compartmentState": "ACTIVE",
+  "tokenSecondsRemainingAtCheck": 3534,
+  "minimumSecondsRequired": 2700,
+  "mutations": 0,
+  "sessionCreates": 0,
+  "note": "Initial fresh-browser check only; controller must recheck lifetime immediately before starting."
+}
