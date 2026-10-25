@@ -270,8 +270,8 @@ def owner_cidr():
     return observed[0]
 
 
-def fresh_eligibility(client, journal, ad):
-    report = inventory(client, session_account_audit(client))
+def fresh_eligibility(client, journal, ad, *, exact_storage=None):
+    report = inventory(client, session_account_audit(client), **({'exact_storage': exact_storage} if exact_storage is not None else {}))
     usage = report["usage"]
     has_vm = "instance" in journal["created"]
     has_block = "volume" in journal["created"]

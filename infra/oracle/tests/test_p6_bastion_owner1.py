@@ -13,6 +13,18 @@ from key_ceremony import KeySafetyError
 
 
 class OwnerRecoveryTests(unittest.TestCase):
+    def test_only_proven_zero_creates_and_exact_complete_pass_can_reopen_unused_slot(self):
+        failed = {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0, 'bastionUpdates': 0, 'networkChanges': 0,
+                  'code': 'Approximate Object Storage metadata is not exact byte evidence.'}
+        proof = {'status': 'PASS', 'exactBytesProven': True, 'bucketListingStable': True, 'exactBytes': 0, 'standardOnly': True, 'stableCompletePasses': 2}
+        recovery.require_unused_after_exact(failed, proof)
+        for change in ({'sessionCreates': 1}, {'code': 'different failure'}, {'bastionUpdates': 1}, {'sessionClosed': False}):
+            with self.assertRaises(KeySafetyError):
+                recovery.require_unused_after_exact(failed | change, proof)
+        for change in ({'exactBytesProven': False}, {'exactBytes': True}, {'exactBytes': 8_000_000_001}, {'bucketListingStable': False}, {'status': 'FAIL'}):
+            with self.assertRaises(KeySafetyError):
+                recovery.require_unused_after_exact(failed, proof | change)
+
     def test_new_authority_never_changes_an_existing_bastion_allowlist(self):
         journal = {'ownerCIDR': '8.8.8.8/32'}
         parent = {'client-cidr-block-allow-list': ['8.8.8.8/32']}

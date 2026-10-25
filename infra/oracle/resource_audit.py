@@ -166,7 +166,7 @@ def active(items):
     return [row for row in checked if row["lifecycle-state"] not in ("DELETED", "TERMINATED")]
 
 
-def inventory(client, account):
+def inventory(client, account, *, exact_storage=None):
     require_free_session_gate(account)
     compartments = active(client.read("compartments"))
     for row in compartments:
@@ -185,6 +185,7 @@ def inventory(client, account):
     client.namespace = namespace
     bucket_count = 0
     approximate_object_bytes = Decimal(0)
+    exact_bucket_scope = []
     quota_count = 0
     for compartment in sorted(client.compartments):
         instances = active(client.read("instances", compartment=compartment))
@@ -215,12 +216,14 @@ def inventory(client, account):
             if name in client.buckets:
                 raise KeySafetyError("Duplicate bucket metadata; tenancy inventory is incomplete.")
             client.buckets.add(name)
-            metadata = client.read("bucket", bucket=name)
-            if not isinstance(metadata, dict):
-                raise KeySafetyError("Bucket metadata is incomplete.")
-            approximate_object_bytes += number(metadata.get("approximate-size"))
-            number(metadata.get("approximate-count"))
+            if exact_storage is None:
+                metadata = client.read("bucket", bucket=name)
+                if not isinstance(metadata, dict):
+                    raise KeySafetyError("Bucket metadata is incomplete.")
+                approximate_object_bytes += number(metadata.get("approximate-size"))
+                number(metadata.get("approximate-count"))
             bucket_count += 1
+            exact_bucket_scope.append((name, compartment))
     limits = []
     for ad in sorted(client.domains):
         values = {}
@@ -279,13 +282,19 @@ def inventory(client, account):
         current["net"] += amount
         # A credit never hides a positive usage amount in this report.
         current["positive"] += max(amount, Decimal(0))
+    objects = {"buckets": bucket_count, "approximateBytes": str(approximate_object_bytes), "exactBytesProven": bucket_count == 0}
+    if exact_storage is not None:
+        proof = exact_storage(namespace, exact_bucket_scope, compartments=sorted(client.compartments))
+        if proof.get('status') != 'PASS' or proof.get('exactBytesProven') is not True or proof.get('buckets') != bucket_count:
+            raise KeySafetyError('ExactObjectStorageProofRequired_NoApproximateSubstitution')
+        objects = proof
     # Report numbers/names only, never raw account/resource/instance metadata.
     return {"checkedAt": datetime.now(timezone.utc).isoformat(), "mode": "read-only-resource-inventory",
             "region": REGION, "accountPaymentModel": "FREE_TRIAL", "compartmentsInspected": len(client.compartments),
             "availabilityDomains": limits, "usage": {key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()},
             "compatiblePlatformImageNames": sorted(image_names), "activeBudget": "ir35careers-free-tier-gbp1",
             "budgetAlertVerified": True, "quotaPolicyCount": quota_count,
-            "objectStorage": {"buckets": bucket_count, "approximateBytes": str(approximate_object_bytes), "exactBytesProven": bucket_count == 0},
+            "objectStorage": objects,
             "costReport": {"rows": len(cost_items), "amounts": {key: {field: str(value) for field, value in amount.items()} for key, amount in costs.items()},
                            "covers": "current month up to previous UTC midnight", "mayLag": True, "realTimeZeroBillProven": False},
             "infrastructureCreates": 0, "productionChanges": 0,

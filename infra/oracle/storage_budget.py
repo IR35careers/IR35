@@ -23,7 +23,16 @@ def reconcile(report, *, add_live_gb=0, add_volume_backups=0, add_object_bytes=0
         raise KeySafetyError("Approximate Object Storage metadata is not exact byte evidence.")
     live = number(usage.get("liveVolumeGB")) + number(add_live_gb)
     backups = number(usage.get("volumeBackups")) + number(add_volume_backups)
-    object_bytes = number(objects.get("approximateBytes")) + number(add_object_bytes)
+    # Only the historical proven-empty path can use its old zero-valued field.
+    # A non-empty bucket needs the new exact enumeration, never a renamed estimate.
+    if 'exactBytes' in objects:
+        if type(objects['exactBytes']) is not int or objects['exactBytes'] < 0:
+            raise KeySafetyError('Exact integer Object Storage byte count required.')
+        object_bytes = number(objects['exactBytes']) + number(add_object_bytes)
+    elif number(objects.get('approximateBytes')) == 0 and objects.get('buckets', 0) == 0:
+        object_bytes = number(add_object_bytes)
+    else:
+        raise KeySafetyError('Non-empty buckets require exact paginated Object Storage bytes.')
     if live > 150 or backups > 5 or backups != int(backups) or object_bytes > 8_000_000_000:
         raise KeySafetyError("Storage proposal exceeds owner cap: live150GB, five backups, object8GB.")
     if tier != "Standard":

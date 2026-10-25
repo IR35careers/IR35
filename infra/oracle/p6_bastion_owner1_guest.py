@@ -20,9 +20,10 @@ def run(data, runtime):
     original.verify(failed['stage'], failed['manifestSHA256'])
     if failed.get('status') != 'FAIL' or failed.get('stoppedAfterFailure') is not True:
         raise RecoveryError('OriginalStoppedHealthFailureRequired')
-    JOURNAL.mkdir(mode=0o700)
-    os.chown(JOURNAL, 1002, 1002)
-    store = Store(JOURNAL, uid=1002)
+    journal = ROOT / '.env.p6-bastion-after-exact-20261025' if data.get('ownerSessionAfterExact') is True else JOURNAL
+    journal.mkdir(mode=0o700)
+    os.chown(journal, 1002, 1002)
+    store = Store(journal, uid=1002)
     stage = store.stage('01-reconcile')
     result = {'status': 'FAIL', 'workerRestarts': 0, 'probeCreates': 0, 'probeDeletes': 0,
               'secretChanges': 0, 'customerWrites': 0, 'productionChanges': False, 'realAcceptance': False}

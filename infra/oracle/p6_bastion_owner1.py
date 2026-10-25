@@ -107,7 +107,7 @@ def tunnel(agent, guest):
         yield port
 
 
-def work_bundle():
+def work_bundle(*, after_exact=False):
     import cloud_schema as schema
     import p6_worker_build
     import p6_context
@@ -119,6 +119,8 @@ def work_bundle():
     data['workerBuild'] = json.loads(sorted(directory.glob('worker-build-*.json'))[-1].read_text())
     data['mockPrepare'] = json.loads((directory / 'mock-prepare.json').read_text())
     data['failedStart'] = json.loads((directory / 'mock-start.json').read_text())
+    if after_exact is True:
+        data['ownerSessionAfterExact'] = True
     script = p6_worker_build.bundle()
     for name in ('p6_roles_guest', 'p6_mock_guest', 'p6_port_probe_guest', 'p6_bastion_owner1_guest'):
         code = (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()
@@ -127,17 +129,38 @@ def work_bundle():
     return script
 
 
-def execute():
+def require_unused_after_exact(previous, proof):
+    if (previous.get('status') != 'FAIL' or previous.get('sessionCreates') != 0 or previous.get('sessionClosed') is not True
+            or previous.get('code') != 'Approximate Object Storage metadata is not exact byte evidence.'
+            or previous.get('workerRestarts') != 0 or previous.get('bastionUpdates') != 0 or previous.get('networkChanges') != 0):
+        raise KeySafetyError('OnlyProvenUnusedSessionMayReopenAfterExactAudit')
+    if (proof.get('status') != 'PASS' or proof.get('exactBytesProven') is not True or proof.get('bucketListingStable') is not True
+            or type(proof.get('exactBytes')) is not int or not 0 <= proof['exactBytes'] <= 8_000_000_000
+            or proof.get('standardOnly') is not True or proof.get('stableCompletePasses') != 2):
+        raise KeySafetyError('CompleteExactStoragePassRequired_NoEligibilityWaiver')
+
+
+def execute(*, after_exact=False):
     import cloud_schema as schema
     proof = json.loads(PUBLIC.read_text())
     store = Store(ROOT)
     store.verify(proof['stage'], proof['manifestSHA256'])
     if proof.get('status') != 'PASS':
         raise KeySafetyError('PassingOwnerPreflightRequired_NoRetry')
-    script = work_bundle()  # Before any cloud mutation, refuses dirty source.
-    stage = store.stage('02-session')  # Exclusive owner slot, never reused.
+    exact = None
+    if after_exact:
+        import exact_storage_audit
+        previous = json.loads((PUBLIC.parent / 'bastion-owner1-session.json').read_text())
+        store.verify(previous['stage'], previous['manifestSHA256'])
+        exact = exact_storage_audit.latest_pass()
+        require_unused_after_exact(previous, exact)
+    script = work_bundle(after_exact=after_exact)  # Before any cloud mutation, refuses dirty source.
+    stage = store.stage('04-session-after-exact' if after_exact else '02-session')  # Old slot never reset/replayed.
     result = {'status': 'FAIL', 'sessionCreates': 0, 'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0,
               'workerRestarts': 0, 'productionChanges': False, 'realAcceptance': False, 'steps': []}
+    if exact:
+        result['exactAuditManifestSHA256'] = exact['manifestSHA256']
+        result['previousFailureManifestSHA256'] = previous['manifestSHA256']
     session = None
     spec = None
     counter = 0
@@ -187,12 +210,17 @@ def execute():
         spec = bastion.payload(parent['id'], instance['id'], vnic['private-ip'], private_file(KEY_DIRECTORY / 'ssh_ed25519.pub').strip())
         spec['displayName'] = SESSION_NAME
         line = step('gateway-continuity', lambda: transport.continuity_key({}))
-        write_new(HOSTS, line.encode())
+        if HOSTS.exists():
+            if private_file(HOSTS) != line:
+                raise KeySafetyError('ExistingGatewayPinChanged_NoReplacement')
+        else:
+            write_new(HOSTS, line.encode())
         sessions = step('existing-sessions', lambda: infra.invoke(['bastion', 'session', 'list', '--bastion-id', parent['id'], '--all']))
         if any(row.get('display-name') == SESSION_NAME for row in sessions):
             raise KeySafetyError('OwnerSessionIntentAlreadyExists_NoCreateOrRetry')
+        exact_options = {'exact_storage': exact_storage_audit.eligibility_counter} if after_exact else {}
         result['eligibility'] = step('fresh-free-eligibility', lambda: infra.fresh_eligibility(ReadOnlyOci(ensure_session()), journal,
-                                     journal['created']['instance']['spec']['availabilityDomain']), lambda value: value)
+                                     journal['created']['instance']['spec']['availabilityDomain'], **exact_options), lambda value: value)
         store.put(stage, 'session-spec-hash.json', json.dumps({'sha256': hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest(),
                   'targetPort': 22, 'existingVMOnly': True, 'ttlSeconds': 1800, 'createsAllowed': 1}).encode())
         print('CREATE CHECK: ONE free Bastion session, TTL1800, existing A1 2OCPU/12GB/150GB only, approved VM private22; no Bastion/IAM/network/secret/production changes.', flush=True)
@@ -224,7 +252,7 @@ def execute():
                 os.environ.pop('IR35_SSH_TRANSPORT', None)
             else:
                 os.environ['IR35_SSH_TRANSPORT'] = previous
-        with (PUBLIC.parent / 'bastion-owner1-reconcile.json').open('x', encoding='utf-8') as output:
+        with (PUBLIC.parent / ('bastion-owner1-reconcile-after-exact.json' if after_exact else 'bastion-owner1-reconcile.json')).open('x', encoding='utf-8') as output:
             json.dump(work, output, indent=2)
         result['work'] = work
         if work['status'] != 'PASS' or work.get('containment', {}).get('status') != 'PASS':
@@ -267,7 +295,7 @@ def execute():
             result.update(status='FAIL', cleanupCode=str(error) if isinstance(error, KeySafetyError) else type(error).__name__, sessionClosed=False)
     store.put(stage, 'result.json', json.dumps(result, sort_keys=True).encode())
     result.update(stage=stage.name, manifestSHA256=store.seal(stage))
-    with (PUBLIC.parent / 'bastion-owner1-session.json').open('x', encoding='utf-8') as output:
+    with (PUBLIC.parent / ('bastion-owner1-session-after-exact.json' if after_exact else 'bastion-owner1-session.json')).open('x', encoding='utf-8') as output:
         json.dump(result, output, indent=2)
     return result
 
@@ -310,9 +338,9 @@ def containment_after_stop():
 
 if __name__ == '__main__':
     try:
-        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--containment-after-stop']):
+        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--execute-after-exact-audit'], ['--containment-after-stop']):
             raise KeySafetyError('ExplicitReadOnlyOwnerPreflightRequired')
-        result = run_preflight() if sys.argv[1:] == ['--preflight'] else (execute() if sys.argv[1:] == ['--execute'] else containment_after_stop())
+        result = run_preflight() if sys.argv[1:] == ['--preflight'] else (execute(after_exact=sys.argv[1:] == ['--execute-after-exact-audit']) if sys.argv[1:] in (['--execute'], ['--execute-after-exact-audit']) else containment_after_stop())
         print(json.dumps(result))
         raise SystemExit(0 if result['status'] == 'PASS' else 1)
     except Exception as error:

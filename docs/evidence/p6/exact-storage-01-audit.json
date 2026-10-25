@@ -1,0 +1,11 @@
+{
+  "status": "FAIL",
+  "readOnly": true,
+  "mutations": 0,
+  "purpose": "01-audit",
+  "startedAt": "2026-10-24T23:44:36.719669+00:00",
+  "code": "G2: security-token refresh failed; browser sign-in required. Raw output suppressed.",
+  "finishedAt": "2026-10-24T23:44:38.481534+00:00",
+  "stage": "01-audit",
+  "manifestSHA256": "6630e292d141586e440fde0a2ca9be18f0f7f18da346e8acb6afd05959bdc2c1"
+}
