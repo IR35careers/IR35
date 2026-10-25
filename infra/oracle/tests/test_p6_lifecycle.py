@@ -1,9 +1,11 @@
 import copy
 import inspect
+import json
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
+from tempfile import TemporaryDirectory
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import p6_lifecycle as controller
@@ -18,6 +20,41 @@ def receipt(scenario):
 
 
 class NativeLifecycleTests(unittest.TestCase):
+    def test_repair_preserves_all_four_actual_failure_receipts_not_new_expected_values(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            stage = root / '12-native-mock-lifecycle'
+            stage.mkdir()
+            failed = {'status': 'FAIL', 'stage': stage.name, 'manifestSHA256': 'a' * 64,
+                      'code': 'NativeMockTerminalOrHistoryMismatch_NoReadyFallback', 'failureContainment': {'status': 'PASS'}}
+            (stage / 'result.json').write_text(json.dumps({key: value for key, value in failed.items() if key not in ('stage', 'manifestSHA256')}))
+            artifacts = []
+            for index, scenario in enumerate(('success', 'server_error', 'timeout', 'lost_ack'), 1):
+                row = receipt(scenario) | {'applicationId': f'{index:08x}-0000-4000-8000-000000000000'}
+                if scenario == 'lost_ack': row['errorCode'] = 'mock_browser_failed'
+                name = f'{index:03d}-terminal-{scenario}.json'
+                (stage / name).write_text(json.dumps(row))
+                artifacts.append({'name': name})
+            store = Mock(root=root)
+            store.verify.return_value = {'artifacts': artifacts}
+            kept = guest.retained_receipts(store, failed)
+            self.assertEqual(len(kept), 4)
+            self.assertEqual(kept['00000004-0000-4000-8000-000000000000']['errorCode'], 'mock_browser_failed')
+            # It must NOT rewrite the old failure to the newly fixed outcome.
+            original = json.loads((stage / artifacts[-1]['name']).read_text())
+            original['errorCode'] = 'mock_unknown_outcome'
+            (stage / artifacts[-1]['name']).write_text(json.dumps(original))
+            with self.assertRaisesRegex(RecoveryError, 'OriginalReceiptEvidenceChanged'):
+                guest.retained_receipts(store, failed)
+
+    def test_repair_has_new_stage_but_original_empty_fixture_assertion_is_retained(self):
+        source = inspect.getsource(guest.run)
+        self.assertIn("'16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle'", source)
+        self.assertIn("empty == {'applications': 0, 'schedules': 0, 'applyJobs': 0}", source)
+        self.assertIn("empty == {'applications': 4, 'schedules': 0, 'applyJobs': 4}", source)
+        self.assertIn('snapshots = dict(prior_receipts)', source)
+        self.assertIn('actual_receipt == before', source)
+
     def test_every_terminal_and_error_is_exact_never_ready_or_unknown_success(self):
         for scenario in guest.EXPECTED:
             self.assertEqual(guest.terminal(receipt(scenario), scenario)['status'], 'PASS')

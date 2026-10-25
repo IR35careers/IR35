@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October final image3 PASS — no more build/source retries
+
+- Canonical source-helper repair2 PASS sealedf5399660280797e9f189affaaa6d3be5111b09083afa7cb34859bbde5b6f4393, sameintendedcaaf4bd/actualimagebea1c9a5840c1856aa613967fcba4dac509a9e23a4d1b31fa83be0162c1ed844, ARM/nonroot/Playwright1.61.0/pgboss12.38.0/nativeChromiumhealth/full62MD5/Auth/2seq/schema3exceptions+2roles/552/73StoragePASS.197.156s, registrypublicationfalse/servicechanges0. Original03+repair01 failures/partialdirs/all3slots retained; repair02 chains both. Native14 LF reference hashes and parentmax1 remain unchanged, no further build/source repair permitted.
+- Distinct bounded runtime receipt-repair1/stage15 may activate this verifiedimage only, oldpausedv2/image1/env/units/failed12 retained, existingHBA/nativefidelity before/after. Then distinct lifecycle-repair1/stage16 must prove all4oldreceipts EXACT, insert onlynewprivatequeuefixtures (never delete/resetoldjobs), rerun fullnative outcome/duplicate/concurrency/cancel/watchdog/restart/schedule gates plusfullcontainment. Old12cannotreplay; no assertions/timeouts/hash rewrites.418helpersPASS; fullP6 app/Realtime/timer integration remains. No production/secret/role/network/HBA/cutover change.
+
 ## 25 October final source-helper EOL repair2 — hashes remain unchanged
 
 - Source-repair1 sealed326e81b1397718c54e8905f021935ee58aef54cff936a82208729e8a44abf864 FAIL before intent/log/Docker; fullcontainmentPASS. Read-only byte evidence proves Windows core.autocrlf=true exported CRLF (40/32extraCRbytes) while committed Git blobs and native14 expected hashes are IDENTICAL LF: mock-browser2f3372af9e2a5fa265bcc0c9ccf0ce5550578927e52c8c71d82058f0120ac5ce/mock-ats88640c953404aea319a985e755604633bd0c9909654ba01704a3202d73619ec9. Do NOT edit/normalise expected hashes or failed files. Use archive-only core.autocrlf=false to export exact Git bytes; new regression compares archivebytes toGitblobhashes.
