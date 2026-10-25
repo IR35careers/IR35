@@ -69,9 +69,11 @@ console.log(JSON.stringify({inserted:true,mock:true}));"""
     return script.replace('OPERATION', operation)
 
 
-def producer(value, *, orphan=False):
+def producer(value, *, orphan=False, worker_name=NEW_NAME):
+    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3'):
+        raise RecoveryError('FixedMockRuntimeIdentityRequired')
     script = producer_script(value, orphan=orphan)
-    args = ['docker', 'exec', '-i', '--user', '1002:1002', NEW_NAME, '/run/ir35/env-exec',
+    args = ['docker', 'exec', '-i', '--user', '1002:1002', worker_name, '/run/ir35/env-exec',
             '/opt/ir35/.env.p6-mock-worker', 'node', '--import', 'tsx', '--input-type=module', '-']
     observed = subprocess.run(args, input=script.encode(), capture_output=True, timeout=45)
     if observed.returncode or len(observed.stdout) > 16384:
@@ -141,13 +143,46 @@ def probe_lost_ack(data, runtime, *, repair_one=False):
     return result | {'stage': stage.name, 'manifestSHA256': store.seal(stage)}
 
 
-def run(data, runtime):
+def retained_receipts(store, failed):
+    anchored_result(store, failed)
+    if (failed.get('status') != 'FAIL' or failed.get('stage') != '12-native-mock-lifecycle'
+            or failed.get('failureContainment', {}).get('status') != 'PASS'
+            or failed.get('code') != 'NativeMockTerminalOrHistoryMismatch_NoReadyFallback'):
+        raise RecoveryError('ExactPriorLifecycleFailureRequired')
+    manifest = store.verify(failed['stage'], failed['manifestSHA256'])
+    found = {}
+    for item in manifest['artifacts']:
+        match = re.fullmatch(r'[0-9]{3}-terminal-(success|server_error|timeout|lost_ack)\.json', item['name'])
+        if not match:
+            continue
+        value = json.loads((store.root / failed['stage'] / item['name']).read_bytes())
+        if match[1] in found:
+            raise RecoveryError('DuplicateOriginalTerminalArtifact')
+        expected = {'success': ('submitted', None), 'server_error': ('failed', 'mock_ats_http_500'),
+                    'timeout': ('failed', 'mock_ats_timeout'), 'lost_ack': ('failed', 'mock_browser_failed')}[match[1]]
+        if (value.get('state'), value.get('errorCode')) != expected:
+            raise RecoveryError('OriginalReceiptEvidenceChanged')
+        uuid.UUID(value['applicationId'])
+        found[match[1]] = value
+    if set(found) != {'success', 'server_error', 'timeout', 'lost_ack'} or len({row['applicationId'] for row in found.values()}) != 4:
+        raise RecoveryError('FourOriginalReceiptsMustRemainExact')
+    return {row['applicationId']: row for row in found.values()}
+
+
+def run(data, runtime, *, repair_one=False):
+    if type(repair_one) is not bool:
+        raise RecoveryError('ExplicitLifecycleRepairBooleanRequired')
     store = prepared(data)
     anchor = data['runtimeProof']
     anchored_result(store, anchor)
     if anchor.get('status') != 'PASS' or anchor.get('containment', {}).get('status') != 'PASS':
         raise RecoveryError('ActualNativeHandoverPassRequired')
-    stage = store.stage('12-native-mock-lifecycle')
+    prior_receipts = retained_receipts(store, data['failureLifecycle']) if repair_one else {}
+    worker_name = 'ir35-p6-mock-worker-v3' if repair_one else NEW_NAME
+    worker_compose = ROOT / 'p6-mock-compose-v3.yml' if repair_one else NEW_COMPOSE
+    if repair_one and (anchor.get('repairAttempt') != 1 or anchor.get('containerName') != worker_name):
+        raise RecoveryError('ActualReceiptRepairRuntimeRequired')
+    stage = store.stage('16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
     original = Recovery(data['p4'], runtime)
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'realAcceptance': False, 'customerWrites': 0, 'productionChanges': False,
@@ -203,16 +238,22 @@ def run(data, runtime):
           'applications',(SELECT count(*) FROM pgboss.ir35_mock_application),
           'schedules',(SELECT count(*) FROM pgboss.ir35_mock_schedule),
           'applyJobs',(SELECT count(*) FROM pgboss.job WHERE name='ir35-staging-mock-apply'));""", 'postgres'))
-        checked('fresh-lifecycle-fixture', empty, empty == {'applications': 0, 'schedules': 0, 'applyJobs': 0})
-        worker = json.loads(runtime['run'](['docker', 'inspect', NEW_NAME]))[0]
+        if repair_one:
+            checked('retained-failure-fixture-counts', empty, empty == {'applications': 4, 'schedules': 0, 'applyJobs': 4})
+            for identifier, before in prior_receipts.items():
+                actual_receipt = control.request('GET', '/mock/applications/' + identifier)[1]
+                checked('retained-original-receipt', {'idSHA256': digest(identifier.encode()), 'sameReceipt': actual_receipt == before}, actual_receipt == before)
+        else:
+            checked('fresh-lifecycle-fixture', empty, empty == {'applications': 0, 'schedules': 0, 'applyJobs': 0})
+        worker = json.loads(runtime['run'](['docker', 'inspect', worker_name]))[0]
         network = json.loads(runtime['run'](['docker', 'inspect', '--type', 'network', 'ir35-staging_backend']))[0]
         address = isolation(worker, anchor['image'], network)
-        if digest(NEW_COMPOSE.read_bytes()) != anchor['composeSHA256'] or not worker['State']['Running'] or worker['HostConfig'].get('Init') is not True:
+        if digest(worker_compose.read_bytes()) != anchor['composeSHA256'] or not worker['State']['Running'] or worker['HostConfig'].get('Init') is not True:
             raise RecoveryError('ImmutableNativeMockRuntimeRequired')
         health = control.request('GET', '/health')[1]
         checked('mock-health', health, health.get('ok') is True and health.get('realAcceptance') is False
                 and health.get('buildSHA') == anchor['sourceSHA'] and health.get('active') == 0 and health.get('paused') is False)
-        snapshots = {}
+        snapshots = dict(prior_receipts)
         for scenario in EXPECTED:
             value = work(scenario)
             record('publication-intent', value)
@@ -259,7 +300,7 @@ def run(data, runtime):
         expect_http('maintenance-reject-schedule', 'POST', '/mock/schedule', scheduled, 503)
         queued = work('success')
         record('queued-cancel-intent', queued)
-        queued_receipt = producer(queued)
+        queued_receipt = producer(queued, worker_name=worker_name)
         checked('queued-before-cancel', queued_receipt, queued_receipt.get('state') == 'queued')
         cancelled = control.request('POST', '/mock/applications/' + queued['applicationId'] + '/cancel', {})[1]
         checked('queued-cancel', cancelled, cancelled.get('state') == 'failed' and cancelled.get('errorCode') == 'mock_cancelled'
@@ -280,7 +321,7 @@ def run(data, runtime):
         # Record synthetic orphan intent first; INSERT private queue fixture only.
         orphan = work('success')
         record('orphan-queued-intent', orphan)
-        inserted = producer(orphan, orphan=True)
+        inserted = producer(orphan, orphan=True, worker_name=worker_name)
         checked('orphan-insert', inserted, inserted == {'inserted': True, 'mock': True})
         expired = poll(orphan['applicationId'], timeout=30)
         checked('orphan-watchdog', expired, expired.get('state') == 'failed' and expired.get('errorCode') == 'runner_timeout'
@@ -301,8 +342,8 @@ def run(data, runtime):
         checked('durable-mock-schedules', schedules, schedules == ['mock_automation', 'mock_ingest', 'watchdog'])
         before_restart = idle()
         checked('one-browser-max', before_restart, before_restart.get('peakActive') == 1)
-        record('restart-intent', {'container': NEW_NAME, 'image': anchor['image'], 'queueJobsTerminal': True, 'realAcceptance': False})
-        runtime['run'](['docker', 'restart', '--time', '30', NEW_NAME], timeout=60)
+        record('restart-intent', {'container': worker_name, 'image': anchor['image'], 'queueJobsTerminal': True, 'realAcceptance': False})
+        runtime['run'](['docker', 'restart', '--time', '30', worker_name], timeout=60)
         result['workerRestarts'] = 1
         end = time.monotonic() + 90
         while True:
@@ -319,15 +360,16 @@ def run(data, runtime):
         for identifier, before in snapshots.items():
             after = control.request('GET', '/mock/applications/' + identifier)[1]
             checked('durable-after-restart', {'idSHA256': digest(identifier.encode()), 'sameReceipt': after == before}, after == before)
-        actual = json.loads(runtime['run'](['docker', 'inspect', NEW_NAME]))[0]
+        actual = json.loads(runtime['run'](['docker', 'inspect', worker_name]))[0]
         if isolation(actual, anchor['image'], network) != address:
             raise RecoveryError('MockRuntimeIsolationChangedAfterRestart')
-        processes = runtime['run'](['docker', 'top', NEW_NAME, '-eo', 'stat,comm']).splitlines()[1:]
+        processes = runtime['run'](['docker', 'top', worker_name, '-eo', 'stat,comm']).splitlines()[1:]
         chromium = [line for line in processes if re.search(r'\b(?:chrome|chromium|chrome_crashpad)\b', line)]
         checked('no-browser-orphans', {'chromiumProcessCount': len(chromium)}, not chromium)
         result['postQueueBoundary'] = verify_live(data, original, store, function_scope(original))
         result['containment'] = check_containment(data, runtime, store, stage, 'post')
         result.update(status='PASS', phaseComplete=False, scenarios=len(EXPECTED), persistedReceipts=len(snapshots),
+                      repairAttempt=1 if repair_one else 0, originalFailedReceiptsPreserved=len(prior_receipts),
                       scope='private mock lifecycle only; app/Realtime/timer integration still required')
     except Exception as error:
         result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__

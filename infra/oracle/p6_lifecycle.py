@@ -8,12 +8,13 @@ from p6_hba import credential_gate
 
 
 def main():
-    if sys.argv[1:] not in (['--run-mock-lifecycle'], ['--probe-lost-ack'], ['--probe-receipt-repair-one']):
+    if sys.argv[1:] not in (['--run-mock-lifecycle'], ['--probe-lost-ack'], ['--probe-receipt-repair-one'], ['--run-lifecycle-repair-one']):
         raise RuntimeError('ExplicitNativeMockLifecycleRequired')
     repair_one = sys.argv[1:] == ['--probe-receipt-repair-one']
+    lifecycle_repair = sys.argv[1:] == ['--run-lifecycle-repair-one']
     probing = sys.argv[1:] in (['--probe-lost-ack'], ['--probe-receipt-repair-one'])
     directory = schema.REPO / 'docs/evidence/p6'
-    destination = directory / ('isolated-receipt-repair-one.json' if repair_one else
+    destination = directory / ('native-mock-lifecycle-repair-one.json' if lifecycle_repair else 'isolated-receipt-repair-one.json' if repair_one else
                                'isolated-lost-ack-probe.json' if probing else 'native-mock-lifecycle.json')
     if destination.exists():
         raise RuntimeError('NativeMockLifecycleRecorded_NoReplay')
@@ -26,8 +27,10 @@ def main():
         data[name] = json.loads((directory / filename).read_text())
     if data['runtimeProof'].get('status') != 'PASS':
         raise RuntimeError('ActualMockHandoverPassRequired')
-    if probing:
+    if probing or lifecycle_repair:
         data['failureLifecycle'] = json.loads((directory / 'native-mock-lifecycle.json').read_text())
+    if lifecycle_repair:
+        data['runtimeProof'] = json.loads((directory / 'mock-receipt-repair-one-handover.json').read_text())
     if repair_one:
         data['originalBrowserProbe'] = json.loads((directory / 'isolated-lost-ack-probe.json').read_text())
         data['publicRepairSources'] = {name: (schema.REPO / 'services/application-worker' / name).read_text()
@@ -38,7 +41,7 @@ def main():
         code = (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()
         script += 'module=types.ModuleType(' + repr(name) + ');sys.modules[' + repr(name) + ']=module\nexec(' + repr(code) + ',module.__dict__)\n'
     operation = 'probe_lost_ack' if probing else 'run'
-    script += 'result=sys.modules["p6_lifecycle_guest"].' + operation + '(' + repr(data) + ',runtime' + (',repair_one=True' if repair_one else '') + ')\nprint(json.dumps(result))\n'
+    script += 'result=sys.modules["p6_lifecycle_guest"].' + operation + '(' + repr(data) + ',runtime' + (',repair_one=True' if repair_one or lifecycle_repair else '') + ')\nprint(json.dumps(result))\n'
     result = schema.run_guest(script, timeout=900)
     with destination.open('x', encoding='utf-8') as output:
         json.dump(result, output, indent=2)

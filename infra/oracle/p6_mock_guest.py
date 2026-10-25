@@ -65,12 +65,14 @@ def prerequisites(data,runtime):
     store=Store(ROOT/'.env.p6',uid=1002)
     for row in (data['p6Inventory'],data['rolePreflight'],data['roleInstall']):store.verify(row['stage'],row['manifestSHA256'])
     build=data['workerBuild']
-    if build.get('sourceRepairAttempt') == 1:
+    if build.get('sourceRepairAttempt') in (1, 2):
         if (build.get('attempt') != 3 or build.get('journal') != str(ROOT/'.env.p6-build-source-repairs')
-                or build.get('stage') != '01-third-source-repair' or build.get('originalThreeBuildSlotsPreserved') is not True):
+                or build.get('stage') != ('02-third-source-repair' if build['sourceRepairAttempt'] == 2 else '01-third-source-repair') or build.get('originalThreeBuildSlotsPreserved') is not True):
             raise RecoveryError('FixedThirdSourceRepairProofRequired')
         Store(ROOT/'.env.p6-build-source-repairs',uid=1002).verify(build['stage'],build['manifestSHA256'])
         Store(ROOT/'.env.p6-builds',uid=1002).verify('03-build',build['originalFailedBuildManifest'])
+        if build['sourceRepairAttempt'] == 2:
+            Store(ROOT/'.env.p6-build-source-repairs',uid=1002).verify('01-third-source-repair',build['sourceRepairPreviousManifest'])
     else:
         Store(ROOT/'.env.p6-builds',uid=1002).verify(build['stage'],build['manifestSHA256'])
     if build['status']!='PASS' or build.get('browser')!={'ok':True,'browserReady':True,'submissions':0} or build['containment']['status']!='PASS':raise RecoveryError('NativeMockBuildAndBrowserRequired')

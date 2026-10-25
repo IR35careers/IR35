@@ -46,6 +46,18 @@ class WebBuildTests(unittest.TestCase):
         self.assertIn('services/application-worker/Dockerfile.mock', names)
         self.assertIn('services/application-worker/mock-browser.ts', names)
 
+    def test_canonical_archive_bytes_equal_git_blob_without_rewriting_reference_hashes(self):
+        import hashlib
+        repo = Path(__file__).resolve().parents[3]
+        command = git_command(repo)
+        body = subprocess.check_output(command + ['-c', 'core.autocrlf=false', 'archive', '--format=tar', 'HEAD'], cwd=repo / 'infra/oracle')
+        with tarfile.open(fileobj=io.BytesIO(body), mode='r:') as snapshot:
+            for name in ('mock-browser.ts', 'mock-ats.ts'):
+                relative = 'services/application-worker/' + name
+                archived = snapshot.extractfile(relative).read()
+                blob = subprocess.check_output(command + ['show', 'HEAD:' + relative], cwd=repo)
+                self.assertEqual(hashlib.sha256(archived).hexdigest(), hashlib.sha256(blob).hexdigest())
+
     def test_exclusive_archive_boundary(self):
         for name,kind in [('../escape',tarfile.REGTYPE),('/absolute',tarfile.REGTYPE),('.env',tarfile.REGTYPE),('a/.vercel/project.json',tarfile.REGTYPE),('link',tarfile.SYMTYPE)]:
             with archive(name,kind) as value:

@@ -21,8 +21,9 @@ def bundle():
 
 
 def main():
-    if sys.argv[1:] not in (['--build'], ['--repair-third-source-once']):raise RuntimeError('ExplicitP6BuildRequired')
-    source_repair = sys.argv[1:] == ['--repair-third-source-once']
+    if sys.argv[1:] not in (['--build'], ['--repair-third-source-once'], ['--repair-third-source-eol-once']):raise RuntimeError('ExplicitP6BuildRequired')
+    source_repair_two = sys.argv[1:] == ['--repair-third-source-eol-once']
+    source_repair = sys.argv[1:] in (['--repair-third-source-once'], ['--repair-third-source-eol-once'])
     data=p6_context.context();git=git_command(schema.REPO)
     sha=subprocess.check_output(git+['rev-parse','HEAD'],text=True).strip()
     for key,path in [('p6Inventory','p6-inventory.json'),('rolePreflight','p6-role-preflight.json'),('roleInstall','p6-role-install.json')]:
@@ -35,7 +36,7 @@ def main():
     attempt=3 if source_repair else len(previous)+1
     if attempt>3:raise RuntimeError('P6WorkerBuildBudgetExhausted')
     if source_repair:
-        destination = directory / 'worker-build-3-source-repair-one.json'
+        destination = directory / ('worker-build-3-source-repair-two.json' if source_repair_two else 'worker-build-3-source-repair-one.json')
         if destination.exists():raise RuntimeError('ThirdSourceRepairAlreadyRecorded_NoReplay')
         failed = json.loads((directory / 'worker-build-3.json').read_text())
         if (failed.get('attempt') != 3 or failed.get('code') != 'FileNotFoundError'
@@ -45,6 +46,13 @@ def main():
         if subprocess.run(git + ['diff', '--quiet', sha, 'HEAD', '--', 'services/application-worker', 'src/lib/queue', 'package.json', 'package-lock.json']).returncode:
             raise RuntimeError('ThirdSourceRepairCannotChangeIntendedRuntime')
         data['failedThirdSource'] = failed
+        if source_repair_two:
+            first = json.loads((directory / 'worker-build-3-source-repair-one.json').read_text())
+            if (first.get('status') != 'FAIL' or first.get('sourceRepairAttempt') != 1
+                    or first.get('code') != 'ThirdBuildSourceMustMatchNativeSixScenarioProbe'
+                    or first.get('containment', {}).get('status') != 'PASS'):
+                raise RuntimeError('ExactPreDockerEOLFailureRequired_NoThirdRepair')
+            data['failedSourceRepairOne'] = first
     if attempt == 3:
         probe = json.loads((directory / 'isolated-receipt-repair-one.json').read_text())
         if (probe.get('status') != 'PASS' or probe.get('repairAttempt') != 1
@@ -52,16 +60,18 @@ def main():
                 or probe.get('containment', {}).get('status') != 'PASS'):
             raise RuntimeError('ThirdBuildNeedsActualReceiptRepairProbe')
         data['receiptRepairProbe'] = probe
-    archive=subprocess.check_output(git+['archive','--format=tar',sha],cwd=schema.REPO)
+    # Status uses core.autocrlf=true for the Windows worktree. The archive must
+    # instead contain the committed Git blob bytes, identical to native14.
+    archive=subprocess.check_output(git+['-c','core.autocrlf=false','archive','--format=tar',sha],cwd=schema.REPO)
     if len(archive)>100_000_000:raise RuntimeError('P6SourceArchiveBound')
     with tarfile.open(fileobj=io.BytesIO(archive), mode='r:') as snapshot:
         names = set(snapshot.getnames())
         if not {'package.json', 'package-lock.json', 'services/application-worker/Dockerfile.mock', 'services/application-worker/mock-browser.ts'}.issubset(names):
             raise RuntimeError('RepositoryRootSourceArchiveRequired_BeforeSSH')
     data.update(sourceSHA=sha,attempt=attempt,anchors=previous,archiveSHA256=hashlib.sha256(archive).hexdigest(),archive=base64.b64encode(archive).decode())
-    script=bundle()+'result=sys.modules["p6_worker_build_guest"].run('+repr(data)+',runtime,source_repair_one='+repr(source_repair)+')\nprint(json.dumps(result))\n'
+    script=bundle()+'result=sys.modules["p6_worker_build_guest"].run('+repr(data)+',runtime,source_repair_one='+repr(source_repair and not source_repair_two)+',source_repair_two='+repr(source_repair_two)+')\nprint(json.dumps(result))\n'
     result=schema.run_guest(script,timeout=1500);directory.mkdir(exist_ok=True)
-    destination = directory / ('worker-build-3-source-repair-one.json' if source_repair else 'worker-build-'+str(attempt)+'.json')
+    destination = directory / ('worker-build-3-source-repair-two.json' if source_repair_two else 'worker-build-3-source-repair-one.json' if source_repair else 'worker-build-'+str(attempt)+'.json')
     with destination.open('x') as output:json.dump(result,output,indent=2)
     print(json.dumps(result))
     if result['status']!='PASS':raise SystemExit(1)

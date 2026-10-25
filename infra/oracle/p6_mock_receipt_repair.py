@@ -16,7 +16,7 @@ def main():
     destination = directory / 'mock-receipt-repair-one-handover.json'
     if destination.exists():
         raise RuntimeError('ReceiptRepairHandoverRecorded_NoReplay')
-    build = json.loads((directory / 'worker-build-3-source-repair-one.json').read_text())
+    build = json.loads((directory / 'worker-build-3-source-repair-two.json').read_text())
     if build.get('status') != 'PASS' or build.get('attempt') != 3:
         raise RuntimeError('VerifiedFinalBuildThreeRequired')
     credential_gate()

@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October final source-helper EOL repair2 — hashes remain unchanged
+
+- Source-repair1 sealed326e81b1397718c54e8905f021935ee58aef54cff936a82208729e8a44abf864 FAIL before intent/log/Docker; fullcontainmentPASS. Read-only byte evidence proves Windows core.autocrlf=true exported CRLF (40/32extraCRbytes) while committed Git blobs and native14 expected hashes are IDENTICAL LF: mock-browser2f3372af9e2a5fa265bcc0c9ccf0ce5550578927e52c8c71d82058f0120ac5ce/mock-ats88640c953404aea319a985e755604633bd0c9909654ba01704a3202d73619ec9. Do NOT edit/normalise expected hashes or failed files. Use archive-only core.autocrlf=false to export exact Git bytes; new regression compares archivebytes toGitblobhashes.
+- This is second/final documented source-helper self-heal for SAMEcaaf4bd third image, only with both failedsealedstages proving no buildintent/log and independently absentimage. Retain both failedjournals/partialdirectories/all3originalslots, use separate02repairmanifest/source-r2 directory, chainoriginal03+repair01; no fourthslot/Dockerreplay/counterreset. Any failure now stops. No workerstart untilactualbuildPASS, originalmockworker remainspaused; no prod/secret/ACL/HBA/network change.
+
 ## 25 October build3 public-source helper repair (self-heal1, NO slot reset)
 
 - Build3/caaf4bd failed FileNotFoundError BEFORE any build intent/log/Docker invocation; originalsealed4392c963 retained and fullpostcontainmentPASS. Read-only native/source reproduction proves Git archive was scoped to caller infra/oracle (224members/no workerfiles), because Windows-managed git_command omitted -C. Fix root anchoring and add actual nested-CWD archive regression; never relax public-source hashes, assertions, timeouts or zero-loss checks.

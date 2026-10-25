@@ -22,8 +22,9 @@ def require_receipt_sources(probe, target):
         raise RuntimeError('ThirdBuildSourceMustMatchNativeSixScenarioProbe')
 
 
-def run(data,runtime, *, source_repair_one=False):
-    if type(source_repair_one) is not bool:raise RuntimeError('ExplicitSourceRepairBooleanRequired')
+def run(data,runtime, *, source_repair_one=False, source_repair_two=False):
+    if type(source_repair_one) is not bool or type(source_repair_two) is not bool or source_repair_one and source_repair_two:raise RuntimeError('ExplicitSourceRepairBooleanRequired')
+    source_repair = source_repair_one or source_repair_two
     sha=data['sourceSHA'];attempt=data['attempt']
     if not re.fullmatch(r'[a-f0-9]{40}',sha) or type(attempt)is not int or attempt not in (1,2,3):raise RuntimeError('BoundedP6SourceBuildRequired')
     roles=Store(ROOT/'.env.p6',uid=1002)
@@ -40,7 +41,7 @@ def run(data,runtime, *, source_repair_one=False):
     journal=ROOT/'.env.p6-builds'
     if not journal.exists():journal.mkdir(mode=0o700);os.chown(journal,1002,1002)
     store=Store(journal,uid=1002);verify_history(store,data['anchors'],sha)
-    if source_repair_one:
+    if source_repair:
         failed = data['failedThirdSource']
         store.verify(failed['stage'], failed['manifestSHA256'])
         actual = json.loads((store.root / failed['stage'] / 'result.json').read_bytes())
@@ -58,12 +59,25 @@ def run(data,runtime, *, source_repair_one=False):
         repair_root = ROOT / '.env.p6-build-source-repairs'
         if not repair_root.exists():repair_root.mkdir(mode=0o700);os.chown(repair_root,1002,1002)
         store=Store(repair_root,uid=1002)
+        if source_repair_two:
+            first = data['failedSourceRepairOne']
+            store.verify(first['stage'], first['manifestSHA256'])
+            actual_first = json.loads((store.root / first['stage'] / 'result.json').read_bytes())
+            if (first.get('sourceRepairAttempt') != 1 or first.get('sourceSHA') != sha
+                    or first.get('code') != 'ThirdBuildSourceMustMatchNativeSixScenarioProbe'
+                    or actual_first != {key: value for key, value in first.items() if key not in ('stage', 'manifestSHA256')}
+                    or {item.name for item in (store.root / first['stage']).iterdir()} != {
+                        'manifest.json', 'result.json', 'pre-pristine-fidelity.json', 'pre-fixture-fidelity.json',
+                        'post-pristine-fidelity.json', 'post-fixture-fidelity.json'}):
+                raise RuntimeError('SourceRepairOneMustProveNoDockerInvocation')
     elif attempt!=len(data['anchors'])+1:raise RuntimeError('P6BuildHistoryMismatch')
-    stage=store.stage('01-third-source-repair' if source_repair_one else f'{attempt:02d}-build');started=time.monotonic()
+    stage=store.stage('02-third-source-repair' if source_repair_two else '01-third-source-repair' if source_repair_one else f'{attempt:02d}-build');started=time.monotonic()
     result={'status':'FAIL','attempt':attempt,'sourceSHA':sha,'productionChanges':False,'serviceChanges':0,'realAcceptance':False}
-    if source_repair_one:
-        result.update(sourceRepairAttempt=1, journal=str(store.root), originalFailedBuildManifest=data['failedThirdSource']['manifestSHA256'],
+    if source_repair:
+        result.update(sourceRepairAttempt=2 if source_repair_two else 1, journal=str(store.root), originalFailedBuildManifest=data['failedThirdSource']['manifestSHA256'],
                       originalThreeBuildSlotsPreserved=True, dockerInvocationsBeforeRepair=0)
+        if source_repair_two:
+            result.update(sourceRepairPreviousManifest=data['failedSourceRepairOne']['manifestSHA256'], noFurtherSourceRepair=True)
     try:
         before,pristine,fixture=fidelity(data,runtime)
         store.put(stage,'pre-pristine-fidelity.json',json.dumps(pristine).encode());store.put(stage,'pre-fixture-fidelity.json',json.dumps(fixture).encode())
@@ -73,7 +87,7 @@ def run(data,runtime, *, source_repair_one=False):
         if available<4*1024*1024:raise RuntimeError('P6BuildMemoryHeadroomInsufficient')
         body=base64.b64decode(data['archive'],validate=True)
         if digest(body)!=data['archiveSHA256']:raise RuntimeError('SourceArchiveHashMismatch')
-        target=ROOT/'data/p6-build-source'/(sha+'-source-r1' if source_repair_one else sha);target.parent.mkdir(exist_ok=True);target.mkdir(mode=0o755)
+        target=ROOT/'data/p6-build-source'/(sha+'-source-r2' if source_repair_two else sha+'-source-r1' if source_repair_one else sha);target.parent.mkdir(exist_ok=True);target.mkdir(mode=0o755)
         with tarfile.open(fileobj=io.BytesIO(body),mode='r:') as archive:archive.extractall(target,members=safe_members(archive),filter='data')
         if attempt == 3:
             require_receipt_sources(probe, target)
@@ -105,4 +119,5 @@ def run(data,runtime, *, source_repair_one=False):
     except Exception as error:result.update(status='FAIL',containmentError=type(error).__name__)
     result['elapsedSeconds']=round(time.monotonic()-started,3)
     store.put(stage,'result.json',json.dumps(result,sort_keys=True).encode())
-    return result|{'stage':stage.name,'manifestSHA256':store.seal(stage,previous=next(reversed(data['anchors'].values()),None))}
+    previous = data['failedSourceRepairOne']['manifestSHA256'] if source_repair_two else next(reversed(data['anchors'].values()),None)
+    return result|{'stage':stage.name,'manifestSHA256':store.seal(stage,previous=previous)}
