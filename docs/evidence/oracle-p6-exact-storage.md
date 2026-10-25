@@ -1,6 +1,10 @@
 # P6 exact Object Storage accounting — 25 October 2026
 
-Status: **PASS (read-only audit only)**. P6 worker phase is not complete.
+Status: **Exact audit PASS; subsequent recovery STOP at G2**. P6 worker phase is not complete.
+
+The audit ran on24October23:46UTC. On resume25October the one bounded continuation stopped before the existing-Bastion GET because the browser SecurityToken had expired and automatic refresh failed. [Sealed failure](p6/bastion-owner1-session-after-exact.json), SHA256 `4c7ac1fcc95a3ce9b9af86c9bc430ecd132d7b01892a690e474ca01d24c4681f`. No session was created; none needed closing. No guest command, worker restart, probe replay, IAM/network/secret/production change or new full-containment check ran. The next fresh tenancy-wide audit was never reached.
+
+Local read-only metadata at25October07:39:18UTC showed browser age28,415seconds and token expiry24,818seconds earlier; this diagnosis made zero cloud calls and printed no credentials. This explains the authentication stop, not a storage-data mismatch. The prior audit remains immutable but is not fresh pre-create eligibility. Preserve every journal; no automatic retry under the owner's bounded-recovery rule. Fresh browser sign-in plus explicit owner reopening is required.
 
 | Gate | Actual result |
 | --- | --- |
@@ -19,4 +23,4 @@ The browser gate happened before any Object Storage request; owner sign-in compl
 
 The exact counter checks current objects against stored versions without double-counting, enumerates every unfinished upload's parts, rejects missing/non-integer sizes and ambiguous tiers, and detects pagination loops, duplicate entries and changes between complete passes. Object names, upload identifiers and credentials never enter the public artifact. The existing estimate-only path remains fail-closed; only this separately sealed exact callback can satisfy non-empty-bucket eligibility.
 
-Next: the owner's ONE unused existing-Bastion/existing-VM session, after another exact tenancy-wide audit immediately before creation. No Bastion, IAM, network, bucket, object, lifecycle, secret, production or cutover setting has changed. Probe reconciliation and full containment must pass before further mock staging work. Preserve all prior failed journals and counters. All PRs stay draft and unmerged; `YES CUTOVER` is absent.
+The planned single session was not created. Probe reconciliation and full containment still must pass under separately reopened authority before further mock staging work. No Bastion, IAM, network, bucket, object, lifecycle, secret, production or cutover setting changed. Preserve all prior failed journals and counters. All PRs stay draft and unmerged; `YES CUTOVER` is absent.

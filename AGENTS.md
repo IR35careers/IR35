@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October exact-audit continuation STOP — G2 before Bastion GET
+
+- Exact Object Storage audit previously PASS at24October23:46UTC (0bytes/two complete passes/12GETs), but the ONE reopened execution now STOPPED at `existing-bastion`: expired browser SecurityToken refresh failed BEFORE that API request. Sealed04-session-after-exact result4c7ac1fc; sessionCreates0/sessionClosedtrue, no Bastion/IAM/network/secret/worker/production mutation and no new guest/probe/full-containment run. Local read-only metadata at25October07:39UTC confirms browser age28415seconds/token expired24818seconds; zero cloud calls in diagnosis. No password/API/SSH passphrase needed or requested.
+- Preserve this failed stage and every old journal; no automatic second execution, slot reset, new recovery controller, direct-SSH workaround or P6–P9 advancement. Owner's no-further-retries rule applies. A new browser sign-in and explicit owner reopening are needed before another bounded recovery. Do not claim the historical0byte audit as fresh pre-create eligibility or claim a new containment PASS. All PRs draft, exactYES CUTOVER absent.
+
 ## 25 October owner reopens exact read-only storage audit, then UNUSED one session
 
 - Owner approves exact paginated GET/list accounting for every ir35 bucket, current/all stored versions (count current once), unfinished multipart parts, bucket names/object counts/exact totals in write-once evidence. No estimates or mutation of buckets/objects/lifecycle/IAM/network/secrets. Stop over80%of20GB or any unclear number; retain stricter existing Standard-only/8GBbackup cap. Up to2 self-heal tooling repairs, third failure stops; no SDK transport retries or IAM expansion.
