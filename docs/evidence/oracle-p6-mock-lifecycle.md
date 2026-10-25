@@ -1,5 +1,16 @@
 # P6 native mock lifecycle — stopped for owner review
 
+The separately approved read-only audit has now executed **once and stopped**. Logging-only source commit f87ee94 passed431helper tests, including11new per-step/command/error/redaction/write-once regressions. [Result](p6/status-owner-audit-two/result.json), [manifest](p6/status-owner-audit-two/manifest.json) SHA256 `7950d65bd52f898ab2cab0aee802ae22268bc205e81d147116656d607481a2bf`; all7artifact hashes verified.
+
+| Reopened audit step | Result |
+| --- | --- |
+| Sealed historical evidence | PASS |
+| Queue before | PASS: exactly12expected application/job IDs, all12receipts unchanged, no extra/pending jobs, schedules0 |
+| Worker idle | FAIL: `docker top ir35-p6-mock-worker-v3 -eo stat,comm` exit1; preceding Docker inspect PASS |
+| SMTP, full containment/audit tables, queue after | NOT RUN: stopped immediately, not waived |
+
+The [command observation](p6/status-owner-audit-two/03-worker-idle-result.json) identifies docker-top and records stderr SHA256 `e6c2b6078fe8c0e47be00f553dd4f0ab861a8dd6571d7e1e58c5e8b08a7dcfff`. Its category is unclassified/output withheld; underlying ps/daemon cause is unproven. No real queue residue was found by the completed checks, but the full no-side-effects proof is incomplete. Owner's no-further-retry STOP applies. No worker-source fix, new image, deployment, restart, config/queue/DB/SMTP/secret/OCI/production write or phase advance occurred. Previous image/configuration never replaced, so no rollback was needed. The approved image and full P6 rerun remain unused; do not rerun the consumed audit or modify its evidence. The original failure history below is preserved.
+
 Latest owner-approved continuation stopped at its **first read-only prerequisite audit**, before the HTTP-status fix, new image or P6 rerun. [Exact stop record](p6/status-owner-audit-one-stop.json): `Staging command failed: docker; exit=1; output suppressed`. The wrapper did not capture which Docker subcommand or intermediate results, so the new queue/audit/SMTP/worker no-side-effects proof is incomplete. A distinct read-only host diagnostic confirms ps and Docker CLI exist, not the underlying failure. No retry was attempted, following the owner's new explicit rule. New image/rerun allowances are unused; previous image/configuration were never replaced, so rollback was unnecessary. No source/service/queue/database/SMTP/secret/OCI/production changes or new containment PASS. Proposed prerequisite-tooling repair: individual write-once observations and safe operation-specific diagnostics, without raw Docker environments or secret output. Earlier immutable stage16 evidence follows unchanged.
 
 Latest actual run: [stage16 FAIL](p6/native-mock-lifecycle-repair-one.json), manifest `b20410a43d14bc947590cf2b7f29e6104c5880b4199a2b6c155e78e5bde75ee9`. **33 checks passed; one failed.** [Sealed-case/read-only diagnosis](p6/native-lifecycle-repair-one-status-diagnosis.json).

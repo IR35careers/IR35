@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October reopened read-only audit USED / docker-top STOP, no further retry
+
+- Offline per-step/command logger repair committed f87ee94 to draft PR57; 431 helper tests PASS, including11 new failure/redaction/write-once/bootstrap cases. ONE owner-reopened audit executed and is now consumed: local manifest `7950d65bd52f898ab2cab0aee802ae22268bc205e81d147116656d607481a2bf`, all7artifacts verified. Sealed history and queue-before PASS: exactly12expected application/job IDs, all12receipts unchanged, no extra/pending jobs, schedules0. No queue residue from invalid202 found by these checks.
+- Worker-idle step FAIL: read-only `docker top ir35-p6-mock-worker-v3 -eo stat,comm` exit1, stderr digest `e6c2b6078fe8c0e47be00f553dd4f0ab861a8dd6571d7e1e58c5e8b08a7dcfff`; classification unclassified/output withheld. Docker inspect passed immediately before it. Underlying ps/daemon cause is NOT established; do not fabricate it. SMTP/full-customer-audit-containment/queue-after steps NOT RUN; no complete no-residue/full-containment PASS. Per-step logging records exact failing operation, so the old unidentified-command defect is repaired, not a reason to repeat this audit.
+- Owner explicitly says any failure means STOP with no further retry: no more audit, status/source repair, new image or P6 run until separately reopened. Previously approved ONE native image and ONE full P6 rerun remain UNUSED; no worker source edit, image/config replacement, restart, queue/DB/SMTP/secret/OCI/production write. Previous image never switched, rollback unnecessary. Keep every manifest, original failure and counter unchanged, PR57 draft/unmerged, no P7–P9 advance or cutover.
+
 ## 25 October owner reopens ONE read-only diagnostic audit
 
 - Owner approves offline per-step audit logging repair/tests in PR57 and exactly ONE new read-only audit, only because the captured failure was a command/logging failure, not a reported residue finding. Underlying Docker cause and no-residue proof remain unproven; never claim otherwise. If real queue/job/audit/SMTP/worker residue is found, preserve it and STOP without repairing it. Any new audit failure for any reason means STOP/no retry. No worker/status repair/build until prerequisite PASS.

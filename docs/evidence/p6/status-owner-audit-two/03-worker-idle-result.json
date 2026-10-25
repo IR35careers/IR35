@@ -1,0 +1,26 @@
+{
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 1,
+      "operation": "docker-top",
+      "status": "FAIL",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "e6c2b6078fe8c0e47be00f553dd4f0ab861a8dd6571d7e1e58c5e8b08a7dcfff"
+    }
+  ],
+  "exceptionType": "RuntimeError",
+  "mutations": 0,
+  "operation": "worker-idle",
+  "rawErrorWithheld": true,
+  "status": "FAIL"
+}
