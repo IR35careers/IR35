@@ -1,0 +1,1359 @@
+{
+  "status": "PASS",
+  "roleWrites": 0,
+  "grantWrites": 0,
+  "customerWrites": 0,
+  "passwordChanges": 0,
+  "postgresRestarts": 0,
+  "workerStarts": 0,
+  "ociNetworkChanges": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "functionCalls": 0,
+  "baseline552Changed": false,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "rawFunctionScopeBefore": {
+    "status": "REVIEW_REQUIRED",
+    "baseline552Changed": false,
+    "functionCalls": 0,
+    "mutations": 0,
+    "databases": [
+      {
+        "database": "postgres",
+        "checks": 22,
+        "outsideQueueDefiners": []
+      },
+      {
+        "database": "ir35_p4_20261021t170139z_8be0fc2e",
+        "checks": 6,
+        "outsideQueueDefiners": [
+          {
+            "role": "ir35_queue",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          },
+          {
+            "role": "ir35_queue_producer",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          }
+        ]
+      },
+      {
+        "database": "ir35_p5_app",
+        "checks": 6,
+        "outsideQueueDefiners": [
+          {
+            "role": "ir35_queue",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          },
+          {
+            "role": "ir35_queue_producer",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          }
+        ]
+      }
+    ]
+  },
+  "backup": {
+    "path": "/opt/ir35/.env.p6/10-owner-queue-hba-boundary/pg_hba.original.conf",
+    "sha256": "a925911753f4975548eb4079177441c886aa22b6dd69f2b0cff98f779fb0b66a",
+    "mode": "400",
+    "owner": "ir35",
+    "originalPath": "/etc/postgresql/pg_hba.conf",
+    "originalCustody": {
+      "uid": 100,
+      "gid": 101,
+      "mode": 493
+    }
+  },
+  "ruleOrdering": {
+    "status": "PASS",
+    "managedRules": 34,
+    "beforeEveryOriginalRule": true,
+    "localCovered": true,
+    "ipv4Covered": true,
+    "ipv6Covered": true,
+    "futureDatabasesDenied": true,
+    "replicationDenied": true,
+    "authentication": "scram-sha-256"
+  },
+  "reloaded": true,
+  "rawFunctionScopeAfter": {
+    "status": "REVIEW_REQUIRED",
+    "baseline552Changed": false,
+    "functionCalls": 0,
+    "mutations": 0,
+    "databases": [
+      {
+        "database": "postgres",
+        "checks": 22,
+        "outsideQueueDefiners": []
+      },
+      {
+        "database": "ir35_p4_20261021t170139z_8be0fc2e",
+        "checks": 6,
+        "outsideQueueDefiners": [
+          {
+            "role": "ir35_queue",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          },
+          {
+            "role": "ir35_queue_producer",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          }
+        ]
+      },
+      {
+        "database": "ir35_p5_app",
+        "checks": 6,
+        "outsideQueueDefiners": [
+          {
+            "role": "ir35_queue",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          },
+          {
+            "role": "ir35_queue_producer",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          }
+        ]
+      }
+    ]
+  },
+  "queueRoleCustomerAccess": [
+    {
+      "database": "postgres",
+      "checks": 126,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "checks": 114,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p5_app",
+      "checks": 114,
+      "unexpectedAccess": 0
+    }
+  ],
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "candidateSHA256": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+  "loginChecks": [
+    {
+      "role": "ir35_queue",
+      "database": "_supabase",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "_supabase",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "_supabase",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "_supabase",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p5_app",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p5_app",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p5_app",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_p5_app",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "postgres",
+      "transport": "docker-tcp",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "postgres",
+      "transport": "local",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "postgres",
+      "transport": "ipv4-loopback",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "postgres",
+      "transport": "ipv6-loopback",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "template1",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "template1",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "template1",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue",
+      "database": "template1",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "_supabase",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "_supabase",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "_supabase",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "_supabase",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_acl_repair_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_baseline_proof_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_cloud_baseline_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_owner_parity_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p5_app",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p5_app",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p5_app",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_p5_app",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_rehearsal_a_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "ir35_storage_compat_a_20261021",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "postgres",
+      "transport": "docker-tcp",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "postgres",
+      "transport": "local",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "postgres",
+      "transport": "ipv4-loopback",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "postgres",
+      "transport": "ipv6-loopback",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "connectedAsExpected": true,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "template1",
+      "transport": "docker-tcp",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "template1",
+      "transport": "local",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "template1",
+      "transport": "ipv4-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    },
+    {
+      "role": "ir35_queue_producer",
+      "database": "template1",
+      "transport": "ipv6-loopback",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "connectedAsExpected": false,
+      "passed": true,
+      "applicationFunctionCalled": false
+    }
+  ],
+  "inaccessibleApplicationFunctions": true,
+  "rawFunctionFindingRetained": true,
+  "queueDatabase": "postgres",
+  "postmasterStartUnchanged": true,
+  "databasesWithConnections": [
+    "_supabase",
+    "ir35_acl_repair_20261021",
+    "ir35_baseline_proof_20261021",
+    "ir35_cloud_baseline_20261021",
+    "ir35_owner_parity_20261021",
+    "ir35_p4_20261021t170139z_8be0fc2e",
+    "ir35_p4_20261021t170139z_8be0fc2e_named",
+    "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+    "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+    "ir35_p5_app",
+    "ir35_rehearsal_a_20261021",
+    "ir35_storage_compat_a_20261021",
+    "postgres",
+    "template1"
+  ],
+  "disabledDatabaseRules": [
+    "template0"
+  ],
+  "queueOnlyConnectionBoundary": "PASS",
+  "applicationDataMustNeverBeRestoredIntoQueueDatabase": true,
+  "stage": "10-owner-queue-hba-boundary",
+  "manifestSHA256": "bd9c213cca63421095c083de1f5f68b92e652e3ba73f0199d6c123c549ff3d33"
+}

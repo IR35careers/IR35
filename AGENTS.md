@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October actual staging HBA boundary PASS — guarded mock continuation
+
+- Actual owner-approved reload-only repair PASS, sealedbd9c213cca63421095c083de1f5f68b92e652e3ba73f0199d6c123c549ff3d33:112 real logins across2roles/14connectableDBs/4transports, 8queuepositives/104explicitHBArejects/0failures;34managedrules beforeoriginalrules, template0 separatelydenied/disabled. Exact backup originala925911753f4975548eb4079177441c886aa22b6dd69f2b0cff98f779fb0b66a at/opt/ir35/.env.p6/10-owner-queue-hba-boundary/pg_hba.original.conf ownerir35/mode400; current443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68 with originalfilecustody. Postmasterunchanged, reloadonly/no grant/role/password/OCI/network/production change; all62orderedMD5/Auth/2seq/schema3exceptions+2roles/552/73Storage containmentPASS. Raw publicfunctionACL REVIEW_REQUIRED remains unchanged, not filtered/waived orinvoked.
+- Owner's approved connection boundary now releases ONLY the distinct post-HBA mock handover slot11 after sealed-native/public-result equality and currentHBAhash/order/inventory/session checks; oldfailed09 cannotreplay/reset. Fullscope/baselineverification before/after, native image2 only, oldimage/env/proxy retained, no realacceptance/prod/cutover. HBA/apprestores must never placecustomerdata inoperationalpostgres. Finishall remainingP6 runtime/lifecycle/integration gates beforephasePASS and P7→P8; P9prepareonly. SSHrenewalverified/nativehold remains; no automaticnewprompt/Bastion.
+
 ## 25 October owner approves ONE fresh SSH lease after expiry
 
 - Owner replied “Signed in; approve one new four-hour SSH unlock.” This authorises one distinct native hidden ssh-add -t 4h operation on the existing encrypted key after proving the first receipt expired. Preserve every old attempt/receipt; new owner-reopen slot is write-once, no retry. Fingerprint-only verification and conservative four-hour lifetime, no passphrase capture/file/env/log/key decryption on disk. Keep the native hold window alive without CPU load.
