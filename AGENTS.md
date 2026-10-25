@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October stage16 stopped — premature HTTP 202, no automatic build/run extension
+
+- Native lifecycle repair1 is now USED and sealed `b20410a43d14bc947590cf2b7f29e6104c5880b4199a2b6c155e78e5bde75ee9`: 33 checks PASS, invalid employer-URL payload status expected400/actual202 FAIL. All six browser outcomes, duplicates/durable acknowledgements and single-browser concurrency passed before the failure. Worker automatically paused, zero restarts; cancellation/watchdog/schedules/restart and full P6 integration remain untested/incomplete.
+- Read-only diagnosis verifies the exact sealed failure and precisely 12 expected retained/new mock application IDs and queue job IDs, no extra job. `writeHead(202)` runs before awaited enqueue validation; validation rejects before DB transaction, but the catch cannot replace an already-set status. Offline loopback reproduction confirms it. Full post-failure 62 ordered MD5/Auth/2seq/schema3exceptions+2roles/552/73Storage PASS; current HBA/raw function finding/112-login-proof boundary still PASS unchanged. Never waive the 400 assertion, call this phase PASS or rewrite/remove failed receipts.
+- Existing build/source budget is exhausted and stage16 cannot replay. STOP for owner review before another immutable worker image or a distinct native repair run; do not invent a fourth slot, reset counters, overlay live runtime source or advance P7–P9. Proposed narrow fix is await successful enqueue before sending202, with an actual HTTP rejection regression. No worker source/live repair has been applied. All production/provider/DNS/secret/cutover holds remain.
+
 ## 25 October owner-ready access handoff — one fresh login and one SSH prompt
 
 - Owner replied **“Ready—open both once”** after the previous Oracle login timed out and the second four-hour SSH lease expired. This authorises one new normal browser SecurityToken login and one distinct native `ssh-add -t 4h` prompt for the existing encrypted key, not an automatic retry or reset of previous receipts. The new READY HANDOFF lease must verify the previous lease expired, preserve both earlier journals, verify the public fingerprint and retain a conservative expiry. No passphrase is read, logged or stored by the helper.
