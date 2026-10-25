@@ -107,7 +107,7 @@ def tunnel(agent, guest):
         yield port
 
 
-def work_bundle(*, after_exact=False, token_reopen=False, after_close=False):
+def work_bundle(*, after_exact=False, token_reopen=False, after_close=False, four_hour_reopen=False):
     import cloud_schema as schema
     import p6_worker_build
     import p6_context
@@ -124,6 +124,8 @@ def work_bundle(*, after_exact=False, token_reopen=False, after_close=False):
     if token_reopen is True:
         data['ownerTokenReopen'] = True
         data['ownerContainmentAfterClose'] = after_close
+    if four_hour_reopen is True:
+        data['ownerFourHourReopen'] = True
     script = p6_worker_build.bundle()
     for name in ('p6_roles_guest', 'p6_mock_guest', 'p6_port_probe_guest', 'p6_bastion_owner1_guest'):
         code = (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()
@@ -143,11 +145,13 @@ def require_unused_after_exact(previous, proof):
         raise KeySafetyError('CompleteExactStoragePassRequired_NoEligibilityWaiver')
 
 
-def require_token_window(profile, *, now=None):
+def require_token_window(profile, *, now=None, minimum_seconds=2700):
     remaining = profile.get('expiresAt', 0) - (time.time() if now is None else now)
-    if remaining < 2700:
-        raise KeySafetyError('TokenBelow45Minutes_StopBeforeRecovery')
-    return {'status': 'PASS', 'tokenSecondsRemaining': int(remaining), 'minimumSecondsRequired': 2700}
+    if minimum_seconds not in (1800, 2700):
+        raise KeySafetyError('ExplicitOwnerTokenWindowRequired')
+    if remaining < minimum_seconds:
+        raise KeySafetyError('TokenBelow' + str(minimum_seconds // 60) + 'Minutes_StopBeforeRecovery')
+    return {'status': 'PASS', 'tokenSecondsRemaining': int(remaining), 'minimumSecondsRequired': minimum_seconds}
 
 
 def require_auth_only_reopening(previous):
@@ -159,7 +163,16 @@ def require_auth_only_reopening(previous):
         raise KeySafetyError('ExactZeroCreateAuthFailureRequired_NoOtherReopening')
 
 
-def execute(*, after_exact=False, token_reopen=False):
+def require_unloaded_agent_reopening(previous):
+    if (previous.get('status') != 'FAIL' or previous.get('sessionCreates') != 0
+            or previous.get('sessionClosed') is not True or previous.get('workerRestarts') != 0
+            or previous.get('bastionUpdates') != 0 or previous.get('iamChanges') != 0
+            or previous.get('networkChanges') != 0 or previous.get('productionChanges') is not False
+            or previous.get('code') != 'ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt'):
+        raise KeySafetyError('ExactZeroCreateUnloadedAgentGateRequired_NoOtherReopening')
+
+
+def execute(*, after_exact=False, token_reopen=False, four_hour_reopen=False):
     import cloud_schema as schema
     proof = json.loads(PUBLIC.read_text())
     store = Store(ROOT)
@@ -179,14 +192,23 @@ def execute(*, after_exact=False, token_reopen=False):
         auth_failure = json.loads((PUBLIC.parent / 'bastion-owner1-session-after-exact.json').read_text())
         store.verify(auth_failure['stage'], auth_failure['manifestSHA256'])
         require_auth_only_reopening(auth_failure)
-    script = work_bundle(after_exact=after_exact, **({'token_reopen': True} if token_reopen else {}))  # Refuses dirty source.
-    closed_script = work_bundle(after_exact=True, token_reopen=True, after_close=True) if token_reopen else None
-    stage = store.stage('05-owner-token-reopen' if token_reopen else ('04-session-after-exact' if after_exact else '02-session'))
+    if four_hour_reopen:
+        if not token_reopen:
+            raise KeySafetyError('TokenGatedContextRequiredForFourHourReopening')
+        missing_agent = json.loads((PUBLIC.parent / 'bastion-owner1-session-token-reopen.json').read_text())
+        store.verify(missing_agent['stage'], missing_agent['manifestSHA256'])
+        require_unloaded_agent_reopening(missing_agent)
+    options = ({'token_reopen': True} if token_reopen else {}) | ({'four_hour_reopen': True} if four_hour_reopen else {})
+    script = work_bundle(after_exact=after_exact, **options)  # Refuses dirty source.
+    closed_script = work_bundle(after_exact=True, after_close=True, **options) if token_reopen else None
+    stage = store.stage('06-owner-four-hour-reopen' if four_hour_reopen else ('05-owner-token-reopen' if token_reopen else ('04-session-after-exact' if after_exact else '02-session')))
     result = {'status': 'FAIL', 'sessionCreates': 0, 'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0,
               'workerRestarts': 0, 'productionChanges': False, 'realAcceptance': False, 'steps': []}
     if exact:
         result['exactAuditManifestSHA256'] = exact['manifestSHA256']
         result['previousFailureManifestSHA256'] = previous['manifestSHA256']
+    if four_hour_reopen:
+        result['previousUnloadedAgentManifestSHA256'] = missing_agent['manifestSHA256']
     session = None
     spec = None
     counter = 0
@@ -199,7 +221,7 @@ def execute(*, after_exact=False, token_reopen=False):
         filename = f'{counter:02d}-{name}'
         store.put(stage, filename + '-intent.json', json.dumps({'operation': name, 'atUTC': datetime.now(timezone.utc).isoformat()}).encode())
         try:
-            if token_reopen:
+            if token_reopen and name != 'fresh-token-30-minutes':
                 # Synchronous boundary: do not begin another operation while
                 # refresh is needed. ensure_session makes one refresh, never
                 # uses an API key, and raises immediately if refresh fails.
@@ -223,10 +245,19 @@ def execute(*, after_exact=False, token_reopen=False):
 
     try:
         if token_reopen:
-            result['tokenWindow'] = step('fresh-token-45-minutes', lambda: require_token_window(ensure_session()), lambda value: value)
+            if four_hour_reopen:
+                result['tokenWindow'] = step('fresh-token-30-minutes', lambda: require_token_window(ensure_session(minimum_seconds=1800), minimum_seconds=1800), lambda value: value)
+            else:
+                result['tokenWindow'] = step('fresh-token-45-minutes', lambda: require_token_window(ensure_session()), lambda value: value)
             def agent_ready():
-                if not ensure_agent()['keyLoaded']:
+                agent = ensure_agent()
+                if not agent['keyLoaded']:
                     raise KeySafetyError('ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt')
+                if four_hour_reopen:
+                    if type(agent.get('keyLifetimeSecondsRemaining')) is not int or agent['keyLifetimeSecondsRemaining'] < 3600:
+                        raise KeySafetyError('SSHKeyNeedsOneHourVerifiedLifetime_NoReprompt')
+                    return {'status': 'PASS', 'existingKeyLoaded': True, 'passphraseRequested': False,
+                            'keyFingerprint': agent['keyFingerprint'], 'keyLifetimeSecondsRemaining': agent['keyLifetimeSecondsRemaining']}
                 return {'status': 'PASS', 'existingKeyLoaded': True, 'passphraseRequested': False}
             result['sshAgent'] = step('existing-agent', agent_ready, lambda value: value)
         journal = step('existing-intent', lambda: json.loads(private_file(infra.JOURNAL)))
@@ -301,7 +332,7 @@ def execute(*, after_exact=False, token_reopen=False):
                 os.environ.pop('IR35_SSH_TRANSPORT', None)
             else:
                 os.environ['IR35_SSH_TRANSPORT'] = previous
-        with (PUBLIC.parent / ('bastion-owner1-reconcile-token-reopen.json' if token_reopen else ('bastion-owner1-reconcile-after-exact.json' if after_exact else 'bastion-owner1-reconcile.json'))).open('x', encoding='utf-8') as output:
+        with (PUBLIC.parent / ('bastion-owner1-reconcile-four-hour.json' if four_hour_reopen else ('bastion-owner1-reconcile-token-reopen.json' if token_reopen else ('bastion-owner1-reconcile-after-exact.json' if after_exact else 'bastion-owner1-reconcile.json')))).open('x', encoding='utf-8') as output:
             json.dump(work, output, indent=2)
         result['work'] = work
         if work['status'] != 'PASS' or work.get('containment', {}).get('status') != 'PASS':
@@ -375,7 +406,7 @@ def execute(*, after_exact=False, token_reopen=False):
             result.update(status='FAIL', code=str(error) if isinstance(error, KeySafetyError) else type(error).__name__)
     store.put(stage, 'result.json', json.dumps(result, sort_keys=True).encode())
     result.update(stage=stage.name, manifestSHA256=store.seal(stage))
-    with (PUBLIC.parent / ('bastion-owner1-session-token-reopen.json' if token_reopen else ('bastion-owner1-session-after-exact.json' if after_exact else 'bastion-owner1-session.json'))).open('x', encoding='utf-8') as output:
+    with (PUBLIC.parent / ('bastion-owner1-session-four-hour.json' if four_hour_reopen else ('bastion-owner1-session-token-reopen.json' if token_reopen else ('bastion-owner1-session-after-exact.json' if after_exact else 'bastion-owner1-session.json')))).open('x', encoding='utf-8') as output:
         json.dump(result, output, indent=2)
     return result
 
@@ -418,9 +449,11 @@ def containment_after_stop():
 
 if __name__ == '__main__':
     try:
-        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--execute-after-exact-audit'], ['--execute-owner-token-reopen'], ['--containment-after-stop']):
+        if sys.argv[1:] not in (['--preflight'], ['--execute'], ['--execute-after-exact-audit'], ['--execute-owner-token-reopen'], ['--execute-owner-four-hour-reopen'], ['--containment-after-stop']):
             raise KeySafetyError('ExplicitReadOnlyOwnerPreflightRequired')
-        if sys.argv[1:] == ['--execute-owner-token-reopen']:
+        if sys.argv[1:] == ['--execute-owner-four-hour-reopen']:
+            result = execute(after_exact=True, token_reopen=True, four_hour_reopen=True)
+        elif sys.argv[1:] == ['--execute-owner-token-reopen']:
             result = execute(after_exact=True, token_reopen=True)
         else:
             result = run_preflight() if sys.argv[1:] == ['--preflight'] else (execute(after_exact=sys.argv[1:] == ['--execute-after-exact-audit']) if sys.argv[1:] in (['--execute'], ['--execute-after-exact-audit']) else containment_after_stop())

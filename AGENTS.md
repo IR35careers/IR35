@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October owner-approved FOUR-HOUR unlock and ONE recovery
+
+- Owner explicitly approves one native hidden `ssh-add -t 4h` for the existing encrypted key, public-fingerprint verification only, then ONE reopened recovery. No retry if unlock/recovery fails. Preserve all earlier journals; a new exclusive per-boot four-hour prompt receipt may record only fingerprint/conservative expiry, never passphrase/private key. Keep the native window open without CPU load to retain WSL. Before long work prove key remains loaded and time budget is adequate.
+- OCI must have >=30minutes remaining; below that run exactly one SecurityToken refresh and stop if unsuccessful/insufficient, no API-key fallback. This supersedes the earlier45minute gate for this reopening only. Existing Bastion/VM132.145.28.134, one short-TTL session, no IAM/network/bucket/paid changes; reconcile23:40 before restart, close session then full62table/MD5/Auth/2sequences/schema3exceptions+2roles/552baseline/73Storage containment. Mock/SMTPsink only, no production/DNS/Google/Vercel/cloud-Supabase/operational-secret/cutover change. On actualPASS finishP6→P7→P8, P9prepareonly/STOP exactYES CUTOVER, all PRs draft/unmerged.
+
 ## 25 October owner-token recovery STOP — existing SSH identity unloaded
 
 - Fresh browser sign-in and actual read-onlyir35 compartmentGET PASS. ONE05-owner-token-reopen execution then passed >=45minutes (3159seconds remaining) but stopped at the next existing-agent check: `ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt`. Sealed3e48b186. Zero sessions/Bastion/IAM/network/worker/production/operational-secret changes; no new guest/probe/full-containment run, no session to close. Never claim stale historical containment/storage as a new execution PASS.

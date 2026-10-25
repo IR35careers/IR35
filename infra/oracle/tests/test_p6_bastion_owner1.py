@@ -18,6 +18,21 @@ class OwnerRecoveryTests(unittest.TestCase):
         for expires in (2799, 0):
             with self.assertRaisesRegex(KeySafetyError, 'TokenBelow45Minutes'):
                 recovery.require_token_window({'expiresAt': expires}, now=100)
+        self.assertEqual(recovery.require_token_window({'expiresAt': 1900}, now=100, minimum_seconds=1800)['minimumSecondsRequired'], 1800)
+        with self.assertRaisesRegex(KeySafetyError, 'TokenBelow30Minutes'):
+            recovery.require_token_window({'expiresAt': 1899}, now=100, minimum_seconds=1800)
+
+    def test_four_hour_reopening_is_bound_to_zero_create_unloaded_agent_failure(self):
+        failed = {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
+                  'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0, 'productionChanges': False,
+                  'code': 'ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt'}
+        recovery.require_unloaded_agent_reopening(failed)
+        for change in ({'sessionCreates': 1}, {'sessionClosed': False}, {'code': 'unrelated failure'}, {'networkChanges': 1}):
+            with self.assertRaises(KeySafetyError):
+                recovery.require_unloaded_agent_reopening(failed | change)
+
+    def test_four_hour_owner_execution_checks_thirty_minutes_and_closes_before_containment(self):
+        self._token_run(four_hour=True)
 
     def test_owner_reopening_accepts_only_the_preserved_zero_create_auth_gate(self):
         previous = {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
@@ -34,7 +49,7 @@ class OwnerRecoveryTests(unittest.TestCase):
     def test_token_refresh_failure_is_not_retried_in_cleanup_or_another_recovery(self):
         self._token_run(auth_failure=True)
 
-    def _token_run(self, auth_failure=False):
+    def _token_run(self, auth_failure=False, four_hour=False):
         import time
         import subprocess
         import cloud_schema
@@ -47,7 +62,7 @@ class OwnerRecoveryTests(unittest.TestCase):
         creates = []
         deletes = []
         refresh_failures = []
-        def auth():
+        def auth(**kwargs):
             if auth_failure and 'reconcile' in events:
                 refresh_failures.append(True)
                 raise KeySafetyError('G2: security-token refresh failed; browser sign-in required. Raw output suppressed.')
@@ -104,6 +119,10 @@ class OwnerRecoveryTests(unittest.TestCase):
             seal('04-session-after-exact', {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
                  'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0, 'productionChanges': False,
                  'code': 'G2: security-token refresh failed; browser sign-in required. Raw output suppressed.'}, root / 'bastion-owner1-session-after-exact.json')
+            if four_hour:
+                seal('05-owner-token-reopen', {'status': 'FAIL', 'sessionCreates': 0, 'sessionClosed': True, 'workerRestarts': 0,
+                     'bastionUpdates': 0, 'iamChanges': 0, 'networkChanges': 0, 'productionChanges': False,
+                     'code': 'ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt'}, root / 'bastion-owner1-session-token-reopen.json')
             for name, value in [('ROOT', root), ('PUBLIC', public), ('TRANSPORT', root / 'transport.json'), ('HOSTS', root / 'hosts')]:
                 stack.enter_context(patch.object(recovery, name, value))
             stack.enter_context(patch.object(recovery, 'work_bundle', return_value='fixture'))
@@ -120,13 +139,13 @@ class OwnerRecoveryTests(unittest.TestCase):
             stack.enter_context(patch.object(recovery.infra, 'fresh_eligibility', return_value={'shapeBilling': 'LIMITED_FREE'}))
             stack.enter_context(patch.object(recovery, 'ReadOnlyOci', return_value=object()))
             stack.enter_context(patch.object(recovery, 'ensure_session', side_effect=auth))
-            stack.enter_context(patch.object(recovery, 'ensure_agent', return_value={'keyLoaded': True}))
+            stack.enter_context(patch.object(recovery, 'ensure_agent', return_value={'keyLoaded': True, 'keyFingerprint': 'public-fixture-fingerprint', 'keyLifetimeSecondsRemaining': 14400}))
             stack.enter_context(patch.object(recovery.bastion, 'verify_session', return_value=ids['bastionsession']))
             stack.enter_context(patch.object(recovery, 'wait_for_visible', side_effect=lambda action, **_: action()))
             stack.enter_context(patch.object(recovery, 'command', side_effect=lambda args: ['oci', *args]))
             stack.enter_context(patch.object(recovery.subprocess, 'run', side_effect=cli))
             stack.enter_context(patch.object(cloud_schema, 'run_guest', side_effect=guest))
-            result = recovery.execute(after_exact=True, token_reopen=True)
+            result = recovery.execute(after_exact=True, token_reopen=True, four_hour_reopen=four_hour)
             self.assertEqual(len(creates), 1)
             if auth_failure:
                 self.assertEqual(result['status'], 'FAIL')
@@ -139,9 +158,13 @@ class OwnerRecoveryTests(unittest.TestCase):
                 self.assertEqual(len(deletes), 1)
                 self.assertEqual(events, ['reconcile', 'close', 'post-close-containment'])
                 self.assertTrue(result['sessionClosed'])
+                if four_hour:
+                    self.assertEqual(result['tokenWindow']['minimumSecondsRequired'], 1800)
+                    self.assertGreaterEqual(result['sshAgent']['keyLifetimeSecondsRemaining'], 3600)
+                    self.assertEqual(result['stage'], '06-owner-four-hour-reopen')
             store.verify(result['stage'], result['manifestSHA256'])
             with self.assertRaises(FileExistsError):
-                recovery.execute(after_exact=True, token_reopen=True)
+                recovery.execute(after_exact=True, token_reopen=True, four_hour_reopen=four_hour)
             self.assertEqual(len(creates), 1)
 
     def test_only_proven_zero_creates_and_exact_complete_pass_can_reopen_unused_slot(self):

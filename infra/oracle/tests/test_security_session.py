@@ -14,6 +14,21 @@ from key_ceremony import KeySafetyError
 
 
 class SecuritySessionTests(unittest.TestCase):
+    def test_owner_thirty_minute_budget_refreshes_once_even_when_ten_minutes_remain(self):
+        with patch.object(session, 'session_profile', side_effect=[{**self.profile, 'expiresAt': 3500}, {**self.profile, 'expiresAt': 5000}]), \
+                patch.object(session.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, '', '')) as run:
+            result = session.ensure_session(now=2000, minimum_seconds=1800)
+        self.assertEqual(result['expiresAt'], 5000)
+        self.assertEqual(run.call_count, 1)
+
+    def test_owner_budget_failure_never_refreshes_twice_or_prints_provider_output(self):
+        with patch.object(session, 'session_profile', return_value={**self.profile, 'expiresAt': 3500}), \
+                patch.object(session.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, 'secret-sentinel', 'secret-sentinel')) as run:
+            with self.assertRaises(KeySafetyError) as failure:
+                session.ensure_session(now=2000, minimum_seconds=1800)
+        self.assertEqual(run.call_count, 1)
+        self.assertNotIn('secret-sentinel', str(failure.exception))
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

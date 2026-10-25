@@ -16,6 +16,23 @@ FINGERPRINT = "SHA256:" + "A" * 43
 
 
 class AgentTests(unittest.TestCase):
+    def test_owner_four_hour_prompt_uses_exact_ttl_verifies_fingerprint_and_never_repeats(self):
+        write_new(self.directory / 'load-attempt.json', b'original-preserved')
+        responses = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=responses) as run:
+            result = agent.ensure_agent(load=True, owner_four_hour=True)
+        self.assertEqual(run.call_args_list[1].args[0], ['ssh-add', '-t', '4h', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        self.assertTrue(result['keyLoaded'])
+        self.assertEqual(result['keyFingerprint'], FINGERPRINT)
+        self.assertGreater(result['keyLifetimeSecondsRemaining'], 14390)
+        self.assertEqual((self.directory / 'load-attempt.json').read_bytes(), b'original-preserved')
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as run:
+            with self.assertRaises(KeySafetyError):
+                agent.ensure_agent(load=True, owner_four_hour=True)
+        self.assertEqual(run.call_count, 1)
+
     def test_explicit_owner_retry_preserves_first_attempt_and_consumes_only_one_extra_slot(self):
         write_new(self.directory/'load-attempt.json',b'{"promptAttempted":true}\n')
         original=(self.directory/'load-attempt.json').read_bytes()
