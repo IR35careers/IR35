@@ -29,6 +29,13 @@ def main():
         report=json.loads(path.read_text());previous[report['stage']]=report['manifestSHA256']
     attempt=len(previous)+1
     if attempt>3:raise RuntimeError('P6WorkerBuildBudgetExhausted')
+    if attempt == 3:
+        probe = json.loads((directory / 'isolated-receipt-repair-one.json').read_text())
+        if (probe.get('status') != 'PASS' or probe.get('repairAttempt') != 1
+                or probe.get('parentOneSubmissionGuardUnchanged') is not True
+                or probe.get('containment', {}).get('status') != 'PASS'):
+            raise RuntimeError('ThirdBuildNeedsActualReceiptRepairProbe')
+        data['receiptRepairProbe'] = probe
     archive=subprocess.check_output(git+['archive','--format=tar',sha])
     if len(archive)>100_000_000:raise RuntimeError('P6SourceArchiveBound')
     data.update(sourceSHA=sha,attempt=attempt,anchors=previous,archiveSHA256=hashlib.sha256(archive).hexdigest(),archive=base64.b64encode(archive).decode())

@@ -2,6 +2,7 @@ import ast
 from pathlib import Path
 import sys
 import unittest
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import p6_worker_build
@@ -9,6 +10,21 @@ import p6_worker_build_guest as guest
 
 
 class P6WorkerBuildTests(unittest.TestCase):
+    def test_last_build_requires_both_exact_native_probe_source_hashes(self):
+        with TemporaryDirectory() as temporary:
+            target = Path(temporary)
+            folder = target / 'services/application-worker'
+            folder.mkdir(parents=True)
+            for name in ('mock-browser.ts', 'mock-ats.ts'):
+                (folder / name).write_bytes(b'public fixture source')
+            proof = {'publicSourceSHA256': {name: guest.digest(b'public fixture source') for name in ('mock-browser.ts', 'mock-ats.ts')}}
+            guest.require_receipt_sources(proof, target)
+            (folder / 'mock-browser.ts').write_bytes(b'changed after browser verification')
+            with self.assertRaisesRegex(RuntimeError, 'ThirdBuildSourceMustMatchNativeSixScenarioProbe'):
+                guest.require_receipt_sources(proof, target)
+            with self.assertRaisesRegex(RuntimeError, 'ThirdBuildSourceMustMatchNativeSixScenarioProbe'):
+                guest.require_receipt_sources({'publicSourceSHA256': {}}, target)
+
     def test_source_bundle_compiles_and_does_not_execute_prior_controllers(self):
         with patch.object(p6_worker_build.p6_context.schema,'guest_bundle',return_value=''):
             code=p6_worker_build.bundle()

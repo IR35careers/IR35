@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "queueWrites": 0,
+  "customerWrites": 0,
+  "workerStarts": 0,
+  "secretMounts": 0,
+  "publicPorts": 0,
+  "network": "none",
+  "realAcceptance": false,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "publicSourceSHA256": {
+    "mock-browser.ts": "2f3372af9e2a5fa265bcc0c9ccf0ce5550578927e52c8c71d82058f0120ac5ce",
+    "mock-ats.ts": "88640c953404aea319a985e755604633bd0c9909654ba01704a3202d73619ec9"
+  },
+  "success": {
+    "exitCode": 0,
+    "ok": true,
+    "receiptConfirmed": true,
+    "submissions": 1
+  },
+  "server_error": {
+    "exitCode": 0,
+    "ok": false,
+    "errorCode": "mock_ats_http_500",
+    "submissions": 1
+  },
+  "timeout": {
+    "exitCode": 0,
+    "ok": false,
+    "errorCode": "mock_ats_timeout",
+    "submissions": 1
+  },
+  "lost_ack": {
+    "exitCode": 0,
+    "ok": false,
+    "errorCode": "mock_unknown_outcome",
+    "submissions": 1
+  },
+  "captcha": {
+    "exitCode": 0,
+    "ok": false,
+    "errorCode": "mock_captcha_required",
+    "submissions": 0
+  },
+  "unknown_answer": {
+    "exitCode": 0,
+    "ok": false,
+    "errorCode": "mock_input_required",
+    "submissions": 0
+  },
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "phaseComplete": false,
+  "repairAttempt": 1,
+  "originalFailedJournalRetained": true,
+  "parentOneSubmissionGuardUnchanged": true,
+  "stage": "14-isolated-receipt-repair-one",
+  "manifestSHA256": "2b6dbc8b84f3ca2af6aa94c1b4d5c8de357659cf8466a14e340a23f5aed44295"
+}

@@ -15,11 +15,26 @@ from web_build_guest import safe_members,verify_history
 ROOT=Path('/opt/ir35')
 
 
+def require_receipt_sources(probe, target):
+    hashes = probe.get('publicSourceSHA256', {})
+    if set(hashes) != {'mock-browser.ts', 'mock-ats.ts'} or any(
+            digest((target / 'services/application-worker' / name).read_bytes()) != expected for name, expected in hashes.items()):
+        raise RuntimeError('ThirdBuildSourceMustMatchNativeSixScenarioProbe')
+
+
 def run(data,runtime):
     sha=data['sourceSHA'];attempt=data['attempt']
     if not re.fullmatch(r'[a-f0-9]{40}',sha) or type(attempt)is not int or attempt not in (1,2,3):raise RuntimeError('BoundedP6SourceBuildRequired')
     roles=Store(ROOT/'.env.p6',uid=1002)
     for row in (data['p6Inventory'],data['rolePreflight'],data['roleInstall']):roles.verify(row['stage'],row['manifestSHA256'])
+    if attempt == 3:
+        probe = data['receiptRepairProbe']
+        roles.verify(probe['stage'], probe['manifestSHA256'])
+        native = json.loads((roles.root / probe['stage'] / 'result.json').read_bytes())
+        if native != {key: value for key, value in probe.items() if key not in ('stage', 'manifestSHA256')}:
+            raise RuntimeError('ReceiptRepairProbeMustMatchSealedNativeResult')
+        if native.get('status') != 'PASS' or native.get('parentOneSubmissionGuardUnchanged') is not True:
+            raise RuntimeError('ReceiptRepairProbeNotPassing')
     if data['roleInstall']['status']!='PASS':raise RuntimeError('VerifiedMinimalRolesRequired')
     journal=ROOT/'.env.p6-builds'
     if not journal.exists():journal.mkdir(mode=0o700);os.chown(journal,1002,1002)
@@ -38,6 +53,8 @@ def run(data,runtime):
         if digest(body)!=data['archiveSHA256']:raise RuntimeError('SourceArchiveHashMismatch')
         target=ROOT/'data/p6-build-source'/sha;target.parent.mkdir(exist_ok=True);target.mkdir(mode=0o755)
         with tarfile.open(fileobj=io.BytesIO(body),mode='r:') as archive:archive.extractall(target,members=safe_members(archive),filter='data')
+        if attempt == 3:
+            require_receipt_sources(probe, target)
         store.put(stage,'intent.json',json.dumps({'sourceSHA':sha,'archiveSHA256':digest(body),'attempt':attempt,'runtime':'mock-only','publication':False}).encode())
         tag='ir35-p6-mock-worker:'+sha
         with store.sink(stage,'build.log') as log:
