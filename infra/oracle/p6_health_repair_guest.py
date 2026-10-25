@@ -16,12 +16,13 @@ from p6_mock_guest import ROOT, NAME, prerequisites, prepared, check_containment
 from p6_roles_guest import no_customer_access
 
 UNIT = 'ir35-p6-health-proxy-r1'
+UPDATE_UNIT = 'ir35-p6-health-proxy-r2'
 SYSTEMD = Path('/etc/systemd/system')
 PROXY = '/usr/lib/systemd/systemd-socket-proxyd'
 
 
 def units(address, *, unit=UNIT):
-    if unit not in (UNIT, UNIT + '-preflight'):
+    if unit not in (UNIT, UNIT + '-preflight', UPDATE_UNIT, UPDATE_UNIT + '-preflight'):
         raise RecoveryError('FixedOwnedProxyUnitNameRequired')
     ip = ipaddress.ip_address(address)
     if ip.version != 4 or not any(ip in ipaddress.ip_network(net) for net in ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')):
@@ -89,8 +90,8 @@ def require_loopback_listener(output):
         raise RecoveryError('HealthProxyMustListenOnlyOnIPv4Loopback')
 
 
-def write_unit(path, body):
-    if path.parent != SYSTEMD or path.name not in (UNIT + '.socket', UNIT + '.service'):
+def write_unit(path, body, *, unit=UNIT):
+    if unit not in (UNIT, UPDATE_UNIT) or path.parent != SYSTEMD or path.name not in (unit + '.socket', unit + '.service'):
         raise RecoveryError('OnlyOwnedHealthProxyUnitsMayBeCreated')
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
     os.fchmod(fd, 0o644)  # Native harness umask077 must not hide this public unit.
@@ -98,6 +99,22 @@ def write_unit(path, body):
         output.write(body.encode())
         output.flush()
         os.fsync(output.fileno())
+
+
+def validate_proxy(runtime, bodies, *, unit=UNIT):
+    units('10.0.0.1', unit=unit)  # Restricts the unit name before any read.
+    require_loopback_listener(runtime['run'](['ss', '-H', '-ltn', 'sport = :8787']))
+    for name, body in bodies.items():
+        path = SYSTEMD / name
+        if path.is_symlink() or path.read_bytes() != body.encode() or path.stat().st_uid != 0 or stat.S_IMODE(path.stat().st_mode) != 0o644:
+            raise RecoveryError('ProxyUnitReadbackMismatch')
+    settings = dict(line.split('=', 1) for line in runtime['run'](['systemctl', 'show', unit + '.service',
+        '--property=User', '--property=Group', '--property=NoNewPrivileges', '--property=DropInPaths',
+        '--property=FragmentPath', '--property=MainPID', '--property=MemoryMax', '--property=ActiveState']).splitlines())
+    expected = {'User': 'ir35', 'Group': 'ir35', 'NoNewPrivileges': 'yes', 'DropInPaths': '',
+                'FragmentPath': str(SYSTEMD / (unit + '.service')), 'MemoryMax': str(32 * 1024 * 1024), 'ActiveState': 'active'}
+    if any(settings.get(name) != value for name, value in expected.items()) or int(settings.get('MainPID', '0')) <= 0:
+        raise RecoveryError('LoadedProxySandboxDoesNotMatchOwnedUnit')
 
 
 def isolation(item, image, network):
@@ -201,18 +218,7 @@ def run(data, runtime):
                 or observed.get('mode') != 'staging-mock-only' or observed.get('realAcceptance') is not False
                 or observed.get('buildSHA') != data['workerBuild']['sourceSHA']):
             raise RecoveryError('NativeMockHealthRepairMismatch')
-        require_loopback_listener(runtime['run'](['ss', '-H', '-ltn', 'sport = :8787']))
-        for name, body in bodies.items():
-            path = SYSTEMD / name
-            if path.is_symlink() or path.read_bytes() != body.encode() or path.stat().st_uid != 0 or stat.S_IMODE(path.stat().st_mode) != 0o644:
-                raise RecoveryError('ProxyUnitReadbackMismatch')
-        settings = dict(line.split('=', 1) for line in runtime['run'](['systemctl', 'show', UNIT + '.service',
-            '--property=User', '--property=Group', '--property=NoNewPrivileges', '--property=DropInPaths',
-            '--property=FragmentPath', '--property=MainPID', '--property=MemoryMax', '--property=ActiveState']).splitlines())
-        expected = {'User': 'ir35', 'Group': 'ir35', 'NoNewPrivileges': 'yes', 'DropInPaths': '',
-                    'FragmentPath': str(SYSTEMD / (UNIT + '.service')), 'MemoryMax': str(32 * 1024 * 1024), 'ActiveState': 'active'}
-        if any(settings.get(name) != value for name, value in expected.items()) or int(settings.get('MainPID', '0')) <= 0:
-            raise RecoveryError('LoadedProxySandboxDoesNotMatchOwnedUnit')
+        validate_proxy(runtime, bodies)
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         try:
             opener.open(urllib.request.Request('http://127.0.0.1:8787/mock/applications', data=b'{}', method='POST'), timeout=5)
