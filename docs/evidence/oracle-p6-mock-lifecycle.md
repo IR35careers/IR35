@@ -1,5 +1,7 @@
 # P6 native mock lifecycle — stopped for owner review
 
+Latest owner-approved continuation stopped at its **first read-only prerequisite audit**, before the HTTP-status fix, new image or P6 rerun. [Exact stop record](p6/status-owner-audit-one-stop.json): `Staging command failed: docker; exit=1; output suppressed`. The wrapper did not capture which Docker subcommand or intermediate results, so the new queue/audit/SMTP/worker no-side-effects proof is incomplete. A distinct read-only host diagnostic confirms ps and Docker CLI exist, not the underlying failure. No retry was attempted, following the owner's new explicit rule. New image/rerun allowances are unused; previous image/configuration were never replaced, so rollback was unnecessary. No source/service/queue/database/SMTP/secret/OCI/production changes or new containment PASS. Proposed prerequisite-tooling repair: individual write-once observations and safe operation-specific diagnostics, without raw Docker environments or secret output. Earlier immutable stage16 evidence follows unchanged.
+
 Latest actual run: [stage16 FAIL](p6/native-mock-lifecycle-repair-one.json), manifest `b20410a43d14bc947590cf2b7f29e6104c5880b4199a2b6c155e78e5bde75ee9`. **33 checks passed; one failed.** [Sealed-case/read-only diagnosis](p6/native-lifecycle-repair-one-status-diagnosis.json).
 
 Read-only diagnosis JSON SHA256 (canonical committed bytes): `b13fd3bb6d1e5dc9c59592862a0c451391b2e13b3624403f42d020432cf3d4ea`.
