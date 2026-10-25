@@ -1,0 +1,111 @@
+{
+  "status": "FAIL",
+  "newWorkerStarts": 0,
+  "networkChanges": 0,
+  "secretChanges": 0,
+  "sourceRoleChanges": 0,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "queueFunctionScope": {
+    "status": "REVIEW_REQUIRED",
+    "baseline552Changed": false,
+    "functionCalls": 0,
+    "mutations": 0,
+    "databases": [
+      {
+        "database": "postgres",
+        "checks": 22,
+        "outsideQueueDefiners": []
+      },
+      {
+        "database": "ir35_p4_20261021t170139z_8be0fc2e",
+        "checks": 6,
+        "outsideQueueDefiners": [
+          {
+            "role": "ir35_queue",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          },
+          {
+            "role": "ir35_queue_producer",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          }
+        ]
+      },
+      {
+        "database": "ir35_p5_app",
+        "checks": 6,
+        "outsideQueueDefiners": [
+          {
+            "role": "ir35_queue",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          },
+          {
+            "role": "ir35_queue_producer",
+            "schema": "public",
+            "function": "add_to_waitlist(user_email text)",
+            "resultType": "json",
+            "definitionMD5": "7da948329581a94025fe8e9887f7b8b2",
+            "alsoAccessibleToAnon": true
+          }
+        ]
+      }
+    ]
+  },
+  "code": "QueueRoleDefinerAccessOutsideQueueSchema_SecurityStop",
+  "oldWorkerStoppedAfterFailure": false,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "09-mock-runtime-update-two",
+  "manifestSHA256": "37603a21d7f0cbced837f7c608b1651e8125bfefab3584564a4fe6e751281330"
+}

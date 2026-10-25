@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October P6 SECURITY-SCOPE STOP — inherited public definer access
+
+- Guardedimage2activation stopped BEFORE anynewworker/unit/env/role/networkchange. Actual09sealed37603a21d7f0cbced837f7c608b1651e8125bfefab3584564a4fe6e751281330: operationalpostgres22definerchecks/0outside; pristine+app6each, BOTHqueue rolescanexecute public.add_to_waitlist(user_email text), returnsjson, definition7da948329581a94025fe8e9887f7b8b2/sourceunchanged/alsoanonaccessible. Foureffectivepathsoutsidequeue. No functioninvoked, no customerrowread/written bythisaudit; no claimofCVexfiltration. Existing354table/column denials and unchanged552baseline remain valid but doNOT prove functionisolation.
+- User hardstop applies: no image2handover, grant/RLS/PUBLIC rewrite, function call, HBA/network/config/secret change, newcounter/replay orP7–P9 advance without ownerdirection. Preserve rawscope andfailed09; allfull62table/MD5/Auth/2seq/schema3exceptions+2roles/552/73Storage containmentPASS, source/fixturewrites0. Old image1/controlfiles/proxy/service unchanged andhealthcheckedbeforeaudit; image2built/retained/notstarted. No production/cutover/extraBastion change.
+- Proposedownerdecision only: narrowlyrestrict the two queue-role logins to existingoperationalpostgres (where outsidequeue paths0), denyall app/cloneDBs via stagingPostgresclient-auth rules, retaincustomerPUBLIC ACLs/functions/RLS/roles/passwords/OCI rules unchanged. Futureapplicationrestore must use a separate appDB, never the queueDB. CatalogPUBLIC rights remain raw/visible; any approved connection boundary must have actual login denials and fullunchangedbaseline proof, NOT filteringthisfinding. No implementationapprovedyet. Alternative is read-onlybody/ACLreviewfirst; never self-approveapublicfunctionexception.
+
 ## 25 October FOUR-HOUR recovery PASS — P6 staging continuation released
 
 - Actual new06owner recovery PASS,a6626c6c: token2295seconds>=30min, loadedmatchingSSHkey14052seconds, unchanged originalpublicowner-/32+privateBastion-/32/no broadSSH, fresh LIMITED_FREE2/12/150 allocation/Standardexact0bytes. ExactlyONE1800s sessioncreated and independentlyclosed; NO Bastion/IAM/network/operational-secret/production changes. DO NOT create another recovery session/replay06. Existing pinned directowner-/32 route independentlyreverified afterclose.
