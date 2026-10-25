@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October owner-token recovery STOP — existing SSH identity unloaded
+
+- Fresh browser sign-in and actual read-onlyir35 compartmentGET PASS. ONE05-owner-token-reopen execution then passed >=45minutes (3159seconds remaining) but stopped at the next existing-agent check: `ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt`. Sealed3e48b186. Zero sessions/Bastion/IAM/network/worker/production/operational-secret changes; no new guest/probe/full-containment run, no session to close. Never claim stale historical containment/storage as a new execution PASS.
+- Owner explicitly said a failed attempt stops: preserve05and all older logs, no second execution/new controller/SSH workaround or automatic key prompt. Existing encrypted SSH key must be loaded by the owner through the native hidden per-boot prompt under separately reopened authority; no regeneration, password/API-key fallback or key decryption on disk. No further recovery/P6–P9 advancement until owner direction. Token is valid at this checkpoint; don't open another browser unnecessarily. All PRs draft/unmerged, exactYES CUTOVER absent.
+
 ## 25 October owner token-gated ONE recovery reopening
 
 - Owner explicitly reopens ONE bounded recovery after fresh browser authentication, with a read-only compartment proof and >=45minutes token lifetime before starting. Earlier token expiry is not a tooling failure, but all previous failed/sealed slots remain intact. A new exclusive owner-token slot is permitted; no reset/replay of them. Routine SecurityToken checks pause between operations and refresh once below10minutes; refresh failure stops with no repeated refresh/recovery. Existing Bastion/VM132.145.28.134 only, one short-TTL session, no IAM/network/bucket/paid-resource changes.

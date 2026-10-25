@@ -1,6 +1,8 @@
 # P6 exact Object Storage accounting — 25 October 2026
 
-Status: **Exact audit PASS; subsequent recovery STOP at G2**. P6 worker phase is not complete.
+Status: **Exact audit PASS; latest recovery STOP — SSH identity unloaded**. P6 worker phase is not complete.
+
+**Latest owner-reopened result:** after a new normal browser sign-in, the actual read-only compartment check succeeded. The separately journalled05execution passed its45minute token guard with3159seconds remaining, then stopped at `ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt`. [Sealed result](p6/bastion-owner1-session-token-reopen.json), SHA256 `3e48b186761c4a58226e3e9607849c95a574c89778d677e79efa7e97a8ff8351`. No Bastion API/session creation, worker/guest/probe operation, access-rule, IAM, bucket, operational-secret or production change followed. No new full containment is claimed. The owner said to stop on a failed attempt; no retry or automatic key prompt. Fresh browser authentication worked; the remaining blocker is the unloaded SSH identity and owner reopening, not another Oracle login.
 
 The audit ran on24October23:46UTC. On resume25October the one bounded continuation stopped before the existing-Bastion GET because the browser SecurityToken had expired and automatic refresh failed. [Sealed failure](p6/bastion-owner1-session-after-exact.json), SHA256 `4c7ac1fcc95a3ce9b9af86c9bc430ecd132d7b01892a690e474ca01d24c4681f`. No session was created; none needed closing. No guest command, worker restart, probe replay, IAM/network/secret/production change or new full-containment check ran. The next fresh tenancy-wide audit was never reached.
 

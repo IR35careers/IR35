@@ -1,0 +1,32 @@
+{
+  "status": "FAIL",
+  "sessionCreates": 0,
+  "bastionUpdates": 0,
+  "iamChanges": 0,
+  "networkChanges": 0,
+  "workerRestarts": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "steps": [
+    {
+      "step": "fresh-token-45-minutes",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-agent",
+      "status": "FAIL",
+      "code": "ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt"
+    }
+  ],
+  "exactAuditManifestSHA256": "79389e16722f0a77172c5ca10a0892d5b6b9e23c1bc6380ab4dac68a88ecd47b",
+  "previousFailureManifestSHA256": "b18e0a69a7039beb80d561ab0900e6323f0a910d76c8aadc33c3c815e9eb3b3f",
+  "tokenWindow": {
+    "status": "PASS",
+    "tokenSecondsRemaining": 3159,
+    "minimumSecondsRequired": 2700
+  },
+  "code": "ExistingSSHAgentKeyNotLoaded_NoAutomaticPrompt",
+  "sessionClosed": true,
+  "stage": "05-owner-token-reopen",
+  "manifestSHA256": "3e48b186761c4a58226e3e9607849c95a574c89778d677e79efa7e97a8ff8351"
+}
