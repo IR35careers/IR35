@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 25 October owner-approved staging queue connection boundary
+
+- Owner approves only a narrow staging pg_hba.conf repair for ir35_queue and ir35_queue_producer: back up exact original bytes and SHA256 first; explicit per-app/clone database rejects above general rules, queue-database-only password-authenticated allows, and fail-closed rejects for other/future databases. Cover local, IPv4 and IPv6 paths; first-match ordering must be proven. Reload only, never restart Postgres. No customer grants/functions/RLS/passwords, OCI networking, production, DNS/provider or secret changes.
+- Preserve the original public.add_to_waitlist metadata finding and failed stage09 unchanged. Prove actual password-authenticated denied logins to every app/clone for both roles, successful queue logins, no application-function invocation/reachability, then full unchanged containment (62 tables/MD5/Auth, 2 sequences, 3 approved owner exceptions plus 2 queue roles, 552 baseline, 73 Storage SHA256) BEFORE activation. Any denial/containment failure: restore exact backup, reload, preserve evidence, STOP; do not retry or self-approve a privilege exception. No new Bastion session or repeated SSH unlock. Mock/SMTP sink and all cutover holds remain.
+- Earlier security stop is reopened ONLY for this journalled repair and actual proof, not permission to replay failed stage09 or erase the raw finding. Image activation must require the new verified connection boundary and unchanged raw scope plus full containment, preserving all previous counters/history. P6 remains incomplete until every runtime/lifecycle/integration gate passes.
+
 ## 25 October P6 SECURITY-SCOPE STOP — inherited public definer access
 
 - Guardedimage2activation stopped BEFORE anynewworker/unit/env/role/networkchange. Actual09sealed37603a21d7f0cbced837f7c608b1651e8125bfefab3584564a4fe6e751281330: operationalpostgres22definerchecks/0outside; pristine+app6each, BOTHqueue rolescanexecute public.add_to_waitlist(user_email text), returnsjson, definition7da948329581a94025fe8e9887f7b8b2/sourceunchanged/alsoanonaccessible. Foureffectivepathsoutsidequeue. No functioninvoked, no customerrowread/written bythisaudit; no claimofCVexfiltration. Existing354table/column denials and unchanged552baseline remain valid but doNOT prove functionisolation.
