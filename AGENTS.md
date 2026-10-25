@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 25 October owner-ready access handoff — one fresh login and one SSH prompt
+
+- Owner replied **“Ready—open both once”** after the previous Oracle login timed out and the second four-hour SSH lease expired. This authorises one new normal browser SecurityToken login and one distinct native `ssh-add -t 4h` prompt for the existing encrypted key, not an automatic retry or reset of previous receipts. The new READY HANDOFF lease must verify the previous lease expired, preserve both earlier journals, verify the public fingerprint and retain a conservative expiry. No passphrase is read, logged or stored by the helper.
+- Reconcile actual login/key success before any native work; owner confirmation alone is not proof. Keep the existing 30-minute long-run credential floor, unused stage16/no-replay guard and all staging/mock/data/security checks. No new Bastion, IAM, network, HBA, secret, production or cutover change is authorised.
+
 ## 25 October stage16 G2 preflight hold — SSH remains loaded
 
 - Stage15actualPASS/v3healthy/fullsourcecontainment retained. Stage16CLI stoppedKeySafetyError before anynative16journal/newjobs; oldwrapper lostdetail so doNOT fabricate an OCIstatus. Independentreadonlylocalcontext/native15sealedproof/4oldreceiptchecksPASS, stage16ABSENT. Existingkeyloaded/9370seconds, token1583<mandatory1800longrunfloor; don'tlowerfloor or reattemptrefreshblindly. One read-only diagnostic quoting error was fixed locally (zeroVMmutation); successful anchoredread-onlyproof nowrecorded. No data/security mismatch orsourcecleanup.

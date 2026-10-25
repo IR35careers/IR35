@@ -17,6 +17,39 @@ FINGERPRINT = "SHA256:" + "A" * 43
 
 
 class AgentTests(unittest.TestCase):
+    def test_ready_handoff_preserves_prior_leases_and_cannot_prompt_twice(self):
+        old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
+                          'expiresAt': time.time() - 30, 'monotonicExpiresAt': time.monotonic() - 30}).encode()
+        write_new(self.directory / 'load-owner-four-hour-reopen-20261025-result.json', old)
+        write_new(self.directory / 'load-owner-four-hour-20261025-result.json', old)
+        responses = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=responses) as native:
+            proof = agent.ensure_agent(load=True, owner_ready_four_hour=True)
+        self.assertTrue(proof['keyLoaded'])
+        self.assertGreater(proof['keyLifetimeSecondsRemaining'], 14390)
+        self.assertEqual(native.call_args_list[1].args[0], ['ssh-add', '-t', '4h', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        for receipt in ('load-owner-four-hour-20261025-result.json', 'load-owner-four-hour-reopen-20261025-result.json'):
+            self.assertEqual((self.directory / receipt).read_bytes(), old)
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'already requested'):
+                agent.ensure_agent(load=True, owner_ready_four_hour=True)
+        self.assertEqual(native.call_count, 1)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')):
+            self.assertGreater(agent.ensure_agent()['keyLifetimeSecondsRemaining'], 14390)
+
+    def test_ready_handoff_rejects_unexpired_or_mixed_approval(self):
+        write_new(self.directory / 'load-owner-four-hour-reopen-20261025-result.json', json.dumps({
+            'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400, 'expiresAt': time.time() + 3600}).encode())
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'VerifiedExpired'):
+                agent.ensure_agent(load=True, owner_ready_four_hour=True)
+        self.assertEqual(native.call_count, 1)
+        for options in ({'owner_ready_four_hour': True}, {'load': True, 'owner_ready_four_hour': True, 'owner_four_hour_reopen': True}):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(**options)
+
     def test_owner_fresh_lease_preserves_old_receipts_and_has_one_new_prompt_only(self):
         old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
                           'expiresAt': time.time() - 30, 'monotonicExpiresAt': time.monotonic() - 30}).encode()
