@@ -1,0 +1,130 @@
+{
+  "status": "FAIL",
+  "realAcceptance": false,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "networkChanges": 0,
+  "secretChanges": 0,
+  "roleChanges": 0,
+  "workerRestarts": 0,
+  "cases": [
+    {
+      "case": "fresh-lifecycle-fixture",
+      "passed": true
+    },
+    {
+      "case": "mock-health",
+      "passed": true
+    },
+    {
+      "case": "enqueue-success",
+      "passed": true
+    },
+    {
+      "case": "outcome-success",
+      "passed": true
+    },
+    {
+      "case": "duplicate-success",
+      "passed": true
+    },
+    {
+      "case": "durable-job-success",
+      "passed": true
+    },
+    {
+      "case": "enqueue-server_error",
+      "passed": true
+    },
+    {
+      "case": "outcome-server_error",
+      "passed": true
+    },
+    {
+      "case": "duplicate-server_error",
+      "passed": true
+    },
+    {
+      "case": "durable-job-server_error",
+      "passed": true
+    },
+    {
+      "case": "enqueue-timeout",
+      "passed": true
+    },
+    {
+      "case": "outcome-timeout",
+      "passed": true
+    },
+    {
+      "case": "duplicate-timeout",
+      "passed": true
+    },
+    {
+      "case": "durable-job-timeout",
+      "passed": true
+    },
+    {
+      "case": "enqueue-lost_ack",
+      "passed": true
+    }
+  ],
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "preQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "code": "NativeMockTerminalOrHistoryMismatch_NoReadyFallback",
+  "failurePause": {
+    "paused": true,
+    "realAcceptance": false
+  },
+  "failureContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "12-native-mock-lifecycle",
+  "manifestSHA256": "67c024da03423dd30398efe870e8fd0225e71e9c3693b0b37f5f618a1bfded4e"
+}

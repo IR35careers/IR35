@@ -79,6 +79,42 @@ def producer(value, *, orphan=False):
     return json.loads(observed.stdout)
 
 
+def probe_lost_ack(data, runtime):
+    store = prepared(data)
+    failed = data['failureLifecycle']
+    anchored_result(store, failed)
+    if (failed.get('code') != 'NativeMockTerminalOrHistoryMismatch_NoReadyFallback'
+            or failed.get('failureContainment', {}).get('status') != 'PASS'
+            or failed.get('failurePause') != {'paused': True, 'realAcceptance': False}):
+        raise RecoveryError('ExactPausedLifecycleFailureRequired_NoReplay')
+    stage = store.stage('13-isolated-lost-ack-probe')
+    result = {'status': 'FAIL', 'queueWrites': 0, 'customerWrites': 0, 'workerStarts': 0,
+              'secretMounts': 0, 'publicPorts': 0, 'network': 'none', 'realAcceptance': False}
+    try:
+        result['preContainment'] = check_containment(data, runtime, store, stage, 'pre')
+        for scenario in ('success', 'lost_ack'):
+            store.put(stage, scenario + '-intent.json', json.dumps({'operation': 'apply', 'scenario': scenario,
+                      'noCredentialsOrVolumes': True, 'workerImage': data['runtimeProof']['image']}).encode())
+            args = ['docker', 'run', '--rm', '-i', '--init', '--network', 'none', '--read-only', '--user', '1002:1002',
+                    '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--log-driver', 'none',
+                    '--memory', '512m', '--pids-limit', '256', '--tmpfs', '/tmp:rw,size=512m,uid=1002,gid=1002,mode=1777',
+                    '--entrypoint', 'node', data['runtimeProof']['image'], '--import', 'tsx', 'services/application-worker/mock-browser.ts']
+            observed = subprocess.run(args, input=json.dumps({'operation': 'apply', 'scenario': scenario}).encode(),
+                                      capture_output=True, timeout=75)
+            if len(observed.stdout) > 4096 or len(observed.stderr) > 16384:
+                raise RecoveryError('BoundedCredentialFreeProbeOutputRequired')
+            store.put(stage, scenario + '-stdout.json', observed.stdout)
+            store.put(stage, scenario + '-stderr.log', observed.stderr)
+            parsed = json.loads(observed.stdout)
+            result[scenario] = {'exitCode': observed.returncode, **parsed}
+        result['containment'] = check_containment(data, runtime, store, stage, 'post')
+        result.update(status='OBSERVED', phaseComplete=False, originalFailedJournalRetained=True)
+    except Exception as error:
+        result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__
+    store.put(stage, 'result.json', json.dumps(result, sort_keys=True).encode())
+    return result | {'stage': stage.name, 'manifestSHA256': store.seal(stage)}
+
+
 def run(data, runtime):
     store = prepared(data)
     anchor = data['runtimeProof']
