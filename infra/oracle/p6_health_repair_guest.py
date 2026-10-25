@@ -17,12 +17,13 @@ from p6_roles_guest import no_customer_access
 
 UNIT = 'ir35-p6-health-proxy-r1'
 UPDATE_UNIT = 'ir35-p6-health-proxy-r2'
+RECEIPT_UNIT = 'ir35-p6-health-proxy-r3'
 SYSTEMD = Path('/etc/systemd/system')
 PROXY = '/usr/lib/systemd/systemd-socket-proxyd'
 
 
 def units(address, *, unit=UNIT):
-    if unit not in (UNIT, UNIT + '-preflight', UPDATE_UNIT, UPDATE_UNIT + '-preflight'):
+    if unit not in (UNIT, UNIT + '-preflight', UPDATE_UNIT, UPDATE_UNIT + '-preflight', RECEIPT_UNIT, RECEIPT_UNIT + '-preflight'):
         raise RecoveryError('FixedOwnedProxyUnitNameRequired')
     ip = ipaddress.ip_address(address)
     if ip.version != 4 or not any(ip in ipaddress.ip_network(net) for net in ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')):
@@ -91,7 +92,7 @@ def require_loopback_listener(output):
 
 
 def write_unit(path, body, *, unit=UNIT):
-    if unit not in (UNIT, UPDATE_UNIT) or path.parent != SYSTEMD or path.name not in (unit + '.socket', unit + '.service'):
+    if unit not in (UNIT, UPDATE_UNIT, RECEIPT_UNIT) or path.parent != SYSTEMD or path.name not in (unit + '.socket', unit + '.service'):
         raise RecoveryError('OnlyOwnedHealthProxyUnitsMayBeCreated')
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
     os.fchmod(fd, 0o644)  # Native harness umask077 must not hide this public unit.

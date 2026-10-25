@@ -22,7 +22,8 @@ def require_receipt_sources(probe, target):
         raise RuntimeError('ThirdBuildSourceMustMatchNativeSixScenarioProbe')
 
 
-def run(data,runtime):
+def run(data,runtime, *, source_repair_one=False):
+    if type(source_repair_one) is not bool:raise RuntimeError('ExplicitSourceRepairBooleanRequired')
     sha=data['sourceSHA'];attempt=data['attempt']
     if not re.fullmatch(r'[a-f0-9]{40}',sha) or type(attempt)is not int or attempt not in (1,2,3):raise RuntimeError('BoundedP6SourceBuildRequired')
     roles=Store(ROOT/'.env.p6',uid=1002)
@@ -39,9 +40,30 @@ def run(data,runtime):
     journal=ROOT/'.env.p6-builds'
     if not journal.exists():journal.mkdir(mode=0o700);os.chown(journal,1002,1002)
     store=Store(journal,uid=1002);verify_history(store,data['anchors'],sha)
-    if attempt!=len(data['anchors'])+1:raise RuntimeError('P6BuildHistoryMismatch')
-    stage=store.stage(f'{attempt:02d}-build');started=time.monotonic()
+    if source_repair_one:
+        failed = data['failedThirdSource']
+        store.verify(failed['stage'], failed['manifestSHA256'])
+        actual = json.loads((store.root / failed['stage'] / 'result.json').read_bytes())
+        if (failed.get('attempt') != 3 or attempt != 3 or len(data['anchors']) != 3
+                or failed.get('code') != 'FileNotFoundError' or failed.get('sourceSHA') != sha
+                or actual != {key: value for key, value in failed.items() if key not in ('stage', 'manifestSHA256')}
+                or {item.name for item in (store.root / failed['stage']).iterdir()} != {
+                    'manifest.json', 'result.json', 'pre-pristine-fidelity.json', 'pre-fixture-fidelity.json',
+                    'post-pristine-fidelity.json', 'post-fixture-fidelity.json'}):
+            raise RuntimeError('ThirdSlotMustProveNoBuildIntentOrDockerInvocation')
+        tag = 'ir35-p6-mock-worker:' + sha
+        prior_image = subprocess.run(['docker', 'image', 'inspect', tag], capture_output=True, timeout=10)
+        if prior_image.returncode == 0 or b'No such image' not in prior_image.stderr:
+            raise RuntimeError('AmbiguousThirdImageOutcome_NoBuildReplay')
+        repair_root = ROOT / '.env.p6-build-source-repairs'
+        if not repair_root.exists():repair_root.mkdir(mode=0o700);os.chown(repair_root,1002,1002)
+        store=Store(repair_root,uid=1002)
+    elif attempt!=len(data['anchors'])+1:raise RuntimeError('P6BuildHistoryMismatch')
+    stage=store.stage('01-third-source-repair' if source_repair_one else f'{attempt:02d}-build');started=time.monotonic()
     result={'status':'FAIL','attempt':attempt,'sourceSHA':sha,'productionChanges':False,'serviceChanges':0,'realAcceptance':False}
+    if source_repair_one:
+        result.update(sourceRepairAttempt=1, journal=str(store.root), originalFailedBuildManifest=data['failedThirdSource']['manifestSHA256'],
+                      originalThreeBuildSlotsPreserved=True, dockerInvocationsBeforeRepair=0)
     try:
         before,pristine,fixture=fidelity(data,runtime)
         store.put(stage,'pre-pristine-fidelity.json',json.dumps(pristine).encode());store.put(stage,'pre-fixture-fidelity.json',json.dumps(fixture).encode())
@@ -51,7 +73,7 @@ def run(data,runtime):
         if available<4*1024*1024:raise RuntimeError('P6BuildMemoryHeadroomInsufficient')
         body=base64.b64decode(data['archive'],validate=True)
         if digest(body)!=data['archiveSHA256']:raise RuntimeError('SourceArchiveHashMismatch')
-        target=ROOT/'data/p6-build-source'/sha;target.parent.mkdir(exist_ok=True);target.mkdir(mode=0o755)
+        target=ROOT/'data/p6-build-source'/(sha+'-source-r1' if source_repair_one else sha);target.parent.mkdir(exist_ok=True);target.mkdir(mode=0o755)
         with tarfile.open(fileobj=io.BytesIO(body),mode='r:') as archive:archive.extractall(target,members=safe_members(archive),filter='data')
         if attempt == 3:
             require_receipt_sources(probe, target)

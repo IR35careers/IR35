@@ -18,7 +18,7 @@ def git_command(repo):
         gitdir=pointer.read_text().strip().removeprefix('gitdir: ')
         if len(gitdir)>3 and gitdir[1:3]==':/':gitdir='/mnt/'+gitdir[0].lower()+gitdir[2:]
         if not Path(gitdir).is_absolute():gitdir=str((repo/gitdir).resolve())
-        return ['git','--git-dir='+gitdir,'--work-tree='+str(repo),'-c','core.autocrlf=true']
+        return ['git','-C',str(repo),'--git-dir='+gitdir,'--work-tree='+str(repo),'-c','core.autocrlf=true']
     return ['git','-C',str(repo)]
 
 

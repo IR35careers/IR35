@@ -38,6 +38,15 @@ class P6WorkerBuildTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'BoundedP6SourceBuildRequired'):guest.run({'sourceSHA':'a'*40,'attempt':attempt},{})
             store.assert_not_called()
 
+    def test_source_repair_preserves_three_slot_chain_and_requires_proven_no_build_invocation(self):
+        text = Path(guest.__file__).read_text()
+        self.assertIn("verify_history(store,data['anchors'],sha)", text)
+        self.assertIn('ThirdSlotMustProveNoBuildIntentOrDockerInvocation', text)
+        self.assertIn('AmbiguousThirdImageOutcome_NoBuildReplay', text)
+        self.assertIn("ROOT / '.env.p6-build-source-repairs'", text)
+        self.assertIn("'01-third-source-repair' if source_repair_one", text)
+        self.assertIn('originalThreeBuildSlotsPreserved=True', text)
+
     def test_build_recipe_has_no_credentials_and_keeps_the_verified_native_browser_pin(self):
         root=Path(__file__).resolve().parents[3]
         recipe=(root/'services/application-worker/Dockerfile.mock').read_text()
