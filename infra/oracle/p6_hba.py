@@ -12,7 +12,8 @@ from ssh_agent_session import ensure_agent
 
 def credential_gate():
     agent = ensure_agent()
-    if not agent.get('keyLoaded') or agent.get('keyLifetimeSecondsRemaining', 0) < 1800:
+    if not agent.get('keyLoaded') or (agent.get('keyLeaseMode') != 'until-agent-restart'
+                                    and agent.get('keyLifetimeSecondsRemaining', 0) < 1800):
         raise KeySafetyError('OwnerSSHGate_ExistingFourHourKeyExpiredOrInsufficient_NoAutomaticPrompt')
     # One bounded refresh only; no API key fallback or browser automatically.
     ensure_session(minimum_seconds=1800)

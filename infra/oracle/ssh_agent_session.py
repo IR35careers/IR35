@@ -39,7 +39,7 @@ def expected_fingerprint():
     return match[1]
 
 
-def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_four_hour_reopen=False, owner_ready_four_hour=False):
+def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_four_hour_reopen=False, owner_ready_four_hour=False, owner_migration=False):
     if type(owner_retry)is not bool or owner_retry and not load:
         raise KeySafetyError("Owner retry requires an explicit native load operation.")
     if type(owner_four_hour) is not bool or owner_four_hour and (not load or owner_retry):
@@ -48,6 +48,8 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
         raise KeySafetyError('Owner-approved fresh four-hour lease must be its single separate native operation.')
     if type(owner_ready_four_hour) is not bool or owner_ready_four_hour and (not load or owner_retry or owner_four_hour or owner_four_hour_reopen):
         raise KeySafetyError('Ready handoff requires its one explicitly approved native operation.')
+    if type(owner_migration) is not bool or owner_migration and (not load or owner_retry or owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour):
+        raise KeySafetyError('Migration unlock requires its one plain native operation.')
     directory = boot_directory()
     descriptor = os.open(directory / "lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     try:
@@ -73,10 +75,15 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
         loaded = result.returncode == 0 and any(len(line.split()) >= 2 and line.split()[1] == fingerprint for line in result.stdout.splitlines())
         if result.returncode not in (0, 1):
             raise KeySafetyError("Existing agent is unreachable; no restart or repeated passphrase prompt.")
+        migration_receipt = directory / 'load-owner-migration-20261026-result.json'
+        if load and not loaded and migration_receipt.exists():
+            raise KeySafetyError('MigrationIdentityUnloadedInSameAgent_NoAutomaticReprompt')
         if load and (not loaded or owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour):
             if not sys.stdin.isatty() or not sys.stdout.isatty():
                 raise KeySafetyError("SSH key loading needs the native terminal's hidden prompt, never chat/pipes.")
             attempt = directory / "load-attempt.json"
+            if owner_migration:
+                attempt = directory / 'load-owner-migration-20261026.json'
             if owner_four_hour:
                 # A separately approved single prompt; never reset previous
                 # prompt journals or silently extend an existing identity.
@@ -110,7 +117,8 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
             monotonic_started = time.monotonic()
             write_new(attempt, json.dumps({'promptAttempted': True, 'fourHourOwnerApproval': owner_four_hour,
                                           'freshLeaseOwnerApproval': owner_four_hour_reopen,
-                                          'readyHandoffOwnerApproval': owner_ready_four_hour}).encode())
+                                          'readyHandoffOwnerApproval': owner_ready_four_hour,
+                                          'plainMigrationOwnerApproval': owner_migration}).encode())
             # ssh-add owns native hidden input. Never obtain/pass/store the passphrase.
             arguments = ['ssh-add', '-t', '4h', str(KEY_DIRECTORY / 'ssh_ed25519')] if owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour else ['ssh-add', str(KEY_DIRECTORY / 'ssh_ed25519')]
             result = subprocess.run(arguments, env=environment, timeout=300, check=False)
@@ -120,6 +128,9 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
             loaded = result.returncode == 0 and any(len(line.split()) >= 2 and line.split()[1] == fingerprint for line in result.stdout.splitlines())
             if not loaded:
                 raise KeySafetyError("Agent fingerprint verification failed; do not repeat the prompt.")
+            if owner_migration:
+                write_new(migration_receipt, json.dumps({'keyLoaded': True, 'fingerprint': fingerprint,
+                    'mode': 'until-agent-restart', 'agentPID': json.loads(private_file(state))['pid']}).encode())
             if owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour:
                 # Conservative deadline starts BEFORE the prompt, never later
                 # than ssh-add's real expiry. Metadata only, no private key.
@@ -130,6 +141,15 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
                     'keyLoaded': True, 'fingerprint': fingerprint, 'lifetimeSeconds': 14400,
                     'expiresAt': started + 14400, 'monotonicExpiresAt': monotonic_started + 14400}).encode())
         answer = {"agentReady": True, "keyLoaded": loaded, "socket": str(socket)}
+        if loaded:
+            answer['keyFingerprint'] = fingerprint
+        if loaded and migration_receipt.exists():
+            metadata = json.loads(private_file(migration_receipt))
+            if (metadata.get('fingerprint') != fingerprint or metadata.get('mode') != 'until-agent-restart'
+                    or metadata.get('agentPID') != json.loads(private_file(state))['pid']):
+                raise KeySafetyError('MigrationAgentOrFingerprintReceiptMismatch')
+            answer['keyLeaseMode'] = 'until-agent-restart'
+            return answer
         lease = directory / 'load-owner-four-hour-20261025-result.json'
         renewed = directory / 'load-owner-four-hour-reopen-20261025-result.json'
         if renewed.exists():
@@ -149,9 +169,11 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
 
 
 def cli(arguments):
-    if arguments not in (["check"], ["load"], ["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold']):
+    if arguments not in (["check"], ["load"], ["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold'], ['load-owner-migration-and-hold']):
         raise KeySafetyError("Use check, load, load-and-hold or the explicitly owner-requested retry only.")
-    if arguments == ['load-owner-ready-four-hour-and-hold']:
+    if arguments == ['load-owner-migration-and-hold']:
+        result = ensure_agent(load=True, owner_migration=True)
+    elif arguments == ['load-owner-ready-four-hour-and-hold']:
         result = ensure_agent(load=True, owner_ready_four_hour=True)
     elif arguments == ['load-owner-four-hour-reopen-and-hold']:
         result = ensure_agent(load=True, owner_four_hour_reopen=True)
@@ -160,7 +182,7 @@ def cli(arguments):
     else:
         result = ensure_agent(load=True,owner_retry=True) if arguments == ["load-owner-retry-and-hold"] else ensure_agent(load=arguments != ["check"])
     print(json.dumps({key: value for key, value in result.items() if key != "socket"}), flush=True)
-    if arguments in (["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold']):
+    if arguments in (["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold'], ['load-owner-migration-and-hold']):
         if not result["keyLoaded"]:
             raise KeySafetyError("Cannot hold an unloaded SSH identity.")
         print("SSH loaded. Keep this window open during staging work so WSL does not idle-stop the agent. Close it or press Ctrl+C when finished. No CPU load or VM operation is generated.", flush=True)

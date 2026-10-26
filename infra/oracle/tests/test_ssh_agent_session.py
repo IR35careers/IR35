@@ -17,6 +17,47 @@ FINGERPRINT = "SHA256:" + "A" * 43
 
 
 class AgentTests(unittest.TestCase):
+    def test_verified_plain_migration_identity_needs_no_time_based_ssh_renewal(self):
+        import p6_hba
+        with patch.object(p6_hba, 'ensure_agent', return_value={'keyLoaded': True, 'keyFingerprint': FINGERPRINT,
+                                                              'keyLeaseMode': 'until-agent-restart'}), \
+                patch.object(p6_hba, 'ensure_session') as oracle:
+            p6_hba.credential_gate()
+        oracle.assert_called_once_with(minimum_seconds=1800)
+
+    def test_plain_migration_load_has_no_lifetime_and_ignores_old_expiry(self):
+        old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
+                          'expiresAt': time.time()-3600, 'monotonicExpiresAt': time.monotonic()-3600}).encode()
+        write_new(self.directory / 'load-owner-ready-four-hour-20261025-result.json', old)
+        replies = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=replies) as native:
+            proof = agent.ensure_agent(load=True, owner_migration=True)
+        self.assertEqual(native.call_args_list[1].args[0], ['ssh-add', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        self.assertEqual(proof['keyLeaseMode'], 'until-agent-restart')
+        self.assertEqual(proof['keyFingerprint'], FINGERPRINT)
+        self.assertNotIn('keyLifetimeSecondsRemaining', proof)
+        self.assertEqual((self.directory / 'load-owner-ready-four-hour-20261025-result.json').read_bytes(), old)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')) as native:
+            self.assertTrue(agent.ensure_agent(load=True, owner_migration=True)['keyLoaded'])
+        self.assertEqual(native.call_count, 1)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'SameAgent_NoAutomaticReprompt'):
+                agent.ensure_agent(load=True, owner_migration=True)
+        self.assertEqual(native.call_count, 1)
+
+    def test_plain_migration_flags_require_single_explicit_load_and_no_retry_after_failed_prompt(self):
+        for options in ({'owner_migration': True}, {'load': True, 'owner_migration': True, 'owner_four_hour': True}):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(**options)
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=[self.result(1), self.result(1)]):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(load=True, owner_migration=True)
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'already requested'):
+                agent.ensure_agent(load=True, owner_migration=True)
+        self.assertEqual(native.call_count, 1)
+
     def test_ready_handoff_preserves_prior_leases_and_cannot_prompt_twice(self):
         old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
                           'expiresAt': time.time() - 30, 'monotonicExpiresAt': time.monotonic() - 30}).encode()

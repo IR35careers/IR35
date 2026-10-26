@@ -1,0 +1,33 @@
+{
+  "operation": "owner-approved-docker-top-diagnosis-one",
+  "checkedAtUTC": "2026-10-26T06:26:03.298066+00:00",
+  "container": "ir35-p6-mock-worker-v3",
+  "vmWrites": 0,
+  "retries": 0,
+  "auditReruns": 0,
+  "workerRestarts": 0,
+  "builds": 0,
+  "configChanges": 0,
+  "productionChanges": false,
+  "inspectCalls": 1,
+  "topCalls": 1,
+  "inspectExitCode": 0,
+  "inspect": {
+    "State.Status": "running",
+    "Running": true,
+    "Paused": false,
+    "ExitCode": 0,
+    "RestartCount": 0,
+    "StartedAt": "2026-10-25T15:09:10.813384336Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "topExitCode": 1,
+  "topSanitisedStderr": "Error response from daemon: Couldn't find PID field in ps output",
+  "topRawStderrSHA256": "e6c2b6078fe8c0e47be00f553dd4f0ab861a8dd6571d7e1e58c5e8b08a7dcfff",
+  "sameStderrAsPriorAudit": true,
+  "stoppedOrDockerPausedHypothesisSupported": false,
+  "status": "OBSERVED",
+  "canonicalPayloadSHA256": "6f33cf0d2147b8ef28684d25758f80bb8b611bf9c6ce86098ba92b5332f7f9b8",
+  "originalUnparseablePayloadSHA256": "f615d2659380e35a8d9b0fad717877c864bb50cac1b3b91e65f48dd2f680d72f",
+  "earlierPayloadRejectedBeforeDocker": true
+}
