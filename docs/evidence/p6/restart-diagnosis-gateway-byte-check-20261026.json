@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "readOnly": true,
+  "file": "/opt/ir35/.env.p5-kong-config",
+  "sha256": "2dcdd388cee9887bff8952702276d986e3cb43592ae00851ca9a654a5128e1d8",
+  "expectedSHA256": "2dcdd388cee9887bff8952702276d986e3cb43592ae00851ca9a654a5128e1d8",
+  "reference": "docs/evidence/p5/prepare.json",
+  "matchesSealedP5": true,
+  "vmWrites": 0,
+  "services": 7,
+  "originalJWKSUpstream": "http://ir35-p5-auth:9999/.well-known/jwks.json",
+  "collection02FailureCause": "Diagnostic URL regular expression excluded dots in this original sealed path; live gateway file unchanged.",
+  "runtimeFixApplied": false,
+  "privateConfigurationContentsLogged": false
+}

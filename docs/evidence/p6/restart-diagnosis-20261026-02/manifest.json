@@ -1,0 +1,33 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-history-intent.json",
+      "sha256": "86ae2bb0165614dd38edee4c0080f8dd197bf975d10c8e129043daf3ec498b15"
+    },
+    {
+      "name": "01-sealed-history-result.json",
+      "sha256": "0da4ae5c2090592b7e9a105029d57e0cf6ddde7fe3f41879118e043752ca114c"
+    },
+    {
+      "name": "02-worker-state-intent.json",
+      "sha256": "7f37b7c0278ff7d0483fe4abd21e6abaf4dbb79df3da435ec4a3e533ec6ba80a"
+    },
+    {
+      "name": "02-worker-state-result.json",
+      "sha256": "ee7802ef0071279604ebc202c1d850c098369231105488348b288d0b1ad6c81b"
+    },
+    {
+      "name": "03-proxy-routing-intent.json",
+      "sha256": "8f91998b51d07e0daa9d28554e3cce7da434fa76add1cc472b6633a510fc988f"
+    },
+    {
+      "name": "03-proxy-routing-result.json",
+      "sha256": "3ce3d1400575888e55585d21b5ff4aaa33e41461e52db339daaebe3277c02b02"
+    },
+    {
+      "name": "result.json",
+      "sha256": "31fadc5ff742024cfb441f25f2bf20ecb76e04a3e9d35e4d8469f2c99616057a"
+    }
+  ],
+  "version": 1
+}

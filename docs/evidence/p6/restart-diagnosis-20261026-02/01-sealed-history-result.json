@@ -1,0 +1,37 @@
+{
+  "commands": [],
+  "failures": [
+    {
+      "artifact": "docs/evidence/p6/owner-resume-lifecycle.json",
+      "error": "NativeMockCaseFailed_mock-health",
+      "manifestSHA256": "d8fffe84db0bfd03f01505b568b83f2eda1a6bbc575dc230d3599b8c31577505",
+      "stage": "18-owner-resume-lifecycle"
+    },
+    {
+      "artifact": "docs/evidence/p6/owner-resume-lifecycle-pause-repair-one.json",
+      "error": "NativeMockCaseFailed_schedule-mock_automation",
+      "manifestSHA256": "d43b7b000ad706333857964ed86c60e428edcf7fcba8ea59c371676e15d97d70",
+      "stage": "21-owner-pause-repair-lifecycle"
+    },
+    {
+      "artifact": "docs/evidence/p6/owner-resume-lifecycle-schedule-repair-two.json",
+      "error": "NativeMockRestartHealthDeadline",
+      "manifestSHA256": "1ec2dfb4da03790cc4cb9d9e6db4bbd971ff61f3e81b24f53ea3c3a845c7f600",
+      "stage": "25-owner-final-repair-lifecycle"
+    }
+  ],
+  "operation": "sealed-history",
+  "restartIntent": {
+    "artifact": "186-restart-intent.json",
+    "artifactModifiedUTC": "2026-10-26T08:16:55.650383+00:00",
+    "value": {
+      "container": "ir35-p6-mock-worker-v6",
+      "image": "sha256:a4dd534d942dbbdf68f6c1d3f8ed7c760b8ccf409105a07e5d4dfc928c96dbc7",
+      "queueJobsTerminal": true,
+      "realAcceptance": false
+    }
+  },
+  "retainedReceiptsExpected": 34,
+  "status": "PASS",
+  "vmWrites": 0
+}

@@ -28,6 +28,12 @@ from web_edge_guest import private_env
 FAILED='ir35-p6-mock-worker-v6'
 ROLLBACK='ir35-p6-mock-worker-v6-rollback'
 SCENARIOS={'success','server_error','timeout','lost_ack','captcha','unknown_answer'}
+KONG_SHA256='2dcdd388cee9887bff8952702276d986e3cb43592ae00851ca9a654a5128e1d8'
+KONG_UPSTREAMS={'auth-v1':'http://ir35-p5-auth:9999/','rest-v1':'http://ir35-p5-rest:3000/',
+    'auth-open-verify':'http://ir35-p5-auth:9999/verify','auth-open-callback':'http://ir35-p5-auth:9999/callback',
+    'auth-open-authorize':'http://ir35-p5-auth:9999/authorize',
+    'auth-open-.well-known-jwks.json':'http://ir35-p5-auth:9999/.well-known/jwks.json',
+    'storage-v1':'http://ir35-p5-storage:5000/'}
 PROPERTIES=('ActiveState','SubState','Result','NRestarts','ExecMainStatus','ExecMainCode','ExecMainStartTimestamp',
             'ExecMainExitTimestamp','MainPID','FragmentPath','User','Group','MemoryCurrent','MemoryPeak','MemoryMax','DropInPaths','ExecStart')
 BRIDGE_PROBE="""import pg from 'pg';import fs from 'node:fs';
@@ -126,6 +132,9 @@ def projected_container(item):
         **{key:state.get(key) for key in ('Status','Running','Paused','Restarting','StartedAt','FinishedAt','ExitCode','OOMKilled','Dead')},
         'RestartCount':item['RestartCount'],'restartPolicy':host['RestartPolicy']['Name'],
         'healthStatus':state.get('Health',{}).get('Status'),'errorPresent':bool(state.get('Error')),
+        'healthObservations':[{'Start':row.get('Start'),'End':row.get('End'),'ExitCode':row.get('ExitCode'),
+            'outputSHA256':digest(row.get('Output','').encode()),'outputEmpty':not row.get('Output','').strip()}
+            for row in state.get('Health',{}).get('Log',[])],
         'privateAddresses':{name:values.get('IPAddress') for name,values in item['NetworkSettings']['Networks'].items()}}
 
 
@@ -174,6 +183,15 @@ def private_health(address):
     except (OSError,ValueError,urllib.error.URLError):return {'status':'unavailable','rawErrorWithheld':True}
 
 
+def sealed_kong_routes(body):
+    if digest(body)!=KONG_SHA256:raise RuntimeError('SealedP5KongConfigurationMismatch_HardStop')
+    services=json.loads(body)['services']
+    if len(services)!=len(KONG_UPSTREAMS) or {row['name']:row.get('url') for row in services}!=KONG_UPSTREAMS:
+        raise RuntimeError('ExactSealedP5KongUpstreamsRequired_HardStop')
+    return [{'name':row['name'],'upstream':row['url'],'paths':[path for route in row.get('routes',[]) for path in route.get('paths',[])]}
+        for row in services]
+
+
 def proxy_routing(data,runtime):
     store,_,_,_=history(data)
     units=[]
@@ -211,13 +229,7 @@ def proxy_routing(data,runtime):
     proxy_targets=re.findall(r'\breverse_proxy(?:\s+@api)?\s+([^\s{]+)',text)
     if set(proxy_targets)!={'ir35-p5-web:3000','ir35-p5-kong:8000'}:
         raise RuntimeError('UnexpectedStagingProxyTarget_HardStop')
-    kong=json.loads((ROOT/'.env.p5-kong-config').read_text())
-    backends=[]
-    for service in kong['services']:
-        target=service.get('url','')
-        if not re.fullmatch(r'http://ir35-p5-(?:auth|rest|storage):[0-9]+(?:/[a-zA-Z0-9_/-]*)?',target):
-            raise RuntimeError('UnexpectedPrivateKongTarget_HardStop')
-        backends.append({'name':service['name'],'upstream':target,'paths':[path for row in service.get('routes',[]) for path in row.get('paths',[])]})
+    backends=sealed_kong_routes((ROOT/'.env.p5-kong-config').read_bytes())
     values=runtime['read_env']();gate=private_env(ROOT/'.env.p5-caddy')['STAGING_GATE_TOKEN']
     basic='Basic '+base64.b64encode(('ir35:'+values['STAGING_BASIC_PASSWORD']).encode()).decode()
     auth={'apikey':values['ANON_KEY'],'Authorization':'Bearer '+values['ANON_KEY']}
@@ -238,7 +250,7 @@ def proxy_routing(data,runtime):
             'protectedStagingRoutesMatchP5':all(row['matchesP5Reference'] for row in routes)}
     return {'status':'PASS' if all(checks.values()) else 'FAIL','checks':checks,'workerProxies':units,
         'rollbackDirectHealth':direct,'localhostHealth':current,'stagingHTTP':routes,'caddyConfigurationSHA256':expected,
-        'stagingPageUpstream':'ir35-p5-web:3000','stagingSDKAndAPIUpstream':'ir35-p5-kong:8000','kongRoutes':backends,
+        'stagingPageUpstream':'ir35-p5-web:3000','stagingSDKAndAPIUpstream':'ir35-p5-kong:8000','kongRoutes':backends,'kongConfigurationSHA256':KONG_SHA256,
         'P6AppRealtimeTimerIntegrationComplete':False,'requestSecretsOrCookiesLogged':False}
 
 

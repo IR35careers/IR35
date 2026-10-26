@@ -1,0 +1,44 @@
+{
+  "code": "UnexpectedPrivateKongTarget_HardStop",
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "loopback-listener",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    }
+  ],
+  "exceptionType": "RuntimeError",
+  "operation": "proxy-routing",
+  "status": "FAIL",
+  "vmWrites": 0
+}

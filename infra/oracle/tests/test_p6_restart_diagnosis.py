@@ -15,6 +15,27 @@ from p6_audit_log import AuditFailure
 
 
 class RestartDiagnosisTests(unittest.TestCase):
+    def test_kong_requires_sealed_bytes_and_exact_upstreams_including_original_jwks(self):
+        services=[{'name':name,'url':url,'routes':[{'paths':['/test']}]} for name,url in guest.KONG_UPSTREAMS.items()]
+        body=json.dumps({'services':services}).encode()
+        with patch.object(guest,'KONG_SHA256',guest.digest(body)):
+            result=guest.sealed_kong_routes(body)
+            self.assertIn('http://ir35-p5-auth:9999/.well-known/jwks.json',[row['upstream'] for row in result])
+            with self.assertRaisesRegex(RuntimeError,'SealedP5KongConfigurationMismatch'):guest.sealed_kong_routes(body+b' ')
+        for target in ('http://outside.invalid/','http://secret:password@ir35-p5-auth:9999/','http://ir35-p5-auth:9999/?force=true'):
+            services[0]['url']=target;changed=json.dumps({'services':services}).encode()
+            with patch.object(guest,'KONG_SHA256',guest.digest(changed)):
+                with self.assertRaisesRegex(RuntimeError,'ExactSealedP5KongUpstreamsRequired'):guest.sealed_kong_routes(changed)
+
+    def test_docker_health_projection_keeps_times_exit_and_hash_not_output(self):
+        item={'Name':'/candidate','Image':'sha256:x','Created':'now','HostConfig':{'RestartPolicy':{'Name':'unless-stopped'}},
+            'State':{'Health':{'Status':'unhealthy','Log':[{'Start':'a','End':'b','ExitCode':1,'Output':'private diagnostic'}]}},
+            'RestartCount':0,'NetworkSettings':{'Networks':{}}}
+        result=guest.projected_container(item)
+        self.assertNotIn('private diagnostic',json.dumps(result))
+        self.assertEqual(result['healthObservations'][0]['ExitCode'],1)
+        self.assertEqual(result['healthObservations'][0]['outputSHA256'],guest.digest(b'private diagnostic'))
+
     def test_remote_bootstrap_bundles_required_audit_dependency_before_collector(self):
         self.assertEqual(controller.MODULES[0],'p6_audit_log')
         self.assertLess(controller.MODULES.index('p6_audit_log'),controller.MODULES.index('p6_restart_diagnosis_guest'))

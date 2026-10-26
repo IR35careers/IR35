@@ -33,21 +33,30 @@ def remote_case(name,data):
 
 
 def main():
-    if sys.argv[1:] not in (['--read-only'],['--read-only-tooling-repair-one']):raise AuditFailure('ExplicitOwnerReadOnlyRestartDiagnosisRequired')
-    repair=sys.argv[1:]==['--read-only-tooling-repair-one']
-    root=p6_resume.DIRECTORY/('restart-diagnosis-20261026-02' if repair else 'restart-diagnosis-20261026-01')
+    options={'--read-only':1,'--read-only-tooling-repair-one':2,'--read-only-tooling-repair-two':3}
+    if len(sys.argv)!=2 or sys.argv[1] not in options:raise AuditFailure('ExplicitOwnerReadOnlyRestartDiagnosisRequired')
+    attempt=options[sys.argv[1]]
+    root=p6_resume.DIRECTORY/('restart-diagnosis-20261026-'+str(attempt).zfill(2))
     if root.exists():raise AuditFailure('RestartDiagnosisRecorded_NoReplay')
     previous=None
-    if repair:
+    previous_second=None
+    if attempt>1:
         first=root.with_name('restart-diagnosis-20261026-01')
         previous=verified_manifest(first)
         failure=json.loads((first/'01-sealed-history-result.json').read_text())
         if previous!='941cec46766f225482fc126802fb2241c71e14e77ffb7851189b18aa72a0f284' or failure.get('exceptionType')!='KeySafetyError':
             raise AuditFailure('ExactFirstCollectionBootstrapFailureRequired')
+    if attempt==3:
+        second=root.with_name('restart-diagnosis-20261026-02')
+        previous_second=verified_manifest(second)
+        failure=json.loads((second/'03-proxy-routing-result.json').read_text())
+        if previous_second!='47f2e1872fea3fadd48d3a6fb0808eb5b27a9cfb70d70791049bfde40c2e5a06' or failure.get('code')!='UnexpectedPrivateKongTarget_HardStop':
+            raise AuditFailure('ExactSecondCollectionJWKSWhitelistFailureRequired')
     data=payload();journal=Journal(root)
     result={'status':'FAIL','readOnly':True,'vmWrites':0,'newBuilds':0,'restarts':0,'jobPublications':0,'configChanges':0,
             'productionChanges':False,'phaseComplete':False,'lifecycleAttemptBudgetReset':False,'cases':[],
-            'collectionAttempt':2 if repair else 1,'toolingRepairAttempt':1 if repair else 0,'previousCollectionManifestSHA256':previous}
+            'collectionAttempt':attempt,'toolingRepairAttempt':attempt-1,'previousCollectionManifestSHA256':previous,
+            'secondCollectionManifestSHA256':previous_second}
     try:
         for index,name in enumerate(CASES,1):
             observed=journal.step(index,name,lambda:remote_case(name,data))
