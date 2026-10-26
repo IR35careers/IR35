@@ -1,0 +1,6 @@
+{
+  "exceptionType": "KeySafetyError",
+  "operation": "sealed-failure-rollback",
+  "rawErrorWithheld": true,
+  "status": "FAIL"
+}

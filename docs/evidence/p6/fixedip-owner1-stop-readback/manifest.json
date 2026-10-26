@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-failure-rollback-intent.json",
+      "sha256": "f91bc283de985bc8d3c9c440d040731d16ce3f70bdddc30052013bbfe009a6be"
+    },
+    {
+      "name": "01-sealed-failure-rollback-result.json",
+      "sha256": "106812063ea8a2fd058ecb03b445f28f0706c88588f66cd2fa814a73ea929245"
+    },
+    {
+      "name": "result.json",
+      "sha256": "c0f8ead20aa0ec4200e6d7ac201f9d957b5fe6b4a1a147cf3b78ce1aa39d58c2"
+    }
+  ],
+  "version": 1
+}
