@@ -1,5 +1,7 @@
 # P8 memory preflight FAIL — stopped before load, no repair/retry
 
+Separate staging [draft PR62](https://github.com/IR35careers/IR35/pull/62), based on unmerged draft PR61. No merges, approvals or production deployments.
+
 The fixed `readonly-load-01` slot is consumed. Its manifest SHA256 is `8c89ba466ce78bac5cc22c1755bf169878b73b25bc8a608914f5da15cc885da2`; [exact result](p8/readonly-load-01/01-load-memory-edge-containment-result.json) and [manifest](p8/readonly-load-01/manifest.json) are write-once. No slot reset, limit/configuration change, new resource, restart, real email or employer submission occurred.
 
 | Gate | Result |
