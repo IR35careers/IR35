@@ -1,0 +1,76 @@
+{
+  "APPLICATION_WORKER_ACCEPT_JOBS": "false",
+  "APPLY_RUNNER": "mock",
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-ps",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    }
+  ],
+  "expectedInternalTraffic": [
+    "database heartbeat",
+    "empty-queue watchdog",
+    "read-only diagnostic probes"
+  ],
+  "historicalPacketCaptureClaimed": false,
+  "operation": "external-isolation",
+  "proofScope": "Exact sealed mock-only payloads and immutable mock program plus internal-only network/provider-free execution; no retrospective packet-capture claim.",
+  "smtp": {
+    "checks": {
+      "bothAuthStacksRouteToSink": true,
+      "noForwardOrRelayConfigured": true,
+      "noSinkRestart": true,
+      "privateUnpublishedSink": true,
+      "sinkEmpty": true,
+      "sinkStartedBeforeCutoff": true
+    },
+    "mailContentOrRecipientLogged": false,
+    "sinkMessages": 0,
+    "sinkRestartCount": 0,
+    "sinkStartedAt": "2026-10-20T21:06:05.524915751Z",
+    "smtpPort": 1025,
+    "status": "PASS"
+  },
+  "status": "PASS",
+  "vmWrites": 0,
+  "workers": [
+    {
+      "checks": {
+        "noDirectProviderCredentials": true,
+        "noDockerSocket": true,
+        "noHostNetwork": true,
+        "noProxy": true,
+        "onlyInternalNetwork": true,
+        "readOnlyUnprivileged": true
+      },
+      "container": "ir35-p6-mock-worker-v6"
+    },
+    {
+      "checks": {
+        "noDirectProviderCredentials": true,
+        "noDockerSocket": true,
+        "noHostNetwork": true,
+        "noProxy": true,
+        "onlyInternalNetwork": true,
+        "readOnlyUnprivileged": true
+      },
+      "container": "ir35-p6-mock-worker-v6-rollback"
+    }
+  ]
+}

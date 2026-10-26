@@ -1,0 +1,250 @@
+{
+  "P6AppRealtimeTimerIntegrationComplete": false,
+  "caddyConfigurationSHA256": "2a4fad8dd6c35c3708c1d5a382f88dd105475cf54dc5d10425771da19758a49a",
+  "checks": {
+    "currentProxyTargetsRollback": true,
+    "localhostAndDirectHealthMatch": true,
+    "protectedStagingRoutesMatchP5": true,
+    "rollbackBuildMatches": true,
+    "rollbackHealthyPausedMock": true
+  },
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "systemd-proxy-properties",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "loopback-listener",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    }
+  ],
+  "kongConfigurationSHA256": "2dcdd388cee9887bff8952702276d986e3cb43592ae00851ca9a654a5128e1d8",
+  "kongRoutes": [
+    {
+      "name": "auth-v1",
+      "paths": [
+        "/auth/v1/"
+      ],
+      "upstream": "http://ir35-p5-auth:9999/"
+    },
+    {
+      "name": "rest-v1",
+      "paths": [
+        "/rest/v1/"
+      ],
+      "upstream": "http://ir35-p5-rest:3000/"
+    },
+    {
+      "name": "auth-open-verify",
+      "paths": [
+        "/auth/v1/verify"
+      ],
+      "upstream": "http://ir35-p5-auth:9999/verify"
+    },
+    {
+      "name": "auth-open-callback",
+      "paths": [
+        "/auth/v1/callback"
+      ],
+      "upstream": "http://ir35-p5-auth:9999/callback"
+    },
+    {
+      "name": "auth-open-authorize",
+      "paths": [
+        "/auth/v1/authorize"
+      ],
+      "upstream": "http://ir35-p5-auth:9999/authorize"
+    },
+    {
+      "name": "auth-open-.well-known-jwks.json",
+      "paths": [
+        "/auth/v1/.well-known/jwks.json"
+      ],
+      "upstream": "http://ir35-p5-auth:9999/.well-known/jwks.json"
+    },
+    {
+      "name": "storage-v1",
+      "paths": [
+        "/storage/v1/"
+      ],
+      "upstream": "http://ir35-p5-storage:5000/"
+    }
+  ],
+  "localhostHealth": {
+    "active": 0,
+    "browserReady": true,
+    "buildSHA": "1c07c8507aa9049c6fe89c2f1c784fb2958084cf",
+    "databaseReady": true,
+    "mode": "staging-mock-only",
+    "ok": true,
+    "paused": true,
+    "peakActive": 0,
+    "realAcceptance": false
+  },
+  "operation": "proxy-routing",
+  "requestSecretsOrCookiesLogged": false,
+  "rollbackDirectHealth": {
+    "active": 0,
+    "browserReady": true,
+    "buildSHA": "1c07c8507aa9049c6fe89c2f1c784fb2958084cf",
+    "databaseReady": true,
+    "mode": "staging-mock-only",
+    "ok": true,
+    "paused": true,
+    "realAcceptance": false,
+    "status": 200
+  },
+  "stagingHTTP": [
+    {
+      "caddyRequestID": "49336360-af30-4a8f-9cab-b5b6f0ad19f3",
+      "expectedRoute": "page-proxy",
+      "expectedStatus": 200,
+      "host": "staging.ir35careers.com",
+      "matchedRoute": "page-proxy",
+      "matchesP5Reference": true,
+      "path": "/jobs",
+      "status": 200
+    },
+    {
+      "caddyRequestID": "579cc5d4-515b-499e-b30a-d5bcb1b1423b",
+      "expectedRoute": "page-proxy",
+      "expectedStatus": 503,
+      "host": "staging.ir35careers.com",
+      "matchedRoute": "page-proxy",
+      "matchesP5Reference": true,
+      "path": "/api/health",
+      "status": 503
+    },
+    {
+      "caddyRequestID": "1732b05a-3ca5-4220-9f24-a8ce7cbbc365",
+      "expectedRoute": "sdk-proxy",
+      "expectedStatus": 200,
+      "host": "staging.ir35careers.com",
+      "matchedRoute": "sdk-proxy",
+      "matchesP5Reference": true,
+      "path": "/supabase/auth/v1/health",
+      "status": 200
+    },
+    {
+      "caddyRequestID": "3f5fd31c-88e5-40db-abd5-6f72bc1267fe",
+      "expectedRoute": "api-proxy",
+      "expectedStatus": 200,
+      "host": "api-staging.ir35careers.com",
+      "matchedRoute": "api-proxy",
+      "matchesP5Reference": true,
+      "path": "/auth/v1/health",
+      "status": 200
+    }
+  ],
+  "stagingPageUpstream": "ir35-p5-web:3000",
+  "stagingSDKAndAPIUpstream": "ir35-p5-kong:8000",
+  "status": "PASS",
+  "vmWrites": 0,
+  "workerProxies": [
+    {
+      "configuredUpstream": "172.18.0.17:8787",
+      "properties": {
+        "service": {
+          "ActiveState": "inactive",
+          "DropInPaths": "",
+          "ExecMainCode": "0",
+          "ExecMainExitTimestamp": "",
+          "ExecMainStartTimestamp": "",
+          "ExecMainStatus": "0",
+          "FragmentPath": "/etc/systemd/system/ir35-p6-health-proxy-r4-final-repair2.service",
+          "Group": "ir35",
+          "MainPID": "0",
+          "MemoryCurrent": "[not set]",
+          "MemoryMax": "33554432",
+          "MemoryPeak": "[not set]",
+          "NRestarts": "0",
+          "Result": "success",
+          "SubState": "dead",
+          "User": "ir35",
+          "loadedUpstream": "172.18.0.17:8787"
+        },
+        "socket": {
+          "ActiveState": "inactive",
+          "DropInPaths": "",
+          "FragmentPath": "/etc/systemd/system/ir35-p6-health-proxy-r4-final-repair2.socket",
+          "Group": "",
+          "MemoryCurrent": "[not set]",
+          "MemoryMax": "infinity",
+          "MemoryPeak": "[not set]",
+          "Result": "success",
+          "SubState": "dead",
+          "User": "",
+          "loadedUpstream": null
+        }
+      },
+      "sealedFilesMatch": true,
+      "unit": "ir35-p6-health-proxy-r4-final-repair2"
+    },
+    {
+      "configuredUpstream": "172.18.0.16:8787",
+      "properties": {
+        "service": {
+          "ActiveState": "active",
+          "DropInPaths": "",
+          "ExecMainCode": "0",
+          "ExecMainExitTimestamp": "",
+          "ExecMainStartTimestamp": "Mon 2026-10-26 08:18:55 UTC",
+          "ExecMainStatus": "0",
+          "FragmentPath": "/etc/systemd/system/ir35-p6-health-proxy-r4-final-rollback2.service",
+          "Group": "ir35",
+          "MainPID": "3138774",
+          "MemoryCurrent": "1216512",
+          "MemoryMax": "33554432",
+          "MemoryPeak": "1740800",
+          "NRestarts": "0",
+          "Result": "success",
+          "SubState": "running",
+          "User": "ir35",
+          "loadedUpstream": "172.18.0.16:8787"
+        },
+        "socket": {
+          "ActiveState": "active",
+          "DropInPaths": "",
+          "FragmentPath": "/etc/systemd/system/ir35-p6-health-proxy-r4-final-rollback2.socket",
+          "Group": "",
+          "MemoryCurrent": "4096",
+          "MemoryMax": "infinity",
+          "MemoryPeak": "262144",
+          "Result": "success",
+          "SubState": "running",
+          "User": "",
+          "loadedUpstream": null
+        }
+      },
+      "sealedFilesMatch": true,
+      "unit": "ir35-p6-health-proxy-r4-final-rollback2"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "operation": "queue-ledger",
+  "readOnly": true
+}
