@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-protected-auth-source-readiness-intent.json",
+      "sha256": "209d392d4bfc8497f6476a7bcdcc4137bcb5e32db1c3322acdeac3e1bbd7d409"
+    },
+    {
+      "name": "01-protected-auth-source-readiness-result.json",
+      "sha256": "1a2c54e2af260653c136596b3a2279db290ffafa735b50f537ff9e29578c1a5d"
+    },
+    {
+      "name": "result.json",
+      "sha256": "c76ded0d5b6a1b8b691649841d6b0f52bfe6cd7f0a3a03aa24affac061aa9775"
+    }
+  ],
+  "version": 1
+}

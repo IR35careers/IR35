@@ -1,0 +1,4 @@
+{
+  "operation": "protected-auth-source-readiness",
+  "readOnly": true
+}

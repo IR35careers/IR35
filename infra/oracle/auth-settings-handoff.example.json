@@ -1,0 +1,67 @@
+{
+  "format": "ir35-auth-settings-handoff-v1",
+  "copied_at_utc": null,
+  "url_configuration": {
+    "site_url": null,
+    "additional_redirect_urls": null
+  },
+  "email_behavior": {
+    "email_provider_enabled": null,
+    "new_signups_allowed": null,
+    "confirm_email_required": null,
+    "magic_links_enabled": null,
+    "secure_email_change_enabled": null,
+    "otp_expiry_seconds": null,
+    "otp_length": null,
+    "minimum_email_interval_seconds": null
+  },
+  "email_templates": {
+    "confirmation": { "subject": null, "unrendered_html": null },
+    "magic_link": { "subject": null, "unrendered_html": null },
+    "recovery": { "subject": null, "unrendered_html": null },
+    "invite": { "subject": null, "unrendered_html": null },
+    "email_change": { "subject": null, "unrendered_html": null }
+  },
+  "rate_limits": {
+    "email_sent": null,
+    "verify": null,
+    "token_refresh": null,
+    "otp": null,
+    "sso": null,
+    "anonymous_users": null,
+    "units_shown_by_dashboard": null
+  },
+  "sessions": {
+    "jwt_expiry_seconds": null,
+    "refresh_token_rotation_enabled": null,
+    "refresh_token_reuse_interval_seconds": null,
+    "session_timebox": null,
+    "inactivity_timeout": null,
+    "single_session_per_user": null
+  },
+  "password_and_mfa": {
+    "minimum_password_length": null,
+    "required_character_rules": null,
+    "totp_enroll_enabled": null,
+    "totp_verify_enabled": null,
+    "other_enabled_mfa_methods": null
+  },
+  "providers": {
+    "google": { "enabled": null, "public_client_id": null, "nonce_validation_enabled": null },
+    "github": { "enabled": null, "public_client_id": null },
+    "other_enabled_provider_names": null
+  },
+  "smtp_metadata_only": {
+    "host": null,
+    "port": null,
+    "sender_email": null,
+    "sender_name": null
+  },
+  "additional_security_controls": {
+    "captcha_enabled": null,
+    "captcha_provider_name": null,
+    "enabled_auth_hook_types": null,
+    "enabled_email_notification_types": null
+  },
+  "settings_not_visible_in_dashboard": null
+}
