@@ -65,7 +65,17 @@ def prerequisites(data,runtime):
     store=Store(ROOT/'.env.p6',uid=1002)
     for row in (data['p6Inventory'],data['rolePreflight'],data['roleInstall']):store.verify(row['stage'],row['manifestSHA256'])
     build=data['workerBuild']
-    if build.get('sourceRepairAttempt') in (1, 2):
+    if build.get('ownerResume') is True:
+        root = ROOT/'.env.p6-resume-builds-20261026'
+        if (build.get('journal') != str(root) or build.get('attempt') not in (1,2,3)
+                or build.get('stage') != f"{build['attempt']:02d}-build" or build.get('historicalBuildSlotsPreserved') is not True
+                or build.get('pidAuditManifestSHA256') != '7e08a4af09655a9be9efd249f5f0adcc1c4c8eb4691839a319d7470a241e1e4a'):
+            raise RecoveryError('FixedOwnerResumeBuildProofRequired')
+        Store(root,uid=1002).verify(build['stage'],build['manifestSHA256'])
+        actual = json.loads((root/build['stage']/'result.json').read_bytes())
+        if actual != {k:v for k,v in build.items() if k not in ('stage','manifestSHA256')}:
+            raise RecoveryError('ResumeBuildMustEqualSealedNativeResult')
+    elif build.get('sourceRepairAttempt') in (1, 2):
         if (build.get('attempt') != 3 or build.get('journal') != str(ROOT/'.env.p6-build-source-repairs')
                 or build.get('stage') != ('02-third-source-repair' if build['sourceRepairAttempt'] == 2 else '01-third-source-repair') or build.get('originalThreeBuildSlotsPreserved') is not True):
             raise RecoveryError('FixedThirdSourceRepairProofRequired')

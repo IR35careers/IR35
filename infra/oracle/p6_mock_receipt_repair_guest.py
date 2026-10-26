@@ -21,14 +21,71 @@ NAME = 'ir35-p6-mock-worker-v3'
 COMPOSE = ROOT / 'p6-mock-compose-v3.yml'
 
 
-def configuration(image, source):
+def configuration(image, source, *, owner_resume=False):
     value = compose_two(image, source)
-    value['name'] = 'ir35-p6-mock-v3'
-    value['services']['worker']['container_name'] = NAME
+    value['name'] = 'ir35-p6-mock-v4' if owner_resume else 'ir35-p6-mock-v3'
+    value['services']['worker']['container_name'] = 'ir35-p6-mock-worker-v4' if owner_resume else NAME
+    if owner_resume:
+        entry = value['services']['worker']['entrypoint']
+        entry.insert(entry.index('node'),'IR35_READ_ONLY=true')
     return value
 
 
-def run(data, runtime):
+def paused_rollback(data,runtime,store,stage,prior):
+    """Restore old immutable image WITHOUT briefly enabling its consumer."""
+    from p6_health_repair_guest import ROLLBACK_UNIT
+    name = 'ir35-p6-mock-worker-v4-rollback'
+    path = ROOT/'p6-mock-compose-v4-rollback.yml'
+    value = configuration(prior['image'],prior['sourceSHA'],owner_resume=True)
+    value['name'] = 'ir35-p6-mock-v4-rollback'
+    value['services']['worker']['container_name'] = name
+    store.put(stage,'rollback-intent.json',json.dumps({'image':prior['image'],'sourceSHA':prior['sourceSHA'],
+        'processingPausedFromStart':True,'originalSecretsUnchanged':True}).encode())
+    names = runtime['run'](['docker','ps','-a','--format','{{.Names}}']).splitlines()
+    if path.exists() or name in names:raise RecoveryError('RollbackAlreadyExists_NoBlindReplay')
+    with path.open('x') as output:json.dump(value,output,indent=2)
+    os.chmod(path,0o644)
+    with store.sink(stage,'rollback-start.log') as log:
+        command = ['docker','compose','--env-file',str(ROOT/'.env'),'-f',str(path)]
+        if subprocess.run(command+['config','--quiet'],stdout=log,stderr=log,timeout=30).returncode:
+            raise RecoveryError('RollbackComposeInvalid')
+        if subprocess.run(command+['up','-d','--no-deps','worker'],stdout=log,stderr=log,timeout=120).returncode:
+            raise RecoveryError('RollbackStartFailed')
+    item = json.loads(runtime['run'](['docker','inspect',name]))[0]
+    network = json.loads(runtime['run'](['docker','inspect','--type','network','ir35-staging_backend']))[0]
+    address = isolation(item,prior['image'],network)
+    bodies = units(address,unit=ROLLBACK_UNIT)
+    for filename,body in bodies.items():
+        write_unit(SYSTEMD/filename,body,unit=ROLLBACK_UNIT)
+        store.put(stage,filename,body.encode())
+    runtime['run'](['systemctl','daemon-reload'])
+    runtime['run'](['systemctl','enable','--now',ROLLBACK_UNIT+'.socket'])
+    control = Control(private_env(ROOT/'.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
+    deadline = time.monotonic()+90
+    while True:
+        try:
+            observed = control.request('GET','/health')[1]
+            if observed.get('ok') is True:break
+        except RecoveryError:pass
+        if time.monotonic() >= deadline:raise RecoveryError('RollbackHealthDeadline')
+        time.sleep(1)
+    if observed.get('paused') is not True or observed.get('buildSHA') != prior['sourceSHA'] or observed.get('realAcceptance') is not False:
+        raise RecoveryError('RollbackMustBeOldImagePausedMock')
+    validate_proxy(runtime,bodies,unit=ROLLBACK_UNIT)
+    return {'status':'PASS','image':prior['image'],'processingPaused':True,'realAcceptance':False,
+            'originalContainerAndImagesRetained':True,'containerName':name}
+
+
+def run(data, runtime, *, owner_resume=False):
+    if type(owner_resume) is not bool:raise RecoveryError('ExplicitResumeBooleanRequired')
+    # Fixed identities, not caller-supplied names; historical three generations
+    # and their failed journals are never overwritten or silently replayed.
+    worker_name = 'ir35-p6-mock-worker-v4' if owner_resume else NAME
+    worker_compose = ROOT/'p6-mock-compose-v4.yml' if owner_resume else COMPOSE
+    old_name = NAME if owner_resume else OLD_NAME
+    old_compose = COMPOSE if owner_resume else OLD_COMPOSE
+    new_unit = 'ir35-p6-health-proxy-r4' if owner_resume else RECEIPT_UNIT
+    old_unit = RECEIPT_UNIT if owner_resume else UPDATE_UNIT
     prerequisites(data, runtime)
     store = prepared(data)
     prior = data['runtimeProof']
@@ -43,9 +100,16 @@ def run(data, runtime):
             or probe.get('parentOneSubmissionGuardUnchanged') is not True):
         raise RecoveryError('ExactRetainedFailureAndSixScenarioProbeRequired')
     build = data['workerBuild']
-    if build.get('attempt') != 3 or build.get('image') == prior.get('image'):
+    if (not owner_resume and build.get('attempt') != 3) or build.get('image') == prior.get('image'):
         raise RecoveryError('FinalVerifiedBuildThreeRequired')
-    stage = store.stage('15-receipt-repair-one-handover')
+    if owner_resume:
+        from p6_status_audit_guest import history
+        history(data)
+        if build.get('ownerResume') is not True:raise RecoveryError('VerifiedOwnerResumeBuildRequired')
+    if owner_resume:
+        stage = store.stage('17-owner-resume-handover')
+    else:
+        stage = store.stage('15-receipt-repair-one-handover')
     recovery = Recovery(data['p4'], runtime)
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'repairAttempt': 1, 'newWorkerStarts': 0, 'realAcceptance': False,
@@ -57,33 +121,35 @@ def run(data, runtime):
     def rollback():
         if requested:
             names = runtime['run'](['docker', 'ps', '-a', '--format', '{{.Names}}']).splitlines()
-            if NAME in names:
-                current = json.loads(runtime['run'](['docker', 'inspect', NAME]))[0]
+            if worker_name in names:
+                current = json.loads(runtime['run'](['docker', 'inspect', worker_name]))[0]
                 if current['Image'] != build['image']:
                     raise RecoveryError('NewRepairContainerIdentityMismatch_NoSignal')
-                runtime['run'](['docker', 'stop', '--time', '30', NAME], timeout=45)
+                runtime['run'](['docker', 'stop', '--time', '30', worker_name], timeout=45)
                 result['newWorkerStoppedAfterFailure'] = True
         if installed:
-            runtime['run'](['systemctl', 'disable', '--now', RECEIPT_UNIT + '.socket'])
-            runtime['run'](['systemctl', 'stop', RECEIPT_UNIT + '.service'])
+            runtime['run'](['systemctl', 'disable', '--now', new_unit + '.socket'])
+            runtime['run'](['systemctl', 'stop', new_unit + '.service'])
         if proxy_switched and not old_stopped:
-            old = json.loads(runtime['run'](['docker', 'inspect', OLD_NAME]))[0]
+            old = json.loads(runtime['run'](['docker', 'inspect', old_name]))[0]
             if (old['State']['Running'] is not True or old['Image'] != prior['image']
                     or old['NetworkSettings']['Networks']['ir35-staging_backend']['IPAddress'] != old_address):
                 raise RecoveryError('OriginalPausedRuntimeChanged_NoProxyFallback')
-            runtime['run'](['systemctl', 'enable', '--now', UPDATE_UNIT + '.socket'])
+            runtime['run'](['systemctl', 'enable', '--now', old_unit + '.socket'])
             result['oldPausedProxyRestored'] = True
+        elif proxy_switched and old_stopped and owner_resume:
+            result['rollback'] = paused_rollback(data,runtime,store,stage,prior)
 
     try:
         result['preContainment'] = check_containment(data, runtime, store, stage, 'pre')
         result['preQueueBoundary'] = verify_live(data, recovery, store, function_scope(recovery))
         names = runtime['run'](['docker', 'ps', '-a', '--format', '{{.Names}}']).splitlines()
-        if NAME in names or COMPOSE.exists() or any((SYSTEMD / name).exists() for name in units('10.0.0.1', unit=RECEIPT_UNIT)):
+        if worker_name in names or worker_compose.exists() or any((SYSTEMD / name).exists() for name in units('10.0.0.1', unit=new_unit)):
             raise RecoveryError('ReceiptRepairRuntimeExists_NoReplay')
-        original = json.loads(runtime['run'](['docker', 'inspect', OLD_NAME]))[0]
+        original = json.loads(runtime['run'](['docker', 'inspect', old_name]))[0]
         network = json.loads(runtime['run'](['docker', 'inspect', '--type', 'network', 'ir35-staging_backend']))[0]
         old_address = isolation(original, prior['image'], network)
-        if not original['State']['Running'] or digest(OLD_COMPOSE.read_bytes()) != prior['composeSHA256']:
+        if not original['State']['Running'] or digest(old_compose.read_bytes()) != prior['composeSHA256']:
             raise RecoveryError('PausedOriginalImageAndComposeMustRemainIntact')
         for filename, expected in prior['unitSHA256'].items():
             path = SYSTEMD / filename
@@ -102,36 +168,39 @@ def run(data, runtime):
         if counts['pendingApplications'] or counts['pendingJobs'] or counts['ownerConnections'] > 2 or counts['producerConnections'] > 1:
             raise RecoveryError('IdleQueueAndExistingConnectionBudgetRequired')
         result['preflightQueueCounts'] = counts
-        preview = units('10.0.0.1', unit=RECEIPT_UNIT + '-preflight')
+        preview = units('10.0.0.1', unit=new_unit + '-preflight')
         for name, body in preview.items():
             store.put(stage, name, body.encode())
         with store.sink(stage, 'preflight-systemd.log') as log:
             if subprocess.run(['systemd-analyze', 'verify', *[str(stage / name) for name in preview]], stdout=log, stderr=log, timeout=20).returncode:
                 raise RecoveryError('ReceiptProxyPreflightFailed_NoRuntimeChange')
-        value = configuration(build['image'], build['sourceSHA'])
+        value = configuration(build['image'], build['sourceSHA'],owner_resume=owner_resume)
         store.put(stage, 'intent.json', json.dumps({'newImage': build['image'], 'sourceSHA': build['sourceSHA'],
             'repairAttempt': 1, 'newStartsAllowed': 1, 'oldImageAndFailedJournalsRetained': True, 'newSecrets': False}).encode())
-        with COMPOSE.open('x') as output:
-            json.dump(value, output, indent=2)
-        os.chmod(COMPOSE, 0o644)
-        result['composeSHA256'] = digest(COMPOSE.read_bytes())
+        if owner_resume:
+            with worker_compose.open('x') as output:json.dump(value,output,indent=2)
+        else:
+            with COMPOSE.open('x') as output:
+                json.dump(value,output,indent=2)
+        os.chmod(worker_compose, 0o644)
+        result['composeSHA256'] = digest(worker_compose.read_bytes())
         with store.sink(stage, 'compose-validation.log') as log:
-            if subprocess.run(['docker', 'compose', '--env-file', str(ROOT / '.env'), '-f', str(COMPOSE), 'config', '--quiet'], stdout=log, stderr=log, timeout=30).returncode:
+            if subprocess.run(['docker', 'compose', '--env-file', str(ROOT / '.env'), '-f', str(worker_compose), 'config', '--quiet'], stdout=log, stderr=log, timeout=30).returncode:
                 raise RecoveryError('ReceiptComposeValidationFailed_NoRuntimeChange')
         proxy_switched = True
-        runtime['run'](['systemctl', 'stop', UPDATE_UNIT + '.socket', UPDATE_UNIT + '.service'])
+        runtime['run'](['systemctl', 'stop', old_unit + '.socket', old_unit + '.service'])
         requested = True
         with store.sink(stage, 'start-new-worker.log') as log:
-            if subprocess.run(['docker', 'compose', '--env-file', str(ROOT / '.env'), '-f', str(COMPOSE), 'up', '-d', '--no-deps', 'worker'], stdout=log, stderr=log, timeout=120).returncode:
+            if subprocess.run(['docker', 'compose', '--env-file', str(ROOT / '.env'), '-f', str(worker_compose), 'up', '-d', '--no-deps', 'worker'], stdout=log, stderr=log, timeout=120).returncode:
                 raise RecoveryError('ReceiptWorkerStartFailed_PrivateLog')
         result['newWorkerStarts'] = 1
-        item = json.loads(runtime['run'](['docker', 'inspect', NAME]))[0]
+        item = json.loads(runtime['run'](['docker', 'inspect', worker_name]))[0]
         address = isolation(item, build['image'], network)
         if item['HostConfig'].get('Init') is not True or item['Config']['Entrypoint'] != value['services']['worker']['entrypoint']:
             raise RecoveryError('ReceiptWorkerInitOrPublicSHAOverrideMismatch')
-        bodies = units(address, unit=RECEIPT_UNIT)
+        bodies = units(address, unit=new_unit)
         for filename, body in bodies.items():
-            write_unit(SYSTEMD / filename, body, unit=RECEIPT_UNIT)
+            write_unit(SYSTEMD / filename, body, unit=new_unit)
             installed.append(filename)
             store.put(stage, filename, body.encode())
         result['unitSHA256'] = {name: digest(body.encode()) for name, body in bodies.items()}
@@ -139,7 +208,7 @@ def run(data, runtime):
             if subprocess.run(['systemd-analyze', 'verify', *[str(SYSTEMD / name) for name in bodies]], stdout=log, stderr=log, timeout=20).returncode:
                 raise RecoveryError('ReceiptProxyValidationFailed')
         runtime['run'](['systemctl', 'daemon-reload'])
-        runtime['run'](['systemctl', 'enable', '--now', RECEIPT_UNIT + '.socket'])
+        runtime['run'](['systemctl', 'enable', '--now', new_unit + '.socket'])
         deadline = time.monotonic() + 90
         while True:
             try:
@@ -154,10 +223,11 @@ def run(data, runtime):
         if (health.get('buildSHA') != build['sourceSHA'] or any(health.get(key) is not True for key in ('ok', 'browserReady', 'databaseReady'))
                 or health.get('mode') != 'staging-mock-only' or health.get('realAcceptance') is not False):
             raise RecoveryError('ReceiptWorkerHealthIdentityMismatch')
-        validate_proxy(runtime, bodies, unit=RECEIPT_UNIT)
-        runtime['run'](['docker', 'stop', '--time', '30', OLD_NAME], timeout=45)
+        if owner_resume and health.get('paused') is not True:raise RecoveryError('ResumedHandoverMustStartProcessingPaused')
+        validate_proxy(runtime, bodies, unit=new_unit)
+        runtime['run'](['docker', 'stop', '--time', '30', old_name], timeout=45)
         old_stopped = True
-        runtime['run'](['systemctl', 'disable', UPDATE_UNIT + '.socket'])
+        runtime['run'](['systemctl', 'disable', old_unit + '.socket'])
         until = time.monotonic() + 30
         while True:
             heartbeat = json.loads(recovery.query("SELECT jsonb_build_object('sourceSHA',build_sha,'fresh',seen_at>clock_timestamp()-interval '45 seconds','active',active) FROM pgboss.ir35_mock_heartbeat WHERE id='staging_mock_worker';", 'postgres'))
@@ -174,7 +244,7 @@ def run(data, runtime):
         result['postQueueBoundary'] = verify_live(data, recovery, store, function_scope(recovery))
         result['containment'] = check_containment(data, runtime, store, stage, 'post')
         result.update(status='PASS', sourceSHA=build['sourceSHA'], image=build['image'], health=health,
-            durableHeartbeat=heartbeat, hostMemoryAvailableKiB=available, containerName=NAME, composePath=str(COMPOSE),
+            durableHeartbeat=heartbeat, hostMemoryAvailableKiB=available, containerName=worker_name, composePath=str(worker_compose),ownerResume=owner_resume,
             oldWorkerStopped=True, oldArtifactsRetained=True, originalEnvUnchanged=True, loopbackOnly=True)
     except Exception as error:
         result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__

@@ -1,0 +1,33 @@
+{
+  "checks": {
+    "activeZero": true,
+    "noBrowserProcesses": true,
+    "paused": true,
+    "previousContainerRunning": true,
+    "previousImageUnchanged": true,
+    "realAcceptanceFalse": true
+  },
+  "chromiumProcessCount": 0,
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-top",
+      "status": "PASS"
+    }
+  ],
+  "image": "sha256:bea1c9a5840c1856aa613967fcba4dac509a9e23a4d1b31fa83be0162c1ed844",
+  "mutations": 0,
+  "operation": "worker-idle",
+  "status": "PASS",
+  "workerActive": 0
+}

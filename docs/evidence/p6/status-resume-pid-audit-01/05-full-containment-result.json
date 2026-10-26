@@ -1,0 +1,175 @@
+{
+  "auditTableWrites": 0,
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-read-hba-archive",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    }
+  ],
+  "containment": {
+    "appRolePrivilegesEach": 552,
+    "approvedP6RolesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "baseline552Unchanged": true,
+    "fixtureWrites": 0,
+    "manifests": "PASS",
+    "orderedMD5Each": true,
+    "originalCaddyFilesUnchanged": true,
+    "pristineWrites": 0,
+    "privateFixtureRunningNoPorts": true,
+    "rawCatalogDifferencesRetained": true,
+    "sequencesEach": 2,
+    "sourceRolesUnchanged": true,
+    "sourceWrites": 0,
+    "status": "PASS",
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "tablesEach": 62
+  },
+  "mutations": 0,
+  "operation": "full-containment",
+  "queueBoundary": {
+    "actualLoginChecks": 112,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "functionCalls": 0,
+    "ownerApprovedConnectionBoundary": true,
+    "queueDatabase": "postgres",
+    "rawFindingUnchanged": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "status": "PASS"
+  },
+  "sourceWrites": 0,
+  "status": "PASS"
+}

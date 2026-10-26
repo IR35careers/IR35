@@ -71,7 +71,7 @@ console.log(JSON.stringify({inserted:true,mock:true}));"""
 
 
 def producer(value, *, orphan=False, worker_name=NEW_NAME):
-    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3'):
+    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3','ir35-p6-mock-worker-v4'):
         raise RecoveryError('FixedMockRuntimeIdentityRequired')
     script = producer_script(value, orphan=orphan)
     args = ['docker', 'exec', '-i', '--user', '1002:1002', worker_name, '/run/ir35/env-exec',
@@ -170,7 +170,9 @@ def retained_receipts(store, failed):
     return {row['applicationId']: row for row in found.values()}
 
 
-def run(data, runtime, *, repair_one=False):
+def run(data, runtime, *, repair_one=False,owner_resume=False):
+    if type(owner_resume) is not bool or owner_resume and repair_one:
+        raise RecoveryError('DistinctOwnerLifecycleResumeRequired')
     if type(repair_one) is not bool:
         raise RecoveryError('ExplicitLifecycleRepairBooleanRequired')
     store = prepared(data)
@@ -181,9 +183,16 @@ def run(data, runtime, *, repair_one=False):
     prior_receipts = retained_receipts(store, data['failureLifecycle']) if repair_one else {}
     worker_name = 'ir35-p6-mock-worker-v3' if repair_one else NEW_NAME
     worker_compose = ROOT / 'p6-mock-compose-v3.yml' if repair_one else NEW_COMPOSE
+    if owner_resume:
+        from p6_status_audit_guest import history
+        _,prior_receipts = history(data)
+        worker_name = 'ir35-p6-mock-worker-v4'
+        worker_compose = ROOT/'p6-mock-compose-v4.yml'
+        if anchor.get('ownerResume') is not True or anchor.get('containerName') != worker_name:
+            raise RecoveryError('ActualResumeRuntimeRequired')
     if repair_one and (anchor.get('repairAttempt') != 1 or anchor.get('containerName') != worker_name):
         raise RecoveryError('ActualReceiptRepairRuntimeRequired')
-    stage = store.stage('16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
+    stage = store.stage('18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
     original = Recovery(data['p4'], runtime)
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'realAcceptance': False, 'customerWrites': 0, 'productionChanges': False,
@@ -239,7 +248,16 @@ def run(data, runtime, *, repair_one=False):
           'applications',(SELECT count(*) FROM pgboss.ir35_mock_application),
           'schedules',(SELECT count(*) FROM pgboss.ir35_mock_schedule),
           'applyJobs',(SELECT count(*) FROM pgboss.job WHERE name='ir35-staging-mock-apply'));""", 'postgres'))
-        if repair_one:
+        if owner_resume:
+            checked('retained-all-twelve-counts',empty,empty == {'applications':12,'schedules':0,'applyJobs':12})
+            for identifier,before in prior_receipts.items():
+                actual_receipt = control.request('GET','/mock/applications/'+identifier)[1]
+                checked('retained-all-twelve-receipt',{'idSHA256':digest(identifier.encode()),'sameReceipt':actual_receipt == before},actual_receipt == before)
+            paused = control.request('GET','/health')[1]
+            checked('resumed-start-paused',paused,paused.get('paused') is True and paused.get('active') == 0)
+            record('resume-mock-consumer-intent',{'realAcceptance':False,'mockOnly':True})
+            control.request('POST','/mock/maintenance',{'action':'resume'})
+        elif repair_one:
             checked('retained-failure-fixture-counts', empty, empty == {'applications': 4, 'schedules': 0, 'applyJobs': 4})
             for identifier, before in prior_receipts.items():
                 actual_receipt = control.request('GET', '/mock/applications/' + identifier)[1]

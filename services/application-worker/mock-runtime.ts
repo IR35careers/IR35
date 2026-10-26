@@ -174,7 +174,8 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
       if (!authenticatedMockRequest(config.APPLICATION_WORKER_SECRET, request.headers["x-ir35-mock-timestamp"], request.headers["x-ir35-mock-signature"], method, path, body)) { response.writeHead(401).end("{}"); return; }
       if (method === "POST" && path === "/mock/applications") {
         if (paused || stopping) { response.writeHead(503).end(JSON.stringify({ error: "mock_maintenance" })); return; }
-        response.writeHead(202).end(JSON.stringify(await store.enqueue(JSON.parse(body)))); return;
+        const receipt = await store.enqueue(JSON.parse(body));
+        response.writeHead(202).end(JSON.stringify(receipt)); return;
       }
       const id = /^\/mock\/applications\/([0-9a-f-]{36})$/.exec(path)?.[1];
       if (method === "GET" && id) { const saved = await store.get(id); response.writeHead(saved ? 200 : 404).end(JSON.stringify(saved)); return; }
