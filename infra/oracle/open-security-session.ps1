@@ -1,9 +1,26 @@
+param([switch]$ValidateOnly)
 $ErrorActionPreference = 'Stop'
+# Use PowerShell7/.NET argument lists. Never execute a stale copied helper.
+if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'PowerShell7 is required; no browser opened.' }
+$currentScript = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot 'security_session.py')).Path
+$linuxScript = (& wsl.exe --distribution Ubuntu --exec /usr/bin/wslpath -u $currentScript | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or -not $linuxScript.StartsWith('/mnt/c/') -or
+    -not $linuxScript.EndsWith('/infra/oracle/security_session.py') -or $linuxScript.Contains("`n")) {
+    throw 'Reviewed checkout helper path required; no browser opened.'
+}
+if ($ValidateOnly) {
+    @{ status='PASS'; sourceFromCurrentCheckout=$true; helperSHA256=(Get-FileHash -LiteralPath $currentScript -Algorithm SHA256).Hash.ToLowerInvariant(); browserOpened=$false; cloudRequests=0 } | ConvertTo-Json -Compress
+    exit 0
+}
+$busy = (& wsl.exe --distribution Ubuntu --exec /usr/bin/ss -H -ltn 'sport = :8181' | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or $busy.Length -ne 0) { throw 'Existing/unclear browser callback listener; no duplicate login opened.' }
 # Run natively on Windows; WSL Windows-executable interop is disabled on this host.
 # Pipe the public-key browser request directly to Start-Process, never to logs.
 $start = [System.Diagnostics.ProcessStartInfo]::new()
 $start.FileName = 'wsl.exe'
-$start.Arguments = '--distribution Ubuntu --exec /usr/bin/env IR35_BROWSER_BRIDGE_PIPE=1 /home/anvesh/.ir35/oci/bin/python /home/anvesh/.ir35/p1-tooling/security_session.py authenticate'
+foreach ($argument in @('--distribution','Ubuntu','--exec','/usr/bin/env','IR35_BROWSER_BRIDGE_PIPE=1','/home/anvesh/.ir35/oci/bin/python',$linuxScript,'authenticate')) {
+    $start.ArgumentList.Add($argument)
+}
 $start.UseShellExecute = $false
 $start.CreateNoWindow = $true
 $start.RedirectStandardOutput = $true

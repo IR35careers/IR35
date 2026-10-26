@@ -16,7 +16,7 @@ def put(path,body):
 
 
 def main():
-    if len(sys.argv)!=2 or not re.fullmatch(r'(?:ci-isolation-0[12]|p7-journal-hermetic-0[12]|auth-export-hermetic-0[12]|auth-supplement-hermetic-0[12]|owner-g3-hermetic-0[12]|p7-auth-hermetic-0[12]|p7-link-hermetic-0[12]|p7-storage-hermetic-0[12]|p8-readonly-hermetic-0[12])',sys.argv[1]):raise RuntimeError('FixedHermeticEvidenceSlotRequired')
+    if len(sys.argv)!=2 or not re.fullmatch(r'(?:ci-isolation-0[12]|p7-journal-hermetic-0[12]|auth-export-hermetic-0[12]|auth-supplement-hermetic-0[12]|owner-g3-hermetic-0[12]|p7-auth-hermetic-0[12]|p7-link-hermetic-0[12]|p7-storage-hermetic-0[12]|p8-readonly-hermetic-0[12]|p9-prep-hermetic-0[12])',sys.argv[1]):raise RuntimeError('FixedHermeticEvidenceSlotRequired')
     repo=Path(__file__).resolve().parents[2]
     root=repo/'docs/evidence/p6'/sys.argv[1] if sys.argv[1].startswith('ci-') else repo/'docs/evidence'/sys.argv[1]
     root.mkdir()  # No overwrite/replay of a failed run.
