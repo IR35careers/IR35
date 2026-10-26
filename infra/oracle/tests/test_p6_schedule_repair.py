@@ -7,6 +7,10 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import p6_schedule_repair as controller
 import p6_schedule_repair_guest as guest
 import p6_schedule_drain_guest as drain_guest
+import p6_mock_receipt_repair_guest as handover
+import p6_lifecycle_guest as lifecycle
+import p6_resume
+import p6_worker_build_guest as build_guest
 
 
 class ScheduleRepairTests(unittest.TestCase):
@@ -60,6 +64,28 @@ class ScheduleRepairTests(unittest.TestCase):
         self.assertIn("check_containment(data,runtime,store,stage,'post')",source)
         for forbidden in ('INSERT ','UPDATE ','DELETE ','ALTER ','GRANT ','REVOKE ','/mock/schedule','/mock/applications'):
             self.assertNotIn(forbidden,source)
+
+    def test_final_repair_is_exact_third_image_and_requires_sealed_drained_intent(self):
+        code=inspect.getsource(p6_resume.build)
+        self.assertIn('OneFinalScheduleRepairBuildOnly',code)
+        self.assertIn('schedule_repair and attempt!=3',code)
+        self.assertIn('FinalScheduleRepairRequiresSealedOwnedDrain',inspect.getsource(build_guest.run))
+        self.assertIn("or failure.get('code')!='NativeMockCaseFailed_schedule-mock_automation' or attempt!=3",inspect.getsource(build_guest.run))
+
+    def test_final_runtime_is_new_generation_and_preserves_original_assertions_and_receipts(self):
+        value=handover.configuration('sha256:'+'a'*64,'b'*40,owner_resume=True,schedule_repair=True)
+        self.assertEqual(value['services']['worker']['container_name'],'ir35-p6-mock-worker-v6')
+        self.assertIn('IR35_MOCK_START_PAUSED=true',value['services']['worker']['entrypoint'])
+        self.assertNotIn('IR35_READ_ONLY=true',value['services']['worker']['entrypoint'])
+        with self.assertRaises(RuntimeError):handover.configuration('sha256:'+'a'*64,'b'*40,owner_resume=True,pause_repair=True,schedule_repair=True)
+        code=inspect.getsource(lifecycle.run)
+        self.assertIn("{'applications':23,'schedules':1,'applyJobs':22}",code)
+        self.assertIn('retained-all-twenty-three-receipt',code)
+        self.assertIn('FinalLifecycleRequiresExactDrainedLedger',code)
+        self.assertIn('25-owner-final-repair-lifecycle',code)
+        self.assertIn("empty == {'applications': 0, 'schedules': 0, 'applyJobs': 0}",code)
+        self.assertIn("empty == {'applications': 4, 'schedules': 0, 'applyJobs': 4}",code)
+        self.assertIn('durable-after-restart',code)
 
 
 if __name__=='__main__':unittest.main()

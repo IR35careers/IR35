@@ -24,6 +24,8 @@ PAUSE_REPAIR_UNIT = 'ir35-p6-health-proxy-r4-pause-repair1'
 PAUSE_ROLLBACK_UNIT = 'ir35-p6-health-proxy-r4-pause-rollback1'
 DRAIN_UNIT = 'ir35-p6-health-proxy-r4-drain23'
 DRAIN_ROLLBACK_UNIT = 'ir35-p6-health-proxy-r4-drain23-fallback'
+FINAL_UNIT = 'ir35-p6-health-proxy-r4-final-repair2'
+FINAL_ROLLBACK_UNIT = 'ir35-p6-health-proxy-r4-final-rollback2'
 SYSTEMD = Path('/etc/systemd/system')
 PROXY = '/usr/lib/systemd/systemd-socket-proxyd'
 
@@ -32,7 +34,8 @@ def units(address, *, unit=UNIT):
     if unit not in (UNIT, UNIT + '-preflight', UPDATE_UNIT, UPDATE_UNIT + '-preflight', RECEIPT_UNIT, RECEIPT_UNIT + '-preflight',
                     RESUME_UNIT,RESUME_UNIT+'-preflight',ROLLBACK_UNIT,ROLLBACK_UNIT+'-preflight',
                     PAUSE_REPAIR_UNIT,PAUSE_REPAIR_UNIT+'-preflight',PAUSE_ROLLBACK_UNIT,PAUSE_ROLLBACK_UNIT+'-preflight',
-                    DRAIN_UNIT,DRAIN_UNIT+'-preflight',DRAIN_ROLLBACK_UNIT,DRAIN_ROLLBACK_UNIT+'-preflight'):
+                    DRAIN_UNIT,DRAIN_UNIT+'-preflight',DRAIN_ROLLBACK_UNIT,DRAIN_ROLLBACK_UNIT+'-preflight',
+                    FINAL_UNIT,FINAL_UNIT+'-preflight',FINAL_ROLLBACK_UNIT,FINAL_ROLLBACK_UNIT+'-preflight'):
         raise RecoveryError('FixedOwnedProxyUnitNameRequired')
     ip = ipaddress.ip_address(address)
     if ip.version != 4 or not any(ip in ipaddress.ip_network(net) for net in ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')):
@@ -101,7 +104,7 @@ def require_loopback_listener(output):
 
 
 def write_unit(path, body, *, unit=UNIT):
-    if unit not in (UNIT, UPDATE_UNIT, RECEIPT_UNIT, RESUME_UNIT, ROLLBACK_UNIT,PAUSE_REPAIR_UNIT,PAUSE_ROLLBACK_UNIT,DRAIN_UNIT,DRAIN_ROLLBACK_UNIT) or path.parent != SYSTEMD or path.name not in (unit + '.socket', unit + '.service'):
+    if unit not in (UNIT, UPDATE_UNIT, RECEIPT_UNIT, RESUME_UNIT, ROLLBACK_UNIT,PAUSE_REPAIR_UNIT,PAUSE_ROLLBACK_UNIT,DRAIN_UNIT,DRAIN_ROLLBACK_UNIT,FINAL_UNIT,FINAL_ROLLBACK_UNIT) or path.parent != SYSTEMD or path.name not in (unit + '.socket', unit + '.service'):
         raise RecoveryError('OnlyOwnedHealthProxyUnitsMayBeCreated')
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
     os.fchmod(fd, 0o644)  # Native harness umask077 must not hide this public unit.

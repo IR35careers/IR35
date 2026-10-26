@@ -21,29 +21,39 @@ NAME = 'ir35-p6-mock-worker-v3'
 COMPOSE = ROOT / 'p6-mock-compose-v3.yml'
 
 
-def configuration(image, source, *, owner_resume=False,pause_repair=False):
+def configuration(image, source, *, owner_resume=False,pause_repair=False,schedule_repair=False):
+    if type(schedule_repair)is not bool or schedule_repair and (not owner_resume or pause_repair):raise RecoveryError('DistinctFinalScheduleRepairRequired')
     if type(pause_repair)is not bool or pause_repair and not owner_resume:raise RecoveryError('DistinctPauseRepairRequired')
     value = compose_two(image, source)
     value['name'] = 'ir35-p6-mock-v4' if owner_resume else 'ir35-p6-mock-v3'
     value['services']['worker']['container_name'] = 'ir35-p6-mock-worker-v4' if owner_resume else NAME
     if owner_resume:
         entry = value['services']['worker']['entrypoint']
-        entry.insert(entry.index('node'),'IR35_MOCK_START_PAUSED=true' if pause_repair else 'IR35_READ_ONLY=true')
+        entry.insert(entry.index('node'),'IR35_MOCK_START_PAUSED=true' if pause_repair or schedule_repair else 'IR35_READ_ONLY=true')
     if pause_repair:
         value['name']='ir35-p6-mock-v5'
         value['services']['worker']['container_name']='ir35-p6-mock-worker-v5'
+    if schedule_repair:
+        value['name']='ir35-p6-mock-v6'
+        value['services']['worker']['container_name']='ir35-p6-mock-worker-v6'
     return value
 
 
-def paused_rollback(data,runtime,store,stage,prior,*,pause_repair=False):
+def paused_rollback(data,runtime,store,stage,prior,*,pause_repair=False,schedule_repair=False):
     """Restore old immutable image WITHOUT briefly enabling its consumer."""
-    from p6_health_repair_guest import ROLLBACK_UNIT,PAUSE_ROLLBACK_UNIT
+    from p6_health_repair_guest import ROLLBACK_UNIT,PAUSE_ROLLBACK_UNIT,FINAL_ROLLBACK_UNIT
+    if type(schedule_repair)is not bool or schedule_repair and pause_repair:raise RecoveryError('DistinctFinalScheduleRollbackRequired')
     if type(pause_repair)is not bool:raise RecoveryError('ExplicitPauseRollbackRequired')
     unit=PAUSE_ROLLBACK_UNIT if pause_repair else ROLLBACK_UNIT
     name = 'ir35-p6-mock-worker-v5-rollback' if pause_repair else 'ir35-p6-mock-worker-v4-rollback'
     path = ROOT/('p6-mock-compose-v5-rollback.yml' if pause_repair else 'p6-mock-compose-v4-rollback.yml')
+    if schedule_repair:
+        unit=FINAL_ROLLBACK_UNIT
+        name='ir35-p6-mock-worker-v6-rollback'
+        path=ROOT/'p6-mock-compose-v6-rollback.yml'
     value = configuration(prior['image'],prior['sourceSHA'],owner_resume=True)
     value['name'] = 'ir35-p6-mock-v5-rollback' if pause_repair else 'ir35-p6-mock-v4-rollback'
+    if schedule_repair:value['name']='ir35-p6-mock-v6-rollback'
     value['services']['worker']['container_name'] = name
     store.put(stage,'rollback-intent.json',json.dumps({'image':prior['image'],'sourceSHA':prior['sourceSHA'],
         'processingPausedFromStart':True,'originalSecretsUnchanged':True}).encode())
@@ -82,7 +92,8 @@ def paused_rollback(data,runtime,store,stage,prior,*,pause_repair=False):
             'originalContainerAndImagesRetained':True,'containerName':name}
 
 
-def run(data, runtime, *, owner_resume=False,pause_repair=False):
+def run(data, runtime, *, owner_resume=False,pause_repair=False,schedule_repair=False):
+    if type(schedule_repair)is not bool or schedule_repair and (not owner_resume or pause_repair):raise RecoveryError('DistinctFinalScheduleRepairRequired')
     if type(pause_repair)is not bool or pause_repair and not owner_resume:raise RecoveryError('DistinctPauseRepairRequired')
     if type(owner_resume) is not bool:raise RecoveryError('ExplicitResumeBooleanRequired')
     # Fixed identities, not caller-supplied names; historical three generations
@@ -100,6 +111,13 @@ def run(data, runtime, *, owner_resume=False,pause_repair=False):
         old_compose=ROOT/'p6-mock-compose-v4-rollback.yml'
         new_unit='ir35-p6-health-proxy-r4-pause-repair1'
         old_unit='ir35-p6-health-proxy-r4-rollback'
+    if schedule_repair:
+        worker_name='ir35-p6-mock-worker-v6'
+        worker_compose=ROOT/'p6-mock-compose-v6.yml'
+        old_name='ir35-p6-mock-worker-v5'
+        old_compose=ROOT/'p6-mock-compose-v5.yml'
+        new_unit='ir35-p6-health-proxy-r4-final-repair2'
+        old_unit='ir35-p6-health-proxy-r4-drain23'
     prerequisites(data, runtime)
     store = prepared(data)
     prior = data['runtimeProof']
@@ -133,7 +151,14 @@ def run(data, runtime, *, owner_resume=False,pause_repair=False):
         from p6_status_audit_guest import history
         history(data)
         if build.get('ownerResume') is not True:raise RecoveryError('VerifiedOwnerResumeBuildRequired')
-    if pause_repair:
+    if schedule_repair:
+        from p6_schedule_repair_guest import observe
+        observed,_=observe(data,runtime)
+        if (build.get('resumeScheduleRepair')is not True or prior.get('drainedExistingSchedule')!=1
+                or observed['pendingScheduleJobs']!=0 or observed['ledgerSHA256']!=prior.get('observation',{}).get('ledgerSHA256')):
+            raise RecoveryError('ExactDrainedScheduleLedgerRequired')
+        stage=store.stage('24-owner-final-repair-handover')
+    elif pause_repair:
         stage=store.stage('20-owner-pause-repair-handover')
     elif owner_resume:
         stage = store.stage('17-owner-resume-handover')
@@ -167,7 +192,7 @@ def run(data, runtime, *, owner_resume=False,pause_repair=False):
             runtime['run'](['systemctl', 'enable', '--now', old_unit + '.socket'])
             result['oldPausedProxyRestored'] = True
         elif proxy_switched and old_stopped and owner_resume:
-            result['rollback'] = paused_rollback(data,runtime,store,stage,prior,pause_repair=pause_repair)
+            result['rollback'] = paused_rollback(data,runtime,store,stage,prior,pause_repair=pause_repair,schedule_repair=schedule_repair)
 
     try:
         result['preContainment'] = check_containment(data, runtime, store, stage, 'pre')
@@ -203,7 +228,7 @@ def run(data, runtime, *, owner_resume=False,pause_repair=False):
         with store.sink(stage, 'preflight-systemd.log') as log:
             if subprocess.run(['systemd-analyze', 'verify', *[str(stage / name) for name in preview]], stdout=log, stderr=log, timeout=20).returncode:
                 raise RecoveryError('ReceiptProxyPreflightFailed_NoRuntimeChange')
-        value = configuration(build['image'], build['sourceSHA'],owner_resume=owner_resume,pause_repair=pause_repair)
+        value = configuration(build['image'], build['sourceSHA'],owner_resume=owner_resume,pause_repair=pause_repair,schedule_repair=schedule_repair)
         store.put(stage, 'intent.json', json.dumps({'newImage': build['image'], 'sourceSHA': build['sourceSHA'],
             'repairAttempt': 1, 'newStartsAllowed': 1, 'oldImageAndFailedJournalsRetained': True, 'newSecrets': False}).encode())
         if owner_resume:
@@ -274,7 +299,7 @@ def run(data, runtime, *, owner_resume=False,pause_repair=False):
         result['containment'] = check_containment(data, runtime, store, stage, 'post')
         result.update(status='PASS', sourceSHA=build['sourceSHA'], image=build['image'], health=health,
             durableHeartbeat=heartbeat, hostMemoryAvailableKiB=available, containerName=worker_name, composePath=str(worker_compose),ownerResume=owner_resume,
-            oldWorkerStopped=True, oldArtifactsRetained=True, originalEnvUnchanged=True, loopbackOnly=True,pauseRepair=pause_repair)
+            oldWorkerStopped=True, oldArtifactsRetained=True, originalEnvUnchanged=True, loopbackOnly=True,pauseRepair=pause_repair,scheduleRepair=schedule_repair)
     except Exception as error:
         result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__
         try:
