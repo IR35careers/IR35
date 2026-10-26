@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-26",
+  "repository": "IR35careers/IR35",
+  "pullRequest": 57,
+  "headSHA": "60749f310392991decf7bb2810a3416e9a1cb379",
+  "state": "OPEN",
+  "draft": true,
+  "status": "PASS",
+  "source": "Authenticated read-only gh pr view statusCheckRollup and gh run list for the exact full head SHA",
+  "checks": [
+    {"name":"JavaScript and TypeScript","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Native arm64 image and isolated mock ATS","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Private Caddy SDK ordering regression","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Oracle local key custody tests","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Worker Docker build and Postgres standby health","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Code quality and production build","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Dependency and repository security","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Responsive browser and accessibility (mobile-chrome)","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Responsive browser and accessibility (tablet-chrome)","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"Responsive browser and accessibility (desktop-chrome)","status":"COMPLETED","conclusion":"SUCCESS"},
+    {"name":"CodeQL","status":"COMPLETED","conclusion":"SUCCESS"}
+  ],
+  "workflows": [
+    {"id":40368851280,"name":"Oracle ARM worker verification","status":"completed","conclusion":"success"},
+    {"id":40368851271,"name":"CodeQL security analysis","status":"completed","conclusion":"success"},
+    {"id":40368851412,"name":"Release quality","status":"completed","conclusion":"success"}
+  ],
+  "nativeP6Reruns": 0,
+  "privateFilesUploaded": 0,
+  "realKeysOrCISecretsAdded": false,
+  "merged": false,
+  "productionChanges": false
+}
