@@ -1,0 +1,3329 @@
+{
+  "fullP6Runs": 1,
+  "native": {
+    "APPLY_RUNNER": "mock",
+    "SMTP": "private-sink-only",
+    "endpoint": {
+      "IPAMConfigMatches": true,
+      "active": 0,
+      "browserReady": true,
+      "buildSHA": "b55dafd709d6b00307b912c50cc3e3883087897a",
+      "databaseReady": true,
+      "directLocalhostBuildSHAEqual": true,
+      "fixedIP": "172.18.0.240",
+      "paused": false,
+      "realAcceptance": false,
+      "status": "PASS"
+    },
+    "failuresOneAndTwoRechecked": true,
+    "fullContainment": {
+      "P5Fixture": {
+        "authTableChecks": 27,
+        "dataDifferences": [],
+        "extensionChecks": {
+          "capabilityChecks": 198,
+          "conditionalExceptionsOnly": true,
+          "conditions": {
+            "adminOwner": true,
+            "allObjectACLs": true,
+            "ddlCapabilities": true,
+            "versions": true
+          },
+          "memberChecks": 55,
+          "objectACLChecks": 62,
+          "ownerDifferences": [
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pg_stat_statements",
+              "stagingOwner": "supabase_admin",
+              "version": "1.11"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pgcrypto",
+              "stagingOwner": "supabase_admin",
+              "version": "1.3"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:uuid-ossp",
+              "stagingOwner": "supabase_admin",
+              "version": "1.1"
+            }
+          ],
+          "status": "PASS",
+          "typeACLChecks": 4,
+          "unapprovedDifferences": []
+        },
+        "fullP4Complete": false,
+        "passwordHashBytesCoveredByWholeTableFingerprints": true,
+        "privileges": {
+          "differences": [],
+          "exceptionsApproved": [],
+          "morePermissive": [],
+          "repairMustStop": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceEntries": 552,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T14:48:28Z",
+          "targetEntries": 552
+        },
+        "schema": {
+          "additionExpiryVerified": true,
+          "approvedP6Additions": [
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue",
+              "object": "role:ir35_queue",
+              "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+            },
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue_producer",
+              "object": "role:ir35_queue_producer",
+              "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+            }
+          ],
+          "baseline552Unchanged": true,
+          "baselineCatalogResult": {
+            "conditionsPASS": true,
+            "exceptions": [
+              {
+                "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+                "object": "extension:pg_stat_statements",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+              },
+              {
+                "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+                "object": "extension:pgcrypto",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "63652c33f708c5861e34f2218529562b"
+              },
+              {
+                "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+                "object": "extension:uuid-ossp",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+              }
+            ],
+            "fullDataVerification": false,
+            "metadataMatch": true,
+            "phaseComplete": false,
+            "roleAttributesMatch": true,
+            "sourceCheckedAt": "2026-10-21T17:02:41Z",
+            "sourceObjects": 3752,
+            "status": "FAIL",
+            "targetCheckedAt": "2026-10-26T14:48:27Z",
+            "targetObjects": 3754,
+            "unexplainedDifferences": [
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue",
+                "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+              },
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue_producer",
+                "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+              }
+            ]
+          },
+          "exceptions": [
+            {
+              "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+              "object": "extension:pg_stat_statements",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+            },
+            {
+              "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+              "object": "extension:pgcrypto",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "63652c33f708c5861e34f2218529562b"
+            },
+            {
+              "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+              "object": "extension:uuid-ossp",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+            }
+          ],
+          "fullDataVerification": false,
+          "phaseComplete": false,
+          "sourceObjects": 3752,
+          "sourceRoleExpiryUnchanged": true,
+          "sourceRolesUnchanged": true,
+          "status": "PASS_WITH_APPROVED_P6_ADDITIONS",
+          "targetObjects": 3754,
+          "unexplainedDifferences": []
+        },
+        "sequenceChecks": 2,
+        "sourceWrites": 0,
+        "stagingWrites": 0,
+        "status": "PASS",
+        "tables": [
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.audit_log_entries",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.custom_oauth_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "358ad650b328db71025b61931d4517f7",
+            "name": "auth.flow_state",
+            "rows": "47",
+            "serializedBytes": "9268"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "67af4006a7088b82f7e5d69baf174dfc",
+            "name": "auth.identities",
+            "rows": "148",
+            "serializedBytes": "91893"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.instances",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+            "name": "auth.mfa_amr_claims",
+            "rows": "144",
+            "serializedBytes": "23650"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_factors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_code_sets",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_codes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_authorizations",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_client_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_clients",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_consents",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+            "name": "auth.one_time_tokens",
+            "rows": "21",
+            "serializedBytes": "5580"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "af55a92e3b0a38f28d29578ed520275b",
+            "name": "auth.refresh_tokens",
+            "rows": "1466",
+            "serializedBytes": "359317"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_relay_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "87a88933e7be6edec713b7a7f5a356ca",
+            "name": "auth.schema_migrations",
+            "rows": "82",
+            "serializedBytes": "2058"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_tokens",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_users",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "6c4d8a050ce7636a424a8cebdf57f31f",
+            "name": "auth.sessions",
+            "rows": "144",
+            "serializedBytes": "49616"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_domains",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "bd1686d190f4f6c94dbb8175f8761a12",
+            "name": "auth.users",
+            "rows": "147",
+            "serializedBytes": "129226"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_credentials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+            "name": "public.admin_members",
+            "rows": "2",
+            "serializedBytes": "446"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9319b54d9de4586f855da822729b529e",
+            "name": "public.application_events",
+            "rows": "815",
+            "serializedBytes": "339172"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "949df7a51a9609a32b36a84bc11964df",
+            "name": "public.application_packets",
+            "rows": "87",
+            "serializedBytes": "2269643"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+            "name": "public.application_submissions",
+            "rows": "64",
+            "serializedBytes": "86590"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "077765c72ba9ff8921e6124ea5577eb6",
+            "name": "public.application_worker_heartbeats",
+            "rows": "479",
+            "serializedBytes": "65305"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+            "name": "public.application_worker_tasks",
+            "rows": "64",
+            "serializedBytes": "46559"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.articles",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "ed908b923358cbad706195d02319adb2",
+            "name": "public.automation_rules",
+            "rows": "119",
+            "serializedBytes": "20037"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2848dbf849c96d21f8042b133c93ba88",
+            "name": "public.automation_runs",
+            "rows": "13",
+            "serializedBytes": "59729"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+            "name": "public.contact_requests",
+            "rows": "5",
+            "serializedBytes": "3435"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+            "name": "public.feedback_messages",
+            "rows": "11",
+            "serializedBytes": "3574"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+            "name": "public.inbox_aliases",
+            "rows": "117",
+            "serializedBytes": "24161"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "7fdfd20d4c05626429e0512f8d2552e7",
+            "name": "public.inbox_messages",
+            "rows": "291",
+            "serializedBytes": "556006"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f331f2304263b0cd3642c296b2676169",
+            "name": "public.job_alerts",
+            "rows": "5",
+            "serializedBytes": "890"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e647095d75414a442175f7fb3588caf4",
+            "name": "public.jobs",
+            "rows": "24041",
+            "serializedBytes": "77014823"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "470367f38c31f63ffd34430371f1476c",
+            "name": "public.moderation_logs",
+            "rows": "4327",
+            "serializedBytes": "1921831"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e56a2b9b48ff149e29fb6c27ad7fa566",
+            "name": "public.profiles",
+            "rows": "122",
+            "serializedBytes": "1763445"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+            "name": "public.resume_versions",
+            "rows": "12",
+            "serializedBytes": "103861"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+            "name": "public.saved_jobs",
+            "rows": "8",
+            "serializedBytes": "1069"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.testimonials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.user_entitlements",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+            "name": "public.waitlist",
+            "rows": "22",
+            "serializedBytes": "4184"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.messages",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "802700104fc0aed2f68c413f50637ba5",
+            "name": "realtime.schema_migrations",
+            "rows": "89",
+            "serializedBytes": "4382"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.subscription",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+            "name": "storage.buckets",
+            "rows": "4",
+            "serializedBytes": "838"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_analytics",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_vectors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55a444ce635336fa733a015fc4db877f",
+            "name": "storage.migrations",
+            "rows": "74",
+            "serializedBytes": "8715"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+            "name": "storage.objects",
+            "rows": "73",
+            "serializedBytes": "48321"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads_parts",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.vector_indexes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "35d965e826914770a00b84c3d87dd610",
+            "name": "supabase_migrations.schema_migrations",
+            "rows": "1",
+            "serializedBytes": "2310"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "vault.secrets",
+            "rows": "0",
+            "serializedBytes": "21"
+          }
+        ],
+        "transport": {
+          "customerRowsImported": 0,
+          "differences": [],
+          "exceptions": [],
+          "fullDataVerification": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceObjects": 327,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T14:48:28Z",
+          "targetObjects": 327
+        }
+      },
+      "containment": {
+        "appRolePrivilegesEach": 552,
+        "approvedP6RolesEach": 2,
+        "approvedSchemaExceptionsEach": 3,
+        "baseline552Unchanged": true,
+        "fixtureWrites": 0,
+        "manifests": "PASS",
+        "orderedMD5Each": true,
+        "originalCaddyFilesUnchanged": true,
+        "pristineWrites": 0,
+        "privateFixtureRunningNoPorts": true,
+        "rawCatalogDifferencesRetained": true,
+        "sequencesEach": 2,
+        "sourceRolesUnchanged": true,
+        "sourceWrites": 0,
+        "status": "PASS",
+        "storageObjectsEach": 73,
+        "storageSHA256Match": true,
+        "tablesEach": 62
+      },
+      "freshLoginChecks": [
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        }
+      ],
+      "freshReadOnlyHBAProof": {
+        "applicationRejections": 104,
+        "checks": 112,
+        "functionCalls": 0,
+        "noContainerCreated": true,
+        "noReloadRestartOrConfigWrite": true,
+        "queueSuccesses": 8,
+        "status": "PASS"
+      },
+      "pg_hba": {
+        "actualLoginChecks": 112,
+        "baseline552Changed": false,
+        "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+        "functionCalls": 0,
+        "ownerApprovedConnectionBoundary": true,
+        "queueDatabase": "postgres",
+        "rawFindingUnchanged": true,
+        "rawFunctionACLStatus": "REVIEW_REQUIRED",
+        "status": "PASS"
+      },
+      "pristine": {
+        "authTableChecks": 27,
+        "dataDifferences": [],
+        "extensionChecks": {
+          "capabilityChecks": 198,
+          "conditionalExceptionsOnly": true,
+          "conditions": {
+            "adminOwner": true,
+            "allObjectACLs": true,
+            "ddlCapabilities": true,
+            "versions": true
+          },
+          "memberChecks": 55,
+          "objectACLChecks": 62,
+          "ownerDifferences": [
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pg_stat_statements",
+              "stagingOwner": "supabase_admin",
+              "version": "1.11"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pgcrypto",
+              "stagingOwner": "supabase_admin",
+              "version": "1.3"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:uuid-ossp",
+              "stagingOwner": "supabase_admin",
+              "version": "1.1"
+            }
+          ],
+          "status": "PASS",
+          "typeACLChecks": 4,
+          "unapprovedDifferences": []
+        },
+        "fullP4Complete": false,
+        "passwordHashBytesCoveredByWholeTableFingerprints": true,
+        "privileges": {
+          "differences": [],
+          "exceptionsApproved": [],
+          "morePermissive": [],
+          "repairMustStop": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceEntries": 552,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T14:48:15Z",
+          "targetEntries": 552
+        },
+        "schema": {
+          "additionExpiryVerified": true,
+          "approvedP6Additions": [
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue",
+              "object": "role:ir35_queue",
+              "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+            },
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue_producer",
+              "object": "role:ir35_queue_producer",
+              "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+            }
+          ],
+          "baseline552Unchanged": true,
+          "baselineCatalogResult": {
+            "conditionsPASS": true,
+            "exceptions": [
+              {
+                "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+                "object": "extension:pg_stat_statements",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+              },
+              {
+                "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+                "object": "extension:pgcrypto",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "63652c33f708c5861e34f2218529562b"
+              },
+              {
+                "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+                "object": "extension:uuid-ossp",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+              }
+            ],
+            "fullDataVerification": false,
+            "metadataMatch": true,
+            "phaseComplete": false,
+            "roleAttributesMatch": true,
+            "sourceCheckedAt": "2026-10-21T17:02:41Z",
+            "sourceObjects": 3752,
+            "status": "FAIL",
+            "targetCheckedAt": "2026-10-26T14:48:15Z",
+            "targetObjects": 3754,
+            "unexplainedDifferences": [
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue",
+                "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+              },
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue_producer",
+                "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+              }
+            ]
+          },
+          "exceptions": [
+            {
+              "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+              "object": "extension:pg_stat_statements",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+            },
+            {
+              "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+              "object": "extension:pgcrypto",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "63652c33f708c5861e34f2218529562b"
+            },
+            {
+              "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+              "object": "extension:uuid-ossp",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+            }
+          ],
+          "fullDataVerification": false,
+          "phaseComplete": false,
+          "sourceObjects": 3752,
+          "sourceRoleExpiryUnchanged": true,
+          "sourceRolesUnchanged": true,
+          "status": "PASS_WITH_APPROVED_P6_ADDITIONS",
+          "targetObjects": 3754,
+          "unexplainedDifferences": []
+        },
+        "sequenceChecks": 2,
+        "sourceWrites": 0,
+        "stagingWrites": 0,
+        "status": "PASS",
+        "tables": [
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.audit_log_entries",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.custom_oauth_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "358ad650b328db71025b61931d4517f7",
+            "name": "auth.flow_state",
+            "rows": "47",
+            "serializedBytes": "9268"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "67af4006a7088b82f7e5d69baf174dfc",
+            "name": "auth.identities",
+            "rows": "148",
+            "serializedBytes": "91893"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.instances",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+            "name": "auth.mfa_amr_claims",
+            "rows": "144",
+            "serializedBytes": "23650"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_factors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_code_sets",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_codes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_authorizations",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_client_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_clients",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_consents",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+            "name": "auth.one_time_tokens",
+            "rows": "21",
+            "serializedBytes": "5580"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "af55a92e3b0a38f28d29578ed520275b",
+            "name": "auth.refresh_tokens",
+            "rows": "1466",
+            "serializedBytes": "359317"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_relay_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "87a88933e7be6edec713b7a7f5a356ca",
+            "name": "auth.schema_migrations",
+            "rows": "82",
+            "serializedBytes": "2058"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_tokens",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_users",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "6c4d8a050ce7636a424a8cebdf57f31f",
+            "name": "auth.sessions",
+            "rows": "144",
+            "serializedBytes": "49616"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_domains",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "bd1686d190f4f6c94dbb8175f8761a12",
+            "name": "auth.users",
+            "rows": "147",
+            "serializedBytes": "129226"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_credentials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+            "name": "public.admin_members",
+            "rows": "2",
+            "serializedBytes": "446"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9319b54d9de4586f855da822729b529e",
+            "name": "public.application_events",
+            "rows": "815",
+            "serializedBytes": "339172"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "949df7a51a9609a32b36a84bc11964df",
+            "name": "public.application_packets",
+            "rows": "87",
+            "serializedBytes": "2269643"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+            "name": "public.application_submissions",
+            "rows": "64",
+            "serializedBytes": "86590"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "077765c72ba9ff8921e6124ea5577eb6",
+            "name": "public.application_worker_heartbeats",
+            "rows": "479",
+            "serializedBytes": "65305"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+            "name": "public.application_worker_tasks",
+            "rows": "64",
+            "serializedBytes": "46559"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.articles",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "ed908b923358cbad706195d02319adb2",
+            "name": "public.automation_rules",
+            "rows": "119",
+            "serializedBytes": "20037"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2848dbf849c96d21f8042b133c93ba88",
+            "name": "public.automation_runs",
+            "rows": "13",
+            "serializedBytes": "59729"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+            "name": "public.contact_requests",
+            "rows": "5",
+            "serializedBytes": "3435"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+            "name": "public.feedback_messages",
+            "rows": "11",
+            "serializedBytes": "3574"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+            "name": "public.inbox_aliases",
+            "rows": "117",
+            "serializedBytes": "24161"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "7fdfd20d4c05626429e0512f8d2552e7",
+            "name": "public.inbox_messages",
+            "rows": "291",
+            "serializedBytes": "556006"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f331f2304263b0cd3642c296b2676169",
+            "name": "public.job_alerts",
+            "rows": "5",
+            "serializedBytes": "890"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e647095d75414a442175f7fb3588caf4",
+            "name": "public.jobs",
+            "rows": "24041",
+            "serializedBytes": "77014823"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "470367f38c31f63ffd34430371f1476c",
+            "name": "public.moderation_logs",
+            "rows": "4327",
+            "serializedBytes": "1921831"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e56a2b9b48ff149e29fb6c27ad7fa566",
+            "name": "public.profiles",
+            "rows": "122",
+            "serializedBytes": "1763445"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+            "name": "public.resume_versions",
+            "rows": "12",
+            "serializedBytes": "103861"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+            "name": "public.saved_jobs",
+            "rows": "8",
+            "serializedBytes": "1069"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.testimonials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.user_entitlements",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+            "name": "public.waitlist",
+            "rows": "22",
+            "serializedBytes": "4184"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.messages",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "802700104fc0aed2f68c413f50637ba5",
+            "name": "realtime.schema_migrations",
+            "rows": "89",
+            "serializedBytes": "4382"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.subscription",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+            "name": "storage.buckets",
+            "rows": "4",
+            "serializedBytes": "838"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_analytics",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_vectors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55a444ce635336fa733a015fc4db877f",
+            "name": "storage.migrations",
+            "rows": "74",
+            "serializedBytes": "8715"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+            "name": "storage.objects",
+            "rows": "73",
+            "serializedBytes": "48321"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads_parts",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.vector_indexes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "35d965e826914770a00b84c3d87dd610",
+            "name": "supabase_migrations.schema_migrations",
+            "rows": "1",
+            "serializedBytes": "2310"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "vault.secrets",
+            "rows": "0",
+            "serializedBytes": "21"
+          }
+        ],
+        "transport": {
+          "customerRowsImported": 0,
+          "differences": [],
+          "exceptions": [],
+          "fullDataVerification": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceObjects": 327,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T14:48:16Z",
+          "targetObjects": 327
+        }
+      },
+      "rawFunctionFindingRetained": "REVIEW_REQUIRED",
+      "status": "PASS"
+    },
+    "handover": {
+      "captureOwner3": true,
+      "composeSHA256": "78904e165f7f1b85e713d60ff1a4792afd8ae53bab4eb9ffe16f28f55129d446",
+      "containerName": "ir35-p6-mock-worker-v7-fixedip",
+      "containment": {
+        "appRolePrivilegesEach": 552,
+        "approvedP6RolesEach": 2,
+        "approvedSchemaExceptionsEach": 3,
+        "baseline552Unchanged": true,
+        "fixtureWrites": 0,
+        "manifests": "PASS",
+        "orderedMD5Each": true,
+        "originalCaddyFilesUnchanged": true,
+        "pristineWrites": 0,
+        "privateFixtureRunningNoPorts": true,
+        "rawCatalogDifferencesRetained": true,
+        "sequencesEach": 2,
+        "sourceRolesUnchanged": true,
+        "sourceWrites": 0,
+        "status": "PASS",
+        "storageObjectsEach": 73,
+        "storageSHA256Match": true,
+        "tablesEach": 62
+      },
+      "endpoint": {
+        "IPAMConfigMatches": true,
+        "active": 0,
+        "browserReady": true,
+        "buildSHA": "b55dafd709d6b00307b912c50cc3e3883087897a",
+        "databaseReady": true,
+        "directLocalhostBuildSHAEqual": true,
+        "fixedIP": "172.18.0.240",
+        "paused": true,
+        "realAcceptance": false,
+        "status": "PASS"
+      },
+      "fixedIPOwnerRepair": true,
+      "image": "sha256:a4dd534d942dbbdf68f6c1d3f8ed7c760b8ccf409105a07e5d4dfc928c96dbc7",
+      "manifestSHA256": "3f81ae7f19cea1b1e144bb6a030d3d7ac9bc38738b96201f11f372c8d043a779",
+      "newBuilds": 0,
+      "preContainment": {
+        "appRolePrivilegesEach": 552,
+        "approvedP6RolesEach": 2,
+        "approvedSchemaExceptionsEach": 3,
+        "baseline552Unchanged": true,
+        "fixtureWrites": 0,
+        "manifests": "PASS",
+        "orderedMD5Each": true,
+        "originalCaddyFilesUnchanged": true,
+        "pristineWrites": 0,
+        "privateFixtureRunningNoPorts": true,
+        "rawCatalogDifferencesRetained": true,
+        "sequencesEach": 2,
+        "sourceRolesUnchanged": true,
+        "sourceWrites": 0,
+        "status": "PASS",
+        "storageObjectsEach": 73,
+        "storageSHA256Match": true,
+        "tablesEach": 62
+      },
+      "previousImageRetained": true,
+      "realAcceptance": false,
+      "sourceSHA": "b55dafd709d6b00307b912c50cc3e3883087897a",
+      "stage": "36-owner-capture-fixedip-handover",
+      "status": "PASS"
+    },
+    "historicalCountersPreserved": true,
+    "integration": {
+      "actualSystemdSchedules": [
+        {
+          "id": "e9f6cb78-e1a3-4509-a7b0-b83b1f9852c3",
+          "operation": "mock_ingest"
+        },
+        {
+          "id": "edb5605a-d5c1-444f-b16b-22b5131838d2",
+          "operation": "mock_automation"
+        },
+        {
+          "id": "5b6ad640-0b86-48e8-ab86-715b15e8883e",
+          "operation": "watchdog"
+        }
+      ],
+      "appHealth": {
+        "buildSHA": "a35db403d3fbb57148247606234a9807f48ea8a0",
+        "checks": {
+          "auth": "ready",
+          "database": "ready",
+          "realtime": "ready",
+          "storage": "ready",
+          "worker": "ready"
+        },
+        "ok": true
+      },
+      "heartbeat": {
+        "active": 0,
+        "buildSHA": "b55dafd709d6b00307b912c50cc3e3883087897a",
+        "fresh": true
+      },
+      "maintenance503": true,
+      "manifestSHA256": "40764ac92e8764976792ac929dc3ea4fbeafbcbc0f4a279abb0c01577acba60d",
+      "phaseComplete": false,
+      "realAcceptance": false,
+      "realtime": {
+        "TLSWebsocket101": true,
+        "anonymousPublicChannelJoin": true,
+        "broadcastEcho": true,
+        "customerWrites": 0,
+        "status": "PASS",
+        "tokenLogged": false
+      },
+      "restartPolicies": "unless-stopped",
+      "sdk401401200": [
+        {
+          "actualStatus": 401,
+          "caddyRequestId": "9dbe1eaf-e64f-40b2-95f9-9ebae8adff50",
+          "case": "sdk-missing",
+          "checks": {
+            "exactRoute": true,
+            "matchedRoute": true,
+            "noStore": true,
+            "noindex": true,
+            "requestId": true
+          },
+          "clientRequestId": "53995e13-5627-40bf-947e-6885bba7ce28",
+          "expectedStatus": 401,
+          "matchedRoute": "sdk-guard",
+          "method": "GET",
+          "passed": true,
+          "path": "/supabase/auth/v1/health",
+          "responseHeaders": {
+            "alt-svc": "<redacted>",
+            "cache-control": "no-store",
+            "connection": "<redacted>",
+            "content-length": "31",
+            "content-type": "text/plain; charset=utf-8",
+            "date": "Mon, 26 Oct 2026 14:48:10 GMT",
+            "x-caddy-request-id": "9dbe1eaf-e64f-40b2-95f9-9ebae8adff50",
+            "x-ir35-matched-route": "sdk-guard",
+            "x-robots-tag": "noindex, nofollow, noarchive"
+          }
+        },
+        {
+          "actualStatus": 401,
+          "caddyRequestId": "008eb443-f328-4c04-a6ff-bad8c1077138",
+          "case": "sdk-suffix",
+          "checks": {
+            "exactRoute": true,
+            "matchedRoute": true,
+            "noStore": true,
+            "noindex": true,
+            "requestId": true
+          },
+          "clientRequestId": "4eacd729-c0c1-4c66-a315-8f970f89ccba",
+          "expectedStatus": 401,
+          "matchedRoute": "sdk-guard",
+          "method": "GET",
+          "passed": true,
+          "path": "/supabase/auth/v1/health",
+          "responseHeaders": {
+            "alt-svc": "<redacted>",
+            "cache-control": "no-store",
+            "connection": "<redacted>",
+            "content-length": "31",
+            "content-type": "text/plain; charset=utf-8",
+            "date": "Mon, 26 Oct 2026 14:48:10 GMT",
+            "x-caddy-request-id": "008eb443-f328-4c04-a6ff-bad8c1077138",
+            "x-ir35-matched-route": "sdk-guard",
+            "x-robots-tag": "noindex, nofollow, noarchive"
+          }
+        },
+        {
+          "actualStatus": 200,
+          "caddyRequestId": "fa17a945-29ef-48ee-ba82-167b588216f2",
+          "case": "sdk-valid",
+          "checks": {
+            "exactRoute": true,
+            "matchedRoute": true,
+            "noStore": true,
+            "noindex": true,
+            "requestId": true
+          },
+          "clientRequestId": "203cf27a-67b5-40b0-be0b-eeb7f196ffc3",
+          "expectedStatus": 200,
+          "matchedRoute": "sdk-proxy",
+          "method": "GET",
+          "passed": true,
+          "path": "/supabase/auth/v1/health",
+          "responseHeaders": {
+            "access-control-allow-origin": "<redacted>",
+            "alt-svc": "<redacted>",
+            "cache-control": "no-store",
+            "connection": "<redacted>",
+            "content-length": "107",
+            "content-type": "application/json",
+            "date": "Mon, 26 Oct 2026 14:48:10 GMT",
+            "vary": "<redacted>",
+            "via": "<redacted>",
+            "x-caddy-request-id": "fa17a945-29ef-48ee-ba82-167b588216f2",
+            "x-ir35-matched-route": "sdk-proxy",
+            "x-kong-proxy-latency": "<redacted>",
+            "x-kong-request-id": "<redacted>",
+            "x-kong-upstream-latency": "<redacted>",
+            "x-robots-tag": "noindex, nofollow, noarchive"
+          }
+        }
+      ],
+      "stage": "38-owner-capture-app-realtime-schedules",
+      "status": "PASS"
+    },
+    "lifecycle": {
+      "cases": [
+        {
+          "case": "retained-all-forty-five-counts",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "retained-all-thirty-four-receipt",
+          "passed": true
+        },
+        {
+          "case": "fixedip-start-paused",
+          "passed": true
+        },
+        {
+          "case": "mock-health",
+          "passed": true
+        },
+        {
+          "case": "enqueue-success",
+          "passed": true
+        },
+        {
+          "case": "outcome-success",
+          "passed": true
+        },
+        {
+          "case": "duplicate-success",
+          "passed": true
+        },
+        {
+          "case": "durable-job-success",
+          "passed": true
+        },
+        {
+          "case": "enqueue-server_error",
+          "passed": true
+        },
+        {
+          "case": "outcome-server_error",
+          "passed": true
+        },
+        {
+          "case": "duplicate-server_error",
+          "passed": true
+        },
+        {
+          "case": "durable-job-server_error",
+          "passed": true
+        },
+        {
+          "case": "enqueue-timeout",
+          "passed": true
+        },
+        {
+          "case": "outcome-timeout",
+          "passed": true
+        },
+        {
+          "case": "duplicate-timeout",
+          "passed": true
+        },
+        {
+          "case": "durable-job-timeout",
+          "passed": true
+        },
+        {
+          "case": "enqueue-lost_ack",
+          "passed": true
+        },
+        {
+          "case": "outcome-lost_ack",
+          "passed": true
+        },
+        {
+          "case": "duplicate-lost_ack",
+          "passed": true
+        },
+        {
+          "case": "durable-job-lost_ack",
+          "passed": true
+        },
+        {
+          "case": "enqueue-captcha",
+          "passed": true
+        },
+        {
+          "case": "outcome-captcha",
+          "passed": true
+        },
+        {
+          "case": "duplicate-captcha",
+          "passed": true
+        },
+        {
+          "case": "durable-job-captcha",
+          "passed": true
+        },
+        {
+          "case": "enqueue-unknown_answer",
+          "passed": true
+        },
+        {
+          "case": "outcome-unknown_answer",
+          "passed": true
+        },
+        {
+          "case": "duplicate-unknown_answer",
+          "passed": true
+        },
+        {
+          "case": "durable-job-unknown_answer",
+          "passed": true
+        },
+        {
+          "case": "concurrent-outcome",
+          "passed": true
+        },
+        {
+          "case": "concurrent-outcome",
+          "passed": true
+        },
+        {
+          "case": "concurrent-browser-exclusion",
+          "passed": true
+        },
+        {
+          "case": "reject-employer-url",
+          "passed": true
+        },
+        {
+          "case": "reject-non-test-actor",
+          "passed": true
+        },
+        {
+          "case": "maintenance-pause",
+          "passed": true
+        },
+        {
+          "case": "maintenance-reject-apply",
+          "passed": true
+        },
+        {
+          "case": "maintenance-reject-schedule",
+          "passed": true
+        },
+        {
+          "case": "queued-before-cancel",
+          "passed": true
+        },
+        {
+          "case": "queued-cancel",
+          "passed": true
+        },
+        {
+          "case": "cancel-idempotent",
+          "passed": true
+        },
+        {
+          "case": "submitting-before-cancel",
+          "passed": true
+        },
+        {
+          "case": "active-cancel",
+          "passed": true
+        },
+        {
+          "case": "orphan-insert",
+          "passed": true
+        },
+        {
+          "case": "orphan-watchdog",
+          "passed": true
+        },
+        {
+          "case": "schedule-mock_ingest",
+          "passed": true
+        },
+        {
+          "case": "schedule-mock_automation",
+          "passed": true
+        },
+        {
+          "case": "schedule-watchdog",
+          "passed": true
+        },
+        {
+          "case": "durable-mock-schedules",
+          "passed": true
+        },
+        {
+          "case": "fixedip-every-owned-schedule-durable",
+          "passed": true
+        },
+        {
+          "case": "one-browser-max",
+          "passed": true
+        },
+        {
+          "case": "restart-health",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "durable-after-restart",
+          "passed": true
+        },
+        {
+          "case": "fixedip-direct-localhost-after-restart",
+          "passed": true
+        },
+        {
+          "case": "no-browser-orphans",
+          "passed": true
+        }
+      ],
+      "containment": {
+        "appRolePrivilegesEach": 552,
+        "approvedP6RolesEach": 2,
+        "approvedSchemaExceptionsEach": 3,
+        "baseline552Unchanged": true,
+        "fixtureWrites": 0,
+        "manifests": "PASS",
+        "orderedMD5Each": true,
+        "originalCaddyFilesUnchanged": true,
+        "pristineWrites": 0,
+        "privateFixtureRunningNoPorts": true,
+        "rawCatalogDifferencesRetained": true,
+        "sequencesEach": 2,
+        "sourceRolesUnchanged": true,
+        "sourceWrites": 0,
+        "status": "PASS",
+        "storageObjectsEach": 73,
+        "storageSHA256Match": true,
+        "tablesEach": 62
+      },
+      "customerWrites": 0,
+      "historicalCountersPreserved": true,
+      "manifestSHA256": "90725082554c7356921aa3c87f31e614f0432b7f8ae13ddc51cf3f45aabb9f59",
+      "networkChanges": 0,
+      "originalFailedReceiptsPreserved": 45,
+      "ownerCaptureLifecycleAttempt": 1,
+      "ownerFixedIPLifecycleAttempt": 1,
+      "persistedReceipts": 56,
+      "phaseComplete": false,
+      "postQueueBoundary": {
+        "actualLoginChecks": 112,
+        "baseline552Changed": false,
+        "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+        "functionCalls": 0,
+        "ownerApprovedConnectionBoundary": true,
+        "queueDatabase": "postgres",
+        "rawFindingUnchanged": true,
+        "rawFunctionACLStatus": "REVIEW_REQUIRED",
+        "status": "PASS"
+      },
+      "preContainment": {
+        "appRolePrivilegesEach": 552,
+        "approvedP6RolesEach": 2,
+        "approvedSchemaExceptionsEach": 3,
+        "baseline552Unchanged": true,
+        "fixtureWrites": 0,
+        "manifests": "PASS",
+        "orderedMD5Each": true,
+        "originalCaddyFilesUnchanged": true,
+        "pristineWrites": 0,
+        "privateFixtureRunningNoPorts": true,
+        "rawCatalogDifferencesRetained": true,
+        "sequencesEach": 2,
+        "sourceRolesUnchanged": true,
+        "sourceWrites": 0,
+        "status": "PASS",
+        "storageObjectsEach": 73,
+        "storageSHA256Match": true,
+        "tablesEach": 62
+      },
+      "preQueueBoundary": {
+        "actualLoginChecks": 112,
+        "baseline552Changed": false,
+        "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+        "functionCalls": 0,
+        "ownerApprovedConnectionBoundary": true,
+        "queueDatabase": "postgres",
+        "rawFindingUnchanged": true,
+        "rawFunctionACLStatus": "REVIEW_REQUIRED",
+        "status": "PASS"
+      },
+      "productionChanges": false,
+      "realAcceptance": false,
+      "repairAttempt": 0,
+      "retainedAcknowledgedJobProcessedWithoutRepublish": true,
+      "roleChanges": 0,
+      "scenarios": 6,
+      "scope": "private mock lifecycle only; app/Realtime/timer integration still required",
+      "secretChanges": 0,
+      "stage": "37-owner-capture-full-lifecycle",
+      "status": "PASS",
+      "workerRestarts": 1
+    },
+    "manifestSHA256": "ef7f9bfcc3c48737dcb8bf6a69e3850fc611165cc519f987e2d42c3bf0985f4f",
+    "newBuilds": 0,
+    "ownerFullP6Attempt": 1,
+    "phaseComplete": true,
+    "productionChanges": false,
+    "realAcceptance": false,
+    "restartCheck": true,
+    "secretValuesChanged": false,
+    "smtp": {
+      "APPLICATION_WORKER_ACCEPT_JOBS": "false",
+      "APPLY_RUNNER": "mock",
+      "expectedInternalTraffic": [
+        "database heartbeat",
+        "empty-queue watchdog",
+        "read-only diagnostic probes"
+      ],
+      "historicalPacketCaptureClaimed": false,
+      "proofScope": "Exact sealed mock-only payloads and immutable mock program plus internal-only network/provider-free execution; no retrospective packet-capture claim.",
+      "smtp": {
+        "checks": {
+          "bothAuthStacksRouteToSink": true,
+          "noForwardOrRelayConfigured": true,
+          "noSinkRestart": true,
+          "privateUnpublishedSink": true,
+          "sinkEmpty": true,
+          "sinkStartedBeforeCutoff": true
+        },
+        "mailContentOrRecipientLogged": false,
+        "sinkMessages": 0,
+        "sinkRestartCount": 0,
+        "sinkStartedAt": "2026-10-20T21:06:05.524915751Z",
+        "smtpPort": 1025,
+        "status": "PASS"
+      },
+      "status": "PASS",
+      "workers": [
+        {
+          "checks": {
+            "noDirectProviderCredentials": true,
+            "noDockerSocket": true,
+            "noHostNetwork": true,
+            "noProxy": true,
+            "onlyInternalNetwork": true,
+            "readOnlyUnprivileged": true
+          },
+          "container": "ir35-p6-mock-worker-v6"
+        },
+        {
+          "checks": {
+            "noDirectProviderCredentials": true,
+            "noDockerSocket": true,
+            "noHostNetwork": true,
+            "noProxy": true,
+            "onlyInternalNetwork": true,
+            "readOnlyUnprivileged": true
+          },
+          "container": "ir35-p6-mock-worker-v6-rollback"
+        }
+      ]
+    },
+    "stage": "35-owner-capture-one-full-p6",
+    "status": "PASS"
+  },
+  "newIsolatedDispatches": 0,
+  "operation": "full",
+  "productionChanges": false,
+  "status": "PASS"
+}

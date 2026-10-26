@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-full-intent.json",
+      "sha256": "faed5db168dd1ea3f08c5acb6cc552c3b60affad36e521e68d6b2c78aaa39674"
+    },
+    {
+      "name": "01-full-result.json",
+      "sha256": "bada50dc5e84d4b5d8e23705e072e65c52bea85a82c5cd583dbd16b51263bf96"
+    },
+    {
+      "name": "result.json",
+      "sha256": "578902a9ad49fea77b5d6c6ebf36605cdd0a1da65711be50394bb8bf3fba5ab0"
+    }
+  ],
+  "version": 1
+}
