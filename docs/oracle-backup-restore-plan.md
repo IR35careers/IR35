@@ -1,5 +1,7 @@
 # P8 backup/restore plan — NOT INSTALLED or signed off
 
+Offline implementation now includes `infra/oracle/backup_stream.py`: fixed staging dump/Storage command builders and shell-free age-pipe primitives; exclusive output, no plaintext temporary files, redacted diagnostics, input-completeness/return-code/header/byte-budget guards, and owned-process-group cleanup. Ten subprocess-fixture regressions and full596fresh-home tests PASS. Fixtures deliberately do NOT use real age or customer data: this is not proof of cryptography, consistent snapshots, an installed timer, upload or restore. The full orchestrator/uploader/retention and every real proof below remain required, not replaced by these tests.
+
 No backup upload, IAM change, lifecycle policy, timer, private-key creation, or restore is authorised by this file. The current browser SecurityToken refresh failed once: batch G2 instead of retrying it. Read-only inventory must establish existing access before proposing any new permission. Never copy a laptop API signing key or private age identity to the VM, create a public PAR, or use an unreviewed credential as a workaround.
 
 ## Exact budget before any upload/create
