@@ -1,0 +1,18 @@
+{
+  "operation": "one-normal-headed-oracle-browser-sign-in",
+  "profile": "ir35",
+  "region": "uk-london-1",
+  "auth": "security_token",
+  "helperSHA256": "70d74f12e84546f8644fcd99399785012a206f29131ecddd9a5ef8183bd33e96",
+  "sourceFromReviewedCheckout": true,
+  "priorRefreshFailed": true,
+  "refreshRetried": false,
+  "sshKeyAlreadyLoaded": true,
+  "apiOrSSHPasswordPrompt": false,
+  "ownerEntersLoginAndMFA": true,
+  "cloudAuditOrWritesStarted": false,
+  "ageKeyGenerated": false,
+  "iamChanged": false,
+  "phaseComplete": false,
+  "cutover": false
+}
