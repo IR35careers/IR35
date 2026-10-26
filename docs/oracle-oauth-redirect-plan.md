@@ -13,12 +13,13 @@ In the existing Google Cloud project's Google Auth Platform, select the existing
 | Oracle staging | `https://staging.ir35careers.com` | `https://api-staging.ir35careers.com/auth/v1/callback` |
 | Oracle canonical production | `https://www.ir35careers.com` | `https://api.ir35careers.com/auth/v1/callback` |
 | Bare-domain sign-in compatibility | `https://ir35careers.com` | Same production callback above |
+| Existing admin Google flow | `https://admin.ir35careers.com` | Same production callback above |
 
-The app's `/auth/callback` is a GoTrue post-login redirect, **not** the Google provider callback. The self-hosted GoTrue redirect allowlist must include only the app's reviewed exact URLs, for example `https://staging.ir35careers.com/auth/callback` during staging and the canonical production equivalent after cutover. Do not introduce wildcard origins or a broad redirect allowlist.
+The app's `/auth/callback` is a GoTrue post-login redirect, **not** the Google provider callback. The self-hosted GoTrue redirect allowlist must include only the app's reviewed exact URLs, for example `https://staging.ir35careers.com/auth/callback` during staging and the canonical production equivalent after cutover. Current server admin fallback explicitly redirects to `https://admin.ir35careers.com/`; include that exact post-login destination in the later owner-reviewed GoTrue production allowlist, not in Google's provider-callback list. Test the real flows and their permitted query/path variants before release. Do not introduce wildcard origins or a broad redirect allowlist.
 
 Keep the existing cloud callback `https://kxcbgflleqnjzjbkevwd.supabase.co/auth/v1/callback` throughout the 14-day rollback retention. Removing it would impair rollback. Do not switch the live OAuth flow, DNS or production environment before exact **YES CUTOVER** and all release gates. Retain any already-authorised credential-free preview origin only if still required; do not invent or copy preview secrets.
 
-The admin hostname needs an origin entry only if the reviewed admin code actually uses this Google client. Its current disabled GitHub flow must not be silently enabled. Record the admin flow verification in the full QA signoff before adding another origin.
+Read-only source inspection confirms `src/lib/google-oauth.ts` uses the SAME Google provider with an explicit admin origin, and `src/proxy.ts` rewrites the admin host's root/login to admin routes. Include the admin origin in the owner's existing-client review, but real admin Google/session isolation still needs protected browser proof. The source GitHub provider is disabled; do not silently enable it. Separately, the server redirect fallback canonicalises non-admin production-mode origins to `www`; staging fallback must be explicitly tested/fixed before provider activation, never allowed to send staging sessions to production as an unreviewed workaround.
 
 ## Consent branding checklist, owner-only G4 action
 
