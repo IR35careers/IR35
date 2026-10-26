@@ -1,0 +1,23 @@
+{
+  "status": "WAIT_OWNER_NEW_LOGIN_AND_BACKUP_HANDOFF",
+  "launcherSessionId": 99615,
+  "terminal": true,
+  "exitCode": 1,
+  "lastSanitisedOutput": "STOP: native browser session launcher failed; raw output suppressed. No automatic retry.",
+  "successReceiptObserved": false,
+  "localTokenStillExpired": true,
+  "callbackListenerPresent": false,
+  "rootCause": "Not proven from suppressed launcher error; no timeout, password or MFA cause invented",
+  "sameHandlePolledUntilTerminal": true,
+  "replacementWindowOpened": false,
+  "refreshRetried": false,
+  "apiOrSSHPasswordRequested": false,
+  "cloudRequests": 0,
+  "vmWrites": 0,
+  "keyGenerated": false,
+  "iamChanged": false,
+  "backupUploadOrRestore": false,
+  "productionChanges": false,
+  "cutover": false,
+  "phaseComplete": false
+}
