@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October full P6 PASS — conditional P7/P8 and P9 preparation released
+
+- The single owner3 full allowance is USED/PASS, not permission to repeat it: local5b51ba02d4785d1ddd7dab874c8622a57c163f40adbc9bc26598633259325c24, native35ef7f9bfcc3c48737dcb8bf6a69e3850fc611165cc519f987e2d42c3bf0985f4f. Native37PASS152checks,45old receipts exact/56total, one restart/fixed.240/direct-localhost SHA equality, earlier failures1/2 rechecked. Integration38PASS appall5ready/SDK401401200/maintenance503/RealtimeTLS101joinbroadcast/three actualsystemd durable schedules/heartbeat/restartpolicies. Active invocation captured for ALL3units, journalread0, redacted sealed proof9d65ac874e1b25462f9abd4f0c272758b96825b7e1471893e9bf2087f768a23a; fast-exit fallback separately offline tested.
+- Final full62MD5/Auth/2seq/3exceptions/552+2approved roles/73Storage/FRESH112HBA PASS. Existingwatchdog completed once/no republish, alloldledger preserved; SMTP0/noemployerpayloads, internal-only mock network/provider-free runtime, no retrospective packet-capture claim. Owner conditional source/evidence push to draftPR57 now allowed; keep unmerged. Continue P7/P8 then P9 PREP only under RESUME and hard stops. No production/DNS/provider/Google/cloud/Vercel/real-secret/paid/OCI-IAM/network-resource changes or cutover; exact YES CUTOVER absent. Latest history below remains immutable.
+
 ## 26 October owner journal-capture repair and ONE full P6 allowance
 
 - Latest explicit approval reopens offline active InvocationID capture plus bounded unit/time journal fallback, without relaxing evidence. Preserve every previous failed stage/counter; no second isolated dispatch. Record and process ONLY existing watchdog job `0ec588ee-fbd8-4c05-8367-c7e0d5437fc1`, never delete, republish or reset it. Require one matching mock receipt, unchanged prior ledger, SMTP0/employer payload0 and unconditional original rollback restoration/containment.

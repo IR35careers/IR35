@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-schedule-journals-intent.json",
+      "sha256": "67a83ed453590eee8c70ace1364b711b9beda4519ed1e93d279bef67467caa46"
+    },
+    {
+      "name": "01-sealed-schedule-journals-result.json",
+      "sha256": "b08fdd1973ad21b1ec6577c1f634e825177f4c18972be3f22582c0e3b53b351e"
+    },
+    {
+      "name": "result.json",
+      "sha256": "632fab1910acc44b3eba0dd4aa4d443d9f12591b8e4b4869bf79f4376c51bb1e"
+    }
+  ],
+  "version": 1
+}

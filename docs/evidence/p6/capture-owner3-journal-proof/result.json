@@ -1,0 +1,112 @@
+{
+  "proof": {
+    "readOnly": true,
+    "sealedIntegrationManifestSHA256": "40764ac92e8764976792ac929dc3ea4fbeafbcbc0f4a279abb0c01577acba60d",
+    "status": "PASS",
+    "units": [
+      {
+        "name": "ir35-p6-mock-mock-automation-decoder3-execution-result.json",
+        "result": {
+          "commandExitCode": 0,
+          "commandStderr": {
+            "length": 0,
+            "redacted": true,
+            "sha256Prefix": "e3b0c44298fc"
+          },
+          "commandStdout": {
+            "length": 0,
+            "redacted": true,
+            "sha256Prefix": "e3b0c44298fc"
+          },
+          "dispatcherStderr": [],
+          "invocationCaptured": true,
+          "journalReadExitCode": 0,
+          "journalScope": "invocation-and-window",
+          "journalValidJSON": true,
+          "journalWithinSizeLimit": true,
+          "service": {
+            "ExecMainCode": "1",
+            "ExecMainStatus": "0",
+            "Result": "success"
+          },
+          "startAttempts": 1,
+          "status": "PASS",
+          "unit": "ir35-p6-mock-mock-automation-decoder3.service",
+          "windowEnd": "2026-10-26T14:48:12.001160+00:00",
+          "windowStart": "2026-10-26T14:48:11.849050+00:00"
+        },
+        "sha256": "f759f54ba7efbdd92477a9f67482d34dae2858b10a385eae2c46b579d9b80d68"
+      },
+      {
+        "name": "ir35-p6-mock-mock-ingest-decoder3-execution-result.json",
+        "result": {
+          "commandExitCode": 0,
+          "commandStderr": {
+            "length": 0,
+            "redacted": true,
+            "sha256Prefix": "e3b0c44298fc"
+          },
+          "commandStdout": {
+            "length": 0,
+            "redacted": true,
+            "sha256Prefix": "e3b0c44298fc"
+          },
+          "dispatcherStderr": [],
+          "invocationCaptured": true,
+          "journalReadExitCode": 0,
+          "journalScope": "invocation-and-window",
+          "journalValidJSON": true,
+          "journalWithinSizeLimit": true,
+          "service": {
+            "ExecMainCode": "1",
+            "ExecMainStatus": "0",
+            "Result": "success"
+          },
+          "startAttempts": 1,
+          "status": "PASS",
+          "unit": "ir35-p6-mock-mock-ingest-decoder3.service",
+          "windowEnd": "2026-10-26T14:48:11.413937+00:00",
+          "windowStart": "2026-10-26T14:48:11.214764+00:00"
+        },
+        "sha256": "3f182b5e4e6b66a612dbfd39b021ff8264f224a766aaeedfa1b35036b331e015"
+      },
+      {
+        "name": "ir35-p6-mock-watchdog-decoder3-execution-result.json",
+        "result": {
+          "commandExitCode": 0,
+          "commandStderr": {
+            "length": 0,
+            "redacted": true,
+            "sha256Prefix": "e3b0c44298fc"
+          },
+          "commandStdout": {
+            "length": 0,
+            "redacted": true,
+            "sha256Prefix": "e3b0c44298fc"
+          },
+          "dispatcherStderr": [],
+          "invocationCaptured": true,
+          "journalReadExitCode": 0,
+          "journalScope": "invocation-and-window",
+          "journalValidJSON": true,
+          "journalWithinSizeLimit": true,
+          "service": {
+            "ExecMainCode": "1",
+            "ExecMainStatus": "0",
+            "Result": "success"
+          },
+          "startAttempts": 1,
+          "status": "PASS",
+          "unit": "ir35-p6-mock-watchdog-decoder3.service",
+          "windowEnd": "2026-10-26T14:48:12.559675+00:00",
+          "windowStart": "2026-10-26T14:48:12.405659+00:00"
+        },
+        "sha256": "36063e1f75fa8b3287c12a748aa256c963a4dad4c00e400b4c0044d7aada3341"
+      }
+    ],
+    "vmWrites": 0
+  },
+  "readOnly": true,
+  "status": "PASS",
+  "vmWrites": 0
+}
