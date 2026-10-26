@@ -109,4 +109,6 @@ All 477 Oracle helper tests PASS in 20.513s, including 11 collector regressions 
 
 No code push was made: PR workflows would automatically build Docker images, contrary to the explicit no-build instruction. Diagnostic code/tests/evidence are committed locally; PR #57 remains at its previous remote revision. No production/provider/OCI cost claim is inferred from this SSH-only audit; no resources were changed and billing was not freshly queried.
 
+Summary posted to [draft PR #57](https://github.com/IR35careers/IR35/pull/57#issuecomment-6415246287) without pushing source or triggering a PR-update build. All three sealed collection directories are marked read-only locally; manifest bytes reverified unchanged. Remote head remains `5357390cee5a5acbcf958cad9e2abe10e9695bd5`.
+
 STOP for owner review of the proposed proxy repair. No fix, build, restart, P6 retry, P7/P8/P9 advancement or cutover is authorised by this report. Literal YES CUTOVER remains absent.
