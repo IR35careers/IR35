@@ -1,0 +1,8 @@
+{
+  "newAuthAttempts": 0,
+  "previousProbeFailures": 2,
+  "readOnly": true,
+  "repair": "effective private mounted env, not Docker image Config.Env",
+  "thirdFailureHardStop": true,
+  "vmWrites": 0
+}

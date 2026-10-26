@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "name": "01-effective-config-containment-intent.json",
+      "sha256": "e533f6cc5c7f5f3c5869776d5d535951e3b2303c9303cd52c7819bb336a0028d"
+    },
+    {
+      "name": "01-effective-config-containment-result.json",
+      "sha256": "3492cdedc2bdeb3a53f9fb42d09f5b30a7f6d8782d85b46e1ecc593eddc6af3c"
+    },
+    {
+      "name": "intent.json",
+      "sha256": "87a57e1f73c4aa86ec7ee96e14192c32809e2594443e44834c25dca0fe5d37f6"
+    },
+    {
+      "name": "result.json",
+      "sha256": "b4bea681f1eda642498693eabb93b927a049eb883f05bee162e712bd6d279112"
+    }
+  ],
+  "version": 1
+}
