@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "scope": "Owner-completed Auth export handoff; immutable public metadata only",
+  "artifacts": [
+    {
+      "name": "auth-export-window-owner1-intent.json",
+      "sha256": "b3f7ee859be974ef7c4f7814850f80f4f1910c21e3f16183d19a5111e6180ec6"
+    },
+    {
+      "name": "auth-export-window-owner1-result.json",
+      "sha256": "92425d29d27e97132d9b770a70a96816274d0857de2c29cdb070321730fe417c"
+    },
+    {
+      "name": "oracle-auth-export-handoff-20261026T183723Z.json",
+      "sha256": "e36c144eae0b8f23d49e6519b9fad1c6db738d619865d2bc0fd39c887f500a33"
+    }
+  ]
+}

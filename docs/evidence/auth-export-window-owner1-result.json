@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-26",
+  "intent": "auth-export-window-owner1-intent.json",
+  "status": "OWNER_EXPORT_COMPLETE_LOCAL_VALIDATION_PASS",
+  "launchCountByAgent": 1,
+  "processId": 2900,
+  "startedAt": "2026-10-26T18:29:03.1061536Z",
+  "reconciledChildProcessId": 13628,
+  "newLaunchesDuringReconciliation": 0,
+  "exporterSHA256": "789c8ab31e25e5da2c4bafe64af9c05fb5cfcc0c60158a52e76f1f7a0d5f6b3b",
+  "ownerReportedTokenRevoked": true,
+  "revocationIndependentlyTested": false,
+  "tokenCaptured": false,
+  "stdinCaptured": false,
+  "credentialOrTerminalScreensCaptured": false,
+  "exportValuesPrinted": false,
+  "automaticRetries": 0,
+  "additionalManagementAPIRequestsByAgent": 0,
+  "validationEvidence": "oracle-auth-export-handoff-20261026T183723Z.json",
+  "productionChanges": false,
+  "cutover": false
+}

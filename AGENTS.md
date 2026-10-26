@@ -1,5 +1,14 @@
 # IR35Careers engineering instructions
 
+## 26 October Auth export received — remaining G3 fields, not a phase PASS
+
+- Owner confirms the one native export completed and the personal token was revoked. Agent's LOCAL read-only validation PASS: exact 140-field typed allowlist, 117 populated/23 null, protected owner-only ACL, credential-pattern rejection and source SHA256 `b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9`. No values/token printed, no new Management API request or VM call. Do not rerun the exporter or overwrite the populated handoff. Revocation is owner-confirmed, not independently tested with another request.
+- Twenty-one nulls belong to disabled providers. `password_required_characters` and `external_google_additional_client_ids` remain unresolved; do not interpret null as an empty/default value or infer complete source parity. A separate blank owner-only `oracle-auth-settings-supplement.json` beside the original export is hash-bound to it and contains ONLY these two non-secret fields. Owner copies their actual settings read-only, uses an empty string only after explicitly confirming none, or leaves unavailable fields null. Never request credentials or edit cloud settings. G3 remains pending; P7/P8/P9 incomplete, prior native audit slot remains USED, all provider/production/cost/cutover gates unchanged.
+
+## 26 October owner delegates launching the native export window
+
+- Latest “you do it” authorises ONE clearly labelled native PowerShell exporter window, using the unchanged reviewed exporter hash, not agent creation/retrieval/typing of a PAT. Owner handles Supabase token creation/hidden entry/revocation; no token/auth-screen screenshots, clipboard reads, terminal UI injection or secret search. Use the command/process launcher only, no Windows UI automation of credential/terminal screens. No unsolicited second window/retry; before launch verify the blank handoff and absence of a matching active window/process. Record public launch intent/PID only; no secret/stdin capture. The one GET happens only after owner enters token into native getpass. Exporter remains unchanged; other G3/VM/provider/production/cost/cutover gates remain.
+
 ## 26 October owner requests one local read-only Auth exporter
 
 - Owner chooses a single local script rather than manual G3copy: exactly ONE GET to the fixed project config/auth Management API, no redirects/retries/other endpoints or write methods. Owner creates a short-lived personal token, enters it only through a verified hidden getpassprompt, runs once and revokes it themselves. Agent prepares/tests code only; DO NOT run a live export, searchtokens, open an unsolicited prompt, storePATinargv/env/files/logs/evidence or echoAPIresponse.

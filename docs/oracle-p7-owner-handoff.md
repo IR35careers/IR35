@@ -1,5 +1,17 @@
 # P7 owner batch — source Auth settings only
 
+## Current status: export received; do not run it again
+
+Owner confirms completion and token revocation. The private export passed local schema/type/ACL checks: 140 fields, 117 populated, 23 null. Its SHA256 is `b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9`. No second API call was made; the populated original is preserved. Twenty-one nulls belong to disabled providers and require no client credentials.
+
+**Remaining G3 batch (two non-secret fields only):**
+
+1. Read the existing project's password character requirements and Google's additional client IDs in the Supabase Authentication dashboard. Do not change or save cloud settings; do not copy any secret.
+2. Fill ONLY `password_required_characters` and `external_google_additional_client_ids` in `C:\Users\anves\.oci\ir35-p0-readonly\oracle-auth-settings-supplement.json`. This separate owner-only file was prepared blank and is bound to the original export hash. Preserve the original export and the binding. Use `""` only if the dashboard explicitly confirms no requirement/additional IDs; keep `null` if unavailable. Do not guess from the API nulls. The exact API field names are documented in the [Management API reference](https://supabase.com/docs/reference/api/v1-get-auth-service-config); GoTrue's [password parser](https://github.com/supabase/auth/blob/v2.197.0/internal/conf/configuration.go) distinguishes an explicitly empty character requirement from required character groups.
+3. Reply **“Auth supplement ready”**, or provide only the unavailable field names. No token, file contents, passwords or client secrets in chat. No new token/export attempt is requested.
+
+This validates a source handoff, not runtime parity. Applying reviewed configuration, disposable Auth tests, provider proof and full containment still gate P7. Google Console changes remain unapproved; P8/P9 are not complete and exact `YES CUTOVER` is still absent. Earlier exporter instructions below are retained history, not a request to rerun it.
+
 ## Owner-selected read-only export (preferred)
 
 Use the ONE local standard-library [exporter](../infra/oracle/export_auth_settings.py), not manual copy first. It uses only the fixed GET endpoint documented by [Supabase](https://supabase.com/docs/reference/api/v1-get-auth-service-config), with the narrow `auth:read` / `auth_config_read` permission where available. The owner creates/revokes the short-lived personal token; the script never creates or revokes tokens or changes settings.

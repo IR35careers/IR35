@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-26",
+  "authorization": "Owner: you do it; one native hidden-token exporter window",
+  "launchAllowance": 1,
+  "exporterSHA256": "789c8ab31e25e5da2c4bafe64af9c05fb5cfcc0c60158a52e76f1f7a0d5f6b3b",
+  "tokenCreationEntryAndRevocation": "owner only",
+  "tokenStdinCaptured": false,
+  "credentialScreensCaptured": false,
+  "automaticRetries": 0,
+  "requestMethod": "GET",
+  "liveRequestBeforeOwnerInput": false,
+  "productionChanges": false,
+  "cutover": false
+}
