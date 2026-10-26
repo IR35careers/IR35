@@ -13,6 +13,11 @@ MODULES=('p6_audit_log','p6_pause_reconcile_guest','p6_restart_diagnosis_guest')
 
 def payload():
     data=p6_resume.context()
+    return evidence_context(data)
+
+
+def evidence_context(data):
+    """Read existing public anchors; no SSH, mutation or native retry."""
     for key,name in [('resumeFailure','owner-resume-lifecycle.json'),('scheduleFailure','owner-resume-lifecycle-pause-repair-one.json'),
                      ('finalFailure','owner-resume-lifecycle-schedule-repair-two.json'),('finalHandover','owner-resume-handover-schedule-repair-two.json'),
                      ('finalBuild','worker-resume-build-3.json'),('rollbackBuild','worker-resume-build-2.json')]:

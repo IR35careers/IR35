@@ -36,6 +36,11 @@ def context():
     if ensure_agent().get('keyLoaded') is not True:
         raise RuntimeError('MatchingSSHIdentityRequired_NoAutomaticPrompt')
     data = p6_context.context() | proof
+    return evidence_context(data)
+
+
+def evidence_context(data):
+    """Load existing redacted anchors only; caller retains its own phase gate."""
     for key,name in [('p6Inventory','p6-inventory.json'),('rolePreflight','p6-role-preflight.json'),('roleInstall','p6-role-install.json')]:
         data[key] = json.loads((schema.REPO/'docs/evidence'/name).read_text())
     for key,name in [('mockPrepare','mock-prepare.json'),('ownerHBABoundary','queue-hba-owner-boundary.json'),

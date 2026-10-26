@@ -23,6 +23,12 @@ def context():
     git=git_command(schema.REPO)
     if subprocess.check_output(git+['branch','--show-current'],text=True).strip()!='codex/oracle-migration-p6':raise RuntimeError('P6BranchRequired')
     if subprocess.check_output(git+['status','--porcelain'],text=True).strip():raise RuntimeError('CommittedCleanP6SourceRequired')
+    return read_evidence()
+
+
+def read_evidence():
+    """Read immutable evidence only; grants no phase execution authority."""
+    git=git_command(schema.REPO)
     signoff=p4_recovery.reports().get('revised_signoff',{})
     if signoff.get('status')!='PASS' or signoff.get('phaseComplete')is not True:raise RuntimeError('RevisedP4SignoffRequired')
     evidence=schema.REPO/'docs/evidence'
