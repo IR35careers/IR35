@@ -5,7 +5,7 @@ import sys
 import cloud_schema as schema
 import p6_context
 import p6_worker_build
-from p6_audit_log import AuditFailure, Journal
+from p6_audit_log import AuditFailure, Journal, sha
 from p6_status_audit import MODULES
 from p6_pause_reconcile_guest import CASES
 from ssh_agent_session import ensure_agent
@@ -25,11 +25,15 @@ def remote_case(name, data):
 
 
 def main():
-    if sys.argv[1:] != ['--read-only']:
+    if sys.argv[1:] not in (['--read-only'], ['--read-only', '--attempt', '2']):
         raise AuditFailure('ExplicitReadOnlyPauseReconciliationRequired')
-    root = schema.REPO / 'docs/evidence/p6/pause-reconciliation-20261026-01'
+    attempt = 2 if sys.argv[1:] == ['--read-only', '--attempt', '2'] else 1
+    root = schema.REPO / ('docs/evidence/p6/pause-reconciliation-20261026-' + f'{attempt:02d}')
     if root.exists():
         raise AuditFailure('ReconciliationAlreadyRecorded_NoOverwrite')
+    previous = None
+    if attempt == 2:
+        previous = verify_first_tooling_failure(root.with_name('pause-reconciliation-20261026-01'))
     if ensure_agent().get('keyLoaded') is not True:
         raise AuditFailure('ExistingMatchingSSHIdentityRequired_NoAutomaticPrompt')
     data = p6_context.context()
@@ -40,7 +44,8 @@ def main():
                           ('priorDiagnosis', 'docker-top-owner-diagnosis-one-observed.json')]:
         data[key] = json.loads((directory / filename).read_text())
     journal = Journal(root)
-    result = {'status': 'FAIL', 'phaseComplete': False, 'vmWrites': 0, 'repairsStarted': 0,
+    result = {'status': 'FAIL', 'phaseComplete': False, 'vmWrites': 0, 'repairsStarted': 0, 'attempt': attempt,
+              'previousFailureManifestSHA256': previous,
               'processingFlagChanges': 0, 'productionChanges': False, 'steps': []}
     try:
         for index, name in enumerate(CASES, 1):
@@ -59,6 +64,28 @@ def main():
     print(json.dumps(result))
     if result['status'] != 'PASS':
         raise SystemExit(1)
+
+
+def verify_first_tooling_failure(root):
+    body = (root / 'manifest.json').read_bytes()
+    manifest = json.loads(body)
+    expected = {'manifest.json'}
+    for row in manifest['artifacts']:
+        if row['name'] in expected or not row['name'].endswith('.json') or '/' in row['name'] or '\\' in row['name']:
+            raise AuditFailure('PreviousReconciliationManifestInvalid')
+        expected.add(row['name'])
+        path = root / row['name']
+        if path.is_symlink() or sha(path.read_bytes()) != row['sha256']:
+            raise AuditFailure('PreviousReconciliationArtifactMismatch')
+    if {p.name for p in root.iterdir()} != expected:
+        raise AuditFailure('PreviousReconciliationUnmanifestedArtifact')
+    prior = json.loads((root / 'result.json').read_bytes())
+    failed = json.loads((root / '05-full-containment-result.json').read_bytes())
+    if (prior.get('status') != 'FAIL' or prior.get('code') != 'ReadOnlyAuditFailed_full-containment'
+            or failed.get('status') != 'ERROR' or failed.get('exceptionType') != 'AuditFailure'
+            or failed.get('commands', [{}])[-1] != {'code': 'ReadOnlyCommandNotAllowed', 'operation': 'rejected-before-execution', 'status': 'FAIL'}):
+        raise AuditFailure('PreviousReconciliationNotExactReadOnlyToolingFailure_Stop')
+    return sha(body)
 
 
 if __name__ == '__main__':

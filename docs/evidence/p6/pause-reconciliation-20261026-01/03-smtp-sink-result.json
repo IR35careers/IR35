@@ -1,0 +1,35 @@
+{
+  "checks": {
+    "bothAuthStacksRouteToSink": true,
+    "noForwardOrRelayConfigured": true,
+    "noSinkRestart": true,
+    "privateUnpublishedSink": true,
+    "sinkEmpty": true,
+    "sinkStartedBeforeCutoff": true
+  },
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-ps",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "PASS"
+    }
+  ],
+  "mailContentOrRecipientLogged": false,
+  "operation": "smtp-sink",
+  "sinkMessages": 0,
+  "sinkRestartCount": 0,
+  "sinkStartedAt": "2026-10-20T21:06:05.524915751Z",
+  "smtpPort": 1025,
+  "status": "PASS",
+  "vmWrites": 0
+}

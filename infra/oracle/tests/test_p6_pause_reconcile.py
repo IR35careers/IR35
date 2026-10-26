@@ -10,9 +10,34 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import p6_pause_reconcile_guest as guest
+from p6_pause_reconcile import verify_first_tooling_failure
+from p6_audit_log import Journal, AuditFailure
 
 
 class PauseReconciliationTests(unittest.TestCase):
+    def test_separate_self_heal_requires_exact_sealed_tooling_error_not_a_data_failure(self):
+        for outcome in ('ERROR', 'FAIL'):
+            with self.subTest(outcome=outcome), TemporaryDirectory() as directory:
+                journal = Journal(Path(directory) / 'first')
+                journal.put('05-full-containment-result.json', {'status': outcome, 'exceptionType': 'AuditFailure', 'commands': [
+                    {'code': 'ReadOnlyCommandNotAllowed', 'operation': 'rejected-before-execution', 'status': 'FAIL'}]})
+                anchor = journal.seal({'status': 'FAIL', 'code': 'ReadOnlyAuditFailed_full-containment'})
+                if outcome == 'ERROR':
+                    self.assertEqual(verify_first_tooling_failure(journal.root), anchor)
+                else:
+                    with self.assertRaisesRegex(AuditFailure, 'NotExactReadOnlyToolingFailure'):
+                        verify_first_tooling_failure(journal.root)
+
+    def test_reconciliation_self_heal_refuses_any_old_artifact_tampering(self):
+        with TemporaryDirectory() as directory:
+            journal = Journal(Path(directory) / 'first')
+            journal.put('05-full-containment-result.json', {'status': 'ERROR', 'exceptionType': 'AuditFailure', 'commands': [
+                {'code': 'ReadOnlyCommandNotAllowed', 'operation': 'rejected-before-execution', 'status': 'FAIL'}]})
+            journal.seal({'status': 'FAIL', 'code': 'ReadOnlyAuditFailed_full-containment'})
+            (journal.root / '05-full-containment-result.json').write_text('changed')
+            with self.assertRaisesRegex(AuditFailure, 'ArtifactMismatch'):
+                verify_first_tooling_failure(journal.root)
+
     def test_job_activity_before_cutoff_passes_with_snake_and_compact_keys(self):
         jobs = [{'created_on': '2026-10-25T22:20:00Z', 'started_on': '2026-10-25T22:21:00Z',
                  'completed_on': '2026-10-25T22:22:00Z', 'retry_count': 0},

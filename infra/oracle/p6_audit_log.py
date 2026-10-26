@@ -28,6 +28,10 @@ def command_kind(arguments, supplied_input=None):
         return 'docker-' + args[1]
     if args[1:3] in (['image', 'inspect'], ['network', 'inspect']):
         return 'docker-' + args[1] + '-inspect'
+    if args == ['docker', 'cp', 'ir35-staging-db-1:/etc/postgresql/pg_hba.conf', '-']:
+        # Existing verifier's archive GET, stdout in RAM only. Never permit
+        # reverse-direction cp, another file/container, flags or a destination.
+        return 'docker-read-hba-archive'
     if args[1] == 'compose' and 'exec' in args and 'psql' in args:
         body = supplied_input.decode() if isinstance(supplied_input, bytes) else supplied_input
         if not isinstance(body, str) or not body.startswith('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;') or not body.rstrip().endswith('ROLLBACK;'):

@@ -15,6 +15,18 @@ import p6_status_audit as controller
 
 
 class AuditLogTests(unittest.TestCase):
+    def test_hba_archive_read_is_exact_and_every_write_or_other_file_is_refused(self):
+        self.assertEqual(command_kind(['docker', 'cp', 'ir35-staging-db-1:/etc/postgresql/pg_hba.conf', '-']), 'docker-read-hba-archive')
+        for arguments in (['docker', 'cp', '-', 'ir35-staging-db-1:/etc/postgresql/pg_hba.conf'],
+                          ['docker', 'cp', '-a', '-', 'ir35-staging-db-1:/etc/postgresql'],
+                          ['docker', 'cp', 'ir35-staging-db-1:/opt/ir35/.env.db', '-'],
+                          ['docker', 'cp', 'other-container:/etc/postgresql/pg_hba.conf', '-'],
+                          ['docker', 'cp', 'ir35-staging-db-1:/etc/postgresql/pg_hba.conf', '/tmp/output']):
+            native = Mock()
+            with self.subTest(arguments=arguments), self.assertRaises(AuditFailure):
+                CommandTrace(native)(arguments)
+            native.assert_not_called()
+
     def test_remote_command_failure_keeps_operation_even_when_old_wrapper_discards_details(self):
         bootstrap = '''runtime={}
 guest=types.ModuleType('p6_status_audit_guest')

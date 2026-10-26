@@ -1,0 +1,4 @@
+{
+  "operation": "smtp-sink",
+  "readOnly": true
+}
