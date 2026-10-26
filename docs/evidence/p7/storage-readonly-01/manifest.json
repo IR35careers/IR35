@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-signed-bytes-rls-containment-intent.json",
+      "sha256": "d8cd34a49a1fe5ee554b021d256bbeaa492f1357c8c77efc3c5a489c2e45754f"
+    },
+    {
+      "name": "01-signed-bytes-rls-containment-result.json",
+      "sha256": "b9d4d2e86051a123a65483c3f5743e7ccce6fde99a2025bdc27e9c8d0ed35413"
+    },
+    {
+      "name": "result.json",
+      "sha256": "06ba4ce5c85d317bace2a08ebfcd88153a6ebfaae72f7b738ece1869b8415084"
+    }
+  ],
+  "version": 1
+}

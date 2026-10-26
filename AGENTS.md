@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October P7 scoped staging PASS — P8 safe work released
+
+- Final Auth03 PASS and read-only Storage73signed-byte checks/73anon+73unrelated-userdenials PASS, native manifest `f0c38ace30f2dc3dc87e2704567014706afb51ed3be60e37b364e721477c3ffe`; full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS. No named-owner object exists in this snapshot (positive owner reads0), do not fabricate coverage. See scoped P7 signoff. No Auth slot may replay. Owner's latest OAuth-prepared/no-provider-change order permits safe P8 work while real Google/SMTP release proof remains deferred.
+- P8 uses a separate draft branch and journals; no production, DNS, provider, IAM, real-secret or paid changes. OCI refresh has already failed once; batch fresh browser login with other owner-only needs at the end. SSH remains loaded. Full data/security mismatches STOP immediately. No exact YES CUTOVER, no production release, no merging.
+
 ## 26 October P7 disposable Auth attempt03 PASS — fresh Storage proof next
 
 - Final bounded Auth attempt03 is USED/PASS, immutable manifest `67a1051c0930d544a02d86706a0b02fb29bab59de910266a46f0020f5c219595`. Three isolated source-configured clone cases prove password/refresh/RLS, magic link, recovery/session revocation, signup/confirmation/invite and two-step email change. Six messages went ONLY to private SMTP sinks. All three owned databases and fifteen test containers were removed. No original-password attempt, source/pristine/P5 write or real email/employer call. Do not replay any Auth attempt or open attempt04.
