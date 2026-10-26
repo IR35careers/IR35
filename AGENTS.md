@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October owner reopens READ-ONLY restart diagnosis ONLY
+
+- Owner explicitly approves read-only diagnosis after the three-failure stop, NOT a fourth run/fix/build/restart/configuration or provider/production/DNS/IAM/network/secret change. Keep all original counters and failure/rollback journals immutable, mock runner and SMTP sink only. Gather each of3failures/exactcode/artifact; projected container StartedAt/restart count/exit/OOM/restart-policy and sealed restart intent; each staging route's current vs expected upstream; EVERY retained mock queue/application/schedule row with source timestamp/attempt fields; fresh62MD5/Auth/2seq/3exceptions/552+2queue-role/73Storage/pg_hba containment. Any actual data/security mismatch stops. No real employer or mailbox calls.
+- Diagnostic artifacts are new/operator-local/write-once, no VM journal/config writes. Existing private credentials may be read in RAM for read-only login checks, never logged/copied/changed. Preserve proof limits: no invented historical packet capture or claims from missing Docker events. Report facts and ONE proposed root-cause fix with offline tests, then wait for a new owner decision before applying anything. P7–P9 and fourth lifecycle attempt remain held.
+
 ## 26 October resumed P6 gate THIRD FAILURE — STOP, no fourth attempt
 
 - Final resumed lifecycle stage25 FAIL `NativeMockRestartHealthDeadline`:70recorded cases PASS through all23retained receipts, six outcomes/duplicate+durable acknowledgements/concurrency, rejected400/maintenance503, cancellation/watchdog and all3schedule operations/durable rows/peak1. ONE actual Docker restart occurred; health was not reachable/ready within the unchanged90second deadline. Failure processing-pause response was UNCONFIRMED; do not claim the failed candidate was safely paused in place or invent a root cause. Candidate was then stopped and separate stage26 automatic previous-image rollback PASS, verified healthy/mock/processing-paused. Image691acf10/source1c07c85 restored, finalimagea4dd534d/sourceb55dafd retained stopped.
