@@ -71,7 +71,7 @@ console.log(JSON.stringify({inserted:true,mock:true}));"""
 
 
 def producer(value, *, orphan=False, worker_name=NEW_NAME):
-    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3','ir35-p6-mock-worker-v4'):
+    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3','ir35-p6-mock-worker-v4','ir35-p6-mock-worker-v5'):
         raise RecoveryError('FixedMockRuntimeIdentityRequired')
     script = producer_script(value, orphan=orphan)
     args = ['docker', 'exec', '-i', '--user', '1002:1002', worker_name, '/run/ir35/env-exec',
@@ -170,7 +170,8 @@ def retained_receipts(store, failed):
     return {row['applicationId']: row for row in found.values()}
 
 
-def run(data, runtime, *, repair_one=False,owner_resume=False):
+def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False):
+    if type(pause_repair)is not bool or pause_repair and not owner_resume:raise RecoveryError('DistinctPauseLifecycleRequired')
     if type(owner_resume) is not bool or owner_resume and repair_one:
         raise RecoveryError('DistinctOwnerLifecycleResumeRequired')
     if type(repair_one) is not bool:
@@ -186,13 +187,13 @@ def run(data, runtime, *, repair_one=False,owner_resume=False):
     if owner_resume:
         from p6_status_audit_guest import history
         _,prior_receipts = history(data)
-        worker_name = 'ir35-p6-mock-worker-v4'
-        worker_compose = ROOT/'p6-mock-compose-v4.yml'
+        worker_name = 'ir35-p6-mock-worker-v5' if pause_repair else 'ir35-p6-mock-worker-v4'
+        worker_compose = ROOT/('p6-mock-compose-v5.yml' if pause_repair else 'p6-mock-compose-v4.yml')
         if anchor.get('ownerResume') is not True or anchor.get('containerName') != worker_name:
             raise RecoveryError('ActualResumeRuntimeRequired')
     if repair_one and (anchor.get('repairAttempt') != 1 or anchor.get('containerName') != worker_name):
         raise RecoveryError('ActualReceiptRepairRuntimeRequired')
-    stage = store.stage('18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
+    stage = store.stage('21-owner-pause-repair-lifecycle' if pause_repair else '18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
     original = Recovery(data['p4'], runtime)
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'realAcceptance': False, 'customerWrites': 0, 'productionChanges': False,

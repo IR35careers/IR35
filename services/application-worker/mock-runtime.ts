@@ -77,7 +77,7 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
   const config = mockWorkerConfig(env);
   const sha = z.string().regex(/^[a-f0-9]{40}$/).parse(env.IR35_BUILD_SHA);
   const owner = new PgBoss(await mockOptions("worker", env)), producer = new PgBoss(await mockOptions("producer", env));
-  let stopping = false, paused = !config.mockConsumerEnabled, browserReady = false, active = 0, peakActive = 0, lastDB = 0;
+  let stopping = false, paused = !config.mockConsumerEnabled || config.IR35_MOCK_START_PAUSED === "true", browserReady = false, active = 0, peakActive = 0, lastDB = 0;
   const applicationAborts = new Map<string, AbortController>();
   owner.on("error", () => { lastDB = 0; }); producer.on("error", () => { lastDB = 0; });
   await owner.start(); await producer.start();

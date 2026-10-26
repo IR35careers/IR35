@@ -43,6 +43,17 @@ def run(data,runtime, *, source_repair_one=False, source_repair_two=False, owner
         roles.verify(probe['stage'],probe['manifestSHA256'])
         if json.loads((roles.root/probe['stage']/'result.json').read_bytes()) != {k:v for k,v in probe.items() if k not in ('stage','manifestSHA256')}:
             raise RuntimeError('ResumeReceiptProbeMustMatchNative')
+        if data.get('resumePauseRepair') is True:
+            failure = data['resumeFailure']
+            roles.verify(failure['stage'],failure['manifestSHA256'])
+            roles.verify(failure['imageRollback']['stage'],failure['imageRollback']['manifestSHA256'])
+            actual_failure=json.loads((roles.root/failure['stage']/'result.json').read_bytes())
+            names=[row['name'] for row in roles.verify(failure['stage'],failure['manifestSHA256'])['artifacts']]
+            if (actual_failure != {k:v for k,v in failure.items() if k not in ('stage','manifestSHA256','imageRollback')}
+                    or failure.get('code') != 'NativeMockCaseFailed_mock-health' or failure.get('failureContainment',{}).get('status') != 'PASS'
+                    or failure['imageRollback'].get('status') != 'PASS' or attempt != 2
+                    or any('publication-intent' in name or 'schedule-intent' in name for name in names)):
+                raise RuntimeError('ExactPrePublicationPauseFailureAndRollbackRequired')
     if attempt == 3:
         probe = data['receiptRepairProbe']
         roles.verify(probe['stage'], probe['manifestSHA256'])
@@ -91,6 +102,7 @@ def run(data,runtime, *, source_repair_one=False, source_repair_two=False, owner
         result.update(ownerResume=True,journal=str(journal),priorBuildManifestSHA256=prior['manifestSHA256'],
                       historicalBuildSlotsPreserved=True,pauseReconciliationManifestSHA256=data['pauseReconciliationManifestSHA256'],
                       pidAuditManifestSHA256=data['pidAuditManifestSHA256'])
+        if data.get('resumePauseRepair') is True:result.update(resumePauseRepair=True,resumeRepairAttempt=1,priorLifecycleFailureManifestSHA256=data['resumeFailure']['manifestSHA256'])
     if source_repair:
         result.update(sourceRepairAttempt=2 if source_repair_two else 1, journal=str(store.root), originalFailedBuildManifest=data['failedThirdSource']['manifestSHA256'],
                       originalThreeBuildSlotsPreserved=True, dockerInvocationsBeforeRepair=0)

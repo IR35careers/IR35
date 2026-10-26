@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "checks": {
+    "allHealthFieldsPassedExceptProcessingPause": true,
+    "readonlyOverridePresent": true,
+    "rollbackRunningPaused": true,
+    "allTwelveUnchanged": true,
+    "smtpEmpty": true,
+    "containmentPASS": true,
+    "queueBoundaryPASS": true
+  },
+  "failureHealth": {
+    "active": 0,
+    "browserReady": true,
+    "buildSHA": "2bf2bd2eb86a4d50875c66253d9bfd33e10d1936",
+    "databaseReady": true,
+    "mode": "staging-mock-only",
+    "ok": true,
+    "paused": true,
+    "peakActive": 0,
+    "realAcceptance": false
+  },
+  "publicationIntents": 0,
+  "ledger": {
+    "status": "PASS",
+    "checks": {
+      "exactExpectedApplicationIDs": true,
+      "exactExpectedJobIDs": true,
+      "noUnexpectedJobs": true,
+      "noPendingJobs": true,
+      "noScheduleWrite": true,
+      "allTwelveReceiptsUnchanged": true
+    },
+    "applicationCount": 12,
+    "jobCount": 12,
+    "pendingJobCount": 0,
+    "scheduleCount": 0,
+    "ledgerSHA256": "2acb6f3affe7d313029123fcf58de93f201c66aeda6e75a02fa85bd477dabc3a"
+  },
+  "smtp": {
+    "status": "PASS",
+    "sinkTotal": 0,
+    "listedMessages": 0,
+    "sinkWrites": 0
+  },
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "queueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "vmWrites": 0,
+  "rootCause": "The public startup override IR35_READ_ONLY=true correctly makes mockConsumerEnabled=false; maintenance resume cannot override a read-only runtime."
+}

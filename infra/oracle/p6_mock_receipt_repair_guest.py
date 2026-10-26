@@ -21,23 +21,29 @@ NAME = 'ir35-p6-mock-worker-v3'
 COMPOSE = ROOT / 'p6-mock-compose-v3.yml'
 
 
-def configuration(image, source, *, owner_resume=False):
+def configuration(image, source, *, owner_resume=False,pause_repair=False):
+    if type(pause_repair)is not bool or pause_repair and not owner_resume:raise RecoveryError('DistinctPauseRepairRequired')
     value = compose_two(image, source)
     value['name'] = 'ir35-p6-mock-v4' if owner_resume else 'ir35-p6-mock-v3'
     value['services']['worker']['container_name'] = 'ir35-p6-mock-worker-v4' if owner_resume else NAME
     if owner_resume:
         entry = value['services']['worker']['entrypoint']
-        entry.insert(entry.index('node'),'IR35_READ_ONLY=true')
+        entry.insert(entry.index('node'),'IR35_MOCK_START_PAUSED=true' if pause_repair else 'IR35_READ_ONLY=true')
+    if pause_repair:
+        value['name']='ir35-p6-mock-v5'
+        value['services']['worker']['container_name']='ir35-p6-mock-worker-v5'
     return value
 
 
-def paused_rollback(data,runtime,store,stage,prior):
+def paused_rollback(data,runtime,store,stage,prior,*,pause_repair=False):
     """Restore old immutable image WITHOUT briefly enabling its consumer."""
-    from p6_health_repair_guest import ROLLBACK_UNIT
-    name = 'ir35-p6-mock-worker-v4-rollback'
-    path = ROOT/'p6-mock-compose-v4-rollback.yml'
+    from p6_health_repair_guest import ROLLBACK_UNIT,PAUSE_ROLLBACK_UNIT
+    if type(pause_repair)is not bool:raise RecoveryError('ExplicitPauseRollbackRequired')
+    unit=PAUSE_ROLLBACK_UNIT if pause_repair else ROLLBACK_UNIT
+    name = 'ir35-p6-mock-worker-v5-rollback' if pause_repair else 'ir35-p6-mock-worker-v4-rollback'
+    path = ROOT/('p6-mock-compose-v5-rollback.yml' if pause_repair else 'p6-mock-compose-v4-rollback.yml')
     value = configuration(prior['image'],prior['sourceSHA'],owner_resume=True)
-    value['name'] = 'ir35-p6-mock-v4-rollback'
+    value['name'] = 'ir35-p6-mock-v5-rollback' if pause_repair else 'ir35-p6-mock-v4-rollback'
     value['services']['worker']['container_name'] = name
     store.put(stage,'rollback-intent.json',json.dumps({'image':prior['image'],'sourceSHA':prior['sourceSHA'],
         'processingPausedFromStart':True,'originalSecretsUnchanged':True}).encode())
@@ -54,12 +60,12 @@ def paused_rollback(data,runtime,store,stage,prior):
     item = json.loads(runtime['run'](['docker','inspect',name]))[0]
     network = json.loads(runtime['run'](['docker','inspect','--type','network','ir35-staging_backend']))[0]
     address = isolation(item,prior['image'],network)
-    bodies = units(address,unit=ROLLBACK_UNIT)
+    bodies = units(address,unit=unit)
     for filename,body in bodies.items():
-        write_unit(SYSTEMD/filename,body,unit=ROLLBACK_UNIT)
+        write_unit(SYSTEMD/filename,body,unit=unit)
         store.put(stage,filename,body.encode())
     runtime['run'](['systemctl','daemon-reload'])
-    runtime['run'](['systemctl','enable','--now',ROLLBACK_UNIT+'.socket'])
+    runtime['run'](['systemctl','enable','--now',unit+'.socket'])
     control = Control(private_env(ROOT/'.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     deadline = time.monotonic()+90
     while True:
@@ -71,12 +77,13 @@ def paused_rollback(data,runtime,store,stage,prior):
         time.sleep(1)
     if observed.get('paused') is not True or observed.get('buildSHA') != prior['sourceSHA'] or observed.get('realAcceptance') is not False:
         raise RecoveryError('RollbackMustBeOldImagePausedMock')
-    validate_proxy(runtime,bodies,unit=ROLLBACK_UNIT)
+    validate_proxy(runtime,bodies,unit=unit)
     return {'status':'PASS','image':prior['image'],'processingPaused':True,'realAcceptance':False,
             'originalContainerAndImagesRetained':True,'containerName':name}
 
 
-def run(data, runtime, *, owner_resume=False):
+def run(data, runtime, *, owner_resume=False,pause_repair=False):
+    if type(pause_repair)is not bool or pause_repair and not owner_resume:raise RecoveryError('DistinctPauseRepairRequired')
     if type(owner_resume) is not bool:raise RecoveryError('ExplicitResumeBooleanRequired')
     # Fixed identities, not caller-supplied names; historical three generations
     # and their failed journals are never overwritten or silently replayed.
@@ -86,6 +93,13 @@ def run(data, runtime, *, owner_resume=False):
     old_compose = COMPOSE if owner_resume else OLD_COMPOSE
     new_unit = 'ir35-p6-health-proxy-r4' if owner_resume else RECEIPT_UNIT
     old_unit = RECEIPT_UNIT if owner_resume else UPDATE_UNIT
+    if pause_repair:
+        worker_name='ir35-p6-mock-worker-v5'
+        worker_compose=ROOT/'p6-mock-compose-v5.yml'
+        old_name='ir35-p6-mock-worker-v4-rollback'
+        old_compose=ROOT/'p6-mock-compose-v4-rollback.yml'
+        new_unit='ir35-p6-health-proxy-r4-pause-repair1'
+        old_unit='ir35-p6-health-proxy-r4-rollback'
     prerequisites(data, runtime)
     store = prepared(data)
     prior = data['runtimeProof']
@@ -93,6 +107,19 @@ def run(data, runtime, *, owner_resume=False):
     probe = data['receiptRepairProbe']
     for report in (prior, failure, probe):
         anchored_result(store, report)
+    if pause_repair:
+        failed=data['resumeFailure']
+        anchored_result(store,{k:v for k,v in failed.items() if k!='imageRollback'})
+        anchored_result(store,failed['imageRollback'])
+        if failed.get('code')!='NativeMockCaseFailed_mock-health' or failed['imageRollback'].get('status')!='PASS':
+            raise RecoveryError('ActualPauseFailureAndRollbackRequired')
+        old_item=json.loads(runtime['run'](['docker','inspect',old_name]))[0]
+        old_address=old_item['NetworkSettings']['Networks']['ir35-staging_backend']['IPAddress']
+        expected=configuration(prior['image'],prior['sourceSHA'],owner_resume=True)
+        expected['name']='ir35-p6-mock-v4-rollback'
+        expected['services']['worker']['container_name']=old_name
+        if json.loads(old_compose.read_bytes())!=expected:raise RecoveryError('SealedRollbackConfigurationMismatch')
+        prior=prior|{'composeSHA256':digest(old_compose.read_bytes()),'unitSHA256':{k:digest(v.encode()) for k,v in units(old_address,unit=old_unit).items()}}
     if (prior.get('status') != 'PASS' or failure.get('code') != 'NativeMockTerminalOrHistoryMismatch_NoReadyFallback'
             or failure.get('failureContainment', {}).get('status') != 'PASS'
             or failure.get('failurePause') != {'paused': True, 'realAcceptance': False}
@@ -106,7 +133,9 @@ def run(data, runtime, *, owner_resume=False):
         from p6_status_audit_guest import history
         history(data)
         if build.get('ownerResume') is not True:raise RecoveryError('VerifiedOwnerResumeBuildRequired')
-    if owner_resume:
+    if pause_repair:
+        stage=store.stage('20-owner-pause-repair-handover')
+    elif owner_resume:
         stage = store.stage('17-owner-resume-handover')
     else:
         stage = store.stage('15-receipt-repair-one-handover')
@@ -138,7 +167,7 @@ def run(data, runtime, *, owner_resume=False):
             runtime['run'](['systemctl', 'enable', '--now', old_unit + '.socket'])
             result['oldPausedProxyRestored'] = True
         elif proxy_switched and old_stopped and owner_resume:
-            result['rollback'] = paused_rollback(data,runtime,store,stage,prior)
+            result['rollback'] = paused_rollback(data,runtime,store,stage,prior,pause_repair=pause_repair)
 
     try:
         result['preContainment'] = check_containment(data, runtime, store, stage, 'pre')
@@ -174,7 +203,7 @@ def run(data, runtime, *, owner_resume=False):
         with store.sink(stage, 'preflight-systemd.log') as log:
             if subprocess.run(['systemd-analyze', 'verify', *[str(stage / name) for name in preview]], stdout=log, stderr=log, timeout=20).returncode:
                 raise RecoveryError('ReceiptProxyPreflightFailed_NoRuntimeChange')
-        value = configuration(build['image'], build['sourceSHA'],owner_resume=owner_resume)
+        value = configuration(build['image'], build['sourceSHA'],owner_resume=owner_resume,pause_repair=pause_repair)
         store.put(stage, 'intent.json', json.dumps({'newImage': build['image'], 'sourceSHA': build['sourceSHA'],
             'repairAttempt': 1, 'newStartsAllowed': 1, 'oldImageAndFailedJournalsRetained': True, 'newSecrets': False}).encode())
         if owner_resume:
@@ -245,7 +274,7 @@ def run(data, runtime, *, owner_resume=False):
         result['containment'] = check_containment(data, runtime, store, stage, 'post')
         result.update(status='PASS', sourceSHA=build['sourceSHA'], image=build['image'], health=health,
             durableHeartbeat=heartbeat, hostMemoryAvailableKiB=available, containerName=worker_name, composePath=str(worker_compose),ownerResume=owner_resume,
-            oldWorkerStopped=True, oldArtifactsRetained=True, originalEnvUnchanged=True, loopbackOnly=True)
+            oldWorkerStopped=True, oldArtifactsRetained=True, originalEnvUnchanged=True, loopbackOnly=True,pauseRepair=pause_repair)
     except Exception as error:
         result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__
         try:

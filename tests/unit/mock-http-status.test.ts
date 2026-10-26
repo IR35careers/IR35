@@ -104,18 +104,21 @@ beforeEach(async () => {
     const timer = interval(...args); timers.push(timer); return timer;
   }) as typeof setInterval);
   previousTerm = process.listeners("SIGTERM"); previousInt = process.listeners("SIGINT");
+}, 30_000);
+
+async function boot(overrides: Record<string, string> = {}) {
   await runMockWorker({ APPLY_RUNNER: "mock", IR35_STAGING: "true", APPLICATION_WORKER_ACCEPT_JOBS: "false",
     APPLICATION_WORKER_CONCURRENCY: "1", IR35_READ_ONLY: "false", IR35_SCHEDULER_ENABLED: "false",
     APPLICATION_WORKER_SECRET: publicFixtureHmac, IR35_BUILD_SHA: "b".repeat(40),
     IR35CAREERS_APP_URL: "https://staging.ir35careers.com", QUEUE_DB_ALLOWED_HOSTS: "db",
     PG_BOSS_DATABASE_URL: "postgresql://ir35_queue:public-fixture@db:5432/postgres",
-    PG_BOSS_PRODUCER_DATABASE_URL: "postgresql://ir35_queue_producer:public-fixture@db:5432/postgres" });
+    PG_BOSS_PRODUCER_DATABASE_URL: "postgresql://ir35_queue_producer:public-fixture@db:5432/postgres", ...overrides });
   const server = controls.server!;
   if (!server.listening) await new Promise<void>(resolve => server.once("listening", resolve));
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Loopback HTTP fixture missing.");
   origin = `http://127.0.0.1:${address.port}`;
-}, 30_000);
+}
 
 afterEach(async () => {
   for (const timer of timers) clearInterval(timer);
@@ -130,7 +133,10 @@ afterEach(async () => {
 const work = () => ({ kind: "staging_mock_application", applicationId: randomUUID(), actorEmail: STAGING_TEST_ACCOUNT,
   scenario: "success", requestedAt: "2026-10-26T06:00:00.000Z" });
 async function post(value: unknown) {
-  const body = JSON.stringify(value), timestamp = String(Date.now()), path = "/mock/applications";
+  return command("/mock/applications", value);
+}
+async function command(path: "/mock/applications" | "/mock/maintenance", value: unknown) {
+  const body = JSON.stringify(value), timestamp = String(Date.now());
   return fetch(origin + path, { method: "POST", body, headers: { "content-type": "application/json",
     "x-ir35-mock-timestamp": timestamp, "x-ir35-mock-signature": mockSignature(publicFixtureHmac, timestamp, "POST", path, body) } });
 }
@@ -141,6 +147,7 @@ async function counts() {
 
 describe("real HTTP status and real SQL queue publication", () => {
   it("rejects extra employer fields with400, the same error body and no transaction or writes", async () => {
+    await boot();
     const begin = vi.spyOn(producer.getDb(), "beginTransaction"), send = vi.spyOn(producer, "send");
     const response = await post({ ...work(), employerURL: "https://forbidden.invalid/apply" });
     expect(response.status).toBe(400);
@@ -149,6 +156,7 @@ describe("real HTTP status and real SQL queue publication", () => {
     expect(await counts()).toEqual({ applications: 0, jobs: 0 });
   });
   it("returns202 only after valid work is committed and queues a duplicate exactly once", async () => {
+    await boot();
     const input = work(), send = vi.spyOn(producer, "send");
     const first = await post(input);
     expect(first.status).toBe(202);
@@ -161,10 +169,26 @@ describe("real HTTP status and real SQL queue publication", () => {
     expect(await counts()).toEqual({ applications: 1, jobs: 1 });
   });
   it("does not report202 when queue publication fails, and rolls back the application insert", async () => {
+    await boot();
     vi.spyOn(producer, "send").mockResolvedValueOnce(null);
     const response = await post(work());
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "invalid_mock_request_or_unavailable" });
+    expect(await counts()).toEqual({ applications: 0, jobs: 0 });
+  });
+  it("starts paused without accepting work, then resumes only an enabled mock consumer", async () => {
+    await boot({ IR35_MOCK_START_PAUSED: "true" });
+    expect(await (await fetch(origin + "/health")).json()).toMatchObject({ paused: true, active: 0, realAcceptance: false });
+    expect((await post(work())).status).toBe(503);
+    expect(await counts()).toEqual({ applications: 0, jobs: 0 });
+    expect(await (await command("/mock/maintenance", { action: "resume" })).json()).toEqual({ paused: false, realAcceptance: false });
+    expect((await post(work())).status).toBe(202);
+    expect(await counts()).toEqual({ applications: 1, jobs: 1 });
+  });
+  it("never lets maintenance resume override the global read-only gate", async () => {
+    await boot({ IR35_MOCK_START_PAUSED: "true", IR35_READ_ONLY: "true" });
+    expect(await (await command("/mock/maintenance", { action: "resume" })).json()).toEqual({ paused: true, realAcceptance: false });
+    expect((await post(work())).status).toBe(503);
     expect(await counts()).toEqual({ applications: 0, jobs: 0 });
   });
 });

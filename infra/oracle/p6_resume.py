@@ -53,17 +53,30 @@ def bundle():
     return script
 
 
-def build():
+def pause_repair_proof(data):
+    failure=json.loads((DIRECTORY/'owner-resume-lifecycle.json').read_text())
+    diagnosis=json.loads((DIRECTORY/'owner-resume-pause-diagnosis.json').read_text())
+    if (failure.get('code')!='NativeMockCaseFailed_mock-health' or failure.get('imageRollback',{}).get('status')!='PASS'
+            or diagnosis.get('status')!='PASS' or diagnosis.get('vmWrites')!=0 or diagnosis.get('publicationIntents')!=0
+            or diagnosis.get('ledger',{}).get('ledgerSHA256')!='2acb6f3affe7d313029123fcf58de93f201c66aeda6e75a02fa85bd477dabc3a'
+            or not all(diagnosis.get('checks',{}).values())):
+        raise RuntimeError('ActualReadOnlyPauseFailureDiagnosisRequired')
+    return data|{'resumeFailure':failure,'resumePauseRepair':True}
+
+
+def build(*,pause_repair=False):
     data = context()
+    if pause_repair:data=pause_repair_proof(data)
     git = git_command(schema.REPO)
     sha = subprocess.check_output(git+['rev-parse','HEAD'],text=True).strip()
     previous = {}
     for path in sorted(DIRECTORY.glob('worker-resume-build-[123].json')):
         row = json.loads(path.read_text())
         previous[row['stage']] = row['manifestSHA256']
-        if row['status'] == 'PASS':raise RuntimeError('ResumeBuildAlreadyPassed_NoReplay')
+        if row['status'] == 'PASS' and not (pause_repair and row.get('attempt')==1):raise RuntimeError('ResumeBuildAlreadyPassed_NoReplay')
         if row.get('containment',{}).get('status') != 'PASS':raise RuntimeError('PreviousBuildContainmentFailed_HardStop')
     attempt = len(previous)+1
+    if pause_repair and attempt!=2:raise RuntimeError('OneSeparatePauseRepairBuildOnly')
     if attempt > 3:raise RuntimeError('ResumeBuildThreeFailures_Stop')
     archive = subprocess.check_output(git+['-c','core.autocrlf=false','archive','--format=tar',sha],cwd=schema.REPO)
     with tarfile.open(fileobj=io.BytesIO(archive),mode='r:') as snapshot:
@@ -79,45 +92,48 @@ def build():
     if result['status'] != 'PASS':raise SystemExit(1)
 
 
-def run_runtime(operation):
+def run_runtime(operation,*,pause_repair=False):
     if operation not in ('handover','lifecycle'):raise RuntimeError('FixedResumeRuntimeOperationRequired')
-    destination = DIRECTORY/('owner-resume-'+operation+'.json')
+    suffix='-pause-repair-one' if pause_repair else ''
+    destination = DIRECTORY/('owner-resume-'+operation+suffix+'.json')
     if destination.exists():raise RuntimeError('ResumeStageRecorded_NoReplay')
     data = context()
+    if pause_repair:data=pause_repair_proof(data)
     builds = [json.loads(path.read_text()) for path in sorted(DIRECTORY.glob('worker-resume-build-[123].json'))]
     if not builds or builds[-1].get('status') != 'PASS':raise RuntimeError('ActualResumeBuildRequired')
+    if pause_repair and builds[-1].get('resumePauseRepair')is not True:raise RuntimeError('ActualPauseRepairImageRequired')
     data['workerBuild'] = builds[-1]
     if subprocess.run(git_command(schema.REPO)+['diff','--quiet',builds[-1]['sourceSHA'],'HEAD','--',
         'services/application-worker','src/lib/queue','package.json','package-lock.json']).returncode:
         raise RuntimeError('ResumeRuntimeChangedAfterBuild')
     if operation == 'lifecycle':
         data['previousRuntimeProof'] = data['runtimeProof']
-        data['runtimeProof'] = json.loads((DIRECTORY/'owner-resume-handover.json').read_text())
+        data['runtimeProof'] = json.loads((DIRECTORY/('owner-resume-handover'+suffix+'.json')).read_text())
         if data['runtimeProof'].get('status') != 'PASS':raise RuntimeError('ActualResumeHandoverRequired')
     script = bundle()
     module = 'p6_mock_receipt_repair_guest'
     code = (schema.REPO/'infra/oracle'/ (module+'.py')).read_text()
     script += 'module=types.ModuleType('+repr(module)+');sys.modules['+repr(module)+']=module\nexec('+repr(code)+',module.__dict__)\n'
     selected = module if operation == 'handover' else 'p6_lifecycle_guest'
-    script += 'result=sys.modules['+repr(selected)+'].run('+repr(data)+',runtime,owner_resume=True)\n'
+    script += 'result=sys.modules['+repr(selected)+'].run('+repr(data)+',runtime,owner_resume=True,pause_repair='+repr(pause_repair)+')\n'
     if operation == 'lifecycle':
         # Failure rollback is an explicit retained-old-image, paused launch.
         # Do not briefly restart an old unpaused Compose definition.
         script += '''
 if result['status'] != 'PASS':
  store=sys.modules['p6_mock_guest'].prepared(DATA)
- rollback_stage=store.stage('19-owner-resume-rollback')
+ rollback_stage=store.stage(ROLLBACK_STAGE)
  rollback={'status':'FAIL'}
  try:
-  runtime['run'](['docker','stop','--time','30','ir35-p6-mock-worker-v4'],timeout=45)
-  runtime['run'](['systemctl','disable','--now','ir35-p6-health-proxy-r4.socket'])
-  runtime['run'](['systemctl','stop','ir35-p6-health-proxy-r4.service'])
-  rollback=sys.modules['p6_mock_receipt_repair_guest'].paused_rollback(DATA,runtime,store,rollback_stage,DATA['previousRuntimeProof'])
+  runtime['run'](['docker','stop','--time','30',WORKER_NAME],timeout=45)
+  runtime['run'](['systemctl','disable','--now',PROXY_UNIT+'.socket'])
+  runtime['run'](['systemctl','stop',PROXY_UNIT+'.service'])
+  rollback=sys.modules['p6_mock_receipt_repair_guest'].paused_rollback(DATA,runtime,store,rollback_stage,DATA['previousRuntimeProof'],pause_repair=PAUSE_REPAIR)
  except Exception as error:rollback['code']=type(error).__name__
  rollback['containment']=sys.modules['p6_mock_guest'].check_containment(DATA,runtime,store,rollback_stage,'post')
  store.put(rollback_stage,'result.json',json.dumps(rollback,sort_keys=True).encode())
  result['imageRollback']=rollback|{'stage':rollback_stage.name,'manifestSHA256':store.seal(rollback_stage)}
-'''.replace('DATA',repr(data))
+'''.replace('DATA',repr(data)).replace('ROLLBACK_STAGE',repr('22-owner-pause-repair-rollback' if pause_repair else '19-owner-resume-rollback')).replace('WORKER_NAME',repr('ir35-p6-mock-worker-v5' if pause_repair else 'ir35-p6-mock-worker-v4')).replace('PROXY_UNIT',repr('ir35-p6-health-proxy-r4-pause-repair1' if pause_repair else 'ir35-p6-health-proxy-r4')).replace('PAUSE_REPAIR',repr(pause_repair))
     script += 'print(json.dumps(result))\n'
     result = schema.run_guest(script,timeout=900)
     with destination.open('x',encoding='utf-8') as output:json.dump(result,output,indent=2)
@@ -130,6 +146,9 @@ if __name__ == '__main__':
         if sys.argv[1:] == ['--build']:build()
         elif sys.argv[1:] == ['--handover']:run_runtime('handover')
         elif sys.argv[1:] == ['--lifecycle']:run_runtime('lifecycle')
+        elif sys.argv[1:] == ['--build-pause-repair-one']:build(pause_repair=True)
+        elif sys.argv[1:] == ['--handover-pause-repair-one']:run_runtime('handover',pause_repair=True)
+        elif sys.argv[1:] == ['--lifecycle-pause-repair-one']:run_runtime('lifecycle',pause_repair=True)
         else:raise RuntimeError('ExplicitResumeOperationRequired')
     except Exception as error:
         print(json.dumps({'status':'STOP','code':str(error) if type(error)is RuntimeError else type(error).__name__,'rawErrorWithheld':True}))

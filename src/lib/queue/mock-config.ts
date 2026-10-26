@@ -34,6 +34,8 @@ const configuration = z.object({
       && !url.username && !url.password && !url.search && !url.hash;
   }),
   IR35_READ_ONLY: z.enum(["true", "false"]).default("true"),
+  // Startup pause is distinct from the non-overridable read-only safety gate.
+  IR35_MOCK_START_PAUSED: z.enum(["true", "false"]).default("false"),
   IR35_SCHEDULER_ENABLED: z.literal("false").default("false"),
   PORT: z.coerce.number().int().min(1).max(65535).default(8787),
 });
