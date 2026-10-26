@@ -32,6 +32,25 @@ def memory_checks(samples):
     return True
 
 
+def kernel_memory_checks(samples):
+    """Enforce the kernel's budget metric; still report unmodified process RSS.
+
+    RSS/PSS map resident pages, not which cgroup owns the charge. Keep the old
+    raw-RSS guard/tests for historical evidence; never relabel charge as RSS.
+    """
+    if not samples or any(row['availableBytes']<2*1024**3 for row in samples):raise RuntimeError('OSHeadroomBelowTwoGiB_Abort')
+    for row in samples:
+        if not row['containers']:raise RuntimeError('CompleteMemorySamplesRequired')
+        for container in row['containers']:
+            required=('limitBytes','kernelLimitBytes','chargedBytes','kernelPeakBytes','rssBytes','oomEvents','oomKillEvents')
+            if any(type(container.get(key))is not int or container[key]<0 for key in required):raise RuntimeError('ExactKernelMemoryCountersRequired')
+            if (container['limitBytes']<=0 or container['kernelLimitBytes']!=container['limitBytes']
+                or container['chargedBytes']>container['limitBytes'] or container['kernelPeakBytes']>container['limitBytes']
+                or container['oomKilled'] or container['oomEvents'] or container['oomKillEvents']):
+                raise RuntimeError('ContainerMemoryBudgetExceeded_Abort')
+    return True
+
+
 def context():
     git=git_command(schema.REPO)
     if subprocess.check_output(git+['branch','--show-current'],text=True).strip()!='codex/oracle-migration-p8':raise RuntimeError('P8BranchRequired')
@@ -45,7 +64,7 @@ def context():
 
 
 def program(data):
-    code=p6_capture_repair.bundle()+'\n'+inspect.getsource(percentile95)+'\n'+inspect.getsource(memory_checks)
+    code=p6_capture_repair.bundle()+'\n'+inspect.getsource(percentile95)+'\n'+inspect.getsource(memory_checks)+'\n'+inspect.getsource(kernel_memory_checks)
     code+='\ndata='+repr(data)+'\n'
     code+='''
 import base64,concurrent.futures,threading,time,os,shutil
@@ -82,8 +101,11 @@ def sample():
     lines=Path('/proc/'+process+'/status').read_text().splitlines()
     rss+=sum(int(line.split()[1])*1024 for line in lines if line.startswith('VmRSS:'))
    except FileNotFoundError:pass # A completed process no longer has resident pages.
+  events=dict(line.split() for line in (group/'memory.events').read_text().splitlines())
   containers.append({'name':row['Name'].lstrip('/'),'rssBytes':rss,'limitBytes':row['HostConfig']['Memory'],
-    'oomKilled':row['State']['OOMKilled'],'restartCount':row['RestartCount']})
+    'kernelLimitBytes':int((group/'memory.max').read_text()),'chargedBytes':int((group/'memory.current').read_text()),
+    'kernelPeakBytes':int((group/'memory.peak').read_text()),'oomEvents':int(events['oom']),'oomKillEvents':int(events['oom_kill']),
+    'maxEvents':int(events['max']),'oomKilled':row['State']['OOMKilled'],'restartCount':row['RestartCount']})
  available=int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:')))*1024
  return {'availableBytes':available,'containers':containers}
 
@@ -93,11 +115,11 @@ result={'status':'FAIL','readOnly':True,'users':50,'requestsPerUser':4,'phaseCom
 samples=[];stop=threading.Event();sampling_errors=[]
 def monitor():
  while not stop.is_set():
-  try:samples.append(sample());memory_checks([samples[-1]])
+  try:samples.append(sample());kernel_memory_checks([samples[-1]])
   except Exception as error:sampling_errors.append(type(error).__name__);return
   stop.wait(0.25)
 try:
- samples.append(sample());memory_checks(samples)
+ samples.append(sample());kernel_memory_checks(samples)
  paths=('/jobs','/tools/ir35-status','/tools/take-home','/api/health')
  barrier=threading.Barrier(50,timeout=30)
  def visitor(number):
@@ -113,7 +135,7 @@ try:
   with concurrent.futures.ThreadPoolExecutor(max_workers=50) as pool:
    observations=[case for group in pool.map(visitor,range(50)) for case in group]
  finally:stop.set();thread.join(timeout=15)
- samples.append(sample());memory_checks(samples)
+ samples.append(sample());kernel_memory_checks(samples)
  if sampling_errors or thread.is_alive():raise RuntimeError('MemorySamplingIncomplete_Abort')
  if len(observations)!=200 or any(row['status']!=200 or not row['noindex'] or not row['noStore'] or not row['h1'] for row in observations):raise RuntimeError('ReadonlyLoadResponseGateFailed')
  result['load']={'requests':len(observations),'seconds':round(time.monotonic()-started,3),
@@ -134,8 +156,12 @@ finally:
  stop.set()
  names=sorted({c['name'] for row in samples for c in row['containers']})
  result['memory']={'samples':len(samples),'minimumOSAvailableBytes':min((r['availableBytes'] for r in samples),default=0),
-  'metric':'sampled sum of per-process /proc VmRSS; shared pages may be counted more than once; not cgroup charge or all-time kernel peak',
+  'metric':'process VmRSS sum reported separately; enforce exact kernel memory.current/peak/max plus OOM events and OS headroom; no counter reset',
   'containers':[{'name':name,'sampledPeakRSSBytes':max(c['rssBytes'] for r in samples for c in r['containers'] if c['name']==name),
+   'sampledPeakChargedBytes':max(c['chargedBytes'] for r in samples for c in r['containers'] if c['name']==name),
+   'allTimeKernelPeakBytes':max(c['kernelPeakBytes'] for r in samples for c in r['containers'] if c['name']==name),
+   'maxEventsBefore':next(c['maxEvents'] for r in samples for c in r['containers'] if c['name']==name),
+   'maxEventsAfter':next(c['maxEvents'] for r in reversed(samples) for c in r['containers'] if c['name']==name),
    'limitBytes':next(c['limitBytes'] for r in samples for c in r['containers'] if c['name']==name)} for name in names]}
  # Known PUBLIC backup-recipient location only; no key search/read or secret generation.
  public=ROOT/'config/backup-age-recipient.txt'
@@ -153,11 +179,17 @@ finally:
 
 
 def main():
-    if sys.argv[1:]!=['--read-only-load']:raise RuntimeError('ExplicitBoundedReadonlyLoadRequired')
+    if sys.argv[1:]!=['--read-only-load','--repair-one']:raise RuntimeError('ExplicitBoundedReadonlyLoadRepairRequired')
+    original=schema.REPO/'docs/evidence/p8/readonly-load-01'
+    diagnosis=schema.REPO/'docs/evidence/p8/memory-diagnosis-01'
+    if verified_manifest(original)!='8c89ba466ce78bac5cc22c1755bf169878b73b25bc8a608914f5da15cc885da2':raise RuntimeError('OriginalFailureRequired_NoReset')
+    if verified_manifest(diagnosis)!='d44312fed7e73cc9d67b3cb974473a98e405685dcc910ef6d3c03cbfc081d675':raise RuntimeError('ExactReadonlyMemoryDiagnosisRequired')
+    report=json.loads((diagnosis/'01-cgroup-rss-pss-containment-result.json').read_bytes())
+    if report['status']!='PASS' or not report['noOOMObserved'] or not report['cgroupCurrentWithinConfiguredLimit']:raise RuntimeError('NoBudgetOrOOMWaiverAllowed')
     data=context();code=program(data);parent=schema.REPO/'docs/evidence/p8'
     if not parent.exists():parent.mkdir(mode=0o700)
     if parent.is_symlink() or parent.resolve()!=schema.REPO/'docs/evidence/p8':raise RuntimeError('ControlledP8ParentRequired')
-    journal=Journal(parent/'readonly-load-01');result={'status':'FAIL','phaseComplete':False}
+    journal=Journal(parent/'readonly-load-02');result={'status':'FAIL','phaseComplete':False,'attempt':2,'originalFailureRetained':True}
     try:
         result['audit']=journal.step(1,'load-memory-edge-containment',lambda:schema.run_guest(code,timeout=900))
         result['status']=result['audit']['status']

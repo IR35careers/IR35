@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## P8 read-only memory diagnosis PASS / accounting self-heal1
+
+- Immutable diagnosis `d44312fed7e73cc9d67b3cb974473a98e405685dcc910ef6d3c03cbfc081d675` proves meta kernelcurrent117,985,280<=max134,217,728, kernelpeak exactlymax, OOM/kill0/restart0, unchanged6-day-oldStartedAt and full containmentPASS. RSS152,690,688/PSS152,682,496 are almost equal: shared-page double counting hypothesis is NOT proven. Actual bug is comparing resident mappings to kernel charge ownership; Linux documents these different metrics. Historicalmaxevents112 remain visible, not reset or hidden.
+- Self-heal1 records rawRSS unchanged while enforcing kernelcurrent/peak<=unchangedDocker/kernelmax, OOM0, complete exact counters and2GiBOS headroom. Original RSS guard/tests remain unchanged and still fail their original over-RSS fixture; add separate kernel-accounting regressions, never relabel charge asRSS. Full586fresh-home testsPASS41.293s, no privatefiles/realkeys/VM. New readonly-load-02 requires exact failed01 AND diagnosis manifests; no replay/counter reset. All response,62MD5/Auth/2seq/3exceptions/552+roles/73Storage/112HBA and hard stops unchanged. No config/limit/VM/production write. Continue only under standard bounded RESUME.
+
 ## Current continuation: read-only P8 accounting diagnosis under RESUME
 
 - Latest continuous-run goal releases low-risk read-only/offline tooling diagnosis under the standard two-self-heal/third-failure stop, not another approval for every step. Diagnose the preserved P8 memory preflight before any change/retry: exact container cgroup.current/peak/events/limit, smaps_rollup RSS/PSS and state only, full containment. No limit/configuration/VM write, load replay or secret read. Existing failure journal/hashes/counters remain. Any genuine security/data mismatch or three same-gate failures STOP; no invented PASS. Previous proposed owner-review hold below is historical after this continuation, not an extra owner gate for read-only diagnosis. OCI refresh still failed once; no repeated refresh/window or API/SSH prompt. Production/provider/DNS/IAM/secrets/paid/cutover holds unchanged.

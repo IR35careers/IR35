@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-cgroup-rss-pss-containment-intent.json",
+      "sha256": "b76027ecb4e32e935c88f86b33e218d6fb9e9d8b1f839910579fb4cfc6229459"
+    },
+    {
+      "name": "01-cgroup-rss-pss-containment-result.json",
+      "sha256": "4615ba5525c3ce82e66e895ada9002757edad08ed37c87fd84ec4f254f3dd3a5"
+    },
+    {
+      "name": "result.json",
+      "sha256": "692e2f42cbcd3eb66b1608ac8a6226d926b1cae880b01c5c98c4e4305da8eda6"
+    }
+  ],
+  "version": 1
+}
