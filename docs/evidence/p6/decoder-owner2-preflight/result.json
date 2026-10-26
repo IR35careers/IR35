@@ -1,0 +1,135 @@
+{
+  "fullP6Runs": 0,
+  "isolatedDispatches": 0,
+  "preflight": {
+    "applications": 45,
+    "checks": {
+      "all45RetainedReceipts": true,
+      "all49JobsPreserved": true,
+      "all7ScheduleReceipts": true,
+      "noPendingJobs": true,
+      "noUnexpectedJobTypes": true,
+      "samePausedMockRollback": true
+    },
+    "hardReadOnlyStartupFlag": true,
+    "ledgerSHA256": "faaccf33316a2699f09c9b63474cef2ec13c56d39140d9c68f7aeb73bd473c8e",
+    "queueJobs": 49,
+    "readOnly": true,
+    "receiptIDs": [
+      "0a67fb46-fdc7-4d88-be27-23d4d5ef7f44",
+      "1af09294-30a2-45de-b187-8f1ca60964b8",
+      "1dc7170f-7992-470b-b626-c543bb57c347",
+      "245a70e1-74d3-453a-9625-9a605940cbaf",
+      "2621de4a-4348-43ef-ae68-6ebbcb2a295b",
+      "26baa57f-63eb-4d3f-86ac-a9cc2fcc42b9",
+      "37bf2056-99db-458e-8c1d-7dc7a75b2a01",
+      "37e14b62-fdfc-4851-ae39-6674bbf73423",
+      "483719d9-43bb-4783-ad21-8766d0042f4a",
+      "4bd23f80-5895-4a54-8d61-aa074e86db06",
+      "4d38cbde-e120-44fd-b2a6-ac703e37a3de",
+      "4ecd7ecb-e2fc-4137-be2d-536227a26682",
+      "5030aa69-ac86-4668-b09c-25051670c84a",
+      "516d7edb-6d71-41fc-aad4-3f06112ce232",
+      "571f4911-a041-4fec-88f9-24ada9fef9f0",
+      "5b0ab16f-be23-46cc-84e9-ec0ac9ae2da3",
+      "62bdf063-df9a-4030-8f72-9946c8c27b1c",
+      "6651fa63-857c-4c48-bf2c-7c98583797a2",
+      "7648a13b-e701-4fd5-ab9b-74a32e83b17e",
+      "795acb94-4d88-449c-ab4f-ab2cc823cab8",
+      "79f1d20f-5105-43ff-9d08-380b613e01f8",
+      "7c79304f-73fc-402a-ad75-a78dc3c683f0",
+      "7f66a1d6-f999-4333-9a37-e3118ea820c5",
+      "86b5e7a4-28a2-404d-bb7e-43e3d77b63ae",
+      "9878c2cc-4219-423c-8e38-3706fbacd804",
+      "9a6a1789-0b34-4e8d-b9f4-f64705f26fb6",
+      "9b1812b4-1e99-4b64-bdbc-25aff7f44605",
+      "a117660f-c280-4e91-a623-77e7bc2f6d80",
+      "a3f89222-0d99-412b-ae1b-6106dfffe8a1",
+      "a434139b-6bfc-4a67-9cf1-2bc0388fd025",
+      "ae537ab9-b3fe-4db3-858c-039c28a149ca",
+      "b7ac17f1-799d-43ba-93c0-a1434e518350",
+      "b97ec52c-577a-4864-a7c1-b976e39caf62",
+      "bd178233-4098-4543-98b0-e24db3b78530",
+      "c44c4c7e-e4eb-43e9-8c97-81ad94110cb9",
+      "c57c0353-4c25-41af-a8fc-0b914986ea98",
+      "cc36b6f4-db27-48fb-989c-020d4fa4844e",
+      "cdcf368d-38ae-46c8-955b-65e6d0c74b5d",
+      "ceb09831-198a-4557-813c-460086029693",
+      "e2a68943-e410-40de-ae53-4192fdd792d8",
+      "edf8d8d9-eef5-4327-9a51-aa3f15f25d2f",
+      "ee41a8bb-3092-49c9-8a40-af7cea44bcd6",
+      "f54f34c5-34c5-41bd-a03e-3e9ea6c6f791",
+      "f5e2a999-36a2-4d07-9440-d72f98f0d273",
+      "f8959449-b0eb-4943-9fd7-0fa9f7813b9e"
+    ],
+    "rollbackHealth": {
+      "active": 0,
+      "browserReady": true,
+      "buildSHA": "1c07c8507aa9049c6fe89c2f1c784fb2958084cf",
+      "databaseReady": true,
+      "mode": "staging-mock-only",
+      "ok": true,
+      "paused": true,
+      "realAcceptance": false,
+      "status": 200
+    },
+    "schedules": 7,
+    "smtp": {
+      "APPLICATION_WORKER_ACCEPT_JOBS": "false",
+      "APPLY_RUNNER": "mock",
+      "expectedInternalTraffic": [
+        "database heartbeat",
+        "empty-queue watchdog",
+        "read-only diagnostic probes"
+      ],
+      "historicalPacketCaptureClaimed": false,
+      "proofScope": "Exact sealed mock-only payloads and immutable mock program plus internal-only network/provider-free execution; no retrospective packet-capture claim.",
+      "smtp": {
+        "checks": {
+          "bothAuthStacksRouteToSink": true,
+          "noForwardOrRelayConfigured": true,
+          "noSinkRestart": true,
+          "privateUnpublishedSink": true,
+          "sinkEmpty": true,
+          "sinkStartedBeforeCutoff": true
+        },
+        "mailContentOrRecipientLogged": false,
+        "sinkMessages": 0,
+        "sinkRestartCount": 0,
+        "sinkStartedAt": "2026-10-20T21:06:05.524915751Z",
+        "smtpPort": 1025,
+        "status": "PASS"
+      },
+      "status": "PASS",
+      "workers": [
+        {
+          "checks": {
+            "noDirectProviderCredentials": true,
+            "noDockerSocket": true,
+            "noHostNetwork": true,
+            "noProxy": true,
+            "onlyInternalNetwork": true,
+            "readOnlyUnprivileged": true
+          },
+          "container": "ir35-p6-mock-worker-v6"
+        },
+        {
+          "checks": {
+            "noDirectProviderCredentials": true,
+            "noDockerSocket": true,
+            "noHostNetwork": true,
+            "noProxy": true,
+            "onlyInternalNetwork": true,
+            "readOnlyUnprivileged": true
+          },
+          "container": "ir35-p6-mock-worker-v6-rollback"
+        }
+      ]
+    },
+    "status": "PASS",
+    "vmWrites": 0
+  },
+  "readOnly": true,
+  "status": "PASS",
+  "vmWrites": 0
+}

@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October owner approves temporary SAME-IMAGE isolated probe configuration
+
+- Owner approves one temporary private mock-processing config of the SAME pinned rollback image at existing.241, exactly ONE new fixed-dispatcher systemctl schedule, then unconditional restore of original hard-paused rollback even on failure. Before any change, hash original Docker Config/Env/HostConfig, protected env files and Compose, and record identity/functional state; after restore all those hashes and operational state must be identical or STOP. Lifecycle timestamps are recorded separately, never fabricated as unchanged after an approved stop/start. Original container/config/files/secrets retained, no real acceptance.
+- Probe may hit only existing loopback proxy VERIFIED to.241; new public script path/unit name preserve prior failed definitions. Stderr journal messages are sanitised into write-once sealed evidence (safe fixed codes + length/SHA-prefix only), no raw values/errors retained. One owned mock schedule only, zero employer payloads or SMTP messages, no full run until actual positive dispatch+restore+containmentPASS. Any failure STOP, restore and report/no retry. Then only the already approved single fullP6 at.240 and conditional P7/P8/P9prep; all production/provider/network-resource/secret-value/cutover gates remain.
+
 ## 26 October owner approves decoder/observability repair, isolated dispatch, ONE full run
 
 - Latest owner explicitly reopens strict env decoder + sanitised dispatcher stderr only, then ONE isolated systemctl mock-schedule dispatch against the current pinned rollback worker. Strip one matching surrounding single/double quote pair; accept unquoted64hex; trim surrounding horizontal whitespace only; reject unmatched/malformed quotes, embedded newlines and invalid values without printing them. Test all formats and the66character regression offline. Sealed stderr retains safe stage/error code plus length/SHA-prefix redactions only, never raw secrets/errors/headers.

@@ -53,7 +53,7 @@ def dispatch_once(unit,runtime,store,stage,prefix):
                     if isinstance(message,str):result['dispatcherStderr'].append(safe_message(message))
             else:result['journalReadError']=redacted(journal.stderr)
     else:result['stateReadError']=redacted(observed.stderr)
-    result['status']='PASS' if reply.returncode==0 and result.get('service',{}).get('Result')=='success' and result['service'].get('ExecMainStatus')=='0' else 'FAIL'
+    result['status']='PASS' if reply.returncode==0 and result.get('service',{}).get('Result')=='success' and result['service'].get('ExecMainStatus')=='0' and result.get('journalReadExitCode')==0 else 'FAIL'
     store.put(stage,prefix+'-result.json',json.dumps(result,sort_keys=True).encode())
     if result['status']!='PASS':raise RecoveryError('DecoderMockSystemctlDispatchFailed_SeeSealedRedactedStderr')
     return result

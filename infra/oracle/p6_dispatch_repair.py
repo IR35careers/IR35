@@ -4,9 +4,11 @@ import sys
 import cloud_schema as schema
 import p6_fixed_ip
 from p6_audit_log import Journal
+from p6_pause_reconcile import verified_manifest
 
 
 def main():
+    if sys.argv[1:]==['--isolated']:return isolated()
     if sys.argv[1:]!=['--preflight']:raise RuntimeError('ExplicitDecoderPreflightRequired')
     root=schema.REPO/'docs/evidence/p6/decoder-owner2-preflight'
     if root.exists():raise RuntimeError('DecoderPreflightRecorded_NoReplay')
@@ -52,6 +54,30 @@ print(json.dumps(result))
         result['status']='PASS'
     finally:result['manifestSHA256']=journal.seal(result)
     print(json.dumps({k:v for k,v in result.items() if k!='preflight'}))
+
+
+def isolated():
+    root=schema.REPO/'docs/evidence/p6/decoder-owner2-isolated'
+    if root.exists():raise RuntimeError('IsolatedDecoderDispatchRecorded_NoReplay')
+    pre=schema.REPO/'docs/evidence/p6/decoder-owner2-preflight'
+    if verified_manifest(pre)!='ffe210ec6110f44730e350dc7335d9d0b7ac44337d6c5b4f1d6badbe562f95dc':raise RuntimeError('ExactDecoderPreflightRequired')
+    data=p6_fixed_ip.context();data['decoderPreflight']=json.loads((pre/'01-decoder-prerequisites-result.json').read_text())
+    data['ownerTemporaryProbeApproved']=True
+    data['fixedDispatcherSource']=(schema.REPO/'infra/oracle/p6_schedule_dispatch.py').read_text()
+    journal=Journal(root);result={'status':'FAIL','isolatedDispatchAllowance':1,'fullP6Runs':0,'productionChanges':False,'secretValuesChanged':False}
+    journal.put('01-isolated-dispatch-intent.json',{'readOnly':False,'mockOnly':True,'scheduleDispatchesAllowed':1,'restoreOriginalEvenOnFailure':True})
+    try:
+        code=p6_fixed_ip.bundle()
+        for name in ('p6_dispatch_observability','p6_dispatch_probe_guest'):
+            code+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr((schema.REPO/'infra/oracle'/(name+'.py')).read_text())+',module.__dict__)\n'
+        code+="result=sys.modules['p6_dispatch_probe_guest'].execute("+repr(data)+',runtime)\nprint(json.dumps(result))\n'
+        observed=schema.run_guest(code,timeout=600);journal.put('01-isolated-dispatch-result.json',observed)
+        result.update(status=observed['status'],native=observed)
+    except Exception as error:
+        result['code']=str(error) if type(error)is RuntimeError else type(error).__name__
+    result['manifestSHA256']=journal.seal(result)
+    print(json.dumps({k:v for k,v in result.items() if k!='native'}))
+    if result['status']!='PASS':raise SystemExit(1)
 
 
 if __name__=='__main__':
