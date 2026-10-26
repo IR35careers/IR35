@@ -1,0 +1,6 @@
+{
+  "mockOnly": true,
+  "readOnly": false,
+  "restoreOriginalEvenOnFailure": true,
+  "scheduleDispatchesAllowed": 1
+}

@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-isolated-dispatch-intent.json",
+      "sha256": "6281d2bd44019ea791f9e141c07e0a570faa0de6d00d77efbe3abed42dfa2c97"
+    },
+    {
+      "name": "01-isolated-dispatch-result.json",
+      "sha256": "d46aeaa0428c3329652de495cee76bbafadd958df926f1961d21f74fa578a3c5"
+    },
+    {
+      "name": "result.json",
+      "sha256": "bb9b1f2507afda7875f17710895eb2dfc359443e3077da6786c81dd2b1ebb324"
+    }
+  ],
+  "version": 1
+}
