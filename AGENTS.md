@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October owner reopens CI isolation, P7 journal and ONE read-only inventory
+
+- Owner approves test-only non-secret bootstrap fixtures and explicit private-state/network refusal for compiler/import-order tests. Live custody/manifest checks and semantic assertions stay intact. Run FULL suite with fresh HOME/no .ir35/no real keys, then push only P6fix to draft57 and require green hosted CI before the ONE new read-only P7audit. Separately validate/create controlled phase evidence parent before exclusive journal; preserve O_EXCL and every failed slot. No native P6rerun or used-attempt reset.
+- RESUME self-heal is restored ONLY for offline harness/tooling bugs touching no VM/data/secrets: up to2repairs perissue, STOP on third same-gate failure. Any data/security mismatch, used native attempt, paidresource/IAM/production/DNS/cloud/Vercel/Google/real-secret change or realmail/employer remains hard STOP. After read-only inventory, batch missing Auth questions ONCE; no guessed defaults/token search/passwords or tokens in chat. Conditional P7/P8 and P9PREP only, no merge/cutover; mock/SMTPsink/write-once remain. Historical stops/counters below stay recorded, superseded only by this exact approval.
+
 ## 26 October full P6 PASS — conditional P7/P8 and P9 preparation released
 
 - The single owner3 full allowance is USED/PASS, not permission to repeat it: local5b51ba02d4785d1ddd7dab874c8622a57c163f40adbc9bc26598633259325c24, native35ef7f9bfcc3c48737dcb8bf6a69e3850fc611165cc519f987e2d42c3bf0985f4f. Native37PASS152checks,45old receipts exact/56total, one restart/fixed.240/direct-localhost SHA equality, earlier failures1/2 rechecked. Integration38PASS appall5ready/SDK401401200/maintenance503/RealtimeTLS101joinbroadcast/three actualsystemd durable schedules/heartbeat/restartpolicies. Active invocation captured for ALL3units, journalread0, redacted sealed proof9d65ac874e1b25462f9abd4f0c272758b96825b7e1471893e9bf2087f768a23a; fast-exit fallback separately offline tested.

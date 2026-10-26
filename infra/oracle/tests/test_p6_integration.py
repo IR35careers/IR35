@@ -9,6 +9,7 @@ import p6_integration_guest as guest
 import p6_fixed_ip as controller
 import p6_fixed_ip_guest as fixed
 from staging_stack import kong_config
+from offline_bundle_fixture import public_bootstrap
 
 
 class IntegrationTests(unittest.TestCase):
@@ -45,7 +46,9 @@ class IntegrationTests(unittest.TestCase):
             self.assertNotIn('SECRET=',service);self.assertNotIn('Environment=',service)
         with self.assertRaises(RuntimeError):guest.timer_units('real-apply','03')
     def test_remote_bundle_covers_imports_and_compiles_before_any_vm_action(self):
-        code=controller.bundle();compile(code,'<public-bootstrap>','exec')
+        with public_bootstrap() as bootstrap:
+            code=controller.bundle();compile(code,'<public-bootstrap>','exec')
+            bootstrap.assert_called_once_with(rehearsal=True)
         self.assertLess(code.index("module=types.ModuleType('p6_mock_receipt_repair_guest')"),code.index("module=types.ModuleType('p6_fixed_ip_guest')"))
         self.assertLess(code.index("module=types.ModuleType('p6_fixed_ip_guest')"),code.index("module=types.ModuleType('p6_integration_guest')"))
     def test_full_gate_never_reports_pass_without_lifecycle_integration_and_fresh_containment(self):

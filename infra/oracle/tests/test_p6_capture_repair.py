@@ -9,6 +9,7 @@ import p6_capture_repair as controller
 import p6_capture_repair_guest as guest
 import p6_integration_guest as integration
 import p6_lifecycle_guest as lifecycle
+from offline_bundle_fixture import public_bootstrap
 
 
 class CaptureRepairTests(unittest.TestCase):
@@ -34,7 +35,9 @@ class CaptureRepairTests(unittest.TestCase):
         self.assertIn('finally:',source);self.assertIn('restored_equal(before,after)',source)
         self.assertIn('containment(data,runtime',source)
     def test_complete_public_remote_bundle_compiles_without_execution(self):
-        compile(controller.bundle(),'<capture-public-bootstrap>','exec')
+        with public_bootstrap() as bootstrap:
+            compile(controller.bundle(),'<capture-public-bootstrap>','exec')
+            bootstrap.assert_called_once_with(rehearsal=True)
     def test_new_full_allowance_never_replays_used_stages_or_isolated_dispatch(self):
         source=inspect.getsource(guest.full)
         self.assertEqual(source.count('lifecycle(data,runtime'),1)
