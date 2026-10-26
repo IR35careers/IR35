@@ -1,16 +1,26 @@
 # P7 owner batch — source Auth settings only
 
-## Current status: export received; do not run it again
+## Current owner action: ONE supplement command, no manual copy
 
 Owner confirms completion and token revocation. The private export passed local schema/type/ACL checks: 140 fields, 117 populated, 23 null. Its SHA256 is `b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9`. No second API call was made; the populated original is preserved. Twenty-one nulls belong to disabled providers and require no client credentials.
 
-**Remaining G3 batch (two non-secret fields only):**
+The owner superseded manual copying. Create a short-lived read-only Supabase personal token and run this **one command** in a normal Windows PowerShell window:
 
-1. Read the existing project's password character requirements and Google's additional client IDs in the Supabase Authentication dashboard. Do not change or save cloud settings; do not copy any secret.
-2. Fill ONLY `password_required_characters` and `external_google_additional_client_ids` in `C:\Users\anves\.oci\ir35-p0-readonly\oracle-auth-settings-supplement.json`. This separate owner-only file was prepared blank and is bound to the original export hash. Preserve the original export and the binding. Use `""` only if the dashboard explicitly confirms no requirement/additional IDs; keep `null` if unavailable. Do not guess from the API nulls. The exact API field names are documented in the [Management API reference](https://supabase.com/docs/reference/api/v1-get-auth-service-config); GoTrue's [password parser](https://github.com/supabase/auth/blob/v2.197.0/internal/conf/configuration.go) distinguishes an explicitly empty character requirement from required character groups.
-3. Reply **“Auth supplement ready”**, or provide only the unavailable field names. No token, file contents, passwords or client secrets in chat. No new token/export attempt is requested.
+```powershell
+& 'C:\Python314\python.exe' 'C:\Users\anves\.codex\worktrees\bot-handoff\ir35careers\infra\oracle\fill_auth_supplement.py'
+```
 
-This validates a source handoff, not runtime parity. Applying reviewed configuration, disposable Auth tests, provider proof and full containment still gate P7. Google Console changes remain unapproved; P8/P9 are not complete and exact `YES CUTOVER` is still absent. Earlier exporter instructions below are retained history, not a request to rerun it.
+Enter the token only at the hidden prompt. The command makes at most ONE GET to the same fixed config/auth endpoint through the unchanged TLS/no-redirect/no-proxy/no-retry transport. It never changes Supabase settings. Revoke the token immediately afterwards; reply **“Supplement complete; token revoked”** on success, or **“Supplement failed; token revoked”** on failure. Do not rerun automatically or send any token/file contents here.
+
+Only `password_required_characters` and `external_google_additional_client_ids` can be filled in the existing owner-only `C:\Users\anves\.oci\ir35-p0-readonly\oracle-auth-settings-supplement.json`. The original export is never rewritten. Its binding, protected ACL, file type and SHA are verified before prompting and before replacement. Populated strings/lists (including empty ones) and previously attested nulls are never overwritten; when both fields are complete there is no prompt or request. Concurrent changes fail closed; an exclusive lock prevents two writers.
+
+Password character classes are public strings and are preserved exactly, including punctuation. Additional Google client IDs may be a public string or an array of strings; both shapes, including empty values, are preserved without coercion. All existing credential-field exclusions remain unchanged, and every accepted string/list element still receives the original credential-pattern checks. [API field reference](https://supabase.com/docs/reference/api/v1-get-auth-service-config).
+
+The old raw response was deliberately discarded, so its exact types cannot be recovered. Offline tests prove punctuation/empty strings were already accepted, lists were nulled, and absent/explicit-null/invalid/unsafe results were conflated. The new `source_observations` metadata records fixed field names/types/states only. An explicitly present API null stays null, labelled `explicit_null`; it is not guessed as an empty string or treated as an absent field. Missing, malformed or unsafe fields fail rather than silently relaxing a policy. Per-attempt intent/result journals in the same private directory are exclusive, owner-only and contain no values, raw response or credentials.
+
+Stdout remains only `field_count`, `null_fields`, `file_sha256`. Exit0/field_count2 means success; `null_fields` may name an explicitly attested source null, not an export failure. Exit1/field_count0 means STOP, with the original/supplement values preserved and fixed diagnostic metadata available locally. No raw errors or secrets are printed.
+
+This validates a source handoff, not runtime parity. After the owner-run handoff, continue authorised P7/P8 and P9 preparation under RESUME; collect remaining owner-only items into one end batch. Actual Auth/provider tests and full containment remain required, with hard stops for mismatches/cost/disallowed changes. No production/provider/DNS/IAM/real-secret changes or cutover. Earlier full-export instructions below are retained history, not a request to rerun the completed export or use its historical window wrapper.
 
 ## Owner-selected read-only export (preferred)
 

@@ -54,8 +54,9 @@ ALLOWLIST={**{name:(str,) for name in TEXT_FIELDS},**{name:(bool,) for name in B
     **{'mailer_templates_'+name+'_content':(str,) for name in TEMPLATES},
     **{'mailer_notifications_'+name+'_enabled':(bool,) for name in NOTIFICATIONS},
     **{'hook_'+name+'_enabled':(bool,) for name in HOOKS},
-    'external_google_additional_client_ids':(str,),'external_google_skip_nonce_check':(bool,),
+    'external_google_additional_client_ids':(str,list),'external_google_skip_nonce_check':(bool,),
     'external_apple_additional_client_ids':(str,),'smtp_port':(str,int)}
+PUBLIC_SUPPLEMENT_FIELDS=('external_google_additional_client_ids','password_required_characters')
 
 
 class ExportRefused(RuntimeError):pass
@@ -73,10 +74,36 @@ def unique_object(pairs):
     return result
 
 
+def public_setting(payload,name,token):
+    """Two public fields only; preserve shape and distinguish null from absent.
+
+    Never infer an empty value from null. Credential checks are identical to
+    those on other strings, including every element of a public ID list.
+    """
+    if name not in PUBLIC_SUPPLEMENT_FIELDS:raise ExportRefused('TwoPublicFieldsOnly')
+    if name not in payload:return None,{'state':'absent','source_type':'absent'}
+    value=payload[name]
+    if value is None:return None,{'state':'explicit_null','source_type':'null'}
+    source_type='string' if type(value)is str else 'array' if type(value)is list else 'other'
+    strings=[value] if type(value)is str else value if name=='external_google_additional_client_ids' and type(value)is list else None
+    if strings is None or len(strings)>4096 or any(type(item)is not str for item in strings):
+        return None,{'state':'invalid_type','source_type':source_type}
+    for item in strings:
+        if (len(item)>524288 or token in item
+                or re.search(r'\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+',item)
+                or re.search(r'\b(?:sbp_|sb_secret_)[A-Za-z0-9_-]+',item)
+                or re.search(r'https?://[^/\s\"<>]*@',item)):
+            return None,{'state':'unsafe_value','source_type':source_type}
+    return value,{'state':'present','source_type':source_type}
+
+
 def project(payload,token):
     if not isinstance(payload,dict):raise ExportRefused('ObjectResponseRequired')
     settings={}
     for name,types in sorted(ALLOWLIST.items()):
+        if name in PUBLIC_SUPPLEMENT_FIELDS:
+            settings[name]=public_setting(payload,name,token)[0]
+            continue
         value=payload.get(name)
         if type(value) not in types:value=None
         if isinstance(value,str) and (len(value)>524288 or token in value
@@ -89,7 +116,7 @@ def project(payload,token):
     return {'settings':settings,'missing_fields':missing}
 
 
-def fetch(token):
+def fetch(token,*,projector=project):
     if not isinstance(token,str) or not re.fullmatch(r'[A-Za-z0-9._~-]{1,4096}',token):raise ExportRefused('HiddenTokenRequired')
     request=urllib.request.Request(ENDPOINT,method='GET',headers={'Authorization':'Bearer '+token,
         'Accept':'application/json','Accept-Encoding':'identity'})
@@ -101,7 +128,7 @@ def fetch(token):
             raw=response.read(MAX_BYTES+1)
         if len(raw)>MAX_BYTES:raise ExportRefused('ResponseTooLarge')
         payload=json.loads(raw,object_pairs_hook=unique_object)
-        return project(payload,token)
+        return projector(payload,token)
     finally:
         request.remove_header('Authorization');token=None
 

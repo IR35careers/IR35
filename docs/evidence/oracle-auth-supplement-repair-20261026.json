@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-26",
+  "scope": "Owner-approved offline two-field Auth export repair; no manual copy",
+  "status": "PASS",
+  "phaseComplete": false,
+  "historicalRawResponseRetained": false,
+  "historicalExactNullCauseProven": false,
+  "offlineReproduction": {
+    "passwordSymbolsAlreadyPreserved": true,
+    "passwordEmptyStringAlreadyPreserved": true,
+    "googleEmptyStringAlreadyPreserved": true,
+    "googleListsPreviouslyNulled": true,
+    "missingExplicitNullAndRejectedPreviouslyConflated": true
+  },
+  "repair": {
+    "fieldNames": ["external_google_additional_client_ids", "password_required_characters"],
+    "publicStringShapesPreserved": true,
+    "googlePublicStringListsPreserved": true,
+    "explicitNullRecordedWithoutCoercion": true,
+    "fixedObservationStates": ["present", "explicit_null", "absent", "invalid_type", "unsafe_value"],
+    "otherCredentialExclusionsUnchanged": true,
+    "credentialChecksApplyToEveryListElement": true,
+    "noPopulatedValueOverwrite": true,
+    "originalExportUnchanged": true,
+    "atomicOwnerOnlySupplementUpdate": true,
+    "exclusiveLockAndConcurrentEditRefusal": true,
+    "writeOnceValueFreeDiagnostics": true,
+    "sameSingleFixedGETTransport": true,
+    "redirectsOrRetries": false
+  },
+  "localPreflight": {
+    "status": "PASS",
+    "originalExportSHA256": "b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9",
+    "unchangedBlankSupplementSHA256": "5be541df00a64ba2494f8b5bbc2b7fcd1172433d874ac86cc63f9da4bb7a5c0f",
+    "ownerOnlyCustody": true,
+    "requests": 0,
+    "prompts": 0,
+    "writes": 0
+  },
+  "codeSHA256": {
+    "fill_auth_supplement.py": "5c74f86ec2f6dee94e1e93cf525808f703c1cdcbf6e7b73931d78bf7802c4365",
+    "export_auth_settings.py": "7fc08055aeca8372361aff79df525d02d6a85b93aaa93d6e59ad155ac1be4303"
+  },
+  "nativeWindowsTests": {
+    "supplement": {"status":"PASS","tests":21,"seconds":10.702},
+    "unchangedExporterRegressions": {"status":"PASS","tests":12,"seconds":14.312},
+    "http": "mocked only",
+    "actualPrivateACLAndAtomicWriteTests": true
+  },
+  "fullFreshHomeSuite": {
+    "status": "PASS",
+    "tests": 555,
+    "seconds": 37.341,
+    "manifest": "auth-supplement-hermetic-01/manifest.json",
+    "manifestSHA256": "436d046c30c8ebe238b66a49de23b869b585ea01c22045444a5804a54769df98",
+    "realKeysSupplied": false,
+    "copiedPrivateFiles": 0,
+    "ir35DirectoryBeforeOrAfter": false,
+    "testsRemoved": 0
+  },
+  "liveManagementAPIRequestsByAgent": 0,
+  "tokenPromptsOpenedByAgent": 0,
+  "vmCalls": 0,
+  "productionDNSProviderIAMOrSecretChanges": false,
+  "cutover": false,
+  "nextAction": "Owner runs ONE native hidden-token supplement command, revokes token, then staging P7/P8/P9 preparation resumes under existing hard stops and batched owner actions"
+}
