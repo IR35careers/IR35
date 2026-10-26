@@ -16,8 +16,9 @@ def put(path,body):
 
 
 def main():
-    if len(sys.argv)!=2 or not re.fullmatch(r'ci-isolation-0[12]',sys.argv[1]):raise RuntimeError('FixedHermeticEvidenceSlotRequired')
-    repo=Path(__file__).resolve().parents[2];root=repo/'docs/evidence/p6'/sys.argv[1]
+    if len(sys.argv)!=2 or not re.fullmatch(r'(?:ci-isolation-0[12]|p7-journal-hermetic-01)',sys.argv[1]):raise RuntimeError('FixedHermeticEvidenceSlotRequired')
+    repo=Path(__file__).resolve().parents[2]
+    root=repo/'docs/evidence/p6'/sys.argv[1] if sys.argv[1].startswith('ci-') else repo/'docs/evidence'/sys.argv[1]
     root.mkdir()  # No overwrite/replay of a failed run.
     result={'status':'FAIL','realKeysSupplied':False,'copiedPrivateFiles':0,'vmCalls':0,'testsRemoved':0}
     with tempfile.TemporaryDirectory(prefix='ir35-hermetic-home-') as test_home:

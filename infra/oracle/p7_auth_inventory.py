@@ -16,6 +16,20 @@ TEMPLATES=('CONFIRMATION','MAGIC_LINK','RECOVERY','INVITE','EMAIL_CHANGE')
 RATES=('EMAIL_SENT','VERIFY','TOKEN_REFRESH','OTP','SSO','ANONYMOUS_USERS')
 
 
+def phase_journal(repo):
+    """Create only the controlled parent; the audit slot stays exclusive."""
+    repo=Path(repo).resolve();evidence=repo/'docs/evidence';parent=evidence/'p7'
+    if evidence.is_symlink() or not evidence.is_dir() or evidence.resolve()!=repo/'docs/evidence':
+        raise RuntimeError('ControlledP7EvidenceRootRequired')
+    try:parent.mkdir(mode=0o700)
+    except FileExistsError:pass
+    if parent.is_symlink() or not parent.is_dir() or parent.resolve()!=evidence/'p7':
+        raise RuntimeError('ControlledP7EvidenceParentRequired')
+    root=parent/'auth-inventory-01'
+    if root.exists() or root.is_symlink():raise RuntimeError('P7InventoryAlreadyRecorded_NoOverwrite')
+    return Journal(root)  # Exclusive mkdir + O_EXCL artifact writes unchanged.
+
+
 def project(config,settings):
     """Only field NAMES, configured booleans and safe behavioural booleans."""
     templates={kind:{'templateConfigured':bool(config.get('GOTRUE_MAILER_TEMPLATES_'+kind)),
@@ -47,7 +61,7 @@ def main():
     if sys.argv[1:]!=['--read-only']:raise RuntimeError('ReadOnlyP7InventoryRequired')
     root=schema.REPO/'docs/evidence/p7/auth-inventory-01'
     if root.exists():raise RuntimeError('P7InventoryAlreadyRecorded_NoOverwrite')
-    data=context();journal=Journal(root);result={'status':'FAIL','readOnly':True,'vmWrites':0,'authRequests':'GET settings only','mailRequests':0,'phaseComplete':False}
+    data=context();journal=phase_journal(schema.REPO);result={'status':'FAIL','readOnly':True,'vmWrites':0,'authRequests':'GET settings only','mailRequests':0,'phaseComplete':False}
     code=p6_capture_repair.bundle()
     code+='\n'+__import__('inspect').getsource(project)
     code+='\nTEMPLATES='+repr(TEMPLATES)+'\nRATES='+repr(RATES)+'\n'
