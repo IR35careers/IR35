@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October P8 initial memory preflight STOP — owner review before native retry
+
+- Unique readonly-load-01 USED/FAIL `ContainerMemoryBudgetExceeded_Abort`, manifest `8c89ba466ce78bac5cc22c1755bf169878b73b25bc8a608914f5da15cc885da2`. Baseline meta summed processRSS152,690,688 exceeds134,217,728configured limit; OSavailable9,410,158,592. SumRSS can double-count shared pages, so genuine cgroup overrun/OOM is NOT established.50-user load never started, p95 unavailable. Full62MD5/Auth/2seq/3exceptions/552+2queue roles/73Storage/FRESH112HBA PASS after failure. Preserve evidence, no native retry/limit/config/assertion change/phase advance. Proposed read-only cgroup/Rss/Pss diagnosis needs owner review; see P8 memory-stop report. No data/security mismatch observed.
+- G3 CLOSED, P7 scoped email/Auth+Storage PASS; Google/real SMTP remain deferred. P8 backup/restore/reverse-sync and P9prep incomplete. Do not fabricate final signoff. OCI refresh failed once; all remaining owner-only actions batched in report, no fresh browser/SSH prompt. Production/DNS/providers/IAM/secrets/paid resources/cutover unchanged, exact YES CUTOVER absent.
+
 ## 26 October P7 scoped staging PASS — P8 safe work released
 
 - Final Auth03 PASS and read-only Storage73signed-byte checks/73anon+73unrelated-userdenials PASS, native manifest `f0c38ace30f2dc3dc87e2704567014706afb51ed3be60e37b364e721477c3ffe`; full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS. No named-owner object exists in this snapshot (positive owner reads0), do not fabricate coverage. See scoped P7 signoff. No Auth slot may replay. Owner's latest OAuth-prepared/no-provider-change order permits safe P8 work while real Google/SMTP release proof remains deferred.
