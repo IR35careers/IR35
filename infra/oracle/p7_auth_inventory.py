@@ -16,6 +16,12 @@ TEMPLATES=('CONFIRMATION','MAGIC_LINK','RECOVERY','INVITE','EMAIL_CHANGE')
 RATES=('EMAIL_SENT','VERIFY','TOKEN_REFRESH','OTP','SSO','ANONYMOUS_USERS')
 
 
+def bind_data(program,data):
+    marker='\ndata=DATA\n'
+    if program.count(marker)!=1:raise RuntimeError('SingleExplicitP7PayloadBindingRequired')
+    return program.replace(marker,'\ndata='+repr(data)+'\n',1)
+
+
 def phase_journal(repo):
     """Create only the controlled parent; the audit slot stays exclusive."""
     repo=Path(repo).resolve();evidence=repo/'docs/evidence';parent=evidence/'p7'
@@ -65,7 +71,7 @@ def main():
     code=p6_capture_repair.bundle()
     code+='\n'+__import__('inspect').getsource(project)
     code+='\nTEMPLATES='+repr(TEMPLATES)+'\nRATES='+repr(RATES)+'\n'
-    code+='''
+    code+=bind_data('''
 from p6_mock_guest import prepared,ROOT
 from web_edge_guest import private_env
 from web_services_guest import require_prepared
@@ -85,7 +91,7 @@ projection=project(config,settings)
 uri=urlsplit(config.get('GOTRUE_DB_DATABASE_URL',''))
 projection['databaseIsVerifiedP5Fixture']=uri.hostname=='db' and uri.path=='/ir35_p5_app'
 projection['readOnlyDatabaseGuard']=('default_transaction_read_only' in uri.query)
-checks={name:projection[name]is True for name in ('emailEnabled','confirmationRequired','smtpSink','siteIsStaging','externalAPIIsStaging','databaseIsVerifiedP5Fixture')}
+checks={name:projection[name]is True for name in ('emailEnabled','confirmationRequired','smtpSink','siteIsStaging','externalAPIIsStaging','databaseIsVerifiedP5Fixture','readOnlyDatabaseGuard')}
 handoff=ROOT/'.env.auth-source-handoff.json'
 present=handoff.exists()
 if present:
@@ -96,7 +102,8 @@ print(json.dumps({'status':'PASS' if all(checks.values()) and full['status']=='P
  'checks':checks,'auth':projection,'sourceHandoffPresent':present,'sourceMetadataIsIncomplete':True,
  'ownerGate':'G3' if not present else 'SOURCE_CONFIG_VALIDATION_REQUIRED','phaseComplete':False,'mailRequests':0,
  'passwordAttempts':0,'fullContainment':full,'p6NativeManifestSHA256':passed['manifestSHA256']}))
-'''.replace('DATA',repr(data))
+''',data)
+    compile(code,'<p7-read-only-bootstrap>','exec')  # Reject harness syntax BEFORE consuming a native audit.
     try:
         result['audit']=journal.step(1,'protected-auth-source-readiness',lambda:schema.run_guest(code,timeout=600));result['status']='PASS'
         result['ownerGate']=result['audit']['ownerGate']

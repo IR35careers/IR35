@@ -4,13 +4,38 @@ from pathlib import Path
 import sys
 import unittest
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock,patch
+from contextlib import redirect_stdout
+from io import StringIO
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import p7_auth_inventory as inventory
 import p6_context
 import p6_resume
+from offline_bundle_fixture import public_bootstrap
 
 
 class AuthInventoryTests(unittest.TestCase):
+    def test_payload_binding_never_rewrites_database_identifiers_or_inserted_strings(self):
+        program="\ndata=DATA\nkey='GOTRUE_DB_DATABASE_URL'\n"
+        value={'fixture':'DATA / DATABASE / GOTRUE_DB_DATABASE_URL'}
+        generated=inventory.bind_data(program,value);namespace={}
+        exec(compile(generated,'<public-fixture>','exec'),namespace)
+        self.assertEqual(namespace['data'],value);self.assertEqual(namespace['key'],'GOTRUE_DB_DATABASE_URL')
+        with self.assertRaisesRegex(RuntimeError,'SingleExplicit'):inventory.bind_data(program+program,value)
+    def test_actual_complete_inventory_program_compiles_offline_before_remote_call(self):
+        journal=Mock();journal.seal.return_value='a'*64
+        journal.step.side_effect=lambda number,name,action:action()
+        def remote(code,timeout):
+            compile(code,'<actual-inventory-public-fixture>','exec')
+            self.assertIn("config.get('GOTRUE_DB_DATABASE_URL','')",code)
+            self.assertIn("'GET','/supabase/auth/v1/settings'",code)
+            return {'status':'PASS','ownerGate':'G3'}
+        with public_bootstrap(),patch.object(inventory,'context',return_value={'fixture':'DATABASE'}),\
+                patch.object(inventory,'phase_journal',return_value=journal),patch.object(Path,'exists',return_value=False),\
+                patch.object(inventory.schema,'run_guest',side_effect=remote) as dispatch,\
+                patch.object(sys,'argv',['inventory','--read-only']),redirect_stdout(StringIO()):
+            inventory.main()
+        dispatch.assert_called_once()
     def test_absent_phase_parent_created_before_exclusive_journal_and_duplicate_write_refused(self):
         with TemporaryDirectory() as temporary:
             repo=Path(temporary);(repo/'docs/evidence').mkdir(parents=True)
