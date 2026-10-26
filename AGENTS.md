@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## P8 bounded read load02 PASS — remaining full phase still required
+
+- Native02manifest `e95c2ff16232eb766195b2715f9671b48370b3af5e72a0f741ea2b62ab52c443`:50concurrent/200GET/0errors/p95=3883.508ms, current/peak<=unchangedkernel/Dockerlimits/OOM0/minOSavailable9,264,906,240; full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS. No native load replay, original01FAIL/diagnosis remain. Read-only/co-located/no-store load is not authenticated-write/browser QA or a productionSLO. See P8 load report.
+- Latest automatic RESUME self-heal resolved accounting tooling; historical memory-stop owner-review request is no longer an active blocker. Full P8 remains incomplete: browser-write QA, encrypted automated backup/restore, reverse-sync, monitoring/currentOCIaudit. OCI refresh already failed once, publicage recipient and age/timers absent. Collect genuine owner-only needs once, no secret search/generation, broadIAM, sourcecloud/provider/production/DNS or cutover change. P9 only safe preparation, not execution/signoff.
+
 ## P8 read-only memory diagnosis PASS / accounting self-heal1
 
 - Immutable diagnosis `d44312fed7e73cc9d67b3cb974473a98e405685dcc910ef6d3c03cbfc081d675` proves meta kernelcurrent117,985,280<=max134,217,728, kernelpeak exactlymax, OOM/kill0/restart0, unchanged6-day-oldStartedAt and full containmentPASS. RSS152,690,688/PSS152,682,496 are almost equal: shared-page double counting hypothesis is NOT proven. Actual bug is comparing resident mappings to kernel charge ownership; Linux documents these different metrics. Historicalmaxevents112 remain visible, not reset or hidden.
