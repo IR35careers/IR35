@@ -1,6 +1,7 @@
 """Fresh owner3 journals. No replay of decoder2 dispatch or old full runs."""
 import json
 import sys
+import subprocess
 import cloud_schema as schema
 import p6_fixed_ip
 from p6_audit_log import Journal
@@ -28,7 +29,7 @@ def context():
 
 
 def main():
-    if sys.argv[1:] not in (['--preflight'],['--drain']):raise RuntimeError('ExplicitCaptureOwner3OperationRequired')
+    if sys.argv[1:] not in (['--preflight'],['--drain'],['--full']):raise RuntimeError('ExplicitCaptureOwner3OperationRequired')
     operation=sys.argv[1][2:];root=schema.REPO/('docs/evidence/p6/capture-owner3-'+operation)
     if root.exists():raise RuntimeError('CaptureOwner3OperationRecorded_NoReplay')
     data=context()
@@ -36,12 +37,23 @@ def main():
         prior=schema.REPO/'docs/evidence/p6/capture-owner3-preflight';verified_manifest(prior)
         data['capturePreflight']=json.loads((prior/'01-preflight-result.json').read_text())
         if data['capturePreflight']['status']!='PASS':raise RuntimeError('ActualKnownPendingPreflightRequired')
-    journal=Journal(root);result={'status':'FAIL','operation':operation,'fullP6Runs':0,'productionChanges':False,'newDispatches':0}
+    if operation=='full':
+        prior=schema.REPO/'docs/evidence/p6/capture-owner3-drain'
+        if verified_manifest(prior)!='f5a4db5e774d771e94ee09142f3e71adb9d70a88c83b04138403cdf5c7f6dc66':raise RuntimeError('ExactOneKnownJobDrainRequired')
+        data['captureDrain']=json.loads((prior/'01-drain-result.json').read_text())
+        if data['captureDrain']['status']!='PASS':raise RuntimeError('ActualKnownJobDrainPassRequired')
+        data['captureOwner3']=True
+        data['scheduleDispatcherSource']=(schema.REPO/'infra/oracle/p6_schedule_dispatch.py').read_text()
+        data['fixedIPPreflight']=json.loads((schema.REPO/'docs/evidence/p6/fixedip-owner1-preflight/01-fixedip-readonly-result.json').read_text())
+        git=p6_fixed_ip.diagnosis.p6_resume.git_command(schema.REPO)
+        if subprocess.run(git+['diff','--quiet',data['finalBuild']['sourceSHA'],'HEAD','--','services/application-worker','src/lib/queue','package.json','package-lock.json']).returncode:
+            raise RuntimeError('ApprovedPinnedWorkerSourceChanged_NoRebuildAuthority')
+    journal=Journal(root);result={'status':'FAIL','operation':operation,'fullP6Runs':int(operation=='full'),'productionChanges':False,'newIsolatedDispatches':0}
     journal.put('01-'+operation+'-intent.json',{'readOnly':operation=='preflight','mockOnly':True,'newPublications':0,
         'knownPendingID':'0ec588ee-fbd8-4c05-8367-c7e0d5437fc1','restoreOriginalEvenOnFailure':True})
     try:
-        code=bundle()+"result=sys.modules['p6_capture_repair_guest']."+('preflight' if operation=='preflight' else 'drain')+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
-        observed=schema.run_guest(code,timeout=600 if operation=='drain' else 180)
+        code=bundle()+"result=sys.modules['p6_capture_repair_guest']."+operation+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
+        observed=schema.run_guest(code,timeout=900 if operation=='full' else 600 if operation=='drain' else 180)
         journal.put('01-'+operation+'-result.json',observed);result.update(status=observed['status'],native=observed)
     except Exception as error:result['code']=str(error) if type(error)is RuntimeError else type(error).__name__
     result['manifestSHA256']=journal.seal(result)

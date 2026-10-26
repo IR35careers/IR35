@@ -26,7 +26,7 @@ DISPATCHER=ROOT/'bin/p6-mock-schedule-owner1.py'
 APP_NAMES=('ir35-p5-web','ir35-p5-kong')
 
 
-def app_configuration(original):
+def app_configuration(original,*,capture_repair=False):
     value=copy.deepcopy(original);value['name']='ir35-p6-fixedip-app'
     value['services']={name:value['services'][name] for name in ('web','kong')}
     for service in value['services'].values():service['restart']='unless-stopped'
@@ -55,9 +55,10 @@ def put_file(path,body,mode=0o644):
     os.chown(path,1002,1002);os.chmod(path,mode)
 
 
-def timer_units(operation,hour):
+def timer_units(operation,hour,*,capture_repair=False):
     if operation not in ('mock_ingest','mock_automation','watchdog'):raise RecoveryError('FixedTimerOperationRequired')
-    name='ir35-p6-mock-'+operation.replace('_','-')+'-owner1'
+    name='ir35-p6-mock-'+operation.replace('_','-')+('-decoder3' if capture_repair else '-owner1')
+    dispatcher=ROOT/'bin/p6-mock-schedule-capture3.py' if capture_repair else DISPATCHER
     service=f'''[Unit]
 Description=IR35 isolated mock-only {operation}
 Requires={"ir35-p6-health-proxy-fixedip-owner1.socket"}
@@ -67,7 +68,7 @@ RequiresMountsFor=/opt/ir35/data
 Type=oneshot
 User=ir35
 Group=ir35
-ExecStart=/usr/bin/python3 {DISPATCHER} {operation}
+ExecStart=/usr/bin/python3 {dispatcher} {operation}
 TimeoutStartSec=30
 MemoryMax=32M
 TasksMax=16
@@ -81,7 +82,7 @@ RestrictAddressFamilies=AF_INET AF_UNIX
 IPAddressDeny=any
 IPAddressAllow=127.0.0.1/32
 StandardOutput=null
-StandardError=null
+StandardError={"journal" if capture_repair else "null"}
 '''
     timer=f'''[Unit]
 Description=IR35 mock-only daily {operation}
@@ -96,27 +97,38 @@ WantedBy=timers.target
 
 
 def prepare(data,runtime,store,stage):
+    capture_repair=data.get('captureOwner3')is True
+    app_compose=ROOT/'p6-capture3-app-compose.yml' if capture_repair else APP_COMPOSE
+    dispatcher=ROOT/'bin/p6-mock-schedule-capture3.py' if capture_repair else DISPATCHER
+    suffix='-before-capture-owner3' if capture_repair else '-before-fixedip-owner1'
     original=json.loads((ROOT/'p5-compose.yml').read_bytes())
     before=json.loads((ROOT/'.env.p5-kong-config').read_bytes())
     platform=json.loads((ROOT/'.env.kong-config.json').read_bytes())
     gateway=routing_configuration(before,platform)
     original_hash=digest((ROOT/'.env.p5-kong-config').read_bytes())
-    put_file(GATEWAY,json.dumps(gateway).encode(),0o600)
-    value=app_configuration(original);body=json.dumps(value,sort_keys=True,indent=2).encode()
-    put_file(APP_COMPOSE,body);store.put(stage,APP_COMPOSE.name,body)
-    put_file(DISPATCHER,data['scheduleDispatcherSource'].encode(),0o644)
+    if capture_repair:
+        # Reuse the sealed VM-only routing copy with IDENTICAL credential
+        # values, never overwrite/regenerate it or the old failed artifacts.
+        if json.loads(GATEWAY.read_bytes())!=gateway or GATEWAY.stat().st_mode&0o777!=0o600 or GATEWAY.stat().st_uid!=1002:
+            raise RecoveryError('RetainedPrivateGatewayCopyMismatch')
+    else:put_file(GATEWAY,json.dumps(gateway).encode(),0o600)
+    value=app_configuration(original,capture_repair=capture_repair)
+    if capture_repair:value['name']='ir35-p6-capture-owner3-app'
+    body=json.dumps(value,sort_keys=True,indent=2).encode()
+    put_file(app_compose,body);store.put(stage,app_compose.name,body)
+    put_file(dispatcher,data['scheduleDispatcherSource'].encode(),0o644)
     store.put(stage,'prepare-intent.json',json.dumps({'newCredentialValues':0,'credentialValuesUnchanged':True,
         'originalGatewaySHA256':original_hash,'newPrivateRoutingConfigSHA256':digest(GATEWAY.read_bytes()),
         'images':{name:original['services'][name]['image'] for name in ('web','kong')},'originalFilesUntouched':True}).encode())
-    command=['docker','compose','--env-file',str(ROOT/'.env'),'-f',str(APP_COMPOSE)]
+    command=['docker','compose','--env-file',str(ROOT/'.env'),'-f',str(app_compose)]
     with store.sink(stage,'app-config-validation.log') as log:
         if subprocess.run(command+['config','--quiet'],stdout=log,stderr=log,timeout=30).returncode:raise RecoveryError('P6AppComposeInvalid')
     names=runtime['run'](['docker','ps','-a','--format','{{.Names}}']).splitlines()
     for name in APP_NAMES:
-        if name+'-before-fixedip-owner1' in names:raise RecoveryError('P6AppHandoverAlreadyExists_NoReplay')
-        store.put(stage,name+'-stop-intent.json',json.dumps({'container':name,'preservedAs':name+'-before-fixedip-owner1'}).encode())
+        if name+suffix in names:raise RecoveryError('P6AppHandoverAlreadyExists_NoReplay')
+        store.put(stage,name+'-stop-intent.json',json.dumps({'container':name,'preservedAs':name+suffix}).encode())
         runtime['run'](['docker','stop','--time','30',name],timeout=45)
-        runtime['run'](['docker','rename',name,name+'-before-fixedip-owner1'])
+        runtime['run'](['docker','rename',name,name+suffix])
     with store.sink(stage,'app-start.log') as log:
         if subprocess.run(command+['up','-d','--no-deps','--pull','never','kong','web'],stdout=log,stderr=log,timeout=120).returncode:
             raise RecoveryError('P6AppIntegrationStartFailed')
@@ -133,7 +145,7 @@ def prepare(data,runtime,store,stage):
     for row in policies:runtime['run'](['docker','update','--restart','unless-stopped',row['name']])
     timers=[]
     for operation,hour in (('mock_ingest','03'),('mock_automation','04'),('watchdog','05')):
-        name,bodies=timer_units(operation,hour);timers.append(name)
+        name,bodies=timer_units(operation,hour,capture_repair=capture_repair);timers.append(name)
         for filename,content in bodies.items():
             path=Path('/etc/systemd/system')/filename
             put_file(path,content.encode());os.chown(path,0,0);store.put(stage,filename,content.encode())
@@ -229,11 +241,15 @@ def verify(data,runtime,store,stage,prepared):
     before=json.loads(recovery.query("SELECT coalesce(jsonb_agg(id),'[]') FROM pgboss.ir35_mock_schedule;",'postgres'))
     for name in prepared['timers']:
         runtime['run'](['systemctl','enable','--now',name+'.timer'])
-        runtime['run'](['systemctl','start',name+'.service'],timeout=40)
-        output=runtime['run'](['systemctl','show',name+'.service','--property=Result','--property=ExecMainStatus'])
-        state=dict(row.split('=',1) for row in output.splitlines() if '=' in row)
-        store.put(stage,name+'-execution.json',json.dumps(state).encode())
-        if state!={'Result':'success','ExecMainStatus':'0'}:raise RecoveryError('P6ActualScheduleDispatchFailed')
+        if data.get('captureOwner3')is True:
+            from p6_dispatch_observability import dispatch_once
+            dispatch_once(name+'.service',runtime,store,stage,name+'-execution')
+        else:
+            runtime['run'](['systemctl','start',name+'.service'],timeout=40)
+            output=runtime['run'](['systemctl','show',name+'.service','--property=Result','--property=ExecMainStatus'])
+            state=dict(row.split('=',1) for row in output.splitlines() if '=' in row)
+            store.put(stage,name+'-execution.json',json.dumps(state).encode())
+            if state!={'Result':'success','ExecMainStatus':'0'}:raise RecoveryError('P6ActualScheduleDispatchFailed')
     end=time.monotonic()+15
     while True:
         receipts=json.loads(recovery.query("SELECT coalesce(jsonb_agg(jsonb_build_object('id',id,'operation',operation)),'[]') FROM pgboss.ir35_mock_schedule;",'postgres'))
@@ -252,17 +268,20 @@ def verify(data,runtime,store,stage,prepared):
 
 
 def restore(data,runtime,store,stage):
+    capture_repair=data.get('captureOwner3')is True
+    suffix='-before-capture-owner3' if capture_repair else '-before-fixedip-owner1'
+    failed_suffix='-failed-capture-owner3' if capture_repair else '-failed-fixedip-owner1'
     # Called at most once by the owner-full-run wrapper; originals never removed.
     for operation,hour in (('mock_ingest','03'),('mock_automation','04'),('watchdog','05')):
-        name,_=timer_units(operation,hour)
+        name,_=timer_units(operation,hour,capture_repair=capture_repair)
         if (Path('/etc/systemd/system')/(name+'.timer')).exists():runtime['run'](['systemctl','disable','--now',name+'.timer'])
     names=runtime['run'](['docker','ps','-a','--format','{{.Names}}']).splitlines()
     for name in APP_NAMES:
-        old=name+'-before-fixedip-owner1'
+        old=name+suffix
         if old not in names:continue
         if name in names:
             runtime['run'](['docker','stop','--time','30',name],timeout=45)
-            runtime['run'](['docker','rename',name,name+'-failed-fixedip-owner1'])
+            runtime['run'](['docker','rename',name,name+failed_suffix])
         runtime['run'](['docker','rename',old,name])
         runtime['run'](['docker','start',name])
     for row in data['fixedIPPreflight']['services']:

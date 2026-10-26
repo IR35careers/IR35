@@ -170,7 +170,9 @@ def retained_receipts(store, failed):
     return {row['applicationId']: row for row in found.values()}
 
 
-def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False,schedule_repair=False,fixed_ip=False):
+def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False,schedule_repair=False,fixed_ip=False,capture_repair=False):
+    if type(capture_repair)is not bool or capture_repair and (not fixed_ip or data.get('captureOwner3')is not True):
+        raise RecoveryError('SeparateOwnerCaptureLifecycleRequired')
     if type(fixed_ip)is not bool or fixed_ip and (repair_one or owner_resume or pause_repair or schedule_repair):
         raise RecoveryError('SeparateSingleOwnerFixedIPLifecycleRequired')
     if type(schedule_repair)is not bool or schedule_repair and (not owner_resume or pause_repair):raise RecoveryError('DistinctFinalScheduleLifecycleRequired')
@@ -211,10 +213,13 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
         from p6_restart_diagnosis_guest import history as fixed_history
         from p6_fixed_ip_guest import NAME as fixed_name,COMPOSE as fixed_compose
         _,prior_receipts,_,_=fixed_history(data)
+        if capture_repair:
+            from p6_capture_repair_guest import retained
+            prior_receipts=retained(data,store)
         worker_name,worker_compose=fixed_name,fixed_compose
         if anchor.get('fixedIPOwnerRepair')is not True or anchor.get('containerName')!=worker_name:
             raise RecoveryError('ActualFixedIPOwnerHandoverRequired')
-    stage = store.stage('29-owner-fixedip-full-lifecycle' if fixed_ip else '25-owner-final-repair-lifecycle' if schedule_repair else '21-owner-pause-repair-lifecycle' if pause_repair else '18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
+    stage = store.stage('37-owner-capture-full-lifecycle' if capture_repair else '29-owner-fixedip-full-lifecycle' if fixed_ip else '25-owner-final-repair-lifecycle' if schedule_repair else '21-owner-pause-repair-lifecycle' if pause_repair else '18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
     original = Recovery(data['p4'], runtime)
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'realAcceptance': False, 'customerWrites': 0, 'productionChanges': False,
@@ -224,6 +229,7 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
             repairAttempt=2 if schedule_repair else 1 if pause_repair else 0,historicalCountersPreserved=True)
     sequence = 0
     if fixed_ip:result.update(ownerFixedIPLifecycleAttempt=1,historicalCountersPreserved=True)
+    if capture_repair:result.update(ownerCaptureLifecycleAttempt=1,retainedAcknowledgedJobProcessedWithoutRepublish=True)
 
     def record(name, observed):
         nonlocal sequence
@@ -275,7 +281,10 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
           'schedules',(SELECT count(*) FROM pgboss.ir35_mock_schedule),
           'applyJobs',(SELECT count(*) FROM pgboss.job WHERE name='ir35-staging-mock-apply'));""", 'postgres'))
         if fixed_ip:
-            checked('retained-all-thirty-four-counts',empty,empty=={'applications':34,'schedules':data['fixedScheduleRowsBefore'],'applyJobs':32})
+            if capture_repair:
+                checked('retained-all-forty-five-counts',empty,empty=={'applications':45,'schedules':8,'applyJobs':42})
+            else:
+                checked('retained-all-thirty-four-counts',empty,empty=={'applications':34,'schedules':data['fixedScheduleRowsBefore'],'applyJobs':32})
             for identifier,before in prior_receipts.items():
                 actual_receipt=control.request('GET','/mock/applications/'+identifier)[1]
                 checked('retained-all-thirty-four-receipt',{'idSHA256':digest(identifier.encode()),'sameReceipt':actual_receipt==before},actual_receipt==before)
