@@ -1,0 +1,145 @@
+{
+  "fullP6Runs": 0,
+  "native": {
+    "checks": {
+      "ledger": true,
+      "originalHardPaused": true,
+      "sameStoppedProbe": true,
+      "sealedProbeCompose": true,
+      "smtpAndExternalBoundary": true
+    },
+    "ledger": {
+      "applications": 45,
+      "checks": {
+        "all45RetainedReceipts": true,
+        "all50JobsPresent": true,
+        "all7ReceiptsPresent": true,
+        "allPrior49RowsExact": true,
+        "knownMockWatchdog": true,
+        "noEmployerPayloads": true,
+        "onlyKnownPendingJob": true
+      },
+      "jobs": 50,
+      "ledgerSHA256": "67a56e49f4ab82412eaa5818ea6c86fa156fe261e38ac18507f7b6dcec160918",
+      "pending": [
+        {
+          "data": {
+            "kind": "staging_mock_schedule",
+            "operation": "watchdog",
+            "requestedAt": "2026-10-26T14:11:55.355Z"
+          },
+          "id": "0ec588ee-fbd8-4c05-8367-c7e0d5437fc1",
+          "name": "ir35-staging-mock-schedule",
+          "retry_count": 0,
+          "state": "created"
+        }
+      ],
+      "schedules": 7,
+      "status": "PASS"
+    },
+    "oldLedgerSHA256": "faaccf33316a2699f09c9b63474cef2ec13c56d39140d9c68f7aeb73bd473c8e",
+    "probeConfigSHA256": "1544e4e4db4632f391ed3c50146fc5f3d9bac9275a2913a702d5c610887547f3",
+    "probeContainerID": "c7b6a4898dab08288a5bd3b1d77999cd3fb575b9b359b68f6d62248fdd531641",
+    "probeHostConfigSHA256": "8f50e5805cc5a4e3a1f31c7dfb7100381fffa18f47ee4db326ae44dcc1243389",
+    "readOnly": true,
+    "rollback": {
+      "container": "ir35-p6-mock-worker-v7-fixedip-rollback",
+      "containerID": "f436798f7cf7d2c896d32f344ec3703ab88aa3d94505047ef6cdb208486fc95d",
+      "dockerConfigSHA256": "2d4744b849ad7d65d06dcf7de7a41f03a34c76c1d64d6fab30aa81594277f225",
+      "dockerEnvSHA256": "6db46019dc2aec11bf41db1f1c0834fd397a7620ddcaff5f88b00ec9e62829f0",
+      "hostConfigSHA256": "8f50e5805cc5a4e3a1f31c7dfb7100381fffa18f47ee4db326ae44dcc1243389",
+      "image": "sha256:691acf104f69f7cdf87dadf83370558886c8563fd9a22e1d8e99fb4c7e8f3e3f",
+      "lifecycleTimestamps": {
+        "FinishedAt": "2026-10-26T14:11:52.008512795Z",
+        "StartedAt": "2026-10-26T14:11:55.788176015Z"
+      },
+      "operationalState": {
+        "Dead": false,
+        "ExitCode": 0,
+        "OOMKilled": false,
+        "Paused": false,
+        "RestartCount": 0,
+        "Restarting": false,
+        "Running": true,
+        "Status": "running",
+        "endpoint": "172.18.0.241",
+        "health": {
+          "active": 0,
+          "browserReady": true,
+          "buildSHA": "1c07c8507aa9049c6fe89c2f1c784fb2958084cf",
+          "databaseReady": true,
+          "mode": "staging-mock-only",
+          "ok": true,
+          "paused": true,
+          "realAcceptance": false
+        },
+        "healthStatus": "healthy"
+      },
+      "protectedFilesSHA256": {
+        "/etc/systemd/system/ir35-p6-health-proxy-fixedip-owner1-rollback.service": "43cc55f2be7d5420dce191345614a79e6d7dadd0bc816d4e2fa700c729099453",
+        "/etc/systemd/system/ir35-p6-health-proxy-fixedip-owner1-rollback.socket": "0574311a7ecfb051bd0928cadaddf146b1ba2afcacf99714aa25def08a07371a",
+        "/opt/ir35/.env.p6-mock-control": "a21a2eaba3161c779fb0d164d5da873d6937aae8a370ad3e6efc840953c9dbe2",
+        "/opt/ir35/.env.p6-mock-worker": "dfac1b6629fc5a8246975eebd89e5b9ea557747bad5e3b441b03572f821403ab",
+        "/opt/ir35/p6-mock-compose-v7-fixedip-rollback.yml": "022e40ce4c70e84599f85c7c7f4df44a83ecae97ce6f1d90ab8b704087a86058"
+      }
+    },
+    "smtp": {
+      "APPLICATION_WORKER_ACCEPT_JOBS": "false",
+      "APPLY_RUNNER": "mock",
+      "expectedInternalTraffic": [
+        "database heartbeat",
+        "empty-queue watchdog",
+        "read-only diagnostic probes"
+      ],
+      "historicalPacketCaptureClaimed": false,
+      "proofScope": "Exact sealed mock-only payloads and immutable mock program plus internal-only network/provider-free execution; no retrospective packet-capture claim.",
+      "smtp": {
+        "checks": {
+          "bothAuthStacksRouteToSink": true,
+          "noForwardOrRelayConfigured": true,
+          "noSinkRestart": true,
+          "privateUnpublishedSink": true,
+          "sinkEmpty": true,
+          "sinkStartedBeforeCutoff": true
+        },
+        "mailContentOrRecipientLogged": false,
+        "sinkMessages": 0,
+        "sinkRestartCount": 0,
+        "sinkStartedAt": "2026-10-20T21:06:05.524915751Z",
+        "smtpPort": 1025,
+        "status": "PASS"
+      },
+      "status": "PASS",
+      "workers": [
+        {
+          "checks": {
+            "noDirectProviderCredentials": true,
+            "noDockerSocket": true,
+            "noHostNetwork": true,
+            "noProxy": true,
+            "onlyInternalNetwork": true,
+            "readOnlyUnprivileged": true
+          },
+          "container": "ir35-p6-mock-worker-v6"
+        },
+        {
+          "checks": {
+            "noDirectProviderCredentials": true,
+            "noDockerSocket": true,
+            "noHostNetwork": true,
+            "noProxy": true,
+            "onlyInternalNetwork": true,
+            "readOnlyUnprivileged": true
+          },
+          "container": "ir35-p6-mock-worker-v6-rollback"
+        }
+      ]
+    },
+    "status": "PASS",
+    "vmWrites": 0
+  },
+  "newDispatches": 0,
+  "operation": "preflight",
+  "productionChanges": false,
+  "status": "PASS"
+}

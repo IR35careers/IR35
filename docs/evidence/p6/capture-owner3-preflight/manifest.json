@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-preflight-intent.json",
+      "sha256": "a4affb89365bc6f6133e1a7b9d92676853cff14daf1145ba8e30b62ba2c2091b"
+    },
+    {
+      "name": "01-preflight-result.json",
+      "sha256": "3a290d951ff265b9d553f8d862240a906adc75c34f6dde4a73f011d46b7679a5"
+    },
+    {
+      "name": "result.json",
+      "sha256": "2c85db6a127706937e0e180060f96fe251815e129e84b1f7b523e730d9741c28"
+    }
+  ],
+  "version": 1
+}
