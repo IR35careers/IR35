@@ -1,0 +1,32 @@
+{
+  "status": "FAIL",
+  "attempt": 3,
+  "sourceSHA": "caaf4bdb0b9015b2afe3de943af7191228cf2004",
+  "productionChanges": false,
+  "serviceChanges": 0,
+  "realAcceptance": false,
+  "code": "FileNotFoundError",
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "elapsedSeconds": 48.733,
+  "stage": "03-build",
+  "manifestSHA256": "4392c96348829108d44edadba98b262efc583e96f6dc6a19984267b580d261ef"
+}

@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "observation": {
+    "status": "PASS",
+    "applications": 23,
+    "applyJobs": 22,
+    "scheduleJobs": 1,
+    "scheduleRows": 0,
+    "pendingScheduleJobs": 1,
+    "pendingApplicationJobs": 0,
+    "allRetainedReceiptsMatch": true,
+    "ledgerSHA256": "7f637e1955b134b8d66f5e33510f5aca4e7089c6aefea9991f71957e45e1d9d3",
+    "scheduleJobIDSHA256": "0c8207bbbe8ae488c3fa0404dd4257c9fedb45417ee7b52d7775221ef1286774",
+    "scheduleOperation": "mock_ingest",
+    "vmWrites": 0
+  },
+  "queueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "smtp": {
+    "status": "PASS",
+    "sinkTotal": 0,
+    "listedMessages": 0,
+    "sinkWrites": 0
+  },
+  "rootCause": "The short-policy queue indexes (name, COALESCE(singleton_key, empty)). Distinct schedule operations were published without a singleton key, so the second pending command was not queued.",
+  "repair": "Set the validated mock schedule operation as singletonKey; preserve the queue policy and queued=false negative acknowledgement.",
+  "queuePolicyChanges": 0,
+  "vmWrites": 0,
+  "productionChanges": false
+}

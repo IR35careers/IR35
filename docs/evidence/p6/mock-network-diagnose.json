@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "workerRestarts": 0,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "secretMounts": 0,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "directBridge": {
+    "status": 200,
+    "marker": true
+  },
+  "requestedLoopback": {
+    "status": 0,
+    "marker": false
+  },
+  "actualPublishedMapping": null,
+  "requestedBinding": {
+    "18788/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "18788"
+      }
+    ]
+  },
+  "networkInternal": true,
+  "originalInternalHealthExitCodes": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "cause": "Docker omits port publication when container has only an internal bridge",
+  "evidence": "https://github.com/moby/moby/issues/36174",
+  "proposedRepair": "Keep internal-only worker; use a bounded localhost-only host proxy, no public ingress or egress expansion",
+  "probeStopped": true,
+  "probeRemoved": true,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "07-network-diagnose",
+  "manifestSHA256": "4f59433dfe974b016b7c7ea8902e103dcc7c778f6ab76c09b9caecc161884e1e"
+}

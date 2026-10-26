@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-fixedip-readonly-intent.json",
+      "sha256": "720d663d6c42e6a10f4abe75ad822dcc628ad5f89a9e65d13a1da7c47dc6186b"
+    },
+    {
+      "name": "01-fixedip-readonly-result.json",
+      "sha256": "fba17da3369dd4d4b875670e47b911cf25ad51b0c3d156f7281fd68e05e7ddcc"
+    },
+    {
+      "name": "result.json",
+      "sha256": "2841d78e18c56a9ad486d6301021f0766746d7ce0244b7fc3005013b7fb1ff7a"
+    }
+  ],
+  "version": 1
+}

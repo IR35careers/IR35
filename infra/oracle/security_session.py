@@ -102,7 +102,9 @@ def clean_environment():
     return {key: value for key, value in os.environ.items() if not key.startswith("OCI_")}
 
 
-def ensure_session(now=None):
+def ensure_session(now=None, *, minimum_seconds=600):
+    if type(minimum_seconds) is not int or minimum_seconds not in (600, 1800):
+        raise KeySafetyError('Only routine10minute or owner-approved30minute token windows are supported.')
     now = time.time() if now is None else now
     private_directory(ROOT)
     lock = ROOT / "ir35-session.lock"
@@ -115,7 +117,7 @@ def ensure_session(now=None):
         if type(started) not in (int, float) or now < started or now - started >= 86400:
             raise KeySafetyError("G2: daily browser sign-in required; no API-key fallback.")
         profile = session_profile()
-        if profile["expiresAt"] - now <= 600:
+        if profile["expiresAt"] - now <= minimum_seconds:
             # Exactly one refresh, before each active operation when <10min remain.
             # A failed/expired refresh is a browser owner gate, never a retry loop.
             result = subprocess.run(command(["session", "refresh"]), capture_output=True, text=True,
@@ -123,7 +125,7 @@ def ensure_session(now=None):
             if result.returncode:
                 raise KeySafetyError("G2: security-token refresh failed; browser sign-in required. Raw output suppressed.")
             profile = session_profile()
-            if profile["expiresAt"] <= now + 600:
+            if profile["expiresAt"] <= now + minimum_seconds:
                 raise KeySafetyError("G2: refreshed expiry is insufficient; browser sign-in required.")
         return {**profile, "region": REGION}
     except (OSError, ValueError, TypeError):

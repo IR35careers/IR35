@@ -1,0 +1,15 @@
+{
+  "noRepairOrRetry": true,
+  "offlineDummyReproduction": {
+    "HTTPReachedByFailingCodePath": false,
+    "actualSecretReadOrLogged": false,
+    "decodedDummyLength": 64,
+    "existingFormat": "KEY=single-quoted-value",
+    "rawParsedLength": 66,
+    "rawValuePassesDispatcherRegex": false,
+    "repairApplied": false
+  },
+  "readOnly": true,
+  "status": "FAIL",
+  "vmWrites": 0
+}

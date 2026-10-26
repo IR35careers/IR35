@@ -1,0 +1,27 @@
+{
+  "code": "ReadOnlyAuditFailed_full-containment",
+  "phaseComplete": false,
+  "processingFlagChanges": 0,
+  "productionChanges": false,
+  "repairsStarted": 0,
+  "status": "FAIL",
+  "steps": [
+    {
+      "case": "processing-flag",
+      "status": "PASS"
+    },
+    {
+      "case": "application-ledger",
+      "status": "PASS"
+    },
+    {
+      "case": "smtp-sink",
+      "status": "PASS"
+    },
+    {
+      "case": "external-isolation",
+      "status": "PASS"
+    }
+  ],
+  "vmWrites": 0
+}

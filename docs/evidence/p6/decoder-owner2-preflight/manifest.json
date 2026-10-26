@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-decoder-prerequisites-intent.json",
+      "sha256": "1137c320c0698b53f247c029e274e7ebba7dd60d68c696300ab94f1c5fd1a8f6"
+    },
+    {
+      "name": "01-decoder-prerequisites-result.json",
+      "sha256": "37d6c7521c8385f6db5c9a03650ee6155f69f03a1506c4b766e54314ec8543bb"
+    },
+    {
+      "name": "result.json",
+      "sha256": "575f16fd45f557f2176a5b8d8e20b338e0db201df292846c2fed108c62bb60a8"
+    }
+  ],
+  "version": 1
+}

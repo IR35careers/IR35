@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-26",
+  "operation": "offline diagnostic-delivery validation; no worker repair",
+  "firstOrchestratorParseFailure": {
+    "errorType": "SyntaxError",
+    "toolDispatchReached": false,
+    "vmRequests": 0,
+    "cause": "Unescaped backtick in the JavaScript template containing a redaction pattern"
+  },
+  "firstDeliveredPayload": {
+    "sha256": "f615d2659380e35a8d9b0fad717877c864bb50cac1b3b91e65f48dd2f680d72f",
+    "offlineSyntaxValid": false,
+    "errorType": "SyntaxError",
+    "line": 11,
+    "message": "closing parenthesis ']' does not match opening parenthesis '('",
+    "cause": "PowerShell/Windows argument delivery removed quote escaping from the inline Python string",
+    "dockerCommandsReachable": false,
+    "failureRecordPreserved": "docker-top-owner-diagnosis-one.json"
+  },
+  "canonicalByteStableDelivery": {
+    "sha256": "6f33cf0d2147b8ef28684d25758f80bb8b611bf9c6ce86098ba92b5332f7f9b8",
+    "method": "base64 public script decoded and hash-checked locally; forwarded over pinned SSH stdin",
+    "offlineSyntaxValid": true,
+    "syntheticRedactionAssertions": "PASS",
+    "sanitisationOrDockerCommandAssertionsChanged": false,
+    "inspectCallsExecuted": 1,
+    "topCallsExecuted": 1,
+    "observationRecord": "docker-top-owner-diagnosis-one-observed.json"
+  },
+  "priorArtifactsOverwritten": false,
+  "auditReruns": 0,
+  "workerFixesOrRestarts": 0,
+  "builds": 0,
+  "vmConfigChanges": 0,
+  "productionChanges": false
+}

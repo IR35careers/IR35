@@ -1,0 +1,14 @@
+{
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    }
+  ],
+  "expectedReceipts": 12,
+  "mutations": 0,
+  "operation": "sealed-history",
+  "stage16ManifestSHA256": "b20410a43d14bc947590cf2b7f29e6104c5880b4199a2b6c155e78e5bde75ee9",
+  "status": "PASS"
+}

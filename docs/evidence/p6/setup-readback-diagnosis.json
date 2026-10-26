@@ -1,0 +1,19 @@
+{
+  "status": "DIAGNOSED_TOOLING_ERROR",
+  "failedManifestSHA256": "7a6d417a56926f13765db249981b911e34ab160e21aceb3c7944a2e153b2d0a8",
+  "statementSHA256": "e103c9a5d8b83652d7624dc8f252da39203587806b86a80bb527ae972f532258",
+  "nativeSQLSTATE": "42601",
+  "nativeReadonlyReproductionExitCode": 3,
+  "localPostgresReproduction": "syntax error at or near closing parenthesis",
+  "rootCause": "Extra closing parenthesis in the Python ACL read-back SELECT, not queue installation or a privilege mismatch.",
+  "installedQueues": ["ir35-staging-mock-apply", "ir35-staging-mock-schedule"],
+  "mockTables": 3,
+  "operationalQueueRelationCount": 53,
+  "failedStageIntentRecorded": true,
+  "failedManifestRetained": true,
+  "containmentAfterFailure": "PASS",
+  "sourceWrites": 0,
+  "customerWrites": 0,
+  "serviceChanges": 0,
+  "repair": "One SQL-parenthesis fix, exact-query regression, then verification-only new journal stage. Never replay schema installation."
+}

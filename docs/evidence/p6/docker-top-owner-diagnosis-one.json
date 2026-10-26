@@ -1,0 +1,7 @@
+{
+  "status": "STOP",
+  "exceptionType": "KeySafetyError",
+  "rawOutputWithheld": true,
+  "retries": 0,
+  "vmChangesRequested": false
+}

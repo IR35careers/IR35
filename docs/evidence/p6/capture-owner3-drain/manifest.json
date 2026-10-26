@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-drain-intent.json",
+      "sha256": "faed5db168dd1ea3f08c5acb6cc552c3b60affad36e521e68d6b2c78aaa39674"
+    },
+    {
+      "name": "01-drain-result.json",
+      "sha256": "19a57225c43f60e4de1f6e34e40839ecf9f8c7f4cd4858d282faa771450b43d3"
+    },
+    {
+      "name": "result.json",
+      "sha256": "c50bddfea8c0f61d4441a85a513a95d6cd3bdcb9c2d40f7224fa79fcea0cdce8"
+    }
+  ],
+  "version": 1
+}

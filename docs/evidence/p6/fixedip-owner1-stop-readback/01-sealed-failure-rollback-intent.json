@@ -1,0 +1,4 @@
+{
+  "operation": "sealed-failure-rollback",
+  "readOnly": true
+}

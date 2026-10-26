@@ -1,0 +1,40 @@
+{
+  "auditAttempt": 3,
+  "configChanges": 0,
+  "newImageBuilds": 0,
+  "p6Reruns": 0,
+  "pauseReconciliationManifestSHA256": "5cc51791a86c13913296bd2707c54e279728822e67911b81bd6ff57d81f4d23a",
+  "phaseComplete": false,
+  "productionChanges": false,
+  "retries": 0,
+  "sourceWrites": 0,
+  "status": "PASS",
+  "steps": [
+    {
+      "case": "sealed-history",
+      "status": "PASS"
+    },
+    {
+      "case": "queue-before",
+      "status": "PASS"
+    },
+    {
+      "case": "worker-idle",
+      "status": "PASS"
+    },
+    {
+      "case": "smtp-empty",
+      "status": "PASS"
+    },
+    {
+      "case": "full-containment",
+      "status": "PASS"
+    },
+    {
+      "case": "queue-after",
+      "status": "PASS"
+    }
+  ],
+  "vmWrites": 0,
+  "workerRestarts": 0
+}

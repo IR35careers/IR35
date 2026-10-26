@@ -1,0 +1,9 @@
+{
+  "checkedAtUTC": "2026-10-25T08:25:13.8809625Z",
+  "publicPort": 8787,
+  "connected": false,
+  "expectedConnected": false,
+  "status": "PASS",
+  "credentialsUsed": false,
+  "origin": "owner machine, outside VM"
+}

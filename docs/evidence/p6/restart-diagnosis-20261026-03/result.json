@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "case": "sealed-history",
+      "status": "PASS"
+    },
+    {
+      "case": "worker-state",
+      "status": "PASS"
+    },
+    {
+      "case": "proxy-routing",
+      "status": "PASS"
+    },
+    {
+      "case": "queue-ledger",
+      "status": "PASS"
+    },
+    {
+      "case": "external-isolation",
+      "status": "PASS"
+    },
+    {
+      "case": "full-containment",
+      "status": "PASS"
+    },
+    {
+      "case": "ledger-after",
+      "status": "PASS"
+    }
+  ],
+  "collectionAttempt": 3,
+  "configChanges": 0,
+  "jobPublications": 0,
+  "lifecycleAttemptBudgetReset": false,
+  "newBuilds": 0,
+  "phaseComplete": false,
+  "previousCollectionManifestSHA256": "941cec46766f225482fc126802fb2241c71e14e77ffb7851189b18aa72a0f284",
+  "productionChanges": false,
+  "readOnly": true,
+  "restarts": 0,
+  "secondCollectionManifestSHA256": "47f2e1872fea3fadd48d3a6fb0808eb5b27a9cfb70d70791049bfde40c2e5a06",
+  "status": "PASS",
+  "toolingRepairAttempt": 2,
+  "vmWrites": 0
+}

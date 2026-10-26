@@ -1,0 +1,6 @@
+{
+  "exceptionType": "KeySafetyError",
+  "operation": "sealed-history",
+  "rawErrorWithheld": true,
+  "status": "FAIL"
+}

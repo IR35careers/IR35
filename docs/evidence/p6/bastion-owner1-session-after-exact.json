@@ -1,0 +1,31 @@
+{
+  "status": "FAIL",
+  "sessionCreates": 0,
+  "bastionUpdates": 0,
+  "iamChanges": 0,
+  "networkChanges": 0,
+  "workerRestarts": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "steps": [
+    {
+      "step": "existing-intent",
+      "status": "PASS"
+    },
+    {
+      "step": "current-source",
+      "status": "PASS"
+    },
+    {
+      "step": "existing-bastion",
+      "status": "FAIL",
+      "code": "G2: security-token refresh failed; browser sign-in required. Raw output suppressed."
+    }
+  ],
+  "exactAuditManifestSHA256": "79389e16722f0a77172c5ca10a0892d5b6b9e23c1bc6380ab4dac68a88ecd47b",
+  "previousFailureManifestSHA256": "b18e0a69a7039beb80d561ab0900e6323f0a910d76c8aadc33c3c815e9eb3b3f",
+  "code": "G2: security-token refresh failed; browser sign-in required. Raw output suppressed.",
+  "sessionClosed": true,
+  "stage": "04-session-after-exact",
+  "manifestSHA256": "4c7ac1fcc95a3ce9b9af86c9bc430ecd132d7b01892a690e474ca01d24c4681f"
+}

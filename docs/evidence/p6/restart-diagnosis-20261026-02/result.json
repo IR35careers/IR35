@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "case": "sealed-history",
+      "status": "PASS"
+    },
+    {
+      "case": "worker-state",
+      "status": "PASS"
+    }
+  ],
+  "code": "ReadOnlyAuditFailed_proxy-routing",
+  "collectionAttempt": 2,
+  "configChanges": 0,
+  "jobPublications": 0,
+  "lifecycleAttemptBudgetReset": false,
+  "newBuilds": 0,
+  "phaseComplete": false,
+  "previousCollectionManifestSHA256": "941cec46766f225482fc126802fb2241c71e14e77ffb7851189b18aa72a0f284",
+  "productionChanges": false,
+  "readOnly": true,
+  "restarts": 0,
+  "status": "FAIL",
+  "toolingRepairAttempt": 1,
+  "vmWrites": 0
+}

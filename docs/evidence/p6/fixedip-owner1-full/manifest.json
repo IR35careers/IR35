@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-fixedip-full-intent.json",
+      "sha256": "05eb08f3603255ec9cee28af1c9b4ef0dbc749c09d4a4f1ba1bf64e7c25f74d6"
+    },
+    {
+      "name": "01-fixedip-full-result.json",
+      "sha256": "86652cceabb3316eccdd1f477037a01a6c8bfc04dc5266791ac0e1572c1b043a"
+    },
+    {
+      "name": "result.json",
+      "sha256": "e930c20c00a5b7707ac7f0ce8ece0cdcaaaadba1cbc281258d9ef48fb8d8f042"
+    }
+  ],
+  "version": 1
+}

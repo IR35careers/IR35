@@ -1,0 +1,129 @@
+{
+  "status": "PASS",
+  "repairAttempt": 1,
+  "newWorkerStarts": 1,
+  "realAcceptance": false,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "networkChanges": 0,
+  "secretChanges": 0,
+  "roleChanges": 0,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "preQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "preflightQueueCounts": {
+    "pendingJobs": 0,
+    "ownerConnections": 1,
+    "pendingApplications": 0,
+    "producerConnections": 0
+  },
+  "composeSHA256": "8b5ee3e06a4e293fe2239119aa2be8ae4315180437d5ee82b1a32c9591d72b0c",
+  "unitSHA256": {
+    "ir35-p6-health-proxy-r4.socket": "2cf42cf6c7aa72fce4fd8dcd627633cdb3ec3b3594b517dc03696ca8ba91c7aa",
+    "ir35-p6-health-proxy-r4.service": "8ff8d09ebb37d7cca01c589245323a4a8210ac4ef7c219574c5f27819345df31"
+  },
+  "queueRoleCustomerAccess": [
+    {
+      "database": "postgres",
+      "checks": 126,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "checks": 114,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p5_app",
+      "checks": 114,
+      "unexpectedAccess": 0
+    }
+  ],
+  "postQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "sourceSHA": "2bf2bd2eb86a4d50875c66253d9bfd33e10d1936",
+  "image": "sha256:88391137bf79292492fd85463461ae81bbf246b6e7045d00793bbb5f5d2bbdc0",
+  "health": {
+    "ok": true,
+    "browserReady": true,
+    "databaseReady": true,
+    "mode": "staging-mock-only",
+    "realAcceptance": false,
+    "paused": true,
+    "active": 0,
+    "peakActive": 0,
+    "buildSHA": "2bf2bd2eb86a4d50875c66253d9bfd33e10d1936"
+  },
+  "durableHeartbeat": {
+    "fresh": true,
+    "active": 0,
+    "sourceSHA": "2bf2bd2eb86a4d50875c66253d9bfd33e10d1936"
+  },
+  "hostMemoryAvailableKiB": 8871568,
+  "containerName": "ir35-p6-mock-worker-v4",
+  "composePath": "/opt/ir35/p6-mock-compose-v4.yml",
+  "ownerResume": true,
+  "oldWorkerStopped": true,
+  "oldArtifactsRetained": true,
+  "originalEnvUnchanged": true,
+  "loopbackOnly": true,
+  "stage": "17-owner-resume-handover",
+  "manifestSHA256": "7793fc1ee6bed9454d964ff9a48581a87539a9cd71f85f595ab9b7bfa462a781"
+}

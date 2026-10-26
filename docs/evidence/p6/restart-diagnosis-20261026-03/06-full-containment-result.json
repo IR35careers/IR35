@@ -1,0 +1,3195 @@
+{
+  "P5Fixture": {
+    "authTableChecks": 27,
+    "dataDifferences": [],
+    "extensionChecks": {
+      "capabilityChecks": 198,
+      "conditionalExceptionsOnly": true,
+      "conditions": {
+        "adminOwner": true,
+        "allObjectACLs": true,
+        "ddlCapabilities": true,
+        "versions": true
+      },
+      "memberChecks": 55,
+      "objectACLChecks": 62,
+      "ownerDifferences": [
+        {
+          "cloudOwner": "postgres",
+          "object": "extension:pg_stat_statements",
+          "stagingOwner": "supabase_admin",
+          "version": "1.11"
+        },
+        {
+          "cloudOwner": "postgres",
+          "object": "extension:pgcrypto",
+          "stagingOwner": "supabase_admin",
+          "version": "1.3"
+        },
+        {
+          "cloudOwner": "postgres",
+          "object": "extension:uuid-ossp",
+          "stagingOwner": "supabase_admin",
+          "version": "1.1"
+        }
+      ],
+      "status": "PASS",
+      "typeACLChecks": 4,
+      "unapprovedDifferences": []
+    },
+    "fullP4Complete": false,
+    "passwordHashBytesCoveredByWholeTableFingerprints": true,
+    "privileges": {
+      "differences": [],
+      "exceptionsApproved": [],
+      "morePermissive": [],
+      "repairMustStop": false,
+      "sourceCheckedAt": "2026-10-21T17:02:41Z",
+      "sourceEntries": 552,
+      "sourceWrites": 0,
+      "stagingWrites": 0,
+      "status": "PASS",
+      "targetCheckedAt": "2026-10-26T11:37:56Z",
+      "targetEntries": 552
+    },
+    "schema": {
+      "additionExpiryVerified": true,
+      "approvedP6Additions": [
+        {
+          "approvedP6Addition": true,
+          "attributesVerified": true,
+          "cloudHash": null,
+          "name": "ir35_queue",
+          "object": "role:ir35_queue",
+          "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+        },
+        {
+          "approvedP6Addition": true,
+          "attributesVerified": true,
+          "cloudHash": null,
+          "name": "ir35_queue_producer",
+          "object": "role:ir35_queue_producer",
+          "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+        }
+      ],
+      "baseline552Unchanged": true,
+      "baselineCatalogResult": {
+        "conditionsPASS": true,
+        "exceptions": [
+          {
+            "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+            "object": "extension:pg_stat_statements",
+            "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+            "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+          },
+          {
+            "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+            "object": "extension:pgcrypto",
+            "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+            "stagingHash": "63652c33f708c5861e34f2218529562b"
+          },
+          {
+            "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+            "object": "extension:uuid-ossp",
+            "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+            "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+          }
+        ],
+        "fullDataVerification": false,
+        "metadataMatch": true,
+        "phaseComplete": false,
+        "roleAttributesMatch": true,
+        "sourceCheckedAt": "2026-10-21T17:02:41Z",
+        "sourceObjects": 3752,
+        "status": "FAIL",
+        "targetCheckedAt": "2026-10-26T11:37:56Z",
+        "targetObjects": 3754,
+        "unexplainedDifferences": [
+          {
+            "cloudHash": null,
+            "object": "role:ir35_queue",
+            "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+          },
+          {
+            "cloudHash": null,
+            "object": "role:ir35_queue_producer",
+            "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+          }
+        ]
+      },
+      "exceptions": [
+        {
+          "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+          "object": "extension:pg_stat_statements",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+          "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+        },
+        {
+          "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+          "object": "extension:pgcrypto",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+          "stagingHash": "63652c33f708c5861e34f2218529562b"
+        },
+        {
+          "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+          "object": "extension:uuid-ossp",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+          "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+        }
+      ],
+      "fullDataVerification": false,
+      "phaseComplete": false,
+      "sourceObjects": 3752,
+      "sourceRoleExpiryUnchanged": true,
+      "sourceRolesUnchanged": true,
+      "status": "PASS_WITH_APPROVED_P6_ADDITIONS",
+      "targetObjects": 3754,
+      "unexplainedDifferences": []
+    },
+    "sequenceChecks": 2,
+    "sourceWrites": 0,
+    "stagingWrites": 0,
+    "status": "PASS",
+    "tables": [
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.audit_log_entries",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.custom_oauth_providers",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "358ad650b328db71025b61931d4517f7",
+        "name": "auth.flow_state",
+        "rows": "47",
+        "serializedBytes": "9268"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "67af4006a7088b82f7e5d69baf174dfc",
+        "name": "auth.identities",
+        "rows": "148",
+        "serializedBytes": "91893"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.instances",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+        "name": "auth.mfa_amr_claims",
+        "rows": "144",
+        "serializedBytes": "23650"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_challenges",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_factors",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_recovery_code_sets",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_recovery_codes",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_authorizations",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_client_states",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_clients",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_consents",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+        "name": "auth.one_time_tokens",
+        "rows": "21",
+        "serializedBytes": "5580"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "af55a92e3b0a38f28d29578ed520275b",
+        "name": "auth.refresh_tokens",
+        "rows": "1466",
+        "serializedBytes": "359317"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.saml_providers",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.saml_relay_states",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "87a88933e7be6edec713b7a7f5a356ca",
+        "name": "auth.schema_migrations",
+        "rows": "82",
+        "serializedBytes": "2058"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.scim_tokens",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.scim_users",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "6c4d8a050ce7636a424a8cebdf57f31f",
+        "name": "auth.sessions",
+        "rows": "144",
+        "serializedBytes": "49616"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.sso_domains",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.sso_providers",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "bd1686d190f4f6c94dbb8175f8761a12",
+        "name": "auth.users",
+        "rows": "147",
+        "serializedBytes": "129226"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.webauthn_challenges",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.webauthn_credentials",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+        "name": "public.admin_members",
+        "rows": "2",
+        "serializedBytes": "446"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "9319b54d9de4586f855da822729b529e",
+        "name": "public.application_events",
+        "rows": "815",
+        "serializedBytes": "339172"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "949df7a51a9609a32b36a84bc11964df",
+        "name": "public.application_packets",
+        "rows": "87",
+        "serializedBytes": "2269643"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+        "name": "public.application_submissions",
+        "rows": "64",
+        "serializedBytes": "86590"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "077765c72ba9ff8921e6124ea5577eb6",
+        "name": "public.application_worker_heartbeats",
+        "rows": "479",
+        "serializedBytes": "65305"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+        "name": "public.application_worker_tasks",
+        "rows": "64",
+        "serializedBytes": "46559"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "public.articles",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "ed908b923358cbad706195d02319adb2",
+        "name": "public.automation_rules",
+        "rows": "119",
+        "serializedBytes": "20037"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "2848dbf849c96d21f8042b133c93ba88",
+        "name": "public.automation_runs",
+        "rows": "13",
+        "serializedBytes": "59729"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+        "name": "public.contact_requests",
+        "rows": "5",
+        "serializedBytes": "3435"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+        "name": "public.feedback_messages",
+        "rows": "11",
+        "serializedBytes": "3574"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+        "name": "public.inbox_aliases",
+        "rows": "117",
+        "serializedBytes": "24161"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "7fdfd20d4c05626429e0512f8d2552e7",
+        "name": "public.inbox_messages",
+        "rows": "291",
+        "serializedBytes": "556006"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "f331f2304263b0cd3642c296b2676169",
+        "name": "public.job_alerts",
+        "rows": "5",
+        "serializedBytes": "890"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "e647095d75414a442175f7fb3588caf4",
+        "name": "public.jobs",
+        "rows": "24041",
+        "serializedBytes": "77014823"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "470367f38c31f63ffd34430371f1476c",
+        "name": "public.moderation_logs",
+        "rows": "4327",
+        "serializedBytes": "1921831"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "e56a2b9b48ff149e29fb6c27ad7fa566",
+        "name": "public.profiles",
+        "rows": "122",
+        "serializedBytes": "1763445"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+        "name": "public.resume_versions",
+        "rows": "12",
+        "serializedBytes": "103861"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+        "name": "public.saved_jobs",
+        "rows": "8",
+        "serializedBytes": "1069"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "public.testimonials",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "public.user_entitlements",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+        "name": "public.waitlist",
+        "rows": "22",
+        "serializedBytes": "4184"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "realtime.messages",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "802700104fc0aed2f68c413f50637ba5",
+        "name": "realtime.schema_migrations",
+        "rows": "89",
+        "serializedBytes": "4382"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "realtime.subscription",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+        "name": "storage.buckets",
+        "rows": "4",
+        "serializedBytes": "838"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.buckets_analytics",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.buckets_vectors",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "55a444ce635336fa733a015fc4db877f",
+        "name": "storage.migrations",
+        "rows": "74",
+        "serializedBytes": "8715"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+        "name": "storage.objects",
+        "rows": "73",
+        "serializedBytes": "48321"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.s3_multipart_uploads",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.s3_multipart_uploads_parts",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.vector_indexes",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "35d965e826914770a00b84c3d87dd610",
+        "name": "supabase_migrations.schema_migrations",
+        "rows": "1",
+        "serializedBytes": "2310"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "vault.secrets",
+        "rows": "0",
+        "serializedBytes": "21"
+      }
+    ],
+    "transport": {
+      "customerRowsImported": 0,
+      "differences": [],
+      "exceptions": [],
+      "fullDataVerification": false,
+      "sourceCheckedAt": "2026-10-21T17:02:41Z",
+      "sourceObjects": 327,
+      "sourceWrites": 0,
+      "stagingWrites": 0,
+      "status": "PASS",
+      "targetCheckedAt": "2026-10-26T11:37:56Z",
+      "targetObjects": 327
+    }
+  },
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-read-hba-archive",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "70df49b4592cb5fd6cdf54e94e690ee6c5ebcebcda6823046b06b02b95c474ac"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "646d99762e0d2391c2e28a4720f1a115bb3372d9a0f5538b0675a50ab4c1a2ce"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "ec9a443d1de94955007c6ad71a70b0ead2998701a82087cc2cb2555afd6a21d7"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "0324c4aa1ea0ed80b951b046ed99ec5b161a0dc03a7653c1e6936ec41ff5c543"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "9d0065c73c88bc866cf8707581be4a11f94948c3b19f6792ca5724216d8dc10f"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "0989397fd169666a82711baa093158d76002362c294ec19df04ba2581f73c921"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "5e59803a32110ffd17dde8655501a5976eb94acbab95a27a413938f95c8fddd2"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "0e92eff7ddfca3b33437bdfbc6455cf5f9b4929fe7aa621fa67d77f952f14757"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "c71d56b7635d98d89aa2649b931c550ff707e4c0ea76b1561333031d6bc2cde5"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "306e60027e74dae8aac1c7df8d56ff71457ca66e04388c19b864a1ab276fcefb"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "c6ebaac4d755552ede30bb59f4c056b239acccfc8b3635102c4acf9f99ce29bc"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "6673de1d67bca0ccda0308a23b3ea445aa882a0eeb8f9065c473a56eec8c6de8"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "0cb4d187dc02b10ab2973e85e69a96a07d2cd3bfbc5757037dab7cc52eed0523"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "6d16810314a762f108325cbe0bb9b418f747b07f0ca678df0b21c7b254735a63"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "5f5a8b80ad2b403f9b6d7d1e1261eb49702e0b68b088273295dda03fba5185ed"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "788daad5cd5b98aac6dfaa87f6a30fe2375906f3ba4e1d3b591b96941c1efd25"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "285f2652e44e47d11cad75e701bee68669d0a389be67bf692f70f3a98ff29dbd"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "db43319f0bcd22629f6f41edcabdc94bd5ec6ef8bdf5c8094317b23ae6c35e55"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "a003b3a23f09603b6ce66ff007353062de3ce558fb0134f7ec06ae619a45b5b5"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "0b95b4288bc7558938446413a0f77de4faee42be6b436c50a9775204a44cdeda"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "adff1a24c6b0f9711395e847cc8f4feae131de5b4e65e294d31d7fd8da5d6d58"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "21407a3eaf17062a12bfff6724f140d2d18f487b13cb0025060df88a471ee842"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "b73b8ae6474c6208e50cb6e6f3576c5d4c78e724bbca66561cd9c533f8353980"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "3b21d14158dbfd4cbf4e47ed347631f72f0bbb7fef8e105a538864868b0e4ae2"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "1080b866349546c8409bafb967515c9f21066e3e10a1a1a0d9869cceefa26277"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "06567fcbbc02d004826fff3b5d3128d3fa659dea2bfcab8d07fd7d97078d865e"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "5e2b41aa2d5db15d26c437d01df2d656f406a00c93cb165542c6d84b156eec91"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "ec7fb9ca83ccb5f0afe5ce576f379917be0870a0a625f13770713a5a6e06dae9"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "294551af59ebdae32d0bcbdf84a157aa981136496cd967da118a6b3fd1925a03"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "cd525ee82368f5b50ce3da69e8edc555257a1822f861e0bc0e0602326183825f"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "6715305a87748532fd7f93d7e46b83f819537b92023268b909de24a2cfc10785"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "dabfd6021ec4f64997488e20b028f5d078f80face5fefbdaaf85777a384d9ad4"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "6a4669ee44cbc1e1134ca9481681faf7856d7aa8242d29daf4f0d85c099c3c31"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "c90e2ecdacb7207b05da3dc68734f2904df36efa6dcc3179cd3e72f47611438e"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "bdec2b15bd49339d42f4325732073e6c6b97ec5f2a64c7044eb88fd593d43194"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "1f2bebb710bf050586698e8ca807ab3a137fd73474a3a3bc94e23415f5fe250a"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "57889dda3138024650bab094171c6c95515cd3b46d5208f2619bbb5f1effd841"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "4d90b766fc9d9f7ec4db28407b76ccbdeacaf18d9610fea706bb1e1f79dd86d0"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "ed4fcdcc5656eaab9413b7f14873e9f1f0ea2f6465b2663aa044e610fdee2e82"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "79fd71a9ac4183dac25dc6fac71f1a76948d81d40490d16811eff583167cc4a9"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "f9ba4f5592595f97fc0d33ccc6c4ad05e19ac663298ed85a2143553767185e58"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "c1d0b0563a0724390c8750765629d0eda108db38fa54c6cbb02593c5dec3f836"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "59ac7ca685c00bc7933e9c2e0f225b78bbc05fc3238e454c5c77f2c9e576d0a5"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "929709435fd13b637a7d76f3bf8145ce601e9bc37d168148a6a01e1ff692e25e"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "8e39d8c63c5e74e1b7bc3a9b5a3389d94e88c899306b1aa0699bdb8e96c4d639"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "ee266eb1abe5cfbc79847ee68bce289f18c8cb84cbb1be4fe89b34aa40f303c8"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "3f4055d4a8ba8824b780f6ddbe4af0a73bcfcb40f8cbf8f69c10eba5749ca279"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "7ad0e772770df048fb127e7c759cb256eb62a31f1fef757bee7a87b8a6fd4b4e"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "bc67385ef0b1b4658f3a47d5114c8c4346da635f924095a5fe839f43f8273710"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "66ead1b8ca594ce4a79a13ffbc943d87fd0c5bc0c9139b0e688efab1f5173137"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "ec3debed9d3ed1fce37b9cc6e7ac9c5cbb3afddc6b13da0bd4798e562d9112b2"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "d3e8f8ee22152426e8b36bae6d194fe2ac56821fa45970b98c108766e4da1727"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "db99c684f0dd75edf448753be7ae44b4f8292b4a50cd5bf0207c08a8f183fbb0"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "6d900e4b26baca6c70b63798f5cf31b3e3c04fe6915444f634ab4d5f01af2eaa"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "bf0231300276afea5e9a7a76ccacea5468de838be6b53eb4330e3c7f2b5d553d"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "bd6158d573b5415cfda562ca1f4edbf2ff441d0a629dc25c3fa067faf913d91b"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "11a823ff15c7a45abea890868e059d276f85d10faf65bdfd70ea60b01de6e1e4"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "509d2b2ff311fbcd62f95df23f0ede0e0ae9af8eb55406c073847648fdb238e9"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "aca682351cb247950208e0256c340da2316df39db3c9f4a7bdc73df0d4d95d69"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "eba1758f3aed77f07fa5121a94051e2efa23564b0c607217137add64c78a873c"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "7400a739d8616c6a861031978623f84089dd3112c8d9607ccb31e3fe6758d14a"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "102afe47e53703d7eaa8d29a57e17b072cd0fdc45db87c9dd7bff0a0c1cbf38a"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "c50ed6c11e4669430b04fbc3e63d665cf21831a24264f51a8aaadc58f5297b8c"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "fb19858f52c4c8a043e1471c45f3ea6fcd2620df2ce8fb1c67091fa97556fb5e"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "b1d3aaa378c4ac8c342e3a9f0bd49c11e32e07bb8a9a0cadf8adfd6711d8359f"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "05a9b5a20b4a75c75a685218bfd9a69b22dc8c7a3214f18f0377cea46493db1a"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "77c01e2117c02456bfe0bee2a983c123b65c30c7a26b8dec1cebe483428e119d"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "2b394ef23f1bb026a09d24af95f85f4a974e6deb87e185a4b1bc9b12d83cae98"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "af0443f9b4519c675e66ee40f582b77d185cf9ec025527c63fa98218e2b2ab52"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "9e3939b859b1e3eda9211d2b58bbbd43ff46b1a82c76c015b01d4615bd7b6b14"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "e35c82f9625bbe6b11b6ae69d8c90406dd565c55607b16cee92f465c8b15c430"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "703ef42c8761de404d86d1a077aac354e875fba324abd0a557358633c1947d69"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "b0ea540b8a68ffeca2e856021306f2ba48c8a0bcca72b9cb0159ed9c9a9c9f95"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "c853fdae299ef082b5f2af991ccdc0df56088ff5b8210fe4955973fab712859e"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "a7a0992f12c89a05807df95c4263890fd0098ac375334de82b421e0203e315c1"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "private-bridge-read-only-login",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "0f03e059fb2ac6905d33571f0c2297f2bad470edfae0719a668372b4e8ad5cec"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "2063a447d32e18800ac5804b05a4a450dbbd0c3145ecf8908366ba8de62ad839"
+    },
+    {
+      "exitCode": 2,
+      "operation": "private-socket-read-only-login",
+      "status": "OBSERVED",
+      "stderrCategory": "unclassified-output-withheld",
+      "stderrSHA256": "a64124f3d7815e4442347f04d9794e205d3eea981b0fe9239452f589bbb73124"
+    }
+  ],
+  "containment": {
+    "appRolePrivilegesEach": 552,
+    "approvedP6RolesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "baseline552Unchanged": true,
+    "fixtureWrites": 0,
+    "manifests": "PASS",
+    "orderedMD5Each": true,
+    "originalCaddyFilesUnchanged": true,
+    "pristineWrites": 0,
+    "privateFixtureRunningNoPorts": true,
+    "rawCatalogDifferencesRetained": true,
+    "sequencesEach": 2,
+    "sourceRolesUnchanged": true,
+    "sourceWrites": 0,
+    "status": "PASS",
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "tablesEach": 62
+  },
+  "freshLoginChecks": [
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "_supabase",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_acl_repair_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_baseline_proof_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_cloud_baseline_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_owner_parity_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_p5_app",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_rehearsal_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "ir35_storage_compat_a_20261021",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": true,
+      "database": "postgres",
+      "exitCode": 0,
+      "explicitHBAReject": false,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "docker-tcp"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "local"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv4-loopback"
+    },
+    {
+      "applicationFunctionCalled": false,
+      "connectedAsExpected": false,
+      "database": "template1",
+      "exitCode": 2,
+      "explicitHBAReject": true,
+      "passed": true,
+      "role": "ir35_queue_producer",
+      "transport": "ipv6-loopback"
+    }
+  ],
+  "freshReadOnlyHBAProof": {
+    "applicationRejections": 104,
+    "checks": 112,
+    "functionCalls": 0,
+    "noContainerCreated": true,
+    "noReloadRestartOrConfigWrite": true,
+    "queueSuccesses": 8,
+    "status": "PASS"
+  },
+  "operation": "full-containment",
+  "pg_hba": {
+    "actualLoginChecks": 112,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "functionCalls": 0,
+    "ownerApprovedConnectionBoundary": true,
+    "queueDatabase": "postgres",
+    "rawFindingUnchanged": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "status": "PASS"
+  },
+  "pristine": {
+    "authTableChecks": 27,
+    "dataDifferences": [],
+    "extensionChecks": {
+      "capabilityChecks": 198,
+      "conditionalExceptionsOnly": true,
+      "conditions": {
+        "adminOwner": true,
+        "allObjectACLs": true,
+        "ddlCapabilities": true,
+        "versions": true
+      },
+      "memberChecks": 55,
+      "objectACLChecks": 62,
+      "ownerDifferences": [
+        {
+          "cloudOwner": "postgres",
+          "object": "extension:pg_stat_statements",
+          "stagingOwner": "supabase_admin",
+          "version": "1.11"
+        },
+        {
+          "cloudOwner": "postgres",
+          "object": "extension:pgcrypto",
+          "stagingOwner": "supabase_admin",
+          "version": "1.3"
+        },
+        {
+          "cloudOwner": "postgres",
+          "object": "extension:uuid-ossp",
+          "stagingOwner": "supabase_admin",
+          "version": "1.1"
+        }
+      ],
+      "status": "PASS",
+      "typeACLChecks": 4,
+      "unapprovedDifferences": []
+    },
+    "fullP4Complete": false,
+    "passwordHashBytesCoveredByWholeTableFingerprints": true,
+    "privileges": {
+      "differences": [],
+      "exceptionsApproved": [],
+      "morePermissive": [],
+      "repairMustStop": false,
+      "sourceCheckedAt": "2026-10-21T17:02:41Z",
+      "sourceEntries": 552,
+      "sourceWrites": 0,
+      "stagingWrites": 0,
+      "status": "PASS",
+      "targetCheckedAt": "2026-10-26T11:37:44Z",
+      "targetEntries": 552
+    },
+    "schema": {
+      "additionExpiryVerified": true,
+      "approvedP6Additions": [
+        {
+          "approvedP6Addition": true,
+          "attributesVerified": true,
+          "cloudHash": null,
+          "name": "ir35_queue",
+          "object": "role:ir35_queue",
+          "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+        },
+        {
+          "approvedP6Addition": true,
+          "attributesVerified": true,
+          "cloudHash": null,
+          "name": "ir35_queue_producer",
+          "object": "role:ir35_queue_producer",
+          "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+        }
+      ],
+      "baseline552Unchanged": true,
+      "baselineCatalogResult": {
+        "conditionsPASS": true,
+        "exceptions": [
+          {
+            "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+            "object": "extension:pg_stat_statements",
+            "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+            "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+          },
+          {
+            "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+            "object": "extension:pgcrypto",
+            "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+            "stagingHash": "63652c33f708c5861e34f2218529562b"
+          },
+          {
+            "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+            "object": "extension:uuid-ossp",
+            "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+            "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+          }
+        ],
+        "fullDataVerification": false,
+        "metadataMatch": true,
+        "phaseComplete": false,
+        "roleAttributesMatch": true,
+        "sourceCheckedAt": "2026-10-21T17:02:41Z",
+        "sourceObjects": 3752,
+        "status": "FAIL",
+        "targetCheckedAt": "2026-10-26T11:37:44Z",
+        "targetObjects": 3754,
+        "unexplainedDifferences": [
+          {
+            "cloudHash": null,
+            "object": "role:ir35_queue",
+            "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+          },
+          {
+            "cloudHash": null,
+            "object": "role:ir35_queue_producer",
+            "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+          }
+        ]
+      },
+      "exceptions": [
+        {
+          "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+          "object": "extension:pg_stat_statements",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+          "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+        },
+        {
+          "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+          "object": "extension:pgcrypto",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+          "stagingHash": "63652c33f708c5861e34f2218529562b"
+        },
+        {
+          "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+          "object": "extension:uuid-ossp",
+          "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+          "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+        }
+      ],
+      "fullDataVerification": false,
+      "phaseComplete": false,
+      "sourceObjects": 3752,
+      "sourceRoleExpiryUnchanged": true,
+      "sourceRolesUnchanged": true,
+      "status": "PASS_WITH_APPROVED_P6_ADDITIONS",
+      "targetObjects": 3754,
+      "unexplainedDifferences": []
+    },
+    "sequenceChecks": 2,
+    "sourceWrites": 0,
+    "stagingWrites": 0,
+    "status": "PASS",
+    "tables": [
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.audit_log_entries",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.custom_oauth_providers",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "358ad650b328db71025b61931d4517f7",
+        "name": "auth.flow_state",
+        "rows": "47",
+        "serializedBytes": "9268"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "67af4006a7088b82f7e5d69baf174dfc",
+        "name": "auth.identities",
+        "rows": "148",
+        "serializedBytes": "91893"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.instances",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+        "name": "auth.mfa_amr_claims",
+        "rows": "144",
+        "serializedBytes": "23650"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_challenges",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_factors",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_recovery_code_sets",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.mfa_recovery_codes",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_authorizations",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_client_states",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_clients",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.oauth_consents",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+        "name": "auth.one_time_tokens",
+        "rows": "21",
+        "serializedBytes": "5580"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "af55a92e3b0a38f28d29578ed520275b",
+        "name": "auth.refresh_tokens",
+        "rows": "1466",
+        "serializedBytes": "359317"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.saml_providers",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.saml_relay_states",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "87a88933e7be6edec713b7a7f5a356ca",
+        "name": "auth.schema_migrations",
+        "rows": "82",
+        "serializedBytes": "2058"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.scim_tokens",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.scim_users",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "6c4d8a050ce7636a424a8cebdf57f31f",
+        "name": "auth.sessions",
+        "rows": "144",
+        "serializedBytes": "49616"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.sso_domains",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.sso_providers",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "bd1686d190f4f6c94dbb8175f8761a12",
+        "name": "auth.users",
+        "rows": "147",
+        "serializedBytes": "129226"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.webauthn_challenges",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "auth.webauthn_credentials",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+        "name": "public.admin_members",
+        "rows": "2",
+        "serializedBytes": "446"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "9319b54d9de4586f855da822729b529e",
+        "name": "public.application_events",
+        "rows": "815",
+        "serializedBytes": "339172"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "949df7a51a9609a32b36a84bc11964df",
+        "name": "public.application_packets",
+        "rows": "87",
+        "serializedBytes": "2269643"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+        "name": "public.application_submissions",
+        "rows": "64",
+        "serializedBytes": "86590"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "077765c72ba9ff8921e6124ea5577eb6",
+        "name": "public.application_worker_heartbeats",
+        "rows": "479",
+        "serializedBytes": "65305"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+        "name": "public.application_worker_tasks",
+        "rows": "64",
+        "serializedBytes": "46559"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "public.articles",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "ed908b923358cbad706195d02319adb2",
+        "name": "public.automation_rules",
+        "rows": "119",
+        "serializedBytes": "20037"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "2848dbf849c96d21f8042b133c93ba88",
+        "name": "public.automation_runs",
+        "rows": "13",
+        "serializedBytes": "59729"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+        "name": "public.contact_requests",
+        "rows": "5",
+        "serializedBytes": "3435"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+        "name": "public.feedback_messages",
+        "rows": "11",
+        "serializedBytes": "3574"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+        "name": "public.inbox_aliases",
+        "rows": "117",
+        "serializedBytes": "24161"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "7fdfd20d4c05626429e0512f8d2552e7",
+        "name": "public.inbox_messages",
+        "rows": "291",
+        "serializedBytes": "556006"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "f331f2304263b0cd3642c296b2676169",
+        "name": "public.job_alerts",
+        "rows": "5",
+        "serializedBytes": "890"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "e647095d75414a442175f7fb3588caf4",
+        "name": "public.jobs",
+        "rows": "24041",
+        "serializedBytes": "77014823"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "470367f38c31f63ffd34430371f1476c",
+        "name": "public.moderation_logs",
+        "rows": "4327",
+        "serializedBytes": "1921831"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "e56a2b9b48ff149e29fb6c27ad7fa566",
+        "name": "public.profiles",
+        "rows": "122",
+        "serializedBytes": "1763445"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+        "name": "public.resume_versions",
+        "rows": "12",
+        "serializedBytes": "103861"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+        "name": "public.saved_jobs",
+        "rows": "8",
+        "serializedBytes": "1069"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "public.testimonials",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "public.user_entitlements",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+        "name": "public.waitlist",
+        "rows": "22",
+        "serializedBytes": "4184"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "realtime.messages",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "802700104fc0aed2f68c413f50637ba5",
+        "name": "realtime.schema_migrations",
+        "rows": "89",
+        "serializedBytes": "4382"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "realtime.subscription",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+        "name": "storage.buckets",
+        "rows": "4",
+        "serializedBytes": "838"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.buckets_analytics",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.buckets_vectors",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "55a444ce635336fa733a015fc4db877f",
+        "name": "storage.migrations",
+        "rows": "74",
+        "serializedBytes": "8715"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+        "name": "storage.objects",
+        "rows": "73",
+        "serializedBytes": "48321"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.s3_multipart_uploads",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.s3_multipart_uploads_parts",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "storage.vector_indexes",
+        "rows": "0",
+        "serializedBytes": "21"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "35d965e826914770a00b84c3d87dd610",
+        "name": "supabase_migrations.schema_migrations",
+        "rows": "1",
+        "serializedBytes": "2310"
+      },
+      {
+        "algorithm": "pg17-copy-binary-framed-text-v1",
+        "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+        "name": "vault.secrets",
+        "rows": "0",
+        "serializedBytes": "21"
+      }
+    ],
+    "transport": {
+      "customerRowsImported": 0,
+      "differences": [],
+      "exceptions": [],
+      "fullDataVerification": false,
+      "sourceCheckedAt": "2026-10-21T17:02:41Z",
+      "sourceObjects": 327,
+      "sourceWrites": 0,
+      "stagingWrites": 0,
+      "status": "PASS",
+      "targetCheckedAt": "2026-10-26T11:37:44Z",
+      "targetObjects": 327
+    }
+  },
+  "rawFunctionFindingRetained": "REVIEW_REQUIRED",
+  "status": "PASS",
+  "vmWrites": 0
+}

@@ -4,6 +4,7 @@ import sys
 import tarfile
 import unittest
 import tempfile
+import subprocess
 from unittest.mock import patch
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
@@ -34,6 +35,28 @@ class WebBuildTests(unittest.TestCase):
             self.assertIn('--work-tree='+str(repo),command)
             self.assertEqual(pointer.read_text(),body)
             self.assertIn('core.autocrlf=true',command)
+            self.assertEqual(command[1:3], ['-C', str(repo)])
+
+    def test_archive_from_nested_infra_directory_still_contains_repository_root(self):
+        repo = Path(__file__).resolve().parents[3]
+        body = subprocess.check_output(git_command(repo) + ['archive', '--format=tar', 'HEAD'], cwd=repo / 'infra/oracle')
+        with tarfile.open(fileobj=io.BytesIO(body), mode='r:') as snapshot:
+            names = set(snapshot.getnames())
+        self.assertIn('package.json', names)
+        self.assertIn('services/application-worker/Dockerfile.mock', names)
+        self.assertIn('services/application-worker/mock-browser.ts', names)
+
+    def test_canonical_archive_bytes_equal_git_blob_without_rewriting_reference_hashes(self):
+        import hashlib
+        repo = Path(__file__).resolve().parents[3]
+        command = git_command(repo)
+        body = subprocess.check_output(command + ['-c', 'core.autocrlf=false', 'archive', '--format=tar', 'HEAD'], cwd=repo / 'infra/oracle')
+        with tarfile.open(fileobj=io.BytesIO(body), mode='r:') as snapshot:
+            for name in ('mock-browser.ts', 'mock-ats.ts'):
+                relative = 'services/application-worker/' + name
+                archived = snapshot.extractfile(relative).read()
+                blob = subprocess.check_output(command + ['show', 'HEAD:' + relative], cwd=repo)
+                self.assertEqual(hashlib.sha256(archived).hexdigest(), hashlib.sha256(blob).hexdigest())
 
     def test_exclusive_archive_boundary(self):
         for name,kind in [('../escape',tarfile.REGTYPE),('/absolute',tarfile.REGTYPE),('.env',tarfile.REGTYPE),('a/.vercel/project.json',tarfile.REGTYPE),('link',tarfile.SYMTYPE)]:

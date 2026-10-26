@@ -1,0 +1,382 @@
+{
+  "status": "FAIL",
+  "realAcceptance": false,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "networkChanges": 0,
+  "secretChanges": 0,
+  "roleChanges": 0,
+  "workerRestarts": 1,
+  "cases": [
+    {
+      "case": "retained-all-twenty-three-counts",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twenty-three-receipt",
+      "passed": true
+    },
+    {
+      "case": "final-start-paused",
+      "passed": true
+    },
+    {
+      "case": "mock-health",
+      "passed": true
+    },
+    {
+      "case": "enqueue-success",
+      "passed": true
+    },
+    {
+      "case": "outcome-success",
+      "passed": true
+    },
+    {
+      "case": "duplicate-success",
+      "passed": true
+    },
+    {
+      "case": "durable-job-success",
+      "passed": true
+    },
+    {
+      "case": "enqueue-server_error",
+      "passed": true
+    },
+    {
+      "case": "outcome-server_error",
+      "passed": true
+    },
+    {
+      "case": "duplicate-server_error",
+      "passed": true
+    },
+    {
+      "case": "durable-job-server_error",
+      "passed": true
+    },
+    {
+      "case": "enqueue-timeout",
+      "passed": true
+    },
+    {
+      "case": "outcome-timeout",
+      "passed": true
+    },
+    {
+      "case": "duplicate-timeout",
+      "passed": true
+    },
+    {
+      "case": "durable-job-timeout",
+      "passed": true
+    },
+    {
+      "case": "enqueue-lost_ack",
+      "passed": true
+    },
+    {
+      "case": "outcome-lost_ack",
+      "passed": true
+    },
+    {
+      "case": "duplicate-lost_ack",
+      "passed": true
+    },
+    {
+      "case": "durable-job-lost_ack",
+      "passed": true
+    },
+    {
+      "case": "enqueue-captcha",
+      "passed": true
+    },
+    {
+      "case": "outcome-captcha",
+      "passed": true
+    },
+    {
+      "case": "duplicate-captcha",
+      "passed": true
+    },
+    {
+      "case": "durable-job-captcha",
+      "passed": true
+    },
+    {
+      "case": "enqueue-unknown_answer",
+      "passed": true
+    },
+    {
+      "case": "outcome-unknown_answer",
+      "passed": true
+    },
+    {
+      "case": "duplicate-unknown_answer",
+      "passed": true
+    },
+    {
+      "case": "durable-job-unknown_answer",
+      "passed": true
+    },
+    {
+      "case": "concurrent-outcome",
+      "passed": true
+    },
+    {
+      "case": "concurrent-outcome",
+      "passed": true
+    },
+    {
+      "case": "concurrent-browser-exclusion",
+      "passed": true
+    },
+    {
+      "case": "reject-employer-url",
+      "passed": true
+    },
+    {
+      "case": "reject-non-test-actor",
+      "passed": true
+    },
+    {
+      "case": "maintenance-pause",
+      "passed": true
+    },
+    {
+      "case": "maintenance-reject-apply",
+      "passed": true
+    },
+    {
+      "case": "maintenance-reject-schedule",
+      "passed": true
+    },
+    {
+      "case": "queued-before-cancel",
+      "passed": true
+    },
+    {
+      "case": "queued-cancel",
+      "passed": true
+    },
+    {
+      "case": "cancel-idempotent",
+      "passed": true
+    },
+    {
+      "case": "submitting-before-cancel",
+      "passed": true
+    },
+    {
+      "case": "active-cancel",
+      "passed": true
+    },
+    {
+      "case": "orphan-insert",
+      "passed": true
+    },
+    {
+      "case": "orphan-watchdog",
+      "passed": true
+    },
+    {
+      "case": "schedule-mock_ingest",
+      "passed": true
+    },
+    {
+      "case": "schedule-mock_automation",
+      "passed": true
+    },
+    {
+      "case": "schedule-watchdog",
+      "passed": true
+    },
+    {
+      "case": "durable-mock-schedules",
+      "passed": true
+    },
+    {
+      "case": "one-browser-max",
+      "passed": true
+    }
+  ],
+  "resumedLifecycleAttempt": 3,
+  "repairAttempt": 2,
+  "historicalCountersPreserved": true,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "preQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "code": "NativeMockRestartHealthDeadline",
+  "failurePause": {
+    "status": "UNCONFIRMED"
+  },
+  "failureContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "25-owner-final-repair-lifecycle",
+  "manifestSHA256": "1ec2dfb4da03790cc4cb9d9e6db4bbd971ff61f3e81b24f53ea3c3a845c7f600",
+  "imageRollback": {
+    "status": "PASS",
+    "image": "sha256:691acf104f69f7cdf87dadf83370558886c8563fd9a22e1d8e99fb4c7e8f3e3f",
+    "processingPaused": true,
+    "realAcceptance": false,
+    "originalContainerAndImagesRetained": true,
+    "containerName": "ir35-p6-mock-worker-v6-rollback",
+    "containment": {
+      "status": "PASS",
+      "manifests": "PASS",
+      "tablesEach": 62,
+      "orderedMD5Each": true,
+      "sequencesEach": 2,
+      "approvedSchemaExceptionsEach": 3,
+      "appRolePrivilegesEach": 552,
+      "storageObjectsEach": 73,
+      "storageSHA256Match": true,
+      "originalCaddyFilesUnchanged": true,
+      "privateFixtureRunningNoPorts": true,
+      "sourceWrites": 0,
+      "pristineWrites": 0,
+      "fixtureWrites": 0,
+      "approvedP6RolesEach": 2,
+      "baseline552Unchanged": true,
+      "sourceRolesUnchanged": true,
+      "rawCatalogDifferencesRetained": true
+    },
+    "stage": "26-owner-final-repair-rollback",
+    "manifestSHA256": "e1885d6d47df03eebb26a8535791983ecb0b900eb7a3a1ff21d5c236dd13bfab"
+  }
+}

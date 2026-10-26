@@ -1,0 +1,133 @@
+{
+  "status": "PASS",
+  "repairAttempt": 2,
+  "newWorkerStarts": 1,
+  "realAcceptance": false,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "networkChanges": 0,
+  "secretChanges": 0,
+  "roleChanges": 0,
+  "resumedLifecycleAttempt": 3,
+  "historicalCountersPreserved": true,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "preQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "preflightQueueCounts": {
+    "pendingJobs": 0,
+    "ownerConnections": 1,
+    "pendingApplications": 0,
+    "producerConnections": 0
+  },
+  "composeSHA256": "257515da60129bc7eb1b565e530d12232678e3cba62850c582d3df606e576f3c",
+  "unitSHA256": {
+    "ir35-p6-health-proxy-r4-final-repair2.socket": "2c8d8886abe1a3ebefea4cfe68289f6eeb44627d5754da09560c12fc247e827f",
+    "ir35-p6-health-proxy-r4-final-repair2.service": "c67caa2cfcf0f70faa867134e21a3bed2fee189d6aa48c0ea1916274b72d4802"
+  },
+  "queueRoleCustomerAccess": [
+    {
+      "database": "postgres",
+      "checks": 126,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "checks": 114,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p5_app",
+      "checks": 114,
+      "unexpectedAccess": 0
+    }
+  ],
+  "postQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "sourceSHA": "b55dafd709d6b00307b912c50cc3e3883087897a",
+  "image": "sha256:a4dd534d942dbbdf68f6c1d3f8ed7c760b8ccf409105a07e5d4dfc928c96dbc7",
+  "health": {
+    "ok": true,
+    "browserReady": true,
+    "databaseReady": true,
+    "mode": "staging-mock-only",
+    "realAcceptance": false,
+    "paused": true,
+    "active": 0,
+    "peakActive": 0,
+    "buildSHA": "b55dafd709d6b00307b912c50cc3e3883087897a"
+  },
+  "durableHeartbeat": {
+    "fresh": true,
+    "active": 0,
+    "sourceSHA": "b55dafd709d6b00307b912c50cc3e3883087897a"
+  },
+  "hostMemoryAvailableKiB": 8673800,
+  "containerName": "ir35-p6-mock-worker-v6",
+  "composePath": "/opt/ir35/p6-mock-compose-v6.yml",
+  "ownerResume": true,
+  "oldWorkerStopped": true,
+  "oldArtifactsRetained": true,
+  "originalEnvUnchanged": true,
+  "loopbackOnly": true,
+  "pauseRepair": false,
+  "scheduleRepair": true,
+  "stage": "24-owner-final-repair-handover",
+  "manifestSHA256": "ed20f3042701057f7d0e7e8378135cbdde6c87156cb573e1fd4f4dfed61e12a9"
+}

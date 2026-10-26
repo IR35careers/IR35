@@ -1,0 +1,21 @@
+{
+  "status": "OWNER_GATE",
+  "observedAtUTC": "2026-10-25T13:12:21Z",
+  "operation": "read-only HBA inspection",
+  "terminalExitCode": 1,
+  "terminalCode": "KeySafetyError",
+  "keyLoaded": false,
+  "originalFourHourReceiptPreserved": true,
+  "ociRefreshAttemptsAfterExpiry": 1,
+  "ociRefreshResult": "G2: security-token refresh failed; browser sign-in required. Raw output suppressed.",
+  "hbaApplyInvoked": false,
+  "hbaWrites": 0,
+  "workerStarts": 0,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "inspectionNativeJournalOutcome": "UNKNOWN: reconcile existing stage through pinned SSH before any repeat",
+  "newContainmentClaimed": false,
+  "offlineHelperTestsPassed": 394,
+  "sourceHistoryCheck": "PASS 1264 tracked files",
+  "nextGate": "Oracle browser sign-in and separately owner-authorised new SSH lease; never API passphrase or automatic repeat"
+}

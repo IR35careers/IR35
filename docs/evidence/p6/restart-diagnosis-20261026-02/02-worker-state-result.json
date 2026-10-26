@@ -1,0 +1,95 @@
+{
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "bounded-container-events",
+      "status": "OBSERVED"
+    },
+    {
+      "exitCode": 0,
+      "operation": "bounded-container-events",
+      "status": "OBSERVED"
+    }
+  ],
+  "containers": [
+    {
+      "Created": "2026-10-26T08:13:19.018191443Z",
+      "Dead": false,
+      "ExitCode": 0,
+      "FinishedAt": "2026-10-26T08:18:53.849447838Z",
+      "OOMKilled": false,
+      "Paused": false,
+      "RestartCount": 0,
+      "Restarting": false,
+      "Running": false,
+      "StartedAt": "2026-10-26T08:16:55.805414197Z",
+      "Status": "exited",
+      "container": "ir35-p6-mock-worker-v6",
+      "errorPresent": false,
+      "healthStatus": "unhealthy",
+      "image": "sha256:a4dd534d942dbbdf68f6c1d3f8ed7c760b8ccf409105a07e5d4dfc928c96dbc7",
+      "privateAddresses": {
+        "ir35-staging_backend": ""
+      },
+      "restartPolicy": "unless-stopped"
+    },
+    {
+      "Created": "2026-10-26T08:18:54.714171561Z",
+      "Dead": false,
+      "ExitCode": 0,
+      "FinishedAt": "0001-01-01T00:00:00Z",
+      "OOMKilled": false,
+      "Paused": false,
+      "RestartCount": 0,
+      "Restarting": false,
+      "Running": true,
+      "StartedAt": "2026-10-26T08:18:54.797689225Z",
+      "Status": "running",
+      "container": "ir35-p6-mock-worker-v6-rollback",
+      "errorPresent": false,
+      "healthStatus": "healthy",
+      "image": "sha256:691acf104f69f7cdf87dadf83370558886c8563fd9a22e1d8e99fb4c7e8f3e3f",
+      "privateAddresses": {
+        "ir35-staging_backend": "172.18.0.16"
+      },
+      "restartPolicy": "unless-stopped"
+    }
+  ],
+  "currentExitCodeIsAfterRollbackStop": true,
+  "dockerEvents": [
+    {
+      "commandExitCode": 0,
+      "container": "ir35-p6-mock-worker-v6",
+      "dockerMaximumRetainedEvents": 256,
+      "events": [],
+      "historyMayBeTruncated": true
+    },
+    {
+      "commandExitCode": 0,
+      "container": "ir35-p6-mock-worker-v6-rollback",
+      "dockerMaximumRetainedEvents": 256,
+      "events": [],
+      "historyMayBeTruncated": true
+    }
+  ],
+  "historicalOOMExcludedByMissingEvents": false,
+  "operation": "worker-state",
+  "restartIntent": {
+    "artifact": "186-restart-intent.json",
+    "artifactModifiedUTC": "2026-10-26T08:16:55.650383+00:00",
+    "value": {
+      "container": "ir35-p6-mock-worker-v6",
+      "image": "sha256:a4dd534d942dbbdf68f6c1d3f8ed7c760b8ccf409105a07e5d4dfc928c96dbc7",
+      "queueJobsTerminal": true,
+      "realAcceptance": false
+    }
+  },
+  "status": "PASS",
+  "triggerEvidence": "The sealed lifecycle records an explicit docker restart test step and workerRestarts=1, before the separate rollback deployment.",
+  "vmWrites": 0
+}

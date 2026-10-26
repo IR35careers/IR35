@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-dispatch-and-current-safety-intent.json",
+      "sha256": "20ecafa5a5f2dd93eebfe5ecd4634d636511938b00971ce82144c9db928f19bf"
+    },
+    {
+      "name": "01-sealed-dispatch-and-current-safety-result.json",
+      "sha256": "e1b6aafb85350cbf28d6023273f8ccdc634cc88ee745f83d5545ec6d51d2b832"
+    },
+    {
+      "name": "result.json",
+      "sha256": "cff9b59032043c8431cff8e3bc3c6845ce6158b7a791b990c4de6dd1b4be7486"
+    }
+  ],
+  "version": 1
+}

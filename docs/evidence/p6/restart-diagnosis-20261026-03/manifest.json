@@ -1,0 +1,65 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-history-intent.json",
+      "sha256": "86ae2bb0165614dd38edee4c0080f8dd197bf975d10c8e129043daf3ec498b15"
+    },
+    {
+      "name": "01-sealed-history-result.json",
+      "sha256": "0da4ae5c2090592b7e9a105029d57e0cf6ddde7fe3f41879118e043752ca114c"
+    },
+    {
+      "name": "02-worker-state-intent.json",
+      "sha256": "7f37b7c0278ff7d0483fe4abd21e6abaf4dbb79df3da435ec4a3e533ec6ba80a"
+    },
+    {
+      "name": "02-worker-state-result.json",
+      "sha256": "dba7bd853f59b221ca7b18a679f2434e5394f39f05f1b8b318503cd4bb0125f2"
+    },
+    {
+      "name": "03-proxy-routing-intent.json",
+      "sha256": "8f91998b51d07e0daa9d28554e3cce7da434fa76add1cc472b6633a510fc988f"
+    },
+    {
+      "name": "03-proxy-routing-result.json",
+      "sha256": "7d8d5b477eb6742e813f690ca9cd44bde25a80f9441545f8fc966c9ab4aa78d4"
+    },
+    {
+      "name": "04-queue-ledger-intent.json",
+      "sha256": "788e043e6e63b785434580b69caa7f2b254caba4f7689bf1cb18c3d046291c57"
+    },
+    {
+      "name": "04-queue-ledger-result.json",
+      "sha256": "85abeaf054d8dbf71ef803a831b828dc091026edf5baf32ec60e0ecc072d8acd"
+    },
+    {
+      "name": "05-external-isolation-intent.json",
+      "sha256": "7ee3b943ee35ae7060bd2d045376b0b09d29d70ffa4bd487763fdb7cadb70ff0"
+    },
+    {
+      "name": "05-external-isolation-result.json",
+      "sha256": "e7a85700ccfbe0dc2f560ec586664884cc0111babf781f6a306ec4290276761e"
+    },
+    {
+      "name": "06-full-containment-intent.json",
+      "sha256": "ef8a98d06f6e847d7180ef107a990de62092cdd42d070d53b4707b0962e90de3"
+    },
+    {
+      "name": "06-full-containment-result.json",
+      "sha256": "82d5e82a896cb893844c755b13ad4dc6a27a1835bf474bf3b2ec4ceab78d737e"
+    },
+    {
+      "name": "07-ledger-after-intent.json",
+      "sha256": "31ce2a00bd9b887d9c720d335612b842d562e7732525e617a75d8e58b7a7edc9"
+    },
+    {
+      "name": "07-ledger-after-result.json",
+      "sha256": "38841301c28d05afccec0b6d18d4a7324195c02801eca53bee260d8f83a49a53"
+    },
+    {
+      "name": "result.json",
+      "sha256": "cf7741971041ffccccec375d3028da7feb71d354677420a385bc17b7dbe42cf3"
+    }
+  ],
+  "version": 1
+}

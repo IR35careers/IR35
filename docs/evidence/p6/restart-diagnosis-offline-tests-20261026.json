@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "mode": "offline-only",
+  "command": "python -m unittest discover -s infra/oracle/tests",
+  "tests": 477,
+  "seconds": 20.513,
+  "collectorRegressionTests": 11,
+  "proposalMechanismTests": 3,
+  "proposalTestFile": "infra/oracle/tests/test_p6_restart_proxy_proposal.py",
+  "proposalAppliedToVM": false,
+  "historicalIPChangeProven": false,
+  "networkFixture": "Linux loopback only, no Docker/OCI/staging connection",
+  "ociCreateOutputWasMockedFixture": true,
+  "nativeP6Retry": false,
+  "newBuilds": 0,
+  "restarts": 0
+}

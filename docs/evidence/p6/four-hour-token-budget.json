@@ -1,0 +1,12 @@
+{
+  "purpose": "owner-approved30minute token budget",
+  "cloudMutations": 0,
+  "recoverySessionCreates": 0,
+  "checkedAtUTC": "2026-10-25T08:03:13.476811+00:00",
+  "refreshNeeded": false,
+  "status": "PASS",
+  "tokenSecondsRemaining": 2483,
+  "minimumSecondsRequired": 1800,
+  "stage": "06-four-hour-token-budget",
+  "manifestSHA256": "115fe2345a4dd2077132fd801829efa8cfa185ed002d877d85a69a7568c2247a"
+}

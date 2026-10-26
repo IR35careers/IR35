@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "repairAttempt": 1,
+  "workerStarts": 1,
+  "networkChanges": 0,
+  "customerWrites": 0,
+  "secretChanges": 0,
+  "productionChanges": false,
+  "realAcceptance": false,
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "unitSHA256": {
+    "ir35-p6-health-proxy-r1.socket": "bf8f6b599600a6cfb67a8a942c1b71f876559aa12d2efd959eef570da4713697",
+    "ir35-p6-health-proxy-r1.service": "6f9c16a876fad3de7232ae244adc44366e63d7f029337d32cfb9ec7261718c06"
+  },
+  "queueRoleCustomerAccess": [
+    {
+      "database": "postgres",
+      "checks": 126,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p4_20261021t170139z_8be0fc2e",
+      "checks": 114,
+      "unexpectedAccess": 0
+    },
+    {
+      "database": "ir35_p5_app",
+      "checks": 114,
+      "unexpectedAccess": 0
+    }
+  ],
+  "health": {
+    "ok": true,
+    "browserReady": true,
+    "databaseReady": true,
+    "mode": "staging-mock-only",
+    "realAcceptance": false,
+    "paused": false,
+    "active": 0,
+    "peakActive": 0,
+    "buildSHA": "1d21c10b01d2084c8c7a94aee0d6f03d91b4803c"
+  },
+  "loopbackOnly": true,
+  "workerNetworkStillInternal": true,
+  "noNewEgress": true,
+  "unauthenticatedControlStatus": 401,
+  "hostMemoryAvailableKiB": 9027560,
+  "proxyMemoryLimitBytes": 33554432,
+  "workerMemoryLimitBytes": 2684354560,
+  "originalEnvironmentUnchanged": true,
+  "restart": "unless-stopped",
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "08-mock-health-repair-one",
+  "manifestSHA256": "b5f30ea761316f460cf33f8b305541f27aafcad127de1059666ec6bf34118089"
+}

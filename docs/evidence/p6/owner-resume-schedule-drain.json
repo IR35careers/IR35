@@ -1,0 +1,137 @@
+{
+  "status": "PASS",
+  "productionChanges": false,
+  "realAcceptance": false,
+  "newPublications": 0,
+  "customerWrites": 0,
+  "queuePolicyChanges": 0,
+  "secretChanges": 0,
+  "networkChanges": 0,
+  "cases": [
+    {
+      "case": "rollback-preflight",
+      "passed": true
+    },
+    {
+      "case": "start-paused",
+      "passed": true
+    },
+    {
+      "case": "ledger-before-resume",
+      "passed": true
+    },
+    {
+      "case": "resume-owned-command",
+      "passed": true
+    },
+    {
+      "case": "pause-after-drain",
+      "passed": true
+    },
+    {
+      "case": "owned-command-completed",
+      "passed": true
+    },
+    {
+      "case": "zero-application-processing",
+      "passed": true
+    }
+  ],
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "preBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "postBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "smtp": {
+    "status": "PASS",
+    "sinkTotal": 0,
+    "listedMessages": 0,
+    "sinkWrites": 0
+  },
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "drainedExistingSchedule": 1,
+  "observation": {
+    "status": "PASS",
+    "applications": 23,
+    "applyJobs": 22,
+    "scheduleJobs": 1,
+    "scheduleRows": 1,
+    "pendingScheduleJobs": 0,
+    "pendingApplicationJobs": 0,
+    "allRetainedReceiptsMatch": true,
+    "ledgerSHA256": "fbcf22db4f921ee3a6a025b65bbc28bd2a75971e667ac1a15c5b8661dcbb2d4d",
+    "scheduleJobIDSHA256": "0c8207bbbe8ae488c3fa0404dd4257c9fedb45417ee7b52d7775221ef1286774",
+    "scheduleOperation": "mock_ingest",
+    "vmWrites": 0
+  },
+  "sourceSHA": "1c07c8507aa9049c6fe89c2f1c784fb2958084cf",
+  "image": "sha256:691acf104f69f7cdf87dadf83370558886c8563fd9a22e1d8e99fb4c7e8f3e3f",
+  "containerName": "ir35-p6-mock-worker-v5",
+  "composeSHA256": "f84b4cbfda8bd7b6e895ed67d28d76ec0a8735cc3f6bd43b509cf04d59f9cd96",
+  "unitSHA256": {
+    "ir35-p6-health-proxy-r4-drain23.socket": "14d1578aa3e425f81616080f86fb4c4fd6da38635dac330cbe05e126c3702663",
+    "ir35-p6-health-proxy-r4-drain23.service": "4af49c2e1f8db2c8381e6d01438e3b26b7fe98f2906c4c44bb310d2809b6f61e"
+  },
+  "composePath": "/opt/ir35/p6-mock-compose-v5.yml",
+  "processingPaused": true,
+  "oldArtifactsRetained": true,
+  "originalEnvUnchanged": true,
+  "stage": "23-owner-schedule-intent-drain",
+  "manifestSHA256": "8987fe96307fa7d54380fbb8146483ca5438a89f937a10a77de53c937fc1f9ae"
+}

@@ -1,0 +1,33 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-history-intent.json",
+      "sha256": "86ae2bb0165614dd38edee4c0080f8dd197bf975d10c8e129043daf3ec498b15"
+    },
+    {
+      "name": "01-sealed-history-result.json",
+      "sha256": "cdd88e41554431ded6b3e2dbf4b9d177b61aec3ed0fa635aba3c0ad6269e704a"
+    },
+    {
+      "name": "02-queue-before-intent.json",
+      "sha256": "aaea3a3d7d5db7122fd4a0083c85fa1feeb0a4ea938a2bf8ee44e49fda26bbb4"
+    },
+    {
+      "name": "02-queue-before-result.json",
+      "sha256": "d8735b4614360463a5b31c2071d27eca69389ffd55539ed7a12a9ff3977e6cea"
+    },
+    {
+      "name": "03-worker-idle-intent.json",
+      "sha256": "2a60c621006bb73f782fe3843f65086fe502d34a7bc71ccea8de261be4ee9bc5"
+    },
+    {
+      "name": "03-worker-idle-result.json",
+      "sha256": "5e2a70a74d57357fbd756491445707c56f8bcc57c726d9aee4112c88ee7e0a71"
+    },
+    {
+      "name": "result.json",
+      "sha256": "f187d61bfeecb654da5b73450f135ee54c208fb695355f11e75443bf154669e5"
+    }
+  ],
+  "version": 1
+}

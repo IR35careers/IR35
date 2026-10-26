@@ -5,6 +5,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -16,6 +17,157 @@ FINGERPRINT = "SHA256:" + "A" * 43
 
 
 class AgentTests(unittest.TestCase):
+    def test_verified_plain_migration_identity_needs_no_time_based_ssh_renewal(self):
+        import p6_hba
+        with patch.object(p6_hba, 'ensure_agent', return_value={'keyLoaded': True, 'keyFingerprint': FINGERPRINT,
+                                                              'keyLeaseMode': 'until-agent-restart'}), \
+                patch.object(p6_hba, 'ensure_session') as oracle:
+            p6_hba.credential_gate()
+        oracle.assert_called_once_with(minimum_seconds=1800)
+
+    def test_plain_migration_load_has_no_lifetime_and_ignores_old_expiry(self):
+        old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
+                          'expiresAt': time.time()-3600, 'monotonicExpiresAt': time.monotonic()-3600}).encode()
+        write_new(self.directory / 'load-owner-ready-four-hour-20261025-result.json', old)
+        replies = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=replies) as native:
+            proof = agent.ensure_agent(load=True, owner_migration=True)
+        self.assertEqual(native.call_args_list[1].args[0], ['ssh-add', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        self.assertEqual(proof['keyLeaseMode'], 'until-agent-restart')
+        self.assertEqual(proof['keyFingerprint'], FINGERPRINT)
+        self.assertNotIn('keyLifetimeSecondsRemaining', proof)
+        self.assertEqual((self.directory / 'load-owner-ready-four-hour-20261025-result.json').read_bytes(), old)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')) as native:
+            self.assertTrue(agent.ensure_agent(load=True, owner_migration=True)['keyLoaded'])
+        self.assertEqual(native.call_count, 1)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'SameAgent_NoAutomaticReprompt'):
+                agent.ensure_agent(load=True, owner_migration=True)
+        self.assertEqual(native.call_count, 1)
+
+    def test_plain_migration_flags_require_single_explicit_load_and_no_retry_after_failed_prompt(self):
+        for options in ({'owner_migration': True}, {'load': True, 'owner_migration': True, 'owner_four_hour': True}):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(**options)
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=[self.result(1), self.result(1)]):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(load=True, owner_migration=True)
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'already requested'):
+                agent.ensure_agent(load=True, owner_migration=True)
+        self.assertEqual(native.call_count, 1)
+
+    def test_ready_handoff_preserves_prior_leases_and_cannot_prompt_twice(self):
+        old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
+                          'expiresAt': time.time() - 30, 'monotonicExpiresAt': time.monotonic() - 30}).encode()
+        write_new(self.directory / 'load-owner-four-hour-reopen-20261025-result.json', old)
+        write_new(self.directory / 'load-owner-four-hour-20261025-result.json', old)
+        responses = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=responses) as native:
+            proof = agent.ensure_agent(load=True, owner_ready_four_hour=True)
+        self.assertTrue(proof['keyLoaded'])
+        self.assertGreater(proof['keyLifetimeSecondsRemaining'], 14390)
+        self.assertEqual(native.call_args_list[1].args[0], ['ssh-add', '-t', '4h', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        for receipt in ('load-owner-four-hour-20261025-result.json', 'load-owner-four-hour-reopen-20261025-result.json'):
+            self.assertEqual((self.directory / receipt).read_bytes(), old)
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'already requested'):
+                agent.ensure_agent(load=True, owner_ready_four_hour=True)
+        self.assertEqual(native.call_count, 1)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')):
+            self.assertGreater(agent.ensure_agent()['keyLifetimeSecondsRemaining'], 14390)
+
+    def test_ready_handoff_rejects_unexpired_or_mixed_approval(self):
+        write_new(self.directory / 'load-owner-four-hour-reopen-20261025-result.json', json.dumps({
+            'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400, 'expiresAt': time.time() + 3600}).encode())
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'VerifiedExpired'):
+                agent.ensure_agent(load=True, owner_ready_four_hour=True)
+        self.assertEqual(native.call_count, 1)
+        for options in ({'owner_ready_four_hour': True}, {'load': True, 'owner_ready_four_hour': True, 'owner_four_hour_reopen': True}):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(**options)
+
+    def test_owner_fresh_lease_preserves_old_receipts_and_has_one_new_prompt_only(self):
+        old = json.dumps({'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400,
+                          'expiresAt': time.time() - 30, 'monotonicExpiresAt': time.monotonic() - 30}).encode()
+        write_new(self.directory / 'load-owner-four-hour-20261025-result.json', old)
+        write_new(self.directory / 'load-owner-four-hour-20261025.json', b'original attempt retained')
+        responses = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=responses) as native:
+            proof = agent.ensure_agent(load=True, owner_four_hour_reopen=True)
+        self.assertTrue(proof['keyLoaded'])
+        self.assertGreater(proof['keyLifetimeSecondsRemaining'], 14390)
+        self.assertEqual(native.call_args_list[1].args[0], ['ssh-add', '-t', '4h', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        self.assertEqual((self.directory / 'load-owner-four-hour-20261025-result.json').read_bytes(), old)
+        self.assertEqual((self.directory / 'load-owner-four-hour-20261025.json').read_bytes(), b'original attempt retained')
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'already requested'):
+                agent.ensure_agent(load=True, owner_four_hour_reopen=True)
+        self.assertEqual(native.call_count, 1)
+        with patch.object(agent.subprocess, 'run', return_value=self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')):
+            self.assertGreater(agent.ensure_agent()['keyLifetimeSecondsRemaining'], 14390)
+
+    def test_fresh_lease_refuses_unexpired_original_or_noninteractive_or_mixed_flags(self):
+        write_new(self.directory / 'load-owner-four-hour-20261025-result.json', json.dumps({
+            'fingerprint': FINGERPRINT, 'lifetimeSeconds': 14400, 'expiresAt': time.time() + 3600}).encode())
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as native:
+            with self.assertRaisesRegex(KeySafetyError, 'VerifiedExpired'):
+                agent.ensure_agent(load=True, owner_four_hour_reopen=True)
+        self.assertEqual(native.call_count, 1)
+        for options in ({'owner_four_hour_reopen': True}, {'load': True, 'owner_four_hour_reopen': True, 'owner_four_hour': True}):
+            with self.assertRaises(KeySafetyError): agent.ensure_agent(**options)
+
+    def test_owner_four_hour_prompt_uses_exact_ttl_verifies_fingerprint_and_never_repeats(self):
+        write_new(self.directory / 'load-attempt.json', b'original-preserved')
+        responses = [self.result(1), self.result(0), self.result(0, '256 ' + FINGERPRINT + ' fixture (ED25519)')]
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', side_effect=responses) as run:
+            result = agent.ensure_agent(load=True, owner_four_hour=True)
+        self.assertEqual(run.call_args_list[1].args[0], ['ssh-add', '-t', '4h', str(agent.KEY_DIRECTORY / 'ssh_ed25519')])
+        self.assertTrue(result['keyLoaded'])
+        self.assertEqual(result['keyFingerprint'], FINGERPRINT)
+        self.assertGreater(result['keyLifetimeSecondsRemaining'], 14390)
+        self.assertEqual((self.directory / 'load-attempt.json').read_bytes(), b'original-preserved')
+        with patch.object(agent.sys.stdin, 'isatty', return_value=True), patch.object(agent.sys.stdout, 'isatty', return_value=True), \
+                patch.object(agent.subprocess, 'run', return_value=self.result(1)) as run:
+            with self.assertRaises(KeySafetyError):
+                agent.ensure_agent(load=True, owner_four_hour=True)
+        self.assertEqual(run.call_count, 1)
+
+    def test_explicit_owner_retry_preserves_first_attempt_and_consumes_only_one_extra_slot(self):
+        write_new(self.directory/'load-attempt.json',b'{"promptAttempted":true}\n')
+        original=(self.directory/'load-attempt.json').read_bytes()
+        with patch.object(agent.sys.stdin,'isatty',return_value=True),patch.object(agent.sys.stdout,'isatty',return_value=True),patch.object(agent.subprocess,'run',side_effect=[self.result(1),self.result(1)]) as run:
+            with self.assertRaises(KeySafetyError):agent.ensure_agent(load=True,owner_retry=True)
+        self.assertEqual(run.call_count,2)
+        self.assertTrue((self.directory/'load-owner-retry-1.json').is_file())
+        self.assertEqual((self.directory/'load-attempt.json').read_bytes(),original)
+        with patch.object(agent.sys.stdin,'isatty',return_value=True),patch.object(agent.sys.stdout,'isatty',return_value=True),patch.object(agent.subprocess,'run',return_value=self.result(1)) as run:
+            with self.assertRaises(KeySafetyError):agent.ensure_agent(load=True,owner_retry=True)
+        self.assertEqual(run.call_count,1)
+
+    def test_owner_retry_cannot_silently_replace_the_normal_first_prompt(self):
+        with patch.object(agent.sys.stdin,'isatty',return_value=True),patch.object(agent.sys.stdout,'isatty',return_value=True),patch.object(agent.subprocess,'run',return_value=self.result(1)) as run:
+            with self.assertRaises(KeySafetyError):agent.ensure_agent(load=True,owner_retry=True)
+        self.assertEqual(run.call_count,1)
+        self.assertFalse((self.directory/'load-owner-retry-1.json').exists())
+
+    def test_hold_only_after_verified_load_has_no_secret_input_or_polling(self):
+        with patch.object(agent,'ensure_agent',return_value={'agentReady':True,'keyLoaded':True,'socket':'private-path'}) as ensure,patch.object(agent.signal,'pause') as pause,patch('builtins.print') as output:
+            agent.cli(['load-and-hold'])
+        ensure.assert_called_once_with(load=True);pause.assert_called_once_with()
+        self.assertNotIn('private-path',str(output.call_args_list))
+        with patch.object(agent,'ensure_agent',return_value={'agentReady':True,'keyLoaded':False}),patch.object(agent.signal,'pause') as pause,patch('builtins.print'):
+            with self.assertRaises(KeySafetyError):agent.cli(['load-and-hold'])
+        pause.assert_not_called()
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

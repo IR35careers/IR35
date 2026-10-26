@@ -1,0 +1,24 @@
+{
+  "auditAttempt": 2,
+  "code": "ReadOnlyAuditFailed_worker-idle",
+  "configChanges": 0,
+  "newImageBuilds": 0,
+  "p6Reruns": 0,
+  "phaseComplete": false,
+  "productionChanges": false,
+  "retries": 0,
+  "sourceWrites": 0,
+  "status": "FAIL",
+  "steps": [
+    {
+      "case": "sealed-history",
+      "status": "PASS"
+    },
+    {
+      "case": "queue-before",
+      "status": "PASS"
+    }
+  ],
+  "vmWrites": 0,
+  "workerRestarts": 0
+}

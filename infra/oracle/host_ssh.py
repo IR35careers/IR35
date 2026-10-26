@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+from contextlib import nullcontext
 
 from bootstrap_audit import KEY_DIRECTORY, ocid
 from key_ceremony import KeySafetyError, write_new
@@ -128,12 +129,24 @@ def run_remote(source, arguments, *, timeout=65, user="ubuntu"):
                "ForwardAgent=no", "ClearAllForwardings=yes", "ConnectTimeout=10", "ServerAliveInterval=10", "ServerAliveCountMax=3",
                "UserKnownHostsFile=" + str(KNOWN_HOSTS), "GlobalKnownHostsFile=/dev/null", "IdentityAgent=" + agent["socket"]]
     remote = (["sudo", "-n"] if user == "ubuntu" else []) + ["/usr/bin/python3", "-u", "-", *arguments]
-    args = ["ssh", "-F", "/dev/null", *[item for option in options for item in ("-o", option)], "-i", str(KEY_DIRECTORY / "ssh_ed25519"),
-            user + "@" + state["publicIP"], shlex.join(remote)]
+    transport = os.environ.get("IR35_SSH_TRANSPORT", "direct")
+    if transport not in ("direct", "bastion", "bastion-owner1"):
+        raise KeySafetyError("Unknown SSH transport; no fallback or arbitrary proxy.")
+    context = nullcontext(None)
+    if transport == "bastion":
+        import p6_bastion
+        context = p6_bastion.tunnel(agent, state)
+    elif transport == "bastion-owner1":
+        import p6_bastion_owner1
+        context = p6_bastion_owner1.tunnel(agent, state)
     # Source DB/Storage read credentials are local-only, not needed by SSH.
     environment = {key: value for key, value in os.environ.items() if key not in ("SSH_ASKPASS", "SSH_ASKPASS_REQUIRE", "IR35_SOURCE_STORAGE_KEY", "IR35_SOURCE_ANON_KEY") and not key.startswith("PG")}
     environment["SSH_AUTH_SOCK"] = agent["socket"]
-    result = subprocess.run(args, input=source, capture_output=True, text=True, timeout=call_timeout(timeout), env=environment, check=False)
+    with context as port:
+        extra = ["-p", str(port), "-o", "HostKeyAlias=" + state["publicIP"]] if port is not None else []
+        args = ["ssh", "-F", "/dev/null", *[item for option in options for item in ("-o", option)], *extra,
+                "-i", str(KEY_DIRECTORY / "ssh_ed25519"), user + "@" + ("127.0.0.1" if port is not None else state["publicIP"]), shlex.join(remote)]
+        result = subprocess.run(args, input=source, capture_output=True, text=True, timeout=call_timeout(timeout), env=environment, check=False)
     if result.returncode:
         if connection_not_ready(result.returncode, result.stderr):
             raise SshNotReady("SSH transport unavailable; only an explicit reboot wait may poll this condition.")

@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "roleWrites": 0,
+  "secretChanges": 0,
+  "productionChanges": false,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0
+  },
+  "database": {
+    "logging": {
+      "pgaudit": "none",
+      "statement": "none",
+      "errorStatement": "panic",
+      "pgStatStatements": "top"
+    },
+    "appSchemas": [
+      "auth",
+      "public",
+      "storage"
+    ],
+    "rolesAbsent": true,
+    "schemaOwner": "postgres",
+    "queueObjects": 0,
+    "administrator": "supabase_admin",
+    "existingSuperuser": true
+  },
+  "dbImage": "sha256:a9946f08d31e8eb1149229c94e5c26603a9233116807cbbd93d75179cbac516a",
+  "logDriver": "none",
+  "publicPorts": false,
+  "stage": "02-role-preflight",
+  "manifestSHA256": "54a353c10d8ae7005b8a73e086e4f33818064d967f7af0b1980e7b6c0715ebb0"
+}

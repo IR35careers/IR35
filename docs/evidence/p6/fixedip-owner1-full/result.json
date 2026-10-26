@@ -1,0 +1,10 @@
+{
+  "code": "ReadOnlyAuditFailed_fixedip-full",
+  "historicalAttemptsPreserved": true,
+  "newBuilds": 0,
+  "operation": "full",
+  "ownerFixedIPAttempt": 1,
+  "phaseComplete": false,
+  "productionChanges": false,
+  "status": "FAIL"
+}

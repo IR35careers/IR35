@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-26",
+  "authorization": "one read-only Docker diagnosis, not an audit retry or repair",
+  "container": "ir35-p6-mock-worker-v3",
+  "dockerInspectCallsAllowed": 1,
+  "dockerTopCallsAllowed": 1,
+  "inspectFields": ["State.Status", "Running", "Paused", "ExitCode", "RestartCount", "StartedAt", "FinishedAt"],
+  "topArguments": ["-eo", "stat,comm"],
+  "topStdout": "discarded",
+  "topStderr": "sanitised before returning; raw SHA256 only",
+  "vmWrites": 0,
+  "retries": 0,
+  "fixesBuildsRestartsOrConfigChanges": false
+}

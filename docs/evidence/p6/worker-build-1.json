@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "attempt": 1,
+  "sourceSHA": "1d21c10b01d2084c8c7a94aee0d6f03d91b4803c",
+  "productionChanges": false,
+  "serviceChanges": 0,
+  "realAcceptance": false,
+  "image": "sha256:68e887e8d9a5dfc18c0fd4421f41af318257340e25d611faee0c94f1305062fc",
+  "architecture": "linux/arm64",
+  "nonroot": true,
+  "imageBytes": 5831823899,
+  "versions": {
+    "playwright": "1.61.0",
+    "pgBoss": "12.38.0",
+    "architecture": "arm64"
+  },
+  "browser": {
+    "ok": true,
+    "browserReady": true,
+    "submissions": 0
+  },
+  "archiveSHA256": "5a8e7881277b4492c0fceeb53e0ad2d6cdc01af0088e6486b5d34b0d313d4536",
+  "registryPublished": false,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "elapsedSeconds": 346.658,
+  "stage": "01-build",
+  "manifestSHA256": "d43a358991518953da47ca59cb86971c4b83ca708105a5c0b8aec5c8ddb0218a"
+}

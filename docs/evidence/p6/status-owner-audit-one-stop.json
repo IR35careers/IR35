@@ -1,0 +1,53 @@
+{
+  "status": "STOP",
+  "operation": "owner-approved HTTP-status repair prerequisite audit",
+  "recordedAtUTC": "2026-10-25T22:42:43Z",
+  "authorization": {
+    "narrowStatusMappingFix": true,
+    "newNativeArmImagesAllowed": 1,
+    "newNativeArmImagesBuilt": 0,
+    "newStagingRerunsAllowed": 1,
+    "newStagingRerunsStarted": 0,
+    "noRetryOnFailure": true
+  },
+  "readOnlyAudit": {
+    "attempts": 1,
+    "terminalExitCode": 1,
+    "errorType": "KeySafetyError",
+    "exactRedactedError": "Staging command failed: docker; exit=1; output suppressed",
+    "failingDockerSubcommand": "NOT_CAPTURED by the existing runtime wrapper",
+    "structuredIntermediateObservations": "NOT_CAPTURED; the audit failed before its final JSON output",
+    "queueAuditSMTPAndWorkerEffectsProof": "INCOMPLETE; do not substitute the earlier stage16 evidence",
+    "retries": 0
+  },
+  "separateReadOnlyHostDiagnostic": {
+    "psAvailable": true,
+    "usrBinPsPresent": true,
+    "dockerCLIAvailable": true,
+    "mutations": 0,
+    "rootCauseEstablished": false
+  },
+  "previousEvidencePreserved": {
+    "stage16ManifestSHA256": "b20410a43d14bc947590cf2b7f29e6104c5880b4199a2b6c155e78e5bde75ee9",
+    "diagnosisSHA256": "b13fd3bb6d1e5dc9c59592862a0c451391b2e13b3624403f42d020432cf3d4ea",
+    "newFullContainmentPassClaimed": false
+  },
+  "changesDuringThisAttempt": {
+    "workerSourceEdits": 0,
+    "nativeBuilds": 0,
+    "imageSelections": 0,
+    "workerStartsOrRestarts": 0,
+    "queueWrites": 0,
+    "databaseWrites": 0,
+    "smtpWrites": 0,
+    "secretChanges": 0,
+    "ociResourceChanges": 0,
+    "productionChanges": false
+  },
+  "rollback": {
+    "required": false,
+    "reason": "No build, deployment or image switch was attempted; previous image and configuration were never replaced."
+  },
+  "phaseComplete": false,
+  "nextStep": "STOP under the owner's no-retry rule. Proposed tooling repair: capture and seal each read-only observation independently, identify every allowed Docker operation in errors without logging container environment/credentials, then request a distinct bounded prerequisite audit. The one new ARM image and P6 rerun remain unused; do not replay stage16 or proceed to a build without a complete prerequisite PASS."
+}

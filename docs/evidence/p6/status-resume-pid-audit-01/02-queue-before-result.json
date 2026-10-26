@@ -1,0 +1,30 @@
+{
+  "applicationCount": 12,
+  "checks": {
+    "allTwelveReceiptsUnchanged": true,
+    "exactExpectedApplicationIDs": true,
+    "exactExpectedJobIDs": true,
+    "noPendingJobs": true,
+    "noScheduleWrite": true,
+    "noUnexpectedJobs": true
+  },
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-compose-read-only-psql",
+      "status": "PASS"
+    }
+  ],
+  "jobCount": 12,
+  "ledgerSHA256": "2acb6f3affe7d313029123fcf58de93f201c66aeda6e75a02fa85bd477dabc3a",
+  "mutations": 0,
+  "operation": "queue-before",
+  "pendingJobCount": 0,
+  "scheduleCount": 0,
+  "status": "PASS"
+}

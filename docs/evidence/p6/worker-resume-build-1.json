@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "attempt": 1,
+  "sourceSHA": "2bf2bd2eb86a4d50875c66253d9bfd33e10d1936",
+  "productionChanges": false,
+  "serviceChanges": 0,
+  "realAcceptance": false,
+  "ownerResume": true,
+  "journal": "/opt/ir35/.env.p6-resume-builds-20261026",
+  "priorBuildManifestSHA256": "f5399660280797e9f189affaaa6d3be5111b09083afa7cb34859bbde5b6f4393",
+  "historicalBuildSlotsPreserved": true,
+  "pauseReconciliationManifestSHA256": "5cc51791a86c13913296bd2707c54e279728822e67911b81bd6ff57d81f4d23a",
+  "pidAuditManifestSHA256": "7e08a4af09655a9be9efd249f5f0adcc1c4c8eb4691839a319d7470a241e1e4a",
+  "image": "sha256:88391137bf79292492fd85463461ae81bbf246b6e7045d00793bbb5f5d2bbdc0",
+  "architecture": "linux/arm64",
+  "nonroot": true,
+  "imageBytes": 5831742864,
+  "versions": {
+    "playwright": "1.61.0",
+    "pgBoss": "12.38.0",
+    "architecture": "arm64"
+  },
+  "browser": {
+    "ok": true,
+    "browserReady": true,
+    "submissions": 0
+  },
+  "archiveSHA256": "2b82d8faedf430ee5ea261792a26eb90d74329c553872c2ccaaad0fd75e1030d",
+  "registryPublished": false,
+  "containment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "elapsedSeconds": 54.309,
+  "stage": "01-build",
+  "manifestSHA256": "2e73cbaa356d38104340c257f814ea3daf3414765295f9ba161bddbbeea73c22"
+}

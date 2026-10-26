@@ -1,0 +1,22 @@
+{
+  "status": "OWNER_GATE",
+  "phase": "P6",
+  "operation": "queue-role-preflight",
+  "failure": "SSH identity unavailable after WSL restart",
+  "agentReady": true,
+  "keyLoaded": false,
+  "failureBeforeSSH": true,
+  "vmRoleWrites": 0,
+  "vmCredentialChanges": 0,
+  "vmServiceChanges": 0,
+  "productionChanges": false,
+  "p5SDK": {
+    "status": "PASS",
+    "actualStatuses": [401, 401, 200],
+    "evidence": "p5-sdk-owner1/edge-summary.json",
+    "edgeManifestSHA256": "894c6408b8c47329106d0061666e728a0224d92e6cc7e8410944722d60ce616c",
+    "containment": "PASS"
+  },
+  "requiredOwnerAction": "Load existing encrypted SSH key at the native hidden prompt, once this boot; leave that window open.",
+  "fullPhaseComplete": false
+}

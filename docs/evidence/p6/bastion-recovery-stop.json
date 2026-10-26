@@ -1,0 +1,62 @@
+{
+  "status": "STOP",
+  "phase": "P6",
+  "gate": "bastion-recovery-tooling",
+  "ownerBrowserAuthentication": "PASS",
+  "existingSSHAgentKeyLoaded": true,
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "FAIL",
+      "code": "CLIError",
+      "cause": "Wrong CLI option --client-cidr-block-allow-list; actual installed option is --client-cidr-list",
+      "cloudMutationReached": false
+    },
+    {
+      "attempt": 2,
+      "status": "FAIL",
+      "code": "Old failure not proven to be pre-HTTP parser rejection",
+      "cause": "Repair preflight expected a different error spelling and stderr instead of stdout",
+      "cloudMutationReached": false
+    },
+    {
+      "attempt": 3,
+      "status": "FAIL",
+      "code": "Old failure not proven to be pre-HTTP parser rejection",
+      "cause": "Repair preflight inferred exit 1 from the Windows shell; native Python receives exit 2 and stdout",
+      "cloudMutationReached": false
+    }
+  ],
+  "independentReadback": {
+    "bastionState": "ACTIVE",
+    "clientAllowlistUnchanged": true,
+    "sessionCreated": false,
+    "vmState": "RUNNING",
+    "shape": "VM.Standard.A1.Flex",
+    "ocpus": 2,
+    "memoryGB": 12,
+    "publicSSHBroadened": false,
+    "privateBastionSSHChanged": false,
+    "iamChanges": 0,
+    "productionChanges": false
+  },
+  "parserDiagnostic": {
+    "status": "PASS",
+    "tool": "installed OCI CLI via Python subprocess",
+    "publicFixturesOnly": true,
+    "exitCode": 2,
+    "outputStream": "stdout",
+    "message": "Error: No such option '--client-cidr-block-allow-list'. Did you mean '--client-cidr-list'?"
+  },
+  "offlineRepair": "Correct option, combined captured streams, native exit-code assertion, actual vendor-parser regression and hold-before-OCI test; NOT executed live",
+  "native07ProbeOutcome": "UNKNOWN; reconcile exact stage and owned no-mount fixture after transport recovery, never replay blindly",
+  "lastFullContainment": {
+    "status": "PASS",
+    "evidence": "mock-start.json",
+    "manifestSHA256": "b664ca0803a5978b6846833c4edac58383cfe83aa4eb725cdee44f919c999ef9",
+    "currentRecheck": "NOT RUN: SSH transport unavailable"
+  },
+  "nextLiveAttempt": "HELD; owner must explicitly reopen bounded tooling repair with existing journals retained",
+  "realAcceptance": false,
+  "cutoverApproved": false
+}

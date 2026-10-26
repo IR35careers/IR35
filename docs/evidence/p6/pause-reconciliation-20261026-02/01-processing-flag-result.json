@@ -1,0 +1,41 @@
+{
+  "APPLY_RUNNER": "mock",
+  "DockerPaused": false,
+  "RestartCount": 0,
+  "StartedAt": "2026-10-25T15:09:10.813384336Z",
+  "checks": {
+    "activeZero": true,
+    "containerRunning": true,
+    "dockerNotPaused": true,
+    "mockModeConfigured": true,
+    "mockOnlyHealth": true,
+    "noContainerRestart": true,
+    "pauseEvidencePredatesReport": true,
+    "processingFlagPaused": true,
+    "sameVerifiedBuildSHA": true,
+    "sameVerifiedImage": true,
+    "startedBeforePauseReport": true,
+    "unchangedSincePriorDiagnosis": true
+  },
+  "commands": [
+    {
+      "exitCode": 0,
+      "operation": "findmnt-data-volume",
+      "status": "PASS"
+    },
+    {
+      "exitCode": 0,
+      "operation": "docker-inspect",
+      "status": "PASS"
+    }
+  ],
+  "cutoffUTC": "2026-10-25T22:36:00+00:00",
+  "dockerPauseOrStopWasNeverRequestedByFailureHandler": true,
+  "expectedInternalHeartbeatTraffic": true,
+  "explanation": "The /mock/maintenance processing flag gates queue fetches; the container remains alive for health, the empty-queue watchdog and database heartbeat.",
+  "operation": "processing-flag",
+  "processingPaused": true,
+  "status": "PASS",
+  "vmWrites": 0,
+  "workerActive": 0
+}

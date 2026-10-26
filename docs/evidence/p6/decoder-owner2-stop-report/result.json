@@ -1,0 +1,75 @@
+{
+  "noRetry": true,
+  "observation": {
+    "dispatch": {
+      "commandExitCode": 0,
+      "commandStderr": {
+        "length": 0,
+        "redacted": true,
+        "sha256Prefix": "e3b0c44298fc"
+      },
+      "commandStdout": {
+        "length": 0,
+        "redacted": true,
+        "sha256Prefix": "e3b0c44298fc"
+      },
+      "dispatcherStderr": [],
+      "service": {
+        "ExecMainCode": "0",
+        "ExecMainStatus": "0",
+        "Result": "success"
+      },
+      "status": "FAIL",
+      "unit": "ir35-p6-mock-watchdog-decoder2.service"
+    },
+    "dispatchGateStatus": "FAIL",
+    "phaseComplete": false,
+    "queue": {
+      "applications": 45,
+      "employerURLPayloads": 0,
+      "jobs": 50,
+      "newJobs": [
+        {
+          "created_at": "2026-10-26T14:11:55.388166+00:00",
+          "id": "0ec588ee-fbd8-4c05-8367-c7e0d5437fc1",
+          "kind": "staging_mock_schedule",
+          "name": "ir35-staging-mock-schedule",
+          "operation": "watchdog",
+          "retry_count": 0,
+          "state": "created"
+        }
+      ],
+      "pendingJobs": 1,
+      "scheduleReceipts": 7,
+      "terminalApplications": 45
+    },
+    "queueReadExitCode": 0,
+    "readOnly": true,
+    "sealedNativeManifestSHA256": "028b5e3ac651d22a015e50e6ef53a25172fec367d23ece3f0fbbc59a39c1c76b",
+    "smtp": {
+      "RestartCount": 0,
+      "StartedAt": "2026-10-20T21:06:05.524915751Z",
+      "contentLogged": false,
+      "messages": 0,
+      "privateUnpublished": true,
+      "returnedMessages": 0
+    },
+    "status": "PASS",
+    "systemdNow": {
+      "ActiveState": "inactive",
+      "ExecMainCode": "0",
+      "ExecMainExitTimestamp": "",
+      "ExecMainStartTimestamp": "",
+      "ExecMainStatus": "0",
+      "InvocationID": "",
+      "Result": "success",
+      "SubState": "dead"
+    },
+    "systemdReadExitCode": 0,
+    "vmWrites": 0
+  },
+  "phaseComplete": false,
+  "readOnly": true,
+  "status": "PASS",
+  "vmWrites": 0
+}
