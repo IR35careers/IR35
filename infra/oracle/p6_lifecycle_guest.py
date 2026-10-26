@@ -210,6 +210,9 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'realAcceptance': False, 'customerWrites': 0, 'productionChanges': False,
               'networkChanges': 0, 'secretChanges': 0, 'roleChanges': 0, 'workerRestarts': 0, 'cases': []}
+    if owner_resume:
+        result.update(resumedLifecycleAttempt=3 if schedule_repair else 2 if pause_repair else 1,
+            repairAttempt=2 if schedule_repair else 1 if pause_repair else 0,historicalCountersPreserved=True)
     sequence = 0
 
     def record(name, observed):
@@ -410,7 +413,7 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
         result['postQueueBoundary'] = verify_live(data, original, store, function_scope(original))
         result['containment'] = check_containment(data, runtime, store, stage, 'post')
         result.update(status='PASS', phaseComplete=False, scenarios=len(EXPECTED), persistedReceipts=len(snapshots),
-                      repairAttempt=1 if repair_one else 0, originalFailedReceiptsPreserved=len(prior_receipts),
+                      repairAttempt=2 if schedule_repair else 1 if pause_repair or repair_one else 0, originalFailedReceiptsPreserved=len(prior_receipts),
                       scope='private mock lifecycle only; app/Realtime/timer integration still required')
     except Exception as error:
         result['code'] = str(error) if isinstance(error, RecoveryError) else type(error).__name__

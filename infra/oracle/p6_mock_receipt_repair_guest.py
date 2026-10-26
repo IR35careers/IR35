@@ -168,6 +168,9 @@ def run(data, runtime, *, owner_resume=False,pause_repair=False,schedule_repair=
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'repairAttempt': 1, 'newWorkerStarts': 0, 'realAcceptance': False,
               'customerWrites': 0, 'productionChanges': False, 'networkChanges': 0, 'secretChanges': 0, 'roleChanges': 0}
+    if owner_resume:
+        result.update(repairAttempt=2 if schedule_repair else 1 if pause_repair else 0,
+            resumedLifecycleAttempt=3 if schedule_repair else 2 if pause_repair else 1,historicalCountersPreserved=True)
     requested = proxy_switched = old_stopped = False
     installed = []
     old_address = None

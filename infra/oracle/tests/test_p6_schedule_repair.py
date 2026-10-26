@@ -83,6 +83,8 @@ class ScheduleRepairTests(unittest.TestCase):
         self.assertIn('retained-all-twenty-three-receipt',code)
         self.assertIn('FinalLifecycleRequiresExactDrainedLedger',code)
         self.assertIn('25-owner-final-repair-lifecycle',code)
+        self.assertIn('resumedLifecycleAttempt=3 if schedule_repair',code)
+        self.assertIn('repairAttempt=2 if schedule_repair',code)
         self.assertIn("empty == {'applications': 0, 'schedules': 0, 'applyJobs': 0}",code)
         self.assertIn("empty == {'applications': 4, 'schedules': 0, 'applyJobs': 4}",code)
         self.assertIn('durable-after-restart',code)
