@@ -15,6 +15,15 @@ from p6_audit_log import AuditFailure
 
 
 class RestartDiagnosisTests(unittest.TestCase):
+    def test_remote_bootstrap_bundles_required_audit_dependency_before_collector(self):
+        self.assertEqual(controller.MODULES[0],'p6_audit_log')
+        self.assertLess(controller.MODULES.index('p6_audit_log'),controller.MODULES.index('p6_restart_diagnosis_guest'))
+        source=inspect.getsource(guest)
+        self.assertIn('from p6_audit_log import',source)
+        main=inspect.getsource(controller.main)
+        self.assertIn('verified_manifest(first)',main)
+        self.assertIn('ExactFirstCollectionBootstrapFailureRequired',main)
+        self.assertIn('previousCollectionManifestSHA256',main)
     def test_no_mutating_command_is_accepted(self):
         for command in (['docker','start',guest.FAILED],['docker','restart',guest.FAILED],['docker','run','image'],
                         ['systemctl','restart',guest.FINAL_UNIT+'.service'],['docker','compose','up','-d'],

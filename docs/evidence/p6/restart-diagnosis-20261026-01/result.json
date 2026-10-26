@@ -1,0 +1,14 @@
+{
+  "cases": [],
+  "code": "ReadOnlyAuditFailed_sealed-history",
+  "configChanges": 0,
+  "jobPublications": 0,
+  "lifecycleAttemptBudgetReset": false,
+  "newBuilds": 0,
+  "phaseComplete": false,
+  "productionChanges": false,
+  "readOnly": true,
+  "restarts": 0,
+  "status": "FAIL",
+  "vmWrites": 0
+}

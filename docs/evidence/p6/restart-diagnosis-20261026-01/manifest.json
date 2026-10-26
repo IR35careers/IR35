@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-sealed-history-intent.json",
+      "sha256": "86ae2bb0165614dd38edee4c0080f8dd197bf975d10c8e129043daf3ec498b15"
+    },
+    {
+      "name": "01-sealed-history-result.json",
+      "sha256": "5111df616a0bfc3e8d7988fe8bf233234d81b8cad8f792a60555ab9313a3e6a3"
+    },
+    {
+      "name": "result.json",
+      "sha256": "84bd8b05747d39cf37d2bbddf8a5adabd0da7bc59a183c83b6e0d48996a6ea68"
+    }
+  ],
+  "version": 1
+}

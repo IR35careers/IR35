@@ -5,9 +5,10 @@ import sys
 import cloud_schema as schema
 import p6_resume
 from p6_audit_log import AuditFailure,Journal
+from p6_pause_reconcile import verified_manifest
 
 CASES=('sealed-history','worker-state','proxy-routing','queue-ledger','external-isolation','full-containment','ledger-after')
-MODULES=('p6_pause_reconcile_guest','p6_restart_diagnosis_guest')
+MODULES=('p6_audit_log','p6_pause_reconcile_guest','p6_restart_diagnosis_guest')
 
 
 def payload():
@@ -32,12 +33,21 @@ def remote_case(name,data):
 
 
 def main():
-    if sys.argv[1:]!=['--read-only']:raise AuditFailure('ExplicitOwnerReadOnlyRestartDiagnosisRequired')
-    root=p6_resume.DIRECTORY/'restart-diagnosis-20261026-01'
+    if sys.argv[1:] not in (['--read-only'],['--read-only-tooling-repair-one']):raise AuditFailure('ExplicitOwnerReadOnlyRestartDiagnosisRequired')
+    repair=sys.argv[1:]==['--read-only-tooling-repair-one']
+    root=p6_resume.DIRECTORY/('restart-diagnosis-20261026-02' if repair else 'restart-diagnosis-20261026-01')
     if root.exists():raise AuditFailure('RestartDiagnosisRecorded_NoReplay')
+    previous=None
+    if repair:
+        first=root.with_name('restart-diagnosis-20261026-01')
+        previous=verified_manifest(first)
+        failure=json.loads((first/'01-sealed-history-result.json').read_text())
+        if previous!='941cec46766f225482fc126802fb2241c71e14e77ffb7851189b18aa72a0f284' or failure.get('exceptionType')!='KeySafetyError':
+            raise AuditFailure('ExactFirstCollectionBootstrapFailureRequired')
     data=payload();journal=Journal(root)
     result={'status':'FAIL','readOnly':True,'vmWrites':0,'newBuilds':0,'restarts':0,'jobPublications':0,'configChanges':0,
-            'productionChanges':False,'phaseComplete':False,'lifecycleAttemptBudgetReset':False,'cases':[]}
+            'productionChanges':False,'phaseComplete':False,'lifecycleAttemptBudgetReset':False,'cases':[],
+            'collectionAttempt':2 if repair else 1,'toolingRepairAttempt':1 if repair else 0,'previousCollectionManifestSHA256':previous}
     try:
         for index,name in enumerate(CASES,1):
             observed=journal.step(index,name,lambda:remote_case(name,data))
