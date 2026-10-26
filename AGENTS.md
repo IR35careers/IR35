@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October owner journal-capture repair and ONE full P6 allowance
+
+- Latest explicit approval reopens offline active InvocationID capture plus bounded unit/time journal fallback, without relaxing evidence. Preserve every previous failed stage/counter; no second isolated dispatch. Record and process ONLY existing watchdog job `0ec588ee-fbd8-4c05-8367-c7e0d5437fc1`, never delete, republish or reset it. Require one matching mock receipt, unchanged prior ledger, SMTP0/employer payload0 and unconditional original rollback restoration/containment.
+- Only after that passes, ONE fresh full P6 lifecycle at fixed172.18.0.240 with the retained digest-pinned rollback. Actual schedules use repaired capture; preserve SDK401/401/200, Realtime, heartbeat/restart and full62MD5/Auth/2seq/3exceptions/552+queue roles/fresh112HBA/73Storage. ANY failure hard STOP with rollback/evidence, no retry. Then conditional push to draftPR57 and P7/P8/P9 PREP only. No production/DNS/cloud/Vercel/Google/IAM/network-resource/secret-value/paid changes or cutover; literal YES CUTOVER absent. Historical holds below remain immutable history, superseded only for this bounded approval.
+
 ## 26 October decoder isolated gate FAILED — observability hold, no full run
 
 - The ONE approved isolated gate33 is USED/FAIL, native028b5e3ac651d22a015e50e6ef53a25172fec367d23ece3f0fbbc59a39c1c76b; local6f963b27d9dc2326b5de63645f8645cdbed53fa3debe7f39cbaef615ec5739ef. Fixed decoder ran: systemctl exit0/Resultsuccess/ExecMainStatus0, one matching mockwatchdog row queued, but capture gate required journalReadExitCode0 and it was absent: late oneshot InvocationID empty. This is a gateFAIL, never reinterpret as fullPASS or auto-retry. Sanitised sealed commandstderr length0/SHA-prefixe3b0c44298fc; no dynamic values leaked.
