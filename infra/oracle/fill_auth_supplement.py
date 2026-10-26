@@ -19,6 +19,11 @@ SOURCE_SHA256='b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9'
 FORMAT='ir35-auth-settings-supplement-v1'
 FIELDS=exporter.PUBLIC_SUPPLEMENT_FIELDS
 ACCEPTED=('present','explicit_null')
+OWNER_NONE_API_SHA256='79b4842204e05b9c4b4d05812ed8f97975928f1bb58bb3ba4013d5389c76727a'
+
+
+def owner_none_confirmation():
+    return {'authority':'owner-explicit-none-20261026','api_supplement_sha256':OWNER_NONE_API_SHA256,'field_names':list(FIELDS)}
 
 
 class SupplementRefused(RuntimeError):pass
@@ -44,16 +49,20 @@ def load():
 
 
 def validate_document(document,source_hash):
-    if (type(document)is not dict or set(document)-{'format','source_export_sha256','settings','source_observations'}
+    if (type(document)is not dict or set(document)-{'format','source_export_sha256','settings','source_observations','owner_confirmation'}
             or document.get('format')!=FORMAT or document.get('source_export_sha256')!=source_hash
             or type(document.get('settings'))is not dict or set(document['settings'])!=set(FIELDS)):
         raise SupplementRefused('ExactBoundSupplementRequired')
     observations=document.get('source_observations',{})
     if type(observations)is not dict or set(observations)-set(FIELDS):raise SupplementRefused('InvalidObservationNames')
+    confirmed='owner_confirmation' in document
+    if confirmed and (document['owner_confirmation']!=owner_none_confirmation()
+            or any(document['settings'][name]!='' or observations.get(name)!={'state':'explicit_null','source_type':'null'} for name in FIELDS)):
+        raise SupplementRefused('ExactOwnerNoneConfirmationRequired')
     for name,value in document['settings'].items():
         checked,observation=exporter.public_setting({name:value},name,'<NO_TOKEN_IN_LOCAL_VALIDATION>')
         if observation['state'] not in ACCEPTED:raise SupplementRefused('InvalidExistingPublicField')
-        if name in observations and observations[name]!=observation:raise SupplementRefused('InvalidExistingObservation')
+        if name in observations and observations[name]!=observation and not confirmed:raise SupplementRefused('InvalidExistingObservation')
 
 
 def pending(document):

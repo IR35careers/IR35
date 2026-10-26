@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-26",
+  "status": "PASS",
+  "gate": "G3",
+  "gateClosed": true,
+  "phaseComplete": false,
+  "ownerReportedTokenRevoked": true,
+  "exactOneRunReceiptVerified": true,
+  "apiSupplementSHA256": "79b4842204e05b9c4b4d05812ed8f97975928f1bb58bb3ba4013d5389c76727a",
+  "archivedAPIProofSHA256": "79b4842204e05b9c4b4d05812ed8f97975928f1bb58bb3ba4013d5389c76727a",
+  "updatedSupplementSHA256": "fc936b56f693bd432486ac0cac28c55b0ce473932f4476c1b0fe1c856306fb95",
+  "originalExportSHA256": "b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9",
+  "fieldNames": ["external_google_additional_client_ids", "password_required_characters"],
+  "apiObservation": "explicit_null for both fields, preserved separately",
+  "effectiveSettingAuthority": "owner-explicit-none-20261026",
+  "ownerConfirmationRecordedSeparately": true,
+  "ownerOnlyCustodyVerified": true,
+  "apiArchiveReadOnly": true,
+  "originalExportPreserved": true,
+  "newManagementRequests": 0,
+  "credentialPrompts": 0,
+  "secretValuesPrinted": false,
+  "offlineRepair": {
+    "initialFailure": "ArchivedAPIProofMismatch in two disposable fixture tests",
+    "cause": "reserialization changed Windows fixture line endings",
+    "repair": "archive exact original bytes, no normalization or changed assertions",
+    "nativeConfirmationBeforeRepair": false,
+    "targetedTests": 4,
+    "status": "PASS",
+    "seconds": 0.184
+  },
+  "fullSuite": {
+    "status": "PASS",
+    "tests": 559,
+    "seconds": 36.939,
+    "freshHome": true,
+    "privateStateCopied": false,
+    "manifestSHA256": "67e831c5994e459c71170c404933ca5789af569802dbf01f937b101e13790234"
+  },
+  "runtimeReadiness": {
+    "failedProbesRetained": 2,
+    "first": "KeySafetyError; original helper omitted structured remote exception capture",
+    "second": "KeySafetyError: StagingSMTPSinkMismatch; helper inspected Docker image Config.Env instead of effective mounted file",
+    "vmWrites": 0,
+    "repairProofPending": "readonly launcher/mount + original sink condition + full containment",
+    "thirdSameGateFailureRequiresStop": true,
+    "offlineReadinessRegressionTests": 3,
+    "offlineReadinessRegressionStatus": "PASS in WSL; native Windows lacks controller fcntl dependency"
+  },
+  "productionDNSProviderIAMSecretOrCostChanges": false,
+  "cutover": false
+}

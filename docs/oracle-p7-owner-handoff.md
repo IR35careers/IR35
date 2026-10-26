@@ -1,5 +1,11 @@
 # P7 owner batch — source Auth settings only
 
+## G3 CLOSED — no further owner export or hand-copy action
+
+Owner completed the supplement once and confirmed token revocation. Its reported SHA256 `79b4842204e05b9c4b4d05812ed8f97975928f1bb58bb3ba4013d5389c76727a` matches locally; both fields have an actual `explicit_null` API observation. Owner explicitly confirms NONE for both public settings. A byte-identical, read-only, owner-only API archive is retained; the supplement keeps those observations and separately records the owner decision. Effective settings now contain the two owner-authorised empty strings, with updated SHA256 `fc936b56f693bd432486ac0cac28c55b0ce473932f4476c1b0fe1c856306fb95`. Original full export unchanged. [Evidence](evidence/oracle-g3-owner-confirmation-20261026.json).
+
+No further token, re-export or manual copy is requested. Continue staging P7/P8 and P9 preparation under RESUME; batch any other owner-only items once at the end. Runtime/provider/restore/load gates are separate and not implied PASS by G3 closure. No production, DNS, provider, IAM or real-secret change and no cutover. The command instructions below are historical; do not run them again.
+
 ## Current owner action: ONE supplement command, no manual copy
 
 Owner confirms completion and token revocation. The private export passed local schema/type/ACL checks: 140 fields, 117 populated, 23 null. Its SHA256 is `b6f708f921a730b8e07e5c2e77052318207900d06b3d855d9b45fa28f2a959c9`. No second API call was made; the populated original is preserved. Twenty-one nulls belong to disabled providers and require no client credentials.
