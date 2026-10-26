@@ -106,7 +106,9 @@ def scoped_runtime(data,runtime):
 
 def owned_clone(recovery,stage,case):
     if case not in ('mail','signup','email'):raise RecoveryError('ExplicitP7CaseRequired')
-    pristine=recovery.database;target=pristine+'_p7a1_'+case
+    attempt=recovery.payload['p7AuthAttempt']
+    if attempt not in (1,2):raise RecoveryError('BoundedP7AttemptRequired')
+    pristine=recovery.database;target=pristine+'_p7a'+str(attempt)+'_'+case
     if recovery.query("SELECT 1 FROM pg_database WHERE datname='"+target+"';",'postgres').strip():raise RecoveryError('P7CloneExists_NoReplay')
     recovery.command(recovery.base+['psql','-XqAt','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres','-f','-'],
         input=('CREATE DATABASE '+target+' WITH TEMPLATE '+pristine+' OWNER postgres;').encode())
@@ -116,7 +118,8 @@ def owned_clone(recovery,stage,case):
 
 
 def destroy_clone(recovery,target,stage,pristine):
-    if target not in tuple(pristine+'_p7a1_'+case for case in ('mail','signup','email')):raise RecoveryError('P7DropTargetRefused')
+    attempt=recovery.payload['p7AuthAttempt']
+    if attempt not in (1,2) or target not in tuple(pristine+'_p7a'+str(attempt)+'_'+case for case in ('mail','signup','email')):raise RecoveryError('P7DropTargetRefused')
     annotation=recovery.query("SELECT coalesce(shobj_description(oid,'pg_database'),'') FROM pg_database WHERE datname='"+target+"';",'postgres').strip()
     if annotation!='ir35-p7:'+recovery.run_id+':'+stage.name:raise RecoveryError('P7DropOwnershipMismatch')
     if recovery.query("SELECT count(*) FROM pg_stat_activity WHERE datname='"+target+"';",'postgres').strip()!='0':raise RecoveryError('P7CloneStillConnected')
@@ -231,11 +234,14 @@ def email_case(stack):
 
 def run(data,runtime,handoff):
     profile.validate(handoff);scoped=scoped_runtime(data,runtime)
+    attempt=data['p7AuthAttempt']
+    if attempt not in (1,2):raise RecoveryError('BoundedP7AttemptRequired')
+    p4=dict(data['p4'])|{'p7AuthAttempt':attempt}
     result={'status':'FAIL','phaseComplete':False,'sourceWrites':0,'realPasswordAttempts':0,'realEmailRequests':0,
-        'cases':{},'providerProof':'DEFERRED_NO_GOOGLE_CHANGES','nativeAttempt':1}
+        'cases':{},'providerProof':'DEFERRED_NO_GOOGLE_CHANGES','nativeAttempt':attempt}
     for case,action in (('mail',lambda s,r:mail_case(s,r,handoff)),('signup',lambda s,r:signup_case(s)),('email',lambda s,r:email_case(s))):
-        recovery=Recovery(data['p4'],scoped);pristine=recovery.database
-        store=recovery.store();stage=store.stage('13-p7-auth-1-'+case);stack=None;target=None
+        recovery=Recovery(p4,scoped);pristine=recovery.database
+        store=recovery.store();stage=store.stage('13-p7-auth-'+str(attempt)+'-'+case);stack=None;target=None
         observed={'status':'FAIL','case':case,'realEmailRequests':0,'originalPasswordAttempts':0}
         store.put(stage,'intent.json',json.dumps({'case':case,'disposableOnly':True,'smtpSink':True,'sourceConfigSHA256':handoff['source_sha256'],'g3SupplementSHA256':handoff['supplement_sha256']}).encode())
         try:

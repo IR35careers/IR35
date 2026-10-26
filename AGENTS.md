@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 26 October P7 Auth bootstrap tooling repair — no Auth case ran yet
+
+- Native attempt01 FAIL with generic KeySafetyError, immutable manifest `98a6fdc1c27722467899d03d0783a163fe3db9115ba26e81c37d236f4125e348`; original remote error detail was not retained and must not be invented. Readonly diagnosis PASS `def74ee1cc0295971afa7dbd81faab96dbb936f45408f82bfceab6a3abd86fdc`: all three new stage directories absent, zero new containers/DBs, full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS. No Auth scenario/password/mail attempt or customer-data mutation occurred.
+- Offline cold imports reproduce an actual bootstrap defect: P4 mail module imported before missing `p4_auth_probe`/`auth_redaction` dependencies. Corrected explicit dependency order and guarded cold-import execution now prevent repository fallback/private-state access, retaining the original compile/semantic assertions. Full572 fresh-home tests PASS39.937s. This is a bounded low-risk tooling self-heal under RESUME, not a data/security waiver or counter reset.
+- A distinct attempt02 is permitted only with BOTH exact failed/diagnosis manifests, no stages/DBs/containers and fullcontainmentPASS; attempt01 can never replay. New DB/stage names include attempt2, private API handoff uses valid newline JSON, safe error metadata is sealed. Same source config, sink/mock, clone fidelity/queue denials, cleanup and containment. Any data/security mismatch or third same-gate failure still STOP. No production/provider/DNS/IAM/secret/cost/cutover change; owner questions remain batched at end.
+
 ## 26 October post-G3 runtime proof PASS / isolated P7 Auth prepared
 
 - Third read-only readiness gate PASS, manifest `8102e6ec7eb58e156bc337d4dac69da1fb3b5c781e4bd7e6df9a984503700a58`. Verified actual readonly private env launcher mount, SAME smtp/1025/no-credentials guard, mock/acceptancefalse and full62 MD5/Auth/2sequences/3exceptions/552+2roles/73Storage/FRESH112HBA PASS. Prior Config.Env failures were tooling source-selection errors, not a waived runtime/security mismatch. No VM/config/Auth/mail writes. Do not replay the consumed readiness slot.
