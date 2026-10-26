@@ -195,7 +195,7 @@ export async function runMockWorker(env: Record<string, string | undefined> = pr
       if (method === "POST" && path === "/mock/schedule") {
         if (paused || stopping) { response.writeHead(503).end("{}"); return; }
         const value = mockScheduledWorkSchema.safeParse(JSON.parse(body)); if (!value.success) throw new Error("Invalid mock schedule.");
-        const id = await producer.send(MOCK_SCHEDULE_QUEUE, value.data);
+        const id = await producer.send(MOCK_SCHEDULE_QUEUE, value.data, { singletonKey: value.data.operation });
         response.writeHead(202).end(JSON.stringify({ mock: true, queued: Boolean(id) })); return;
       }
       response.writeHead(404).end("{}");

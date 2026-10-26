@@ -1,6 +1,7 @@
 """Retained schedule diagnosis; no fixture reset, policy change or source write."""
 import json
 import re
+import time
 
 from immutable_artifacts import digest
 from p4_recovery_guest import Recovery,RecoveryError
@@ -8,6 +9,10 @@ from p6_status_audit_guest import history as original_history,run_case
 from p6_queue_boundary_gate import anchored_result,verify_live
 from p6_queue_function_scope import audit as function_scope
 from p6_containment import fidelity
+from p6_mock_guest import ROOT,prepared,check_containment
+from p6_mock_control import Control
+from p6_health_repair_guest import SYSTEMD,isolation,units,validate_proxy
+from web_edge_guest import private_env
 
 
 def retained(data):

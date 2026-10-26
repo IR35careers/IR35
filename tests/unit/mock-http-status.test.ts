@@ -135,7 +135,7 @@ const work = () => ({ kind: "staging_mock_application", applicationId: randomUUI
 async function post(value: unknown) {
   return command("/mock/applications", value);
 }
-async function command(path: "/mock/applications" | "/mock/maintenance", value: unknown) {
+async function command(path: "/mock/applications" | "/mock/maintenance" | "/mock/schedule", value: unknown) {
   const body = JSON.stringify(value), timestamp = String(Date.now());
   return fetch(origin + path, { method: "POST", body, headers: { "content-type": "application/json",
     "x-ir35-mock-timestamp": timestamp, "x-ir35-mock-signature": mockSignature(publicFixtureHmac, timestamp, "POST", path, body) } });
@@ -190,5 +190,22 @@ describe("real HTTP status and real SQL queue publication", () => {
     expect(await (await command("/mock/maintenance", { action: "resume" })).json()).toEqual({ paused: true, realAcceptance: false });
     expect((await post(work())).status).toBe(503);
     expect(await counts()).toEqual({ applications: 0, jobs: 0 });
+  });
+  it("queues all three distinct schedule operations while retaining honest duplicate acknowledgements", async () => {
+    await boot();
+    const scheduled = (operation: string) => ({ kind: "staging_mock_schedule", operation, requestedAt: "2026-10-26T07:00:00.000Z" });
+    for (const operation of ["mock_ingest", "mock_automation", "watchdog"]) {
+      const response = await command("/mock/schedule", scheduled(operation));
+      expect(response.status).toBe(202);
+      expect(await response.json()).toEqual({ mock: true, queued: true });
+    }
+    expect(await counts()).toEqual({ applications: 0, jobs: 3 });
+    const duplicate = await command("/mock/schedule", scheduled("mock_ingest"));
+    expect(duplicate.status).toBe(202);
+    expect(await duplicate.json()).toEqual({ mock: true, queued: false });
+    expect(await counts()).toEqual({ applications: 0, jobs: 3 });
+    const forbidden = await command("/mock/schedule", scheduled("real_ingest"));
+    expect(forbidden.status).toBe(400);
+    expect(await counts()).toEqual({ applications: 0, jobs: 3 });
   });
 });
