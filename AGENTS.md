@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 26 October owner approves decoder/observability repair, isolated dispatch, ONE full run
+
+- Latest owner explicitly reopens strict env decoder + sanitised dispatcher stderr only, then ONE isolated systemctl mock-schedule dispatch against the current pinned rollback worker. Strip one matching surrounding single/double quote pair; accept unquoted64hex; trim surrounding horizontal whitespace only; reject unmatched/malformed quotes, embedded newlines and invalid values without printing them. Test all formats and the66character regression offline. Sealed stderr retains safe stage/error code plus length/SHA-prefix redactions only, never raw secrets/errors/headers.
+- Isolated dispatch MUST PASS before a distinct ONE fullP6 rerun at fixed172.18.0.240; previous image remains digest-pinned for rollback. All historical failed runs/fixtures/counters stay immutable and new stages/names must not overwrite them. Current rollback is hard processing/read-only paused; any preparation must stay on the SAME private mock queue/image/endpoint, never override a global guard through HTTP or change real acceptance/source app flags/secrets. Any ambiguous prerequisite, data/security mismatch or failed native check STOP/report/wait, no repair/retry under this allowance.
+- If fullP6 PASS, push local evidence to draftPR57 (CI builds allowed), continueP7/P8 and P9prepare only under RESUME rules. No production/DNS/Vercel/cloudSupabase/Google/IAM/network-resource/secret-value/paid changes, real employer/mail or cutover; exact YES CUTOVER absent. Earlier stops superseded only for this new bounded sequence.
+
 ## 26 October single fixed-IP full P6 run USED — schedule dispatch FAIL, STOP
 
 - The ONE owner-approved fixed-IP handover27 PASS: exact.240/IPAM/direct-localhost SHA/browser+DB/pausedmock, no image rebuild. Single full run28/29/30 USED: native29lifecycle PASS130checks including all34old receipts, failures1/2, all outcomes/cancel/watchdog, owned durable schedules, one restart and unchanged fixedIP/proxy SHA. Native29manifest44f7fd6e2e8d1ac1d6c7353c03f6b79e185d3920e6ecee6ae2a017db34daa0b0. This is NOT fullP6 PASS.
