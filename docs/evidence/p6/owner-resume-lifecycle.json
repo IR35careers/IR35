@@ -1,0 +1,160 @@
+{
+  "status": "FAIL",
+  "realAcceptance": false,
+  "customerWrites": 0,
+  "productionChanges": false,
+  "networkChanges": 0,
+  "secretChanges": 0,
+  "roleChanges": 0,
+  "workerRestarts": 0,
+  "cases": [
+    {
+      "case": "retained-all-twelve-counts",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "retained-all-twelve-receipt",
+      "passed": true
+    },
+    {
+      "case": "resumed-start-paused",
+      "passed": true
+    },
+    {
+      "case": "mock-health",
+      "passed": false
+    }
+  ],
+  "preContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "preQueueBoundary": {
+    "status": "PASS",
+    "ownerApprovedConnectionBoundary": true,
+    "rawFunctionACLStatus": "REVIEW_REQUIRED",
+    "rawFindingUnchanged": true,
+    "baseline552Changed": false,
+    "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+    "actualLoginChecks": 112,
+    "functionCalls": 0,
+    "queueDatabase": "postgres"
+  },
+  "code": "NativeMockCaseFailed_mock-health",
+  "failurePause": {
+    "paused": true,
+    "realAcceptance": false
+  },
+  "failureContainment": {
+    "status": "PASS",
+    "manifests": "PASS",
+    "tablesEach": 62,
+    "orderedMD5Each": true,
+    "sequencesEach": 2,
+    "approvedSchemaExceptionsEach": 3,
+    "appRolePrivilegesEach": 552,
+    "storageObjectsEach": 73,
+    "storageSHA256Match": true,
+    "originalCaddyFilesUnchanged": true,
+    "privateFixtureRunningNoPorts": true,
+    "sourceWrites": 0,
+    "pristineWrites": 0,
+    "fixtureWrites": 0,
+    "approvedP6RolesEach": 2,
+    "baseline552Unchanged": true,
+    "sourceRolesUnchanged": true,
+    "rawCatalogDifferencesRetained": true
+  },
+  "stage": "18-owner-resume-lifecycle",
+  "manifestSHA256": "d8fffe84db0bfd03f01505b568b83f2eda1a6bbc575dc230d3599b8c31577505",
+  "imageRollback": {
+    "status": "PASS",
+    "image": "sha256:bea1c9a5840c1856aa613967fcba4dac509a9e23a4d1b31fa83be0162c1ed844",
+    "processingPaused": true,
+    "realAcceptance": false,
+    "originalContainerAndImagesRetained": true,
+    "containerName": "ir35-p6-mock-worker-v4-rollback",
+    "containment": {
+      "status": "PASS",
+      "manifests": "PASS",
+      "tablesEach": 62,
+      "orderedMD5Each": true,
+      "sequencesEach": 2,
+      "approvedSchemaExceptionsEach": 3,
+      "appRolePrivilegesEach": 552,
+      "storageObjectsEach": 73,
+      "storageSHA256Match": true,
+      "originalCaddyFilesUnchanged": true,
+      "privateFixtureRunningNoPorts": true,
+      "sourceWrites": 0,
+      "pristineWrites": 0,
+      "fixtureWrites": 0,
+      "approvedP6RolesEach": 2,
+      "baseline552Unchanged": true,
+      "sourceRolesUnchanged": true,
+      "rawCatalogDifferencesRetained": true
+    },
+    "stage": "19-owner-resume-rollback",
+    "manifestSHA256": "cd09b85d58fadb696c1d6dbded69b2cac437c5d668a80c208b97a4df48b3fd16"
+  }
+}
