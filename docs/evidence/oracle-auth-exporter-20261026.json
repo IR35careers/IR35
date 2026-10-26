@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-26",
+  "scope": "Owner-approved local read-only Auth exporter; implementation/tests only",
+  "script": "infra/oracle/export_auth_settings.py",
+  "operatorScriptSHA256": "789c8ab31e25e5da2c4bafe64af9c05fb5cfcc0c60158a52e76f1f7a0d5f6b3b",
+  "allowlistedFieldCount": 140,
+  "endpoint": "https://api.supabase.com/v1/projects/kxcbgflleqnjzjbkevwd/config/auth",
+  "requestMethod": "GET",
+  "redirectsAllowed": false,
+  "automaticRetries": 0,
+  "liveCloudRequestsByAgent": 0,
+  "realPersonalTokensRead": 0,
+  "privateDestinationModified": false,
+  "cloudSettingChanges": 0,
+  "vmCalls": 0,
+  "outputFieldNames": ["field_count", "null_fields", "file_sha256"],
+  "credentialsAndAllJWTFieldsExcluded": true,
+  "unknownAndNestedFieldsExcluded": true,
+  "missingFieldsNullNoDefaults": true,
+  "hiddenPromptEchoFallbackRefused": true,
+  "tokenArgumentRefused": true,
+  "noTokenEnvironmentFallback": true,
+  "nonblankHandoffPreserved": true,
+  "ownerOnlyACLBeforeWritingAndReadback": true,
+  "atomicReplacementAndSHAReadback": true,
+  "offlineTargetedTests": {
+    "nativeWindows": {"status":"PASS","tests":12,"seconds":14.747,"http":"mocked only","filesystem":"disposable local fixtures; actual Windows ACL verification"},
+    "linux": {"status":"PASS","includedInFullSuite":true}
+  },
+  "freshHomeFullSuite": {
+    "status":"PASS",
+    "tests":534,
+    "seconds":35.977,
+    "privateStateCopied":false,
+    "ir35DirectoryPresentBefore":false,
+    "ir35DirectoryPresentAfter":false,
+    "manifest":"auth-export-hermetic-02/manifest.json",
+    "manifestSHA256":"7c69717973609dea5da387a71b84f0476fefea0796a2dde609f9fa75876a41c2"
+  },
+  "nextAction": "Owner runs once with a short-lived read-only personal token at the hidden prompt, then revokes it; no token or file content in chat",
+  "sourceSchemaReference": "https://supabase.com/docs/reference/api/v1-get-auth-service-config",
+  "productionOrCutoverChanges": false
+}
