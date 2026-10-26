@@ -14,6 +14,7 @@ from p6_health_repair_guest import isolation
 from p6_mock_control import Control
 from p6_queue_boundary_gate import anchored_result, verify_live
 from p6_queue_function_scope import audit as function_scope
+from p6_processes import PS_FIELDS, process_rows
 from web_edge_guest import private_env
 
 ACCOUNT = 'anvesh.mannuru+ir35test@gmail.com'
@@ -363,7 +364,7 @@ def run(data, runtime, *, repair_one=False):
         actual = json.loads(runtime['run'](['docker', 'inspect', worker_name]))[0]
         if isolation(actual, anchor['image'], network) != address:
             raise RecoveryError('MockRuntimeIsolationChangedAfterRestart')
-        processes = runtime['run'](['docker', 'top', worker_name, '-eo', 'stat,comm']).splitlines()[1:]
+        processes = process_rows(runtime['run'](['docker', 'top', worker_name, '-eo', PS_FIELDS]))
         chromium = [line for line in processes if re.search(r'\b(?:chrome|chromium|chrome_crashpad)\b', line)]
         checked('no-browser-orphans', {'chromiumProcessCount': len(chromium)}, not chromium)
         result['postQueueBoundary'] = verify_live(data, original, store, function_scope(original))

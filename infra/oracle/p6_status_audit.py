@@ -7,9 +7,10 @@ import p6_context
 import p6_worker_build
 from p6_audit_log import AuditFailure, Journal
 from p6_hba import credential_gate
+from ssh_agent_session import ensure_agent
 
 CASES = ('sealed-history', 'queue-before', 'worker-idle', 'smtp-empty', 'full-containment', 'queue-after')
-MODULES = ('p6_roles_guest', 'p6_mock_guest', 'p6_health_repair_guest', 'p6_mock_control', 'p6_queue_function_scope',
+MODULES = ('p6_processes', 'p6_roles_guest', 'p6_mock_guest', 'p6_health_repair_guest', 'p6_mock_control', 'p6_queue_function_scope',
            'p6_queue_hba', 'p6_hba_guest', 'p6_queue_boundary_gate', 'p6_mock_update_guest', 'p6_lifecycle_guest', 'p6_status_audit_guest')
 
 
@@ -28,12 +29,20 @@ def remote_case(name, data):
 
 
 def main():
-    if sys.argv[1:] != ['--owner-read-only-once']:
+    if sys.argv[1:] not in (['--owner-read-only-once'], ['--resume-pid-audit']):
         raise AuditFailure('ExplicitOwnerReadOnlyAuditRequired')
-    root = schema.REPO / 'docs/evidence/p6/status-owner-audit-two'
+    resuming = sys.argv[1:] == ['--resume-pid-audit']
+    root = schema.REPO / ('docs/evidence/p6/status-resume-pid-audit-01' if resuming else 'docs/evidence/p6/status-owner-audit-two')
     if root.exists():
         raise AuditFailure('OwnerReadOnlyAuditAlreadyRecorded_NoRetry')
-    credential_gate()
+    pause_anchor = None
+    if resuming:
+        from p6_pause_reconcile import verify_passed_reconciliation
+        pause_anchor = verify_passed_reconciliation(schema.REPO / 'docs/evidence/p6/pause-reconciliation-20261026-02')
+        if ensure_agent().get('keyLoaded') is not True:
+            raise AuditFailure('MatchingSSHIdentityRequired_NoAutomaticPrompt')
+    else:
+        credential_gate()
     data = p6_context.context()
     directory = schema.REPO / 'docs/evidence/p6'
     for key, name in [('mockPrepare', 'mock-prepare.json'), ('currentFailure', 'native-mock-lifecycle-repair-one.json'),
@@ -41,7 +50,8 @@ def main():
                       ('ownerHBABoundary', 'queue-hba-owner-boundary.json'), ('scopeFailure', 'mock-runtime-update-two.json')]:
         data[key] = json.loads((directory / name).read_text())
     journal = Journal(root)
-    result = {'status': 'FAIL', 'auditAttempt': 2, 'retries': 0, 'vmWrites': 0, 'sourceWrites': 0,
+    result = {'status': 'FAIL', 'auditAttempt': 3 if resuming else 2, 'pauseReconciliationManifestSHA256': pause_anchor,
+              'retries': 0, 'vmWrites': 0, 'sourceWrites': 0,
               'workerRestarts': 0, 'configChanges': 0, 'newImageBuilds': 0, 'p6Reruns': 0, 'productionChanges': False,
               'steps': [], 'phaseComplete': False}
     try:

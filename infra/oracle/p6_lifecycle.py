@@ -37,7 +37,7 @@ def main():
         data['publicRepairSources'] = {name: (schema.REPO / 'services/application-worker' / name).read_text()
                                       for name in ('mock-browser.ts', 'mock-ats.ts')}
     script = p6_worker_build.bundle()
-    for name in ('p6_roles_guest', 'p6_mock_guest', 'p6_health_repair_guest', 'p6_mock_control', 'p6_queue_function_scope',
+    for name in ('p6_processes', 'p6_roles_guest', 'p6_mock_guest', 'p6_health_repair_guest', 'p6_mock_control', 'p6_queue_function_scope',
                  'p6_queue_hba', 'p6_hba_guest', 'p6_queue_boundary_gate', 'p6_mock_update_guest', 'p6_lifecycle_guest'):
         code = (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()
         script += 'module=types.ModuleType(' + repr(name) + ');sys.modules[' + repr(name) + ']=module\nexec(' + repr(code) + ',module.__dict__)\n'

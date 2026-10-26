@@ -12,6 +12,7 @@ from p6_mock_control import Control
 from p6_mock_guest import prepared, ROOT
 from p6_queue_boundary_gate import anchored_result, verify_live
 from p6_queue_function_scope import audit as function_scope
+from p6_processes import PS_FIELDS, process_rows
 from web_edge_guest import private_env
 
 CASES = ('sealed-history', 'queue-before', 'worker-idle', 'smtp-empty', 'full-containment', 'queue-after')
@@ -79,7 +80,7 @@ def run_case(name, data, runtime):
         control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
         health = control.request('GET', '/health')[1]
         item = json.loads(runtime['run'](['docker', 'inspect', 'ir35-p6-mock-worker-v3']))[0]
-        processes = runtime['run'](['docker', 'top', 'ir35-p6-mock-worker-v3', '-eo', 'stat,comm']).splitlines()[1:]
+        processes = process_rows(runtime['run'](['docker', 'top', 'ir35-p6-mock-worker-v3', '-eo', PS_FIELDS]))
         chromium = [line for line in processes if re.search(r'\b(?:chrome|chromium|chrome_crashpad)\b', line)]
         checks = {'paused': health.get('paused') is True, 'activeZero': health.get('active') == 0,
                   'noBrowserProcesses': not chromium, 'realAcceptanceFalse': health.get('realAcceptance') is False,

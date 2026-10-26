@@ -1,0 +1,36 @@
+{
+  "attempt": 2,
+  "phaseComplete": false,
+  "previousFailureManifestSHA256": "123373ab407c490a531a810d23aa13b9c4f8df1eec32e3fd5945a8c6a9c13545",
+  "processingFlagChanges": 0,
+  "productionChanges": false,
+  "repairsStarted": 0,
+  "status": "PASS",
+  "steps": [
+    {
+      "case": "processing-flag",
+      "status": "PASS"
+    },
+    {
+      "case": "application-ledger",
+      "status": "PASS"
+    },
+    {
+      "case": "smtp-sink",
+      "status": "PASS"
+    },
+    {
+      "case": "external-isolation",
+      "status": "PASS"
+    },
+    {
+      "case": "full-containment",
+      "status": "PASS"
+    },
+    {
+      "case": "ledger-after",
+      "status": "PASS"
+    }
+  ],
+  "vmWrites": 0
+}

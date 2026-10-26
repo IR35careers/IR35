@@ -66,7 +66,7 @@ def main():
         raise SystemExit(1)
 
 
-def verify_first_tooling_failure(root):
+def verified_manifest(root):
     body = (root / 'manifest.json').read_bytes()
     manifest = json.loads(body)
     expected = {'manifest.json'}
@@ -79,13 +79,28 @@ def verify_first_tooling_failure(root):
             raise AuditFailure('PreviousReconciliationArtifactMismatch')
     if {p.name for p in root.iterdir()} != expected:
         raise AuditFailure('PreviousReconciliationUnmanifestedArtifact')
+    return sha(body)
+
+
+def verify_first_tooling_failure(root):
+    anchor = verified_manifest(root)
     prior = json.loads((root / 'result.json').read_bytes())
     failed = json.loads((root / '05-full-containment-result.json').read_bytes())
     if (prior.get('status') != 'FAIL' or prior.get('code') != 'ReadOnlyAuditFailed_full-containment'
             or failed.get('status') != 'ERROR' or failed.get('exceptionType') != 'AuditFailure'
             or failed.get('commands', [{}])[-1] != {'code': 'ReadOnlyCommandNotAllowed', 'operation': 'rejected-before-execution', 'status': 'FAIL'}):
         raise AuditFailure('PreviousReconciliationNotExactReadOnlyToolingFailure_Stop')
-    return sha(body)
+    return anchor
+
+
+def verify_passed_reconciliation(root):
+    anchor = verified_manifest(root)
+    result = json.loads((root / 'result.json').read_bytes())
+    if (anchor != '5cc51791a86c13913296bd2707c54e279728822e67911b81bd6ff57d81f4d23a'
+            or result.get('status') != 'PASS' or result.get('vmWrites') != 0
+            or result.get('steps') != [{'case': case, 'status': 'PASS'} for case in CASES]):
+        raise AuditFailure('ActualReadOnlyPauseReconciliationPassRequired')
+    return anchor
 
 
 if __name__ == '__main__':
