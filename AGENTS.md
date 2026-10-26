@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## Current continuation: read-only P8 accounting diagnosis under RESUME
+
+- Latest continuous-run goal releases low-risk read-only/offline tooling diagnosis under the standard two-self-heal/third-failure stop, not another approval for every step. Diagnose the preserved P8 memory preflight before any change/retry: exact container cgroup.current/peak/events/limit, smaps_rollup RSS/PSS and state only, full containment. No limit/configuration/VM write, load replay or secret read. Existing failure journal/hashes/counters remain. Any genuine security/data mismatch or three same-gate failures STOP; no invented PASS. Previous proposed owner-review hold below is historical after this continuation, not an extra owner gate for read-only diagnosis. OCI refresh still failed once; no repeated refresh/window or API/SSH prompt. Production/provider/DNS/IAM/secrets/paid/cutover holds unchanged.
+
 ## 26 October P8 initial memory preflight STOP — owner review before native retry
 
 - Unique readonly-load-01 USED/FAIL `ContainerMemoryBudgetExceeded_Abort`, manifest `8c89ba466ce78bac5cc22c1755bf169878b73b25bc8a608914f5da15cc885da2`. Baseline meta summed processRSS152,690,688 exceeds134,217,728configured limit; OSavailable9,410,158,592. SumRSS can double-count shared pages, so genuine cgroup overrun/OOM is NOT established.50-user load never started, p95 unavailable. Full62MD5/Auth/2seq/3exceptions/552+2queue roles/73Storage/FRESH112HBA PASS after failure. Preserve evidence, no native retry/limit/config/assertion change/phase advance. Proposed read-only cgroup/Rss/Pss diagnosis needs owner review; see P8 memory-stop report. No data/security mismatch observed.
