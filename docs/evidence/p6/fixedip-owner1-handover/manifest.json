@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-fixedip-handover-intent.json",
+      "sha256": "d47d0f61b9f77ab4f195c03d868b92813929b3b328249ebb0027ebd6ec06d62b"
+    },
+    {
+      "name": "01-fixedip-handover-result.json",
+      "sha256": "792ed0b4a274050e3103775d9ccce00943f3d431f2681f205f9e5bb3c49b265c"
+    },
+    {
+      "name": "result.json",
+      "sha256": "699df3675313d3b795a3b052a33219d8b2e94b01263993988114fd13908e27f6"
+    }
+  ],
+  "version": 1
+}
