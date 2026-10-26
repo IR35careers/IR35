@@ -1,0 +1,3869 @@
+{
+  "auth": {
+    "cases": {
+      "email": {
+        "case": "email",
+        "checks": {
+          "bothEmailConfirmationsRequired": true,
+          "changedEmailLoginRefresh": true,
+          "changedEmailRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          },
+          "initialRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          },
+          "sinkMessages": 2
+        },
+        "controls": {
+          "confirmationRequired": true,
+          "controlled400Captured": true,
+          "emailEnabled": true,
+          "invalidApikeyDenied": true,
+          "missingApikeyDenied": true
+        },
+        "diagnostics": [
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": "[withheld]",
+                "error_code": "validation_failed",
+                "level": "warning",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "3601db93-22ff-406b-9bcf-3814f30a5e97",
+                "status": 400
+              }
+            ],
+            "response": {
+              "clientRequestId": "3601db93-22ff-406b-9bcf-3814f30a5e97",
+              "error": null,
+              "error_code": "validation_failed",
+              "msg": "missing email or phone",
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 400
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "email_confirm",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/admin/users",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "Authorization",
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "requestId": "bcf69638-cfe5-4428-8c3e-fddf7c453ed3",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "bcf69638-cfe5-4428-8c3e-fddf7c453ed3",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "b62fb50b-a6cc-4e0b-a1de-f85ec2120890",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "b62fb50b-a6cc-4e0b-a1de-f85ec2120890",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "refresh_token"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "7083c6b8-3bf8-43cc-b241-bdf845df50a0",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "7083c6b8-3bf8-43cc-b241-bdf845df50a0",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email"
+            ],
+            "logBoundExceeded": false,
+            "method": "PUT",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/user",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "Authorization",
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "msg": "request completed",
+                "path": "/user",
+                "requestId": "fcf17ffb-e007-4d95-9222-a043311d2b44",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "fcf17ffb-e007-4d95-9222-a043311d2b44",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "token_hash",
+              "type"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/verify",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/verify",
+                "requestId": "f34b888e-80b9-4f1b-b91e-4b2c783e3995",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "f34b888e-80b9-4f1b-b91e-4b2c783e3995",
+              "error": null,
+              "error_code": null,
+              "msg": "[withheld]",
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "token_hash",
+              "type"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/verify",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/verify",
+                "requestId": "0dcc1fa3-7ff6-4d0c-8e25-19ae646ca793",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "0dcc1fa3-7ff6-4d0c-8e25-19ae646ca793",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "d4cd9b05-0971-4f2f-b01d-242e933bc70a",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "d4cd9b05-0971-4f2f-b01d-242e933bc70a",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "refresh_token"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "78af72c8-9748-4ff5-bac4-69dfb359688a",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "78af72c8-9748-4ff5-bac4-69dfb359688a",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          }
+        ],
+        "disposableContainersRemoved": 5,
+        "disposableDatabaseDestroyed": true,
+        "linkDiagnostics": [
+          {
+            "anchorCount": 1,
+            "kind": "email_change",
+            "matchingAnchorCount": 1,
+            "uniqueMatchingTokens": 1,
+            "valuesPrinted": false
+          },
+          {
+            "anchorCount": 1,
+            "kind": "email_change",
+            "matchingAnchorCount": 1,
+            "uniqueMatchingTokens": 1,
+            "valuesPrinted": false
+          }
+        ],
+        "manifestSHA256": "d9d5ce06ce872dbd40dadd09f20b5ba35c60c7782ea0534bc45815f8a41e9dba",
+        "originalPasswordAttempts": 0,
+        "partialChecks": {},
+        "queueCloneDenials": {
+          "applicationFunctionCalls": 0,
+          "deniedLogins": 8,
+          "status": "PASS"
+        },
+        "realEmailRequests": 0,
+        "runId": "p4_20261021T170139Z_8be0fc2e",
+        "runtime": {
+          "containers": {
+            "auth": "4422c4b61d77c04cab5913dd9b75731ba3220ea06343072749d6b00ce743c450",
+            "kong": "eadd050197b3d37670b88c979b718220644d32cf0bf2f1dd1964bdc512080a50",
+            "rest": "1dab62aa872817b6e00955ad63b9ec0c9933123a9358cceb98ab7c116199179e",
+            "smtp": "aef896685844a2608391e3ba4846c677b12a935624b40cea5986699d74674e7c",
+            "templates": "02749f8196955321343c675c0f8ecbd6b9b1078f0e3f2b52a214fd37ca387e77"
+          },
+          "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email",
+          "files": [
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.public-subjects",
+              "sha256": "0b37b06dd6212b0651b2e848e33504e9a4f8c2fff4dc7f46c3bd27dccd2abd4d"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.templates.json",
+              "sha256": "11570cbf9e6b8ae204e44526dce7854a8cdb921fc5aaa0ce24317c91ec132c39"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.smtp",
+              "sha256": "aa5f2748fd90fd1099c82929bcb39d6c96757f8e448092c272afeb0a1feadcff"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.auth",
+              "sha256": "f38541d751e468d19df353850ae5f00045bbac41d432b81433418a7991d662ff"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.rest",
+              "sha256": "1ec995b92c9a16788575deaa9b7c07504487c05e5f66139bff0826b474ef48bf"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.kong-config.json",
+              "sha256": "f2ee33494feb70273a8b79bedd5af7314f7a82d1938a966108348dc0ad948907"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-email/.env.kong",
+              "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce"
+            }
+          ]
+        },
+        "sourceProfile": {
+          "deferredProviderFieldNames": [
+            "external_google_enabled"
+          ],
+          "providerLoginProven": false,
+          "smtpSink": true,
+          "sourceFields": 140,
+          "sourceZeroOptionalSessionDurationsOmitted": [
+            "sessions_inactivity_timeout",
+            "sessions_timebox"
+          ],
+          "stagingURLsOnly": true,
+          "subjectCount": 13,
+          "templateCount": 13,
+          "valuesPrinted": false
+        },
+        "stage": "13-p7-auth-3-email",
+        "status": "PASS",
+        "target": "ir35_p4_20261021t170139z_8be0fc2e"
+      },
+      "mail": {
+        "case": "mail",
+        "checks": {
+          "magicLinkRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          },
+          "oldRefreshDenied": true,
+          "oldSessionsRevoked": true,
+          "originalPasswordAttempts": 0,
+          "recoveryRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          },
+          "sinkMessages": 2,
+          "sourceCooldownHonoured": true,
+          "syntheticDeleted": true,
+          "syntheticGrantRefreshRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          }
+        },
+        "controls": {
+          "confirmationRequired": true,
+          "controlled400Captured": true,
+          "emailEnabled": true,
+          "invalidApikeyDenied": true,
+          "missingApikeyDenied": true
+        },
+        "diagnostics": [
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": "[withheld]",
+                "error_code": "validation_failed",
+                "level": "warning",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "af45cd2b-2701-4668-9d5c-e519ddec34b4",
+                "status": 400
+              }
+            ],
+            "response": {
+              "clientRequestId": "af45cd2b-2701-4668-9d5c-e519ddec34b4",
+              "error": null,
+              "error_code": "validation_failed",
+              "msg": "missing email or phone",
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 400
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "email_confirm",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/admin/users",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "Authorization",
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "requestId": "3ade8348-bfae-4c3c-aa14-09d2c10492c1",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "3ade8348-bfae-4c3c-aa14-09d2c10492c1",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "20637e55-db08-40a8-9030-b33438eb3838",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "20637e55-db08-40a8-9030-b33438eb3838",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "refresh_token"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "5f0fed03-c79a-40e8-8688-946c06bff214",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "5f0fed03-c79a-40e8-8688-946c06bff214",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [],
+            "logBoundExceeded": false,
+            "method": "DELETE",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/admin/users/:test-user",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "Authorization",
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "msg": "request completed",
+                "requestId": "05ce7d19-ed96-4c8f-9bf1-af1663fc5698",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "05ce7d19-ed96-4c8f-9bf1-af1663fc5698",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "create_user",
+              "email"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/otp",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/otp",
+                "requestId": "18b3ce58-7e18-45de-a826-957793c9b078",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "18b3ce58-7e18-45de-a826-957793c9b078",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "token_hash",
+              "type"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/verify",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/verify",
+                "requestId": "c428a064-55cf-4c7f-80ce-ae99ed8fa959",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "c428a064-55cf-4c7f-80ce-ae99ed8fa959",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/recover",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "requestId": "15a61e6f-35a2-4c53-8194-963e3101ba8a",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "15a61e6f-35a2-4c53-8194-963e3101ba8a",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "token_hash",
+              "type"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/verify",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/verify",
+                "requestId": "413a244d-c42e-4b66-951c-9c9e84e78e60",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "413a244d-c42e-4b66-951c-9c9e84e78e60",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "PUT",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/user",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "Authorization",
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "msg": "request completed",
+                "path": "/user",
+                "requestId": "5f62a08b-74f5-408a-bb5c-07adce9bbed1",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "5f62a08b-74f5-408a-bb5c-07adce9bbed1",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "refresh_token"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": "[withheld]",
+                "error_code": "refresh_token_not_found",
+                "level": "warning",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "13cf8881-4378-49aa-9c91-13ceb6d6ef67",
+                "status": 400
+              }
+            ],
+            "response": {
+              "clientRequestId": "13cf8881-4378-49aa-9c91-13ceb6d6ef67",
+              "error": null,
+              "error_code": "refresh_token_not_found",
+              "msg": "[withheld]",
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 400
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "d4223849-885e-45ef-ab2a-bb83ad7cd953",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "d4223849-885e-45ef-ab2a-bb83ad7cd953",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "refresh_token"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "5f3b786d-9521-467d-b180-446db7632654",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "5f3b786d-9521-467d-b180-446db7632654",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          }
+        ],
+        "disposableContainersRemoved": 5,
+        "disposableDatabaseDestroyed": true,
+        "linkDiagnostics": [
+          {
+            "anchorCount": 1,
+            "kind": "magiclink",
+            "matchingAnchorCount": 1,
+            "uniqueMatchingTokens": 1,
+            "valuesPrinted": false
+          },
+          {
+            "anchorCount": 10,
+            "kind": "recovery",
+            "matchingAnchorCount": 4,
+            "uniqueMatchingTokens": 1,
+            "valuesPrinted": false
+          }
+        ],
+        "manifestSHA256": "d7567b7fb8da2443fa9502112fa8c815fcaac17ef46656cf94b1e5dc5c0161f0",
+        "originalPasswordAttempts": 0,
+        "partialChecks": {
+          "magicLinkRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          },
+          "recoveryRequestAccepted": true,
+          "syntheticDeleted": true,
+          "syntheticGrantRefreshRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          }
+        },
+        "queueCloneDenials": {
+          "applicationFunctionCalls": 0,
+          "deniedLogins": 8,
+          "status": "PASS"
+        },
+        "realEmailRequests": 0,
+        "runId": "p4_20261021T170139Z_8be0fc2e",
+        "runtime": {
+          "containers": {
+            "auth": "2e334ca481ac440dc58b184e4d7e960714339b0046575e986956d2524d15e95b",
+            "kong": "f519d4c952af3249c22e6758f6d4ca45b72e19b67f0aa6afd02939c7950687aa",
+            "rest": "be2e4350d3387ec1060a29a2bd57555de8376d4db3f5979ae16ab6c3416613e8",
+            "smtp": "fd50fe492feb5f61ef370ce0e83d8aceca477471869420ca9471d41b7c9a8be1",
+            "templates": "507f5e44c36ba20ef67a3ff029c9970b687bc11966ce3f1b30b854af45859eae"
+          },
+          "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail",
+          "files": [
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.public-subjects",
+              "sha256": "0b37b06dd6212b0651b2e848e33504e9a4f8c2fff4dc7f46c3bd27dccd2abd4d"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.templates.json",
+              "sha256": "11570cbf9e6b8ae204e44526dce7854a8cdb921fc5aaa0ce24317c91ec132c39"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.smtp",
+              "sha256": "aa5f2748fd90fd1099c82929bcb39d6c96757f8e448092c272afeb0a1feadcff"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.auth",
+              "sha256": "60dc81d462d36f7f7c62cc1edf1b68399340e1f68e4f83b67e49839c6e0cd484"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.rest",
+              "sha256": "4f3cdab6b1c603248d926520ec2419aa9acf40839a086c6cb43013afd47db86e"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.kong-config.json",
+              "sha256": "40959668635f20763d97fba5ee1638ebb8257a63a0d509868b4f08c3995f15fb"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-mail/.env.kong",
+              "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce"
+            }
+          ]
+        },
+        "sourceProfile": {
+          "deferredProviderFieldNames": [
+            "external_google_enabled"
+          ],
+          "providerLoginProven": false,
+          "smtpSink": true,
+          "sourceFields": 140,
+          "sourceZeroOptionalSessionDurationsOmitted": [
+            "sessions_inactivity_timeout",
+            "sessions_timebox"
+          ],
+          "stagingURLsOnly": true,
+          "subjectCount": 13,
+          "templateCount": 13,
+          "valuesPrinted": false
+        },
+        "stage": "13-p7-auth-3-mail",
+        "status": "PASS",
+        "target": "ir35_p4_20261021t170139z_8be0fc2e"
+      },
+      "signup": {
+        "case": "signup",
+        "checks": {
+          "confirmationExchanged": true,
+          "inviteExchanged": true,
+          "passwordLogin": true,
+          "sessionRefresh": true,
+          "signupRLS": {
+            "anonymousDenied": true,
+            "crossOwnerDenied": true,
+            "ownerRead": true,
+            "ownerRows": 1
+          },
+          "signupRequiresConfirmation": true,
+          "sinkMessages": 2
+        },
+        "controls": {
+          "confirmationRequired": true,
+          "controlled400Captured": true,
+          "emailEnabled": true,
+          "invalidApikeyDenied": true,
+          "missingApikeyDenied": true
+        },
+        "diagnostics": [
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": "[withheld]",
+                "error_code": "validation_failed",
+                "level": "warning",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "1c3388b7-2ee1-435c-88a2-21af11f7097d",
+                "status": 400
+              }
+            ],
+            "response": {
+              "clientRequestId": "1c3388b7-2ee1-435c-88a2-21af11f7097d",
+              "error": null,
+              "error_code": "validation_failed",
+              "msg": "missing email or phone",
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 400
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/signup",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "requestId": "9234b2d3-7416-485a-a658-4b610336148b",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "9234b2d3-7416-485a-a658-4b610336148b",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "token_hash",
+              "type"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/verify",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/verify",
+                "requestId": "64a4d246-7bb9-4716-836a-4c01cd2804ef",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "64a4d246-7bb9-4716-836a-4c01cd2804ef",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email",
+              "password"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "e1b56b28-7e89-435e-a5d9-20cda15491ae",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "e1b56b28-7e89-435e-a5d9-20cda15491ae",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "refresh_token"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/token",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/token",
+                "requestId": "29e7cfd2-dff9-4218-841b-de30717f7638",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "29e7cfd2-dff9-4218-841b-de30717f7638",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "email"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/invite",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "Authorization",
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "requestId": "6ee4f701-b2f7-40cc-bce3-9966e881c770",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "6ee4f701-b2f7-40cc-bce3-9966e881c770",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          },
+          {
+            "bodyFields": [
+              "token_hash",
+              "type"
+            ],
+            "logBoundExceeded": false,
+            "method": "POST",
+            "observer": {
+              "cliKillRequired": true,
+              "containerSignalsProxied": false
+            },
+            "path": "/auth/v1/verify",
+            "rawLogsPersisted": false,
+            "requestHeaders": [
+              "X-Request-ID",
+              "apikey"
+            ],
+            "requestLogs": [
+              {
+                "error": null,
+                "level": "info",
+                "method": "POST",
+                "msg": "request completed",
+                "path": "/verify",
+                "requestId": "b0fe1970-f011-418f-81f9-44badbb4a799",
+                "status": 200
+              }
+            ],
+            "response": {
+              "clientRequestId": "b0fe1970-f011-418f-81f9-44badbb4a799",
+              "error": null,
+              "error_code": null,
+              "msg": null,
+              "redaction": "strict known-message projection; all other fields withheld",
+              "requestId": null,
+              "requestIdFromBody": null,
+              "status": 200
+            }
+          }
+        ],
+        "disposableContainersRemoved": 5,
+        "disposableDatabaseDestroyed": true,
+        "linkDiagnostics": [
+          {
+            "anchorCount": 10,
+            "kind": "signup",
+            "matchingAnchorCount": 4,
+            "uniqueMatchingTokens": 1,
+            "valuesPrinted": false
+          },
+          {
+            "anchorCount": 1,
+            "kind": "invite",
+            "matchingAnchorCount": 1,
+            "uniqueMatchingTokens": 1,
+            "valuesPrinted": false
+          }
+        ],
+        "manifestSHA256": "6c34411d055aa28c80b513e8dbe948b5b5f093feafdbfa3e9fceec73da51890a",
+        "originalPasswordAttempts": 0,
+        "partialChecks": {},
+        "queueCloneDenials": {
+          "applicationFunctionCalls": 0,
+          "deniedLogins": 8,
+          "status": "PASS"
+        },
+        "realEmailRequests": 0,
+        "runId": "p4_20261021T170139Z_8be0fc2e",
+        "runtime": {
+          "containers": {
+            "auth": "9dc454c274f4338fe0018752f17595944fa2b6492f8c523ab76968e8f5551f28",
+            "kong": "f9d4f6b587b48c25e0ee6d89d0125eba000d523f7a1c4d0d4fd3179604452ae4",
+            "rest": "34e06aa037989ca39432af7533d7165d29815ab55b4eefb414e7f023b08ff3fe",
+            "smtp": "56b898d2885fcd38d8925ad0374324c6fce5b52982d9affa5a794b347869db41",
+            "templates": "0576b4aafa8b315bf3a317e529914d1a57ab56e0203ff40319a5f03f35ab631c"
+          },
+          "environmentRoot": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup",
+          "files": [
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.public-subjects",
+              "sha256": "0b37b06dd6212b0651b2e848e33504e9a4f8c2fff4dc7f46c3bd27dccd2abd4d"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.templates.json",
+              "sha256": "11570cbf9e6b8ae204e44526dce7854a8cdb921fc5aaa0ce24317c91ec132c39"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.smtp",
+              "sha256": "aa5f2748fd90fd1099c82929bcb39d6c96757f8e448092c272afeb0a1feadcff"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.auth",
+              "sha256": "e098ddc6a08438fa3edfb7d05296b44049cd13e34bfed6b5552e6e3a8e10915d"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.rest",
+              "sha256": "f88bb4e10064437ce5d2bb444b82fc5486ee0e4a66c485218b4d0f72e5baa154"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.kong-config.json",
+              "sha256": "89176143dd151681f487970dc8325af27d8656691e184600c8cefe7ff296eb09"
+            },
+            {
+              "mode": "600",
+              "path": "/opt/ir35/.env.p4-runs/p4_20261021T170139Z_8be0fc2e/runtime-13-p7-auth-3-signup/.env.kong",
+              "sha256": "a5b6b870fe5fbc0c92c666c8a0fb8edfd01c862a26affaf95ccf2f58a8c155ce"
+            }
+          ]
+        },
+        "sourceProfile": {
+          "deferredProviderFieldNames": [
+            "external_google_enabled"
+          ],
+          "providerLoginProven": false,
+          "smtpSink": true,
+          "sourceFields": 140,
+          "sourceZeroOptionalSessionDurationsOmitted": [
+            "sessions_inactivity_timeout",
+            "sessions_timebox"
+          ],
+          "stagingURLsOnly": true,
+          "subjectCount": 13,
+          "templateCount": 13,
+          "valuesPrinted": false
+        },
+        "stage": "13-p7-auth-3-signup",
+        "status": "PASS",
+        "target": "ir35_p4_20261021t170139z_8be0fc2e"
+      }
+    },
+    "emailAuthRehearsalComplete": true,
+    "fullContainment": {
+      "P5Fixture": {
+        "authTableChecks": 27,
+        "dataDifferences": [],
+        "extensionChecks": {
+          "capabilityChecks": 198,
+          "conditionalExceptionsOnly": true,
+          "conditions": {
+            "adminOwner": true,
+            "allObjectACLs": true,
+            "ddlCapabilities": true,
+            "versions": true
+          },
+          "memberChecks": 55,
+          "objectACLChecks": 62,
+          "ownerDifferences": [
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pg_stat_statements",
+              "stagingOwner": "supabase_admin",
+              "version": "1.11"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pgcrypto",
+              "stagingOwner": "supabase_admin",
+              "version": "1.3"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:uuid-ossp",
+              "stagingOwner": "supabase_admin",
+              "version": "1.1"
+            }
+          ],
+          "status": "PASS",
+          "typeACLChecks": 4,
+          "unapprovedDifferences": []
+        },
+        "fullP4Complete": false,
+        "passwordHashBytesCoveredByWholeTableFingerprints": true,
+        "privileges": {
+          "differences": [],
+          "exceptionsApproved": [],
+          "morePermissive": [],
+          "repairMustStop": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceEntries": 552,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T22:28:04Z",
+          "targetEntries": 552
+        },
+        "schema": {
+          "additionExpiryVerified": true,
+          "approvedP6Additions": [
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue",
+              "object": "role:ir35_queue",
+              "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+            },
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue_producer",
+              "object": "role:ir35_queue_producer",
+              "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+            }
+          ],
+          "baseline552Unchanged": true,
+          "baselineCatalogResult": {
+            "conditionsPASS": true,
+            "exceptions": [
+              {
+                "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+                "object": "extension:pg_stat_statements",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+              },
+              {
+                "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+                "object": "extension:pgcrypto",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "63652c33f708c5861e34f2218529562b"
+              },
+              {
+                "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+                "object": "extension:uuid-ossp",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+              }
+            ],
+            "fullDataVerification": false,
+            "metadataMatch": true,
+            "phaseComplete": false,
+            "roleAttributesMatch": true,
+            "sourceCheckedAt": "2026-10-21T17:02:41Z",
+            "sourceObjects": 3752,
+            "status": "FAIL",
+            "targetCheckedAt": "2026-10-26T22:28:03Z",
+            "targetObjects": 3754,
+            "unexplainedDifferences": [
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue",
+                "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+              },
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue_producer",
+                "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+              }
+            ]
+          },
+          "exceptions": [
+            {
+              "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+              "object": "extension:pg_stat_statements",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+            },
+            {
+              "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+              "object": "extension:pgcrypto",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "63652c33f708c5861e34f2218529562b"
+            },
+            {
+              "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+              "object": "extension:uuid-ossp",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+            }
+          ],
+          "fullDataVerification": false,
+          "phaseComplete": false,
+          "sourceObjects": 3752,
+          "sourceRoleExpiryUnchanged": true,
+          "sourceRolesUnchanged": true,
+          "status": "PASS_WITH_APPROVED_P6_ADDITIONS",
+          "targetObjects": 3754,
+          "unexplainedDifferences": []
+        },
+        "sequenceChecks": 2,
+        "sourceWrites": 0,
+        "stagingWrites": 0,
+        "status": "PASS",
+        "tables": [
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.audit_log_entries",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.custom_oauth_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "358ad650b328db71025b61931d4517f7",
+            "name": "auth.flow_state",
+            "rows": "47",
+            "serializedBytes": "9268"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "67af4006a7088b82f7e5d69baf174dfc",
+            "name": "auth.identities",
+            "rows": "148",
+            "serializedBytes": "91893"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.instances",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+            "name": "auth.mfa_amr_claims",
+            "rows": "144",
+            "serializedBytes": "23650"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_factors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_code_sets",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_codes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_authorizations",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_client_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_clients",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_consents",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+            "name": "auth.one_time_tokens",
+            "rows": "21",
+            "serializedBytes": "5580"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "af55a92e3b0a38f28d29578ed520275b",
+            "name": "auth.refresh_tokens",
+            "rows": "1466",
+            "serializedBytes": "359317"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_relay_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "87a88933e7be6edec713b7a7f5a356ca",
+            "name": "auth.schema_migrations",
+            "rows": "82",
+            "serializedBytes": "2058"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_tokens",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_users",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "6c4d8a050ce7636a424a8cebdf57f31f",
+            "name": "auth.sessions",
+            "rows": "144",
+            "serializedBytes": "49616"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_domains",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "bd1686d190f4f6c94dbb8175f8761a12",
+            "name": "auth.users",
+            "rows": "147",
+            "serializedBytes": "129226"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_credentials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+            "name": "public.admin_members",
+            "rows": "2",
+            "serializedBytes": "446"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9319b54d9de4586f855da822729b529e",
+            "name": "public.application_events",
+            "rows": "815",
+            "serializedBytes": "339172"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "949df7a51a9609a32b36a84bc11964df",
+            "name": "public.application_packets",
+            "rows": "87",
+            "serializedBytes": "2269643"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+            "name": "public.application_submissions",
+            "rows": "64",
+            "serializedBytes": "86590"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "077765c72ba9ff8921e6124ea5577eb6",
+            "name": "public.application_worker_heartbeats",
+            "rows": "479",
+            "serializedBytes": "65305"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+            "name": "public.application_worker_tasks",
+            "rows": "64",
+            "serializedBytes": "46559"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.articles",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "ed908b923358cbad706195d02319adb2",
+            "name": "public.automation_rules",
+            "rows": "119",
+            "serializedBytes": "20037"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2848dbf849c96d21f8042b133c93ba88",
+            "name": "public.automation_runs",
+            "rows": "13",
+            "serializedBytes": "59729"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+            "name": "public.contact_requests",
+            "rows": "5",
+            "serializedBytes": "3435"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+            "name": "public.feedback_messages",
+            "rows": "11",
+            "serializedBytes": "3574"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+            "name": "public.inbox_aliases",
+            "rows": "117",
+            "serializedBytes": "24161"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "7fdfd20d4c05626429e0512f8d2552e7",
+            "name": "public.inbox_messages",
+            "rows": "291",
+            "serializedBytes": "556006"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f331f2304263b0cd3642c296b2676169",
+            "name": "public.job_alerts",
+            "rows": "5",
+            "serializedBytes": "890"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e647095d75414a442175f7fb3588caf4",
+            "name": "public.jobs",
+            "rows": "24041",
+            "serializedBytes": "77014823"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "470367f38c31f63ffd34430371f1476c",
+            "name": "public.moderation_logs",
+            "rows": "4327",
+            "serializedBytes": "1921831"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e56a2b9b48ff149e29fb6c27ad7fa566",
+            "name": "public.profiles",
+            "rows": "122",
+            "serializedBytes": "1763445"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+            "name": "public.resume_versions",
+            "rows": "12",
+            "serializedBytes": "103861"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+            "name": "public.saved_jobs",
+            "rows": "8",
+            "serializedBytes": "1069"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.testimonials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.user_entitlements",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+            "name": "public.waitlist",
+            "rows": "22",
+            "serializedBytes": "4184"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.messages",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "802700104fc0aed2f68c413f50637ba5",
+            "name": "realtime.schema_migrations",
+            "rows": "89",
+            "serializedBytes": "4382"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.subscription",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+            "name": "storage.buckets",
+            "rows": "4",
+            "serializedBytes": "838"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_analytics",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_vectors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55a444ce635336fa733a015fc4db877f",
+            "name": "storage.migrations",
+            "rows": "74",
+            "serializedBytes": "8715"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+            "name": "storage.objects",
+            "rows": "73",
+            "serializedBytes": "48321"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads_parts",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.vector_indexes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "35d965e826914770a00b84c3d87dd610",
+            "name": "supabase_migrations.schema_migrations",
+            "rows": "1",
+            "serializedBytes": "2310"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "vault.secrets",
+            "rows": "0",
+            "serializedBytes": "21"
+          }
+        ],
+        "transport": {
+          "customerRowsImported": 0,
+          "differences": [],
+          "exceptions": [],
+          "fullDataVerification": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceObjects": 327,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T22:28:04Z",
+          "targetObjects": 327
+        }
+      },
+      "containment": {
+        "appRolePrivilegesEach": 552,
+        "approvedP6RolesEach": 2,
+        "approvedSchemaExceptionsEach": 3,
+        "baseline552Unchanged": true,
+        "fixtureWrites": 0,
+        "manifests": "PASS",
+        "orderedMD5Each": true,
+        "originalCaddyFilesUnchanged": true,
+        "pristineWrites": 0,
+        "privateFixtureRunningNoPorts": true,
+        "rawCatalogDifferencesRetained": true,
+        "sequencesEach": 2,
+        "sourceRolesUnchanged": true,
+        "sourceWrites": 0,
+        "status": "PASS",
+        "storageObjectsEach": 73,
+        "storageSHA256Match": true,
+        "tablesEach": 62
+      },
+      "freshLoginChecks": [
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "_supabase",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_acl_repair_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_baseline_proof_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_cloud_baseline_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_owner_parity_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_named",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p4_20261021t170139z_8be0fc2e_syn2",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_p5_app",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_rehearsal_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "ir35_storage_compat_a_20261021",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": true,
+          "database": "postgres",
+          "exitCode": 0,
+          "explicitHBAReject": false,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "docker-tcp"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "local"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv4-loopback"
+        },
+        {
+          "applicationFunctionCalled": false,
+          "connectedAsExpected": false,
+          "database": "template1",
+          "exitCode": 2,
+          "explicitHBAReject": true,
+          "passed": true,
+          "role": "ir35_queue_producer",
+          "transport": "ipv6-loopback"
+        }
+      ],
+      "freshReadOnlyHBAProof": {
+        "applicationRejections": 104,
+        "checks": 112,
+        "functionCalls": 0,
+        "noContainerCreated": true,
+        "noReloadRestartOrConfigWrite": true,
+        "queueSuccesses": 8,
+        "status": "PASS"
+      },
+      "pg_hba": {
+        "actualLoginChecks": 112,
+        "baseline552Changed": false,
+        "currentHBAHash": "443eb1cee65e0cec7f947026c892426c6bd979a5a85678a75ba3a9d9e4724c68",
+        "functionCalls": 0,
+        "ownerApprovedConnectionBoundary": true,
+        "queueDatabase": "postgres",
+        "rawFindingUnchanged": true,
+        "rawFunctionACLStatus": "REVIEW_REQUIRED",
+        "status": "PASS"
+      },
+      "pristine": {
+        "authTableChecks": 27,
+        "dataDifferences": [],
+        "extensionChecks": {
+          "capabilityChecks": 198,
+          "conditionalExceptionsOnly": true,
+          "conditions": {
+            "adminOwner": true,
+            "allObjectACLs": true,
+            "ddlCapabilities": true,
+            "versions": true
+          },
+          "memberChecks": 55,
+          "objectACLChecks": 62,
+          "ownerDifferences": [
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pg_stat_statements",
+              "stagingOwner": "supabase_admin",
+              "version": "1.11"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:pgcrypto",
+              "stagingOwner": "supabase_admin",
+              "version": "1.3"
+            },
+            {
+              "cloudOwner": "postgres",
+              "object": "extension:uuid-ossp",
+              "stagingOwner": "supabase_admin",
+              "version": "1.1"
+            }
+          ],
+          "status": "PASS",
+          "typeACLChecks": 4,
+          "unapprovedDifferences": []
+        },
+        "fullP4Complete": false,
+        "passwordHashBytesCoveredByWholeTableFingerprints": true,
+        "privileges": {
+          "differences": [],
+          "exceptionsApproved": [],
+          "morePermissive": [],
+          "repairMustStop": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceEntries": 552,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T22:27:52Z",
+          "targetEntries": 552
+        },
+        "schema": {
+          "additionExpiryVerified": true,
+          "approvedP6Additions": [
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue",
+              "object": "role:ir35_queue",
+              "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+            },
+            {
+              "approvedP6Addition": true,
+              "attributesVerified": true,
+              "cloudHash": null,
+              "name": "ir35_queue_producer",
+              "object": "role:ir35_queue_producer",
+              "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+            }
+          ],
+          "baseline552Unchanged": true,
+          "baselineCatalogResult": {
+            "conditionsPASS": true,
+            "exceptions": [
+              {
+                "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+                "object": "extension:pg_stat_statements",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+              },
+              {
+                "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+                "object": "extension:pgcrypto",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "63652c33f708c5861e34f2218529562b"
+              },
+              {
+                "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+                "object": "extension:uuid-ossp",
+                "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+                "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+              }
+            ],
+            "fullDataVerification": false,
+            "metadataMatch": true,
+            "phaseComplete": false,
+            "roleAttributesMatch": true,
+            "sourceCheckedAt": "2026-10-21T17:02:41Z",
+            "sourceObjects": 3752,
+            "status": "FAIL",
+            "targetCheckedAt": "2026-10-26T22:27:51Z",
+            "targetObjects": 3754,
+            "unexplainedDifferences": [
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue",
+                "stagingHash": "5ce2868ebccdb81e978cc6c527f828b3"
+              },
+              {
+                "cloudHash": null,
+                "object": "role:ir35_queue_producer",
+                "stagingHash": "d0300df7140e0fd4d573e19764f30f03"
+              }
+            ]
+          },
+          "exceptions": [
+            {
+              "cloudHash": "80a735fbd04851d69e0a6916b27ff3a3",
+              "object": "extension:pg_stat_statements",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "b952fee91dcdd79d5f1ab664ca94b4ae"
+            },
+            {
+              "cloudHash": "d9102eaa6d39b8bc4cfdd793e87de16c",
+              "object": "extension:pgcrypto",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "63652c33f708c5861e34f2218529562b"
+            },
+            {
+              "cloudHash": "fd9cd4d2b037e1ceefe92dedc89cb4e7",
+              "object": "extension:uuid-ossp",
+              "reason": "Owner-approved platform extension owner only; all a-d conditions independently PASS",
+              "stagingHash": "f8a2ed32366bd20293b463f2bf1924dc"
+            }
+          ],
+          "fullDataVerification": false,
+          "phaseComplete": false,
+          "sourceObjects": 3752,
+          "sourceRoleExpiryUnchanged": true,
+          "sourceRolesUnchanged": true,
+          "status": "PASS_WITH_APPROVED_P6_ADDITIONS",
+          "targetObjects": 3754,
+          "unexplainedDifferences": []
+        },
+        "sequenceChecks": 2,
+        "sourceWrites": 0,
+        "stagingWrites": 0,
+        "status": "PASS",
+        "tables": [
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.audit_log_entries",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.custom_oauth_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "358ad650b328db71025b61931d4517f7",
+            "name": "auth.flow_state",
+            "rows": "47",
+            "serializedBytes": "9268"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "67af4006a7088b82f7e5d69baf174dfc",
+            "name": "auth.identities",
+            "rows": "148",
+            "serializedBytes": "91893"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.instances",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2807b1372da13ed41202a23b8e9dd2f2",
+            "name": "auth.mfa_amr_claims",
+            "rows": "144",
+            "serializedBytes": "23650"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_factors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_code_sets",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.mfa_recovery_codes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_authorizations",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_client_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_clients",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.oauth_consents",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8428bec654dfe1222e19c9ea4e4acb88",
+            "name": "auth.one_time_tokens",
+            "rows": "21",
+            "serializedBytes": "5580"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "af55a92e3b0a38f28d29578ed520275b",
+            "name": "auth.refresh_tokens",
+            "rows": "1466",
+            "serializedBytes": "359317"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.saml_relay_states",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "87a88933e7be6edec713b7a7f5a356ca",
+            "name": "auth.schema_migrations",
+            "rows": "82",
+            "serializedBytes": "2058"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_tokens",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.scim_users",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "6c4d8a050ce7636a424a8cebdf57f31f",
+            "name": "auth.sessions",
+            "rows": "144",
+            "serializedBytes": "49616"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_domains",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.sso_providers",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "bd1686d190f4f6c94dbb8175f8761a12",
+            "name": "auth.users",
+            "rows": "147",
+            "serializedBytes": "129226"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_challenges",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "auth.webauthn_credentials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "a8e9975b1fd3e7e88e7fcc75fba8ba62",
+            "name": "public.admin_members",
+            "rows": "2",
+            "serializedBytes": "446"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9319b54d9de4586f855da822729b529e",
+            "name": "public.application_events",
+            "rows": "815",
+            "serializedBytes": "339172"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "949df7a51a9609a32b36a84bc11964df",
+            "name": "public.application_packets",
+            "rows": "87",
+            "serializedBytes": "2269643"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "80050f1cf52006a9fcaf9aeac03fa9f9",
+            "name": "public.application_submissions",
+            "rows": "64",
+            "serializedBytes": "86590"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "077765c72ba9ff8921e6124ea5577eb6",
+            "name": "public.application_worker_heartbeats",
+            "rows": "479",
+            "serializedBytes": "65305"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "54bbc85d25ec4b66d04df64c4e41e661",
+            "name": "public.application_worker_tasks",
+            "rows": "64",
+            "serializedBytes": "46559"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.articles",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "ed908b923358cbad706195d02319adb2",
+            "name": "public.automation_rules",
+            "rows": "119",
+            "serializedBytes": "20037"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2848dbf849c96d21f8042b133c93ba88",
+            "name": "public.automation_runs",
+            "rows": "13",
+            "serializedBytes": "59729"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55fb93a9e5f14eaadbd958e1dca07bd3",
+            "name": "public.contact_requests",
+            "rows": "5",
+            "serializedBytes": "3435"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e9f0100b3c3122f3d7f2929cc6e9b46e",
+            "name": "public.feedback_messages",
+            "rows": "11",
+            "serializedBytes": "3574"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "2c3a20e6c8eb1ecbd6364ce3f71ef215",
+            "name": "public.inbox_aliases",
+            "rows": "117",
+            "serializedBytes": "24161"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "7fdfd20d4c05626429e0512f8d2552e7",
+            "name": "public.inbox_messages",
+            "rows": "291",
+            "serializedBytes": "556006"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f331f2304263b0cd3642c296b2676169",
+            "name": "public.job_alerts",
+            "rows": "5",
+            "serializedBytes": "890"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e647095d75414a442175f7fb3588caf4",
+            "name": "public.jobs",
+            "rows": "24041",
+            "serializedBytes": "77014823"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "470367f38c31f63ffd34430371f1476c",
+            "name": "public.moderation_logs",
+            "rows": "4327",
+            "serializedBytes": "1921831"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "e56a2b9b48ff149e29fb6c27ad7fa566",
+            "name": "public.profiles",
+            "rows": "122",
+            "serializedBytes": "1763445"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "8071d4f0bd1ee7bf43d79ec1fa5d471c",
+            "name": "public.resume_versions",
+            "rows": "12",
+            "serializedBytes": "103861"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "38654c466dcd5f3d5a7b40acee402b2f",
+            "name": "public.saved_jobs",
+            "rows": "8",
+            "serializedBytes": "1069"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.testimonials",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "public.user_entitlements",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "5e8836dc6b0b08549063f9d1d949ec44",
+            "name": "public.waitlist",
+            "rows": "22",
+            "serializedBytes": "4184"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.messages",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "802700104fc0aed2f68c413f50637ba5",
+            "name": "realtime.schema_migrations",
+            "rows": "89",
+            "serializedBytes": "4382"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "realtime.subscription",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "f1f3115f6255e8c5b3bfe18fb05741ec",
+            "name": "storage.buckets",
+            "rows": "4",
+            "serializedBytes": "838"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_analytics",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.buckets_vectors",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "55a444ce635336fa733a015fc4db877f",
+            "name": "storage.migrations",
+            "rows": "74",
+            "serializedBytes": "8715"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "9ee449e1eb1044501e25cb7e8e9f1319",
+            "name": "storage.objects",
+            "rows": "73",
+            "serializedBytes": "48321"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.s3_multipart_uploads_parts",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "storage.vector_indexes",
+            "rows": "0",
+            "serializedBytes": "21"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "35d965e826914770a00b84c3d87dd610",
+            "name": "supabase_migrations.schema_migrations",
+            "rows": "1",
+            "serializedBytes": "2310"
+          },
+          {
+            "algorithm": "pg17-copy-binary-framed-text-v1",
+            "md5": "b503374a9d222ffef163a2b60ea9e5c1",
+            "name": "vault.secrets",
+            "rows": "0",
+            "serializedBytes": "21"
+          }
+        ],
+        "transport": {
+          "customerRowsImported": 0,
+          "differences": [],
+          "exceptions": [],
+          "fullDataVerification": false,
+          "sourceCheckedAt": "2026-10-21T17:02:41Z",
+          "sourceObjects": 327,
+          "sourceWrites": 0,
+          "stagingWrites": 0,
+          "status": "PASS",
+          "targetCheckedAt": "2026-10-26T22:27:52Z",
+          "targetObjects": 327
+        }
+      },
+      "rawFunctionFindingRetained": "REVIEW_REQUIRED",
+      "status": "PASS"
+    },
+    "nativeAttempt": 3,
+    "phaseComplete": false,
+    "privateHandoffSHA256": "44b663aac34d99bf278e9705067051d5ab4b0ba58d5233bf4cc375baf3361c4a",
+    "providerProof": "DEFERRED_NO_GOOGLE_CHANGES",
+    "realEmailRequests": 0,
+    "realPasswordAttempts": 0,
+    "sourceWrites": 0,
+    "status": "PASS"
+  },
+  "phaseComplete": false,
+  "stagingOnly": true,
+  "status": "PASS"
+}

@@ -1,0 +1,10 @@
+{
+  "attempt": 3,
+  "disposableAuthClonesOnly": true,
+  "oauthProviderCalls": 0,
+  "productionChanges": false,
+  "realPasswordAttempts": 0,
+  "smtpSink": true,
+  "sourceValuesPrinted": false,
+  "stagingOnly": true
+}

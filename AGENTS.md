@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 26 October P7 disposable Auth attempt03 PASS — fresh Storage proof next
+
+- Final bounded Auth attempt03 is USED/PASS, immutable manifest `67a1051c0930d544a02d86706a0b02fb29bab59de910266a46f0020f5c219595`. Three isolated source-configured clone cases prove password/refresh/RLS, magic link, recovery/session revocation, signup/confirmation/invite and two-step email change. Six messages went ONLY to private SMTP sinks. All three owned databases and fifteen test containers were removed. No original-password attempt, source/pristine/P5 write or real email/employer call. Do not replay any Auth attempt or open attempt04.
+- Post-test full62 orderedMD5/Auth/2sequences/3approved exceptions/552+2queue roles/73Storage/FRESH112HBA PASS. Full575 fresh-home helper tests PASS40.209s, no private files/keys/VM supplied. Fresh read-only signed-Storage/RLS verification on the existing protected P5 fixture is prepared; whole P7 and P8 remain incomplete until their gates are observed. OAuth URI preparation is not real Google proof. OCI refresh already failed once: keep browser sign-in in the single final owner batch, no repeated refresh/login prompt. SSH remains agent-loaded without a lifetime. All production/provider/DNS/IAM/real-secret/cost/cutover holds remain.
+
 ## 26 October P7 source recovery-template parser repair — LAST attempt03
 
 - Attempt02 used/FAIL `SinkVerificationLinkInvalid` after actual synthetic password/refresh/RLS/deletion and named magic-link exchange; recovery request accepted. Original evidence preserved, manifest `cddcc20fa6db9c4147836f66d0c88b0da883efc0e4b24d9f5946fdd8be6f470f`. Five owned containers and owned DB destroyed, eight clone-role denial checks PASS, full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS; no pristine/P5/source write or real email.
