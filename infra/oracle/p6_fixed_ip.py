@@ -1,6 +1,7 @@
 """One owner fixed-IP repair, separate journals, never replays old attempts."""
 import json
 import sys
+import subprocess
 import cloud_schema as schema
 import p6_restart_diagnosis as diagnosis
 from p6_audit_log import Journal,AuditFailure
@@ -16,12 +17,13 @@ def context():
 
 def bundle():
     code=diagnosis.p6_resume.bundle()
-    for name in (*diagnosis.MODULES,'p6_fixed_ip_guest'):
+    for name in (*diagnosis.MODULES,'p6_mock_receipt_repair_guest','p6_fixed_ip_guest','p6_integration_guest'):
         code+='module=types.ModuleType('+repr(name)+');sys.modules['+repr(name)+']=module\nexec('+repr((schema.REPO/'infra/oracle'/(name+'.py')).read_text())+',module.__dict__)\n'
     return code
 
 
 def main():
+    if sys.argv[1:] in (['--handover'],['--full']):return execute(sys.argv[1][2:])
     if sys.argv[1:]!=['--preflight']:raise AuditFailure('ExplicitFixedIPPreflightRequired')
     root=schema.REPO/'docs/evidence/p6/fixedip-owner1-preflight'
     if root.exists():raise AuditFailure('FixedIPPreflightRecorded_NoReplay')
@@ -40,6 +42,35 @@ print(json.dumps(result))
     except AuditFailure as error:result['code']=str(error)
     result['manifestSHA256']=journal.seal(result)
     print(json.dumps({key:value for key,value in result.items() if key!='preflight'}))
+    if result['status']!='PASS':raise SystemExit(1)
+
+
+def execute(operation):
+    root=schema.REPO/('docs/evidence/p6/fixedip-owner1-'+operation)
+    if root.exists():raise AuditFailure('FixedIPOwnerOperationRecorded_NoReplay')
+    preflight=schema.REPO/'docs/evidence/p6/fixedip-owner1-preflight'
+    if verified_manifest(preflight)!='08219c6fc466c198112e8fd9684a50d028c7722eafbe17b19a7972bac93d3bb8':
+        raise AuditFailure('ExactStaticAddressPreflightRequired')
+    data=context();data['fixedIPPreflight']=json.loads((preflight/'01-fixedip-readonly-result.json').read_text())
+    git=diagnosis.p6_resume.git_command(schema.REPO)
+    if subprocess.run(git+['diff','--quiet',data['finalBuild']['sourceSHA'],'HEAD','--','services/application-worker','src/lib/queue','package.json','package-lock.json']).returncode:
+        raise AuditFailure('ApprovedPinnedWorkerSourceChanged_NoRebuildAuthority')
+    if operation=='full':
+        path=schema.REPO/'docs/evidence/p6/fixedip-owner1-handover'
+        verified_manifest(path)
+        data['runtimeProof']=json.loads((path/'01-fixedip-handover-result.json').read_text())
+        if data['runtimeProof'].get('status')!='PASS':raise AuditFailure('ActualFixedIPRepairHandoverRequired')
+        data['fixedScheduleRowsBefore']=4
+        data['scheduleDispatcherSource']=(schema.REPO/'infra/oracle/p6_schedule_dispatch.py').read_text()
+    journal=Journal(root);result={'status':'FAIL','ownerFixedIPAttempt':1,'historicalAttemptsPreserved':True,'newBuilds':0,
+        'operation':operation,'phaseComplete':False,'productionChanges':False}
+    def observe():
+        code=bundle()+"result=sys.modules['p6_fixed_ip_guest']."+('handover' if operation=='handover' else 'full')+'('+repr(data)+',runtime)\nprint(json.dumps(result))\n'
+        return schema.run_guest(code,timeout=900)
+    try:result['native']=journal.step(1,'fixedip-'+operation,observe);result['status']='PASS';result['phaseComplete']=operation=='full' and result['native'].get('phaseComplete')is True
+    except AuditFailure as error:result['code']=str(error)
+    result['manifestSHA256']=journal.seal(result)
+    print(json.dumps({k:v for k,v in result.items() if k!='native'}))
     if result['status']!='PASS':raise SystemExit(1)
 
 

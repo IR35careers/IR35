@@ -22,6 +22,30 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class RestartProxyProposalTests(unittest.TestCase):
+    def test_fixed_worker_endpoint_survives_process_restart_without_proxy_retarget(self):
+        opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        worker=ThreadingHTTPServer(('127.0.0.2',0),Handler);port=worker.server_address[1]
+        target=f'http://127.0.0.2:{port}/health'
+        class Proxy(BaseHTTPRequestHandler):
+            def do_GET(self):
+                with opener.open(target,timeout=1) as reply:body=reply.read(1024)
+                self.send_response(200);self.end_headers();self.wfile.write(body)
+            def log_message(self,*args):pass
+        proxy=ThreadingHTTPServer(('127.0.0.1',0),Proxy)
+        proxy_thread=threading.Thread(target=proxy.serve_forever,daemon=True);proxy_thread.start()
+        worker_thread=threading.Thread(target=worker.serve_forever,daemon=True);worker_thread.start()
+        url=f'http://127.0.0.1:{proxy.server_address[1]}/health'
+        try:
+            with opener.open(url,timeout=2) as reply:self.assertEqual(reply.read(),b'{"ok":true}')
+            worker.shutdown();worker.server_close();worker_thread.join()
+            worker=ThreadingHTTPServer(('127.0.0.2',port),Handler)
+            worker_thread=threading.Thread(target=worker.serve_forever,daemon=True);worker_thread.start()
+            with opener.open(url,timeout=2) as reply:self.assertEqual(reply.read(),b'{"ok":true}')
+            self.assertTrue(proxy_thread.is_alive())
+            self.assertEqual(target,f'http://127.0.0.2:{port}/health')
+        finally:
+            worker.shutdown();worker.server_close();worker_thread.join()
+            proxy.shutdown();proxy.server_close();proxy_thread.join()
     def test_stale_endpoint_fails_while_new_endpoint_is_healthy_then_retarget_works(self):
         # Linux loopback aliases only; the VM and its services are never used.
         opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))

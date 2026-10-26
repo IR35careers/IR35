@@ -343,7 +343,9 @@ def external_isolation(data,runtime):
         'historicalPacketCaptureClaimed':False,'proofScope':'Exact sealed mock-only payloads and immutable mock program plus internal-only network/provider-free execution; no retrospective packet-capture claim.'}
 
 
-def containment(data,runtime):
+def containment(data,runtime,*,probe_container=ROLLBACK):
+    if probe_container not in (ROLLBACK,'ir35-p6-mock-worker-v7-fixedip','ir35-p6-mock-worker-v7-fixedip-rollback'):
+        raise RuntimeError('FixedExistingOwnerWorkerProbeRequired')
     store,_,_,_=history(data);recovery=Recovery(data['p4'],runtime)
     scope=function_scope(recovery);boundary=verify_live(data,recovery,store,scope)
     summary,pristine,fixture=fidelity(data,runtime)
@@ -361,7 +363,7 @@ def containment(data,runtime):
                 if not database['allowConnections']:continue
                 for transport in ('docker-tcp','local','ipv4-loopback','ipv6-loopback'):
                     if transport=='docker-tcp':
-                        reply=subprocess.run(['docker','exec','-i','--user','1002:1002',ROLLBACK,'node','--input-type=module','-e',BRIDGE_PROBE],
+                        reply=subprocess.run(['docker','exec','-i','--user','1002:1002',probe_container,'node','--input-type=module','-e',BRIDGE_PROBE],
                             input=json.dumps({'role':role,'database':database['name'],'password':credentials['PGPASSWORD']}).encode(),capture_output=True,timeout=20)
                         if reply.returncode or len(reply.stdout)>4096:raise RuntimeError('ReadOnlyBridgeLoginProbeFailed_RawWithheld')
                         observed=json.loads(reply.stdout)

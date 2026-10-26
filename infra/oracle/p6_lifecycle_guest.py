@@ -71,7 +71,7 @@ console.log(JSON.stringify({inserted:true,mock:true}));"""
 
 
 def producer(value, *, orphan=False, worker_name=NEW_NAME):
-    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3','ir35-p6-mock-worker-v4','ir35-p6-mock-worker-v5','ir35-p6-mock-worker-v6'):
+    if worker_name not in (NEW_NAME, 'ir35-p6-mock-worker-v3','ir35-p6-mock-worker-v4','ir35-p6-mock-worker-v5','ir35-p6-mock-worker-v6','ir35-p6-mock-worker-v7-fixedip'):
         raise RecoveryError('FixedMockRuntimeIdentityRequired')
     script = producer_script(value, orphan=orphan)
     args = ['docker', 'exec', '-i', '--user', '1002:1002', worker_name, '/run/ir35/env-exec',
@@ -170,7 +170,9 @@ def retained_receipts(store, failed):
     return {row['applicationId']: row for row in found.values()}
 
 
-def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False,schedule_repair=False):
+def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False,schedule_repair=False,fixed_ip=False):
+    if type(fixed_ip)is not bool or fixed_ip and (repair_one or owner_resume or pause_repair or schedule_repair):
+        raise RecoveryError('SeparateSingleOwnerFixedIPLifecycleRequired')
     if type(schedule_repair)is not bool or schedule_repair and (not owner_resume or pause_repair):raise RecoveryError('DistinctFinalScheduleLifecycleRequired')
     if type(pause_repair)is not bool or pause_repair and not owner_resume:raise RecoveryError('DistinctPauseLifecycleRequired')
     if type(owner_resume) is not bool or owner_resume and repair_one:
@@ -205,7 +207,14 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
         worker_compose=ROOT/'p6-mock-compose-v6.yml'
         if anchor.get('scheduleRepair')is not True or anchor.get('containerName')!=worker_name:
             raise RecoveryError('ActualFinalScheduleHandoverRequired')
-    stage = store.stage('25-owner-final-repair-lifecycle' if schedule_repair else '21-owner-pause-repair-lifecycle' if pause_repair else '18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
+    if fixed_ip:
+        from p6_restart_diagnosis_guest import history as fixed_history
+        from p6_fixed_ip_guest import NAME as fixed_name,COMPOSE as fixed_compose
+        _,prior_receipts,_,_=fixed_history(data)
+        worker_name,worker_compose=fixed_name,fixed_compose
+        if anchor.get('fixedIPOwnerRepair')is not True or anchor.get('containerName')!=worker_name:
+            raise RecoveryError('ActualFixedIPOwnerHandoverRequired')
+    stage = store.stage('29-owner-fixedip-full-lifecycle' if fixed_ip else '25-owner-final-repair-lifecycle' if schedule_repair else '21-owner-pause-repair-lifecycle' if pause_repair else '18-owner-resume-lifecycle' if owner_resume else '16-native-mock-lifecycle-repair-one' if repair_one else '12-native-mock-lifecycle')
     original = Recovery(data['p4'], runtime)
     control = Control(private_env(ROOT / '.env.p6-mock-control')['APPLICATION_WORKER_SECRET'])
     result = {'status': 'FAIL', 'realAcceptance': False, 'customerWrites': 0, 'productionChanges': False,
@@ -214,6 +223,7 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
         result.update(resumedLifecycleAttempt=3 if schedule_repair else 2 if pause_repair else 1,
             repairAttempt=2 if schedule_repair else 1 if pause_repair else 0,historicalCountersPreserved=True)
     sequence = 0
+    if fixed_ip:result.update(ownerFixedIPLifecycleAttempt=1,historicalCountersPreserved=True)
 
     def record(name, observed):
         nonlocal sequence
@@ -264,7 +274,16 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
           'applications',(SELECT count(*) FROM pgboss.ir35_mock_application),
           'schedules',(SELECT count(*) FROM pgboss.ir35_mock_schedule),
           'applyJobs',(SELECT count(*) FROM pgboss.job WHERE name='ir35-staging-mock-apply'));""", 'postgres'))
-        if schedule_repair:
+        if fixed_ip:
+            checked('retained-all-thirty-four-counts',empty,empty=={'applications':34,'schedules':data['fixedScheduleRowsBefore'],'applyJobs':32})
+            for identifier,before in prior_receipts.items():
+                actual_receipt=control.request('GET','/mock/applications/'+identifier)[1]
+                checked('retained-all-thirty-four-receipt',{'idSHA256':digest(identifier.encode()),'sameReceipt':actual_receipt==before},actual_receipt==before)
+            paused=control.request('GET','/health')[1]
+            checked('fixedip-start-paused',paused,paused.get('paused')is True and paused.get('active')==0)
+            record('resume-fixedip-mock-consumer-intent',{'realAcceptance':False,'mockOnly':True})
+            control.request('POST','/mock/maintenance',{'action':'resume'})
+        elif schedule_repair:
             checked('retained-all-twenty-three-counts',empty,empty=={'applications':23,'schedules':1,'applyJobs':22})
             for identifier,before in prior_receipts.items():
                 actual_receipt=control.request('GET','/mock/applications/'+identifier)[1]
@@ -371,9 +390,11 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
         checked('orphan-watchdog', expired, expired.get('state') == 'failed' and expired.get('errorCode') == 'runner_timeout'
                 and [event['state'] for event in expired['events']] == ['queued', 'failed'])
         snapshots[orphan['applicationId']] = expired
+        owned_schedules=[]
         for operation in ('mock_ingest', 'mock_automation', 'watchdog'):
             command = {'kind': 'staging_mock_schedule', 'operation': operation, 'requestedAt': work('success')['requestedAt']}
             record('schedule-intent', command)
+            owned_schedules.append(command)
             accepted = control.request('POST', '/mock/schedule', command)
             checked('schedule-' + operation, {'status': accepted[0], 'value': accepted[1]},
                     accepted == (202, {'mock': True, 'queued': True}))
@@ -384,6 +405,14 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
                 break
             time.sleep(0.4)
         checked('durable-mock-schedules', schedules, schedules == ['mock_automation', 'mock_ingest', 'watchdog'])
+        if fixed_ip:
+            deadline=time.monotonic()+15
+            while True:
+                rows=json.loads(original.query("SELECT coalesce(jsonb_agg(jsonb_build_object('data',j.data,'state',j.state,'receipt',s.id IS NOT NULL)),'[]') FROM pgboss.job j LEFT JOIN pgboss.ir35_mock_schedule s ON s.id=j.id WHERE j.name='ir35-staging-mock-schedule';",'postgres'))
+                durable=all(any(row['data']==value and row['state']=='completed' and row['receipt'] is True for row in rows) for value in owned_schedules)
+                if durable or time.monotonic()>=deadline:break
+                time.sleep(0.4)
+            checked('fixedip-every-owned-schedule-durable',{'owned':len(owned_schedules),'durable':durable},durable)
         before_restart = idle()
         checked('one-browser-max', before_restart, before_restart.get('peakActive') == 1)
         record('restart-intent', {'container': worker_name, 'image': anchor['image'], 'queueJobsTerminal': True, 'realAcceptance': False})
@@ -407,6 +436,9 @@ def run(data, runtime, *, repair_one=False,owner_resume=False,pause_repair=False
         actual = json.loads(runtime['run'](['docker', 'inspect', worker_name]))[0]
         if isolation(actual, anchor['image'], network) != address:
             raise RecoveryError('MockRuntimeIsolationChangedAfterRestart')
+        if fixed_ip:
+            from p6_fixed_ip_guest import verify_fixed_endpoint
+            checked('fixedip-direct-localhost-after-restart',verify_fixed_endpoint(actual,anchor,control),True)
         processes = process_rows(runtime['run'](['docker', 'top', worker_name, '-eo', PS_FIELDS]))
         chromium = [line for line in processes if re.search(r'\b(?:chrome|chromium|chrome_crashpad)\b', line)]
         checked('no-browser-orphans', {'chromiumProcessCount': len(chromium)}, not chromium)
