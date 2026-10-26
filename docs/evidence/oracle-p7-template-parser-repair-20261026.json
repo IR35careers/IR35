@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-26",
+  "status": "PASS",
+  "phaseComplete": false,
+  "scope": "Offline source-template parser repair; no migration-data deduplication",
+  "actualPrivateSourceRenderProbe": {
+    "magic_link": {"placeholderOccurrences":1,"matchingAnchors":1,"uniqueTokens":1},
+    "recovery": {"placeholderOccurrences":6,"matchingAnchors":4,"uniqueTokens":1},
+    "sourceValuesPrinted": false,
+    "networkCalls": 0
+  },
+  "preservedGuards": ["recipient","https","exact-gateway","port","no-userinfo","exact-path","expected-type","56-lowercase-hex","exactly-one-unique-token"],
+  "distinctTokensRejected": true,
+  "originalP4ParserUnchanged": true,
+  "migrationVerifiersHashesCataloguesAndTimeoutsUnchanged": true,
+  "attempt02ManifestSHA256": "cddcc20fa6db9c4147836f66d0c88b0da883efc0e4b24d9f5946fdd8be6f470f",
+  "attempt02OwnedDatabaseDestroyed": true,
+  "attempt02OwnedContainersRemoved": 5,
+  "cloneQueueDenialsPassed": 8,
+  "postCleanupFullContainment": "PASS",
+  "targetedTests": {"status":"PASS","tests":5,"seconds":0.868},
+  "fullFreshHomeSuite": {"status":"PASS","tests":572,"seconds":38.408,"manifestSHA256":"0e79bdb751d6dcb6ffe2cfc46c105f1066343dcf5a61d02ec8a30feaf1d35303"},
+  "lastNativeAttemptPrepared": 3,
+  "attempt04Permitted": false,
+  "ownerBatchPending": [{"gate":"G2","cause":"security-token refresh failed once","browserOpened":false,"retries":0}],
+  "productionDNSProviderIAMOrRealSecretChanges": false,
+  "realEmailOrEmployerRequests": 0,
+  "cutover": false
+}

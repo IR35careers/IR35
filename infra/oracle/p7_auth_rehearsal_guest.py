@@ -24,7 +24,7 @@ if(req.method!=='GET'||!Object.hasOwn(templates,key)){res.writeHead(404);res.end
 res.setHeader('Content-Type','text/html; charset=utf-8');res.end(templates[key]);}).listen(8080,'0.0.0.0');"""
 
 
-def parse_link(message,kind,recipient):
+def matching_tokens(message,kind,recipient):
     if recipient!=EMAIL and not re.fullmatch(r'qa\+[a-z]+@invalid\.test',recipient):raise RecoveryError('FixtureRecipientRequired')
     if [row.get('Address') for row in message.get('To',[])]!=[recipient]:raise RecoveryError('SinkRecipientMismatch_Abort')
     parser=Anchors();parser.feed(message.get('HTML',''));tokens=[]
@@ -34,14 +34,27 @@ def parse_link(message,kind,recipient):
                 and not url.username and not url.password and url.path=='/auth/v1/verify' and query.get('type')==[kind]):
             values=query.get('token',[])
             if len(values)==1 and re.fullmatch(r'[0-9a-f]{56}',values[0]):tokens.append(values[0])
-    if len(tokens)!=1:raise RecoveryError('SinkVerificationLinkInvalid')
-    return tokens[0]
+    return tokens,len(parser.links)
+
+
+def parse_link(message,kind,recipient):
+    tokens,unused=matching_tokens(message,kind,recipient)
+    unique=set(tokens)
+    if len(unique)!=1:raise RecoveryError('SinkVerificationLinkInvalid')
+    return next(iter(unique))
+
+
+def link_metadata(message,kind,recipient):
+    tokens,anchors=matching_tokens(message,kind,recipient)
+    return {'kind':kind,'anchorCount':anchors,'matchingAnchorCount':len(tokens),'uniqueMatchingTokens':len(set(tokens)),
+        'valuesPrinted':False}
 
 
 class SourceStack(MailStack):
     def __init__(self,recovery,stage,handoff,app_image):
         super().__init__(recovery,stage)
         self.handoff=handoff;self.app_image=app_image
+        self.link_diagnostics=[];self.case_checks={}
         self.template_name='ir35-p4-'+self.r.run_id[-8:]+'-'+stage.name+'-templates'
         base=self.runtime['component_env']
         configured,templates,subjects,self.projection=profile.configure(base(self.values)['auth'],handoff,self.template_name)
@@ -88,7 +101,9 @@ class SourceStack(MailStack):
                 if not re.fullmatch(r'[A-Za-z0-9_-]{8,100}',message_id):raise RecoveryError('SinkIdentifierInvalid')
                 status,body,_=self.raw('/api/v1/message/'+message_id,service='smtp',port=8025)
                 if status!=200:raise RecoveryError('SinkReadFailed')
-                token=parse_link(json.loads(body),kind,recipient);seen.add(message_id)
+                message=json.loads(body)
+                self.link_diagnostics.append(link_metadata(message,kind,recipient))
+                token=parse_link(message,kind,recipient);seen.add(message_id)
                 status,body,_=self.observe('/auth/v1/verify',{'token_hash':token,'type':kind});token=None
                 if status!=200:raise RecoveryError('SinkLinkExchangeFailed')
                 return json.loads(body)
@@ -107,7 +122,7 @@ def scoped_runtime(data,runtime):
 def owned_clone(recovery,stage,case):
     if case not in ('mail','signup','email'):raise RecoveryError('ExplicitP7CaseRequired')
     attempt=recovery.payload['p7AuthAttempt']
-    if attempt not in (1,2):raise RecoveryError('BoundedP7AttemptRequired')
+    if attempt not in (1,2,3):raise RecoveryError('BoundedP7AttemptRequired')
     pristine=recovery.database;target=pristine+'_p7a'+str(attempt)+'_'+case
     if recovery.query("SELECT 1 FROM pg_database WHERE datname='"+target+"';",'postgres').strip():raise RecoveryError('P7CloneExists_NoReplay')
     recovery.command(recovery.base+['psql','-XqAt','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres','-f','-'],
@@ -119,7 +134,7 @@ def owned_clone(recovery,stage,case):
 
 def destroy_clone(recovery,target,stage,pristine):
     attempt=recovery.payload['p7AuthAttempt']
-    if attempt not in (1,2) or target not in tuple(pristine+'_p7a'+str(attempt)+'_'+case for case in ('mail','signup','email')):raise RecoveryError('P7DropTargetRefused')
+    if attempt not in (1,2,3) or target not in tuple(pristine+'_p7a'+str(attempt)+'_'+case for case in ('mail','signup','email')):raise RecoveryError('P7DropTargetRefused')
     annotation=recovery.query("SELECT coalesce(shobj_description(oid,'pg_database'),'') FROM pg_database WHERE datname='"+target+"';",'postgres').strip()
     if annotation!='ir35-p7:'+recovery.run_id+':'+stage.name:raise RecoveryError('P7DropOwnershipMismatch')
     if recovery.query("SELECT count(*) FROM pg_stat_activity WHERE datname='"+target+"';",'postgres').strip()!='0':raise RecoveryError('P7CloneStillConnected')
@@ -161,8 +176,10 @@ def queue_clone_denials(recovery,target):
 
 def mail_case(stack,recovery,handoff):
     synthetic,password,reply,headers,rls=create_user(stack,'qa+staging@invalid.test');password=None
+    stack.case_checks['syntheticGrantRefreshRLS']=rls
     status,_,_=stack.observe('/auth/v1/admin/users/'+synthetic,None,bearer=stack.values['SERVICE_ROLE_KEY'],method='DELETE')
     if status not in (200,204):raise RecoveryError('P7SyntheticDeletionFailed')
+    stack.case_checks['syntheticDeleted']=True
     user_id=recovery.query("SELECT id::text FROM auth.users WHERE lower(email)='"+EMAIL+"';").strip()
     if not re.fullmatch(r'[a-f0-9-]{36}',user_id):raise RecoveryError('P7NamedIdentityMissing')
     seen=set();sent=time.monotonic()
@@ -170,10 +187,12 @@ def mail_case(stack,recovery,handoff):
     if status!=200:raise RecoveryError('P7MagicLinkRequestFailed')
     old=stack.consume('magiclink',EMAIL,seen);old_headers=stack.session(old,user_id)
     magic_rls=stack.rls(user_id,old_headers)
+    stack.case_checks['magicLinkRLS']=magic_rls
     cooldown=handoff['settings']['smtp_max_frequency']+5
     while time.monotonic()-sent<cooldown:time.sleep(min(5,cooldown-(time.monotonic()-sent)))
     status,_,_=stack.observe('/auth/v1/recover',{'email':EMAIL})
     if status!=200:raise RecoveryError('P7RecoveryRequestFailed')
+    stack.case_checks['recoveryRequestAccepted']=True
     recovered=stack.consume('recovery',EMAIL,seen);stack.session(recovered,user_id)
     session=json.loads(base64.urlsafe_b64decode(recovered['access_token'].split('.')[1]+'==')).get('session_id')
     if not re.fullmatch(r'[a-f0-9-]{36}',session or ''):raise RecoveryError('P7RecoverySessionMissing')
@@ -235,7 +254,7 @@ def email_case(stack):
 def run(data,runtime,handoff):
     profile.validate(handoff);scoped=scoped_runtime(data,runtime)
     attempt=data['p7AuthAttempt']
-    if attempt not in (1,2):raise RecoveryError('BoundedP7AttemptRequired')
+    if attempt not in (1,2,3):raise RecoveryError('BoundedP7AttemptRequired')
     p4=dict(data['p4'])|{'p7AuthAttempt':attempt}
     result={'status':'FAIL','phaseComplete':False,'sourceWrites':0,'realPasswordAttempts':0,'realEmailRequests':0,
         'cases':{},'providerProof':'DEFERRED_NO_GOOGLE_CHANGES','nativeAttempt':attempt}
@@ -250,12 +269,16 @@ def run(data,runtime,handoff):
             if before['status']!='PASS':raise RecoveryError('P7CloneFidelityMismatch_Abort')
             observed['queueCloneDenials']=queue_clone_denials(recovery,target)
             stack=SourceStack(recovery,stage,handoff,data['build']['image']);stack.start()
-            observed.update(controls=gateway_controls(stack),sourceProfile=stack.projection,checks=action(stack,recovery),status='PASS')
+            observed['controls']=gateway_controls(stack)
+            observed['sourceProfile']=stack.projection
+            observed['checks']=action(stack,recovery)
+            observed['status']='PASS'
         except Exception as error:observed['code']=str(error) if type(error)in(RecoveryError,profile.ProfileError) else type(error).__name__
         finally:
             try:
                 if stack:
-                    stack.stop();observed.update(runtime=stack.record(),diagnostics=stack.diagnostics,disposableContainersRemoved=stack.destroy())
+                    stack.stop();observed.update(runtime=stack.record(),diagnostics=stack.diagnostics,
+                        linkDiagnostics=stack.link_diagnostics,partialChecks=stack.case_checks,disposableContainersRemoved=stack.destroy())
                 if target:observed['disposableDatabaseDestroyed']=destroy_clone(recovery,target,stage,pristine)
             except Exception as error:observed.update(status='FAIL',cleanupCode=str(error) if type(error)is RecoveryError else type(error).__name__)
         recovery.database=pristine

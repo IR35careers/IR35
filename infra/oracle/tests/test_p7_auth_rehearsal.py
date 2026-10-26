@@ -44,6 +44,12 @@ class AuthRehearsalTests(unittest.TestCase):
         token='a'*56;recipient='qa+signup@invalid.test'
         message={'To':[{'Address':recipient}],'HTML':'<a href="https://api-staging.ir35careers.com/auth/v1/verify?type=signup&amp;token='+token+'">Confirm</a>'}
         self.assertEqual(guest.parse_link(message,'signup',recipient),token)
+        repeated=json.loads(json.dumps(message));repeated['HTML']*=4
+        self.assertEqual(guest.parse_link(repeated,'signup',recipient),token)
+        metadata=guest.link_metadata(repeated,'signup',recipient)
+        self.assertEqual((metadata['matchingAnchorCount'],metadata['uniqueMatchingTokens']),(4,1))
+        distinct=json.loads(json.dumps(message));distinct['HTML']+=message['HTML'].replace(token,'b'*56)
+        with self.assertRaises(guest.RecoveryError):guest.parse_link(distinct,'signup',recipient)
         for bad in ('https://employer.invalid','https://user:pass@api-staging.ir35careers.com'):
             changed=json.loads(json.dumps(message));changed['HTML']=changed['HTML'].replace('https://api-staging.ir35careers.com',bad)
             with self.assertRaises(guest.RecoveryError):guest.parse_link(changed,'signup',recipient)

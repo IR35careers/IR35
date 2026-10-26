@@ -1,5 +1,11 @@
 # IR35Careers engineering instructions
 
+## 26 October P7 source recovery-template parser repair — LAST attempt03
+
+- Attempt02 used/FAIL `SinkVerificationLinkInvalid` after actual synthetic password/refresh/RLS/deletion and named magic-link exchange; recovery request accepted. Original evidence preserved, manifest `cddcc20fa6db9c4147836f66d0c88b0da883efc0e4b24d9f5946fdd8be6f470f`. Five owned containers and owned DB destroyed, eight clone-role denial checks PASS, full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS; no pristine/P5/source write or real email.
+- Offline rendering of the ACTUAL private source recovery template gives six ConfirmationURL occurrences/four matching anchors/ONE unique token, vs magic-link one/one/one. New P7 parser must accept repeated IDENTICAL authorized verification links but require exactly ONE unique valid token, retaining HTTPS/exact gateway/path/type/recipient/hash guards; distinct tokens remain rejected. This does not deduplicate migration data or change any P4 verifier/assertion/hash/catalogue. Add metadata-only anchor/token counts before parse and preserve partial positive checks on failure. Full572 fresh-home regressions PASS38.408s.
+- Distinct attempt03 is the LAST bounded Auth run, requiring the exact attempt02 parser-only failure, owned cleanup and full containment PASS. All three attempt journals remain immutable. A failure on attempt03 stops P7/P8/P9 work and reports; no attempt04 or counter reset. All standard security/data/paid/provider/production/DNS/IAM/secret/cutover stops remain. OCI refresh has failed once without browser opening; keep G2 in the final owner batch, do not retry/open another login now. SSH remains loaded and does not need OCI auth for these tests.
+
 ## 26 October P7 Auth bootstrap tooling repair — no Auth case ran yet
 
 - Native attempt01 FAIL with generic KeySafetyError, immutable manifest `98a6fdc1c27722467899d03d0783a163fe3db9115ba26e81c37d236f4125e348`; original remote error detail was not retained and must not be invented. Readonly diagnosis PASS `def74ee1cc0295971afa7dbd81faab96dbb936f45408f82bfceab6a3abd86fdc`: all three new stage directories absent, zero new containers/DBs, full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS. No Auth scenario/password/mail attempt or customer-data mutation occurred.

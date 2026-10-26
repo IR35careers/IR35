@@ -14,7 +14,7 @@ AUTH_MODULES=('export_auth_settings','p7_auth_profile','auth_redaction','p4_auth
 
 def program(data,handoff,attempt=1):
     profile.validate(handoff)
-    if attempt not in (1,2):raise RuntimeError('BoundedP7AuthAttemptRequired')
+    if attempt not in (1,2,3):raise RuntimeError('BoundedP7AuthAttemptRequired')
     data=dict(data)|{'p7AuthAttempt':attempt}
     code=p6_capture_repair.bundle()
     for name in AUTH_MODULES:
@@ -46,8 +46,8 @@ print(json.dumps(result))
 
 
 def main():
-    if sys.argv[1:] not in (['--staging-only'],['--staging-only','--attempt','2']):raise RuntimeError('ExplicitStagingAuthOperationRequired')
-    attempt=2 if len(sys.argv)>2 else 1
+    if sys.argv[1:] not in (['--staging-only'],['--staging-only','--attempt','2'],['--staging-only','--attempt','3']):raise RuntimeError('ExplicitStagingAuthOperationRequired')
+    attempt=int(sys.argv[-1]) if len(sys.argv)>2 else 1
     root=schema.REPO/('docs/evidence/p7/auth-rehearsal-0'+str(attempt))
     if root.exists():raise RuntimeError('P7AuthAttemptUsed_NoReplay')
     if attempt==2:
@@ -60,6 +60,16 @@ def main():
         if (proof['status']!='PASS' or proof['containers'] or proof['databases'] or any(stage['exists']for stage in proof['stages'])
                 or proof['fullContainment']['status']!='PASS'):
             raise RuntimeError('NoMutationImportFailureProofRequired')
+    if attempt==3:
+        prior=schema.REPO/'docs/evidence/p7/auth-rehearsal-02'
+        if verified_manifest(prior)!='cddcc20fa6db9c4147836f66d0c88b0da883efc0e4b24d9f5946fdd8be6f470f':
+            raise RuntimeError('ExactRetainedParserFailureRequired')
+        proof=json.loads((prior/'auth-result.json').read_bytes())
+        case=proof.get('cases',{}).get('mail',{})
+        if (proof.get('status')!='FAIL' or set(proof.get('cases',{}))!={'mail'} or case.get('code')!='SinkVerificationLinkInvalid'
+                or case.get('disposableDatabaseDestroyed')is not True or case.get('disposableContainersRemoved')!=5
+                or case.get('queueCloneDenials',{}).get('status')!='PASS' or proof.get('fullContainment',{}).get('status')!='PASS'):
+            raise RuntimeError('ParserOnlyFailureAndCompleteCleanupProofRequired')
     raw=sys.stdin.buffer.read(4*1024*1024+1)
     if len(raw)>4*1024*1024:raise RuntimeError('BoundedSourceHandoffRequired')
     handoff=json.loads(raw);profile.validate(handoff)
