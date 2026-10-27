@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "ownerConfirmation": "Signed in",
+  "launcherProcessOutcome": "Previous tool process handle unavailable after context handoff; not replayed",
+  "authenticatedRead": "iam compartment get",
+  "compartment": "ir35",
+  "lifecycleState": "ACTIVE",
+  "profile": "ir35",
+  "region": "uk-london-1",
+  "auth": "security_token",
+  "remainingSecondsAtRead": 3290,
+  "cloudReads": 1,
+  "cloudWrites": 0,
+  "refreshAttempted": false,
+  "replacementBrowserOpened": false,
+  "apiOrSSHPasswordRequested": false,
+  "keyGenerated": false,
+  "iamChanged": false,
+  "backupUploadOrRestore": false,
+  "phaseComplete": false,
+  "cutover": false
+}

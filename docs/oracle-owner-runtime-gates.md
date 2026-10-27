@@ -4,6 +4,8 @@ G3 is CLOSED. Do not create another Supabase token, copy Auth settings or send p
 
 ## 1. Oracle browser sign-in
 
+**27 October completed:** profile ir35 authenticated a read-only ir35 compartment GET, ACTIVE,3290 seconds remaining. See [receipt](evidence/p9/owner-access-02-result.json). No replacement login, refresh, API/SSH prompt or cloud write. The following login instructions are retained history, not another requested action. Continue the read-only usage/access audit; age key and conditional IAM decisions below are still unapproved.
+
 Complete the single normal browser login/MFA handoff opened by the reviewed launcher. Wait for **Oracle authentication completed**, then reply **Signed in**. The token was confirmed expired by a local metadata-only check; its prior refresh already failed once. No refresh loop, old API key or second login window. After completion the agent runs a read-only compartment/usage/bucket/permissions audit before any proposed create/upload.
 
 The launcher now uses the current checkout's reviewed helper, not the stale `/home/anvesh/.ir35/p1-tooling` copy. Validation-only PASS, helper SHA256 `70d74f12e84546f8644fcd99399785012a206f29131ecddd9a5ef8183bd33e96`,0cloudrequests/0browseropens in that test. Full590fresh-home helper tests PASS42.204s, manifest `39a1d9bd9a10c6f50cbd2fd0a7791cbbbfd491f0ff61fdf6171f5989fa527396`.
