@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "readOnly": true,
+  "mockOnly": true,
+  "realAcceptance": false,
+  "smtpSink": true,
+  "credentialValuesPrinted": false
+}

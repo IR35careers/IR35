@@ -1,0 +1,10 @@
+{
+  "name": "account",
+  "status": 200,
+  "h1": 1,
+  "overflow": false,
+  "noindex": true,
+  "noStore": true,
+  "csp": true,
+  "sameOrigin": true
+}

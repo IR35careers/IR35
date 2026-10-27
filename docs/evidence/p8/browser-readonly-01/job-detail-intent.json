@@ -1,0 +1,6 @@
+{
+  "method": "GET",
+  "pathSHA256": "cc6b6bef90e9a8efbf04a857834b99f6564a05e22d8c6804aff86148e6c020f4",
+  "expectedStatus": 200,
+  "expectedH1": 1
+}

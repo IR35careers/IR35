@@ -1,0 +1,14 @@
+{
+  "headed": true,
+  "ephemeralContext": true,
+  "demoBackend": false,
+  "methods": [
+    "GET"
+  ],
+  "exactOrigin": "https://staging.ir35careers.com",
+  "serviceWorkers": "block",
+  "webSockets": "block",
+  "snapshotsOrTraces": false,
+  "credentialCustody": "RAM-only stdin/SSH IPC; existing VM Basic credential; no new value",
+  "sourceCleanVerified": true
+}

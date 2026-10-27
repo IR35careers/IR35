@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "readOnly": true,
+  "phaseComplete": false,
+  "productionChanges": false,
+  "browserVersion": "149.0.7827.55",
+  "pageCases": 5,
+  "actualSearchFilter": true,
+  "screenshotsOrTraces": false,
+  "mutationsSent": 0,
+  "googleProof": false,
+  "authenticatedWriteProof": false
+}

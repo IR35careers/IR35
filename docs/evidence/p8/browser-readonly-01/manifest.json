@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "name": "intent.json",
+      "sha256": "11a4655b974b06abb0d3042a4d6b21df495760264b5bc477cbbb0d569f801529"
+    },
+    {
+      "name": "bootstrap-intent.json",
+      "sha256": "450af3496b2e75b6b7d66e386a6cfa9d6c220bbc1465986631713229778a0b52"
+    },
+    {
+      "name": "bootstrap-result.json",
+      "sha256": "4ca52f2ceb22d51bc0c45a1aa2518bd12281dc930fe0a94b08f92c1051de6a84"
+    },
+    {
+      "name": "case-0-intent.json",
+      "sha256": "7243d34f8643a9cedcf7a76df485e3783fab1bba139f1d1d06de03a2852309a2"
+    },
+    {
+      "name": "case-0-result.json",
+      "sha256": "9a4e071af8a7c04710ff2f2f8fc1cb66bd528b912944d7c5d20356c262e509d7"
+    },
+    {
+      "name": "ssr-jobs-result.json",
+      "sha256": "a9a2fcedade89723d82cafe4d9b8cb2b4ae66ffe7d8e27e426ffe3bc6b0a42f4"
+    },
+    {
+      "name": "search-filter-result.json",
+      "sha256": "ccfd6d1ac7ca5df7117100c027b950ce6e2e4ecc8c7e602ef11c5f89c96cc1ac"
+    },
+    {
+      "name": "case-1-intent.json",
+      "sha256": "d4839f92163bb8760438eb250e993fbeffe72af76f6096de8b9934f2ad7cb5b6"
+    },
+    {
+      "name": "case-1-result.json",
+      "sha256": "b3409e096442210bb8cbab70954ab3f5ee2f6c1d044a1180722418965407e21d"
+    },
+    {
+      "name": "case-2-intent.json",
+      "sha256": "cc7fa3b2051df94eba60f371dadcfc297a6a95966c5ad8ffbbdf51c2cfb6eedd"
+    },
+    {
+      "name": "case-2-result.json",
+      "sha256": "5d5fce2654d9ba9a7c8d7455e36253b60c67a96fee7c8d62b41a8e64ef1b6dd2"
+    },
+    {
+      "name": "case-3-intent.json",
+      "sha256": "4dfc4086e9f73f9c3da9094219acbfb0286697c4a58472b2843d2bbc7a890d7f"
+    },
+    {
+      "name": "case-3-result.json",
+      "sha256": "195d2bf4b27cb76a5cd1d7166c60e1575538f93ea96b8c126370fc73e2d24332"
+    },
+    {
+      "name": "job-detail-intent.json",
+      "sha256": "8b85f08ad79fd8495bf0bfbded83bf835a1c3e6ead2e168548a297227cf84a8d"
+    },
+    {
+      "name": "job-detail-result.json",
+      "sha256": "c25e65884f97b070695586973731d633d61a12fb2cece2f03fbb5836b11b7c17"
+    },
+    {
+      "name": "cookie-result.json",
+      "sha256": "cb10efb1a860cb7b63d72ed5041080831b2487bc5806966fc4cca5f89a2a17b6"
+    },
+    {
+      "name": "network-summary.json",
+      "sha256": "c1ea4f66ce9de480fff58a938c5ed4d5c9e77bc30ce410bbffa8ae90118eefc1"
+    },
+    {
+      "name": "containment-intent.json",
+      "sha256": "f88d0cfddcaeaf098ec19e0a608314e0d65c36a27a85986378b043205ab3898b"
+    },
+    {
+      "name": "containment-result.json",
+      "sha256": "58509a8ae4351464d1f40e9ba1726daad0f98f7429e54c555f922e69c65457bb"
+    },
+    {
+      "name": "result.json",
+      "sha256": "87ee91d101f0807d7658047b5fe6211d8564c8e55e1e3b2598ebb5c130e92c45"
+    }
+  ]
+}

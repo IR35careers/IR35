@@ -1,0 +1,4 @@
+{
+  "operation": "readonly-existing-basic-bootstrap",
+  "vmWrites": 0
+}

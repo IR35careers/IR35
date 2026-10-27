@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October P8 actual read-only browser PASS / slot01 USED
+
+- Immutable browser-readonly-01 manifest62fe4e38a9ecd4e865dc1dab95f9c4d2439641058074cd80c783effca066f4cd: headedlocalChromium149/actualOraclebackend,5pagecases/jobsSSR/livefilter/JS+CSS/H1/headers/securecookiePASS;148stagingGETall200,13otherGETsblocked,0redirects/pageerrors/writes. No screenshots/traces/secrets, VM/container/config/IAM/network/production change. Fullpost62orderedMD5/Auth27/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS. Do not replay/reset01 or anyP7Authslot.
+- This is read-only browser coverage, NOT signup/login/recovery/save/mockapply/account-session/mobile/provider/external-assets PASS. P8 still needs a separately owned writable QA clone, actual encrypted backup+restore, zero-loss reverse path, alarms/diskalerts and timed drills; P9prepare/NO-GO only. Backup age/IAM owner batch unchanged; no authority inferred from continued goal messages or old sign-in. LiteralYES CUTOVER absent, allPRsdraft/unmerged.
+
 ## 27 October P8 real read-only browser gate prepared under continuous RESUME
 
 - Source-only controller `scripts/oracle-staging-browser-readonly.ts`: actual protected stagingGETs in locally installed pinned headed Chromium/ephemeral context, no demo backend; exact staging/read-path whitelist, no write methods/external URLs/provider login/redirect following, serviceworkersblocked/WebSocketsclosed/no traces/screenshots. Existing48hex Basic password only in captured stdin/SSH IPC/RAM, never output/argv/env/file; SDK Bearer+secure gate cookie preserved. Clean committed P8 guard BEFORE exclusive local journal; same original fullcontainment afterward, no nativeP7 slot replay or VM/data/config change. New browser-readonly-01 cannot replay; standard bounded self-heal/hard stops apply.
