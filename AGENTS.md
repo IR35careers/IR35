@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October callback source fix / writable QA activation hold
+
+- Normal submit callback now derives from trusted server config before queue writes; strict HTTPS/root/no credentials/control/query/fragment, explicitstagingexactorigin/nonVercel, productiondefaultunchanged, executororigin guard retained.26focused+1116unit/199legacy/strictTS/fullLintPASS, original newlineparser FAIL preserved/one raw-input repair/assertions unchanged. No native image/env/acceptance/provider change, hosted fix proof still required.
+- DO NOT activate writable frontend/submit yet: normalmockkickdisabled and legacy submit has real-provider/email fallback paths. Need explicit provider-free mock-only frontend→separatequeue→worker→authenticated canonical callback bridge, namedtestaccount/server-owned syntheticjob IDs/opaquepayload only, durable terminal failure/unknown outcomes/no Ready fallback, acceptancefalse; no realprovider/production callback. Current Basic/noindex/no-store/readonlyP5 remain intact, no oldP6job/gate replay. This is a staging safety dependency, not a narrowed replacement for requested E2E. Backup age/IAM owner batch and all remaining P8/P9/cutover gates remain.
+
 ## 27 October P8 disposable025upgrade native PASS — slot01 USED
 
 - Sourcef8c0cf1/seal128bea3d6c66e67bdf1b6483503fccf079c6262951dd41654fa6fec2aaf8237d: separate owned clone exactbeforefidelityPASS,025SHA39fa06a4 appliedonce0.270s, all10columns/10functions present,59unrelated tables/Auth/Storage exact, raw3applicationtable/66schema deltas retained forUPGRADE_REVIEW_ONLY (NOT migrationparity).87packets/64tasks preserved;87newbackfill events.552old permissions never broadened, authdirectINSERT/UPDATE revoked,30newfunction-role grants capped/no grantoption, RLS/policies unchanged;8queue-denials before+8after. Clone exactannotation/disconnected before DROP/readbackabsent. Fulloriginal62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS again/source/pristine/P5writes0. No new secrets/services/edge/worker/OCI/production changes. Do not replay01 or retain/recreate its clone as a QA fixture.

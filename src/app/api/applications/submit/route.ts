@@ -55,7 +55,7 @@ import {
   storeNeedsUser,
   storeSubmittedApplication,
 } from "@/lib/application-result-persistence";
-import { applicationWorkerConfig } from "@/lib/application-worker-auth";
+import { applicationWorkerCallbackUrl, applicationWorkerConfig } from "@/lib/application-worker-auth";
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import { isQueueApplyRunner } from "@/lib/application-runner-selection";
@@ -438,6 +438,10 @@ export async function POST(request: Request): Promise<Response> {
       }
     }
 
+    const workerConfig = applicationWorkerConfig();
+    // Validate before queued-state/task writes, using only trusted server config.
+    const callbackUrl = provider?.kind === "native" && workerConfig.enabled
+      ? applicationWorkerCallbackUrl() : null;
     const idempotencyKey = `submit:${packet.id}`;
     const { data: previous } = await admin
       .from("application_submissions")
@@ -514,13 +518,8 @@ export async function POST(request: Request): Promise<Response> {
         { onConflict: "user_id,idempotency_key" },
       );
     if (queueError) throw new Error(queueError.message);
-    const workerConfig = applicationWorkerConfig();
     let persistentWorkerQueued = false;
-    if (provider?.kind === "native" && workerConfig.enabled) {
-      const callbackUrl = new URL(
-        "/api/applications/worker/callback",
-        "https://www.ir35careers.com",
-      );
+    if (callbackUrl) {
       if (callbackUrl.protocol === "https:") {
         const { error: workerQueueError } = await admin
           .from("application_worker_tasks")

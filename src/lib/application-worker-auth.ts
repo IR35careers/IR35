@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
 
 const MAX_CLOCK_SKEW_MS = 5 * 60_000;
 
@@ -7,6 +8,31 @@ export function applicationWorkerAppOrigin(value?: string): string {
   if (url.protocol !== "https:")
     throw new Error("IR35Careers worker origin must use HTTPS.");
   return url.origin;
+}
+
+/** Stored callbacks use the operator's app origin, never a request Host header.
+ * A staging app cannot silently write a production callback into its task row.
+ */
+export function applicationWorkerCallbackUrl(
+  env: Record<string, string | undefined> = process.env,
+): URL {
+  const staging = z.enum(["true", "false"]).default("false").safeParse(env.IR35_STAGING);
+  const raw = env.IR35CAREERS_APP_URL || "https://www.ir35careers.com";
+  // Check BEFORE URL/Zod normalisation can discard ASCII control characters.
+  if (typeof raw !== "string" || /[\u0000-\u0020\u007f]/.test(raw))
+    throw new Error("Invalid application worker callback configuration.");
+  const configured = z.string().url().safeParse(raw);
+  if (!staging.success || !configured.success)
+    throw new Error("Invalid application worker callback configuration.");
+  let origin: URL;
+  try { origin = new URL(configured.data); }
+  catch { throw new Error("Invalid application worker callback configuration."); }
+  if (origin.protocol !== "https:" || origin.username || origin.password || origin.pathname !== "/"
+    || origin.search || origin.hash || /[\r\n\u0000]/.test(configured.data)
+    || (staging.data === "true" && (env.VERCEL === "1" || origin.origin !== "https://staging.ir35careers.com"))
+    || (staging.data === "false" && origin.origin === "https://staging.ir35careers.com"))
+    throw new Error("Invalid application worker callback configuration.");
+  return new URL("/api/applications/worker/callback", origin.origin);
 }
 
 function workerSecret(): string {

@@ -1,0 +1,17 @@
+{
+  "status": "FAIL_OFFLINE_BOUNDARY_TEST",
+  "testFiles": 3,
+  "tests": 24,
+  "passed": 23,
+  "failed": 1,
+  "case": "rejects unsafe or malformed operator config without exposing it 5",
+  "assertion": "expected undefined to be an instance of Error",
+  "cause": "raw newline was normalised before the post-parse rejection test",
+  "repairAttempt": 1,
+  "repair": "reject raw ASCII whitespace and controls before URL parsing",
+  "assertionsRemovedOrWeakened": false,
+  "additionalControlRegressions": ["tab", "carriage return"],
+  "vmCalls": 0,
+  "runtimeOrSecretChanges": false,
+  "phaseComplete": false
+}
