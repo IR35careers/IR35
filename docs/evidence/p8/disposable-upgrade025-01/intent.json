@@ -1,0 +1,12 @@
+{
+  "appQAProven": false,
+  "cloudRequests": 0,
+  "fullMigrationFidelityClaimed": false,
+  "migrationSHA256": "39fa06a4da6a8528ee0419d5fad65e36f759fd51581ec90182e6082bfce1a8e1",
+  "nativeAttempt": 1,
+  "newCredentials": 0,
+  "newServices": 0,
+  "operation": "separate-clone-upgrade025",
+  "originalFixturesRemainUnchanged": true,
+  "sourceWrites": 0
+}

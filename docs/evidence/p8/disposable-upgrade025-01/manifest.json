@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "intent.json",
+      "sha256": "b8b52cb9b5a201852351e6db4125500e3f23a3273d947c7156d1b77c75c13a37"
+    },
+    {
+      "name": "result.json",
+      "sha256": "ff5200bca7ac084b281852432b418b0ae33302bb94c7766cb738d45cf26d6c48"
+    },
+    {
+      "name": "upgrade-result.json",
+      "sha256": "cce0e6211d15b5ba818ad2da41d5710c30c77ddf5162614c7c718b59085ffde2"
+    }
+  ],
+  "version": 1
+}
