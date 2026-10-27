@@ -1,0 +1,13 @@
+{
+  "status": "FAIL_LOCAL_TEST_LAUNCH_BEFORE_TEST_EXECUTION",
+  "operation": "Post-native image proof unit-test launch in WSL",
+  "errorType": "ModuleNotFoundError",
+  "error": "No module named 'offline_bundle_fixture'",
+  "cause": "Direct unittest module selection omitted the test support directory from Python's discovery path.",
+  "testsExecuted": 0,
+  "vmCalls": 0,
+  "nativeImageGateReplayed": false,
+  "sourceOrAssertionsChanged": false,
+  "repairAttempt": 2,
+  "repair": "Use unittest discover with the existing infra/oracle/tests start directory, matching the suite's supported discovery mechanism. A further failure stops this gate."
+}

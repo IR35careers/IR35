@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "intent.json",
+      "sha256": "fb50412c4a03b194f9e10ce348ca03b3671ed4f2aa66c0e80390657c2815e8dc"
+    },
+    {
+      "name": "native-result.json",
+      "sha256": "52a34e4b028c0cf527141df0b65be3ac26e6bd20ba4ca1df2c64c6f3597bf5ac"
+    },
+    {
+      "name": "result.json",
+      "sha256": "0d8d9a612755862d7cb02798be2230a0010edab3b882dc910fc5493a42ac39e2"
+    }
+  ],
+  "version": 1
+}

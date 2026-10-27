@@ -1,0 +1,13 @@
+{
+  "status": "FAIL_LOCAL_TEST_LAUNCH_BEFORE_TEST_EXECUTION",
+  "operation": "Post-native image proof unit-test launch",
+  "errorType": "ModuleNotFoundError",
+  "error": "No module named 'fcntl'",
+  "cause": "The Linux-only OCI helper suite was mistakenly launched with Windows Python instead of the established WSL Python environment.",
+  "testsExecuted": 0,
+  "vmCalls": 0,
+  "nativeImageGateReplayed": false,
+  "sourceOrAssertionsChanged": false,
+  "repairAttempt": 1,
+  "repair": "Use the existing WSL interpreter for the same unchanged test file; no package installation or platform-validation bypass."
+}

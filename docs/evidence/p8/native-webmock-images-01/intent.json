@@ -1,0 +1,81 @@
+{
+  "archiveSHA256": "fcc13d5d1dab95ef16247f1e3a0decd692855a5d302ba68fb2609f1285a74487",
+  "hosted": {
+    "checks": [
+      {
+        "conclusion": "success",
+        "id": 122376673761,
+        "name": "Code quality and production build",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122377640266,
+        "name": "CodeQL",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122376674350,
+        "name": "Dependency and repository security",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122376673863,
+        "name": "JavaScript and TypeScript",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122376673235,
+        "name": "Native arm64 image and isolated mock ATS",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122376674258,
+        "name": "Oracle local key custody tests",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122376674370,
+        "name": "Private Caddy SDK ordering regression",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122378019765,
+        "name": "Responsive browser and accessibility (desktop-chrome)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122378019683,
+        "name": "Responsive browser and accessibility (mobile-chrome)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122378019686,
+        "name": "Responsive browser and accessibility (tablet-chrome)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "id": 122376674296,
+        "name": "Worker Docker build and Postgres standby health",
+        "status": "completed"
+      }
+    ],
+    "sourceSHA": "679dc8c234c525e9ebb246d2efbea857b6a5b660",
+    "status": "PASS"
+  },
+  "newOCIResources": 0,
+  "oldSlotsReplayed": false,
+  "operation": "new-native-webmock-images",
+  "publicHostedInputSHA256": "a8d5f7338319b8ca2a6e180e881e74b6c5a408f06a8cb3d665c7ad8687d86db7",
+  "runtimeActivation": false,
+  "sourceSHA": "679dc8c234c525e9ebb246d2efbea857b6a5b660"
+}

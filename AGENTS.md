@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 27 October P8 native images actual PASS — slot01 USED
+
+- Image-only679dc8c/all11hosted PASS, seal834f7bc0c620e3030c0890db526ad57f0dd85fbc2ab0309078cdcd71f3933b53. Weba0bfd695/worker86e5c87a ARM/nonroot/import-only PASS; original containers/images/restarts unchanged, original full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA before+after PASS. No runtime/queue/schema/secret/OCI activation; old images retained. Never replay native-webmock-images-01 or claim writable browser/app/Realtime/restart proof from it. Continue NEW separately owned disposable QA only under RESUME. P8 remains incomplete/P9NO-GO; outstanding backup age/IAM owner batch and all production/provider/DNS/security/cost/cutover holds remain. Exact YES CUTOVER absent.
+
 ## 27 October image controller interop self-heal1 — BEFORE native intent
 
 - WSL cannot execute the installed Windows gh.exe (`Exec format error`), not an auth failure. One read-only pretest failed, native image slot STILL UNUSED. Fixed offline: authenticated Windows gh GETs public current-commit check metadata; bounded JSON only is piped to WSL `--hosted-checks-stdin`. No token/credential/config transfer, no enabling WSL interop or new login. Require exact current clean HEAD and exactly ALL11 unique known checks SUCCESS; unknown/pending/failed/wrong-source checks reject before context/SSH. Original failure remains in evidence.
