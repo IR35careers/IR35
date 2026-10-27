@@ -1,11 +1,13 @@
 import { PgBoss } from "pg-boss";
-import { APPLY_QUEUE, applicationKickSchema, pgBossOptions, queueName, scheduledWorkSchema } from "./config";
+import { APPLY_QUEUE, applicationKickSchema, queueRuntimeOptions, queueName, scheduledWorkSchema } from "./config";
 
 /** Short-lived producer: no worker, timers, migrations or browser in Vercel. */
 async function publish(name: string, data: object, delaySeconds = 0): Promise<void> {
-  const boss = new PgBoss(pgBossOptions("producer"));
-  boss.on("error", () => { /* Caller receives a redacted publication failure. */ });
+  const options = await queueRuntimeOptions("producer");
+  let boss: PgBoss | undefined;
   try {
+    boss = new PgBoss(options);
+    boss.on("error", () => { /* Caller receives a redacted publication failure. */ });
     await boss.start();
     const id = await boss.send(name, data, {
       startAfter: Math.max(0, Math.min(600, Math.ceil(delaySeconds))),
@@ -19,7 +21,8 @@ async function publish(name: string, data: object, delaySeconds = 0): Promise<vo
   } catch {
     throw new Error("The durable worker queue did not accept the job. No submission is confirmed.");
   } finally {
-    await boss.stop({ graceful: false, timeout: 5_000 });
+    try { await boss?.stop({ graceful: false, timeout: 5_000 }); }
+    catch { throw new Error("The durable worker queue could not close safely. No submission is confirmed."); }
   }
 }
 

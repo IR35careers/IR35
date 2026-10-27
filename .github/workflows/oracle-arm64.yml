@@ -74,6 +74,7 @@ jobs:
         run: |
           docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < tests/fixtures/queue/roles.sql
           docker run --rm --network host -e NODE_ENV=test -e PG_BOSS_LOCAL_TEST=true \
+            -e QUEUE_DB_ALLOWED_HOSTS=127.0.0.1 \
             -e PG_BOSS_DATABASE_URL=postgresql://ir35_queue:ci-only-queue-owner@127.0.0.1:5432/postgres \
             --entrypoint node ir35-worker:arm-ci --import tsx services/application-worker/setup-queue.ts
           docker exec -i "$POSTGRES_CONTAINER" psql -U ir35_queue -d postgres -v ON_ERROR_STOP=1 < supabase/operations/pgboss-producer-grants.sql
@@ -85,6 +86,7 @@ jobs:
         run: |
           docker run -d --name ir35-arm-standby \
             -e NODE_ENV=test -e PG_BOSS_LOCAL_TEST=true \
+            -e QUEUE_DB_ALLOWED_HOSTS=127.0.0.1 \
             -e PG_BOSS_DATABASE_URL=postgresql://ir35_queue:ci-only-queue-owner@127.0.0.1:5432/postgres \
             -e APPLY_RUNNER=vercel -e APPLICATION_WORKER_ACCEPT_JOBS=false \
             -e APPLICATION_WORKER_SECRET=mock-ci-signing-key-not-a-live-credential \

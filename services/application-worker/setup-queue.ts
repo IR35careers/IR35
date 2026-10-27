@@ -1,8 +1,8 @@
 import { PgBoss } from "pg-boss";
-import { WORK_QUEUES, pgBossOptions, queueName, workQueueOptions } from "../../src/lib/queue/config";
+import { WORK_QUEUES, queueRuntimeOptions, queueName, workQueueOptions } from "../../src/lib/queue/config";
 
 async function setup() {
-  const boss = new PgBoss(pgBossOptions("setup"));
+  const boss = new PgBoss(await queueRuntimeOptions("setup"));
   boss.on("error", () => console.error("queue_setup_database_error"));
   try {
     await boss.start();
@@ -12,4 +12,4 @@ async function setup() {
     await boss.stop({ graceful: false });
   }
 }
-void setup().catch(() => { console.error("Queue setup failed. Check schema ownership, verified TLS and the session-pooler credentials."); process.exitCode = 1; });
+void setup().catch(() => { console.error("Queue setup failed. Check schema ownership, validated host/TLS settings and queue credentials; values are never logged."); process.exitCode = 1; });

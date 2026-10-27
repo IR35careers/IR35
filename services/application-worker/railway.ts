@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { chromium } from "playwright-core";
 import { PgBoss } from "pg-boss";
 import { z } from "zod";
-import { APPLY_QUEUE, applicationKickSchema, pgBossOptions, queueWorkerConfig, queueName, scheduledWorkSchema, HEARTBEAT_SECONDS } from "../../src/lib/queue/config";
+import { APPLY_QUEUE, applicationKickSchema, queueRuntimeOptions, queueWorkerConfig, queueName, scheduledWorkSchema, HEARTBEAT_SECONDS } from "../../src/lib/queue/config";
 import { claimApplicationWorkerAssignment, executeApplicationWorkerAssignment, postApplicationWorkerCallback } from "../../src/lib/application-worker-executor";
 import { getSupabaseAdmin } from "../../src/lib/supabase-admin";
 import { signApplicationWorkerBody } from "../../src/lib/application-worker-auth";
@@ -21,7 +21,7 @@ async function main() {
   const accepting = config.APPLICATION_WORKER_ACCEPT_JOBS === "true" && !readOnlyMaintenance();
   if (accepting && (!process.env.SUPABASE_SECRET_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || (process.env.CRON_SECRET?.length || 0) < 32))
     throw new Error("Consuming work requires Supabase server credentials and the shared scheduler secret.");
-  const boss = new PgBoss(pgBossOptions("worker"));
+  const boss = new PgBoss(await queueRuntimeOptions("worker"));
   const hostLabel = config.APPLY_RUNNER === "vercel" ? "queue" : config.APPLY_RUNNER;
   const workerId = `${hostLabel}-${hostname().replace(/[^a-z0-9-]/gi, "-").slice(0, 45)}-${randomUUID().slice(0, 8)}`;
   const startedAt = new Date().toISOString();

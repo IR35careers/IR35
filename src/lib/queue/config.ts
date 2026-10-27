@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ConstructorOptions, Queue } from "pg-boss";
+import { queueDatabaseConnection } from "./database-connection";
 
 export const WORK_QUEUES = ["apply", "ingest", "enrich", "match", "tailor", "mail", "alerts"] as const;
 export const queueName = (name: typeof WORK_QUEUES[number]) => `ir35-${name}`;
@@ -18,7 +19,29 @@ export const scheduledWorkSchema = z.strictObject({
   requestedAt: z.iso.datetime(),
 });
 
-export function pgBossOptions(mode: "producer" | "worker" | "setup", databaseUrl = process.env.PG_BOSS_DATABASE_URL): ConstructorOptions {
+type QueueMode = "producer" | "worker" | "setup";
+
+function queuePolicy(mode: QueueMode): ConstructorOptions {
+  return { schema: "pgboss", max: mode === "producer" ? 1 : 4,
+    connectionTimeoutMillis: 10_000, application_name: `ir35-${mode}`,
+    createSchema: false, migrate: mode === "setup", supervise: mode === "worker", schedule: false,
+    registerInstance: mode === "worker", instanceHeartbeatSeconds: HEARTBEAT_SECONDS,
+    superviseIntervalSeconds: 15, monitorIntervalSeconds: 15 };
+}
+
+/** Normal producer/setup/standby entry points use the SAME validated boundary.
+ * No test-mode bypass: a private host must be explicitly allowlisted and pinned.
+ */
+export async function queueRuntimeOptions(mode: QueueMode, databaseUrl = process.env.PG_BOSS_DATABASE_URL): Promise<ConstructorOptions> {
+  if (!z.enum(["producer", "worker", "setup"]).safeParse(mode).success) throw new Error("Invalid queue connection mode.");
+  const connection = await queueDatabaseConnection(databaseUrl, process.env.QUEUE_DB_ALLOWED_HOSTS);
+  return { ...connection, ...queuePolicy(mode) };
+}
+
+/** Historical synchronous contract retained for explicit disposable permission
+ * probes and compatibility tests ONLY; normal runtime entry points await above.
+ */
+export function pgBossOptions(mode: QueueMode, databaseUrl = process.env.PG_BOSS_DATABASE_URL): ConstructorOptions {
   // Never include a parser error or connection string in an error/log.
   const raw = z.string().min(1).safeParse(databaseUrl);
   let connection: URL;
@@ -40,15 +63,9 @@ export function pgBossOptions(mode: "producer" | "worker" | "setup", databaseUrl
   connection.search = "";
   const ca = process.env.PG_BOSS_SSL_CA?.replace(/\\n/g, "\n");
   return {
-    connectionString: connection.toString(), schema: "pgboss",
+    connectionString: connection.toString(),
     ssl: localTest ? false : { rejectUnauthorized: true, ...(ca ? { ca } : {}) },
-    max: mode === "producer" ? 1 : 4,
-    connectionTimeoutMillis: 10_000,
-    application_name: `ir35-${mode}`,
-    createSchema: false, migrate: mode === "setup",
-    supervise: mode === "worker", schedule: false,
-    registerInstance: mode === "worker", instanceHeartbeatSeconds: HEARTBEAT_SECONDS,
-    superviseIntervalSeconds: 15, monitorIntervalSeconds: 15,
+    ...queuePolicy(mode),
   };
 }
 
