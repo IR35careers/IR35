@@ -1,0 +1,16 @@
+{
+  "status": "FAIL_OFFLINE_ONLY",
+  "vmCalls": 0,
+  "browserLaunches": 0,
+  "privateStateSupplied": false,
+  "typescriptCheck": "PASS",
+  "policyUnitTests": { "passed": 3 },
+  "pythonTests": { "failed": 2 },
+  "cause": "New tests searched entire compiled bundle including quoted historical mutation function definitions, instead of the new executable read-only body",
+  "errors": ["AssertionError: readonly=False unexpectedly found", "AssertionError: forbidden historical mutation definition unexpectedly found"],
+  "repairAttempt": 1,
+  "repair": "Name the unchanged executable bodies separately, compile the complete original bundle, and enforce the same mutation bans on those actual entry bodies",
+  "historicalAssertionsOrTimeoutsChanged": false,
+  "phaseComplete": false,
+  "cutover": false
+}

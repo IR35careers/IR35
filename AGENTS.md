@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October P8 real read-only browser gate prepared under continuous RESUME
+
+- Source-only controller `scripts/oracle-staging-browser-readonly.ts`: actual protected stagingGETs in locally installed pinned headed Chromium/ephemeral context, no demo backend; exact staging/read-path whitelist, no write methods/external URLs/provider login/redirect following, serviceworkersblocked/WebSocketsclosed/no traces/screenshots. Existing48hex Basic password only in captured stdin/SSH IPC/RAM, never output/argv/env/file; SDK Bearer+secure gate cookie preserved. Clean committed P8 guard BEFORE exclusive local journal; same original fullcontainment afterward, no nativeP7 slot replay or VM/data/config change. New browser-readonly-01 cannot replay; standard bounded self-heal/hard stops apply.
+-1084unit/199legacy/strictTS/zero-warninglint and609fresh-home helper testsPASS before native. Original two offline substring-test FAILs are preserved: full reused bundle contains quoted historical mutation definitions; unchanged NEW executable bodies are now separately named and checked against the SAME mutation bans while entire bundle compiles. No historical assertions/timeouts/hashes/catalogues edited. Native browser gate not yet PASS; writable auth/save/apply QA remains a separate disposable-clone requirement. Backup age/IAM and wholeP8/P9 release gates unchanged; exactYES CUTOVER absent.
+
 ## 27 October fresh OCI read-only audit completed — no new mutation authority
 
 - Actual owner browser SecurityToken/London verified; read-only completion03PASS9e792756a7e5c233e909bab43556933f4a0605da666cae55ea9340e3ffcf8788 preserves both earlier toolingFAILs and the sealed fresh inventory.2/12 A1LIMITED_FREE,150GBlive,0backups,exactStandard0bytesinclversions/multipart,quotaGET3exactstatements,laggingGBP0/notreal-time. Backupaccess metadata57227b65:0dynamicgroups/0childpolicies/0alarms,existingtopic+emailsubscriptionACTIVE. No VM/key/IAM/network/bucket/object/customer/production/DNS/provider change; no new fullcontainment from a metadata-only audit. SSHstillloaded/no lifetime/no prompt. See P8OCIreport.

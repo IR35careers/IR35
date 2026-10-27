@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "sourceOnly": true,
+  "typescript": "PASS",
+  "lintZeroWarnings": "PASS",
+  "unitTests": 1084,
+  "unitFiles": 162,
+  "unitSeconds": 169.53,
+  "legacyTests": 199,
+  "helperTests": 609,
+  "helperSeconds": 72.274,
+  "helperFreshHome": true,
+  "helperPrivateStateSupplied": false,
+  "helperManifestSHA256": "2e2a961d67b844ff204b3966f884b51d1a63e566df0c30a83b5b355a9fe4be8a",
+  "liveUnauthenticatedReachability": { "status": 401, "tlsVerified": true, "noindex": true, "noStore": true },
+  "nativeAuthenticatedBrowserAttemptStarted": false,
+  "vmWrites": 0,
+  "keyOrIAMChanges": 0,
+  "productionChanges": false,
+  "phaseComplete": false,
+  "cutover": false
+}
