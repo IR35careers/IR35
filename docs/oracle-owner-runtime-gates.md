@@ -2,6 +2,15 @@
 
 G3 is CLOSED. Do not create another Supabase token, copy Auth settings or send passwords/keys in chat. SSH fingerprint is still loaded with no lifetime, so no SSH/API passphrase prompt.
 
+**27 October current audit:** [P8 report at verified commit c03c99f](https://github.com/IR35careers/IR35/blob/c03c99f38dca6ff001cba4b7593d42107f77c3e5/docs/evidence/oracle-p8-oci-readonly-20261027.md), completion03PASS9e792756. ACTIVE FREE_TRIAL/London; A1LIMITED_FREE2OCPU12GB;150GBlive;0volume backups;exact private Standard0bytes including versions/multipart;3root quota statements exact;laggingGBP0/notreal-timezero.6backup-access reads:0active dynamic groups/0child policies/0alarms;existingtopic+email subscriptionACTIVE. No IAM/key/bucket/object/VM/production change. All607fresh-home helpersPASS62.461s; fullP8 not PASS.
+
+## Current owner batch — ONLY two decisions, no passwords in chat
+
+1. **Backup key custody:** choose the existing offline age identity route (public recipient only through a private local handoff), OR explicitly approve ONE native hidden-prompt ceremony that creates an encrypted local/offline age identity for your password manager. Also approve its native offline restore-unlock mechanism. No identity/private key goes to the VM, chat, logs or Git. The agent does not generate a real key until you choose.
+2. **Backup access:** approve or decline ONLY the exact-existing-VM/ir35-backups policy in section3 below. The fresh audit found no active dynamic group or child policy; no policy has been created, no upload attempted. This is a new narrowly scoped IAM gate, not part of browser sign-in. Read-only operation support/free checks must pass again before any approved create.
+
+Reply with both choices once; do not send private identities, passphrases, tokens or credentials. No more Supabase settings or SSH prompt is needed. Google/realSMTP/DNS/cutover actions remain deferred. The managed Cloud Storage zero-loss reverse-path gap, writable browser QA, actual backup/restore and monitoring/timed drills remain release blockers even after these decisions; approval cannot waive those tests.
+
 ## 1. Oracle browser sign-in
 
 **27 October completed:** profile ir35 authenticated a read-only ir35 compartment GET, ACTIVE,3290 seconds remaining. See [receipt](evidence/p9/owner-access-02-result.json). No replacement login, refresh, API/SSH prompt or cloud write. The following login instructions are retained history, not another requested action. Continue the read-only usage/access audit; age key and conditional IAM decisions below are still unapproved.

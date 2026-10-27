@@ -27,6 +27,8 @@ Confirm the existing app's display name is **IR35 Careers**, its logo is the app
 
 ## Proof still required before cutover
 
+Source isolation fix is prepared in draftPR61/0fa0d51: explicit Zod-validated `IR35_STAGING=true` accepts ONLY the exact HTTPS staging origin; malformed flags/origins fail closed, with production/admin defaults unchanged.50Google tests and1083unit/199legacy/release checks PASS. This is source-only, NOT a new Oracle image/activation or a real Google login. The old deployed-image fallback concern above remains a runtime gate until rebuilt/proved; do not enable fallback on the existing staging image as a workaround.
+
 - A real owner-operated Google sign-in on the protected Oracle staging origin after the exact origin/callback entries are approved; do not substitute a mocked token for provider proof.
 - GIS nonce generated client-side, hashed for Google, original nonce checked by `signInWithIdToken`; nonce checking stays enabled. The redirect fallback remains behind its flag.
 - Callback session/cookie/redirect/noindex behaviour and logout, without a production write or real employer submission.
