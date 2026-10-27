@@ -1,10 +1,22 @@
 import { authCallbackPath, resolvePostAuthPath } from "@/lib/auth-routing";
+import { z } from "zod";
 
 const CUSTOMER_ORIGIN = "https://www.ir35careers.com";
 const ADMIN_ORIGIN = "https://admin.ir35careers.com";
+const STAGING_ORIGIN = "https://staging.ir35careers.com";
 
 function canonicalOrigin(requestOrigin: string): { origin: string; admin: boolean } {
   const parsed = new URL(requestOrigin);
+  const staging = z.enum(["true", "false"]).default("false").safeParse(process.env.IR35_STAGING);
+  if (!staging.success) throw new Error("Invalid staging OAuth configuration");
+  if (staging.data === "true") {
+    // Staging must never fall through into a production customer/admin login.
+    if (parsed.origin !== STAGING_ORIGIN || parsed.username || parsed.password
+      || parsed.pathname !== "/" || parsed.search || parsed.hash) {
+      throw new Error("Staging OAuth requires the exact staging origin");
+    }
+    return { origin: STAGING_ORIGIN, admin: false };
+  }
   if (parsed.hostname.toLowerCase() === "admin.ir35careers.com") {
     return { origin: ADMIN_ORIGIN, admin: true };
   }

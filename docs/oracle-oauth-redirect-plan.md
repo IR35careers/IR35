@@ -13,12 +13,15 @@ In the existing Google Cloud project's Google Auth Platform, select the existing
 | Oracle staging | `https://staging.ir35careers.com` | `https://api-staging.ir35careers.com/auth/v1/callback` |
 | Oracle canonical production | `https://www.ir35careers.com` | `https://api.ir35careers.com/auth/v1/callback` |
 | Bare-domain sign-in compatibility | `https://ir35careers.com` | Same production callback above |
+| Existing admin Google flow | `https://admin.ir35careers.com` | Same production callback above |
 
 The app's `/auth/callback` is a GoTrue post-login redirect, **not** the Google provider callback. The self-hosted GoTrue redirect allowlist must include only the app's reviewed exact URLs, for example `https://staging.ir35careers.com/auth/callback` during staging and the canonical production equivalent after cutover. Do not introduce wildcard origins or a broad redirect allowlist.
 
 Keep the existing cloud callback `https://kxcbgflleqnjzjbkevwd.supabase.co/auth/v1/callback` throughout the 14-day rollback retention. Removing it would impair rollback. Do not switch the live OAuth flow, DNS or production environment before exact **YES CUTOVER** and all release gates. Retain any already-authorised credential-free preview origin only if still required; do not invent or copy preview secrets.
 
-The admin hostname needs an origin entry only if the reviewed admin code actually uses this Google client. Its current disabled GitHub flow must not be silently enabled. Record the admin flow verification in the full QA signoff before adding another origin.
+Read-only source inspection confirms the admin Google flow uses this same provider/client and the explicit admin origin; the owner reviews that origin entry without changing credentials. Its current disabled GitHub flow must not be silently enabled. GoTrue's later reviewed post-login allowlist needs the exact `https://admin.ir35careers.com/` destination used by the server fallback, distinct from Google's `/auth/v1/callback`. Real admin sign-in/session isolation still needs protected browser/provider proof.
+
+The source-only staging fallback repair now requires `IR35_STAGING=true` AND the exact HTTPS staging origin, otherwise refuses rather than redirecting staging requests into production. The flag remains off by default, production/admin defaults unchanged; it is NOT a Google Console or deployment change. Existing public fallback flag, GIS nonce validation, destination filtering, no-store/no-referrer remain. Eight helper and full HTTP/nonce Google regressions pass locally; actual newly built staging image/provider proof is still required. Never replay the consumed Auth03 database rehearsal merely to exercise this source-only redirect change.
 
 ## Consent branding checklist, owner-only G4 action
 

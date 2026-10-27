@@ -82,6 +82,23 @@ describe("explicit fallback and configuration", () => {
       expect(new URL(response.headers.get("location")!).searchParams.get("redirect_to")).toBe(target);
     }
   });
+  it("keeps the flagged staging HTTP fallback on staging and rejects a production-origin request", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("IR35_STAGING", "true");
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_REDIRECT_FALLBACK_ENABLED", "true");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://api-staging.ir35careers.com");
+    const response = await GET(new Request("https://staging.ir35careers.com/api/auth/google?next=/inbox"));
+    expect(response.status).toBe(302);
+    const location = new URL(response.headers.get("location")!);
+    expect(location.origin).toBe("https://api-staging.ir35careers.com");
+    expect(location.searchParams.get("redirect_to")).toBe("https://staging.ir35careers.com/auth/callback?next=%2Finbox");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    const rejected = await GET(new Request("https://www.ir35careers.com/api/auth/google?next=/inbox"));
+    expect(rejected.status).toBe(400);
+    expect(rejected.headers.get("location")).toBeNull();
+    expect(rejected.headers.get("cache-control")).toBe("no-store");
+  });
   it("accepts only an actual web-client-ID shape, not arbitrary configuration", () => {
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_CLIENT_ID", "untrusted-value"); expect(configuredGoogleClientId()).toBeNull();
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_CLIENT_ID", clientId); expect(configuredGoogleClientId()).toBe(clientId);

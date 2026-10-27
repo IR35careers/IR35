@@ -1,0 +1,22 @@
+{
+  "status": "SOURCE_RELEASE_CHECKS_PASS_RUNTIME_UNPROVEN",
+  "command": "npm run verify:release",
+  "exitCode": 0,
+  "typecheck": "PASS",
+  "lintMaxWarnings": 0,
+  "unitFiles": 161,
+  "unitTests": 1083,
+  "unitSeconds": 163.52,
+  "legacyChecks": 199,
+  "legacyFailed": 0,
+  "googleRelatedTests": 50,
+  "googleTestFiles": 5,
+  "productionBuildClaimed": false,
+  "nativeImageBuildOrActivation": false,
+  "realGoogleLoginClaimed": false,
+  "googleOrDNSChanges": false,
+  "sourceCloudOrSecretChanges": false,
+  "originalAuth03Replayed": false,
+  "existingAssertionsAndTimeoutsUnchanged": true,
+  "phaseComplete": false
+}
