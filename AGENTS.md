@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 27 October P8 separately owned025upgrade test — source prepared only
+
+- Owner previously approved pending upgrades on a separate copy, never source/pristine/P5. New disposable-upgrade025-01 is unused until observed: exactGitSQL39fa06a4, fullclonebaseline before, raw025schema/data/grant deltas retained separately from original fidelity, no new secrets/services/roles or real runner. Reject unrelated data/Auth/Storage/sequence/RLS/policy changes or original app-access broadening. New10function permissions checked against reviewed migration, NOT a new552baseline exception. Exactfixed clone name/annotation/disconnected proof before DROP; no force/termination/source cleanup, no replay. Sealed private steps and full originalcontainment after cleanup/failure.626empty-home testsPASS49.04s; original inspect-loader FAIL preserved, one compile-filename repair/no assertion/timeout change. P8stillincomplete, backup age/IAM batch and exactYEShold stay active; no production/cutover authority.
+
 ## 27 October P8 snapshot capability inventory actual PASS / compatibility BLOCKED
 
 - Slot snapshot-app-readiness-01 USED/seal3795578c54b5710510b56b6c4edb9533051a41a342b95864f47715d205531b37: verified snapshot has NONE of025's10columns/10functions. Read-only inventory+full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS, source/pristine/P5writes0. Existing unapplied schema capability gap, not a fidelity failure or complete P8 PASS. No migration/clone/config/secret/OCI change; do not replay. Required application upgrades may be tested ONLY on separately owned disposable copies, never pristine/P5/cloud, with before/after deltas and unchanged original containment. Backup owner batch, managed-Storage reverse blocker and all other holds remain.

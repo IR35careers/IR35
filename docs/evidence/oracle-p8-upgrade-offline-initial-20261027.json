@@ -1,0 +1,17 @@
+{
+  "status": "FAIL_OFFLINE_TEST_LOADER_ONLY",
+  "focusedTests": 5,
+  "passed": 4,
+  "errors": 1,
+  "test": "test_raw_hashes_and_pristine_post_containment_are_not_replaced",
+  "exception": "OSError: could not get source code",
+  "cause": "exec(text) assigned the synthetic <string> filename; inspect.getsource could not locate the actual public module",
+  "repairAttempt": 1,
+  "repair": "compile the identical public source with its actual repository filename before exec",
+  "assertionsChanged": false,
+  "timeoutsChanged": false,
+  "vmCalls": 0,
+  "nativeUpgradeAttemptConsumed": false,
+  "privateStateSupplied": false,
+  "phaseComplete": false
+}
