@@ -16,7 +16,7 @@ def hosted_checks(value, sha):
     rows = value['check_runs']
     names = [row.get('name') for row in rows if type(row) is dict]
     if (len(names) != len(rows) or any(type(name) is not str or not 1 <= len(name) <= 200 for name in names)
-            or len(set(names)) != len(names) or not REQUIRED_CHECKS.issubset(names)):
+            or len(set(names)) != len(names) or set(names) != REQUIRED_CHECKS):
         raise RuntimeError('CompleteUniqueHostedChecksRequired_NoNativeBuild')
     result = []
     for row in rows:

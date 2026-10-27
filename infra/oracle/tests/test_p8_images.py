@@ -1,4 +1,5 @@
 import inspect
+import io
 import json
 from pathlib import Path
 import sys
@@ -23,12 +24,29 @@ class ImageTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'ExactSource_NoNativeBuild'): policy.hosted_checks(checked, 'a' * 40)
 
     def test_missing_duplicate_and_malformed_names_are_not_green(self):
-        for mutation in ('missing', 'duplicate', 'malformed'):
+        for mutation in ('missing', 'duplicate', 'malformed', 'unknown-extra'):
             checked = self.checks()
             if mutation == 'missing': checked['check_runs'].pop()
             if mutation == 'duplicate': checked['check_runs'].append(checked['check_runs'][0])
             if mutation == 'malformed': checked['check_runs'][0]['name'] = []
+            if mutation == 'unknown-extra': checked['check_runs'].append(dict(checked['check_runs'][0], name='unapproved-extra'))
             with self.assertRaisesRegex(RuntimeError, 'CompleteUniqueHostedChecks'): policy.hosted_checks(checked, 'a' * 40)
+
+    def test_public_windows_get_metadata_uses_bounded_stdin_not_windows_binary_or_token(self):
+        body = json.dumps(self.checks()).encode()
+        checked, digest = controller.public_hosted_input(io.BytesIO(body), 'a' * 40)
+        self.assertEqual(checked['status'], 'PASS'); self.assertEqual(len(digest), 64)
+        source = inspect.getsource(controller.main)
+        self.assertIn('public_hosted_input(sys.stdin.buffer, sha)', source)
+        self.assertNotIn('gh.exe', source)
+        self.assertNotIn("'api'", source)
+        self.assertNotIn('GITHUB_TOKEN', source)
+
+    def test_bad_or_secret_like_stdin_never_escapes_or_creates_a_native_intent(self):
+        for body in (b'', b'x' * 1_000_001, b'\xff', b'fixture-private-value-not-json'):
+            with self.assertRaises(RuntimeError) as result:
+                controller.public_hosted_input(io.BytesIO(body), 'a' * 40)
+            self.assertNotIn('private-value', str(result.exception))
 
     def test_only_current_two_cpu_twelve_gib_arm_and_measured_headroom(self):
         self.assertEqual(policy.resources('aarch64', 2, 12 * 1024**2, 5 * 1024**2, 20 * 1024**3)['newOCIResources'], 0)

@@ -1,0 +1,12 @@
+{
+  "status": "FAIL_LOCAL_TOOL_COMPATIBILITY_BEFORE_NATIVE_INTENT",
+  "error": "WSL execvpe of installed Windows gh.exe failed: Exec format error",
+  "actualNativeBuildCalls": 0,
+  "nativeImageJournalUsed": false,
+  "authenticationFailure": false,
+  "repairAttempt": 1,
+  "repair": "Authenticated Windows gh performs the read-only public GET; only bounded public check-result JSON is piped to WSL stdin. Exact-current-commit/all-eleven-success and clean-source checks retained and unknown check names now rejected.",
+  "tokenOrPrivateConfigTransferred": false,
+  "wslInteropConfigurationChanged": false,
+  "vmIamNetworkSecretOrProductionChange": false
+}

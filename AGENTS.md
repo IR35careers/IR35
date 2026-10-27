@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October image controller interop self-heal1 — BEFORE native intent
+
+- WSL cannot execute the installed Windows gh.exe (`Exec format error`), not an auth failure. One read-only pretest failed, native image slot STILL UNUSED. Fixed offline: authenticated Windows gh GETs public current-commit check metadata; bounded JSON only is piped to WSL `--hosted-checks-stdin`. No token/credential/config transfer, no enabling WSL interop or new login. Require exact current clean HEAD and exactly ALL11 unique known checks SUCCESS; unknown/pending/failed/wrong-source checks reject before context/SSH. Original failure remains in evidence.
+-12focused/638fresh-home helpersPASS/no.ir35/privatekeys/VM; actual public JSON pipe works; app/runtime/JS tests unchanged from verifiedf229. Wait for corrected commit's hosted gates, then the NEW image-only slot, not an old build replay. No extra owner gate; all backup/IAM/provider/production/cutover holds remain.
+
 ## 27 October NEW P8 native image preparation — slot01 not yet used
 
 - `p8_images.py` prepares two NEW images on the existing VM only, not an old P5/P6 build replay: exact current commit/all11hostedgreen, fresh2CPU/12GiBARM +4GiB available/15GiBdatafree +DockerdataRoot guard, immutable Git archive, new exclusive private image journal, retained original images/containers, build1200s bound and observed live PID/2GiB OS headroom. Native probes use networknone/nonroot/read-only/import-only; never execute setup/run/main, queue publication, app writes, service activation or OCI create. Original fullcontainment and unchanged container identities/restart state required before+after. Do not replay native-webmock-images-01 after it is used; preserve unknown process outcomes and reconcile before any new attempt.
