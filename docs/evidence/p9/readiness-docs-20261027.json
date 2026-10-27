@@ -1,0 +1,22 @@
+{
+  "status": "PASS_DOCUMENTATION_CONTRACTS_ONLY",
+  "testsPassed": 4,
+  "testSeconds": 0.046,
+  "existingAssertionGroupsRemoved": 0,
+  "p8EvidenceCommit": "d1c1c0b",
+  "hostedSourceProofHead": "6c3c37232ecf6baf05e92cdba232fc6278935454",
+  "hostedSourceChecksPassed": 11,
+  "snapshotInventoryManifest": "3795578c54b5710510b56b6c4edb9533051a41a342b95864f47715d205531b37",
+  "snapshotDeliveryColumnsMissing": 10,
+  "snapshotDeliveryFunctionsMissing": 10,
+  "separateUpgradedCloneStillRequired": true,
+  "fullOriginalContainmentPassedOnP8": true,
+  "newNativeP9Execution": false,
+  "keysOrIAMChanged": false,
+  "backupRestoreExecuted": false,
+  "reverseSyncExecuted": false,
+  "fullCutoverDryRunExecuted": false,
+  "productionOrDNSChanges": false,
+  "phaseComplete": false,
+  "cutover": false
+}

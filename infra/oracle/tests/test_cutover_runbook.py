@@ -26,5 +26,17 @@ class CutoverRunbookTests(unittest.TestCase):
             # Markdown emphasis is presentation only.
             self.assertIn(required,text.replace('**',''))
 
+    def test_fresh_scoped_proofs_never_replace_upgrade_backup_or_release_gates(self):
+        text=(self.root/'docs/cutover.md').read_text(encoding='utf-8')
+        for required in ('10columns/10functions absent','separately owned upgraded-clone QA',
+                '148stagingGETall200','0volume backups','laggingGBP0','0alarms',
+                'ALL11hosted checks passed on exact source6c3c372','not deployed',
+                'No025 migration on pristine/P5/cloud','NOT another action requested now'):
+            self.assertIn(required,text)
+        gates=(self.root/'docs/oracle-owner-runtime-gates.md').read_text(encoding='utf-8')
+        self.assertIn('ONLY two decisions',gates)
+        self.assertIn('No age-key/IAM approval is inferred from Signed in',gates)
+        self.assertIn('managed Cloud Storage zero-loss reverse-path gap',gates)
+
 
 if __name__=='__main__':unittest.main()

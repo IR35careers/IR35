@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 27 October P9 docs only — P8 reference reconciliation, NO-GO
+
+- P8draft62latestd1c1c0b records readonlybrowserPASS, exact6c3hosted11/11/CodeQL/nativequeueStandbyPASS and snapshot inventory3795578c/full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/112HBA PASS. All02510columns/10functions absent: separate upgradedQA copy required, no current pristine/P5/cloud migration or nativegate replay. Runbook cites immutableP8proofs without merging/rebasing phase branches, source/live distinction preserved. Completed27Octlogin is not another owner action; future freshness separate. Backup age/IAMtwochoice batch still unapproved; no key search/generation/IAM/upload/provider/production/DNS/cutover. P9dryrun/restore/reverse/fullwriterfreeze/browserwrites/monitoring/timing remain unproven; all PRs draft/unmerged.
+
 ## P8 bounded read load02 PASS — remaining full phase still required
 
 - Native02manifest `e95c2ff16232eb766195b2715f9671b48370b3af5e72a0f741ea2b62ab52c443`:50concurrent/200GET/0errors/p95=3883.508ms, current/peak<=unchangedkernel/Dockerlimits/OOM0/minOSavailable9,264,906,240; full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS. No native load replay, original01FAIL/diagnosis remain. Read-only/co-located/no-store load is not authenticated-write/browser QA or a productionSLO. See P8 load report.

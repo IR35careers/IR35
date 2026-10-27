@@ -2,6 +2,8 @@
 
 G3 is CLOSED. Do not create another Supabase token, copy Auth settings or send passwords/keys in chat. SSH fingerprint is still loaded with no lifetime, so no SSH/API passphrase prompt.
 
+**Latest protected-staging evidence:** [P8snapshot audit](https://github.com/IR35careers/IR35/blob/d1c1c0b/docs/evidence/oracle-p8-app-readiness-20261027.md) passed full62orderedMD5/Auth/2sequences/3exceptions/552+queue roles/73StorageSHA/FRESH112HBA; source/pristine/P5writes0. Snapshot025capabilities absent, so save/apply frontend proof remains blocked pending a SEPARATE upgraded QA copy. Actual headed read-only browser gate passed earlier. Exact6c3c372hosted11/11/CodeQL+nativequeueStandby PASS is source/CI proof, not a live rollout. No age-key/IAM approval is inferred from Signed in or any of these results. The two decisions below remain the same single owner batch, not new login/settings requests.
+
 **27 October current audit:** [P8 report at verified commit c03c99f](https://github.com/IR35careers/IR35/blob/c03c99f38dca6ff001cba4b7593d42107f77c3e5/docs/evidence/oracle-p8-oci-readonly-20261027.md), completion03PASS9e792756. ACTIVE FREE_TRIAL/London; A1LIMITED_FREE2OCPU12GB;150GBlive;0volume backups;exact private Standard0bytes including versions/multipart;3root quota statements exact;laggingGBP0/notreal-timezero.6backup-access reads:0active dynamic groups/0child policies/0alarms;existingtopic+email subscriptionACTIVE. No IAM/key/bucket/object/VM/production change. All607fresh-home helpersPASS62.461s; fullP8 not PASS.
 
 ## Current owner batch — ONLY two decisions, no passwords in chat
