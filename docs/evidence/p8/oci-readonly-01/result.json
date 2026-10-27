@@ -1,0 +1,8 @@
+{
+  "cloudWrites": 0,
+  "cutover": false,
+  "exceptionType": "AuditFailure",
+  "phaseComplete": false,
+  "readOnly": true,
+  "status": "FAIL"
+}

@@ -16,8 +16,14 @@ def put(path,body):
 
 
 def main():
-    if len(sys.argv)!=2 or not re.fullmatch(r'(?:ci-isolation-0[12]|p7-journal-hermetic-0[12]|auth-export-hermetic-0[12]|auth-supplement-hermetic-0[12]|owner-g3-hermetic-0[12]|p7-auth-hermetic-0[12]|p7-link-hermetic-0[12]|p7-storage-hermetic-0[12]|p8-readonly-hermetic-0[12]|p8-backup-hermetic-0[12]|p8-reverse-hermetic-0[12])',sys.argv[1]):raise RuntimeError('FixedHermeticEvidenceSlotRequired')
+    if len(sys.argv)!=2 or not re.fullmatch(r'(?:ci-isolation-0[12]|p7-journal-hermetic-0[12]|auth-export-hermetic-0[12]|auth-supplement-hermetic-0[12]|owner-g3-hermetic-0[12]|p7-auth-hermetic-0[12]|p7-link-hermetic-0[12]|p7-storage-hermetic-0[12]|p8-readonly-hermetic-0[12]|p8-backup-hermetic-0[12]|p8-reverse-hermetic-0[12]|p8-oci-hermetic-0[12]|p8-oci-hermetic-repair-01|p8-oci-final-01)',sys.argv[1]):raise RuntimeError('FixedHermeticEvidenceSlotRequired')
     repo=Path(__file__).resolve().parents[2]
+    if sys.argv[1]=='p8-oci-hermetic-repair-01':
+        prior=repo/'docs/evidence/p8-oci-hermetic-02'
+        if hashlib.sha256((prior/'manifest.json').read_bytes()).hexdigest()!='2dd502238a9379a002c9a8638d19477e0032fc00fd7346d81d28c30ff6dfd127':raise RuntimeError('OriginalFixtureFailureRequired')
+        for item in json.loads((prior/'manifest.json').read_bytes())['artifacts']:
+            if hashlib.sha256((prior/item['name']).read_bytes()).hexdigest()!=item['sha256']:raise RuntimeError('OriginalFixtureFailureChanged')
+        if json.loads((prior/'result.json').read_bytes())['status']!='FAIL':raise RuntimeError('OriginalFixtureFailureRequired')
     root=repo/'docs/evidence/p6'/sys.argv[1] if sys.argv[1].startswith('ci-') else repo/'docs/evidence'/sys.argv[1]
     root.mkdir()  # No overwrite/replay of a failed run.
     result={'status':'FAIL','realKeysSupplied':False,'copiedPrivateFiles':0,'vmCalls':0,'testsRemoved':0}

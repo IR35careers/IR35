@@ -1,0 +1,14 @@
+{
+  "alertDeliveryProven": false,
+  "checkedAt": "2026-10-27T07:56:52.273248+00:00",
+  "cloudWrites": 0,
+  "cutover": false,
+  "effectiveBackupAccessProven": false,
+  "iamChanges": 0,
+  "keyChanges": 0,
+  "metadataReads": 6,
+  "phaseComplete": false,
+  "readOnly": true,
+  "status": "PASS",
+  "uploadRequests": 0
+}

@@ -87,11 +87,16 @@ class BackupStreamTests(unittest.TestCase):
         self.assertEqual(failed.exception.report['code'],'AgeCiphertextHeaderRequired')
     def test_timed_out_grandchild_is_killed_even_after_its_producer_parent_exits_zero(self):
         pidfile=self.root/'public-child-pid'
-        script="import subprocess,sys,pathlib;p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(20)']);pathlib.Path(sys.argv[1]).write_text(str(p.pid))"
-        producer=(sys.executable,'-c',script,str(pidfile))
+        # A shell forks the public sleep fixture without two cold Python
+        # imports consuming the UNCHANGED 0.2-second pipeline deadline under
+        # CI load. The child still inherits both pipes and the producer's
+        # process group; its parent exits zero before the cleanup under test.
+        script='sleep 20 &\nchild=$!\nprintf "%s" "$child" > "$1"\nexit 0\n'
+        producer=('/bin/sh','-c',script,'public-fixture',str(pidfile))
         with self.assertRaises(backup.BackupPipelineError)as failed:
             backup._encrypt_pipeline('queue',(producer,),self.recipient,self.root/'queue.age',uid=os.getuid(),timeout=0.2)
         self.assertEqual(failed.exception.report['code'],'BackupPipelineDeadline')
+        self.assertEqual(failed.exception.report['exitCodes'][0],0)
         pid=int(pidfile.read_text());state='unknown'
         for unused in range(100):
             try:state=Path('/proc/'+str(pid)+'/stat').read_text().split()[2]

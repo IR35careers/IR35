@@ -1,0 +1,9 @@
+{
+  "cloudWrites": 0,
+  "code": "ExactExistingRootQuotaMustMatch_NoChangeMade",
+  "cutover": false,
+  "exceptionType": "KeySafetyError",
+  "phaseComplete": false,
+  "readOnly": true,
+  "status": "FAIL"
+}

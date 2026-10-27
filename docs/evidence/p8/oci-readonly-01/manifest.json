@@ -1,0 +1,309 @@
+{
+  "artifacts": [
+    {
+      "name": "account.json",
+      "sha256": "ec81a36d92bc2173668d741954a9a00d74295fba286b8a7e018da94642fb72bb"
+    },
+    {
+      "name": "oci-001-intent.json",
+      "sha256": "47f944bc207c0d27e98cc4e8fc36edcdf6088afda7c2b446a11bc294ed6ff184"
+    },
+    {
+      "name": "oci-001-result.json",
+      "sha256": "b8536d6e1ea9d90e039f503338fb1e84c97986d02dab1beb9e439589ab267726"
+    },
+    {
+      "name": "oci-002-intent.json",
+      "sha256": "942fccd43f3f9f8d76df3a61c1ac7c0880f46a01dd5d5256b8872756547c2263"
+    },
+    {
+      "name": "oci-002-result.json",
+      "sha256": "3f6cefe85ed92dcec536a43272a7b37ad5ab2a29a268354d2933bc658ab38ffc"
+    },
+    {
+      "name": "oci-003-intent.json",
+      "sha256": "e105f6c91ca9ba5f9700c184bcd282b74303a0961f4fa642f52091a203a8e021"
+    },
+    {
+      "name": "oci-003-result.json",
+      "sha256": "b8447da94261845142383bf19026dc5ec943969c29d71a98b716d4beeb97f28c"
+    },
+    {
+      "name": "oci-004-intent.json",
+      "sha256": "8bc9dd2a6283814c9a59a6de136d0c4397eb8d98893d2a2cf47f1c3615fa47a6"
+    },
+    {
+      "name": "oci-004-result.json",
+      "sha256": "0ee70863d0b36671836897ab7dae5a8b26ac58e2ce0b8cfb06a44680bff9acec"
+    },
+    {
+      "name": "oci-005-intent.json",
+      "sha256": "29c05b3b80e852dda363bb4d3c656b3683f09c297db2530792f1c2825015d12e"
+    },
+    {
+      "name": "oci-005-result.json",
+      "sha256": "52cf475a8f462542101e1c7366a4e8ec6e3c196375cfe6c9504d1aab92890f83"
+    },
+    {
+      "name": "oci-006-intent.json",
+      "sha256": "13b7a0cc27aee7155a08bcf6efb8e68fc77545d22c6679827a1e68618e514e8e"
+    },
+    {
+      "name": "oci-006-result.json",
+      "sha256": "05214c609fc5f290fec94151901e288fdcc9e7411f5302b15e32cf8de7b897ab"
+    },
+    {
+      "name": "oci-007-intent.json",
+      "sha256": "0aefd0c998b264dad745869c3cd6b83d6dff085198d37b0c91b862df3a33fb90"
+    },
+    {
+      "name": "oci-007-result.json",
+      "sha256": "0fb1ff29d5192846f83976c841340bc2b36f0f62255cdd772cf4468dfb772850"
+    },
+    {
+      "name": "oci-008-intent.json",
+      "sha256": "5b7b503a5ded5f6ddbf184b344749fa4d09d759da599785575a63fc3b25ff537"
+    },
+    {
+      "name": "oci-008-result.json",
+      "sha256": "84bc74ef6cb5fb518998e40697b8612319b09e04e45666ba4474f2d940d629e5"
+    },
+    {
+      "name": "oci-009-intent.json",
+      "sha256": "77bf97d4362cb10a61697843a73538c2e8b2a500e7455e2ad8ab492b8f11746f"
+    },
+    {
+      "name": "oci-009-result.json",
+      "sha256": "771ed30b2be603cc8ae3c170b311951201984f87ac29486a500c5ad3dd15ffb2"
+    },
+    {
+      "name": "oci-010-intent.json",
+      "sha256": "2f862ee3f5eff4e04cd51747a11a5da1593552ebf80f7f2291cda5025ffcf1be"
+    },
+    {
+      "name": "oci-010-result.json",
+      "sha256": "e790649b017c8220610ea6b0ebd58e1457949bd2342dcbb5552bf448998d3a97"
+    },
+    {
+      "name": "oci-011-intent.json",
+      "sha256": "8b7f94d855b189c68bc7246cb3e561e04b20655fc05607594f1f4f841c7a929d"
+    },
+    {
+      "name": "oci-011-result.json",
+      "sha256": "e790649b017c8220610ea6b0ebd58e1457949bd2342dcbb5552bf448998d3a97"
+    },
+    {
+      "name": "oci-012-intent.json",
+      "sha256": "2aca778b189eb706a6ca6b08267dfb7f77820525471728e7acf96b1b4f27a124"
+    },
+    {
+      "name": "oci-012-result.json",
+      "sha256": "e790649b017c8220610ea6b0ebd58e1457949bd2342dcbb5552bf448998d3a97"
+    },
+    {
+      "name": "oci-013-intent.json",
+      "sha256": "1f7a7a30508003d827cdbe108146c7d693925e64baeb09ffa53be2b71f62ad30"
+    },
+    {
+      "name": "oci-013-result.json",
+      "sha256": "9b30e97e2209b3d77b9c69847c09f69aa4500f8167a341fca7a8bd3c4bea5af1"
+    },
+    {
+      "name": "oci-014-intent.json",
+      "sha256": "ef09cef0acad5c54d3c68037d13949f57986e0e0feec5d62739e3e68f9939720"
+    },
+    {
+      "name": "oci-014-result.json",
+      "sha256": "6e78023713f17ebe3afbe41d91c9d2460acb8a4a602862f7c89ee480345b8cee"
+    },
+    {
+      "name": "oci-015-intent.json",
+      "sha256": "f0acc94fee488a28b97f62d8d3a637c2e7c582163961e2d8031f76bfed9182ab"
+    },
+    {
+      "name": "oci-015-result.json",
+      "sha256": "9cc37906ce43f3b31539b461a8e858de967493f902e4a818f0d7f8917618f557"
+    },
+    {
+      "name": "oci-016-intent.json",
+      "sha256": "c37f0f7457400ae0a3b4e740655f2ade05588b2856180177558314e426b4bd52"
+    },
+    {
+      "name": "oci-016-result.json",
+      "sha256": "936445b85312273350ab101542b9c5552ff681b9ccbb72fe9130736070225b09"
+    },
+    {
+      "name": "oci-017-intent.json",
+      "sha256": "2c7239413062442d2a4be1b5576a2b1679ec1196ae707020def2f60be83cc57d"
+    },
+    {
+      "name": "oci-017-result.json",
+      "sha256": "a044b8e7d074810b45fa1ffafde5e87e5531d213057c6a29bbe07f4034805a3b"
+    },
+    {
+      "name": "oci-018-intent.json",
+      "sha256": "35d9d8192be096efd3a4e292461becb4e39218b3741030dd17ecc130384df278"
+    },
+    {
+      "name": "oci-018-result.json",
+      "sha256": "84bc74ef6cb5fb518998e40697b8612319b09e04e45666ba4474f2d940d629e5"
+    },
+    {
+      "name": "oci-019-intent.json",
+      "sha256": "a5a92f1857a2a8efa5685fc8ce23429e781b819581ba58af2150853acdefaab6"
+    },
+    {
+      "name": "oci-019-result.json",
+      "sha256": "771ed30b2be603cc8ae3c170b311951201984f87ac29486a500c5ad3dd15ffb2"
+    },
+    {
+      "name": "oci-020-intent.json",
+      "sha256": "4a8dfbb3c7526b80002cbdc7a7ef0c8cac8bb287cd8761d7ffe9e7ba9f17a212"
+    },
+    {
+      "name": "oci-020-result.json",
+      "sha256": "e790649b017c8220610ea6b0ebd58e1457949bd2342dcbb5552bf448998d3a97"
+    },
+    {
+      "name": "oci-021-intent.json",
+      "sha256": "c6f74ebc998c872c243b91a8c1f079f8ee1e472059d6583ee27fc49b0cb7bac6"
+    },
+    {
+      "name": "oci-021-result.json",
+      "sha256": "e790649b017c8220610ea6b0ebd58e1457949bd2342dcbb5552bf448998d3a97"
+    },
+    {
+      "name": "oci-022-intent.json",
+      "sha256": "0e975fc35c528c20d30e013c58c0881deb0b8c9d0d0f1b69b5a31031be84bfa0"
+    },
+    {
+      "name": "oci-022-result.json",
+      "sha256": "e790649b017c8220610ea6b0ebd58e1457949bd2342dcbb5552bf448998d3a97"
+    },
+    {
+      "name": "oci-023-intent.json",
+      "sha256": "683fde15d3134b43be5ce877322ac9ecd540d460ffc159fa4877cf4005d9fa10"
+    },
+    {
+      "name": "oci-023-result.json",
+      "sha256": "9b30e97e2209b3d77b9c69847c09f69aa4500f8167a341fca7a8bd3c4bea5af1"
+    },
+    {
+      "name": "oci-024-intent.json",
+      "sha256": "025c8984c67536a15c2a2ca6cac4b3413be95021bfc597d49a3a55cbb00e0922"
+    },
+    {
+      "name": "oci-024-result.json",
+      "sha256": "6e78023713f17ebe3afbe41d91c9d2460acb8a4a602862f7c89ee480345b8cee"
+    },
+    {
+      "name": "oci-025-intent.json",
+      "sha256": "7c3c9d8101f2293f9f8a671c8ee14f8836a90bee0d75f7580750c00606e2683d"
+    },
+    {
+      "name": "oci-025-result.json",
+      "sha256": "9cc37906ce43f3b31539b461a8e858de967493f902e4a818f0d7f8917618f557"
+    },
+    {
+      "name": "oci-026-intent.json",
+      "sha256": "cd1233fd3dffb0918a2ead3b1754a5b835343e718dce22a4dcfcafb4d69c0ca0"
+    },
+    {
+      "name": "oci-026-result.json",
+      "sha256": "936445b85312273350ab101542b9c5552ff681b9ccbb72fe9130736070225b09"
+    },
+    {
+      "name": "oci-027-intent.json",
+      "sha256": "d6005bcf14b1594afe9f1d05c499436fcef36256619dec0a414bf5971cdc16b0"
+    },
+    {
+      "name": "oci-027-result.json",
+      "sha256": "a044b8e7d074810b45fa1ffafde5e87e5531d213057c6a29bbe07f4034805a3b"
+    },
+    {
+      "name": "oci-028-intent.json",
+      "sha256": "5675fddd2bfd2b7a7e00b9ab3421e14ee18e1440be62eea30304dceaf4ec90d7"
+    },
+    {
+      "name": "oci-028-result.json",
+      "sha256": "e43e94741085af7f23fa586323f015c20cfa499d4600a698dce5e222a9c9efb3"
+    },
+    {
+      "name": "oci-029-intent.json",
+      "sha256": "60d6afe0f944e3175d4294335723597bf960614c6c883c0ee3f27f9aff420f13"
+    },
+    {
+      "name": "oci-029-result.json",
+      "sha256": "e43e94741085af7f23fa586323f015c20cfa499d4600a698dce5e222a9c9efb3"
+    },
+    {
+      "name": "oci-030-intent.json",
+      "sha256": "d70b4d5092fa5da365e454323841524e14a1e32f64f3921300e8dc4b812ddf0c"
+    },
+    {
+      "name": "oci-030-result.json",
+      "sha256": "e43e94741085af7f23fa586323f015c20cfa499d4600a698dce5e222a9c9efb3"
+    },
+    {
+      "name": "oci-031-intent.json",
+      "sha256": "483d67a0daabd2f18f175191d7f544b79e4ad78b65d9c8b93d051f3a4fff8a3a"
+    },
+    {
+      "name": "oci-031-result.json",
+      "sha256": "e43e94741085af7f23fa586323f015c20cfa499d4600a698dce5e222a9c9efb3"
+    },
+    {
+      "name": "oci-032-intent.json",
+      "sha256": "588b8c6c1a8965336c1b9cf0812a528288bc8a41d7d73e5f0254289502dd89e9"
+    },
+    {
+      "name": "oci-032-result.json",
+      "sha256": "e43e94741085af7f23fa586323f015c20cfa499d4600a698dce5e222a9c9efb3"
+    },
+    {
+      "name": "oci-033-intent.json",
+      "sha256": "6efa97369347d6be75f590b0d8bf3b8734a35e854dc93343f103636148723ed2"
+    },
+    {
+      "name": "oci-033-result.json",
+      "sha256": "e43e94741085af7f23fa586323f015c20cfa499d4600a698dce5e222a9c9efb3"
+    },
+    {
+      "name": "oci-034-intent.json",
+      "sha256": "ef9833df30642bf3a9af1d68455959a46522611386810def7cbb610a276bd318"
+    },
+    {
+      "name": "oci-034-result.json",
+      "sha256": "3b337c998fbef2a77bb48b96b5733881a8ded6011f77a8829cc25d757935c9cb"
+    },
+    {
+      "name": "oci-035-intent.json",
+      "sha256": "809e6db04a34bae02eea8f56655f1b7a5e32a9ec2494d702e262561fc7e50796"
+    },
+    {
+      "name": "oci-035-result.json",
+      "sha256": "fdc75cda1bb4a19fd2003227b5f095573c9178221bea1b202e27fffd79fdbcb8"
+    },
+    {
+      "name": "oci-036-intent.json",
+      "sha256": "5cf674b3a247622753f4edecdae7f96e5ba9afde8d7a7717406a17d18f5f7021"
+    },
+    {
+      "name": "oci-036-result.json",
+      "sha256": "d4133ca7ece14f47bfe65e98c8eebabb261925a21cea1edb63be1a4878a8634c"
+    },
+    {
+      "name": "oci-037-intent.json",
+      "sha256": "4c94e8ed588ba2f644a96f4fec0ff0bdfcaeb1fa289aa033ee3a4646fb6e3447"
+    },
+    {
+      "name": "oci-037-result.json",
+      "sha256": "38c084b1d5b039bb38154ae0e56c8acc87526ce016a427f191c5a653d82153a4"
+    },
+    {
+      "name": "result.json",
+      "sha256": "9d2adbbe1db3da139bd6671ac01fedaa15fc86122da5df8b04293d3a27a25aed"
+    }
+  ],
+  "version": 1
+}

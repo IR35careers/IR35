@@ -1,0 +1,10 @@
+{
+  "assertionsChanged": false,
+  "cause": "Quota LIST summaries omit statements; authenticated GET matches all 3 exact statements",
+  "change": "Use scoped limits quota GET; retain fresh sealed exact-byte inventory, no object re-list",
+  "journalPolicyChanged": false,
+  "originalFailedManifestSHA256": "a7f27ed44b9cfcfed9911e10816677b3c91f0b407fa973c3e6c36b9b05c089ca",
+  "readOnly": true,
+  "repairAttempt": 2,
+  "secondFailedManifestSHA256": "6c3b9fbddaefd41bf9c4a2604e4f755d954a2ea1befd542876968e7aaab6e860"
+}

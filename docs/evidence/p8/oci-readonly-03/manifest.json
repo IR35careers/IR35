@@ -1,0 +1,97 @@
+{
+  "artifacts": [
+    {
+      "name": "account.json",
+      "sha256": "ec81a36d92bc2173668d741954a9a00d74295fba286b8a7e018da94642fb72bb"
+    },
+    {
+      "name": "envelope.json",
+      "sha256": "18a2b774bacb6083f17fe1511994d4e9a4561bdb2621c7442200b8600158a1d7"
+    },
+    {
+      "name": "oci-001-intent.json",
+      "sha256": "47f944bc207c0d27e98cc4e8fc36edcdf6088afda7c2b446a11bc294ed6ff184"
+    },
+    {
+      "name": "oci-001-result.json",
+      "sha256": "b8536d6e1ea9d90e039f503338fb1e84c97986d02dab1beb9e439589ab267726"
+    },
+    {
+      "name": "oci-002-intent.json",
+      "sha256": "942fccd43f3f9f8d76df3a61c1ac7c0880f46a01dd5d5256b8872756547c2263"
+    },
+    {
+      "name": "oci-002-result.json",
+      "sha256": "3f6cefe85ed92dcec536a43272a7b37ad5ab2a29a268354d2933bc658ab38ffc"
+    },
+    {
+      "name": "oci-003-intent.json",
+      "sha256": "e105f6c91ca9ba5f9700c184bcd282b74303a0961f4fa642f52091a203a8e021"
+    },
+    {
+      "name": "oci-003-result.json",
+      "sha256": "b8447da94261845142383bf19026dc5ec943969c29d71a98b716d4beeb97f28c"
+    },
+    {
+      "name": "oci-004-intent.json",
+      "sha256": "8bc9dd2a6283814c9a59a6de136d0c4397eb8d98893d2a2cf47f1c3615fa47a6"
+    },
+    {
+      "name": "oci-004-result.json",
+      "sha256": "0ee70863d0b36671836897ab7dae5a8b26ac58e2ce0b8cfb06a44680bff9acec"
+    },
+    {
+      "name": "oci-005-intent.json",
+      "sha256": "cd1233fd3dffb0918a2ead3b1754a5b835343e718dce22a4dcfcafb4d69c0ca0"
+    },
+    {
+      "name": "oci-005-result.json",
+      "sha256": "936445b85312273350ab101542b9c5552ff681b9ccbb72fe9130736070225b09"
+    },
+    {
+      "name": "oci-006-intent.json",
+      "sha256": "d08be51122191fc98fd3e341574cacb9a75b0931d2fe2eede6e808bc57c9bdff"
+    },
+    {
+      "name": "oci-006-result.json",
+      "sha256": "1c03bfdf9600280f7eba778be0f78e8b74b7c12a3a5f21d031d461d8247ea87c"
+    },
+    {
+      "name": "oci-007-intent.json",
+      "sha256": "5b7b503a5ded5f6ddbf184b344749fa4d09d759da599785575a63fc3b25ff537"
+    },
+    {
+      "name": "oci-007-result.json",
+      "sha256": "84bc74ef6cb5fb518998e40697b8612319b09e04e45666ba4474f2d940d629e5"
+    },
+    {
+      "name": "oci-008-intent.json",
+      "sha256": "35d9d8192be096efd3a4e292461becb4e39218b3741030dd17ecc130384df278"
+    },
+    {
+      "name": "oci-008-result.json",
+      "sha256": "84bc74ef6cb5fb518998e40697b8612319b09e04e45666ba4474f2d940d629e5"
+    },
+    {
+      "name": "oci-009-intent.json",
+      "sha256": "a9a390f2752f20c75835f38c41da9391fef356ad09e754117309cc3ee1aa5a46"
+    },
+    {
+      "name": "oci-009-result.json",
+      "sha256": "e8c289c80a4beec8fd0009324958f9d7a9e77e135140d61a61f7d43fcb993826"
+    },
+    {
+      "name": "repair-intent.json",
+      "sha256": "65af8398f3abd61e789662bd04d48571b86dffb80b2b091ff040fc689af4bcc1"
+    },
+    {
+      "name": "result.json",
+      "sha256": "bf8c524878c5e26aef2d8965b269a0df541d250a99efe00601869684f0d9823c"
+    },
+    {
+      "name": "snapshot-reference.json",
+      "sha256": "9930dffe0286a2ca2f0228b0ab3807955d67cba5b37fb018f9febb99126d35da"
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,9 @@
+{
+  "assertionsChanged": false,
+  "cause": "Counter operation underscores rejected by strict journal filename policy before any Object Storage request",
+  "change": "Hash complete public counter label for filename; preserve original label and observation in JSON",
+  "journalPolicyChanged": false,
+  "originalFailedManifestSHA256": "a7f27ed44b9cfcfed9911e10816677b3c91f0b407fa973c3e6c36b9b05c089ca",
+  "readOnly": true,
+  "repairAttempt": 1
+}

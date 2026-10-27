@@ -1,0 +1,17 @@
+{
+  "billingType": "LIMITED_FREE",
+  "createGateGranted": false,
+  "freeLiveVolumeCapGB": 200,
+  "liveVolumeGB": 150,
+  "maximumVolumeBackups": 5,
+  "memoryGB": 12,
+  "objectBytes": 0,
+  "objectCapBytes": 8000000000,
+  "ocpu": 2,
+  "ownerVolumeCapGB": 150,
+  "quotaStatementsMatch": true,
+  "realTimeZeroBillProven": false,
+  "shape": "VM.Standard.A1.Flex",
+  "status": "PASS",
+  "volumeBackups": 0
+}

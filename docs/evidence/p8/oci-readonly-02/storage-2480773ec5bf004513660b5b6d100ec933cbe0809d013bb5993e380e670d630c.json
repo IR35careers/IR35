@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00011-list_multipart_uploads-result",
+  "observation": {
+    "httpSuccess": true,
+    "nextPagePresent": false,
+    "status": "PASS"
+  }
+}

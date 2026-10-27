@@ -1,0 +1,6 @@
+{
+  "count": 1,
+  "expectedActiveEmailSubscriptionCount": 1,
+  "operation": "subscriptions",
+  "status": "PASS"
+}

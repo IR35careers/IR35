@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October fresh OCI read-only audit completed — no new mutation authority
+
+- Actual owner browser SecurityToken/London verified; read-only completion03PASS9e792756a7e5c233e909bab43556933f4a0605da666cae55ea9340e3ffcf8788 preserves both earlier toolingFAILs and the sealed fresh inventory.2/12 A1LIMITED_FREE,150GBlive,0backups,exactStandard0bytesinclversions/multipart,quotaGET3exactstatements,laggingGBP0/notreal-time. Backupaccess metadata57227b65:0dynamicgroups/0childpolicies/0alarms,existingtopic+emailsubscriptionACTIVE. No VM/key/IAM/network/bucket/object/customer/production/DNS/provider change; no new fullcontainment from a metadata-only audit. SSHstillloaded/no lifetime/no prompt. See P8OCIreport.
+- Keep P8 incomplete and P9NO-GO. Publicage recipient/offline-privatekey custody or explicit hiddenkeyceremony approval and conditional exact-one-VM/one-private-bucket IAM remain owner gates; SIGNED IN does not approve either. No real backup/encryption/upload/restore/timer/alert claimed. Preserve all hashes/counters/nativeattempt restrictions. Source newOAuthfix inP7notdeployed. ExactYES CUTOVER absent; allPRsdraft/unmerged. One final owner batch, not repeated credential requests.
+
 ## P8 bounded read load02 PASS — remaining full phase still required
 
 - Native02manifest `e95c2ff16232eb766195b2715f9671b48370b3af5e72a0f741ea2b62ab52c443`:50concurrent/200GET/0errors/p95=3883.508ms, current/peak<=unchangedkernel/Dockerlimits/OOM0/minOSavailable9,264,906,240; full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS. No native load replay, original01FAIL/diagnosis remain. Read-only/co-located/no-store load is not authenticated-write/browser QA or a productionSLO. See P8 load report.
