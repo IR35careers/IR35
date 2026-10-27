@@ -1,7 +1,7 @@
 /** Real headed browser + actual staging GETs. No demo backend or write flow. */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, openSync, closeSync, fsyncSync, writeFileSync, readFileSync, readdirSync, lstatSync, realpathSync, existsSync } from "node:fs";
+import { mkdirSync, openSync, closeSync, fsyncSync, writeFileSync, readSync, fstatSync, readdirSync, lstatSync, realpathSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { chromium, type BrowserContext } from "playwright-core";
 import { z } from "zod";
@@ -13,6 +13,7 @@ const sha = (value: string | Buffer) => createHash("sha256").update(value).diges
 
 export class BrowserJournal {
   private hashes = new Map<string, string>();
+  private descriptors = new Map<string, number>();
   private closed = false;
   constructor(readonly root: string) {
     if (realpathSync(dirname(root)) !== resolve(dirname(root))) throw new Error("ControlledEvidenceParentRequired");
@@ -22,20 +23,43 @@ export class BrowserJournal {
     if (this.closed || !/^[a-z0-9-]+\.json$/.test(name)) throw new Error("ClosedOrUnsafeEvidenceName");
     if (readdirSync(this.root).sort().join("|") !== [...this.hashes.keys()].sort().join("|")) throw new Error("ArtifactSetChanged");
     for (const [file, digest] of this.hashes) {
-      const path = resolve(this.root, file); const info = lstatSync(path);
-      if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1 || sha(readFileSync(path)) !== digest) throw new Error("ArtifactChanged");
+      const descriptor = this.descriptors.get(file);
+      if (descriptor === undefined) throw new Error("OwnedEvidenceDescriptorRequired");
+      const size = this.identity(file, descriptor);
+      const buffer = Buffer.alloc(65_536); const hash = createHash("sha256");
+      for (let position = 0; position < size;) {
+        // Read ONLY the descriptor held since exclusive creation. A swapped
+        // pathname can never redirect this read to a key or another file.
+        const count = readSync(descriptor, buffer, 0, Math.min(buffer.length, size - position), position);
+        if (count <= 0) throw new Error("IncompleteEvidenceRead");
+        hash.update(buffer.subarray(0, count)); position += count;
+      }
+      if (this.identity(file, descriptor) !== size || hash.digest("hex") !== digest) throw new Error("ArtifactChanged");
     }
     const serialized = JSON.stringify(value, null, 2);
     if (typeof serialized !== "string") throw new Error("StructuredEvidenceRequired");
     const bytes = serialized + "\n";
-    const fd = openSync(resolve(this.root, name), "wx", 0o600);
-    try { writeFileSync(fd, bytes); fsyncSync(fd); } finally { closeSync(fd); }
+    const fd = openSync(resolve(this.root, name), "wx+", 0o600);
+    try { writeFileSync(fd, bytes); fsyncSync(fd); this.descriptors.set(name, fd); }
+    catch { closeSync(fd); throw new Error("ExclusiveEvidenceWriteFailed"); }
     this.hashes.set(name, sha(bytes));
+  }
+  private identity(name: string, descriptor: number) {
+    const owned = fstatSync(descriptor, { bigint: true });
+    const current = lstatSync(resolve(this.root, name), { bigint: true });
+    if (!owned.isFile() || owned.nlink !== BigInt(1) || !current.isFile() || current.isSymbolicLink()
+      || current.dev !== owned.dev || current.ino !== owned.ino || current.nlink !== BigInt(1)
+      || owned.size < BigInt(0) || owned.size > BigInt(16_000_000)) throw new Error("ArtifactIdentityChanged");
+    return Number(owned.size);
+  }
+  dispose() {
+    for (const descriptor of this.descriptors.values()) closeSync(descriptor);
+    this.descriptors.clear(); this.closed = true;
   }
   seal(result: unknown) {
     this.put("result.json", result);
     this.put("manifest.json", { version: 1, artifacts: [...this.hashes].map(([name, sha256]) => ({ name, sha256 })) });
-    this.closed = true;
+    this.dispose();
     return this.hashes.get("manifest.json");
   }
 }
@@ -177,8 +201,10 @@ export async function runProtectedBrowser() {
           if (!z.object({ status: z.literal("PASS") }).safeParse(full).success) result = { ...result, status: "FAIL", code: "FullContainmentFailed_HardStop" };
         } catch { result = { ...result, status: "FAIL", code: "FullContainmentUnconfirmed_HardStop" }; }
       }
-      const manifestSHA256 = journal.seal(result);
-      console.log(JSON.stringify({ ...result, manifestSHA256 }));
+      try {
+        const manifestSHA256 = journal.seal(result);
+        console.log(JSON.stringify({ ...result, manifestSHA256 }));
+      } finally { journal.dispose(); }
     }
   }
   if (result.status !== "PASS") process.exitCode = 1;

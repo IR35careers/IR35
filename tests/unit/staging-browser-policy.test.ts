@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allowStagingRead, safeBrowserFailure, stagingBrowserBootstrap, stagingReadHeaders } from "../../services/application-worker/staging-browser-policy";
 import { BrowserJournal } from "../../scripts/oracle-staging-browser-readonly";
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, lstatSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, writeFileSync, lstatSync, renameSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, basename, resolve } from "node:path";
 
@@ -17,8 +17,10 @@ describe("protected Oracle read-only browser boundary", () => {
   });
   it("refuses evidence replay, overwrite, tampering and post-seal writes", () => {
     const directory = mkdtempSync(join(tmpdir(), "ir35-public-browser-journal-"));
+    const journals: BrowserJournal[] = [];
     try {
       const path = join(directory, "one"); const journal = new BrowserJournal(path);
+      journals.push(journal);
       journal.put("intent.json", { publicFixture: true });
       expect(() => journal.put("intent.json", { changed: true })).toThrow();
       expect(() => new BrowserJournal(path)).toThrow();
@@ -27,10 +29,31 @@ describe("protected Oracle read-only browser boundary", () => {
       const manifest = journal.seal({ status: "PASS" }); expect(manifest).toMatch(/^[a-f0-9]{64}$/);
       expect(() => journal.put("late.json", {})).toThrow();
       const second = new BrowserJournal(join(directory, "two")); second.put("intent.json", {});
+      journals.push(second);
       writeFileSync(join(directory, "two/intent.json"), "tampered");
       expect(() => second.put("next.json", {})).toThrow();
       expect(readFileSync(join(path, "intent.json"), "utf8")).toContain("publicFixture");
     } finally {
+      for (const journal of journals) journal.dispose();
+      if (resolve(dirname(directory)) !== resolve(tmpdir()) || !basename(directory).startsWith("ir35-public-browser-journal-") || lstatSync(directory).isSymbolicLink()) throw new Error("TemporaryFixtureCleanupBoundary");
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+  it("rejects pathname replacement and hashes only a retained owned descriptor", () => {
+    const directory = mkdtempSync(join(tmpdir(), "ir35-public-browser-journal-"));
+    const journal = new BrowserJournal(join(directory, "one"));
+    try {
+      journal.put("intent.json", { original: true });
+      const original = resolve(directory, "one/intent.json"); const moved = resolve(directory, "moved.json");
+      if (!original.startsWith(resolve(directory) + "/") && !original.startsWith(resolve(directory) + "\\")) throw new Error("PublicFixtureMoveBoundary");
+      if (dirname(moved) !== resolve(directory) || !basename(directory).startsWith("ir35-public-browser-journal-")) throw new Error("PublicFixtureMoveBoundary");
+      renameSync(original, moved); writeFileSync(original, "replacement");
+      expect(() => journal.put("next.json", {})).toThrow("ArtifactIdentityChanged");
+      const source = readFileSync(resolve("scripts/oracle-staging-browser-readonly.ts"), "utf8");
+      expect(source).toContain("readSync(descriptor, buffer");
+      expect(source).not.toContain("readFileSync(");
+    } finally {
+      journal.dispose();
       if (resolve(dirname(directory)) !== resolve(tmpdir()) || !basename(directory).startsWith("ir35-public-browser-journal-") || lstatSync(directory).isSymbolicLink()) throw new Error("TemporaryFixtureCleanupBoundary");
       rmSync(directory, { recursive: true, force: true });
     }

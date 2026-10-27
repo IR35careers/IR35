@@ -1,0 +1,21 @@
+{
+  "status": "OPEN_FINDING_OFFLINE_REPAIR_1",
+  "sourceHead": "15ebce4acec397707db88d808ff391112fd270fe",
+  "checkRunId": 122094228606,
+  "check": "CodeQL",
+  "severity": "high",
+  "title": "Potential file system race condition",
+  "path": "scripts/oracle-staging-browser-readonly.ts",
+  "line": 26,
+  "message": "The file may have changed since it was checked.",
+  "rootCause": "lstatSync(path) followed by readFileSync(path) reopened a mutable pathname",
+  "repair": "Retain each wx+ exclusive-create descriptor, hash only positional descriptor reads, check fstat/lstat identity and link count before/after, close descriptors on sealing/disposal",
+  "suppressionOrAssertionWaiver": false,
+  "observedArtifactOrDataMismatch": false,
+  "nativeWorkHeldUntilSecurityCheckPasses": true,
+  "newVMOrSecretOrIAMChanges": 0,
+  "priorNativeArtifactsModified": false,
+  "codeqlRerunProven": false,
+  "phaseComplete": false,
+  "cutover": false
+}

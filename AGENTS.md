@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October hosted CodeQL journal finding — Oracle native hold, offline repair1
+
+- Head15ebce4 hosted10PASS/CodeQLFAILhigh `Potential file system race condition`, check122094228606/scriptline26. Original lstat(path) thenreadFileSync(path) couldreopen a swappedpath. No observed artifact/data/privilege mismatch; original native gate/evidence staysimmutable. HOLD further Oracle VM execution until hostedsecurityPASS; normal offline/CI fixture verification may continue, not another nativegate replay.
+- Offlinefix1 keeps each wx+ exclusive-created file descriptor open untilseal/disposal, reads only positionalreadSync through that SAME owneddescriptor, verifies fstat/lstat dev/ino/linkcount before+after and boundedcompletefilehash, closeshandles unconditionally. No path-content reopens, suppression/checkbypass, datahash/role/catalogue/timeout or historicalassertion waiver. Realfile replacement/tamper/replay/closed-slot tests strengthened. HostedCodeQL rerun must provePASS; ifsamefindingfails3timesSTOP. Queue-source adapter integration remains source-only; no realrunner/acceptance/VMsecret/IAM/production change. Backupownerbatch/exactYEShold unchanged.
+
 ## 27 October P8 actual read-only browser PASS / slot01 USED
 
 - Immutable browser-readonly-01 manifest62fe4e38a9ecd4e865dc1dab95f9c4d2439641058074cd80c783effca066f4cd: headedlocalChromium149/actualOraclebackend,5pagecases/jobsSSR/livefilter/JS+CSS/H1/headers/securecookiePASS;148stagingGETall200,13otherGETsblocked,0redirects/pageerrors/writes. No screenshots/traces/secrets, VM/container/config/IAM/network/production change. Fullpost62orderedMD5/Auth27/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS. Do not replay/reset01 or anyP7Authslot.
