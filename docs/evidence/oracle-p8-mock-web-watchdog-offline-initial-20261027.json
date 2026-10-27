@@ -1,0 +1,10 @@
+{
+  "status": "FAIL_OFFLINE_TIME_FIXTURE",
+  "files": 4, "passed": 58, "failed": 1,
+  "error": "Expected timedOut=1, got timedOut=0",
+  "cause": "The existing lifecycle guard correctly stamps updated_at with clock_timestamp, so the new fixture's attempt to backdate it did not create expired work.",
+  "repairAttempt": 1,
+  "repair": "Use a separate in-memory PostgreSQL fixture and advance ONLY the test's JavaScript clock. Preserve the ten-minute production threshold, original trigger, expected timedOut=1 assertion and every existing timeout.",
+  "nativeGateOrVmChange": false,
+  "catalogOrAssertionChange": false
+}

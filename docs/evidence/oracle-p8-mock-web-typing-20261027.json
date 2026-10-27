@@ -1,0 +1,10 @@
+{
+  "status": "OFFLINE_TYPECHECK_FINDINGS_RETAINED",
+  "findings": [
+    { "error": "Mock call inferred an empty tuple", "repair": "Explicit MockWebKick function type in the new test fixture; no assertion removed." },
+    { "error": "Fixture start returned undefined rather than PgBoss", "repair": "Producer injection exposes only the ignored startup return as unknown. Runtime remains new PgBoss with identical options and all original queue guards." }
+  ],
+  "focusedRuntimeTests": { "files": 6, "passed": 58, "failed": 0, "durationSeconds": 16.47 },
+  "priorTypechecksClaimedPass": false,
+  "nativeGateOrVmCall": false
+}

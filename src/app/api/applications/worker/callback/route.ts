@@ -32,6 +32,7 @@ import {
 import { kickApplicationWorker } from "@/lib/application-worker-kick";
 import { resolveApplicationTaskDestination } from "@/lib/application-worker-destination";
 import { providerReviewQuestions, type SubmissionProviderReceipt } from "@/lib/application-submission";
+import { isMockWebMode, handleMockWebControl } from "@/lib/queue/mock-web-server";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -42,6 +43,7 @@ const HEADERS = {
 };
 
 export async function POST(request: Request): Promise<Response> {
+  if (isMockWebMode()) return handleMockWebControl(request, "callback", getSupabaseAdmin);
   try {
     if (!applicationWorkerConfig().enabled)
       return Response.json(

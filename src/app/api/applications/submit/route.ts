@@ -63,6 +63,8 @@ import { z } from "zod";
 import { EMAIL_CONFIRMATION_REQUIRED, hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
 import { canRetryDelivery, isDeliveryInFlight, applicationDeliveryStatusSchema } from "@/lib/application-lifecycle";
 import { commitDeliveryResult, transitionDelivery } from "@/lib/application-lifecycle-server";
+import { isMockWebMode, requireMockWebPolicy, requireMockWebAccount, requireMockWebJob,
+  submitMockWebApplication, MockRequestError } from "@/lib/queue/mock-web-server";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -240,6 +242,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
+    const mockPolicy = isMockWebMode() ? requireMockWebPolicy() : null;
     const admin = getSupabaseAdmin();
     const internalUserId = /^[0-9a-f-]{36}$/i.test(body.internalUserId ?? "")
       ? String(body.internalUserId)
@@ -284,6 +287,21 @@ export async function POST(request: Request): Promise<Response> {
     }
     if (!hasConfirmedApplicationEmail(authUser)) return Response.json(EMAIL_CONFIRMATION_REQUIRED, { status: 403, headers: NO_STORE });
     const userId = authUser.id;
+    if (mockPolicy) {
+      requireMockWebAccount(authUser.email);
+      // No internal resume or caller-owned destination can cross the mock
+      // boundary. Validate the server-owned job BEFORE any packet/event write.
+      if (internalAuthorized) throw new MockRequestError(403);
+      if (body.packet) {
+        const snapshot = normaliseApprovedApplicationPacket(body.packet, body.applicationId);
+        await requireMockWebJob(admin, mockPolicy, snapshot.job.id);
+      } else {
+        const existing = await admin.from("application_packets").select("job_id")
+          .eq("id", body.applicationId).eq("user_id", userId).maybeSingle();
+        if (existing.error || !existing.data) throw new MockRequestError(404);
+        await requireMockWebJob(admin, mockPolicy, existing.data.job_id);
+      }
+    }
     console.info("application_submit_stage", {
       applicationId: body.applicationId,
       stage: "authenticated",
@@ -331,6 +349,8 @@ export async function POST(request: Request): Promise<Response> {
         { status: 404, headers: NO_STORE },
       );
     const storedStatus = applicationDeliveryStatusSchema.parse(packet.delivery_status);
+    if (mockPolicy && (storedStatus === "queued" || storedStatus === "submitting" || storedStatus === "submitted"))
+      return await submitMockWebApplication({ admin, policy: mockPolicy, applicationId: String(packet.id), userId, retry: body.retry });
     if (storedStatus === "submitted") return Response.json({ state: "submitted", receipt: packet.receipt, duplicate: true }, { headers: NO_STORE });
     if (isDeliveryInFlight(storedStatus)) {
       if (process.env.VERCEL === "1" && storedStatus === "queued")
@@ -397,6 +417,8 @@ export async function POST(request: Request): Promise<Response> {
 
     const accountEmail =
       authUser.email || candidate.email || candidate.forwardingEmail || "";
+    if (mockPolicy) return await submitMockWebApplication({ admin, policy: mockPolicy,
+      applicationId: String(packet.id), userId, retry: body.retry });
     const inbox = await ensureInboxAlias(admin, userId, accountEmail, true);
     const notificationEmail = inbox?.forwardingEmail || accountEmail;
     const submissionCandidate: ContractorProfile = enableEmployerAutomation({
@@ -929,6 +951,7 @@ export async function POST(request: Request): Promise<Response> {
       { status: 202, headers: NO_STORE },
     );
   } catch (error) {
+    if (error instanceof MockRequestError) return Response.json({ error: error.message }, { status: error.status, headers: NO_STORE });
     if (error instanceof z.ZodError) return Response.json({ error: "A valid application and explicit approval are required." }, { status: 400, headers: NO_STORE });
     if (error instanceof RequestBodyError)
       return Response.json(

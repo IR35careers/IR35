@@ -3,7 +3,7 @@ import { request } from "node:http";
 import { isIP } from "node:net";
 import { z } from "zod";
 import { resolvePrivateNetworkAddress } from "./database-connection";
-import { mockWebPolicy, mockWebClaimSchema, mockWebResultSchema } from "./mock-web-policy";
+import { mockWebPolicy, mockWebClaimOrHeartbeatSchema, mockWebResultSchema } from "./mock-web-policy";
 
 export const MOCK_WEB_CLAIM_PATH = "/api/applications/worker/claim";
 export const MOCK_WEB_CALLBACK_PATH = "/api/applications/worker/callback";
@@ -37,7 +37,7 @@ export async function mockWebInternalPost(path: unknown, value: unknown,
   try {
     if (!mockWebPolicy(env) || !paths.safeParse(path).success) throw new Error();
     const fixedPath = paths.parse(path);
-    const payload = (fixedPath === MOCK_WEB_CLAIM_PATH ? mockWebClaimSchema : mockWebResultSchema).safeParse(value);
+    const payload = (fixedPath === MOCK_WEB_CLAIM_PATH ? mockWebClaimOrHeartbeatSchema : mockWebResultSchema).safeParse(value);
     if (!payload.success) throw new Error();
     const raw = env.IR35_MOCK_WEB_INTERNAL_URL;
     const allowed = env.IR35_MOCK_WEB_INTERNAL_HOST;

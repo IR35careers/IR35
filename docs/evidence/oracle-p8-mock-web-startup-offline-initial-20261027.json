@@ -1,0 +1,9 @@
+{
+  "status": "FAIL_OFFLINE_MOCK_IMPORT",
+  "error": "No mockFailure export is defined on the mock-store mock",
+  "startupTestsExecuted": 0,
+  "otherEngineTestsPassed": 15,
+  "repairAttempt": 1,
+  "repair": "Preserve the original module exports and replace only MockStore in the fixture. No production condition, assertion or timeout changed.",
+  "nativeOrVmCall": false
+}

@@ -28,6 +28,7 @@ import type {
 import { enableEmployerAutomation } from "@/lib/application-automation-consent";
 import { isQueueApplyRunner, selectedApplyRunner } from "@/lib/application-runner-selection";
 import { EMAIL_CONFIRMATION_REQUIRED, hasConfirmedApplicationEmail } from "@/lib/auth-confirmation";
+import { isMockWebMode, handleMockWebControl } from "@/lib/queue/mock-web-server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -100,6 +101,7 @@ async function claimWorkerTask(input: {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (isMockWebMode()) return handleMockWebControl(request, "claim", getSupabaseAdmin);
   try {
     if (!applicationWorkerConfig().enabled)
       return Response.json(

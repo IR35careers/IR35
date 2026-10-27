@@ -1,0 +1,10 @@
+{
+  "status": "FAIL_OFFLINE_FIXTURE_SETUP",
+  "tests": 8, "passed": 3, "failed": 5,
+  "error": "inconsistent types deduced for parameter $1",
+  "cause": "New synthetic fixture INSERT reused an uncast UUID parameter as text. It failed before the server bridge was called.",
+  "repairAttempt": 1,
+  "repair": "Explicit UUID cast in the new fixture INSERT, matching the pre-existing lifecycle SQL fixtures. No assertion, timeout or production SQL change.",
+  "nativeAttemptConsumed": false,
+  "vmOrDataChange": false
+}

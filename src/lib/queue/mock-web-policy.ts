@@ -59,10 +59,17 @@ export function requireMockWebActor(policy: MockWebPolicy, input: unknown): { ap
     scenario: policy.scenarioFor(parsed.data.jobId) };
 }
 
+const mockWebWorkerId = z.string().refine(value => value.startsWith("staging-web-mock-") && z.uuid().safeParse(value.slice(17)).success);
 export const mockWebClaimSchema = z.strictObject({
   kind: z.literal("staging_web_mock_claim"), applicationId: z.uuid(), jobId: z.uuid(), deliveryVersion: z.number().int().positive(),
-  workerId: z.string().regex(/^staging-web-mock-[a-f0-9-]{36}$/),
+  workerId: mockWebWorkerId, recoverLease: z.boolean().optional(),
 });
+export const mockWebHeartbeatSchema = z.strictObject({
+  kind: z.literal("staging_web_mock_heartbeat"), workerId: mockWebWorkerId, startedAt: z.iso.datetime(),
+  active: z.number().int().min(0).max(1), completed: z.number().int().nonnegative(), failed: z.number().int().nonnegative(),
+  buildSha: z.string().regex(/^[a-f0-9]{40}$/),
+});
+export const mockWebClaimOrHeartbeatSchema = z.union([mockWebClaimSchema, mockWebHeartbeatSchema]);
 export const mockWebAssignmentSchema = z.strictObject({
   applicationId: z.uuid(), taskId: z.uuid(), attempt: z.number().int().positive(), scenario: mockWebScenarioSchema,
 });

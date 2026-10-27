@@ -1,0 +1,8 @@
+{
+  "status": "FAIL_OFFLINE_FIXTURE_SETUP",
+  "error": "column application_profile of relation profiles already exists",
+  "testsSkipped": 4,
+  "repairAttempt": 1,
+  "repair": "Remove the redundant new-test ALTER; the existing migrations already create this column. No production schema, semantic assertion or timeout changed.",
+  "nativeOrVmCall": false
+}

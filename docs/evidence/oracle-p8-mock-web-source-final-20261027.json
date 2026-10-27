@@ -1,0 +1,24 @@
+{
+  "status": "PASS_SOURCE_ONLY_NATIVE_NOT_RUN",
+  "sourceIndexSHA256": "4a1bed05bc22fd7895a5ff79685e07f450c9e4d1f37003b441da81893cda6cac",
+  "sourceIndexEntries": 622,
+  "indexScope": ["src", "services", "tests", "supabase/migrations", "package.json", "package-lock.json", "tsconfig.json", "vitest.config.ts"],
+  "fullReleaseCheck": {
+    "strictTypecheck": "PASS", "fullZeroWarningLint": "PASS",
+    "unitFiles": 171, "unitTests": 1199, "unitFailed": 0, "unitSeconds": 217.25,
+    "legacyPassed": 199, "legacyFailed": 0
+  },
+  "stagedFilesAndHistorySecretScan": { "status": "PASS", "trackedFilesAtCheck": 1956 },
+  "actualNextHandlersAndExistingSqlExercised": true,
+  "inMemoryPostgresOnly": true,
+  "consumerStartupAndDurableOutboxFixturesPass": true,
+  "originalFailuresRetained": true,
+  "newConsumerSupervisesOriginalQueues": false,
+  "oldMockKickEnabled": false,
+  "nativeImagesBuilt": 0,
+  "vmOrSourceCustomerCalls": 0,
+  "freshNativeContainmentClaimed": false,
+  "sourcePristineP5ConfigDataSecretOrProductionChanges": false,
+  "phaseComplete": false,
+  "cutover": false
+}

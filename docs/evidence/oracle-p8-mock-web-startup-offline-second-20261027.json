@@ -1,0 +1,10 @@
+{
+  "status": "FAIL_OFFLINE_WINDOWS_BIND_FIXTURE",
+  "testsPassed": 19, "testsFailed": 1,
+  "error": "Expected listener startup rejection, but it resolved",
+  "cause": "On this Windows host the wildcard worker listener can coexist with a loopback-only listener on the same port. Occupying loopback did not reliably simulate EADDRINUSE.",
+  "repairAttempt": 2,
+  "repair": "Use a deterministic EventEmitter listener-error fixture, no real listening port. The same startup-rejection/pool-close/no-consumption assertions remain. No source health/listener/timeout weakening.",
+  "nextSameGateFailureMeansStop": true,
+  "actualQueueBrowserVmOrCloudAccess": false
+}
