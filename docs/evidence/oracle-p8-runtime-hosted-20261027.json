@@ -1,0 +1,50 @@
+{
+  "status": "PASS_HOSTED_SOURCE_AND_DISPOSABLE_CI_ONLY",
+  "repository": "IR35careers/IR35",
+  "draftPullRequest": 62,
+  "verifiedHead": "6c3c37232ecf6baf05e92cdba232fc6278935454",
+  "checksPassed": 11,
+  "checksFailed": 0,
+  "codeql": {
+    "checkRunId": 122107003607,
+    "completedAt": "2026-10-27T09:18:50Z",
+    "conclusion": "success",
+    "title": "No new alerts in code changed by this pull request",
+    "annotationsCount": 0,
+    "originalFindingPreserved": "oracle-p8-codeql-journal-race-20261027.json",
+    "suppressionOrDismissal": false
+  },
+  "qualityRunId": 40479611555,
+  "nativeArmRunId": 40479611689,
+  "codeqlRunId": 40479611556,
+  "jobs": [
+    {"id": 122107720516, "name": "Responsive browser and accessibility (tablet-chrome)", "conclusion": "success"},
+    {"id": 122107720639, "name": "Responsive browser and accessibility (mobile-chrome)", "conclusion": "success"},
+    {"id": 122107720569, "name": "Responsive browser and accessibility (desktop-chrome)", "conclusion": "success"},
+    {"id": 122106313000, "name": "Native arm64 image and isolated mock ATS", "conclusion": "success"},
+    {"id": 122106313461, "name": "Private Caddy SDK ordering regression", "conclusion": "success"},
+    {"id": 122106313700, "name": "Worker Docker build and Postgres standby health", "conclusion": "success"},
+    {"id": 122106313188, "name": "JavaScript and TypeScript", "conclusion": "success"},
+    {"id": 122106313360, "name": "Oracle local key custody tests", "conclusion": "success"},
+    {"id": 122106313165, "name": "Code quality and production build", "conclusion": "success"},
+    {"id": 122106313554, "name": "Dependency and repository security", "conclusion": "success"}
+  ],
+  "arm64ActualStepsPassed": [
+    "Install disposable queues and verify distinct queue-only identities",
+    "Verify ARM standby with unchanged Vercel selection and no candidate credentials",
+    "Verify authenticated actual ARM standby drain and resume without acceptance",
+    "Redacted standby diagnostics and cleanup"
+  ],
+  "amd64ActualStepsPassed": [
+    "Prepare isolated CI queues",
+    "Verify separate producer and queue-only owner permissions",
+    "Boot standby without application credentials or consumers",
+    "Print redacted standby diagnostics and stop container"
+  ],
+  "journalSecurityHoldClearedForVerifiedSource": true,
+  "liveOracleImageOrFlagsChanged": false,
+  "newNativeGateRun": false,
+  "productionChanges": false,
+  "phaseComplete": false,
+  "cutover": false
+}

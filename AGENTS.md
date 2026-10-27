@@ -1,5 +1,13 @@
 # IR35Careers engineering instructions
 
+## 27 October P8 snapshot application compatibility inventory
+
+- New snapshot-app-readiness-01 may read ONLY fixed catalogue capabilities on the verified pristine snapshot and run original fullcontainment afterward, no migration/customer/VM write. Missing10columns/10RPCs means BLOCKED application compatibility, not a fidelity mismatch or invented functionalPASS. Full616empty-home helpersPASS46.377s; exacttable/column-pair regression prevents cross-product false findings. Old615PASS retained, no failed-slot overwrite/used Auth/load/browser/P6 replay. All write QA requires a separately owned disposable clone, never P4/P5 changes. Remaining backup keys/IAM batch and exactYES hold stay active.
+
+## 27 October hosted source gate PASS — prior finding remains immutable
+
+- Exact P8head6c3c37232ecf6baf05e92cdba232fc6278935454 has ALL11hosted checks SUCCESS. CodeQL122107003607 completed09:18:50UTC/no new changed-code alerts/0annotations; no suppression/dismissal. NativeARM122106313000 andAMD64122106313700 actually passed separate-role setup/standby (ARM drain/resume too), acceptancefalse. Evidence oracle-p8-runtime-hosted-20261027.json clears ONLY the preceding hosted-security hold for that verified source. Original FAIL/source-pending artifacts remain unchanged. Not an Oracle runtime rollout or wholeP8 PASS; no native gate replay, image/env/role/flags/production/provider/DNS/IAM change or cutover. Remaining backup age/IAM owner batch and all other hard stops stay in force.
+
 ## 27 October hosted CodeQL journal finding — Oracle native hold, offline repair1
 
 - Head15ebce4 hosted10PASS/CodeQLFAILhigh `Potential file system race condition`, check122094228606/scriptline26. Original lstat(path) thenreadFileSync(path) couldreopen a swappedpath. No observed artifact/data/privilege mismatch; original native gate/evidence staysimmutable. HOLD further Oracle VM execution until hostedsecurityPASS; normal offline/CI fixture verification may continue, not another nativegate replay.
