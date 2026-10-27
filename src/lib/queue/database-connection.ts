@@ -48,6 +48,10 @@ async function privateAddress(host: string): Promise<string> {
   } finally { if (timer) clearTimeout(timer); }
 }
 
+// Shared by the isolated mock control transport AFTER its own exact-host gate.
+// Queue URL/allowlist/TLS validation and its existing callers are unchanged.
+export { privateAddress as resolvePrivateNetworkAddress };
+
 export async function queueDatabaseConnection(databaseUrl: unknown, allowlist: unknown) {
   const hosts = allowedHosts(allowlist);
   const raw = z.string().min(1).max(16_384).safeParse(databaseUrl);

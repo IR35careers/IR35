@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 27 October web/mock boundary components — NOT integration authority
+
+- Source policy/privateHTTP components86focusedPASS/strictTS/changed-sourceLintPASS: stage/mock/acceptancefalse/read-onlyfalse/onebrowser/schedulerfalse/providerfree, namedtestaccount/ownedcanonical6fixturejobs, opaqueIDs+version/typedclaim/result. Exactprivatehost+sameunchangedqueue resolver alias, numericpin/purposeHMAC/no redirect/16KiB/10s;actual loopbackfixture tests, no VM/sourcecustomer/network/secret change. Bridgeoff default; normalmockkick STILLdisabled. No producer/claim/callback/persistentworker wiring or writable app activated. Continue implementing the REAL app/mock bridge before any writablefixture; oldP6queues/jobs/nativegates immutable, realacceptancefalse. ExistingpublicBasic/TLS/CSP/noindex/no-store/RLS unchanged. All backup/IAM/provider/production/cutover holds remain; no wholeP8PASS.
+
 ## 27 October callback source fix / writable QA activation hold
 
 - Normal submit callback now derives from trusted server config before queue writes; strict HTTPS/root/no credentials/control/query/fragment, explicitstagingexactorigin/nonVercel, productiondefaultunchanged, executororigin guard retained.26focused+1116unit/199legacy/strictTS/fullLintPASS, original newlineparser FAIL preserved/one raw-input repair/assertions unchanged. No native image/env/acceptance/provider change, hosted fix proof still required.

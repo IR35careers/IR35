@@ -1,0 +1,9 @@
+{
+  "status": "PASS_OFFLINE_COMPONENT_REGRESSIONS_ONLY",
+  "lostPriorToolResult": "Process no longer running; its unavailable result was not treated as PASS.",
+  "freshObservedRun": { "files": 6, "tests": 141, "failed": 0, "durationSeconds": 3.30 },
+  "nativeGateReplayed": false,
+  "appOrWorkerIntegrationProven": false,
+  "vmOrProductionChange": false,
+  "phaseComplete": false
+}
