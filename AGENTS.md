@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 27 October P8 snapshot capability inventory actual PASS / compatibility BLOCKED
+
+- Slot snapshot-app-readiness-01 USED/seal3795578c54b5710510b56b6c4edb9533051a41a342b95864f47715d205531b37: verified snapshot has NONE of025's10columns/10functions. Read-only inventory+full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS, source/pristine/P5writes0. Existing unapplied schema capability gap, not a fidelity failure or complete P8 PASS. No migration/clone/config/secret/OCI change; do not replay. Required application upgrades may be tested ONLY on separately owned disposable copies, never pristine/P5/cloud, with before/after deltas and unchanged original containment. Backup owner batch, managed-Storage reverse blocker and all other holds remain.
+
 ## 27 October P8 snapshot application compatibility inventory
 
 - New snapshot-app-readiness-01 may read ONLY fixed catalogue capabilities on the verified pristine snapshot and run original fullcontainment afterward, no migration/customer/VM write. Missing10columns/10RPCs means BLOCKED application compatibility, not a fidelity mismatch or invented functionalPASS. Full616empty-home helpersPASS46.377s; exacttable/column-pair regression prevents cross-product false findings. Old615PASS retained, no failed-slot overwrite/used Auth/load/browser/P6 replay. All write QA requires a separately owned disposable clone, never P4/P5 changes. Remaining backup keys/IAM batch and exactYES hold stay active.
