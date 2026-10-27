@@ -67,6 +67,27 @@ describe("private signed mock app transport", () => {
       IR35_MOCK_WEB_INTERNAL_URL: "http://p8-app:3000", IR35_MOCK_WEB_INTERNAL_HOST: "p8-app" })).rejects.toThrow("isolated mock control plane is unavailable");
     expect(dns.lookup).toHaveBeenCalledTimes(1);
   });
+  it("uses the explicit staging vhost while retaining the SAME private DNS/IP pin", async () => {
+    dns.lookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
+    await fixture((request, response) => {
+      expect(request.headers.host).toBe("staging.ir35careers.com");
+      expect(request.headers["x-forwarded-host"]).toBeUndefined();
+      expect(request.headers.authorization).toBeUndefined();
+      response.end('{"ok":true}');
+    }, async url => {
+      await expect(mockWebInternalPost(MOCK_WEB_CLAIM_PATH, payload, { ...env,
+        IR35_MOCK_WEB_INTERNAL_URL: url.replace("127.0.0.1", "p8-app"), IR35_MOCK_WEB_INTERNAL_HOST: "p8-app",
+        IR35_MOCK_WEB_INTERNAL_VHOST: "staging.ir35careers.com" })).resolves.toEqual({ ok: true });
+    });
+    expect(dns.lookup).toHaveBeenCalledExactlyOnceWith("p8-app", { all: true, verbatim: true });
+  });
+  it.each(["www.ir35careers.com", "admin.ir35careers.com", "staging.ir35careers.com:3000",
+    "staging.ir35careers.com\n", "*", "private-fixture.invalid"])("rejects any unapproved virtual host before DNS: %s", async value => {
+    await expect(mockWebInternalPost(MOCK_WEB_CLAIM_PATH, payload, { ...env,
+      IR35_MOCK_WEB_INTERNAL_URL: "http://p8-app:3000", IR35_MOCK_WEB_INTERNAL_HOST: "p8-app",
+      IR35_MOCK_WEB_INTERNAL_VHOST: value })).rejects.toThrow("isolated mock control plane is unavailable");
+    expect(dns.lookup).not.toHaveBeenCalled();
+  });
   it.each(["203.0.113.10", "169.254.169.254", "0.0.0.0", "[::ffff:127.0.0.1]"])("rejects unsafe numeric targets %s", async host => {
     await expect(mockWebInternalPost(MOCK_WEB_CLAIM_PATH, payload, { ...env,
       IR35_MOCK_WEB_INTERNAL_URL: `http://${host}:3000`, IR35_MOCK_WEB_INTERNAL_HOST: host.replace(/^\[|\]$/g, "") })).rejects.toThrow("no submission is confirmed");

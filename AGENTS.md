@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 27 October NEW P8 native image preparation — slot01 not yet used
+
+- `p8_images.py` prepares two NEW images on the existing VM only, not an old P5/P6 build replay: exact current commit/all11hostedgreen, fresh2CPU/12GiBARM +4GiB available/15GiBdatafree +DockerdataRoot guard, immutable Git archive, new exclusive private image journal, retained original images/containers, build1200s bound and observed live PID/2GiB OS headroom. Native probes use networknone/nonroot/read-only/import-only; never execute setup/run/main, queue publication, app writes, service activation or OCI create. Original fullcontainment and unchanged container identities/restart state required before+after. Do not replay native-webmock-images-01 after it is used; preserve unknown process outcomes and reconcile before any new attempt.
+- Source compatibility fixes: optional `IR35_MOCK_WEB_INTERNAL_VHOST` accepts ONLY staging host while connecting to the SAME private pinned IP; existing defaultHost assertion/launcher/Caddy/auth remain unchanged. `IR35_STAGING_KONG_HOST` permits ONLY the distinct webqa01 fixture under explicit writable mock/staging/acceptancefalse gates; refuses public or original-P5 fallback. Legacy nonmock transport unchanged. All operator settings are NAMES only in templates; no env value/secret/VM change yet. Require native fixture ownership/protection and all original verification; P8stillincomplete/P9NO-GO/exactYES CUTOVER absent. Backup age/IAM owner batch remains outstanding; G3closed.
+
 ## 27 October web/mock bridge SOURCE integration — native QA still required
 
 - New app producer/submit/claim/callback/heartbeat and separate durable mock consumer are SOURCE-wired. Named verified account + exact server-owned six mock jobs; no alias/provider/email/recovery/after fallback. Opaque IDs/version only; canonical025 SQL, attempt CAS, durable start/outcome/ACK ledger, explicit unknown failure/no browser replay, targeted ten-minute fixture-only watchdog. The older component-only notes below are historical, not a claim this is deployed.

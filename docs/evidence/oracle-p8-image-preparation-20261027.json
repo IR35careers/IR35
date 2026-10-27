@@ -1,0 +1,17 @@
+{
+  "status": "PASS_LOCAL_PREPARATION_NATIVE_NOT_RUN",
+  "fullReleaseCheck": { "strictTypecheck": "PASS", "fullZeroWarningLint": "PASS", "unitFiles": 172, "unitPassed": 1224, "unitFailed": 0, "unitSeconds": 168.75, "legacyPassed": 199, "legacyFailed": 0 },
+  "freshHomeHelpers": { "passed": 636, "failed": 0, "seconds": 94.645, "privateFilesCopied": 0, "realKeysSupplied": false, "vmCalls": 0, "ir35DirectoryPresentBeforeOrAfter": false, "manifestSHA256": "96f763efb06089f98d8b79b24ef5abeb0e742e6b161a6fa0c1c23c7805a10441" },
+  "afterFinalDockerDataRootGuard": { "focusedHelperTests": 10, "failed": 0, "seconds": 0.610 },
+  "localConsumerImportOnlyExports": ["runWebMockWorker", "setupWebMockQueue", "webMockOwnerOptions"],
+  "launcherHostGateModified": false,
+  "legacyTransportAssertionsModified": false,
+  "privateTcpPinUnchanged": true,
+  "onlyExactStagingVirtualHostPermitted": true,
+  "writableFixtureMayFallBackToOriginalP5OrPublicBackend": false,
+  "nativeImageSlotUsed": false,
+  "nativeRuntimeOrDatabaseActivated": false,
+  "newSecretsOrIamNetworkProductionChanges": false,
+  "phaseComplete": false,
+  "cutover": false
+}

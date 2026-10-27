@@ -41,6 +41,11 @@ export async function mockWebInternalPost(path: unknown, value: unknown,
     if (!payload.success) throw new Error();
     const raw = env.IR35_MOCK_WEB_INTERNAL_URL;
     const allowed = env.IR35_MOCK_WEB_INTERNAL_HOST;
+    const virtualHost = env.IR35_MOCK_WEB_INTERNAL_VHOST;
+    // Explicit virtual routing only, never DNS/connection retargeting. This is
+    // the SINGLE existing web launcher's accepted staging host; its host gate
+    // remains unchanged. No arbitrary Host or forwarded-header override.
+    if (virtualHost && virtualHost !== "staging.ir35careers.com") throw new Error();
     if (!raw || !allowed || /[\u0000-\u0020\u007f]/.test(raw) || allowed.length > 253
       || (!isIP(allowed) && !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i.test(allowed))) throw new Error();
     const base = new URL(raw);
@@ -56,7 +61,7 @@ export async function mockWebInternalPost(path: unknown, value: unknown,
     const signature = mockWebSignature(env.APPLICATION_WORKER_SECRET!, timestamp, "POST", fixedPath, body);
     return await new Promise<unknown>((resolve, reject) => {
       const call = request({ hostname: address, port: Number(base.port), path: fixedPath, method: "POST", agent: false,
-        headers: { host: base.host, "content-type": "application/json", "content-length": Buffer.byteLength(body),
+        headers: { host: virtualHost || base.host, "content-type": "application/json", "content-length": Buffer.byteLength(body),
           "x-ir35-web-mock-timestamp": timestamp, "x-ir35-web-mock-signature": signature } }, response => {
         let bytes = 0;
         const chunks: Buffer[] = [];

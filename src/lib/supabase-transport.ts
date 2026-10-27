@@ -6,11 +6,24 @@ import { z } from "zod";
  */
 export function supabaseTransport(fetcher: typeof fetch = fetch): typeof fetch {
   const internal = typeof window === "undefined" ? process.env.SUPABASE_INTERNAL_URL : undefined;
+  const isolatedWebMock = typeof window === "undefined" && process.env.IR35_MOCK_WEB_ENABLED === "true";
+  const fixtureHost = typeof window === "undefined" ? process.env.IR35_STAGING_KONG_HOST : undefined;
+  // A writable QA clone may NEVER silently fall back through the public edge
+  // or reuse the original P5 Kong alias. One explicitly named fixture only.
+  const fixture = isolatedWebMock && fixtureHost === "ir35-p8-webqa01-kong"
+    && process.env.IR35_STAGING === "true" && process.env.APPLY_RUNNER === "mock"
+    && process.env.APPLICATION_WORKER_ACCEPT_JOBS === "false" && process.env.IR35_READ_ONLY === "false"
+    && process.env.IR35CAREERS_APP_URL === "https://staging.ir35careers.com"
+    && process.env.NEXT_PUBLIC_SUPABASE_URL === "https://staging.ir35careers.com/supabase"
+    && !process.env.VERCEL;
+  if ((fixtureHost && !fixture) || (isolatedWebMock && (!fixture || !internal)))
+    throw new Error("Invalid isolated fixture Supabase transport; no public or original-fixture fallback.");
   if (!internal) return fetcher;
   const target = z.url().safeParse(internal);
   if (!target.success) throw new Error("Invalid private Supabase endpoint; value withheld.");
   const endpoint = new URL(target.data);
-  if (endpoint.protocol !== "http:" || !["kong", "ir35-p5-kong"].includes(endpoint.hostname)
+  const allowedHost = fixture ? endpoint.hostname === fixtureHost : ["kong", "ir35-p5-kong"].includes(endpoint.hostname);
+  if (endpoint.protocol !== "http:" || !allowedHost
     || endpoint.port !== "8000" || endpoint.pathname !== "/" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
     throw new Error("Invalid private Supabase endpoint; expected the isolated Kong service.");
   }
