@@ -1,5 +1,24 @@
 # IR35Careers engineering instructions
 
+## P8 bounded read load02 PASS — remaining full phase still required
+
+- Native02manifest `e95c2ff16232eb766195b2715f9671b48370b3af5e72a0f741ea2b62ab52c443`:50concurrent/200GET/0errors/p95=3883.508ms, current/peak<=unchangedkernel/Dockerlimits/OOM0/minOSavailable9,264,906,240; full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA PASS. No native load replay, original01FAIL/diagnosis remain. Read-only/co-located/no-store load is not authenticated-write/browser QA or a productionSLO. See P8 load report.
+- Latest automatic RESUME self-heal resolved accounting tooling; historical memory-stop owner-review request is no longer an active blocker. Full P8 remains incomplete: browser-write QA, encrypted automated backup/restore, reverse-sync, monitoring/currentOCIaudit. OCI refresh already failed once, publicage recipient and age/timers absent. Collect genuine owner-only needs once, no secret search/generation, broadIAM, sourcecloud/provider/production/DNS or cutover change. P9 only safe preparation, not execution/signoff.
+
+## P8 read-only memory diagnosis PASS / accounting self-heal1
+
+- Immutable diagnosis `d44312fed7e73cc9d67b3cb974473a98e405685dcc910ef6d3c03cbfc081d675` proves meta kernelcurrent117,985,280<=max134,217,728, kernelpeak exactlymax, OOM/kill0/restart0, unchanged6-day-oldStartedAt and full containmentPASS. RSS152,690,688/PSS152,682,496 are almost equal: shared-page double counting hypothesis is NOT proven. Actual bug is comparing resident mappings to kernel charge ownership; Linux documents these different metrics. Historicalmaxevents112 remain visible, not reset or hidden.
+- Self-heal1 records rawRSS unchanged while enforcing kernelcurrent/peak<=unchangedDocker/kernelmax, OOM0, complete exact counters and2GiBOS headroom. Original RSS guard/tests remain unchanged and still fail their original over-RSS fixture; add separate kernel-accounting regressions, never relabel charge asRSS. Full586fresh-home testsPASS41.293s, no privatefiles/realkeys/VM. New readonly-load-02 requires exact failed01 AND diagnosis manifests; no replay/counter reset. All response,62MD5/Auth/2seq/3exceptions/552+roles/73Storage/112HBA and hard stops unchanged. No config/limit/VM/production write. Continue only under standard bounded RESUME.
+
+## Current continuation: read-only P8 accounting diagnosis under RESUME
+
+- Latest continuous-run goal releases low-risk read-only/offline tooling diagnosis under the standard two-self-heal/third-failure stop, not another approval for every step. Diagnose the preserved P8 memory preflight before any change/retry: exact container cgroup.current/peak/events/limit, smaps_rollup RSS/PSS and state only, full containment. No limit/configuration/VM write, load replay or secret read. Existing failure journal/hashes/counters remain. Any genuine security/data mismatch or three same-gate failures STOP; no invented PASS. Previous proposed owner-review hold below is historical after this continuation, not an extra owner gate for read-only diagnosis. OCI refresh still failed once; no repeated refresh/window or API/SSH prompt. Production/provider/DNS/IAM/secrets/paid/cutover holds unchanged.
+
+## 26 October P8 initial memory preflight STOP — owner review before native retry
+
+- Unique readonly-load-01 USED/FAIL `ContainerMemoryBudgetExceeded_Abort`, manifest `8c89ba466ce78bac5cc22c1755bf169878b73b25bc8a608914f5da15cc885da2`. Baseline meta summed processRSS152,690,688 exceeds134,217,728configured limit; OSavailable9,410,158,592. SumRSS can double-count shared pages, so genuine cgroup overrun/OOM is NOT established.50-user load never started, p95 unavailable. Full62MD5/Auth/2seq/3exceptions/552+2queue roles/73Storage/FRESH112HBA PASS after failure. Preserve evidence, no native retry/limit/config/assertion change/phase advance. Proposed read-only cgroup/Rss/Pss diagnosis needs owner review; see P8 memory-stop report. No data/security mismatch observed.
+- G3 CLOSED, P7 scoped email/Auth+Storage PASS; Google/real SMTP remain deferred. P8 backup/restore/reverse-sync and P9prep incomplete. Do not fabricate final signoff. OCI refresh failed once; all remaining owner-only actions batched in report, no fresh browser/SSH prompt. Production/DNS/providers/IAM/secrets/paid resources/cutover unchanged, exact YES CUTOVER absent.
+
 ## 26 October P7 scoped staging PASS — P8 safe work released
 
 - Final Auth03 PASS and read-only Storage73signed-byte checks/73anon+73unrelated-userdenials PASS, native manifest `f0c38ace30f2dc3dc87e2704567014706afb51ed3be60e37b364e721477c3ffe`; full62MD5/Auth/2seq/3exceptions/552+2roles/73Storage/FRESH112HBA PASS. No named-owner object exists in this snapshot (positive owner reads0), do not fabricate coverage. See scoped P7 signoff. No Auth slot may replay. Owner's latest OAuth-prepared/no-provider-change order permits safe P8 work while real Google/SMTP release proof remains deferred.

@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-capabilities-containment-intent.json",
+      "sha256": "6cae53f042e26097767b357097d6a3ac2581eb19e3c676cc02b802cefa81bbda"
+    },
+    {
+      "name": "01-capabilities-containment-result.json",
+      "sha256": "0262d2ac720489fef33e73195e9add8cf0bb15e886d96aef257e5398ed4ab729"
+    },
+    {
+      "name": "result.json",
+      "sha256": "ca9f89428bb29064b20cf54bb1004572c9c1121abb24ddc7ac2115f1b045c11b"
+    }
+  ],
+  "version": 1
+}

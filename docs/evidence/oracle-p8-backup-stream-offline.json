@@ -1,0 +1,44 @@
+{
+  "status": "OFFLINE_PRIMITIVES_PASS_RUNTIME_UNPROVEN",
+  "nativeDeployment": false,
+  "realAgeEncryptionTest": false,
+  "backupUpload": false,
+  "restoreProof": false,
+  "cloudRequests": 0,
+  "vmWrites": 0,
+  "realKeysReadOrGenerated": 0,
+  "customerDataRead": false,
+  "focusedTests": 10,
+  "fixtureOnly": true,
+  "coverage": [
+    "fixed staging app and queue snapshot dump commands",
+    "all owners ACLs schemas and encrypted globals retained",
+    "storage scoped away from Caddy and env files",
+    "public recipient validation rejects private identities and unsafe custody",
+    "exclusive output refuses overwrite before producer spawn",
+    "producer failure cannot be hidden by successful downstream consumer",
+    "stderr never printed; only byte count and SHA256 prefix",
+    "early successful consumer cannot hide incomplete verification input",
+    "timeouts and missing age binary reap owned children",
+    "timed-out grandchild killed after parent already exited zero",
+    "ciphertext header required even after zero exit codes",
+    "per-artifact exact-byte ceiling cannot exceed eight GB"
+  ],
+  "retainedOfflineFailure": {
+    "kind": "one focused six-test invocation failed with TypeError",
+    "cause": "local feed dictionary shadowed by function of the same name",
+    "repair": "distinct feed_state and feed_private_input names; explicit completeness guard",
+    "assertionsOrTimeoutsChangedToPass": false,
+    "failureOutput": "original tool transcript; not falsely claimed as a locally sealed log"
+  },
+  "unimplementedGates": [
+    "owner public recipient and approved offline restore-key mechanism",
+    "real age pipeline validation on approved protected data",
+    "consistent database storage snapshot orchestration",
+    "authenticated exact OCI budget and access audit",
+    "cloud uploader read-back and generation commit marker",
+    "automated retention and timers",
+    "full encrypted restore and reverse-sync"
+  ],
+  "phaseComplete": false
+}

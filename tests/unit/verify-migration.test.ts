@@ -35,3 +35,17 @@ it("requires exact table/Auth/sequence/schema/storage equality and complete cove
   const uncovered = structuredClone(source); uncovered.tables = uncovered.tables.filter(row => row.name !== "auth.mfa_factors");
   expect(compareMigration(uncovered, uncovered).status).toBe("FAIL");
 });
+
+it("rejects changed Storage SQL metadata even when every object byte and SHA-256 still matches", () => {
+  const source = manifest();
+  const target = structuredClone(source);
+  // Public synthetic fingerprints, not edited production/golden evidence:
+  // a re-upload may preserve bytes while assigning different version metadata.
+  const objects = target.tables.find(row => row.name === "storage.objects");
+  if (!objects) throw new Error("Required Storage table fixture missing");
+  objects.md5 = "e".repeat(32);
+  expect(target.storage).toEqual(source.storage);
+  const result = compareMigration(source, target);
+  expect(result.status).toBe("FAIL");
+  expect(result.failures).toContain("table:storage.objects");
+});

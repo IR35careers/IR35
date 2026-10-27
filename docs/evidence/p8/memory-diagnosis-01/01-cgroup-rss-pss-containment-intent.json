@@ -1,0 +1,4 @@
+{
+  "operation": "cgroup-rss-pss-containment",
+  "readOnly": true
+}

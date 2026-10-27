@@ -1,0 +1,17 @@
+{
+  "artifacts": [
+    {
+      "name": "01-load-memory-edge-containment-intent.json",
+      "sha256": "ed30551ee969aae9c31cc79edae2fc20e5219a5a71a89c15b097c118676fbec7"
+    },
+    {
+      "name": "01-load-memory-edge-containment-result.json",
+      "sha256": "b202b906f1abb275411f2116941df79017090494c78fc24c47a8305c27d0ad20"
+    },
+    {
+      "name": "result.json",
+      "sha256": "93341322ed8934040e2933fd7e81a3bc833b1e21f6280e4702baad5176e09359"
+    }
+  ],
+  "version": 1
+}
