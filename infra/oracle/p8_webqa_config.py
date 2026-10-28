@@ -29,6 +29,12 @@ class ConfigError(RuntimeError):
     """Fixed codes only; never embed a URL, password or configuration value."""
 
 
+def source_sha(value):
+    if type(value) is not str or not re.fullmatch('[a-f0-9]{40}', value):
+        raise ConfigError('ExactAttestedQaSourceShaRequired')
+    return value
+
+
 def require_compose(version):
     # raw env_file (2.30+) preserves exported subject quotes/$/# verbatim.
     match = re.fullmatch(r'v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:[-+][A-Za-z0-9_.-]+)?', version.strip()) if type(version) is str else None
@@ -46,10 +52,11 @@ def database_name(pristine):
     return target
 
 
-def assert_owned_database(pristine, target, comment, expected_comment, connections):
+def assert_owned_database(pristine, target, comment, expected_comment, connections, *, expected_source_sha=BUILD_SHA):
+    expected_source_sha = source_sha(expected_source_sha)
     if (target != database_name(pristine) or comment != expected_comment
             or type(expected_comment) is not str
-            or not re.fullmatch('ir35-p8-webqa01:' + BUILD_SHA + ':[a-f0-9]{64}', expected_comment)
+            or not re.fullmatch('ir35-p8-webqa01:' + expected_source_sha + ':[a-f0-9]{64}', expected_comment)
             or connections != '0'):
         raise ConfigError('ExactOwnedDisconnectedQaDatabaseRequired_NoDrop')
 
@@ -66,9 +73,10 @@ def environment_path(service):
     return '/opt/ir35/.env.p8-webqa01-' + service
 
 
-def image_pair(proof):
+def image_pair(proof, *, expected_source_sha=BUILD_SHA):
     """Additional shape checks; NOT a substitute for verifying the sealed proof."""
-    if (type(proof) is not dict or proof.get('status') != 'PASS' or proof.get('sourceSHA') != BUILD_SHA
+    expected_source_sha = source_sha(expected_source_sha)
+    if (type(proof) is not dict or proof.get('status') != 'PASS' or proof.get('sourceSHA') != expected_source_sha
             or proof.get('runtimeDeployed') is not False or type(proof.get('newOCIResources')) is not int
             or proof.get('newOCIResources') != 0 or type(proof.get('newSecrets')) is not int
             or proof.get('newSecrets') != 0 or proof.get('cutover') is not False
@@ -76,7 +84,7 @@ def image_pair(proof):
             or proof.get('post', {}).get('originalContainersUnchanged') is not True
             or proof.get('post', {}).get('fullContainment', {}).get('status') != 'PASS'):
         raise ConfigError('ExactNativeImageAndContainmentProofRequired')
-    result = {'sourceSHA': BUILD_SHA}
+    result = {'sourceSHA': expected_source_sha}
     expected = {
         'web': {'next': '16.4.3', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'},
         'worker': {'exports': ['runWebMockWorker', 'setupWebMockQueue', 'webMockOwnerOptions'],
@@ -84,7 +92,7 @@ def image_pair(proof):
     for kind in ('web', 'worker'):
         row = proof.get(kind, {})
         if (row.get('status') != 'PASS' or row.get('architecture') != 'linux/arm64'
-                or row.get('sourceSHA') != BUILD_SHA or row.get('nonroot') is not True
+                or row.get('sourceSHA') != expected_source_sha or row.get('nonroot') is not True
                 or row.get('runtimeDeployed') is not False or row.get('networkNoneProbe') is not True
                 or row.get('probe') != expected[kind]
                 or not re.fullmatch(r'sha256:[a-f0-9]{64}', row.get('image', ''))):
@@ -115,14 +123,15 @@ def queue_uri(value, role):
     return value
 
 
-def environments(base, auth_profile, values, old_web, owner, producer, pristine, images, storage_migrations):
+def environments(base, auth_profile, values, old_web, owner, producer, pristine, images, storage_migrations, *, expected_source_sha=BUILD_SHA):
     """Use only existing Oracle-staging credentials; no random/secrets generation.
 
     auth_profile is the output of the unchanged, source-bound P7 mapper. The
     caller supplies the source migration list only after snapshot verification.
     """
     target = database_name(pristine)
-    if set(images) != {'sourceSHA', 'web', 'worker'} or images['sourceSHA'] != BUILD_SHA:
+    expected_source_sha = source_sha(expected_source_sha)
+    if set(images) != {'sourceSHA', 'web', 'worker'} or images['sourceSHA'] != expected_source_sha:
         raise ConfigError('AttestedQaImagesRequired')
     if (not storage_migrations or type(storage_migrations[-1].get('name')) is not str
             or not storage_migrations[-1]['name'] or not re.fullmatch(r'[A-Za-z0-9_.-]+', storage_migrations[-1]['name'])):
@@ -159,7 +168,7 @@ def environments(base, auth_profile, values, old_web, owner, producer, pristine,
                       'MP_SMTP_BIND_ADDR': '0.0.0.0:1025', 'MP_UI_BIND_ADDR': '0.0.0.0:8025'}
     common = {'APPLY_RUNNER': 'mock', 'IR35_STAGING': 'true', 'APPLICATION_WORKER_ACCEPT_JOBS': 'false',
         'APPLICATION_WORKER_CONCURRENCY': '1', 'IR35_READ_ONLY': 'false', 'IR35_SCHEDULER_ENABLED': 'false',
-        'IR35CAREERS_APP_URL': 'https://staging.ir35careers.com', 'IR35_BUILD_SHA': BUILD_SHA,
+        'IR35CAREERS_APP_URL': 'https://staging.ir35careers.com', 'IR35_BUILD_SHA': expected_source_sha,
         'APPLICATION_WORKER_SECRET': old_web['APPLICATION_WORKER_SECRET'],
         'IR35_MOCK_WEB_ENABLED': 'true', 'IR35_MOCK_WEB_JOB_IDS': ','.join(JOBS), 'QUEUE_DB_ALLOWED_HOSTS': 'db'}
     result['web'] = common | {'NEXT_PUBLIC_SUPABASE_URL': 'https://staging.ir35careers.com/supabase',
@@ -207,14 +216,15 @@ def gateway(original):
     return result
 
 
-def compose(images, pins):
+def compose(images, pins, *, expected_source_sha=BUILD_SHA):
     """Private fixture only. Worker has an explicit profile; never auto-start it.
 
     No Caddy/public-edge changes, ports, host networking or inherited aliases.
     The caller must still verify existing Docker network Internal=true, image
     identity and available memory; configured limits are not fit/load evidence.
     """
-    if (images.get('sourceSHA') != BUILD_SHA or set(images) != {'sourceSHA', 'web', 'worker'}
+    expected_source_sha = source_sha(expected_source_sha)
+    if (images.get('sourceSHA') != expected_source_sha or set(images) != {'sourceSHA', 'web', 'worker'}
             or any(not re.fullmatch(r'sha256:[a-f0-9]{64}', images.get(k, '')) for k in ('web', 'worker'))
             or pins.get('storage', {}).get('image') != STORAGE_IMAGE):
         raise ConfigError('VerifiedImmutableQaImagesAndStorageRequired')
@@ -226,7 +236,7 @@ def compose(images, pins):
             raise ConfigError('PinnedArmBackendImageRequired')
         path = environment_path(name)
         service = {'image': image, 'platform': 'linux/arm64', 'container_name': container_name(name),
-            'labels': {'ir35.qa': PROJECT, 'ir35.image-source': BUILD_SHA},
+            'labels': {'ir35.qa': PROJECT, 'ir35.image-source': expected_source_sha},
             'restart': 'no', 'user': '1002:1002', 'read_only': True, 'mem_limit': str(LIMITS[name]) + 'm',
             'pids_limit': 256 if name == 'worker' else 128, 'cap_drop': ['ALL'],
             'security_opt': ['no-new-privileges:true'], 'logging': {'driver': 'none'}, 'networks': ['backend'],
@@ -257,7 +267,7 @@ def compose(images, pins):
         result['services'][name] = service
     result['services']['templates'] = {
         'image': images['web'], 'platform': 'linux/arm64', 'container_name': container_name('templates'),
-        'labels': {'ir35.qa': PROJECT, 'ir35.image-source': BUILD_SHA}, 'restart': 'no', 'user': '1002:1002',
+        'labels': {'ir35.qa': PROJECT, 'ir35.image-source': expected_source_sha}, 'restart': 'no', 'user': '1002:1002',
         'read_only': True, 'mem_limit': '96m', 'pids_limit': 32, 'cap_drop': ['ALL'],
         'security_opt': ['no-new-privileges:true'], 'logging': {'driver': 'none'}, 'networks': ['backend'],
         'volumes': [environment_path('templates-json') + ':/run/ir35/.env.p8-webqa01-templates:ro'],

@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 28 October new QA-edge CI failure — observability repair1, native HOLD
+
+- Exactdcfc344:10hostedSUCCESS/oldSDK7PASS, new synthetic QAedgeFAIL+cleanupPASS, seal f35b2439. CLI omitted details, root cause UNPROVEN; originalfailure retained. Repair1 exports full redacted cases/fixedsteps/stack filename-function-line, no rawexceptions/locals or auth/assertion/timeout changes. Same gate count; third failureSTOP, no reset.684fresh-home helpersPASS/no privatefiles/VM. Local verified Caddyadapt/validatePASS is not Linux/Docker/VM proof. New explicit source binding preserves historical679defaults/oldslots and requires all nested proofs equal caller-attested SHA; not an attestation substitute. NO native action until exacthostedgreen AND complete bounded QA controller. Backup owner batch/P8incomplete/P9NO-GO/all cutover holds remain.
+
 ## 28 October QA transport/private edge source verified — NOT activated
 
 - Source-only local CONNECT relay preserves actual browser TLS/cookies/Realtime through an attested owned SSH target; never mock Auth/app responses or disable TLS. New private8443 Caddy plan reuses readonly certificates/no ACME/no ports; separate clone-bound Realtime has unique tenant/alias/slot and blocked admin routes.1297unit/199legacy/strictTS/fullLint and678fresh-home helpersPASS; original shutdown/type failures retained. CI adds a stub-only real-Caddy route/Bearer test, not a native fixture PASS. No VM/image/env/secret/native slot changed. Complete bounded create/test/cleanup controller, source-bound new image, real UI/CDC/mock-callback/restart and original fullcontainment/HBA112 remain mandatory BEFORE activation. Never replay old slots, filter the extra clone out of baseline, or infer a new owner approval. P8incomplete/P9NO-GO/backup owner batch unchanged/exactYES CUTOVER absent.

@@ -28,6 +28,8 @@ ROOT = Path('/opt/ir35')
 
 
 class Fixture:
+    source_sha = config.BUILD_SHA  # Historical default; new controller passes an attested image-source SHA.
+
     def __init__(self, data, runtime, store):
         # Constructed only by the future journalled controller after original
         # full containment and custody checks. No service or clone starts here.
@@ -37,8 +39,9 @@ class Fixture:
         self.pristine = self.recovery.database
         self.target = config.database_name(self.pristine)
         self.source = self.recovery.source()
-        self.images = config.image_pair(data['webQaImages'])
-        self.annotation = 'ir35-p8-webqa01:' + config.BUILD_SHA + ':' + MIGRATION_SHA256
+        self.source_sha = config.source_sha(data.get('qaSourceSHA', config.BUILD_SHA))
+        self.images = config.image_pair(data['webQaImages'], expected_source_sha=self.source_sha)
+        self.annotation = 'ir35-p8-webqa01:' + self.source_sha + ':' + MIGRATION_SHA256
         self.database_intent = False
         self.files = []
         self.storage_records = []
@@ -187,10 +190,10 @@ class Fixture:
         auth, templates, subjects, projection = auth_profile.configure(base['auth'], handoff, config.TEMPLATE_HOST)
         environments = config.environments(base, auth, values, private_env(ROOT / '.env.p5-web'),
             private_env(ROOT / '.env.p6-queue-owner'), private_env(ROOT / '.env.p6-queue-producer'),
-            self.pristine, self.images, self.source['storageMigrations'])
+            self.pristine, self.images, self.source['storageMigrations'], expected_source_sha=self.source_sha)
         original_gateway = self.runtime['kong_config'](values['ANON_KEY'], values['SERVICE_ROLE_KEY'])
         gateway = config.gateway(original_gateway)
-        plan = config.compose(self.images, self.data['p4']['pins'])
+        plan = config.compose(self.images, self.data['p4']['pins'], expected_source_sha=self.source_sha)
         # Optional complete private-edge/Realtime plan. No old/global alias or
         # edge file is retargeted. Caller MUST verify the actual internal Docker
         # gateway and readonly certificate custody before choosing this plan.
@@ -243,7 +246,7 @@ class Fixture:
             return {'status': 'PASS', 'databaseAbsent': True, 'dropExecuted': False}
         comment = recovery.query("SELECT coalesce(shobj_description(oid,'pg_database'),'') FROM pg_database WHERE datname=" + quoted + ';', 'postgres').strip()
         connected = recovery.query('SELECT count(*) FROM pg_stat_activity WHERE datname=' + quoted + ';', 'postgres').strip()
-        config.assert_owned_database(self.pristine, self.target, comment, self.annotation, connected)
+        config.assert_owned_database(self.pristine, self.target, comment, self.annotation, connected, expected_source_sha=self.source_sha)
         self.store.put(stage, 'drop-intent.json', json.dumps({'database': self.target, 'annotation': self.annotation,
             'connections': 0, 'ownedDisposableOnly': True}).encode())
         recovery.command(recovery.base + ['psql', '-XqAt', '-v', 'ON_ERROR_STOP=1', '-U', 'supabase_admin', '-d', 'postgres', '-f', '-'],

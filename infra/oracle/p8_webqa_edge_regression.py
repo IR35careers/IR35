@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import time
+import traceback
 import urllib.error
 from immutable_artifacts import Store
 from p8_webqa_edge import caddyfile, CERTIFICATE
@@ -52,18 +53,25 @@ def run(root):
         if command(['docker', 'network', 'ls', '--filter', 'name=^' + network + '$', '--format', '{{.Name}}']).strip(): raise RuntimeError('SyntheticNetworkExists_NoReplay')
         for name in names:
             if command(['docker', 'ps', '-a', '--filter', 'name=^/' + name + '$', '--format', '{{.Names}}']).strip(): raise RuntimeError('SyntheticContainerExists_NoReplay')
+        result['step'] = 'pull-pinned-synthetic-images'
         for image in (CADDY, NODE): command(['docker', 'pull', image], timeout=180)
+        result['step'] = 'hash-public-fixture-password'
         bcrypt = command(['docker', 'run', '--rm', '-i', '--network', 'none', '--log-driver', 'none', CADDY,
                           'caddy', 'hash-password', '--algorithm', 'bcrypt'], input=(PASSWORD + '\n').encode()).strip()
+        result['step'] = 'create-internal-synthetic-network'
         command(['docker', 'network', 'create', '--internal', '--label', LABEL, network]); network_created = True
         net = json.loads(command(['docker', 'network', 'inspect', network]))[0]
         if not net['Internal'] or net['Containers']: raise RuntimeError('EmptyPrivateSyntheticNetworkRequired')
+        result['step'] = 'synthetic-config'
         gateway = net['IPAM']['Config'][0]['Gateway']
         store.put(stage, 'Caddyfile', stub_config(gateway, bcrypt).encode()); store.put(stage, 'stub.mjs', STUB.encode())
         validate = ['docker', 'run', '--rm', '--network', 'none', *common, '--volume', str(stage / 'Caddyfile') + ':/fixture.caddy:ro', CADDY, 'caddy']
+        result['step'] = 'caddy-adapt'
         adapted = json.loads(command(validate + ['adapt', '--config', '/fixture.caddy', '--adapter', 'caddyfile']))
+        result['step'] = 'caddy-validate'
         command(validate + ['validate', '--config', '/fixture.caddy', '--adapter', 'caddyfile'])
         store.put(stage, 'adapted.json', json.dumps(redact_adapted(adapted, {bcrypt: '<synthetic-bcrypt>', TOKEN: '<synthetic-gate>'}), sort_keys=True).encode())
+        result['step'] = 'start-synthetic-containers'
         for index, image in enumerate((NODE, CADDY)):
             args = ['docker', 'run', '-d', '--name', names[index], '--network', network, '--label', LABEL, *common]
             if index == 0:
@@ -73,6 +81,7 @@ def run(root):
         inspect = json.loads(command(['docker', 'inspect', *created]))
         if any(row['HostConfig'].get('PortBindings') or set(row['NetworkSettings']['Networks']) != {network} for row in inspect): raise RuntimeError('SyntheticIsolationFailed')
         address = inspect[1]['NetworkSettings']['Networks'][network]['IPAddress']
+        result['step'] = 'synthetic-readiness'
         deadline = time.monotonic() + 20
         while True:
             try:
@@ -80,6 +89,7 @@ def run(root):
             except (urllib.error.URLError, TimeoutError, ConnectionError): pass
             if time.monotonic() > deadline: raise RuntimeError('SyntheticEdgeReadinessFailed')
             time.sleep(1)
+        result['step'] = 'actual-route-cases'
         observer = Observer(store, stage); call = lambda method, path, headers: request(address, method, path, headers)
         sdk_cases(observer, call, TOKEN)
         basic = 'Basic ' + base64.b64encode(('ir35:' + PASSWORD).encode()).decode()
@@ -96,7 +106,11 @@ def run(root):
                       status='PASS' if all(row['passed'] for row in observer.records) else 'FAIL')
     except Exception as error:
         result['errorClass'] = type(error).__name__
-        if type(error) is RuntimeError and re.fullmatch('[A-Za-z][A-Za-z0-9_]{0,120}', str(error)):
+        result['failureFrames'] = [{'file': Path(frame.filename).name, 'function': frame.name, 'line': frame.lineno}
+                                   for frame in traceback.extract_tb(error.__traceback__)]
+        safe = {'SyntheticNetworkExists_NoReplay', 'SyntheticContainerExists_NoReplay', 'EmptyPrivateSyntheticNetworkRequired',
+                'SyntheticIsolationFailed', 'SyntheticEdgeReadinessFailed', 'SyntheticReadFailure'}
+        if type(error) is RuntimeError and (str(error) in safe or re.fullmatch('PrivateDockerCommandFailed_[0-9]+', str(error))):
             result['code'] = str(error)
     finally:
         try:
@@ -115,5 +129,8 @@ def run(root):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('--root', required=True)
     result = run(parser.parse_args().root)
-    print(json.dumps({key: result[key] for key in ('status', 'scope', 'cleanup', 'manifestSHA256')}))
+    # Complete public synthetic result, including redacted cases and safe stack
+    # locations, survives even if the ephemeral CI filesystem is discarded.
+    # No raw exception messages, headers, command output or real values.
+    print(json.dumps(result, sort_keys=True))
     if result['status'] != 'PASS': raise SystemExit(1)

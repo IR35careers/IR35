@@ -42,3 +42,13 @@ class QaEdgeCiTests(unittest.TestCase):
         self.assertIn('sdk_gate_private.py --mode baseline', body)
         self.assertIn('sdk_gate_private.py --mode fixed', body)
         self.assertIn('p8_webqa_edge_regression.py --root', body)
+
+    def test_unexpected_failure_keeps_code_location_not_its_message_and_cli_keeps_complete_result(self):
+        with tempfile.TemporaryDirectory() as root, patch.object(gate, 'command', side_effect=ValueError('fixture-sensitive-value-must-stay-private')):
+            result = gate.run(root)
+            self.assertEqual(result['status'], 'FAIL'); self.assertEqual(result['errorClass'], 'ValueError')
+            self.assertTrue(result['failureFrames'])
+            self.assertNotIn('fixture-sensitive-value', json.dumps(result))
+            self.assertNotIn('code', result)
+        source = Path(gate.__file__).read_text()
+        self.assertIn('print(json.dumps(result, sort_keys=True))', source)
