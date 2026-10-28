@@ -154,6 +154,7 @@ class QaConfigurationTests(unittest.TestCase):
             self.assertEqual(env['APPLICATION_WORKER_SECRET'], before[3]['APPLICATION_WORKER_SECRET'])
             self.assertNotIn('STRIPE_SECRET_KEY', env); self.assertNotIn('CRON_SECRET', env)
         self.assertEqual(web['SUPABASE_INTERNAL_URL'], 'http://ir35-p8-webqa01-kong:8000')
+        self.assertEqual(web['IR35_STAGING_HEALTH_FIXTURE'], 'webqa01')
         self.assertEqual(worker['IR35_MOCK_WEB_INTERNAL_VHOST'], 'staging.ir35careers.com')
         self.assertEqual(worker['IR35_MOCK_WEB_INTERNAL_HOST'], 'ir35-p8-webqa01-web')
 

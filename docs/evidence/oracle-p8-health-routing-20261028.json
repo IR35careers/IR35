@@ -1,0 +1,21 @@
+{
+  "status": "PASS_SOURCE_ONLY_NOT_DEPLOYED",
+  "scope": "Owned writable QA health-target isolation",
+  "newUnitTests": 25,
+  "focused": { "files": 3, "passed": 54, "failed": 0, "seconds": 2.50 },
+  "release": { "strictTypecheck": "PASS", "fullZeroWarningLint": "PASS", "unitFiles": 173, "unitPassed": 1249, "unitFailed": 0, "unitSeconds": 178.32, "legacyPassed": 199, "legacyFailed": 0 },
+  "pythonConfigurationRegressions": { "passed": 16, "failed": 0, "seconds": 0.136 },
+  "normalRuntimeFixedTargetsUnchanged": true,
+  "isolatedModeMissingOrInvalidMakesZeroRequests": true,
+  "newTargetsFixedToOwnedQaServicesOnly": true,
+  "redirectsForbidden": true,
+  "rawConfigurationOrErrorsPrinted": false,
+  "envNamesAdded": ["IR35_STAGING_HEALTH_FIXTURE"],
+  "nativeImageContainsThisRuntimeChange": false,
+  "newNativeImageRequiredBeforeActivation": true,
+  "vmCalls": 0,
+  "nativeSlotsConsumed": 0,
+  "productionDnsProviderIamNetworkSecretChanges": false,
+  "phaseComplete": false,
+  "cutover": false
+}
