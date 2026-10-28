@@ -18,7 +18,7 @@ def bundle():
     source += "module=types.ModuleType('p8_app_readiness');sys.modules['p8_app_readiness']=module\nexec(" + repr(
         'COLUMNS=' + repr(capabilities.COLUMNS) + '\nFUNCTIONS=' + repr(capabilities.FUNCTIONS)
         + '\nSQL=' + repr(capabilities.SQL) + '\n' + inspect.getsource(capabilities.readiness)) + ',module.__dict__)\n'
-    for name in ('p8_upgrade_guest', 'p8_webqa_config', 'p8_webqa_guest'):
+    for name in ('p8_upgrade_guest', 'p8_webqa_config', 'p8_webqa_edge', 'p8_webqa_realtime', 'p8_webqa_guest'):
         source += 'module=types.ModuleType(' + repr(name) + ');sys.modules[' + repr(name) + ']=module\nexec(' + repr(
             (schema.REPO / 'infra/oracle' / (name + '.py')).read_text()) + ',module.__dict__)\n'
     compile(source, '<p8-private-webqa-dependency-graph>', 'exec')

@@ -153,7 +153,8 @@ class Fixture:
     def private_file(self, name, body):
         if type(body) is not bytes or len(body) > 4 * 1024 * 1024:
             raise RecoveryError('BoundedPrivateQaBytesRequired')
-        path = Path(config.environment_path(name))
+        extra = {key: ROOT / ('.env.p8-webqa01-' + key) for key in ('caddy', 'caddyfile', 'realtime')}
+        path = extra[name] if name in extra else Path(config.environment_path(name))
         if path.parent != ROOT:
             raise RecoveryError('QaEnvironmentDestinationRefused')
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
@@ -166,7 +167,7 @@ class Fixture:
         self.files.append({'name': path.name, 'sha256': digest(body), 'mode': '600', 'owner': 'ir35'})
         return path
 
-    def write_configuration(self, stage):
+    def write_configuration(self, stage, *, private_gateway=None):
         from web_edge_guest import private_env
         if (not self.database_intent or not self.before or not self.upgrade_verified
                 or self.recovery.database != self.target or len(self.storage_records) != 73
@@ -187,13 +188,32 @@ class Fixture:
         environments = config.environments(base, auth, values, private_env(ROOT / '.env.p5-web'),
             private_env(ROOT / '.env.p6-queue-owner'), private_env(ROOT / '.env.p6-queue-producer'),
             self.pristine, self.images, self.source['storageMigrations'])
+        original_gateway = self.runtime['kong_config'](values['ANON_KEY'], values['SERVICE_ROLE_KEY'])
+        gateway = config.gateway(original_gateway)
+        plan = config.compose(self.images, self.data['p4']['pins'])
+        # Optional complete private-edge/Realtime plan. No old/global alias or
+        # edge file is retargeted. Caller MUST verify the actual internal Docker
+        # gateway and readonly certificate custody before choosing this plan.
+        if private_gateway is not None:
+            import p8_webqa_edge as edge
+            import p8_webqa_realtime as realtime
+            edge.gateway_source(private_gateway)
+            environments['realtime'] = realtime.environment(base['realtime'], self.pristine)
+            plan = realtime.add_to_compose(plan, self.data['p4']['pins']['realtime'])
+            plan = edge.add_to_compose(plan, self.data['p4']['pins']['caddy'])
+            gateway = realtime.gateway(gateway, original_gateway)
+            old_caddy = private_env(ROOT / '.env.p5-caddy')
+            if (old_caddy.get('STAGING_BASIC_HASH') != values['STAGING_BASIC_HASH']
+                    or not re.fullmatch('[a-f0-9]{64}', old_caddy.get('STAGING_GATE_TOKEN', ''))):
+                raise RecoveryError('ExistingExactStagingGateCredentialsRequired')
+            environments['caddy'] = {key: old_caddy[key] for key in ('STAGING_BASIC_HASH', 'STAGING_GATE_TOKEN')}
+            self.private_file('caddyfile', edge.caddyfile(private_gateway).encode())
+            environments['web'].update(IR35_WORKER_HEALTH_ENABLED='true', IR35_REALTIME_HEALTH_ENABLED='true')
         for name, environment in environments.items():
             self.private_file(name, self.runtime['env_text'](environment).encode())
         self.private_file('subjects', auth_profile.subject_env(subjects).encode())
         self.private_file('templates-json', json.dumps(templates, ensure_ascii=False).encode())
-        gateway = config.gateway(self.runtime['kong_config'](values['ANON_KEY'], values['SERVICE_ROLE_KEY']))
         self.private_file('kong-config', json.dumps(gateway).encode())
-        plan = config.compose(self.images, self.data['p4']['pins'])
         public_plan = ROOT / 'p8-webqa01-compose.json'
         descriptor = os.open(public_plan, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
         try:
@@ -207,7 +227,7 @@ class Fixture:
         subject_proof = config.subjects_preserved(parsed, subjects)
         result = {'status': 'PASS', 'environmentFiles': self.files, 'composeSHA256': digest(public_plan.read_bytes()),
             'authProjection': projection, 'credentialValuesChanged': 0, 'servicesStarted': 0, 'workerSetupRun': False,
-            'publicPorts': 0, 'realtimeConfigured': False, 'fullQaClaimed': False,
+            'publicPorts': 0, 'realtimeConfigured': private_gateway is not None, 'fullQaClaimed': False,
             'composeVersion': self.compose_version, 'subjectsPreserved': subject_proof}
         self.store.put(stage, 'configuration.json', json.dumps(result, sort_keys=True).encode())
         return result

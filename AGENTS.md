@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 28 October QA transport/private edge source verified — NOT activated
+
+- Source-only local CONNECT relay preserves actual browser TLS/cookies/Realtime through an attested owned SSH target; never mock Auth/app responses or disable TLS. New private8443 Caddy plan reuses readonly certificates/no ACME/no ports; separate clone-bound Realtime has unique tenant/alias/slot and blocked admin routes.1297unit/199legacy/strictTS/fullLint and678fresh-home helpersPASS; original shutdown/type failures retained. CI adds a stub-only real-Caddy route/Bearer test, not a native fixture PASS. No VM/image/env/secret/native slot changed. Complete bounded create/test/cleanup controller, source-bound new image, real UI/CDC/mock-callback/restart and original fullcontainment/HBA112 remain mandatory BEFORE activation. Never replay old slots, filter the extra clone out of baseline, or infer a new owner approval. P8incomplete/P9NO-GO/backup owner batch unchanged/exactYES CUTOVER absent.
+
 ## 28 October own-fixture health isolation — SOURCE only, fresh web image required
 
 - New fixed health enum is not an arbitrary URL override. Writable webqa01 must supply the full mock/staging/acceptancefalse/Kong policy or health makes ZERO requests, never original worker/Realtime fallback. Normal runtime targets unchanged.1249unit/199legacy/strictTS/fullLint and16Python config checksPASS; no VM/image/env/secret/phase activation. Existing679dc8c images remain retained but cannot prove this newer runtime code. Complete bounded fixture controller/edge/tunnel/actual UI+Realtime+callback+restart+cleanup first, then a NEW source-bound native web image/journal; never replay image01 or change its hashes. Current helper hardcoded679 binding must be reconciled with that future verified build, not bypassed. All original full-containment/HBA112/backup owner batch/cutover holds remain; no fullP8 PASS.

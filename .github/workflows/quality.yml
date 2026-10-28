@@ -43,6 +43,11 @@ jobs:
           python3 infra/oracle/sdk_gate_private.py --mode baseline --root "$fixture_root" --export "$evidence_root"
           python3 infra/oracle/sdk_gate_private.py --mode fixed --root "$fixture_root" --export "$evidence_root"
           python3 infra/oracle/sdk_gate_proof.py --root "$evidence_root" --attempt 1
+      - name: Verify new private QA edge and app Bearer handoff with synthetic upstreams
+        run: |
+          set -euo pipefail
+          fixture_root=$(mktemp -d)
+          python3 infra/oracle/p8_webqa_edge_regression.py --root "$fixture_root"
 
   oracle-key-safety:
     name: Oracle local key custody tests

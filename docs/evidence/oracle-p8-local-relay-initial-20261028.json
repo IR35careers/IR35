@@ -1,0 +1,18 @@
+{
+  "scope": "OFFLINE_LOOPBACK_SYNTHETIC_ONLY",
+  "status": "FAIL",
+  "gate": "local CONNECT relay shutdown",
+  "observedTests": 37,
+  "passed": 28,
+  "failed": 9,
+  "exactError": "QaLocalRelayConnectionLeak",
+  "cause": "The server.close callback completed before asynchronous socket close notifications; the guard inspected counters too early.",
+  "repairAttempt": 1,
+  "repair": "Await both listener shutdown and every tracked socket close event before checking the unchanged no-leak assertion.",
+  "assertionsRemoved": 0,
+  "timeoutsChanged": 0,
+  "vmCalls": 0,
+  "nativeSlotConsumed": false,
+  "secretsUsed": false,
+  "cutover": false
+}
