@@ -1,5 +1,9 @@
 # IR35Careers engineering instructions
 
+## 28 October QA-edge final repair2 — next same-gate failure STOP
+
+- Two new hosted synthetic-edge failures retained; latest4296/job122853907724 is caddy-adapt Docker255 before cases, cleanupPASS. Final repair2 only aligns CI fixture custody with passing SDK context and captures bounded sanitised synthetic stderr/length/SHA; actual root cause still unproven, not permission to guess/waive.686fresh-home helpersPASS, no VM/JS/runtime/source-data/secret changes. Native Caddy plan still capdropALL/no added capabilities/no publicports. Next hosted gate is third; FAILURE means STOP/preserve/report, no fourth push/replay/new repair/native continuation without explicit owner reopening. Exacthostedgreen+full bounded controller/real UI/CDC/callback/restart/cleanup still required even if PASS. Backup owner batch/P8incomplete/P9NO-GO/exactYEShold unchanged.
+
 ## 28 October new QA-edge CI failure — observability repair1, native HOLD
 
 - Exactdcfc344:10hostedSUCCESS/oldSDK7PASS, new synthetic QAedgeFAIL+cleanupPASS, seal f35b2439. CLI omitted details, root cause UNPROVEN; originalfailure retained. Repair1 exports full redacted cases/fixedsteps/stack filename-function-line, no rawexceptions/locals or auth/assertion/timeout changes. Same gate count; third failureSTOP, no reset.684fresh-home helpersPASS/no privatefiles/VM. Local verified Caddyadapt/validatePASS is not Linux/Docker/VM proof. New explicit source binding preserves historical679defaults/oldslots and requires all nested proofs equal caller-attested SHA; not an attestation substitute. NO native action until exacthostedgreen AND complete bounded QA controller. Backup owner batch/P8incomplete/P9NO-GO/all cutover holds remain.

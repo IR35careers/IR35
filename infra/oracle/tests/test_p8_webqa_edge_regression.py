@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -52,3 +53,26 @@ class QaEdgeCiTests(unittest.TestCase):
             self.assertNotIn('code', result)
         source = Path(gate.__file__).read_text()
         self.assertIn('print(json.dumps(result, sort_keys=True))', source)
+
+    def test_ci_mount_custody_matches_passing_baseline_not_shared_root_defaults(self):
+        with patch.object(gate.os, 'getuid', return_value=1001): flags = gate.common_flags()
+        self.assertEqual(flags[flags.index('--user') + 1], '1001:1001')
+        for path, size in (('/tmp', '16m'), ('/data', '1m'), ('/config', '1m')):
+            self.assertIn(f'{path}:rw,size={size},uid=1001,gid=1001,mode=0700', flags)
+        self.assertIn('--read-only', flags); self.assertIn('--cap-drop', flags)
+        self.assertNotIn('NET_BIND_SERVICE', flags)  # Validation command alone gets the existing CI capability.
+
+    def test_public_synthetic_docker_stderr_is_bounded_and_fixture_credentials_are_removed(self):
+        stderr = (gate.PASSWORD + ' ' + gate.TOKEN + ' Authorization: Bearer fixture-private ' + 'x' * 5000).encode()
+        reply = subprocess.CompletedProcess(['docker', 'run'], 255, stdout=b'', stderr=stderr)
+        with patch.object(gate.subprocess, 'run', return_value=reply):
+            with self.assertRaises(gate.SyntheticDockerError) as caught: gate.command(['docker', 'run'])
+        value = caught.exception.diagnostic
+        self.assertEqual(value['exitCode'], 255); self.assertEqual(value['stderrBytes'], len(stderr))
+        self.assertEqual(len(value['stderrSHA256']), 64); self.assertTrue(value['truncated'])
+        self.assertLessEqual(len(value['syntheticStderr']), 4000)
+        for secret in (gate.PASSWORD, gate.TOKEN, 'fixture-private'): self.assertNotIn(secret, value['syntheticStderr'])
+        with tempfile.TemporaryDirectory() as root, patch.object(gate, 'command', side_effect=caught.exception):
+            result = gate.run(root)
+            self.assertEqual(result['code'], 'PrivateDockerCommandFailed_255')
+            self.assertEqual(result['dockerDiagnostic'], value)

@@ -1,0 +1,27 @@
+{
+  "status": "FAIL",
+  "scope": "HOSTED_SYNTHETIC_CI_ONLY",
+  "sourceSHA": "4296f54697edeeba7d50f2d00d7616ee4cbbd3f1",
+  "jobId": 122853907724,
+  "gateFailureCount": 2,
+  "observabilityRepair": "PASS: step and code location retained",
+  "step": "caddy-adapt",
+  "errorClass": "RuntimeError",
+  "code": "PrivateDockerCommandFailed_255",
+  "failureFrames": [
+    {"file": "p8_webqa_edge_regression.py", "function": "run", "line": 70},
+    {"file": "sdk_gate_private.py", "function": "command", "line": 26}
+  ],
+  "cleanup": "PASS",
+  "manifestSHA256": "5a9021d73b2829bc6ad8230e87d34c8746a5738f1d6480d1f375687115b8d2e8",
+  "rootCause": "Docker adaptation exit identified; underlying stderr was discarded by the reused command wrapper and remains unproven.",
+  "repairAttempt": 2,
+  "lastRepair": "Match the already-passing SDK CI container context: explicit uid/gid0700 tmpfs and its Caddy-only NET_BIND_SERVICE capability; preserve the separate staging plan's zero added capabilities. Retain bounded sanitised public-fixture Docker stderr plus original byte count/SHA256.",
+  "repairHypothesis": "CI container custody/context differs from the already-passing SDK harness. This hypothesis is not asserted as the proven root cause.",
+  "assertionsChanged": 0,
+  "timeoutsChanged": 0,
+  "vmCalls": 0,
+  "nativeSlotsConsumed": 0,
+  "nextFailureMeansStop": true,
+  "cutover": false
+}

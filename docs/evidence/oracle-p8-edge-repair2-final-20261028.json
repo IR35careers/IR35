@@ -1,0 +1,18 @@
+{
+  "scope": "OFFLINE_SYNTHETIC_ONLY",
+  "status": "PASS",
+  "gate": "final repair2 code-propagation and sanitisation regression",
+  "tests": 6,
+  "seconds": 0.138,
+  "includesFinalCodePropagationAssertion": true,
+  "priorFullSuiteTests": 686,
+  "priorFullSuiteManifest": "c932c901d12a4d9b61fbb4b97e677e53dcfec05f91cf32da67cc48e486e44c29",
+  "appOrJsSourceChanged": false,
+  "assertionsRemoved": 0,
+  "timeoutsChanged": 0,
+  "vmCalls": 0,
+  "nativeSlotsConsumed": 0,
+  "hostedThirdGate": "PENDING",
+  "nextFailureMeansStop": true,
+  "cutover": false
+}

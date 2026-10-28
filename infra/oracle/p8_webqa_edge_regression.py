@@ -6,20 +6,52 @@ not certificate/VM readiness or a migration phase PASS.
 """
 import argparse
 import base64
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import time
 import traceback
 import urllib.error
 from immutable_artifacts import Store
 from p8_webqa_edge import caddyfile, CERTIFICATE
-from sdk_gate_private import command, request, CADDY, NODE, PASSWORD, TOKEN
+from sdk_gate_private import request, CADDY, NODE, PASSWORD, TOKEN
 from sdk_gate_config import redact_adapted
 from sdk_gate_observation import Observer, sdk_cases
 
 LABEL = 'ir35.purpose=p8-webqa-edge-regression'
+
+
+class SyntheticDockerError(RuntimeError):
+    def __init__(self, code, stderr):
+        super().__init__('PrivateDockerCommandFailed_' + str(code))
+        # Only this public-fixture-only Docker context uses this projection.
+        # No VM key, env, token, provider or private mount is passed to it.
+        text = stderr.decode(errors='replace')
+        for value in (PASSWORD, TOKEN): text = text.replace(value, '<public-fixture-value>')
+        text = re.sub(r'\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{53}', '<public-fixture-bcrypt>', text)
+        text = re.sub(r'(?i)(Bearer|Basic)\s+[^\s"\']+', r'\1 <redacted>', text)
+        self.diagnostic = {'exitCode': code, 'stderrBytes': len(stderr), 'stderrSHA256': hashlib.sha256(stderr).hexdigest(),
+                           'syntheticStderr': text[:4000], 'truncated': len(text) > 4000}
+
+
+def command(args, *, input=None, timeout=60):
+    if type(args) is not list or not args or args[0] != 'docker': raise RuntimeError('SyntheticDockerOnly')
+    reply = subprocess.run(args, input=input, capture_output=True, timeout=timeout)
+    if reply.returncode: raise SyntheticDockerError(reply.returncode, reply.stderr)
+    return reply.stdout.decode()
+
+
+def common_flags():
+    # Match the already-PASS SDK fixture's owned700 tmpfs mounts, not root-owned
+    # shared1777 defaults. This changes CI fixture custody only, not the VM plan.
+    uid = os.getuid()
+    return ['--read-only', '--memory', '128m', '--pids-limit', '128', '--user', f'{uid}:{uid}',
+            '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--log-driver', 'none', '--restart', 'no',
+            *[argument for path, size in (('/tmp', '16m'), ('/data', '1m'), ('/config', '1m'))
+              for argument in ('--tmpfs', f'{path}:rw,size={size},uid={uid},gid={uid},mode=0700')]]
 STUB = '''import http from 'node:http';
 http.createServer((req,res)=>{res.setHeader('content-type','application/json');
 if(req.url==='/echo-app'){res.end(JSON.stringify({authorization:req.headers.authorization||'',staging:!!req.headers['x-staging-authorization']}));return;}
@@ -45,9 +77,7 @@ def run(root):
     store = Store(root); stage = store.stage('01-owned-edge'); network = 'ir35-p8-edge-regression'
     names = [network + '-stub', network + '-caddy']; created = []; network_created = False
     result = {'status': 'FAIL', 'scope': 'CI_SYNTHETIC_ONLY', 'vmCalls': 0, 'publicPorts': 0, 'realCertificateMounted': False}
-    common = ['--read-only', '--memory', '128m', '--pids-limit', '128', '--user', str(os.getuid()) + ':' + str(os.getgid()),
-              '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--log-driver', 'none', '--restart', 'no',
-              '--tmpfs', '/tmp:rw,size=16m,mode=1777', '--tmpfs', '/data:rw,size=1m,mode=1777', '--tmpfs', '/config:rw,size=1m,mode=1777']
+    common = common_flags()
     try:
         store.put(stage, 'intent.json', json.dumps(result | {'network': network, 'containers': names, 'syntheticOnly': True}).encode())
         if command(['docker', 'network', 'ls', '--filter', 'name=^' + network + '$', '--format', '{{.Name}}']).strip(): raise RuntimeError('SyntheticNetworkExists_NoReplay')
@@ -65,7 +95,8 @@ def run(root):
         result['step'] = 'synthetic-config'
         gateway = net['IPAM']['Config'][0]['Gateway']
         store.put(stage, 'Caddyfile', stub_config(gateway, bcrypt).encode()); store.put(stage, 'stub.mjs', STUB.encode())
-        validate = ['docker', 'run', '--rm', '--network', 'none', *common, '--volume', str(stage / 'Caddyfile') + ':/fixture.caddy:ro', CADDY, 'caddy']
+        validate = ['docker', 'run', '--rm', '--network', 'none', *common, '--cap-add', 'NET_BIND_SERVICE',
+                    '--volume', str(stage / 'Caddyfile') + ':/fixture.caddy:ro', CADDY, 'caddy']
         result['step'] = 'caddy-adapt'
         adapted = json.loads(command(validate + ['adapt', '--config', '/fixture.caddy', '--adapter', 'caddyfile']))
         result['step'] = 'caddy-validate'
@@ -76,7 +107,7 @@ def run(root):
             args = ['docker', 'run', '-d', '--name', names[index], '--network', network, '--label', LABEL, *common]
             if index == 0:
                 args += ['--network-alias', 'qa-edge-stub', '--volume', str(stage / 'stub.mjs') + ':/stub.mjs:ro', image, 'node', '/stub.mjs']
-            else: args += ['--volume', str(stage / 'Caddyfile') + ':/fixture.caddy:ro', image, 'caddy', 'run', '--config', '/fixture.caddy', '--adapter', 'caddyfile']
+            else: args += ['--cap-add', 'NET_BIND_SERVICE', '--volume', str(stage / 'Caddyfile') + ':/fixture.caddy:ro', image, 'caddy', 'run', '--config', '/fixture.caddy', '--adapter', 'caddyfile']
             created.append(command(args).strip())
         inspect = json.loads(command(['docker', 'inspect', *created]))
         if any(row['HostConfig'].get('PortBindings') or set(row['NetworkSettings']['Networks']) != {network} for row in inspect): raise RuntimeError('SyntheticIsolationFailed')
@@ -108,6 +139,9 @@ def run(root):
         result['errorClass'] = type(error).__name__
         result['failureFrames'] = [{'file': Path(frame.filename).name, 'function': frame.name, 'line': frame.lineno}
                                    for frame in traceback.extract_tb(error.__traceback__)]
+        if isinstance(error, SyntheticDockerError):
+            result['dockerDiagnostic'] = error.diagnostic
+            result['code'] = 'PrivateDockerCommandFailed_' + str(error.diagnostic['exitCode'])
         safe = {'SyntheticNetworkExists_NoReplay', 'SyntheticContainerExists_NoReplay', 'EmptyPrivateSyntheticNetworkRequired',
                 'SyntheticIsolationFailed', 'SyntheticEdgeReadinessFailed', 'SyntheticReadFailure'}
         if type(error) is RuntimeError and (str(error) in safe or re.fullmatch('PrivateDockerCommandFailed_[0-9]+', str(error))):
