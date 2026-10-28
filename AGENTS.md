@@ -1,5 +1,10 @@
 # IR35Careers engineering instructions
 
+## 28 October writable QA preparation SOURCE — no native fixture authority inferred
+
+- New p8_webqa_config/guest/bundle preparation is source/tested only, no native slot or activation.664fresh-home testsPASS/no.ir35/privatekeys/VM; one retained synthetic xattr-order FAIL repaired through the same writable fd before sealing400, assertions unchanged. Use a NEW owned clone/private backend and exact679dc8c images; keep original data/services/roles and all holds. No ad-hoc preparation calls: first integrate the bounded full create/test/cleanup controller, image-manifest/network/memory guards, protected edge/tunnel, actual browser/mock callback/restart/Realtime and cleanup. No real acceptance/provider/secret changes.
+- Original HBA112/database-inventory assertions stay EXACT. Run full original containment before creating and after removing QA clone; actual eight clone-role/transport denials while it exists. Never filter/rebaseline/waive that additional database. Realtime/health placeholders are not a passing integration result. P8 incomplete/P9NO-GO, existing backup age/IAM owner batch unchanged and exact YES CUTOVER absent.
+
 ## 27 October P8 native images actual PASS — slot01 USED
 
 - Image-only679dc8c/all11hosted PASS, seal834f7bc0c620e3030c0890db526ad57f0dd85fbc2ab0309078cdcd71f3933b53. Weba0bfd695/worker86e5c87a ARM/nonroot/import-only PASS; original containers/images/restarts unchanged, original full62MD5/Auth/2seq/3exceptions/552+roles/73Storage/FRESH112HBA before+after PASS. No runtime/queue/schema/secret/OCI activation; old images retained. Never replay native-webmock-images-01 or claim writable browser/app/Realtime/restart proof from it. Continue NEW separately owned disposable QA only under RESUME. P8 remains incomplete/P9NO-GO; outstanding backup age/IAM owner batch and all production/provider/DNS/security/cost/cutover holds remain. Exact YES CUTOVER absent.

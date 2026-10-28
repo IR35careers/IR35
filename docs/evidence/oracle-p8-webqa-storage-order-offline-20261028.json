@@ -1,0 +1,15 @@
+{
+  "status": "FAIL_OFFLINE_SYNTHETIC_FIXTURE",
+  "gate": "New writable-QA preparation helper tests",
+  "testsRun": 23,
+  "passed": 22,
+  "errors": 1,
+  "errorType": "PermissionError",
+  "cause": "Storage copy sealed the new file to mode400 before applying extended attributes. A non-root test process correctly cannot modify the attributes then.",
+  "repairAttempt": 1,
+  "repair": "Apply attributes through the same open owned file descriptor before fchmod400. Byte, metadata, mode and replay assertions remain unchanged.",
+  "vmCalls": 0,
+  "nativeQaAttemptConsumed": false,
+  "customerDataReadOrChanged": false,
+  "assertionsOrTimeoutsChanged": false
+}
