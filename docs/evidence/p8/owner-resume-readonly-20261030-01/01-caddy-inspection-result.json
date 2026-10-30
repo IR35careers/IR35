@@ -1,0 +1,26 @@
+{
+  "RestartCount": 0,
+  "adminOff": true,
+  "configChanges": 0,
+  "configSha256": "2a4fad8dd6c35c3708c1d5a382f88dd105475cf54dc5d10425771da19758a49a",
+  "configValuesPrinted": false,
+  "connected": true,
+  "container": "ir35-staging-caddy-1",
+  "exactReadonlyConfigMount": true,
+  "imageId": "sha256:8dbca3525dd8dce671e495665a0eb297a83ec87ee30f373947d0ea93115949db",
+  "persistenceOff": true,
+  "pinned210ReloadOnlyUnsupported": true,
+  "readOnly": true,
+  "responseCasesChecked": false,
+  "state": {
+    "ExitCode": 0,
+    "FinishedAt": "0001-01-01T00:00:00Z",
+    "OOMKilled": false,
+    "Paused": false,
+    "Running": true,
+    "StartedAt": "2026-10-24T12:38:02.864157786Z",
+    "Status": "running"
+  },
+  "status": "PASS",
+  "version": "v2.10.2"
+}

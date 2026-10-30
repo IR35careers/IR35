@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00002-list_buckets-intent",
+  "observation": {
+    "method": "GET",
+    "operation": "list_buckets",
+    "selectorSHA256": "0f7042af5906df851d3e00ae37dbc95e332cd98c887ead0cfa5ee8ea9039ad48"
+  }
+}

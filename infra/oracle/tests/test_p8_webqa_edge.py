@@ -8,6 +8,17 @@ from p8_webqa_config import ConfigError
 
 
 class PrivateQaEdgeTests(unittest.TestCase):
+    def test_auth_errors_have_explicit_error_chain_same_status_headers_and_no_error_detail(self):
+        body = edge.caddyfile('172.18.0.1')
+        error = body[body.index('    handle_errors {'):body.index('    route {\n        @not_tunnel')]
+        self.assertIn('header >Cache-Control "no-store"', error)
+        self.assertIn('header >X-Robots-Tag "noindex, nofollow, noarchive"', error)
+        self.assertIn('header >X-Caddy-Request-ID {http.request.uuid}', error)
+        self.assertIn('header -Server', error)
+        self.assertIn('respond "" {err.status_code}', error)
+        for forbidden in ('{err.message}', '{err.trace}', 'request_header -WWW-Authenticate', 'respond "" 200'):
+            self.assertNotIn(forbidden, error)
+
     def test_only_actual_private_gateway_can_be_selected_never_public_metadata_or_cidr(self):
         self.assertEqual(edge.gateway_source('172.18.0.1'), '172.18.0.1/32')
         for value in ('0.0.0.0/0', '0.0.0.0', '132.145.28.134', '169.254.169.254', '127.0.0.1', '::1', '*'):

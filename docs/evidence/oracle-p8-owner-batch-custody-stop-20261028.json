@@ -1,0 +1,70 @@
+{
+  "recordedAt": "2026-10-28T19:21:05Z",
+  "status": "STOP",
+  "gate": "local-age-destination-custody",
+  "error": "OwnerProtectedDirectoryRequired",
+  "ownerDirectory": "C:\\Users\\anves\\.oci\\ir35-p0-readonly",
+  "readOnlyAclDiagnosis": {
+    "ownerIsCurrentUser": true,
+    "inheritanceDisabled": false,
+    "ruleCount": 2,
+    "inheritedRuleCount": 2,
+    "currentUserAllowCount": 1,
+    "otherThanCurrentOrSystemCount": 0,
+    "nonAllowCount": 0
+  },
+  "identityFileExists": false,
+  "intentFileExists": false,
+  "keyGenerationCalls": 0,
+  "directoryAclChanges": 0,
+  "vmCalls": 0,
+  "cloudCalls": 0,
+  "officialAgeRelease": {
+    "version": "v1.3.2",
+    "archiveSha256": "f48d8f8f9ebe903ab5027ed067652f2cc1db94bc206976430133b905dcd8e8c7",
+    "proofSha256": "00ae35a24a47b9bace52ec62f06d402f38f6ecba4ca099d060a137e82ef0bc1d",
+    "sigsumProofExitCode": 0,
+    "sigsumVerifierVersion": "v0.13.1",
+    "sigsumVerifierSha256": "1c52bbf0c1ec22dfadb68866726ff6448d20c9c7e39e2cc42e52765759761499",
+    "sigsumPolicy": "sigsum-generic-2025-1",
+    "goVersion": "go1.27.3",
+    "goArchiveSha256": "65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40",
+    "goArchiveBytes": 70588678,
+    "ageExecutableSha256": "2821a4ed191da07372acd302e5f6feae7a7985e285e1417765ebe74025af45f0",
+    "keygenExecutableSha256": "1549c7049be32695594bedd09bbd352a94b6013a9d5c43364f3c6cd7a09ab61c"
+  },
+  "offlineHelperSuite": {
+    "status": "PASS",
+    "tests": 715,
+    "seconds": 59.704,
+    "freshHome": true,
+    "ir35DirectoryPresentBefore": false,
+    "ir35DirectoryPresentAfter": false,
+    "manifest": "p8-owner-batch-hermetic-01/manifest.json",
+    "manifestSha256": "4650bf9bd67c1e0a24d425af4d26e998b90c7b7bba7b39c01c540f9db9666955"
+  },
+  "access": {
+    "sshKeyLoaded": false,
+    "newWslBootReceiptExists": false,
+    "nativeSshAgentAvailable": false,
+    "ociSession": "OWNER_SIGNIN_REQUIRED",
+    "ociReason": "daily browser sign-in required",
+    "apiPassphraseRequested": false,
+    "ownerWindowsOpened": 0
+  },
+  "stagingPublicReadOnlyObservation": {
+    "path": "/",
+    "status": 401,
+    "cacheControl": "no-store",
+    "xRobotsTag": "noindex, nofollow, noarchive",
+    "server": "Caddy",
+    "allPathsOrRuntimeVersionProven": false
+  },
+  "nativeCaddyReload": "NOT ATTEMPTED",
+  "backupIam": "PREPARED ONLY; NOT CREATED",
+  "fullContainmentThisBatch": "NOT RUN; SSH ACCESS UNAVAILABLE",
+  "p8": "INCOMPLETE",
+  "p9": "PREPARATION ONLY; NO-GO",
+  "productionChanges": 0,
+  "cutoverApprovalReceived": false
+}

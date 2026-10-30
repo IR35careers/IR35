@@ -1,0 +1,9 @@
+{
+  "activePolicies": 1,
+  "effectiveLifecycleAccessProven": false,
+  "iamChanges": 0,
+  "newGrantApproved": false,
+  "possibleObjectStorageServiceStatements": 0,
+  "statementCount": 1,
+  "status": "ABSENT_IN_ROOT_AND_CHILD_LISTS"
+}

@@ -1,0 +1,9 @@
+{
+  "activePolicies": 1,
+  "count": 1,
+  "operation": "root-policies",
+  "statementSHA256": [
+    "41836268722951511409c9ba1dd2a8b2d293f06e16a9beb7bb694f2302842e9a"
+  ],
+  "status": "PASS"
+}

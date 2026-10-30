@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "status": "STOP",
+  "artifacts": [
+    {"name": "oracle-p8-owner-batch-custody-stop-20261028.json", "sha256": "bc0c25af5ec05c4a83b8fb31ad193b44800bde7d8a5fad9a1c42f7d04d7058be"},
+    {"name": "oracle-p8-owner-batch-20261028.md", "sha256": "6112dffad02852abdb11c9e94524866b569065999f4e25824faf57d284306600"},
+    {"name": "p8-owner-batch-hermetic-01/manifest.json", "sha256": "4650bf9bd67c1e0a24d425af4d26e998b90c7b7bba7b39c01c540f9db9666955"}
+  ],
+  "noNativePhasePassClaimed": true
+}

@@ -57,6 +57,7 @@ http.createServer((req,res)=>{res.setHeader('content-type','application/json');
 if(req.url==='/echo-app'){res.end(JSON.stringify({authorization:req.headers.authorization||'',staging:!!req.headers['x-staging-authorization']}));return;}
 if(req.url==='/jobs'){res.setHeader('content-type','text/html');res.end('<h1>QA contracts</h1>');return;}
 if(req.url==='/auth/v1/health'){res.end(JSON.stringify({path:req.url}));return;}
+if(req.url==='/upstream-error'){res.writeHead(500).end('{}');return;}
 res.writeHead(404).end('{}');}).listen(8081,'0.0.0.0');'''
 
 
@@ -133,6 +134,22 @@ def run(root):
         observer.case('protected-jobs', 'GET', '/jobs', 200, lambda rid: call('GET', '/jobs', {'Authorization': basic}),
             checks=lambda headers, body: {'h1': b'<h1>QA contracts</h1>' in body,
                 'secureGate': all(flag in headers.get('set-cookie', '') for flag in ('Secure', 'HttpOnly', 'SameSite=Strict', 'Path=/'))})
+        # Supplemental owner-approved error-path coverage. The original six
+        # cases/expected values/timeouts above remain byte-for-byte unchanged.
+        observer.case('auth-error-headers', 'POST', '/echo-app', 401,
+            lambda rid: call('POST', '/echo-app', {'Authorization': 'Bearer public-fixture-session', 'X-Staging-Authorization': 'Basic invalid'}),
+            checks=lambda headers, body: {'challengePreserved': headers.get('www-authenticate') == 'Basic realm="restricted"',
+                                         'serverRemoved': 'server' not in headers})
+        observer.case('sdk-error-fallback', 'GET', '/supabase/not-supported', 404,
+            lambda rid: call('GET', '/supabase/not-supported', {'Cookie': '__Host-ir35-staging=' + TOKEN}),
+            checks=lambda headers, body: {'exactRoute': headers.get('x-ir35-matched-route') == 'sdk-fallback', 'serverRemoved': 'server' not in headers})
+        observer.case('upstream-http-error', 'GET', '/upstream-error', 500,
+            lambda rid: call('GET', '/upstream-error', {'Authorization': basic}),
+            checks=lambda headers, body: {'serverRemoved': 'server' not in headers})
+        command(['docker', 'stop', '--time', '10', created[0]])
+        observer.case('proxy-error-headers', 'GET', '/jobs', 502,
+            lambda rid: call('GET', '/jobs', {'Authorization': basic}),
+            checks=lambda headers, body: {'serverRemoved': 'server' not in headers})
         result.update(cases=observer.records, validate='PASS', adapt='PASS', internalOnly=True,
                       status='PASS' if all(row['passed'] for row in observer.records) else 'FAIL')
     except Exception as error:

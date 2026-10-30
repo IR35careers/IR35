@@ -37,6 +37,15 @@ https://staging.ir35careers.com {
     header X-Caddy-Request-ID {http.request.uuid}
     header >X-Caddy-Request-ID {http.request.uuid}
     header -Server
+    handle_errors {
+        route {
+            header >Cache-Control "no-store"
+            header >X-Robots-Tag "noindex, nofollow, noarchive"
+            header >X-Caddy-Request-ID {http.request.uuid}
+            header -Server
+            respond "" {err.status_code}
+        }
+    }
     route {
         @not_tunnel not remote_ip GATEWAY_SOURCE
         respond @not_tunnel "Forbidden" 403
@@ -58,6 +67,7 @@ https://staging.ir35careers.com {
                     header_up -X-Real-IP
                     header_up -X-Vercel-Forwarded-For
                 }
+                header X-IR35-Matched-Route "sdk-fallback"
                 respond "Not found" 404
             }
         }

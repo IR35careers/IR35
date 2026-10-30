@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00006-list_multipart_uploads-intent",
+  "observation": {
+    "method": "GET",
+    "operation": "list_multipart_uploads",
+    "selectorSHA256": "acae79c673e3d3111261a43f06d5e3a73263a5472a09a6caa60a3b152df5de3e"
+  }
+}
