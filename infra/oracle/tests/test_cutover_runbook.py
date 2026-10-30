@@ -38,5 +38,22 @@ class CutoverRunbookTests(unittest.TestCase):
         self.assertIn('No age-key/IAM approval is inferred from Signed in',gates)
         self.assertIn('managed Cloud Storage zero-loss reverse-path gap',gates)
 
+    def test_postgres_1711_checklist_is_exact_prep_only_and_has_a_local_plan(self):
+        text=(self.root/'docs/cutover.md').read_text(encoding='utf-8')
+        plan=(self.root/'docs/oracle-postgres-minor-upgrade-plan.md').read_text(encoding='utf-8')
+        expected=[line for line in plan.splitlines() if line.startswith('- [ ] ')]
+        section=text.split('### 4a. PostgreSQL 17.11 readiness',1)[1].split('## 5.',1)[0]
+        actual=[line for line in section.splitlines() if line.startswith('- [ ] ')]
+        self.assertEqual(len(expected),5)
+        self.assertEqual(actual,expected)
+        for required in ('No17.11 image has been selected or pulled',
+                'no database update has occurred','These boxes remain unchecked',
+                '(oracle-postgres-minor-upgrade-plan.md)'):
+            self.assertIn(required,section)
+        for required in ('UNSELECTED / UNVERIFIED','170011','No image was pulled',
+                'No automatic `ALTER EXTENSION UPDATE`','62','552','73',
+                'password manager or on a USB drive','YES CUTOVER'):
+            self.assertIn(required,plan)
+
 
 if __name__=='__main__':unittest.main()

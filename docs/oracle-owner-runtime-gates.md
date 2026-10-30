@@ -1,12 +1,22 @@
 # One owner batch — remaining runtime gates, not cutover
 
+## 30 October current status — supersedes the historical decision list below
+
+Owner explicitly approved the folder ACL repair and one local age ceremony on28October; both actually PASS, including owner-only private identity and a real offline synthetic encrypt/decrypt round trip. Do NOT regenerate, ask again for a key choice, or infer any private-key transfer permission. The private identity stays only outside Git/on the laptop/password manager; **store an offline copy of the age key file in your password manager or on a USB drive**. See [published P8 proof and exact prepared VM policy](https://github.com/IR35careers/IR35/blob/ece46358ca2bdd5fc12f247a66cb826c1b6ce82c/docs/evidence/oracle-p8-owner-resume-20261030.md).
+
+Fresh30OctSecurityToken/SSHnoTTL/resourceinventoryPASS:LIMITED_FREE2OCPU12GB/150GBlive/0volume backups/exactStandard0bytes/quota3. Root+childIAMinventory proves NO regional Object Storage lifecycle service grant;0DG/0childpolicies/0alarms. Owner approved the VM's exact one-bucket CREATE/INSPECT/READ policy, NOT service-principal deletion/bucket-inspection scope. No IAM or upload was created. This is the actual hard stop; any new least-privilege service permission needs owner decision, not a broad manage-object-family example or VMDELETE workaround. Caddyactual2.10.2/admin-off also cannot support reload-only if a live defect requires repair; no restart/admin exposure/upgrade is inferred. The full native header audit has not run, so don't claim a live defect or PASS from private CI fixtures.
+
+No new login/SSH/API passphrase or Auth-settings action is requested now. Existing signed-in evidence is not future eligibility or real-time£0proof. P8incomplete/P9NO-GO; actual encrypted backup/restore, managed Cloud Storage zero-loss reverse-path gap, real writable QA/monitoring and all full verification gates remain unresolved. ExactYES CUTOVER absent. The retained pre-approval sections below are history, not current requests or grounds to repeat key generation.
+
+## Historical 27 October inventory and pre-approval context
+
 G3 is CLOSED. Do not create another Supabase token, copy Auth settings or send passwords/keys in chat. SSH fingerprint is still loaded with no lifetime, so no SSH/API passphrase prompt.
 
 **Latest protected-staging evidence:** [P8snapshot audit](https://github.com/IR35careers/IR35/blob/d1c1c0b/docs/evidence/oracle-p8-app-readiness-20261027.md) passed full62orderedMD5/Auth/2sequences/3exceptions/552+queue roles/73StorageSHA/FRESH112HBA; source/pristine/P5writes0. Snapshot025capabilities absent, so save/apply frontend proof remains blocked pending a SEPARATE upgraded QA copy. Actual headed read-only browser gate passed earlier. Exact6c3c372hosted11/11/CodeQL+nativequeueStandby PASS is source/CI proof, not a live rollout. No age-key/IAM approval is inferred from Signed in or any of these results. The two decisions below remain the same single owner batch, not new login/settings requests.
 
 **27 October current audit:** [P8 report at verified commit c03c99f](https://github.com/IR35careers/IR35/blob/c03c99f38dca6ff001cba4b7593d42107f77c3e5/docs/evidence/oracle-p8-oci-readonly-20261027.md), completion03PASS9e792756. ACTIVE FREE_TRIAL/London; A1LIMITED_FREE2OCPU12GB;150GBlive;0volume backups;exact private Standard0bytes including versions/multipart;3root quota statements exact;laggingGBP0/notreal-timezero.6backup-access reads:0active dynamic groups/0child policies/0alarms;existingtopic+email subscriptionACTIVE. No IAM/key/bucket/object/VM/production change. All607fresh-home helpersPASS62.461s; fullP8 not PASS.
 
-## Current owner batch — ONLY two decisions, no passwords in chat
+## Historical owner batch — ONLY two decisions, no passwords in chat
 
 1. **Backup key custody:** choose the existing offline age identity route (public recipient only through a private local handoff), OR explicitly approve ONE native hidden-prompt ceremony that creates an encrypted local/offline age identity for your password manager. Also approve its native offline restore-unlock mechanism. No identity/private key goes to the VM, chat, logs or Git. The agent does not generate a real key until you choose.
 2. **Backup access:** approve or decline ONLY the exact-existing-VM/ir35-backups policy in section3 below. The fresh audit found no active dynamic group or child policy; no policy has been created, no upload attempted. This is a new narrowly scoped IAM gate, not part of browser sign-in. Read-only operation support/free checks must pass again before any approved create.
