@@ -1,0 +1,10 @@
+{
+  "cloudWrites": 0,
+  "controllerSHA256After": "b3a47742e88313ee72ca3bf64805d591644a02f69bbd1815552b4a0aa4315f6b",
+  "controllerSHA256Before": "b3a47742e88313ee72ca3bf64805d591644a02f69bbd1815552b4a0aa4315f6b",
+  "existingControllerWouldFailEquality": true,
+  "nativeCalls": 0,
+  "privateFilesRead": 0,
+  "repairApplied": false,
+  "status": "DIAGNOSED_NOT_REPAIRED"
+}

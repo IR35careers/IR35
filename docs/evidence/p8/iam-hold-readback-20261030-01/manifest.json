@@ -1,0 +1,33 @@
+{
+  "artifacts": [
+    {
+      "name": "01-groups-intent.json",
+      "sha256": "3f94b6eb5ef201e065c8406727d89dd58f1afba807e646de488edfaa338359f9"
+    },
+    {
+      "name": "01-groups-result.json",
+      "sha256": "c88cb44f455c7bba26bccc4e5eec59400980ff49062648155e5bc8d9eddf2ba1"
+    },
+    {
+      "name": "02-root-policies-intent.json",
+      "sha256": "df733edff6f965c77a78bbaf031209a1f3f63399473b8e8996fbd93d05339c35"
+    },
+    {
+      "name": "02-root-policies-result.json",
+      "sha256": "7a59adb3356fd3712cdc8dd3f1549624dfc4631f041a57259a0f12959fb8acdc"
+    },
+    {
+      "name": "03-child-policies-intent.json",
+      "sha256": "123af3a9a145d1e5e7799342ef6564efa3cbc08eada95b30f5f38fe522374037"
+    },
+    {
+      "name": "03-child-policies-result.json",
+      "sha256": "363c205c56a28e94641ed4fc8e0a22a5b7caa9c41ad103bc96b5f5da77213eb0"
+    },
+    {
+      "name": "result.json",
+      "sha256": "da041849f6945365257bcfe91e7d8393c697f8e49fc8af70cb78c2de6326d15a"
+    }
+  ],
+  "version": 1
+}

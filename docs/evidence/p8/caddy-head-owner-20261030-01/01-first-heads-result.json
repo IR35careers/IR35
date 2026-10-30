@@ -1,0 +1,50 @@
+{
+  "activationPerformed": false,
+  "activationRequired": false,
+  "cases": [
+    {
+      "actualStatus": 401,
+      "credentialsSent": false,
+      "expectedStatus": 401,
+      "headers": {
+        "cache-control": "no-store",
+        "server": "Caddy",
+        "www-authenticate": "Basic realm=\"restricted\"",
+        "x-caddy-request-id": "8a2ed151-028d-4d6b-8300-35e45b62a6a5",
+        "x-ir35-matched-route": "basic-auth-rejection",
+        "x-robots-tag": "noindex, nofollow, noarchive"
+      },
+      "host": "staging.ir35careers.com",
+      "method": "HEAD",
+      "noStore": true,
+      "noindex": true,
+      "path": "/jobs",
+      "status": "PASS"
+    },
+    {
+      "actualStatus": 401,
+      "credentialsSent": false,
+      "expectedStatus": 401,
+      "headers": {
+        "cache-control": "no-store",
+        "server": "Caddy",
+        "www-authenticate": "Basic realm=\"restricted\"",
+        "x-caddy-request-id": "68a2e196-9dd6-4fc6-9f5e-4a0d062cf776",
+        "x-ir35-matched-route": "api-basic-rejection",
+        "x-robots-tag": "noindex, nofollow, noarchive"
+      },
+      "host": "api-staging.ir35careers.com",
+      "method": "HEAD",
+      "noStore": true,
+      "noindex": true,
+      "path": "/auth/v1/health",
+      "status": "PASS"
+    }
+  ],
+  "configChanges": 0,
+  "initialRequiredHeadersPresent": true,
+  "phaseComplete": false,
+  "scope": "OWNER_FIRST_TWO_READONLY_HEADS",
+  "serviceRestarts": 0,
+  "status": "PASS"
+}

@@ -1,0 +1,9 @@
+{
+  "assertionsChanged": false,
+  "cause": "Exact inventory metadata GET uses separate transport; observed projection has no bucket row",
+  "change": "Explicit GET of inventoried bucket; exact counter receives documented name-compartment pairs",
+  "counterChanged": false,
+  "previousCloudWrites": 0,
+  "priorManifestSHA256": "57dcca1709f36f8dbe66c3c6e43b10d400a0d0be475487dab5097852149aba71",
+  "repairAttempt": 1
+}

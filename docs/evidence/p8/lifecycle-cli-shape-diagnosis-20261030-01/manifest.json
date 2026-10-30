@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "name": "additional-public-cli-findings.json",
+      "sha256": "6bb0527daa0573ecc27f2e3ff44ee5808c462657572e0085d20689fb981b2d88"
+    },
+    {
+      "name": "public-source-versions.json",
+      "sha256": "0fd139b6e7f312e34d3fed1eb6ce33a34fb16738972765c300b8ca2c2901cca5"
+    },
+    {
+      "name": "result.json",
+      "sha256": "958b50c273c68e91d9810af9ba469d74971d9d4983a6f8fc5fc7b1197408e316"
+    },
+    {
+      "name": "serialization-mismatch.json",
+      "sha256": "5e26d416b95d39045b38b9f267f86eb995e91b883cbc34c5543ccc23ef2688ab"
+    }
+  ],
+  "version": 1
+}

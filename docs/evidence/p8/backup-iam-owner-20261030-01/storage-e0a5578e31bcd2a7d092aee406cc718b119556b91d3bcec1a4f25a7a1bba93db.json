@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00002-list_buckets-result",
+  "observation": {
+    "httpSuccess": true,
+    "nextPagePresent": false,
+    "status": "PASS"
+  }
+}

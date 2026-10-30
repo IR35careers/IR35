@@ -1,0 +1,10 @@
+{
+  "cliPromptsForConfirmationWhenItemsAndNotForce": true,
+  "cliSupportsIfNoneMatch": true,
+  "controllerPassesForce": false,
+  "finding": "Current put-lifecycle command has neither explicit confirmation nor a create-only precondition; no command was run",
+  "nativeCalls": 0,
+  "repairApplied": false,
+  "sdkDocumentsIfNoneMatchStarToRefuseExistingResource": true,
+  "status": "DIAGNOSED_NOT_REPAIRED"
+}

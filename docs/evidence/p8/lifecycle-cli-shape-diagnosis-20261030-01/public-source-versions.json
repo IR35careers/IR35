@@ -1,0 +1,13 @@
+{
+  "cliGeneratedLifecycleFunction": "put_object_lifecycle_policy",
+  "cliGeneratedLifecycleSourceSHA256": "7a4edc90a83ab2477fd391173a843df5cad19bfe128571e18eb063687cf470f7",
+  "cliSerializerFunction": "oci_cli.cli_util.to_dict",
+  "cliSerializerSourceSHA256": "267d6be3d825b1b2297da948fe99abaa65c4bcc34be1688cbc3cc132181f4f94",
+  "controllerSHA256": "b3a47742e88313ee72ca3bf64805d591644a02f69bbd1815552b4a0aa4315f6b",
+  "networkCalls": 0,
+  "ociCliVersion": "3.95.0",
+  "ociSdkVersion": "2.188.0",
+  "privateFilesRead": 0,
+  "reads": "public repository + installed SDK/CLI package source only",
+  "sdkLifecycleSourceSHA256": "d19895f069aff4314c9b385dc14e7f5372507b846a8c1eae443d35be9667d927"
+}

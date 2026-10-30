@@ -1,2 +1,3 @@
 infra/oracle/*.sh text eol=lf
+scripts/reverse-sync.sh text eol=lf
 docs/evidence/** text eol=lf

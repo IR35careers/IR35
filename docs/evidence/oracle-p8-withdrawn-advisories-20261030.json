@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "ownerApprovalDate": "2026-10-30",
+  "githubVerified": [
+    {"id": "GHSA-vfj7-8cjw-p6xm", "withdrawnAt": "2026-10-23T12:53:02Z", "source": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"},
+    {"id": "GHSA-hp3w-g68c-fv3c", "withdrawnAt": "2026-10-22T19:21:04Z", "source": "https://github.com/advisories/GHSA-hp3w-g68c-fv3c"}
+  ],
+  "freshNpmAudit": {"exitCode": 0, "versionedResponseValid": true, "vulnerabilities": 0, "advisoryIds": []},
+  "securityAuditValidatorExitCode": 0,
+  "action": "removed-two-now-unneeded-exceptions",
+  "exceptionsRetained": 0,
+  "renewed": false,
+  "backdated": false,
+  "securityWorkflowChanged": false,
+  "dependencyVersionsChanged": false,
+  "existingAssertionsChanged": false,
+  "productionChanges": 0
+}

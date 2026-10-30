@@ -1,0 +1,20 @@
+{
+  "code": "RawErrorWithheld",
+  "cutover": false,
+  "exceptionType": "BackupScopeError",
+  "freeInventory": {
+    "checkedAt": "2026-10-30T15:18:43.141609+00:00",
+    "cloudWrites": 0,
+    "cutover": false,
+    "keyOrIAMChanges": 0,
+    "objectStorageReads": 14,
+    "ociReads": 42,
+    "phaseComplete": false,
+    "readOnly": true,
+    "status": "PASS"
+  },
+  "productionChanges": 0,
+  "scope": "owner-approved-one-vm-one-bucket",
+  "status": "FAIL",
+  "vmChanges": 0
+}

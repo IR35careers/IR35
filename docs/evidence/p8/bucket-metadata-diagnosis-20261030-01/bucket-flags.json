@@ -1,0 +1,44 @@
+{
+  "existingValidator": {
+    "code": "ExplicitPrivateStandardVersionOffWritableBucketRequired",
+    "status": "FAIL"
+  },
+  "flags": {
+    "auto-tiering": {
+      "present": true,
+      "value": null
+    },
+    "compartment-id": {
+      "matchesApproved": true,
+      "present": true
+    },
+    "is-read-only": {
+      "present": true,
+      "value": false
+    },
+    "kms-key-id": {
+      "configured": false,
+      "present": true
+    },
+    "name": {
+      "matchesApproved": true,
+      "present": true
+    },
+    "public-access-type": {
+      "present": true,
+      "value": "NoPublicAccess"
+    },
+    "replication-enabled": {
+      "present": true,
+      "value": false
+    },
+    "storage-tier": {
+      "present": true,
+      "value": "Standard"
+    },
+    "versioning": {
+      "present": true,
+      "value": "Disabled"
+    }
+  }
+}

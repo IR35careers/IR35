@@ -1,0 +1,16 @@
+{
+  "childPolicies": 0,
+  "controllerStoppedManifestSHA256": "f9e2efadc36c0bc7ae68464fc91927a593de0c57ae648c5fcae90123f89b72b1",
+  "cutover": false,
+  "dynamicGroups": 0,
+  "iamBeforeAfterUnchanged": true,
+  "iamChanges": 0,
+  "lifecycleCreated": false,
+  "metadataReads": 3,
+  "phaseComplete": false,
+  "readOnly": true,
+  "retryStarted": false,
+  "rootPolicies": 1,
+  "status": "PASS",
+  "vmChanges": 0
+}

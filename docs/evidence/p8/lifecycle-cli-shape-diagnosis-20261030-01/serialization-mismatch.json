@@ -1,0 +1,82 @@
+{
+  "additionalModelDefaultNullFields": [
+    "object-name-filter.exclusion-patterns",
+    "object-name-filter.inclusion-patterns"
+  ],
+  "assertionsChanged": false,
+  "controllerEdits": 0,
+  "controllerInputItems": [
+    {
+      "action": "DELETE",
+      "isEnabled": true,
+      "name": "ir35-daily-expiry",
+      "objectNameFilter": {
+        "inclusionPrefixes": [
+          "ir35-backups-v1/daily/"
+        ]
+      },
+      "target": "objects",
+      "timeAmount": 7,
+      "timeUnit": "DAYS"
+    },
+    {
+      "action": "DELETE",
+      "isEnabled": true,
+      "name": "ir35-weekly-expiry",
+      "objectNameFilter": {
+        "inclusionPrefixes": [
+          "ir35-backups-v1/weekly/"
+        ]
+      },
+      "target": "objects",
+      "timeAmount": 28,
+      "timeUnit": "DAYS"
+    }
+  ],
+  "currentStrictEquality": false,
+  "documentedKeyMapping": {
+    "inclusionPrefixes": "inclusion-prefixes",
+    "isEnabled": "is-enabled",
+    "objectNameFilter": "object-name-filter",
+    "timeAmount": "time-amount",
+    "timeUnit": "time-unit"
+  },
+  "existingControllerWouldFailEquality": true,
+  "iamWrites": 0,
+  "installedCliSerializedItems": [
+    {
+      "action": "DELETE",
+      "is-enabled": true,
+      "name": "ir35-daily-expiry",
+      "object-name-filter": {
+        "exclusion-patterns": null,
+        "inclusion-patterns": null,
+        "inclusion-prefixes": [
+          "ir35-backups-v1/daily/"
+        ]
+      },
+      "target": "objects",
+      "time-amount": 7,
+      "time-unit": "DAYS"
+    },
+    {
+      "action": "DELETE",
+      "is-enabled": true,
+      "name": "ir35-weekly-expiry",
+      "object-name-filter": {
+        "exclusion-patterns": null,
+        "inclusion-patterns": null,
+        "inclusion-prefixes": [
+          "ir35-backups-v1/weekly/"
+        ]
+      },
+      "target": "objects",
+      "time-amount": 28,
+      "time-unit": "DAYS"
+    }
+  ],
+  "lifecycleWrites": 0,
+  "nativeCalls": 0,
+  "repairApplied": false,
+  "status": "DIAGNOSED_NOT_REPAIRED"
+}

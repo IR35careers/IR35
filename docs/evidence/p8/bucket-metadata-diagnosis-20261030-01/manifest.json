@@ -1,0 +1,29 @@
+{
+  "artifacts": [
+    {
+      "name": "bucket-flags.json",
+      "sha256": "591c7e67620175972d0fc546d038a6cf9f440f06c61cdbfe5da4db75b2b42457"
+    },
+    {
+      "name": "oci-001-intent.json",
+      "sha256": "0aefd0c998b264dad745869c3cd6b83d6dff085198d37b0c91b862df3a33fb90"
+    },
+    {
+      "name": "oci-001-result.json",
+      "sha256": "0fb1ff29d5192846f83976c841340bc2b36f0f62255cdd772cf4468dfb772850"
+    },
+    {
+      "name": "oci-002-intent.json",
+      "sha256": "8904a3f55e4dc2f8c149b7ae1643d017280c5c564e0c88af2728ad82631e033b"
+    },
+    {
+      "name": "oci-002-result.json",
+      "sha256": "0dbfc33a2f3bc5ad42db76945816c3e2b3b1e1ce2538bc7efad0120b91c04bbf"
+    },
+    {
+      "name": "result.json",
+      "sha256": "d4c6d10da64f65e337d71c08e68e0d9a65897769f772f8cf5925711b174c6825"
+    }
+  ],
+  "version": 1
+}

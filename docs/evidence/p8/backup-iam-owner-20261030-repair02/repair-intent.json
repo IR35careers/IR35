@@ -1,0 +1,15 @@
+{
+  "assertionsChanged": false,
+  "cause": "CLI bucket GET omitted optional autoTiering field; separate exact SDK GET already explicitly requests it",
+  "change": "Request optional autoTiering field on read-back; keep strict Disabled/null-rejection assertions",
+  "counterChanged": false,
+  "nextFailureHardStop": true,
+  "nullDefaultInferred": false,
+  "previousCloudWrites": 0,
+  "priorManifestsSHA256": {
+    "diagnosis": "9234ca1d9cc64160dd4d1bc9d4d71bb062674c772512ab432203370995eaa618",
+    "first": "57dcca1709f36f8dbe66c3c6e43b10d400a0d0be475487dab5097852149aba71",
+    "second": "b052398f71610c2323542cc275f8b6d82260709d349725f1b03417e0fae4816d"
+  },
+  "repairAttempt": 2
+}

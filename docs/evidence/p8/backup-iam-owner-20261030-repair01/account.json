@@ -1,0 +1,13 @@
+{
+  "activeUserMatch": true,
+  "auth": "security_token",
+  "homeRegion": "uk-london-1",
+  "regionStatus": "READY",
+  "signedTenancyMatch": true,
+  "subscriptions": [
+    {
+      "paymentModel": "FREE_TRIAL",
+      "state": "ACTIVE"
+    }
+  ]
+}

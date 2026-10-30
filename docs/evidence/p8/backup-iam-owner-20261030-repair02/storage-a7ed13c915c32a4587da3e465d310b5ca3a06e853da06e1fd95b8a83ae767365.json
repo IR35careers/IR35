@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00004-list_objects-intent",
+  "observation": {
+    "method": "GET",
+    "operation": "list_objects",
+    "selectorSHA256": "e1dce23183b1bbf6cde68c08c5106b0170bd491ba5a1c5d5c0f20961d07fc878"
+  }
+}

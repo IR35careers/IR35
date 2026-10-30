@@ -1,5 +1,11 @@
 # Temporary dependency risk decisions
 
+## 30 October 2026 — withdrawn advisories, exactly two owner-renewed entries
+
+GitHub's advisory API/pages confirm GHSA-vfj7-8cjw-p6xm withdrawn23October and GHSA-hp3w-g68c-fv3c withdrawn22October. Fresh `npm audit --json` returned a valid versioned response with zero vulnerabilities/no advisory IDs. The permitted removal alternative passed live audit, but failed the existing immutable two-entry allowlist contract (8/9 unit tests). Under the owner's explicit alternative approval, retain ONLY these same IDs/packages/versions until `2026-11-30T00:00:00Z`, each with reason `withdrawn advisory; GitHub withdrawal verified 30 October 2026`. Provenance text satisfies the unchanged minimum30-character reason validator; the short literal alone was correctly rejected. No dependency version, security workflow, existing assertion, expiry evaluator or other bypass changed or backdated; all other findings still fail. Both intermediate failed configurations remain recorded in the repair history, not treated as final PASS.
+
+## Historical bounded exception review — original expiry superseded explicitly
+
 The owner explicitly approved **only two** temporary advisory exceptions in chat, expiring 29 October 2026. This is an accepted, bounded residual risk, **not a claim of zero vulnerabilities**. `security/audit-exceptions.json` ends approval at **2026-10-29 00:00 UTC**; CI fails once it expires. All other findings, advisory IDs, installed versions and incomplete audit responses still block. No severity threshold is raised.
 
 | Advisory | Exact installed package | Exposure and decision |

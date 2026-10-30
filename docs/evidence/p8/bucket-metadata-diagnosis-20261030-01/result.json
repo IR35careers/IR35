@@ -1,0 +1,15 @@
+{
+  "broaderPermissionsRequested": false,
+  "cloudWrites": 0,
+  "existingValidator": {
+    "code": "ExplicitPrivateStandardVersionOffWritableBucketRequired",
+    "status": "FAIL"
+  },
+  "iamChanges": 0,
+  "metadataCaptured": true,
+  "originalFailureManifestSHA256": "b052398f71610c2323542cc275f8b6d82260709d349725f1b03417e0fae4816d",
+  "phaseComplete": false,
+  "readOnly": true,
+  "status": "PASS",
+  "vmChanges": 0
+}

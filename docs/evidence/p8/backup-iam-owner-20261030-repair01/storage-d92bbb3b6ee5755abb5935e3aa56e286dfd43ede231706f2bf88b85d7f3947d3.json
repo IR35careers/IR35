@@ -1,0 +1,33 @@
+{
+  "counterLabel": "exact-total",
+  "observation": {
+    "accountingVersion": 1,
+    "bucketReports": [
+      {
+        "bucket": "ir35-backups",
+        "deleteMarkerCount": 0,
+        "manifestSHA256": "c3e89c3e12a0ec5d8faccefe85d5e4ab26671d99f1434965bac0c0a9349470a8",
+        "objectCount": 0,
+        "tier": "Standard",
+        "totalBytes": 0,
+        "unfinishedPartBytes": 0,
+        "unfinishedPartCount": 0,
+        "unfinishedUploadCount": 0,
+        "versionBytesIncludingCurrent": 0,
+        "versionCount": 0
+      }
+    ],
+    "buckets": 1,
+    "checkedAt": "2026-10-30T15:17:54.484906+00:00",
+    "eightyPercentBytes": 16000000000,
+    "exactBytes": 0,
+    "exactBytesProven": true,
+    "freeAllowanceBytes": 20000000000,
+    "mutations": 0,
+    "overEightyPercent": false,
+    "ownerBackupCapBytes": 8000000000,
+    "requests": 12,
+    "stableCompletePasses": 2,
+    "standardOnly": true
+  }
+}
