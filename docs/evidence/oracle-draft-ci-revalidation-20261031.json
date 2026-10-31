@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "checkedDate": "2026-10-31",
+  "scope": "read-only-exact-published-head-checks-only",
+  "pullRequests": [
+    {
+      "number": 62,
+      "url": "https://github.com/IR35careers/IR35/pull/62",
+      "headSHA": "dc00103bb57fb42a06a87d7d5b0c4c2e308e1d75",
+      "state": "OPEN",
+      "isDraft": true,
+      "totalChecks": 11,
+      "successes": 11,
+      "pending": 0,
+      "failures": 0,
+      "releaseRun": "https://github.com/IR35careers/IR35/actions/runs/41082115938"
+    },
+    {
+      "number": 63,
+      "url": "https://github.com/IR35careers/IR35/pull/63",
+      "headSHA": "fdc440ae6a3b2132e5a1f2dcce153cd42b17d09b",
+      "state": "OPEN",
+      "isDraft": true,
+      "totalChecks": 11,
+      "successes": 11,
+      "pending": 0,
+      "failures": 0,
+      "releaseRun": "https://github.com/IR35careers/IR35/actions/runs/41082709453"
+    }
+  ],
+  "newerDocumentationHeadsNotAttestedByThisRecord": true,
+  "nativePhasePassedByTheseChecks": false,
+  "lifecycleHoldReleased": false,
+  "oracleApiCalls": 0,
+  "sshCalls": 0,
+  "privateFilesRead": 0,
+  "productionChanges": 0,
+  "cutoverApproved": false
+}
