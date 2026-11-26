@@ -1,0 +1,169 @@
+{
+  "recordedAt": "2026-11-26T10:13:47.697Z",
+  "base": "df8ee7f37119f76c9cdca5e2a510278bc473517b",
+  "branch": "codex/oracle-security-main-20261125",
+  "vercelSha256": "8ee71a8cec329ed8f8a1e0265bdcc1350c3cf9d2040bc2448322e73ea0438405",
+  "artifacts": [
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/baseline.md",
+      "bytes": 3306,
+      "sha256": "a931ccd9c79672ba31ca7d12a37039f4c51128883dfce35928c4b33c9c974303",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/build-01.json",
+      "bytes": 4119,
+      "sha256": "8cd130f0789c14d069c67ace19fa5000255a864cd213d91f370f516fa431fcd5",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/ci-consistency-01.json",
+      "bytes": 210,
+      "sha256": "1111b9abe00b64cdd9b8545dde2e16e6d54c6a5a3e5adf6640ba2c2967e1c220",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/focused-tests-01.json",
+      "bytes": 607,
+      "sha256": "a65a5a8f0237127e72b1978f38ef7b5c8d458df397b58dee2a485d4d3e29b61a",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/full-unit-01.json",
+      "bytes": 450,
+      "sha256": "9fcb9114fcd839160bb00a3cbf71560ba8c2e7114ce7af7284a82fd2f2c79f88",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/install.json",
+      "bytes": 177,
+      "sha256": "d67d7d0432261ccaf1ee52220a3869adc36fb049f35ef05b0d0039f4177e4e05",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/lighthouse-help-01.json",
+      "bytes": 8760,
+      "sha256": "57e3f4172e2ef11be497f66ff555d565350d806ccb1ea8aa6a8cc14fde1d4a5d",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/lint-01.json",
+      "bytes": 208,
+      "sha256": "8996ddec5bb0e6e33702784942f417d423478ff2bfdd8aa3de293afe0af5c572",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/lock-regeneration.json",
+      "bytes": 386,
+      "sha256": "4a1511c4cbb2f726fec85eda0ee5af3401802aa4b50e75a07e7bd4383fd7af0d",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/lock-version-diff.json",
+      "bytes": 11403,
+      "sha256": "fed3d9cc4036e537726aec65c11c7f5309f6a973f04a6145b1c8f9ccce6ccc7d",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/raw-audit-01.json",
+      "bytes": 612,
+      "sha256": "22affb47dccb21d5620d0dd6f5721a1ec7fce35bbf9d68ccb445033371bcdcaa",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/remove-global-vite-override.json",
+      "bytes": 169,
+      "sha256": "589c922d706a82028655775bd95855fff5ea0b73bf4e1455076271720d33e1e7",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/security-audit-01.json",
+      "bytes": 352,
+      "sha256": "282591a82aac684f64a61d5e67929538a720eb10e5c49f7bca2277b1bc66b8f7",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/security-signatures-01.json",
+      "bytes": 383,
+      "sha256": "582633669c7d2495634072424dfe24327324af37f6938dc579dd85da05625eb8",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/security-source-01.json",
+      "bytes": 228,
+      "sha256": "53dfcdff6cadaaa22225135c4a584e8c394f081fc5e4322657e460ee83ef5643",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/security-source-02.json",
+      "bytes": 228,
+      "sha256": "84832fbab6dcaed6b828fad86f4e8577325c15b7d26a88d680e205f87970e73e",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/test-legacy-01.json",
+      "bytes": 448,
+      "sha256": "92d88d51c678ee37b6ebdf604c0052dd77e1a22802d976aa5d90a8d282982737",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/typecheck-01.json",
+      "bytes": 200,
+      "sha256": "9481e85bb42fec213ff7e76f56845e04ae1cbff5d24f4a29ac3d76981784ca58",
+      "gitBytesIdentical": true
+    },
+    {
+      "path": "docs/evidence/main-security-20261125T151320Z/verification-summary.md",
+      "bytes": 4415,
+      "sha256": "f95c9f8bbe0e590cd7d4d78d8bb081f0ddcb5f5df170bc0ddad7a12536064850",
+      "gitBytesIdentical": true
+    }
+  ],
+  "sources": [
+    {
+      "path": ".gitattributes",
+      "sha256": "ba513b6adbf7d54cea9e0b11c1177985b706e0d8ccd0e414cde9e5f7e4e1581c",
+      "gitCanonicalSha256": "4ba0e348eb04a40eda5adef099af853c5df7be19735d7a07030c4e3975715bf1"
+    },
+    {
+      "path": "package.json",
+      "sha256": "519f35ae743e1146043e488396176f2548924e1bdf3891113f94da80c818777e",
+      "gitCanonicalSha256": "f8c208f28424328f0f4573a816ae48ec52207dc7aa162281f470287deb7d8d5f"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "b5cf64770871d3dc6d861fab79b7eb2997b55b61622ac253a2a379d2479933b8",
+      "gitCanonicalSha256": "ac5dc5ba432b323cac0276ab9026f0273d3acf3a6ea78c346cb1efcf1dd9ff61"
+    },
+    {
+      "path": "bot-preview/package.json",
+      "sha256": "e3edb8c7082cc6e9ec62803f3c0b9746941016092d41698469e093afcc885251",
+      "gitCanonicalSha256": "1740d3482b0714ac80f808de2b785755654adfa829c8b2b7262ac4f5c184ab0b"
+    },
+    {
+      "path": "security/audit-exceptions.json",
+      "sha256": "7d7404d61c33d84008d57a0f648431840c6574cbe55f1b2b2226acbc3c7be5b4",
+      "gitCanonicalSha256": "8ceb609dd8325ac50d8af20bea94849b34f3b758897d56688e2ee8481b15f57e"
+    },
+    {
+      "path": "docs/dependency-security.md",
+      "sha256": "8c7321be73afe7c314948e1fda9a159a8cb258b09790302bdb78f82e2a4c6d3c",
+      "gitCanonicalSha256": "7aec8727788ebc086bae86b6f216a0f0f24b68c11e16e52b9de8b29072f54ab1"
+    },
+    {
+      "path": "docs/progress.md",
+      "sha256": "d444a3d683903b4fc51470fdd9a04ec367a0a09e153539185fbbe9df157981a7",
+      "gitCanonicalSha256": "f712959cd65495180dfdfdf53a7e29aa250b2691310251c246f2451bf2748d66"
+    },
+    {
+      "path": "tests/unit/minimatch-queue-compatibility.test.ts",
+      "sha256": "8f4e86534b5b3c691228bfdf08d1561bcc9cf2e9f4b4c17c945feb780807ba93",
+      "gitCanonicalSha256": "8f4e86534b5b3c691228bfdf08d1561bcc9cf2e9f4b4c17c945feb780807ba93"
+    },
+    {
+      "path": "tests/unit/minimatch-resolution-security.test.ts",
+      "sha256": "2b46d2cf854ad125b77267c38af8d9f98d2c54ee8757d727ae2b109999c76046",
+      "gitCanonicalSha256": "2b46d2cf854ad125b77267c38af8d9f98d2c54ee8757d727ae2b109999c76046"
+    }
+  ]
+}

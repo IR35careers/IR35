@@ -1,0 +1,8 @@
+{
+  "started": "2026-11-26T10:12:25.022Z",
+  "ended": "2026-11-26T10:12:44.195Z",
+  "exitCode": 0,
+  "error": null,
+  "stdout": "Security source check passed (754 tracked files, repository history scanned).\n",
+  "stderr": ""
+}

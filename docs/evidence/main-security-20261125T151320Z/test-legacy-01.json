@@ -1,0 +1,9 @@
+{
+  "started": "2026-11-25T15:30:04.461Z",
+  "ended": "2026-11-25T15:30:07.984Z",
+  "credentialEnvironmentExcluded": true,
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 test:legacy\n> tsx scripts/test-processing.ts && tsx scripts/test-tax.ts && tsx scripts/test-aggregators.ts && tsx scripts/test-fetchers.ts\n\n\n100 passed, 0 failed\n\n19 passed, 0 failed\n\n33 passed, 0 failed\n\n47 passed, 0 failed\n",
+  "stderr": ""
+}

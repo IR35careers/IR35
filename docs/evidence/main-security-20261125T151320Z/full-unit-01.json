@@ -1,0 +1,8 @@
+{
+  "started": "2026-11-25T15:27:06.221Z",
+  "ended": "2026-11-25T15:29:26.773Z",
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 test:unit\n> vitest run --maxWorkers=1\n\n\n RUN  v4.1.12 C:/ir35-security-main-20261125\n\n\n Test Files  140 passed (140)\n      Tests  923 passed (923)\n   Start at  15:27:09\n   Duration  136.61s (transform 7.57s, setup 0ms, import 41.34s, tests 26.61s, environment 20ms)\n\n",
+  "stderr": ""
+}

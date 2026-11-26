@@ -1,0 +1,477 @@
+{
+  "recordedAt": "2026-11-25T15:21:54.848Z",
+  "base": "df8ee7f37119f76c9cdca5e2a510278bc473517b",
+  "lockSha256": "b5cf64770871d3dc6d861fab79b7eb2997b55b61622ac253a2a379d2479933b8",
+  "changes": [
+    {
+      "path": "node_modules/@napi-rs/wasm-runtime",
+      "before": "1.1.6",
+      "after": "1.2.6"
+    },
+    {
+      "path": "node_modules/@next/env",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/eslint-plugin-next",
+      "before": "16.4.1",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-darwin-arm64",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-darwin-x64",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-linux-arm64-gnu",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-linux-arm64-musl",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-gnu",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-musl",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-win32-arm64-msvc",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@next/swc-win32-x64-msvc",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/@oxc-project/types",
+      "before": "0.146.0",
+      "after": "0.156.0"
+    },
+    {
+      "path": "node_modules/@puppeteer/browsers",
+      "before": "3.2.1",
+      "after": "3.2.7"
+    },
+    {
+      "path": "node_modules/@puppeteer/browsers/node_modules/ansi-regex",
+      "before": "6.3.0",
+      "after": "6.6.0"
+    },
+    {
+      "path": "node_modules/@puppeteer/browsers/node_modules/string-width",
+      "before": "8.2.2",
+      "after": "8.3.0"
+    },
+    {
+      "path": "node_modules/@puppeteer/browsers/node_modules/yargs",
+      "before": "18.1.0",
+      "after": "18.2.0"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-android-arm-eabi",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-android-arm64",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-darwin-arm64",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-darwin-x64",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-freebsd-x64",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-arm-gnueabihf",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-arm64-gnu",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-arm64-musl",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-ppc64-gnu",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-s390x-gnu",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-x64-gnu",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-x64-musl",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-openharmony-arm64",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-win32-arm64-msvc",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-win32-x64-msvc",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/pluginutils",
+      "before": "1.0.1",
+      "after": "1.1.1"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/eslint-plugin",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/eslint-plugin/node_modules/ignore",
+      "before": "7.0.6",
+      "after": "7.0.17"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/parser",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/project-service",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/scope-manager",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/tsconfig-utils",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/type-utils",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/types",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/typescript-estree",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+      "before": "5.0.12",
+      "after": "5.1.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch",
+      "before": "10.2.6",
+      "after": "11.0.9"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/utils",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/visitor-keys",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/@vercel/cli-config/node_modules/zod",
+      "before": "4.1.11",
+      "after": null
+    },
+    {
+      "path": "node_modules/@vercel/queue",
+      "before": "0.8.0",
+      "after": "0.11.0"
+    },
+    {
+      "path": "node_modules/@vercel/queue/node_modules/brace-expansion",
+      "before": "5.0.12",
+      "after": "5.1.0"
+    },
+    {
+      "path": "node_modules/@vercel/queue/node_modules/minimatch",
+      "before": "10.2.6",
+      "after": "11.0.9"
+    },
+    {
+      "path": "node_modules/@vitest/expect",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/@vitest/mocker",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/@vitest/pretty-format",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/@vitest/runner",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/@vitest/snapshot",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/@vitest/spy",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/@vitest/utils",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/chai",
+      "before": "6.2.2",
+      "after": "6.3.0"
+    },
+    {
+      "path": "node_modules/chromium-bidi",
+      "before": "17.0.2",
+      "after": "157.0.8090-0"
+    },
+    {
+      "path": "node_modules/chromium-bidi/node_modules/zod",
+      "before": "3.25.76",
+      "after": null
+    },
+    {
+      "path": "node_modules/devtools-protocol",
+      "before": "0.0.1663043",
+      "after": "0.0.1687809"
+    },
+    {
+      "path": "node_modules/eslint-config-next",
+      "before": "16.4.1",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/get-east-asian-width",
+      "before": "1.6.0",
+      "after": "1.7.0"
+    },
+    {
+      "path": "node_modules/lighthouse",
+      "before": "13.4.1",
+      "after": "13.5.0"
+    },
+    {
+      "path": "node_modules/modern-tar",
+      "before": "0.8.4",
+      "after": "0.8.6"
+    },
+    {
+      "path": "node_modules/next",
+      "before": "16.4.0",
+      "after": "16.4.6"
+    },
+    {
+      "path": "node_modules/puppeteer-core",
+      "before": "25.8.0",
+      "after": "25.18.1"
+    },
+    {
+      "path": "node_modules/puppeteer-core/node_modules/devtools-protocol",
+      "before": "0.0.1666840",
+      "after": "0.0.1717327"
+    },
+    {
+      "path": "node_modules/puppeteer-core/node_modules/ws",
+      "before": "8.21.3",
+      "after": "8.23.0"
+    },
+    {
+      "path": "node_modules/react",
+      "before": "19.2.8",
+      "after": "19.2.9"
+    },
+    {
+      "path": "node_modules/react-dom",
+      "before": "19.2.8",
+      "after": "19.2.9"
+    },
+    {
+      "path": "node_modules/rolldown",
+      "before": "1.2.5",
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/third-party-web",
+      "before": "0.29.2",
+      "after": "0.30.0"
+    },
+    {
+      "path": "node_modules/tinyrainbow",
+      "before": "3.1.1",
+      "after": "3.2.0"
+    },
+    {
+      "path": "node_modules/tldts-core",
+      "before": "7.4.10",
+      "after": "7.6.0"
+    },
+    {
+      "path": "node_modules/tldts-icann",
+      "before": "7.4.10",
+      "after": "7.6.0"
+    },
+    {
+      "path": "node_modules/typed-query-selector",
+      "before": "2.12.2",
+      "after": "2.12.4"
+    },
+    {
+      "path": "node_modules/typescript-eslint",
+      "before": "8.67.0",
+      "after": "8.74.0"
+    },
+    {
+      "path": "node_modules/vite",
+      "before": "8.2.1",
+      "after": "8.2.4"
+    },
+    {
+      "path": "node_modules/vite/node_modules/picomatch",
+      "before": "4.0.5",
+      "after": "4.0.7"
+    },
+    {
+      "path": "node_modules/vitest",
+      "before": "4.1.11",
+      "after": "4.1.12"
+    },
+    {
+      "path": "node_modules/web-features",
+      "before": "3.35.0",
+      "after": "3.47.0"
+    },
+    {
+      "path": "node_modules/webdriver-bidi-protocol",
+      "before": "0.4.2",
+      "after": "1.0.2"
+    },
+    {
+      "path": "node_modules/@isaacs/nonrecursive-glob-match",
+      "before": null,
+      "after": "1.1.0"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-wasm32-wasi",
+      "before": null,
+      "after": "1.2.19"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/core",
+      "before": null,
+      "after": "2.0.0-beta.2"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/runtime",
+      "before": null,
+      "after": "2.0.0-beta.2"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/wasi-threads",
+      "before": null,
+      "after": "2.2.0"
+    },
+    {
+      "path": "node_modules/ajv-formats",
+      "before": null,
+      "after": "3.0.1"
+    },
+    {
+      "path": "node_modules/ajv-formats/node_modules/ajv",
+      "before": null,
+      "after": "8.20.0"
+    },
+    {
+      "path": "node_modules/ajv-formats/node_modules/json-schema-traverse",
+      "before": null,
+      "after": "1.0.0"
+    },
+    {
+      "path": "node_modules/fast-uri",
+      "before": null,
+      "after": "3.1.9"
+    },
+    {
+      "path": "node_modules/lighthouse/node_modules/ajv",
+      "before": null,
+      "after": "8.20.0"
+    },
+    {
+      "path": "node_modules/lighthouse/node_modules/json-schema-traverse",
+      "before": null,
+      "after": "1.0.0"
+    },
+    {
+      "path": "node_modules/require-from-string",
+      "before": null,
+      "after": "2.0.2"
+    }
+  ]
+}

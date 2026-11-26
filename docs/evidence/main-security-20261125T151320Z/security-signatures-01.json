@@ -1,0 +1,9 @@
+{
+  "started": "2026-11-26T10:07:19.851Z",
+  "ended": "2026-11-26T10:08:35.689Z",
+  "credentialEnvironmentExcluded": true,
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 security:signatures\n> npm audit signatures\n\naudited 688 packages in 47s\n\n688 packages have verified registry signatures\n\n158 packages have verified attestations\n\n",
+  "stderr": ""
+}
