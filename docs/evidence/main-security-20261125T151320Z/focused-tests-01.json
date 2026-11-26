@@ -1,0 +1,8 @@
+{
+  "started": "2026-11-25T15:24:05.921Z",
+  "ended": "2026-11-25T15:24:15.370Z",
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 test:unit\n> vitest run tests/unit/minimatch-queue-compatibility.test.ts tests/unit/minimatch-resolution-security.test.ts tests/unit/dependency-security.test.ts tests/unit/bot-handoff.test.ts --maxWorkers=1\n\n\n RUN  v4.1.12 C:/ir35-security-main-20261125\n\n\n Test Files  4 passed (4)\n      Tests  35 passed (35)\n   Start at  15:24:10\n   Duration  5.10s (transform 377ms, setup 0ms, import 1.99s, tests 1.14s, environment 0ms)\n\n",
+  "stderr": ""
+}

@@ -1,0 +1,9 @@
+{
+  "started": "2026-11-26T10:07:00.647Z",
+  "ended": "2026-11-26T10:07:19.839Z",
+  "credentialEnvironmentExcluded": true,
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 security:audit\n> tsx scripts/security-audit.ts\n\nDependency audit passed with only the explicitly listed, unexpired exceptions (if any).\n",
+  "stderr": ""
+}

@@ -1,0 +1,8 @@
+{
+  "started": "2026-11-25T15:25:49.712Z",
+  "ended": "2026-11-25T15:26:56.622Z",
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 lint\n> eslint . --max-warnings=0\n\n",
+  "stderr": ""
+}

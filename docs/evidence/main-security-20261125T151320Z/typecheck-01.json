@@ -1,0 +1,8 @@
+{
+  "started": "2026-11-25T15:25:01.195Z",
+  "ended": "2026-11-25T15:25:49.684Z",
+  "exitCode": 0,
+  "error": null,
+  "stdout": "\n> ir35careers@1.0.0 typecheck\n> tsc --noEmit\n\n",
+  "stderr": ""
+}

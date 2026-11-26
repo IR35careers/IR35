@@ -1,6 +1,12 @@
 # Temporary dependency risk decisions
 
-The owner explicitly approved **only two** temporary advisory exceptions in chat, expiring 29 October 2026. This is an accepted, bounded residual risk, **not a claim of zero vulnerabilities**. `security/audit-exceptions.json` ends approval at **2026-10-29 00:00 UTC**; CI fails once it expires. All other findings, advisory IDs, installed versions and incomplete audit responses still block. No severity threshold is raised.
+The owner explicitly renewed **only the same two** temporary advisory exceptions through 30 November 2026, reason **withdrawn advisory**. GitHub withdrew braces on 23 October and sprintf-js on 22 October; both statuses were rechecked on 25 November. The fresh main-baseline npm audit no longer flags either. The exact existing entries remain solely to preserve the audited expiry/list contract without changing its assertions; `security/audit-exceptions.json` ends approval at **2026-11-30 00:00 UTC** and CI fails once it expires. No new ID, version or severity bypass is allowed. All other findings and incomplete audit responses still block.
+
+## Separate main security patch — 25 November 2026
+
+This branch starts from public main `df8ee7f37119f76c9cdca5e2a510278bc473517b`, independently of the migration implementation. The corrected [minimatch advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249) affects >=7.0.0 and <11.0.1; unaffected 3.x callers retain their callable API. TypeScript ESLint 8.74.0 natively selects minimatch 11. Queue 0.11.0 still requests 10.x, so only that consumer is overridden to 11.0.9 and tested using the actual SDK with synthetic intercepted transport.
+
+Next/config 16.4.6 and React/React DOM 19.2.9 are exact compatible security pins; the mock preview's framework metadata tracks that same lockfile. Vitest 4.1.12, Vite 8.2.4 and Lighthouse 13.5.0 address separately observed fresh audit findings. The latest compatible OIDC 3.x parent still pins an affected CLI configuration/Zod dependency; only CLI configuration's Zod consumer is aligned with the existing root 4.6.7 through `$zod`. Root Zod and unaffected minimatch 3.x are unchanged. No application runtime source, auth, RLS/CSP, deployment, secret, workflow or production setting changes are included; the reviewed runtime dependencies do change and require the compatibility checks. Validation results live under `docs/evidence/main-security-20261125T151320Z/` and must pass before a draft PR or hosted checks are requested.
 
 | Advisory | Exact installed package | Exposure and decision |
 | --- | --- | --- |
