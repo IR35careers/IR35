@@ -1,0 +1,18 @@
+{
+  "deadlineSeconds": 180,
+  "fixtureEmptyBefore": true,
+  "fixtureFilesystem": "tmpfs",
+  "freshHomeEmpty": true,
+  "fsyncMocked": false,
+  "nativeCalls": 0,
+  "newCodeNativeProofClaimed": false,
+  "patterns": [
+    "test_resource_audit*.py",
+    "test_p8_oci_readonly.py",
+    "test_storage_budget.py",
+    "test_p8_lifecycle*.py"
+  ],
+  "priorFullManifestSHA256": "e548447e26144784d352ac8d9d75bece423955a2cc5699081ecf3b9e2a1235fc",
+  "privateFilesCopied": 0,
+  "scope": "offline-cost-metadata-compatibility-and-existing-guards"
+}

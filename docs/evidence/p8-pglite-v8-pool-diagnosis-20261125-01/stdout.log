@@ -1,0 +1,11 @@
+{"kind":"stage","name":"clock-start-before-construction","elapsedMs":0.09,"stageMs":0.09,"memory":{"rss":108142592,"heapTotal":63991808,"heapUsed":35834152,"external":6827560,"arrayBuffers":3654528}}
+{"kind":"stage","name":"constructed","elapsedMs":2.545,"stageMs":2.456,"memory":{"rss":108175360,"heapTotal":64253952,"heapUsed":35898160,"external":6169770,"arrayBuffers":3654528}}
+{"kind":"stage","name":"bootstrap-ready","elapsedMs":6012.596,"stageMs":6010.051,"memory":{"rss":424812544,"heapTotal":98693120,"heapUsed":24909984,"external":253418833,"arrayBuffers":93362413}}
+{"kind":"stage","name":"table-created","elapsedMs":6025.709,"stageMs":13.113,"memory":{"rss":424943616,"heapTotal":98693120,"heapUsed":25178888,"external":253419175,"arrayBuffers":93362755}}
+{"kind":"stage","name":"disabled-state-read","elapsedMs":6033.866,"stageMs":8.157,"memory":{"rss":425025536,"heapTotal":98693120,"heapUsed":25426720,"external":253420739,"arrayBuffers":93364319}}
+{"kind":"stage","name":"disabled-state-rejected","elapsedMs":6043.811,"stageMs":9.945,"memory":{"rss":425144320,"heapTotal":98693120,"heapUsed":25620992,"external":253420739,"arrayBuffers":93364319}}
+{"kind":"stage","name":"rls-enabled","elapsedMs":6046.799,"stageMs":2.988,"memory":{"rss":425148416,"heapTotal":98693120,"heapUsed":25782712,"external":253421096,"arrayBuffers":93364676}}
+{"kind":"stage","name":"enabled-state-read","elapsedMs":6049.786,"stageMs":2.987,"memory":{"rss":425148416,"heapTotal":98693120,"heapUsed":25956504,"external":253422660,"arrayBuffers":93366240}}
+{"kind":"stage","name":"enabled-state-accepted","elapsedMs":6051.034,"stageMs":1.248,"memory":{"rss":425148416,"heapTotal":98693120,"heapUsed":25977992,"external":253422660,"arrayBuffers":93366240}}
+{"kind":"stage","name":"closed","elapsedMs":6056.099,"stageMs":5.065,"memory":{"rss":425152512,"heapTotal":98693120,"heapUsed":26130896,"external":253422920,"arrayBuffers":93366500}}
+{"kind":"summary","diagnosticStatus":"COMPLETED","totalMs":6056.788,"semanticChecks":2,"existingGatePassClaimed":false,"gateRerun":false,"initializationMovedOutsideClock":false,"existingTestTimeoutChanged":false}

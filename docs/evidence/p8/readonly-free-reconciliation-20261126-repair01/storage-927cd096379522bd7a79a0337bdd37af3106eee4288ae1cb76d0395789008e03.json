@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00008-get_bucket-intent",
+  "observation": {
+    "method": "GET",
+    "operation": "get_bucket",
+    "selectorSHA256": "6d3c0f376630b699c8ea0dcc86ab38c3bb83f55f4666befec2744148761f7df1"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "access": {
+    "apiOrSshPassphraseRequested": false,
+    "cloudMutationCalls": 0,
+    "keyFingerprint": "SHA256:KMOIA3BjJ1b6L3ANngMkwgHka3DhGMbgJUEPHltk0Qg",
+    "keyLeaseMode": "until-agent-restart",
+    "oracle": "G2-security-token-refresh-failed-browser-sign-in-pending",
+    "refreshFailures": 1,
+    "resourceMetadataCalls": 0,
+    "sshKeyLoaded": true
+  },
+  "approval": "31Oct-decoupled-one-bounded-lifecycle-attempt",
+  "backupUploaded": false,
+  "checkedAt": "2026-10-31T13:42:43.031879+00:00",
+  "cutover": false,
+  "focusedTests": {
+    "installedCliRenderExecuted": true,
+    "seconds": 2.281,
+    "status": "PASS",
+    "tests": 27
+  },
+  "fullLatestSuite": {
+    "freshHome": true,
+    "manifestSHA256": "0ee32d987771bc3b4d431fb1f4b724c0cb79cd40b0b47e344cbbd76af582381a",
+    "path": "docs/evidence/p8-lifecycle-owner31-hermetic-02",
+    "privateStateCopied": false,
+    "seconds": 86.011,
+    "status": "PASS",
+    "tests": 860
+  },
+  "nativeAttempt": {
+    "allowanceUsed": false,
+    "mutationIntentWritten": false,
+    "needsRenewedOwnerApproval": false,
+    "slot": "backup-lifecycle-owner-20261031-01",
+    "slotExists": false
+  },
+  "observerPermissionsAdded": false,
+  "originalRootPolicySHA256": "41836268722951511409c9ba1dd2a8b2d293f06e16a9beb7bb694f2302842e9a",
+  "ownerComment": 6526696000,
+  "phaseComplete": false,
+  "policyTexts": {
+    "dynamicGroup": "instance.id = 'ocid1.instance.oc1.uk-london-1.anwgiljrr72xucychx35t4jbeiaep4qncwolllegqazy3krrryoz7pxqusya'",
+    "service": [
+      "Allow service objectstorage-uk-london-1 to manage object-family in compartment id ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq where request.permission='BUCKET_INSPECT'",
+      "Allow service objectstorage-uk-london-1 to manage object-family in compartment id ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq where all {target.bucket.name='ir35-backups', any {request.permission='BUCKET_READ', request.permission='OBJECT_INSPECT', request.permission='OBJECT_DELETE'}}"
+    ],
+    "vm": "Allow dynamic-group ir35-backup-vm to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq where all {target.bucket.name='ir35-backups', any {request.permission='OBJECT_CREATE', request.permission='OBJECT_INSPECT', request.permission='OBJECT_READ'}}"
+  },
+  "priorFullSuite": {
+    "attestsFinalSource": false,
+    "manifestSHA256": "aa8e0f08c0abdddcb8845d2ae6b976c6995a9f2ef93d27b0ee59ad005deb96e7",
+    "seconds": 122.034,
+    "status": "PASS",
+    "tests": 858
+  },
+  "productionChanges": 0,
+  "protocol": {
+    "createOnly": true,
+    "deleteRequiresCreationEtagAndUnchangedDefinition": true,
+    "existingEmptyPolicyIsNotAbsent": true,
+    "explicitNoninteractiveConfirmation": true,
+    "ifNoneMatch": "*",
+    "shapeManifestSHA256": "13f617824baff855a86c85c7d75b981e1f0c3f0d68c4069c37727ad6ff60b0db",
+    "unknownFieldsRejected": true
+  },
+  "restoreProven": false,
+  "sourceSHA256": {
+    "infra/oracle/p8_lifecycle_owner31.py": "f9f807d89059d630cceba7411b9ff440a505b3b3311235c37aeec0855f3cde9f",
+    "infra/oracle/p8_lifecycle_protocol.py": "8fe01d7b49ab0d91f01d2f9237d0b1de19a5c2be5444d994c446926f74afd8af",
+    "infra/oracle/run_hermetic_suite.py": "3cba7c0dc40dcd0c30702538f5649353d51b389a651dbe99fe2e9c22b4180098",
+    "infra/oracle/tests/test_p8_lifecycle_owner31.py": "e2b4dc66bbd263b473e7d87be7884c8bd3a27d3ce4c0afe0bfd885c8390373ec",
+    "infra/oracle/tests/test_p8_lifecycle_protocol.py": "f4b5400b566f33614f398582eb9b15f8699a7d3b38b733d80f6e435ba0ad85ae"
+  },
+  "status": "OFFLINE_PASS_ACCESS_WAIT",
+  "vmChanges": 0
+}

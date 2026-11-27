@@ -1,3 +1,40 @@
 infra/oracle/*.sh text eol=lf
 scripts/reverse-sync.sh text eol=lf
 docs/evidence/** text eol=lf
+
+# Preserve exact bytes of reviewed write-once P8 evidence and its sealed logs.
+docs/evidence/p8-current-source-hermetic-20261126-01/** -text
+docs/evidence/p8-hermetic-tmpdir-focused-20261126-01/** -text
+docs/evidence/p8-lifecycle-cloud-only-20261126-01/** -text
+docs/evidence/p8-lifecycle-cloud-only-20261126-tmpfs-01/** -text
+docs/evidence/p8-lifecycle-owner23-hermetic-20261124-01/** -text
+docs/evidence/p8-lifecycle-owner31-hermetic-01/** -text
+docs/evidence/p8-lifecycle-owner31-hermetic-02/** -text
+docs/evidence/p8-lifecycle-owner31-hermetic-03/** -text
+docs/evidence/p8-next-pin-20261125-01/** -text
+docs/evidence/p8-node22-rls-20261126-01/** -text
+docs/evidence/p8-oracle-inventory-focused-20261125-01/** -text
+docs/evidence/p8-pglite-linux-diagnosis-20261125-01/** -text
+docs/evidence/p8-pglite-native-assets-diagnosis-20261125-01/** -text
+docs/evidence/p8-pglite-phase-diagnosis-20261125-01/** -text
+docs/evidence/p8-pglite-v8-pool-diagnosis-20261125-01/** -text
+docs/evidence/p8-version-pin-hermetic-20261125-01/** -text
+docs/evidence/p8/backup-lifecycle-owner-20261031-01/** -text
+docs/evidence/p8/cost-metadata-shape-20261126-01/** -text
+docs/evidence/p8/lifecycle-owner31-preparation-20261031-01/** -text
+docs/evidence/p8/lifecycle-owner31-preparation-20261031-02/** -text
+docs/evidence/p8/readonly-free-reconciliation-20261126-01/** -text
+docs/evidence/oracle-access-gates-20261125-02.json -text
+docs/evidence/oracle-live-recovery-20261125.json -text
+docs/evidence/oracle-minimatch-compatibility-stop-20261031.json -text
+docs/evidence/oracle-minimatch-jsx-only-scope-stop-20261031.json -text
+docs/evidence/oracle-p8-access-status-20261125.md -text
+docs/evidence/oracle-p8-node22-gate-stop-20261126.md -text
+docs/evidence/oracle-p8-version-pin-hold-20261124.json -text
+docs/evidence/oracle-readonly-reconciliation-stop-20261126.md -text
+docs/evidence/p8-cost-neutral-metadata-focused-20261126-01/** -text
+docs/evidence/p8/cost-currency-classification-20261126-01/** -text
+docs/evidence/oracle-p8-session-keeper-source-20261126.json -text
+docs/evidence/p8/readonly-free-reconciliation-20261126-repair01/** -text
+docs/evidence/oracle-readonly-repair-preflight-20261126.md -text
+docs/evidence/oracle-p8-publication-prechecks-20261127.json -text

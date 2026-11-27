@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "date": "2026-11-25",
+  "status": "ACCESS_AND_UNIT_GATE_BLOCKED",
+  "ownerReportedAllThreeComplete": true,
+  "verifiedAccess": {
+    "oracle": { "status": "PASS", "auth": "security_token", "region": "uk-london-1", "operation": "read-only-compartment-get", "compartmentName": "ir35", "compartmentState": "ACTIVE" },
+    "ssh": { "status": "FAIL", "keyLoaded": false, "code": "NativeSshUnlockFailed_RawWithheld", "attemptWrittenAt": "2026-11-25T10:43:23.573189Z", "resultWrittenAt": "2026-11-25T10:48:23.687959Z", "secondsBetweenRecords": 300.115, "attemptSHA256": "09d796a1abfa28d8ce9b1ed9d9c5018f2591e01e12cfc9e00c5960e603338702", "resultSHA256": "a1e5b433fc66830b43eafbe08465f18a691000d4621ec293ccc6b63d17c3767c", "automaticRetryAllowed": false },
+    "githubCli": { "status": "LOGIN_REQUIRED", "loginProcessStillOpen": true, "successNotInferredFromBrowserApproval": true }
+  },
+  "sourceChecks": {
+    "isolatedPythonBeforeAccessRetry02": { "status": "PASS", "tests": 918, "seconds": 131.6, "manifestSHA256": "726531e057639b2023e91b715577b96e3ecb8ead454ba5fbb541556f1ce2b96a" },
+    "sshRetry02Focused": { "status": "PASS", "tests": 49, "actualKeysSupplied": false },
+    "fullNodeUnit": { "status": "FAIL", "passed": 1311, "failed": 1, "total": 1312, "files": 178, "sourceUnchanged": true, "sourceSHA256": "e148a17f06e9f2e6888511daebbd5ba2e76f338be10e70e72ddb74bdfb4e1a12", "case": "oracle-inventory real disposable PostgreSQL RLS regression", "reason": "Test timed out in 5000ms", "observedCaseMilliseconds": 7089 },
+    "focusedRlsReproduction": { "status": "FAIL", "passed": 11, "failed": 1, "observedCaseMilliseconds": 5820.7037, "manifestSHA256": "e1077312722fdcb5d1957a1b4ffbce75cd00d536d772f0264419a2996ea6bdf2" },
+    "phaseTimingDiagnosis": { "status": "DIAGNOSTIC_ONLY_NOT_GATE_PASS", "bootstrapMilliseconds": 7794.6, "totalMilliseconds": 7882.249, "syntheticRlsChecksCompleted": true, "manifestSHA256": "a4348498eb8b3683fdd4db9aa1a3292bef23d0037a92bca8a35d19d8e949f88e" },
+    "timeoutsChanged": false,
+    "semanticAssertionsWeakened": false,
+    "failedEvidenceOverwritten": false
+  },
+  "newLifecycleAllowanceConsumed": false,
+  "vmChanges": 0,
+  "resourceCloudWrites": 0,
+  "productionChanges": 0,
+  "dnsChanges": 0,
+  "paidActions": 0,
+  "cutover": false,
+  "siteRestored": false
+}

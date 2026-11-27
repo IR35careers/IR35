@@ -1,0 +1,9 @@
+{
+  "auth": "SecurityToken",
+  "operation": "costSummary",
+  "profile": "ir35",
+  "rawResponseWritten": false,
+  "region": "uk-london-1",
+  "requestsPermitted": 1,
+  "writesPermitted": false
+}

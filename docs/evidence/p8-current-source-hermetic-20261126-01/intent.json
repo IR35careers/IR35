@@ -1,0 +1,27 @@
+{
+  "assertionsChanged": false,
+  "deadlineSeconds": 180,
+  "environmentNames": [
+    "HOME",
+    "PATH",
+    "LANG",
+    "PYTHONNOUSERSITE",
+    "TMPDIR"
+  ],
+  "fixtureEmptyBefore": true,
+  "fixtureFilesystem": "tmpfs",
+  "fixtureFreeBytesBefore": 1984757760,
+  "fixtureMode": "700",
+  "fixtureOwnerMatches": true,
+  "freshHomeEmpty": true,
+  "fsyncMocked": false,
+  "homeMode": "700",
+  "homeOwnerMatches": true,
+  "predecessorManifests": [
+    "97871d8837e089487d8126e3f99b903b231c7d070c91e9431e4768ce8622e8f2",
+    "b3997ff6b2186e20f4ab438b1b20fa71414f25c12a0c926c5db36c85e2c59244",
+    "3c7da722504b839869a798c467e846874830a46aaf054e3fc29a8f95324a298c"
+  ],
+  "privateStateCopied": false,
+  "testsRemoved": 0
+}

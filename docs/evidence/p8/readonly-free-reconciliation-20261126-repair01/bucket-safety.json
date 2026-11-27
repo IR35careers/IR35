@@ -1,0 +1,9 @@
+{
+  "autoTiering": "Disabled",
+  "bucket": "ir35-backups",
+  "customerManagedKey": false,
+  "replicationEnabled": false,
+  "status": "PASS",
+  "storageTier": "Standard",
+  "versioning": "Disabled"
+}

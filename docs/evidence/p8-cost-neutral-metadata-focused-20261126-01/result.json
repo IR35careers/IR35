@@ -1,0 +1,20 @@
+{
+  "existingAssertionsChanged": false,
+  "existingTestFilesChecked": 143,
+  "existingTestsByteIdenticalToPriorFull": true,
+  "exitCode": 0,
+  "fixtureRemainingEntries": 0,
+  "freshHomeEmpty": true,
+  "fullSuitePassClaimed": false,
+  "nativeCalls": 0,
+  "newCodeNativeProofClaimed": false,
+  "privateFilesCopied": 0,
+  "privateHomeCreated": false,
+  "pythonSourceFiles": 338,
+  "seconds": 14.415,
+  "sourceUnchanged": true,
+  "status": "PASS",
+  "tests": 78,
+  "testsRemoved": 0,
+  "timeoutsChanged": false
+}

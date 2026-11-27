@@ -1,0 +1,23 @@
+{
+  "amountTypes": {
+    "float": 2
+  },
+  "cloudWrites": 0,
+  "currencyTypes": {
+    "str": 2
+  },
+  "cutoverExecuted": false,
+  "invalidCurrencyRows": 1,
+  "missingFields": {},
+  "nativeAllowanceUsed": false,
+  "nullAmounts": 0,
+  "nullCoercions": 0,
+  "nullCurrencies": 0,
+  "providerValuesPublished": false,
+  "readOnly": true,
+  "reportedPositiveAmountRows": 0,
+  "responseType": "dict",
+  "rowCount": 2,
+  "status": "DIAGNOSED_NOT_COST_PASS",
+  "zeroBillConclusion": false
+}

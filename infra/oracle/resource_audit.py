@@ -3,6 +3,7 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -38,6 +39,42 @@ def safe_name(value):
     if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,254}", value):
         raise KeySafetyError("Unexpected resource name; raw values suppressed.")
     return value
+
+
+def cost_totals(items):
+    """Account for every row, never infer a currency or a real-time bill.
+
+    A finite exact zero with a nonempty ASCII-space-only label contributes
+    zero to any currency. Record that row separately, without calling the
+    label a documented Oracle sentinel or normalising it to account currency.
+    """
+    costs, neutral_zero_rows = {}, []
+    for index, item in enumerate(items, start=1):
+        currency = item.get("currency")
+        currency_verified = isinstance(currency, str) and re.fullmatch(r"[A-Z]{3}", currency)
+        space_only = isinstance(currency, str) and re.fullmatch(r" +", currency)
+        if not currency_verified and not space_only:
+            raise KeySafetyError("Cost currency is unverified; no zero-billing conclusion.")
+        amount = item.get("computed-amount")
+        if isinstance(amount, bool) or not isinstance(amount, (int, float, str)):
+            raise KeySafetyError("Cost amount is unverified.")
+        try:
+            amount = Decimal(str(amount))
+        except InvalidOperation:
+            raise KeySafetyError("Cost amount is invalid; raw response suppressed.") from None
+        if not amount.is_finite():
+            raise KeySafetyError("Cost amount is not finite.")
+        if space_only:
+            if amount != 0:
+                raise KeySafetyError("Cost currency is unverified; no zero-billing conclusion.")
+            neutral_zero_rows.append({"rowIndex": index,
+                "currencySHA256": hashlib.sha256(currency.encode("ascii")).hexdigest(), "knownZero": True})
+        else:
+            current = costs.setdefault(currency, {"net": Decimal(0), "positive": Decimal(0)})
+            current["net"] += amount
+            # A credit never hides a positive usage amount in this report.
+            current["positive"] += max(amount, Decimal(0))
+    return costs, neutral_zero_rows
 
 
 class ReadOnlyOci:
@@ -264,24 +301,7 @@ def inventory(client, account, *, exact_storage=None):
     if not isinstance(cost_response, dict) or cost_response.get("next-page"):
         raise KeySafetyError("Cost metadata is incomplete/paginated; no zero-billing conclusion.")
     cost_items = rows(cost_response)
-    costs = {}
-    for item in cost_items:
-        currency = item.get("currency")
-        if not isinstance(currency, str) or not re.fullmatch(r"[A-Z]{3}", currency):
-            raise KeySafetyError("Cost currency is unverified; no zero-billing conclusion.")
-        amount = item.get("computed-amount")
-        if isinstance(amount, bool) or not isinstance(amount, (int, float, str)):
-            raise KeySafetyError("Cost amount is unverified.")
-        try:
-            amount = Decimal(str(amount))
-        except InvalidOperation:
-            raise KeySafetyError("Cost amount is invalid; raw response suppressed.") from None
-        if not amount.is_finite():
-            raise KeySafetyError("Cost amount is not finite.")
-        current = costs.setdefault(currency, {"net": Decimal(0), "positive": Decimal(0)})
-        current["net"] += amount
-        # A credit never hides a positive usage amount in this report.
-        current["positive"] += max(amount, Decimal(0))
+    costs, neutral_zero_rows = cost_totals(cost_items)
     objects = {"buckets": bucket_count, "approximateBytes": str(approximate_object_bytes), "exactBytesProven": bucket_count == 0}
     if exact_storage is not None:
         proof = exact_storage(namespace, exact_bucket_scope, compartments=sorted(client.compartments))
@@ -296,6 +316,7 @@ def inventory(client, account, *, exact_storage=None):
             "budgetAlertVerified": True, "quotaPolicyCount": quota_count,
             "objectStorage": objects,
             "costReport": {"rows": len(cost_items), "amounts": {key: {field: str(value) for field, value in amount.items()} for key, amount in costs.items()},
+                           "neutralZeroRowCount": len(neutral_zero_rows), "neutralZeroRows": neutral_zero_rows,
                            "covers": "current month up to previous UTC midnight", "mayLag": True, "realTimeZeroBillProven": False},
             "infrastructureCreates": 0, "productionChanges": 0,
             "freeTierCreateGate": "NOT_PASSED",

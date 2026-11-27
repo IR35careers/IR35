@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/home/anvesh/.ir35/oci/bin/python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "infra/oracle/tests",
+    "-p",
+    "test_p8_lifecycle*.py",
+    "-v"
+  ],
+  "assertionsChanged": false,
+  "deadlineSeconds": 180,
+  "environmentNames": [
+    "HOME",
+    "LANG",
+    "PATH",
+    "PYTHONNOUSERSITE",
+    "TMPDIR"
+  ],
+  "fixtureEmptyBefore": true,
+  "fixtureFilesystem": "tmpfs",
+  "fixtureFreeBytes": 1984757760,
+  "fixtureMode": "700",
+  "fixtureOwnerMatches": true,
+  "fsyncMocked": false,
+  "nativeCalls": 0,
+  "previousFailureManifestSHA256": "b3997ff6b2186e20f4ab438b1b20fa71414f25c12a0c926c5db36c85e2c59244",
+  "privateFilesCopied": 0,
+  "productionDurabilityClaimed": false,
+  "scope": "ENTIRE-identical-offline-lifecycle-family",
+  "sourceEdited": false,
+  "testsRemoved": 0
+}

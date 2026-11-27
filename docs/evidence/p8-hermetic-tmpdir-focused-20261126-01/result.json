@@ -1,0 +1,15 @@
+{
+  "assertionsChanged": false,
+  "exitCode": 0,
+  "freshHomeEmpty": true,
+  "nativeCalls": 0,
+  "predecessorsVerified": true,
+  "privateFilesCopied": 0,
+  "privateHomeCreated": false,
+  "pythonSourceFiles": 335,
+  "seconds": 1.815,
+  "sourceUnchanged": true,
+  "status": "PASS",
+  "testsRemoved": 0,
+  "timeoutsChanged": false
+}

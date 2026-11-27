@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "date": "2026-11-26",
+  "scope": "LOCAL_PUBLIC_FAKE_SOURCE_TESTS_ONLY",
+  "status": "PASS",
+  "nativeAuthStateVerified": false,
+  "nativeExecution": false,
+  "phaseComplete": false,
+  "cutoverExecuted": false,
+  "sourceBindings": {
+    "infra/oracle/security_session_keeper.py": "e53b26534f883d48d1f1139d16c1bcaef7e15e69d8dfea0dd7c38bb67273eb9f",
+    "infra/oracle/tests/test_security_session_keeper.py": "bc18ed26be710192f947d50c9bf34c09b1cf17ee65c4760f1de7cbf7434a99fb",
+    "infra/oracle/security_session.py": "70d74f12e84546f8644fcd99399785012a206f29131ecddd9a5ef8183bd33e96"
+  },
+  "focusedTests": {
+    "tests": 29,
+    "seconds": 1.599,
+    "exitCode": 0,
+    "freshHome": true,
+    "fakeFixturesOnly": true,
+    "ir35DirectoryBefore": false,
+    "ir35DirectoryAfter": false
+  },
+  "localProof": {
+    "manifestSHA256": "75c79b56b8ec05517391d9c98d04f2bd81c9e0f22a01a01073ceed9f05f0bf2a",
+    "referencedArtifacts": 3,
+    "allLocalArtifactHashesVerified": true,
+    "rawFakeLogsPublished": false
+  },
+  "limitations": [
+    "This is a redacted summary of local public-fixture tests; it does not expose or certify the actual owner authentication session.",
+    "The existing 970-test full helper result binds 335 earlier Python source files, not these later additions.",
+    "Final current-head hosted discovery and all migration/data/security/free-tier/release checks remain required.",
+    "No private keeper/authentication files, keys, token values, environment credentials or software distributions are included."
+  ]
+}

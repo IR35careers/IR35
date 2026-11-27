@@ -100,7 +100,7 @@ def image_probe(runtime, tag, kind):
         raise RuntimeError('NativeImageArmNonrootIdentityMismatch')
     if kind == 'web':
         script = "const fs=require('node:fs');let r={};for(const n of ['next','react','react-dom','sharp'])r[n]=JSON.parse(fs.readFileSync('/app/node_modules/'+n+'/package.json','utf8')).version;console.log(JSON.stringify(r))"
-        args, expected = ['-e', script], {'next': '16.4.3', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'}
+        args, expected = ['-e', script], {'next': '16.4.6', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'}
     else:
         script = "const fs=require('node:fs'),m=require('./services/application-worker/mock-web-runtime.ts');const exports=Object.keys(m).sort();let versions={};for(const n of ['playwright-core','pg-boss'])versions[n]=JSON.parse(fs.readFileSync('/app/node_modules/'+n+'/package.json','utf8')).version;console.log(JSON.stringify({exports,versions,importOnly:true}))"
         args, expected = ['--import', 'tsx', '-e', script], {'exports': ['runWebMockWorker', 'setupWebMockQueue', 'webMockOwnerOptions'],

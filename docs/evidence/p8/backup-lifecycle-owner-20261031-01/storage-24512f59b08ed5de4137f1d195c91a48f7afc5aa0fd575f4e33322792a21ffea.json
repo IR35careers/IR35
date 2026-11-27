@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00007-get_bucket-result",
+  "observation": {
+    "httpSuccess": true,
+    "nextPagePresent": false,
+    "status": "PASS"
+  }
+}

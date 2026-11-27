@@ -1,0 +1,11 @@
+{"kind":"stage","name":"clock-start-before-construction","elapsedMs":0.099,"stageMs":0.099,"memory":{"rss":100786176,"heapTotal":19898368,"heapUsed":14892144,"external":8392524,"arrayBuffers":33569}}
+{"kind":"stage","name":"constructed","elapsedMs":4.906,"stageMs":4.807,"memory":{"rss":100917248,"heapTotal":19898368,"heapUsed":14995064,"external":8392564,"arrayBuffers":33569}}
+{"kind":"stage","name":"bootstrap-ready","elapsedMs":9516.175,"stageMs":9511.269,"memory":{"rss":623480832,"heapTotal":47443968,"heapUsed":18556536,"external":256144437,"arrayBuffers":90216409}}
+{"kind":"stage","name":"table-created","elapsedMs":9541.183,"stageMs":25.007,"memory":{"rss":623480832,"heapTotal":47443968,"heapUsed":18909200,"external":256144779,"arrayBuffers":90216751}}
+{"kind":"stage","name":"disabled-state-read","elapsedMs":9554.448,"stageMs":13.265,"memory":{"rss":623480832,"heapTotal":47443968,"heapUsed":19156752,"external":256146343,"arrayBuffers":90218315}}
+{"kind":"stage","name":"disabled-state-rejected","elapsedMs":9567.183,"stageMs":12.736,"memory":{"rss":623611904,"heapTotal":47443968,"heapUsed":19348552,"external":256146343,"arrayBuffers":90218315}}
+{"kind":"stage","name":"rls-enabled","elapsedMs":9569.36,"stageMs":2.177,"memory":{"rss":623611904,"heapTotal":47443968,"heapUsed":19510344,"external":256146700,"arrayBuffers":90218672}}
+{"kind":"stage","name":"enabled-state-read","elapsedMs":9571.881,"stageMs":2.521,"memory":{"rss":623611904,"heapTotal":47443968,"heapUsed":19684536,"external":256148264,"arrayBuffers":90220236}}
+{"kind":"stage","name":"enabled-state-accepted","elapsedMs":9572.963,"stageMs":1.082,"memory":{"rss":623611904,"heapTotal":47443968,"heapUsed":19703152,"external":256148264,"arrayBuffers":90220236}}
+{"kind":"stage","name":"closed","elapsedMs":9577.631,"stageMs":4.668,"memory":{"rss":623611904,"heapTotal":47443968,"heapUsed":19860808,"external":256148524,"arrayBuffers":90220496}}
+{"kind":"summary","diagnosticStatus":"COMPLETED","totalMs":9578.075,"semanticChecks":2,"node":"v24.13.0","v8":"13.6.233.17-node.37","platform":"linux","architecture":"x64","existingGatePassClaimed":false,"gateRerun":false,"initializationMovedOutsideClock":false,"existingTestTimeoutChanged":false}

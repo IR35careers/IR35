@@ -1,15 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-describe("October Next security release gate", () => {
+describe("November Next security release gate", () => {
   const lock = JSON.parse(readFileSync(new URL("../../package-lock.json", import.meta.url), "utf8"));
   it("pins patched framework, React and lint versions, without an advisory waiver", () => {
-    for (const [name, version] of Object.entries({ next: "16.4.3", react: "19.2.9", "react-dom": "19.2.9" })) {
+    for (const [name, version] of Object.entries({ next: "16.4.6", react: "19.2.9", "react-dom": "19.2.9" })) {
       expect(lock.packages[""].dependencies[name]).toBe(version);
       expect(lock.packages[`node_modules/${name}`].version).toBe(version);
     }
-    expect(lock.packages[""].devDependencies["eslint-config-next"]).toBe("16.4.3");
-    expect(lock.packages["node_modules/eslint-config-next"].version).toBe("16.4.3");
+    expect(lock.packages[""].devDependencies["eslint-config-next"]).toBe("16.4.6");
+    expect(lock.packages["node_modules/eslint-config-next"].version).toBe("16.4.6");
   });
   it("locks the patched Sharp API and both Linux ARM64 runtime dependencies", () => {
     expect(lock.packages["node_modules/sharp"].version).toBe("0.35.5");

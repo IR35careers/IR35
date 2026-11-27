@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "name": "intent.json",
+      "sha256": "16eb5725a6a2dfa473fcea7445d71d0ed887234ca3bd5d6d14ee282ab2f8bddd"
+    },
+    {
+      "name": "result.json",
+      "sha256": "e0273b60d74b3bc16611d2f81c55bec2263b3327474f2b6130b744f102ad2408"
+    },
+    {
+      "name": "stderr.log",
+      "sha256": "cb0144c2ce4cdb1f3bfe8ade8528517c1aa9fd0e52e784e5cd1c7395743b1395"
+    },
+    {
+      "name": "stdout.log",
+      "sha256": "e4e63019d6059d40c5bf01df358615ebb1502cc4ddd86a6fd8b46d78522f0a6a"
+    }
+  ],
+  "version": 1
+}

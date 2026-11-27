@@ -53,7 +53,7 @@ def native_proof():
     for kind in ('web', 'worker'):
         proof[kind] = {'status': 'PASS', 'sourceSHA': config.BUILD_SHA, 'architecture': 'linux/arm64',
                        'nonroot': True, 'runtimeDeployed': False, 'networkNoneProbe': True, 'image': images()[kind]}
-    proof['web']['probe'] = {'next': '16.4.3', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'}
+    proof['web']['probe'] = {'next': '16.4.6', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'}
     proof['worker']['probe'] = {'exports': ['runWebMockWorker', 'setupWebMockQueue', 'webMockOwnerOptions'],
                               'versions': {'playwright-core': '1.61.0', 'pg-boss': '12.38.0'}, 'importOnly': True}
     return proof
@@ -113,13 +113,21 @@ class QaConfigurationTests(unittest.TestCase):
                 proof = native_proof(); proof[kind][key] = value
                 with self.assertRaises(config.ConfigError): config.image_pair(proof)
 
-    def test_actual_sealed_public_native_result_is_compatible_not_a_second_build(self):
+    def test_actual_sealed_public_native_result_is_retained_but_rejected_as_historical(self):
         root = Path(config.__file__).resolve().parents[2]
         proof = json.loads((root / 'docs/evidence/p8/native-webmock-images-01/native-result.json').read_bytes())
-        value = config.image_pair(proof)
-        self.assertEqual(value['sourceSHA'], config.BUILD_SHA)
-        self.assertEqual(value['web'], 'sha256:a0bfd695b40349c444297d86dfb5afe7d0fdde7c0aa84378ec1a791a299eff39')
-        self.assertEqual(value['worker'], 'sha256:86e5c87ae8c4cac8ea372c52596fb7b156d320cebe3585182cb50689d1530ea0')
+        self.assertEqual(proof['sourceSHA'], config.BUILD_SHA)
+        self.assertEqual(proof['web']['image'], 'sha256:a0bfd695b40349c444297d86dfb5afe7d0fdde7c0aa84378ec1a791a299eff39')
+        self.assertEqual(proof['worker']['image'], 'sha256:86e5c87ae8c4cac8ea372c52596fb7b156d320cebe3585182cb50689d1530ea0')
+        self.assertEqual(proof['web']['probe']['next'], '16.4.3')
+        with self.assertRaisesRegex(config.ConfigError, 'NativeQaImageIdentityOrImportProofMismatch'):
+            config.image_pair(proof)
+
+    def test_old_and_canary_framework_probe_metadata_cannot_pass_the_new_image_gate(self):
+        for version in ('16.3.2', '16.4.3', '16.4.3-canary.1', '16.4.6-canary.1'):
+            proof = native_proof(); proof['web']['probe']['next'] = version
+            with self.subTest(version=version),self.assertRaisesRegex(config.ConfigError, 'NativeQaImageIdentityOrImportProofMismatch'):
+                config.image_pair(proof)
 
     def test_private_database_host_role_port_and_original_path_are_exact(self):
         target = config.database_name(PRISTINE)

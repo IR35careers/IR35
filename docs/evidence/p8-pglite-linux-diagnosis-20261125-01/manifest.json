@@ -1,0 +1,45 @@
+{
+  "artifacts": [
+    {
+      "name": "diagnostic-intent.json",
+      "sha256": "5a9bf987afdd04a4914ca5cf5f494c81475fd16ce88ab563f04cd4d0dbeacae5"
+    },
+    {
+      "name": "download-result.json",
+      "sha256": "49c267c5c2cf9aafc75c53ca2697528ab0811cdd016ed6da9f97fe1fe27795cc"
+    },
+    {
+      "name": "public-pglite-assets-after.json",
+      "sha256": "34aabaa4bcfeb9cca3cb4a6a0663658d287c0f36eafdbeb0f50c3cf396bb4e33"
+    },
+    {
+      "name": "result.json",
+      "sha256": "4609fde2c305dc430b0157efbaefe104ba67d15b51c589245a144bc2720219a6"
+    },
+    {
+      "name": "runtime-intent.json",
+      "sha256": "6cf9e27e44f5d8dc334da8b10c11e4b49efe6cca365c7a844ff51d900781dff5"
+    },
+    {
+      "name": "runtime-result.json",
+      "sha256": "fed57ad622f1d8a89fd6025a819fd99477185b086cf2111eecd689c3bc102531"
+    },
+    {
+      "name": "source-after.json",
+      "sha256": "ab2cad9621e403d85078643eaeae046a31f830b997d14b38167c956f7ca3753c"
+    },
+    {
+      "name": "source-before.json",
+      "sha256": "ab2cad9621e403d85078643eaeae046a31f830b997d14b38167c956f7ca3753c"
+    },
+    {
+      "name": "stderr.log",
+      "sha256": "c28daf79e7afe4b5c9017938f019a805e3bc492a92d6b2210c08d43a4953eefd"
+    },
+    {
+      "name": "stdout.log",
+      "sha256": "053faba3d19eed2ea81bfb663bec8f692109dddd8a740154ed08415e0b8689e8"
+    }
+  ],
+  "version": 1
+}

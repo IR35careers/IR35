@@ -86,7 +86,7 @@ def image_pair(proof, *, expected_source_sha=BUILD_SHA):
         raise ConfigError('ExactNativeImageAndContainmentProofRequired')
     result = {'sourceSHA': expected_source_sha}
     expected = {
-        'web': {'next': '16.4.3', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'},
+        'web': {'next': '16.4.6', 'react': '19.2.9', 'react-dom': '19.2.9', 'sharp': '0.35.5'},
         'worker': {'exports': ['runWebMockWorker', 'setupWebMockQueue', 'webMockOwnerOptions'],
                    'versions': {'playwright-core': '1.61.0', 'pg-boss': '12.38.0'}, 'importOnly': True}}
     for kind in ('web', 'worker'):

@@ -1,0 +1,6 @@
+{
+  "operation": "groups",
+  "readOnly": true,
+  "region": "uk-london-1",
+  "scope": "owner31-single-bounded-run"
+}

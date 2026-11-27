@@ -1,0 +1,160 @@
+{
+  "diagnosticStatus": "COMPLETED",
+  "existingGatePassClaimed": false,
+  "freshHomeEmpty": true,
+  "gateRerun": false,
+  "kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "nativeCalls": 0,
+  "observations": [
+    {
+      "elapsedMs": 0.099,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 33569,
+        "external": 8392524,
+        "heapTotal": 19898368,
+        "heapUsed": 14892144,
+        "rss": 100786176
+      },
+      "name": "clock-start-before-construction",
+      "stageMs": 0.099
+    },
+    {
+      "elapsedMs": 4.906,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 33569,
+        "external": 8392564,
+        "heapTotal": 19898368,
+        "heapUsed": 14995064,
+        "rss": 100917248
+      },
+      "name": "constructed",
+      "stageMs": 4.807
+    },
+    {
+      "elapsedMs": 9516.175,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90216409,
+        "external": 256144437,
+        "heapTotal": 47443968,
+        "heapUsed": 18556536,
+        "rss": 623480832
+      },
+      "name": "bootstrap-ready",
+      "stageMs": 9511.269
+    },
+    {
+      "elapsedMs": 9541.183,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90216751,
+        "external": 256144779,
+        "heapTotal": 47443968,
+        "heapUsed": 18909200,
+        "rss": 623480832
+      },
+      "name": "table-created",
+      "stageMs": 25.007
+    },
+    {
+      "elapsedMs": 9554.448,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90218315,
+        "external": 256146343,
+        "heapTotal": 47443968,
+        "heapUsed": 19156752,
+        "rss": 623480832
+      },
+      "name": "disabled-state-read",
+      "stageMs": 13.265
+    },
+    {
+      "elapsedMs": 9567.183,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90218315,
+        "external": 256146343,
+        "heapTotal": 47443968,
+        "heapUsed": 19348552,
+        "rss": 623611904
+      },
+      "name": "disabled-state-rejected",
+      "stageMs": 12.736
+    },
+    {
+      "elapsedMs": 9569.36,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90218672,
+        "external": 256146700,
+        "heapTotal": 47443968,
+        "heapUsed": 19510344,
+        "rss": 623611904
+      },
+      "name": "rls-enabled",
+      "stageMs": 2.177
+    },
+    {
+      "elapsedMs": 9571.881,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90220236,
+        "external": 256148264,
+        "heapTotal": 47443968,
+        "heapUsed": 19684536,
+        "rss": 623611904
+      },
+      "name": "enabled-state-read",
+      "stageMs": 2.521
+    },
+    {
+      "elapsedMs": 9572.963,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90220236,
+        "external": 256148264,
+        "heapTotal": 47443968,
+        "heapUsed": 19703152,
+        "rss": 623611904
+      },
+      "name": "enabled-state-accepted",
+      "stageMs": 1.082
+    },
+    {
+      "elapsedMs": 9577.631,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90220496,
+        "external": 256148524,
+        "heapTotal": 47443968,
+        "heapUsed": 19860808,
+        "rss": 623611904
+      },
+      "name": "closed",
+      "stageMs": 4.668
+    },
+    {
+      "architecture": "x64",
+      "diagnosticStatus": "COMPLETED",
+      "existingGatePassClaimed": false,
+      "existingTestTimeoutChanged": false,
+      "gateRerun": false,
+      "initializationMovedOutsideClock": false,
+      "kind": "summary",
+      "node": "v24.13.0",
+      "platform": "linux",
+      "semanticChecks": 2,
+      "totalMs": 9578.075,
+      "v8": "13.6.233.17-node.37"
+    }
+  ],
+  "privateHomeCreated": false,
+  "processExitCode": 0,
+  "scope": "standalone-Linux-diagnosis-not-test-gate",
+  "sourceUnchanged": true,
+  "system": "Linux",
+  "wallSeconds": 20.567
+}

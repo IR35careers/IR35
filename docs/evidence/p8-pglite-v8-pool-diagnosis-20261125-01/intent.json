@@ -1,0 +1,30 @@
+{
+  "scope": "ONE-standalone-synthetic-offline-comparison",
+  "diagnosticProcessBoundMs": 30000,
+  "existingTestTimeoutChanged": false,
+  "initializationMovedOutsideClock": false,
+  "gateRerun": false,
+  "existingGatePassClaimed": false,
+  "networkBlocked": true,
+  "nativeCalls": 0,
+  "flags": [
+    "--v8-pool-size=2"
+  ],
+  "optionDocumentation": "https://nodejs.org/download/release/v24.13.0/docs/api/cli.html#--v8-pool-sizenum",
+  "node": "v24.13.0",
+  "v8": "13.6.233.17-node.37",
+  "baselineManifestSHA256": "a4348498eb8b3683fdd4db9aa1a3292bef23d0037a92bca8a35d19d8e949f88e",
+  "baselineTotalMs": 7882.249,
+  "environmentNames": [
+    "ComSpec",
+    "HOME",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "WINDIR"
+  ],
+  "startedAt": "2026-11-25T10:55:27.156Z"
+}

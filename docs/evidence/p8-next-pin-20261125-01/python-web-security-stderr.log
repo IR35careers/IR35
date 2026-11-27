@@ -1,0 +1,11 @@
+test_exact_patched_lock_required (test_web_security.WebSecurityTests.test_exact_patched_lock_required) ... ok
+test_historical_build_pass_cannot_reach_database (test_web_security.WebSecurityTests.test_historical_build_pass_cannot_reach_database) ... ok
+test_history_preserves_failed_and_passed_artifacts_but_allows_new_patched_source (test_web_security.WebSecurityTests.test_history_preserves_failed_and_passed_artifacts_but_allows_new_patched_source) ... ok
+test_integrity_is_required_for_every_exact_package (test_web_security.WebSecurityTests.test_integrity_is_required_for_every_exact_package) ... ok
+test_native_image_probe_requires_the_new_exact_framework_and_keeps_its_sandbox (test_web_security.WebSecurityTests.test_native_image_probe_requires_the_new_exact_framework_and_keeps_its_sandbox) ... ok
+test_new_build_metadata_is_exact_and_old_or_canary_builds_are_not_relabelled (test_web_security.WebSecurityTests.test_new_build_metadata_is_exact_and_old_or_canary_builds_are_not_relabelled) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.841s
+
+OK

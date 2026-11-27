@@ -1,0 +1,31 @@
+{
+  "scope": "ONE-unchanged-canonical-Node22-focused-gate",
+  "node": "v22.23.5",
+  "nodeBinarySHA256": "247e9693d316da9857e44990e5e11709f596f18112251b8026ec6eed80bdf38a",
+  "officialArchiveSHA256": "4a191082e9706866830379d577d2cc8a50c776fcd9436a8d061b063ed0d9a0e3",
+  "command": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/unit/oracle-inventory.test.ts",
+    "--reporter=json"
+  ],
+  "environmentNames": [
+    "ComSpec",
+    "HOME",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "WINDIR"
+  ],
+  "freshHomeEmpty": true,
+  "changedAssertions": false,
+  "changedTimeouts": false,
+  "movedInitialization": false,
+  "compilerWarmup": false,
+  "nativeCalls": 0,
+  "cutoverExecuted": false,
+  "startedAt": "2026-11-26T10:30:13.133Z"
+}

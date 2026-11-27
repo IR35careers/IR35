@@ -1,0 +1,5 @@
+{
+  "operation": "bootVolumes",
+  "readOnly": true,
+  "selectorSHA256": "14f911ab3f03efdfc88783b8e8307296a4bfd056c6973a84060ebc7f62c38230"
+}

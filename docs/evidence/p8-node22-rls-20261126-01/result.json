@@ -1,0 +1,19 @@
+{
+  "status": "FAIL",
+  "exitCode": 1,
+  "signal": null,
+  "launchError": null,
+  "node": "v22.23.5",
+  "durationMs": 33625,
+  "sourceUnchanged": true,
+  "tests": 12,
+  "passed": 11,
+  "failed": 1,
+  "privateHomeCreated": false,
+  "changedAssertions": false,
+  "changedTimeouts": false,
+  "movedInitialization": false,
+  "nativeCalls": 0,
+  "phaseComplete": false,
+  "cutoverExecuted": false
+}

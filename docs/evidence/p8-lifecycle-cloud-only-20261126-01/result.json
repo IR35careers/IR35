@@ -1,0 +1,13 @@
+{
+  "exitCode": null,
+  "failureCode": "Unchanged180SecondFocusedDeadline",
+  "freshHomeEmpty": true,
+  "fullSuitePassClaimed": false,
+  "nativeCalls": 0,
+  "privateFilesCopied": 0,
+  "privateHomeCreated": false,
+  "seconds": 181.694,
+  "sourceUnchanged": true,
+  "status": "FAIL",
+  "tests": null
+}

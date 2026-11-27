@@ -1,0 +1,10 @@
+{
+  "auth": "SecurityToken",
+  "heldRlsGateReopened": false,
+  "profile": "ir35",
+  "region": "uk-london-1",
+  "scope": "existing-resource-metadata-only",
+  "sourceFamilyManifestSHA256": "3c7da722504b839869a798c467e846874830a46aaf054e3fc29a8f95324a298c",
+  "sshRequired": false,
+  "writesPermitted": false
+}

@@ -1,0 +1,7 @@
+{
+  "tests/unit/oracle-inventory.test.ts": "e7dc1f5bc27ef49b0a33a7894e80ba0ca723b1bc7da1c501981d8de9d245a105",
+  "infra/oracle/inventory.ts": "051c469175cb71732fabe5bbe3a21e408105906afb06b66db484862bf4da0164",
+  "vitest.config.mts": "2f1bc56870a3aada1af4646af5a6f5e5ea350be633a2dfab9d46e157bddc5f98",
+  "package.json": "da331c6d30ede0d2768ab7eb41f28233014851b92f63317163ab23150a21b8e6",
+  "package-lock.json": "4348f2c8e91e74dbf6e37ef657a22e7e10b96ef8c9a6804b2b4bf1649e9cc02d"
+}

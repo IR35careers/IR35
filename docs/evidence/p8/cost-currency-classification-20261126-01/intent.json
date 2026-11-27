@@ -1,0 +1,11 @@
+{
+  "auth": "SecurityToken",
+  "heldRlsGateReopened": false,
+  "maximumApiReads": 1,
+  "onRefreshFailure": "stop-without-opening-browser",
+  "operation": "costSummary",
+  "priorManifestSHA256": "302cc9847214b6ec084902793b4a520a1db643955134dd137f78732498f5bab1",
+  "profile": "ir35",
+  "rawProviderDataWritten": false,
+  "region": "uk-london-1"
+}

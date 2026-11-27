@@ -1,0 +1,8 @@
+{
+  "counterLabel": "00005-list_object_versions-result",
+  "observation": {
+    "httpSuccess": true,
+    "nextPagePresent": false,
+    "status": "PASS"
+  }
+}

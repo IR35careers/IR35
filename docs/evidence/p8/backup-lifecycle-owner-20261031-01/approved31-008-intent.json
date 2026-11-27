@@ -1,0 +1,6 @@
+{
+  "operation": "delete-created-group",
+  "readOnly": false,
+  "region": "uk-london-1",
+  "scope": "owner31-single-bounded-run"
+}

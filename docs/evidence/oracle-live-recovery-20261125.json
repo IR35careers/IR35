@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "date": "2026-11-25",
+  "status": "BLOCKED_SITE_STILL_OFFLINE",
+  "publicChecks": [
+    {
+      "origin": "https://www.ir35careers.com",
+      "observedAt": "2026-11-25T09:54:27Z",
+      "httpStatus": 402,
+      "server": "Vercel",
+      "errorCode": "DEPLOYMENT_DISABLED"
+    },
+    {
+      "origin": "https://admin.ir35careers.com",
+      "observedAt": "2026-11-25T09:54:28Z",
+      "httpStatus": 402,
+      "server": "Vercel",
+      "errorCode": "DEPLOYMENT_DISABLED"
+    }
+  ],
+  "hostingDiagnosis": {
+    "historicalAuthenticatedCause": "Hobby Fluid Active CPU allowance exceeded",
+    "historicalUsagePageWindow": "2026-10-24 to 2026-11-23",
+    "historicalProjectCpuDisplay": "6h 2m",
+    "freshAccountUsageReadCompletedToday": false,
+    "freshUsagePageBlocker": "Browser read timed out after usage navigation; no settings changed",
+    "supportedImmediateFreeOverageResumeEstablished": false,
+    "sources": [
+      "https://vercel.com/docs/errors/deployment_disabled",
+      "https://vercel.com/docs/plans/hobby",
+      "https://vercel.com/docs/projects/managing-projects"
+    ]
+  },
+  "access": {
+    "oracle": "DAILY_BROWSER_SIGN_IN_REQUIRED",
+    "sshKeyLoaded": false,
+    "currentBootSshPromptAttempted": true,
+    "currentBootSuccessfulLoadReceipt": false,
+    "sshPromptReopened": false,
+    "githubCli": "LOGIN_REQUIRED",
+    "credentialsSearchedOrPrinted": false
+  },
+  "nativeAndReleaseGates": {
+    "newLifecycleAttemptConsumed": false,
+    "fullP8Signoff": false,
+    "currentSourceVersionMetadataApproval": "PENDING",
+    "fullMigrationVerificationRunToday": false,
+    "fullCutoverRehearsalPassed": false,
+    "literalYesCutoverReceived": false
+  },
+  "resourceOrProductionChanges": 0,
+  "dnsChanges": 0,
+  "paidActions": 0,
+  "upgrades": 0,
+  "realEmployerSubmissions": 0,
+  "realEmailsSent": 0,
+  "siteRestored": false
+}

@@ -1,0 +1,26 @@
+{
+  "scope": "ONE-focused-offline-file",
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/unit/oracle-inventory.test.ts",
+    "--reporter=json"
+  ],
+  "changedTimeouts": false,
+  "changedAssertions": false,
+  "movedInitialization": false,
+  "nativeCalls": 0,
+  "environmentNames": [
+    "ComSpec",
+    "HOME",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "WINDIR"
+  ],
+  "startedAt": "2026-11-25T10:48:57.106Z"
+}

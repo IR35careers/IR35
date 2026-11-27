@@ -1,0 +1,61 @@
+{
+  "access": {
+    "apiOrSshPassphraseRequested": false,
+    "cloudMutationCalls": 0,
+    "keyFingerprint": "SHA256:KMOIA3BjJ1b6L3ANngMkwgHka3DhGMbgJUEPHltk0Qg",
+    "keyLeaseMode": "until-agent-restart",
+    "oracle": "G2-security-token-refresh-failed-browser-sign-in-pending",
+    "refreshFailures": 1,
+    "resourceMetadataCalls": 0,
+    "sshKeyLoaded": true
+  },
+  "backupUploaded": false,
+  "cutover": false,
+  "focusedTests": {
+    "installedCliRenderExecuted": true,
+    "seconds": 3.711,
+    "status": "PASS",
+    "tests": 27
+  },
+  "fullLatestSuite": {
+    "copiedPrivateFiles": 0,
+    "exitCode": 0,
+    "freshHome": true,
+    "ir35DirectoryPresentAfter": false,
+    "ir35DirectoryPresentBefore": false,
+    "manifestSHA256": "967ca65b97497559b14b7f9ba05f97a5c04a8b2773d378bbc4ad8bb93db1dcb3",
+    "realKeysSupplied": false,
+    "seconds": 79.385,
+    "status": "PASS",
+    "tests": 860,
+    "testsRemoved": 0,
+    "vmCalls": 0
+  },
+  "nativeAttempt": {
+    "allowanceUsed": false,
+    "mutationIntentWritten": false,
+    "needsRenewedOwnerApproval": false,
+    "slot": "backup-lifecycle-owner-20261031-01",
+    "slotExists": false
+  },
+  "observerPermissionsAdded": false,
+  "originalRootPolicySHA256": "41836268722951511409c9ba1dd2a8b2d293f06e16a9beb7bb694f2302842e9a",
+  "phaseComplete": false,
+  "policyTexts": {
+    "dynamicGroup": "instance.id = 'ocid1.instance.oc1.uk-london-1.anwgiljrr72xucychx35t4jbeiaep4qncwolllegqazy3krrryoz7pxqusya'",
+    "service": [
+      "Allow service objectstorage-uk-london-1 to manage object-family in compartment id ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq where request.permission='BUCKET_INSPECT'",
+      "Allow service objectstorage-uk-london-1 to manage object-family in compartment id ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq where all {target.bucket.name='ir35-backups', any {request.permission='BUCKET_READ', request.permission='OBJECT_INSPECT', request.permission='OBJECT_DELETE'}}"
+    ],
+    "vm": "Allow dynamic-group ir35-backup-vm to manage objects in compartment id ocid1.compartment.oc1..aaaaaaaa3k65nsyhjrq3gcjs5gvdvdnpdty3x4ktk6m3drs7dfgnsdmwh3nq where all {target.bucket.name='ir35-backups', any {request.permission='OBJECT_CREATE', request.permission='OBJECT_INSPECT', request.permission='OBJECT_READ'}}"
+  },
+  "priorHermeticSeals": [
+    "aa8e0f08c0abdddcb8845d2ae6b976c6995a9f2ef93d27b0ee59ad005deb96e7",
+    "0ee32d987771bc3b4d431fb1f4b724c0cb79cd40b0b47e344cbbd76af582381a"
+  ],
+  "priorSuitesAttestFinalSource": false,
+  "recordedShapeManifestSHA256": "13f617824baff855a86c85c7d75b981e1f0c3f0d68c4069c37727ad6ff60b0db",
+  "restoreProven": false,
+  "status": "OFFLINE_PASS_ACCESS_WAIT",
+  "supersedesPreparationManifestSHA256": "265a47277614252065290c3bc39304eeb580e860e2c2a10d69f94a38cade1d57"
+}

@@ -1,0 +1,34 @@
+{
+  "a1MemoryGB": "12.0",
+  "a1OCPU": "2.0",
+  "account": {
+    "activeUserMatch": true,
+    "auth": "security_token",
+    "homeRegion": "uk-london-1",
+    "regionStatus": "READY",
+    "signedTenancyMatch": true,
+    "subscriptions": [
+      {
+        "paymentModel": "FREE_TRIAL",
+        "state": "ACTIVE"
+      }
+    ]
+  },
+  "billingType": "LIMITED_FREE",
+  "bucket": {
+    "autoTiering": "Disabled",
+    "bucket": "ir35-backups",
+    "customerManagedKey": false,
+    "replicationEnabled": false,
+    "status": "PASS",
+    "storageTier": "Standard",
+    "versioning": "Disabled"
+  },
+  "exactObjectBytes": 0,
+  "inventorySHA256": "998b1269588890b50c65a7afe5c67d716b3423a495c3a27338d4935cebfaa7e0",
+  "liveVolumeGB": "150",
+  "newPaidResources": 0,
+  "realTimeZeroBillProven": false,
+  "shape": "VM.Standard.A1.Flex",
+  "status": "PASS"
+}

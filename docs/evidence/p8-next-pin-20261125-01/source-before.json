@@ -1,0 +1,9 @@
+{
+  "infra/oracle/p8_images_guest.py": "772783154cf6f6440024b755df4e5bc0bfa20062a7fdc071fee21682d2e3c588",
+  "infra/oracle/p8_webqa_config.py": "44be63aac60162983158707c4f07431bf37b434199c29b6178ded49ce41b1bd6",
+  "infra/oracle/tests/test_p8_webqa_config.py": "8de74285678b2222b6baffb00cd6c87530c11f9d80b6cd6a92747038c2e8c630",
+  "infra/oracle/tests/test_web_security.py": "a4dec9b8ce4358673512897eadfaf47ccfd3a59ff0c4cca15e006674dbc2825d",
+  "infra/oracle/web_security.py": "c6023a6a6b78d6792a48e87dad126d1c700589cbd1ad1c45d5a9c6c628721311",
+  "package-lock.json": "4348f2c8e91e74dbf6e37ef657a22e7e10b96ef8c9a6804b2b4bf1649e9cc02d",
+  "tests/unit/next-security.test.ts": "7412b12ba856e470ad4ffcba98fc8f5715692da63bf6964eea7d890f66e7b85c"
+}

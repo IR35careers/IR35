@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "date": "2026-11-24",
+  "status": "BLOCKED",
+  "scope": "Offline P8 source checks; no native lifecycle attempt",
+  "candidate": {
+    "next": "16.4.6",
+    "eslintConfigNext": "16.4.6",
+    "queue": "0.11.0",
+    "queueMinimatch": "11.0.9",
+    "typescriptEslint": "8.74.0",
+    "unaffectedCallableMinimatchRetained": "3.1.5",
+    "advisoryExceptionsAdded": 0
+  },
+  "fullPythonSuite": {
+    "status": "FAIL",
+    "reason": "Unchanged180SecondSuiteTimeout",
+    "seconds": 180.147,
+    "completedTestsBeforeTimeout": 575,
+    "assertionFailuresObservedBeforeTimeout": 0,
+    "timeoutCauseProven": false,
+    "pythonSourceFiles": 328,
+    "pythonSourcesUnchanged": true,
+    "manifest": "p8-lifecycle-owner23-hermetic-20261124-01/manifest.json",
+    "manifestSHA256": "97871d8837e089487d8126e3f99b903b231c7d070c91e9431e4768ce8622e8f2",
+    "rerunPerformed": false
+  },
+  "focusedPythonVersionGate": {
+    "status": "FAIL",
+    "tests": 3,
+    "passed": 2,
+    "errors": 1,
+    "case": "test_web_security.WebSecurityTests.test_exact_patched_lock_required",
+    "errorCode": "PatchedDependencyLockRequired",
+    "existingExactNextPin": "16.4.3",
+    "candidateExactNextPin": "16.4.6",
+    "assertionsOrPinsChanged": false
+  },
+  "candidateFullUnitSuite": {
+    "status": "FAIL",
+    "testFiles": 178,
+    "tests": 1312,
+    "passed": 1310,
+    "failed": 2,
+    "seconds": 227.48,
+    "failures": [
+      {
+        "file": "tests/unit/next-security.test.ts",
+        "reason": "Existing assertion requires exact Next 16.4.3"
+      },
+      {
+        "file": "tests/unit/bot-handoff.test.ts",
+        "reason": "Local bot-preview manifest remained at 16.4.3 while root candidate lock is 16.4.6"
+      }
+    ],
+    "newSdkAndBrowserBoundaryTestsPassed": 15,
+    "knownFailingFullSuiteReplayed": false
+  },
+  "requiredDecision": "Approve advancing exact Next and eslint-config-next security pins and their expected version metadata to 16.4.6. Keep exact-pin, integrity, canary rejection, historical-image rejection and all semantic security assertions unchanged.",
+  "fullContainmentRunThisTurn": false,
+  "nativeLifecycleAllowanceConsumed": false,
+  "vmChanges": 0,
+  "cloudWrites": 0,
+  "productionChanges": 0,
+  "dnsChanges": 0,
+  "cutover": false,
+  "phaseComplete": false
+}

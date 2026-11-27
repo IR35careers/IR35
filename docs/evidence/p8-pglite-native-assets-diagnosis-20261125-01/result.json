@@ -1,0 +1,167 @@
+{
+  "allPackageBytesUnchanged": true,
+  "copiedPackageBytes": 25606078,
+  "copiedPackageFiles": 308,
+  "copyHashVerificationMayPopulateOSFileCache": true,
+  "databaseOrCompilerWarmup": false,
+  "diagnosticStatus": "COMPLETED",
+  "existingGatePassClaimed": false,
+  "freshHomeEmpty": true,
+  "gateRerun": false,
+  "kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "nativeCalls": 0,
+  "observations": [
+    {
+      "elapsedMs": 0.079,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 203943,
+        "external": 8562898,
+        "heapTotal": 21995520,
+        "heapUsed": 16207336,
+        "rss": 102420480
+      },
+      "name": "clock-start-before-construction",
+      "stageMs": 0.079
+    },
+    {
+      "elapsedMs": 3.299,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 203943,
+        "external": 8562938,
+        "heapTotal": 21995520,
+        "heapUsed": 15797664,
+        "rss": 102551552
+      },
+      "name": "constructed",
+      "stageMs": 3.22
+    },
+    {
+      "elapsedMs": 12615.089,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90216409,
+        "external": 256144437,
+        "heapTotal": 43511808,
+        "heapUsed": 18514752,
+        "rss": 617783296
+      },
+      "name": "bootstrap-ready",
+      "stageMs": 12611.79
+    },
+    {
+      "elapsedMs": 12642.858,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90216751,
+        "external": 256144779,
+        "heapTotal": 43511808,
+        "heapUsed": 18848424,
+        "rss": 617783296
+      },
+      "name": "table-created",
+      "stageMs": 27.769
+    },
+    {
+      "elapsedMs": 12651.492,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90218315,
+        "external": 256146343,
+        "heapTotal": 43511808,
+        "heapUsed": 19097920,
+        "rss": 617914368
+      },
+      "name": "disabled-state-read",
+      "stageMs": 8.634
+    },
+    {
+      "elapsedMs": 12668.925,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90218315,
+        "external": 256146343,
+        "heapTotal": 43511808,
+        "heapUsed": 19289584,
+        "rss": 617914368
+      },
+      "name": "disabled-state-rejected",
+      "stageMs": 17.433
+    },
+    {
+      "elapsedMs": 12673.366,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90218672,
+        "external": 256146700,
+        "heapTotal": 43511808,
+        "heapUsed": 19451384,
+        "rss": 617914368
+      },
+      "name": "rls-enabled",
+      "stageMs": 4.441
+    },
+    {
+      "elapsedMs": 12676.428,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90220236,
+        "external": 256148264,
+        "heapTotal": 43511808,
+        "heapUsed": 19625344,
+        "rss": 617914368
+      },
+      "name": "enabled-state-read",
+      "stageMs": 3.062
+    },
+    {
+      "elapsedMs": 12677.749,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90220236,
+        "external": 256148264,
+        "heapTotal": 43511808,
+        "heapUsed": 19642136,
+        "rss": 617914368
+      },
+      "name": "enabled-state-accepted",
+      "stageMs": 1.321
+    },
+    {
+      "elapsedMs": 12683.168,
+      "kind": "stage",
+      "memory": {
+        "arrayBuffers": 90220496,
+        "external": 256148524,
+        "heapTotal": 43511808,
+        "heapUsed": 19799520,
+        "rss": 617914368
+      },
+      "name": "closed",
+      "stageMs": 5.419
+    },
+    {
+      "architecture": "x64",
+      "diagnosticStatus": "COMPLETED",
+      "existingGatePassClaimed": false,
+      "existingTestTimeoutChanged": false,
+      "gateRerun": false,
+      "initializationMovedOutsideClock": false,
+      "kind": "summary",
+      "node": "v24.13.0",
+      "platform": "linux",
+      "semanticChecks": 2,
+      "totalMs": 12683.958,
+      "v8": "13.6.233.17-node.37"
+    }
+  ],
+  "privateFilesCopied": 0,
+  "privateHomeCreated": false,
+  "processExitCode": 0,
+  "scope": "ONE-public-native-filesystem-standalone-diagnosis",
+  "sourceUnchanged": true,
+  "system": "Linux",
+  "targetFilesystem": "ext2/ext3",
+  "wallSeconds": 25.248
+}

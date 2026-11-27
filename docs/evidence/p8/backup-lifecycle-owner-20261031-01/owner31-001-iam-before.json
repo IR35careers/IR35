@@ -1,0 +1,11 @@
+{
+  "child-policies": [],
+  "groups": [],
+  "root-policies": [
+    {
+      "definitionSHA256": "41836268722951511409c9ba1dd2a8b2d293f06e16a9beb7bb694f2302842e9a",
+      "id": "ocid1.policy.oc1..aaaaaaaasuuh6fsyhrwe4bxsd4vueicqhlwbik2sf6bqdidzh26o7vdvd5gq",
+      "name": "Tenant Admin Policy"
+    }
+  ]
+}

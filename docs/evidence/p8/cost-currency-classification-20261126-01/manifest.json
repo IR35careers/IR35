@@ -1,0 +1,13 @@
+{
+  "artifacts": [
+    {
+      "name": "intent.json",
+      "sha256": "bdf5c22236a9b23c17892b0e4f8fdb9b5aaf74ab446a5210ae42b5c4e7b50fdf"
+    },
+    {
+      "name": "result.json",
+      "sha256": "6b13a39a15ee847fe37ac912f790e9595fa060241b88a6a1171576a72e0d7814"
+    }
+  ],
+  "version": 1
+}

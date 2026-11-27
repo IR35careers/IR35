@@ -1,0 +1,49 @@
+{
+  "apiReadAttempts": 1,
+  "browserOpened": false,
+  "cloudWrites": 0,
+  "currencyNormalised": false,
+  "cutoverExecuted": false,
+  "nativeAllowanceUsed": false,
+  "readOnly": true,
+  "rowCount": 2,
+  "rows": [
+    {
+      "amountFinite": true,
+      "amountPresent": true,
+      "amountSign": "zero",
+      "amountType": "float",
+      "currencyAscii": true,
+      "currencyEmpty": false,
+      "currencyLength": 3,
+      "currencyPresent": true,
+      "currencySHA256Prefix": "402419e92096bd4a",
+      "currencyType": "str",
+      "currencyUppercase3": true,
+      "currencyUppercase3AfterTrim": true,
+      "currencyWhitespaceOnly": false,
+      "index": 0,
+      "trimWouldChange": false
+    },
+    {
+      "amountFinite": true,
+      "amountPresent": true,
+      "amountSign": "zero",
+      "amountType": "float",
+      "currencyAscii": true,
+      "currencyEmpty": false,
+      "currencyLength": 1,
+      "currencyPresent": true,
+      "currencySHA256Prefix": "36a9e7f1c95b82ff",
+      "currencyType": "str",
+      "currencyUppercase3": false,
+      "currencyUppercase3AfterTrim": false,
+      "currencyWhitespaceOnly": true,
+      "index": 1,
+      "trimWouldChange": true
+    }
+  ],
+  "status": "DIAGNOSED_NOT_ELIGIBILITY_PASS",
+  "validationChanged": false,
+  "zeroBillConclusion": false
+}

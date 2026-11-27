@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "recordedAt": "2026-11-27T16:41:03.730Z",
+  "scope": "SOURCE_PUBLICATION_PRECHECKS_ONLY",
+  "prechecksStatus": "PASS",
+  "toolchain": {
+    "nodeVersion": "22.23.5",
+    "npmVersion": "11.19.0",
+    "nodeExecutableSHA256": "247e9693d316da9857e44990e5e11709f596f18112251b8026ec6eed80bdf38a",
+    "npmCliSHA256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
+  },
+  "checks": [
+    {
+      "id": "01-lock-refresh",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 23.755,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "3924d8f7df5ca430f3483753485854e5aab8574bb54618e66fb0d40faed4058a",
+      "resultSHA256": "0c5855366d39b30a90b37fd45a84e88d180dc5bd95aa78296ea9890439d2b8e4"
+    },
+    {
+      "id": "02-security-source",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 79.106,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "b47f0f4f5544011e3f2ab26201223bd26783c0686bf56496ff27e22c85aacf04",
+      "resultSHA256": "6d4dcc5808386daf773a9d1eb85279b9607e0e107e0d57fd61b6fef1aeabd3a1"
+    },
+    {
+      "id": "03-lock-dry-ci",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 17.761,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "53369cb3a137095a69c0c2d0c0b433c7ab434ec99a41a0a020e166a0734f6e03",
+      "resultSHA256": "e04273bafc6d426ad77461ae98687c18a11a837b90332e1cd89708e6cf5bfdc9"
+    },
+    {
+      "id": "04-typecheck",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 147.965,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "91446d5b371b9f467bb7149541fb189d68487aa5d3e3791e6816b7740e661660",
+      "resultSHA256": "49829080c9cc8b326934ce12a5d4d35c486404b0e195c63694ff5ad2ac2bb6dc"
+    },
+    {
+      "id": "05-lint",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 300.466,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "c6131b56bac3948001e7378813b37b69dc82eb72740cae05316e38dff11ae7ab",
+      "resultSHA256": "a82f44d0030a588c0933199079c40d0bf0922a9260a1086ecc9b8b33ad9e7f75"
+    },
+    {
+      "id": "06-build",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 268.108,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "d484b07593f0a3061e9a8ae0d38c3a8054733b430b982cc12ad4d3233a598dd3",
+      "resultSHA256": "9a386519d2d36941fc761dd830a3b44abcb2d3b43e8fd2e41fb4cd01e05f53a5"
+    },
+    {
+      "id": "07-audit",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 62.094,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "459d11fae3c7753aa892b3aae77d5a9b05783bb66fa3dc16010d11b7f3f80fbe",
+      "resultSHA256": "e3d3c16085b81fe4ef5edcbcea7b45d479c8a2db28f89514c1bab3e859407360"
+    },
+    {
+      "id": "08-signatures",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 159.174,
+      "timedOut": false,
+      "sourceChanges": 0,
+      "packageVersionResolvedIntegrityChanges": 0,
+      "redactions": 0,
+      "originalManifestSHA256": "38196b08ba5a4ed63d751d9854303966f8a654b8815ef0711513571c6a37a25e",
+      "resultSHA256": "ff269bf6d3c081113948fd2a5e4759ee42539d5a00860ce444f9f94ddd967ff9"
+    }
+  ],
+  "verifiedRegistrySignatures": 688,
+  "verifiedAttestations": 158,
+  "allOriginalManifestsAndReferencedArtifactsVerified": true,
+  "sourceSnapshotsUnchangedWithinEachPrecheck": true,
+  "environmentCredentialVariablesPassed": 0,
+  "localUnitOrRlsRun": false,
+  "nativeExecution": false,
+  "ciTriggered": false,
+  "fullReleasePassClaimed": false,
+  "phaseComplete": false,
+  "cutoverExecuted": false,
+  "limitations": [
+    "The eight actual captured prechecks apply to their individually recorded source snapshots, not an invented final-head CI result.",
+    "Only redacted result metadata and hashes are published; original arguments, logs, local paths and private state are excluded.",
+    "No local full-unit or RLS replay, native migration, phase completion or full release PASS is claimed.",
+    "Final exact-head canonical CI and independent migration safety gates remain required; parallel cloud operations are outside this summary."
+  ]
+}

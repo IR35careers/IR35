@@ -1,0 +1,22 @@
+{
+  "scope": "ONE-standalone-synthetic-offline-phase-diagnosis",
+  "diagnosticProcessBoundMs": 30000,
+  "existingTestTimeoutChanged": false,
+  "initializationMovedOutsideClock": false,
+  "gateRerun": false,
+  "existingGatePassClaimed": false,
+  "networkBlocked": true,
+  "nativeCalls": 0,
+  "environmentNames": [
+    "ComSpec",
+    "HOME",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "WINDIR"
+  ],
+  "startedAt": "2026-11-25T10:52:31.292Z"
+}

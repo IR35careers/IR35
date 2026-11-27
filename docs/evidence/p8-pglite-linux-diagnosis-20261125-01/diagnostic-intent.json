@@ -1,0 +1,16 @@
+{
+  "diagnosticCodeSHA256": "faa1f777c167a2e9669151ab307909f426f83c201077f258723f0d37c9989315",
+  "existingTestTimeoutChanged": false,
+  "flags": [
+    "--input-type=module"
+  ],
+  "gateRerun": false,
+  "nativeCalls": 0,
+  "networkBlocked": true,
+  "noPreinitializationOrCompilerCache": true,
+  "node": "v24.13.0",
+  "pglite": "0.5.9",
+  "processBoundSeconds": 30,
+  "scope": "ONE-Linux-standalone-not-test-gate",
+  "usesBuiltInTypeStripping": true
+}

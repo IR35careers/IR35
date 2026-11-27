@@ -1,0 +1,19 @@
+{
+  "exitCode": 0,
+  "fixtureFilesystem": "tmpfs",
+  "fixtureFreeBytesBefore": 1984757760,
+  "fixtureRemainingEntries": 0,
+  "freshHomeEmpty": true,
+  "fsyncMocked": false,
+  "fullSuitePassClaimed": false,
+  "nativeCalls": 0,
+  "previousFailureManifestSHA256": "b3997ff6b2186e20f4ab438b1b20fa71414f25c12a0c926c5db36c85e2c59244",
+  "privateFilesCopied": 0,
+  "privateHomeCreated": false,
+  "productionDurabilityClaimed": false,
+  "pythonSourceFiles": 334,
+  "seconds": 10.337,
+  "sourceUnchanged": true,
+  "status": "PASS",
+  "tests": 51
+}

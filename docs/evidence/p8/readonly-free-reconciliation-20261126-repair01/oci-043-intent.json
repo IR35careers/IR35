@@ -1,0 +1,5 @@
+{
+  "operation": "bucket",
+  "readOnly": true,
+  "selectorSHA256": "2bd04c2f44dec62449537e395bed8da222dbdff9447eead60068d2afe1d59eaf"
+}

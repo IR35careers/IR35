@@ -1,0 +1,19 @@
+test_all_eleven_exact_head_hosted_checks_required (test_p8_images.ImageTests.test_all_eleven_exact_head_hosted_checks_required) ... ok
+test_bad_or_secret_like_stdin_never_escapes_or_creates_a_native_intent (test_p8_images.ImageTests.test_bad_or_secret_like_stdin_never_escapes_or_creates_a_native_intent) ... ok
+test_complete_bundle_compiles_without_operator_files_or_network (test_p8_images.ImageTests.test_complete_bundle_compiles_without_operator_files_or_network) ... ok
+test_failure_is_sealed_before_stop_and_original_stage_verified (test_p8_images.ImageTests.test_failure_is_sealed_before_stop_and_original_stage_verified) ... ok
+test_invalid_cli_never_reads_private_context_or_calls_vm (test_p8_images.ImageTests.test_invalid_cli_never_reads_private_context_or_calls_vm) ... usage: p8_images.py [-h] --build-staging-only --hosted-checks-stdin
+p8_images.py: error: the following arguments are required: --build-staging-only, --hosted-checks-stdin
+ok
+test_missing_duplicate_and_malformed_names_are_not_green (test_p8_images.ImageTests.test_missing_duplicate_and_malformed_names_are_not_green) ... ok
+test_no_service_queue_schema_or_old_build_slot_activation (test_p8_images.ImageTests.test_no_service_queue_schema_or_old_build_slot_activation) ... ok
+test_only_current_two_cpu_twelve_gib_arm_and_measured_headroom (test_p8_images.ImageTests.test_only_current_two_cpu_twelve_gib_arm_and_measured_headroom) ... ok
+test_private_error_text_does_not_escape (test_p8_images.ImageTests.test_private_error_text_does_not_escape) ... ok
+test_process_wait_observes_live_owned_child_and_preserves_deadline (test_p8_images.ImageTests.test_process_wait_observes_live_owned_child_and_preserves_deadline) ... ok
+test_public_windows_get_metadata_uses_bounded_stdin_not_windows_binary_or_token (test_p8_images.ImageTests.test_public_windows_get_metadata_uses_bounded_stdin_not_windows_binary_or_token) ... ok
+test_unanchored_stage_fails_before_any_action_or_new_stage (test_p8_images.ImageTests.test_unanchored_stage_fails_before_any_action_or_new_stage) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.035s
+
+OK

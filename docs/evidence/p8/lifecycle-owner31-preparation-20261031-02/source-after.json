@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-31T13:46:02.529804+00:00",
+  "sourceSHA256": {
+    "infra/oracle/p8_lifecycle_owner31.py": "f9f807d89059d630cceba7411b9ff440a505b3b3311235c37aeec0855f3cde9f",
+    "infra/oracle/p8_lifecycle_protocol.py": "1b3a80138956f55c7d6ae637ee7a5c154c0b7d25d3ec692cc92b166736b7bbe3",
+    "infra/oracle/run_hermetic_suite.py": "96e817614a48b52f2d100a806aa70c9713d0384de055ca2885cebcdcdfdd0f01",
+    "infra/oracle/tests/test_p8_lifecycle_owner31.py": "f7c24f989588f1deaad490f1d253e21da690a55ff01a1a67e56f5aa05fcafa40",
+    "infra/oracle/tests/test_p8_lifecycle_protocol.py": "a0fd02eb13ff05f4850cebb25d2b5f03c34096b270f158102988233b720248a1"
+  },
+  "sourceUnchanged": true
+}

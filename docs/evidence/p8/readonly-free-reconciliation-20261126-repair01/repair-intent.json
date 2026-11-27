@@ -1,0 +1,13 @@
+{
+  "allCostRowsAccountedFor": true,
+  "auth": "SecurityToken",
+  "currencyInferred": false,
+  "focusedRepairManifestSHA256": "056a46b179e6b1260c521f5344224193407e4d777679b38ff0876d5cf807c9f1",
+  "priorFailureManifestSHA256": "3a938da9cc9552979b7407c1595c00b4316f6ac0756d9d9dffe055029b0c5309",
+  "profile": "ir35",
+  "region": "uk-london-1",
+  "scope": "existing-resource-metadata-only",
+  "separateKeeperFocusManifestSHA256": "75c79b56b8ec05517391d9c98d04f2bd81c9e0f22a01a01073ceed9f05f0bf2a",
+  "unknownCostStillRejected": true,
+  "writesPermitted": false
+}

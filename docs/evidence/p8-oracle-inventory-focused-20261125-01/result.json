@@ -1,0 +1,24 @@
+{
+  "status": "FAIL",
+  "exitCode": 1,
+  "signal": null,
+  "spawnError": null,
+  "seconds": 10.461,
+  "sourceUnchanged": true,
+  "freshHome": true,
+  "privateHomeCreated": false,
+  "changedTimeouts": false,
+  "changedAssertions": false,
+  "movedInitialization": false,
+  "nativeCalls": 0,
+  "tests": 12,
+  "passed": 11,
+  "failed": 1,
+  "rlsCase": [
+    {
+      "status": "failed",
+      "durationMs": 5820.7037,
+      "title": "executes the RLS regression against real disposable PostgreSQL"
+    }
+  ]
+}

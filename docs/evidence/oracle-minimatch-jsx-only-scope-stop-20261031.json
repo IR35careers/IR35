@@ -1,0 +1,88 @@
+{
+  "result": "STOP_OUTSIDE_APPROVED_JSX_ONLY_SHIM_SCOPE",
+  "checkedDate": "2026-10-31",
+  "sourceHead": "dc00103bb57fb42a06a87d7d5b0c4c2e308e1d75",
+  "advisory": "GHSA-g3hv-75wg-m249",
+  "firstPatchedVersion": "11.0.1",
+  "scope": {
+    "approvedLocalShimConsumer": "eslint-plugin-jsx-a11y",
+    "otherConsumersRoutedThroughShim": false,
+    "pluginFilesPatched": false,
+    "repositoryDependenciesChanged": false,
+    "fullReleaseAttemptConsumed": false,
+    "reason": "Two additional latest stable consumers require the callable minimatch 3 interface. The approved JSX-only shim cannot fix these chains, and a blind version-11 override demonstrably breaks their real rule calls. No knowingly incompatible dependency installation was attempted."
+  },
+  "blockingChains": [
+    ["eslint-config-next@16.4.3", "eslint-plugin-import@2.32.0", "minimatch@3.1.5"],
+    ["eslint-config-next@16.4.3", "eslint-plugin-react@7.37.5", "minimatch@3.1.5"]
+  ],
+  "primaryRegistryChecks": [
+    {
+      "package": "eslint-plugin-import",
+      "latestStable": "2.32.0",
+      "declaredMinimatch": "^3.1.2",
+      "otherDistTag": "next:2.0.0-beta.1",
+      "source": "https://registry.npmjs.org/eslint-plugin-import/latest"
+    },
+    {
+      "package": "eslint-plugin-react",
+      "latestStable": "7.37.5",
+      "declaredMinimatch": "^3.1.2",
+      "otherDistTag": "next:7.8.0-rc.0",
+      "source": "https://registry.npmjs.org/eslint-plugin-react/latest"
+    },
+    {
+      "package": "@typescript-eslint/typescript-estree",
+      "latestStable": "8.72.1",
+      "declaredMinimatch": "^10.2.2",
+      "source": "https://registry.npmjs.org/%40typescript-eslint%2Ftypescript-estree/latest"
+    }
+  ],
+  "isolatedActualRuleProbe": {
+    "testEngine": "Installed ESLint Linter with synthetic source and the actual installed plugin rule",
+    "candidate": "minimatch@11.0.1",
+    "candidateCommonJsExportType": "object",
+    "candidateNamedMinimatchType": "function",
+    "substitutionScope": "In-memory require interception for only the exact rule module inside a new child process; no node_modules file changes",
+    "cases": [
+      {
+        "rule": "import/no-namespace",
+        "publicOptions": {"ignore": ["@app/*"]},
+        "baseline": "PASS",
+        "baselineMessageIds": [],
+        "candidate": "FAIL",
+        "candidateErrorType": "TypeError",
+        "candidateErrorSummary": "minimatch default export is not callable"
+      },
+      {
+        "rule": "react/no-danger",
+        "publicOptions": {"customComponentNames": ["Custom*"]},
+        "baseline": "PASS",
+        "baselineMessageIds": ["dangerousProp"],
+        "candidate": "FAIL",
+        "candidateErrorType": "TypeError",
+        "candidateErrorSummary": "minimatch default export is not callable"
+      }
+    ],
+    "probeSourceSha256": "ac90fc9cd97f7a4af676e477422e1eb95ee6ff0bcd959ad338edcd594b43cc81",
+    "rawErrorMessagesRecorded": false,
+    "networkCallsDuringProbe": 0,
+    "existingRuleConfigurationChanged": false,
+    "semanticAssertionsChanged": false
+  },
+  "unchangedArtifacts": {
+    "originalStopEvidenceSha256": "c6f64864586b7e2f04fe68ccf4aee6b29744ca36db0ea8f4c80b060cfcaaa917",
+    "packageJsonSha256": "951e295221c772e295cdada6ba4f1683d7b5975130d6ea371cda1c2aae8954e3",
+    "packageLockSha256": "081ea5a45a3eee413d1571a7b0de996c06f8d2ae47e51a31848fd01d1ee94fe5"
+  },
+  "newShimImplemented": false,
+  "npmLocalOverrideFeasibilityClaimed": false,
+  "fullLintBaselineClaimed": false,
+  "securityPassClaimed": false,
+  "workflowOrExceptionChanged": false,
+  "commitOrPushPerformed": false,
+  "nativeOrPrivateAccessPerformed": false,
+  "lifecycleApprovalConsumedByThisTrack": false,
+  "productionChanges": false,
+  "cutoverApproved": false
+}

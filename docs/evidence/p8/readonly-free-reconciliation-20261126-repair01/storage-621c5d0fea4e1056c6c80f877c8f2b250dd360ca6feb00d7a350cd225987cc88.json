@@ -1,0 +1,16 @@
+{
+  "counterLabel": "bucket-4ac2062811f7c64e-second",
+  "observation": {
+    "bucket": "ir35-backups",
+    "deleteMarkerCount": 0,
+    "manifestSHA256": "c3e89c3e12a0ec5d8faccefe85d5e4ab26671d99f1434965bac0c0a9349470a8",
+    "objectCount": 0,
+    "tier": "Standard",
+    "totalBytes": 0,
+    "unfinishedPartBytes": 0,
+    "unfinishedPartCount": 0,
+    "unfinishedUploadCount": 0,
+    "versionBytesIncludingCurrent": 0,
+    "versionCount": 0
+  }
+}

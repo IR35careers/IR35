@@ -1,0 +1,67 @@
+{
+  "status": "PASS",
+  "scope": "offline-focused-only",
+  "ownerApproval": "2026-11-25-exact-next-config-16.4.6",
+  "python": [
+    {
+      "name": "python-web-security",
+      "exitCode": 0,
+      "freshHomeEmpty": true,
+      "nativeCalls": 0,
+      "privateHomeCreated": false,
+      "seconds": 4.2,
+      "status": "PASS",
+      "timeoutChanged": false,
+      "tests": 6
+    },
+    {
+      "name": "python-qa-config",
+      "exitCode": 0,
+      "freshHomeEmpty": true,
+      "nativeCalls": 0,
+      "privateHomeCreated": false,
+      "seconds": 0.779,
+      "status": "PASS",
+      "timeoutChanged": false,
+      "tests": 17
+    },
+    {
+      "name": "python-images",
+      "exitCode": 0,
+      "freshHomeEmpty": true,
+      "nativeCalls": 0,
+      "privateHomeCreated": false,
+      "seconds": 3.728,
+      "status": "PASS",
+      "timeoutChanged": false,
+      "tests": 12
+    }
+  ],
+  "node": {
+    "status": "PASS",
+    "exitCode": 0,
+    "signal": null,
+    "spawnError": null,
+    "seconds": 12.312,
+    "freshHome": true,
+    "privateHomeCreated": false,
+    "environmentNames": [
+      "ComSpec",
+      "HOME",
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERPROFILE",
+      "WINDIR"
+    ],
+    "testTimeoutChanged": false,
+    "nativeCalls": 0
+  },
+  "sourceUnchanged": true,
+  "historicalArtifactsChanged": false,
+  "nativeCalls": 0,
+  "productionChanges": 0,
+  "fullSuitePassClaimed": false
+}

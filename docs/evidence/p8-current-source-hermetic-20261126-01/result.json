@@ -1,0 +1,21 @@
+{
+  "copiedPrivateFiles": 0,
+  "exitCode": 0,
+  "fixtureFilesystem": "tmpfs",
+  "fixtureFreeBytesBefore": 1984757760,
+  "fixtureRemainingEntries": 0,
+  "freshHome": true,
+  "fsyncMocked": false,
+  "fullReleasePassClaimed": false,
+  "ir35DirectoryPresentAfter": false,
+  "ir35DirectoryPresentBefore": false,
+  "productionDurabilityClaimed": false,
+  "pythonSourceFiles": 335,
+  "pythonSourcesUnchanged": true,
+  "realKeysSupplied": false,
+  "seconds": 129.368,
+  "status": "PASS",
+  "tests": 970,
+  "testsRemoved": 0,
+  "vmCalls": 0
+}

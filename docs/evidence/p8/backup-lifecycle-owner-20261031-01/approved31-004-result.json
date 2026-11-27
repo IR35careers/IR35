@@ -1,0 +1,8 @@
+{
+  "ambiguousCreatePossible": false,
+  "exceptionType": "OciError",
+  "httpStatus": 404,
+  "rawOutputWithheld": true,
+  "serviceCode": "LifecyclePolicyNotFound",
+  "status": "FAIL"
+}

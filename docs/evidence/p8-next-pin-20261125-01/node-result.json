@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "exitCode": 0,
+  "signal": null,
+  "spawnError": null,
+  "seconds": 12.312,
+  "freshHome": true,
+  "privateHomeCreated": false,
+  "environmentNames": [
+    "ComSpec",
+    "HOME",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "WINDIR"
+  ],
+  "testTimeoutChanged": false,
+  "nativeCalls": 0
+}

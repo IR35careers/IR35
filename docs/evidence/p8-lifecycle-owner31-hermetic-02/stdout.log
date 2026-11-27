@@ -1,0 +1,42 @@
+CREATE CHECK: compartment; IAM/quota control-plane, no VM/shape/volume allocation. Always Free/no service charge; London ACTIVE Free Trial freshly verified; future ceiling A1 2OCPU/12GB, live150GB, five backups, Standard object8GB. Existing GBP1 budget verified; no production/upgrade/cutover. specSHA256=94e0cd2c12baf71e8f476416a98611ab964831717cc99d59eb5624bad8b4f14f
+WAIT: compartment not yet visible; next read in 5s; no create retry.
+WAIT: compartment not yet visible; next read in 10s; no create retry.
+WAIT: compartment not yet visible; next read in 20s; no create retry.
+WAIT: compartment not yet visible; next read in 40s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 45s; no create retry.
+CREATE CHECK: compartment; IAM/quota control-plane, no VM/shape/volume allocation. Always Free/no service charge; London ACTIVE Free Trial freshly verified; future ceiling A1 2OCPU/12GB, live150GB, five backups, Standard object8GB. Existing GBP1 budget verified; no production/upgrade/cutover. specSHA256=a06ce88abb3c1f1940812a9259d78c7a76f6e780cb44d59577a8c4f19b239754
+PASS: compartment independently read back ACTIVE; owner-only journal saved. OCID=ocid1.compartment.oc1..controlledfixture01
+PASS: compartment independently read back ACTIVE; owner-only journal saved. OCID=ocid1.compartment.oc1..controlledfixture01
+PASS: compartment independently read back ACTIVE; owner-only journal saved. OCID=ocid1.compartment.oc1..controlledfixture01
+CREATE CHECK: compartment; IAM/quota control-plane, no VM/shape/volume allocation. Always Free/no service charge; London ACTIVE Free Trial freshly verified; future ceiling A1 2OCPU/12GB, live150GB, five backups, Standard object8GB. Existing GBP1 budget verified; no production/upgrade/cutover. specSHA256=5d48f5f645695512c9af8b6c03e5ad19632e8e012fa37679be53d099daaf1280
+WAIT: compartment not yet visible; next read in 5s; no create retry.
+PASS: compartment independently read back ACTIVE; owner-only journal saved. OCID=ocid1.compartment.oc1..controlledfixture01
+CREATE CHECK: compartment; IAM/quota control-plane, no VM/shape/volume allocation. Always Free/no service charge; London ACTIVE Free Trial freshly verified; future ceiling A1 2OCPU/12GB, live150GB, five backups, Standard object8GB. Existing GBP1 budget verified; no production/upgrade/cutover. specSHA256=654feb8de9854bd230b1ce51f808f6c342926f23da30762cc254624f2ac065a7
+WAIT: compartment not yet visible; next read in 5s; no create retry.
+WAIT: compartment not yet visible; next read in 10s; no create retry.
+WAIT: compartment not yet visible; next read in 20s; no create retry.
+WAIT: compartment not yet visible; next read in 40s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 60s; no create retry.
+WAIT: compartment not yet visible; next read in 45s; no create retry.
+WAIT: quota-effective not yet visible; next read in 5s; no create retry.
+PASS: root quota listed ACTIVE and effective child/AD limits are2/12/150; aggregate free envelope unchanged.
+CREATE CHECK: ONE free Bastion session, TTL1800, existing A1 2OCPU/12GB/150GB only, approved VM private22; no Bastion/IAM/network/secret/production changes.
+CREATE CHECK: ONE free Bastion session, TTL1800, existing A1 2OCPU/12GB/150GB only, approved VM private22; no Bastion/IAM/network/secret/production changes.
+CREATE CHECK: ONE free Bastion session, TTL1800, existing A1 2OCPU/12GB/150GB only, approved VM private22; no Bastion/IAM/network/secret/production changes.
+CREATE CHECK: ONE free Bastion session, TTL1800, existing A1 2OCPU/12GB/150GB only, approved VM private22; no Bastion/IAM/network/secret/production changes.
+{"status": "DRY_RUN", "sourceWrites": 0, "stagingWrites": 0, "productionDestinations": false, "cycles": 2, "phaseComplete": false}

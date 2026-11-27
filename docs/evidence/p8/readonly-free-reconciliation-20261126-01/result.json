@@ -1,0 +1,13 @@
+{
+  "cloudWrites": 0,
+  "code": "RawErrorWithheld",
+  "cutoverExecuted": false,
+  "exceptionType": "KeySafetyError",
+  "keyOrIAMChanges": 0,
+  "lifecycleNativeAllowanceUsed": false,
+  "phaseComplete": false,
+  "readOnly": true,
+  "realTimeZeroBillProven": false,
+  "status": "FAIL",
+  "vmChanges": 0
+}

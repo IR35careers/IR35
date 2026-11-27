@@ -1,0 +1,9 @@
+{
+  "cutover": false,
+  "nativeAttemptUsed": false,
+  "oracleGate": "G2",
+  "phaseComplete": false,
+  "productionChanges": 0,
+  "scope": "offline-only",
+  "status": "PASS"
+}

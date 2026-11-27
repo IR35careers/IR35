@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """WSL per-boot SSH agent. Private key remains encrypted, never read here."""
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,56 @@ import time
 from bootstrap_audit import KEY_DIRECTORY
 from key_ceremony import KeySafetyError, private_directory, write_new
 from security_session import private_file
+
+OWNER25_RETRY01_ATTEMPT_SHA256 = 'db772024c63bccd2c5951828c8701f9ec3e41cd037558cf247e26a078fdbc458'
+OWNER25_RETRY01_RESULT_SHA256 = '518fbe5ec585744e9801954215ec7b344b7fc39d1a4dd5362317f14329e70b0c'
+
+
+def _owner_metadata_bytes(path):
+    """Read only the same owned descriptor; exact bytes bind old retry evidence."""
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        before = os.fstat(descriptor)
+        if (not stat.S_ISREG(before.st_mode) or before.st_uid != os.getuid()
+                or stat.S_IMODE(before.st_mode) != 0o600 or before.st_nlink != 1 or before.st_size > 65536):
+            raise KeySafetyError('Owner25PreviousMetadataCustodyRequired')
+        body = b''
+        while len(body) <= 65536:
+            chunk = os.read(descriptor, 65536 - len(body) + 1)
+            if not chunk: break
+            body += chunk
+        after, named = os.fstat(descriptor), path.lstat()
+        if (len(body) != before.st_size or len(body) > 65536
+                or (before.st_dev, before.st_ino, before.st_mtime_ns, before.st_ctime_ns)
+                   != (after.st_dev, after.st_ino, after.st_mtime_ns, after.st_ctime_ns)
+                or not stat.S_ISREG(named.st_mode) or named.st_nlink != 1
+                or (named.st_dev, named.st_ino) != (after.st_dev, after.st_ino)):
+            raise KeySafetyError('Owner25PreviousMetadataChanged_NoPrompt')
+        return body
+    finally:
+        os.close(descriptor)
+
+
+def _owner25_retry02_predecessor(directory, fingerprint, agent_pid):
+    try:
+        attempt = _owner_metadata_bytes(directory / 'load-owner-migration-retry-20261125.json')
+        result = _owner_metadata_bytes(directory / 'load-owner-migration-retry-20261125-result.json')
+        if (hashlib.sha256(attempt).hexdigest() != OWNER25_RETRY01_ATTEMPT_SHA256
+                or hashlib.sha256(result).hexdigest() != OWNER25_RETRY01_RESULT_SHA256):
+            raise ValueError()
+        intent, receipt = json.loads(attempt), json.loads(result)
+        if (intent.get('ownerMigrationRetry20261125') is not True or intent.get('promptAttempted') is not True
+                or intent.get('expectedFingerprint') != fingerprint or intent.get('agentPID') != agent_pid
+                or receipt.get('status') != 'FAIL' or receipt.get('code') != 'NativeSshUnlockFailed_RawWithheld'
+                or receipt.get('retryAllowed') is not False
+                or receipt.get('previousAttemptSHA256') != intent.get('previousAttemptSHA256')
+                or hashlib.sha256(_owner_metadata_bytes(directory / 'load-owner-migration-20261026.json')).hexdigest()
+                   != intent.get('previousAttemptSHA256')
+                or (directory / 'load-owner-migration-20261026-result.json').exists()):
+            raise ValueError()
+        return OWNER25_RETRY01_ATTEMPT_SHA256, OWNER25_RETRY01_RESULT_SHA256
+    except Exception:
+        raise KeySafetyError('Owner25Retry02RequiresExactRetainedFailure_SameAgent_NoPrompt') from None
 
 
 def boot_directory():
@@ -39,7 +90,13 @@ def expected_fingerprint():
     return match[1]
 
 
-def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_four_hour_reopen=False, owner_ready_four_hour=False, owner_migration=False):
+def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_four_hour_reopen=False, owner_ready_four_hour=False, owner_migration=False, owner_migration_retry_20261125=False, owner_migration_retry_20261125_02=False):
+    if (type(owner_migration_retry_20261125_02) is not bool or owner_migration_retry_20261125_02
+            and (not load or any((owner_retry, owner_four_hour, owner_four_hour_reopen, owner_ready_four_hour, owner_migration, owner_migration_retry_20261125)))):
+        raise KeySafetyError('Owner25Retry02RequiresItsSingleExplicitPlainLoad')
+    if (type(owner_migration_retry_20261125) is not bool or owner_migration_retry_20261125
+            and (not load or any((owner_retry, owner_four_hour, owner_four_hour_reopen, owner_ready_four_hour, owner_migration)))):
+        raise KeySafetyError('Owner25RetryRequiresItsSingleExplicitPlainLoad')
     if type(owner_retry)is not bool or owner_retry and not load:
         raise KeySafetyError("Owner retry requires an explicit native load operation.")
     if type(owner_four_hour) is not bool or owner_four_hour and (not load or owner_retry):
@@ -76,14 +133,45 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
         if result.returncode not in (0, 1):
             raise KeySafetyError("Existing agent is unreachable; no restart or repeated passphrase prompt.")
         migration_receipt = directory / 'load-owner-migration-20261026-result.json'
-        if load and not loaded and migration_receipt.exists():
+        retry_attempt = directory / 'load-owner-migration-retry-20261125.json'
+        retry_receipt = directory / 'load-owner-migration-retry-20261125-result.json'
+        retry02_attempt = directory / 'load-owner-migration-retry-20261125-02.json'
+        retry02_receipt = directory / 'load-owner-migration-retry-20261125-02-result.json'
+        if retry_receipt.exists():
+            migration_receipt = retry_receipt
+        if retry02_receipt.exists():
+            migration_receipt = retry02_receipt
+        if load and not loaded and (retry02_attempt.exists() or retry02_receipt.exists()):
+            raise KeySafetyError('Owner25Retry02AlreadyAttempted_NoReprompt')
+        retry02_chain = None
+        if load and not loaded and owner_migration_retry_20261125_02:
+            retry02_chain = _owner25_retry02_predecessor(directory, fingerprint, json.loads(private_file(state))['pid'])
+        if load and not loaded and migration_receipt.exists() and not (retry02_chain and migration_receipt == retry_receipt):
             raise KeySafetyError('MigrationIdentityUnloadedInSameAgent_NoAutomaticReprompt')
+        if load and not loaded and retry_attempt.exists() and not retry02_chain:
+            raise KeySafetyError('Owner25RetryAlreadyAttempted_NoReprompt')
         if load and (not loaded or owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour):
             if not sys.stdin.isatty() or not sys.stdout.isatty():
                 raise KeySafetyError("SSH key loading needs the native terminal's hidden prompt, never chat/pipes.")
             attempt = directory / "load-attempt.json"
             if owner_migration:
                 attempt = directory / 'load-owner-migration-20261026.json'
+            prior_attempt_sha = None
+            prior_result_sha = None
+            if owner_migration_retry_20261125:
+                previous = private_file(directory / 'load-owner-migration-20261026.json')
+                previous_metadata = json.loads(previous)
+                if (previous_metadata.get('promptAttempted') is not True
+                        or previous_metadata.get('plainMigrationOwnerApproval') is not True
+                        or (directory / 'load-owner-migration-20261026-result.json').exists()):
+                    raise KeySafetyError('Owner25RetryRequiresRetainedUnsuccessfulMigrationPrompt')
+                prior_attempt_sha = hashlib.sha256(previous.encode()).hexdigest()
+                attempt = retry_attempt
+            if owner_migration_retry_20261125_02:
+                if not retry02_chain:
+                    raise KeySafetyError('Owner25Retry02ExactFailureChainRequired_NoPrompt')
+                prior_attempt_sha, prior_result_sha = retry02_chain
+                attempt = retry02_attempt
             if owner_four_hour:
                 # A separately approved single prompt; never reset previous
                 # prompt journals or silently extend an existing identity.
@@ -118,19 +206,49 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
             write_new(attempt, json.dumps({'promptAttempted': True, 'fourHourOwnerApproval': owner_four_hour,
                                           'freshLeaseOwnerApproval': owner_four_hour_reopen,
                                           'readyHandoffOwnerApproval': owner_ready_four_hour,
-                                          'plainMigrationOwnerApproval': owner_migration}).encode())
+                                          'plainMigrationOwnerApproval': owner_migration,
+                                          'ownerMigrationRetry20261125': owner_migration_retry_20261125,
+                                          'ownerMigrationRetry20261125_02': owner_migration_retry_20261125_02,
+                                          'previousAttemptSHA256': prior_attempt_sha,
+                                          'previousResultSHA256': prior_result_sha,
+                                          'expectedFingerprint': fingerprint if owner_migration_retry_20261125 or owner_migration_retry_20261125_02 else None,
+                                          'agentPID': json.loads(private_file(state))['pid'] if owner_migration_retry_20261125 or owner_migration_retry_20261125_02 else None}).encode())
             # ssh-add owns native hidden input. Never obtain/pass/store the passphrase.
             arguments = ['ssh-add', '-t', '4h', str(KEY_DIRECTORY / 'ssh_ed25519')] if owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour else ['ssh-add', str(KEY_DIRECTORY / 'ssh_ed25519')]
-            result = subprocess.run(arguments, env=environment, timeout=300, check=False)
+            def retry_failure(code):
+                if owner_migration_retry_20261125 or owner_migration_retry_20261125_02:
+                    target_receipt = retry02_receipt if owner_migration_retry_20261125_02 else retry_receipt
+                    write_new(target_receipt, json.dumps({'status': 'FAIL', 'code': code,
+                        'previousAttemptSHA256': prior_attempt_sha, 'previousResultSHA256': prior_result_sha,
+                        'retryAllowed': False}).encode())
+            try:
+                result = subprocess.run(arguments, env=environment, timeout=300, check=False)
+            except BaseException:
+                retry_failure('NativeSshUnlockFailed_RawWithheld')
+                raise KeySafetyError('NativeSshUnlockFailed_NoReprompt') from None
             if result.returncode:
+                retry_failure('NativeSshUnlockExitFailure')
                 raise KeySafetyError("SSH key was not loaded; no repeat prompt this boot.")
-            result = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True, env=environment, timeout=5, check=False)
+            try:
+                result = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True, env=environment, timeout=5, check=False)
+            except BaseException:
+                retry_failure('SshFingerprintReadFailed_RawWithheld')
+                raise KeySafetyError('SshFingerprintReadFailed_NoReprompt') from None
             loaded = result.returncode == 0 and any(len(line.split()) >= 2 and line.split()[1] == fingerprint for line in result.stdout.splitlines())
             if not loaded:
+                retry_failure('SshFingerprintVerificationFailed')
                 raise KeySafetyError("Agent fingerprint verification failed; do not repeat the prompt.")
             if owner_migration:
                 write_new(migration_receipt, json.dumps({'keyLoaded': True, 'fingerprint': fingerprint,
                     'mode': 'until-agent-restart', 'agentPID': json.loads(private_file(state))['pid']}).encode())
+            if owner_migration_retry_20261125 or owner_migration_retry_20261125_02:
+                target_receipt = retry02_receipt if owner_migration_retry_20261125_02 else retry_receipt
+                write_new(target_receipt, json.dumps({'status': 'PASS', 'keyLoaded': True,
+                    'fingerprint': fingerprint, 'mode': 'until-agent-restart',
+                    'agentPID': json.loads(private_file(state))['pid'],
+                    'previousAttemptSHA256': prior_attempt_sha, 'previousResultSHA256': prior_result_sha,
+                    'retryAllowed': False}).encode())
+                migration_receipt = target_receipt
             if owner_four_hour or owner_four_hour_reopen or owner_ready_four_hour:
                 # Conservative deadline starts BEFORE the prompt, never later
                 # than ssh-add's real expiry. Metadata only, no private key.
@@ -145,7 +263,8 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
             answer['keyFingerprint'] = fingerprint
         if loaded and migration_receipt.exists():
             metadata = json.loads(private_file(migration_receipt))
-            if (metadata.get('fingerprint') != fingerprint or metadata.get('mode') != 'until-agent-restart'
+            if (migration_receipt in (retry_receipt, retry02_receipt) and metadata.get('status') != 'PASS'
+                    or metadata.get('fingerprint') != fingerprint or metadata.get('mode') != 'until-agent-restart'
                     or metadata.get('agentPID') != json.loads(private_file(state))['pid']):
                 raise KeySafetyError('MigrationAgentOrFingerprintReceiptMismatch')
             answer['keyLeaseMode'] = 'until-agent-restart'
@@ -169,9 +288,13 @@ def ensure_agent(*, load=False, owner_retry=False, owner_four_hour=False, owner_
 
 
 def cli(arguments):
-    if arguments not in (["check"], ["load"], ["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold'], ['load-owner-migration-and-hold']):
+    if arguments not in (["check"], ["load"], ["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold'], ['load-owner-migration-and-hold'], ['load-owner-migration-retry-20261125-and-hold'], ['load-owner-migration-retry-20261125-02-and-hold']):
         raise KeySafetyError("Use check, load, load-and-hold or the explicitly owner-requested retry only.")
-    if arguments == ['load-owner-migration-and-hold']:
+    if arguments == ['load-owner-migration-retry-20261125-02-and-hold']:
+        result = ensure_agent(load=True, owner_migration_retry_20261125_02=True)
+    elif arguments == ['load-owner-migration-retry-20261125-and-hold']:
+        result = ensure_agent(load=True, owner_migration_retry_20261125=True)
+    elif arguments == ['load-owner-migration-and-hold']:
         result = ensure_agent(load=True, owner_migration=True)
     elif arguments == ['load-owner-ready-four-hour-and-hold']:
         result = ensure_agent(load=True, owner_ready_four_hour=True)
@@ -182,7 +305,7 @@ def cli(arguments):
     else:
         result = ensure_agent(load=True,owner_retry=True) if arguments == ["load-owner-retry-and-hold"] else ensure_agent(load=arguments != ["check"])
     print(json.dumps({key: value for key, value in result.items() if key != "socket"}), flush=True)
-    if arguments in (["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold'], ['load-owner-migration-and-hold']):
+    if arguments in (["load-and-hold"], ["load-owner-retry-and-hold"], ['load-owner-four-hour-and-hold'], ['load-owner-four-hour-reopen-and-hold'], ['load-owner-ready-four-hour-and-hold'], ['load-owner-migration-and-hold'], ['load-owner-migration-retry-20261125-and-hold'], ['load-owner-migration-retry-20261125-02-and-hold']):
         if not result["keyLoaded"]:
             raise KeySafetyError("Cannot hold an unloaded SSH identity.")
         print("SSH loaded. Keep this window open during staging work so WSL does not idle-stop the agent. Close it or press Ctrl+C when finished. No CPU load or VM operation is generated.", flush=True)

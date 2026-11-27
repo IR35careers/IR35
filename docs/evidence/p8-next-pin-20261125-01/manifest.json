@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "name": "intent.json",
+      "sha256": "a0eec3de03eaf09b1f97add03d40c2b42216af0090c837aca83b779f42b04125"
+    },
+    {
+      "name": "node-result.json",
+      "sha256": "96f6fd07d61b9503cd7bf382fe92f0a91fd43c6f4c591e8e7e6e19ff143f1246"
+    },
+    {
+      "name": "node-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "node-stdout.log",
+      "sha256": "50d8bae5846ae04cc1e9ccc01613d678e6fdcf168efec5f88e546f8e8b343401"
+    },
+    {
+      "name": "python-images-result.json",
+      "sha256": "22210a7838a91c9b42692f7022758285b2d67f4b4db0963a8c24a53269e30a53"
+    },
+    {
+      "name": "python-images-stderr.log",
+      "sha256": "bce3646f265d5757781752a07e16a3e8f70f3a188013e24e83203fba57cc6ffc"
+    },
+    {
+      "name": "python-images-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "python-qa-config-result.json",
+      "sha256": "9a305b87cdd63d7d7c1c2204963c3ab314e5b0f8d947b6fcc5a1b3c487e4e9b7"
+    },
+    {
+      "name": "python-qa-config-stderr.log",
+      "sha256": "2668b3c982a7efea39870d25c2c0a16f0d765feb745a9d19e20fce18beeac540"
+    },
+    {
+      "name": "python-qa-config-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "python-web-security-result.json",
+      "sha256": "2f4bfde3b24fc1f6bf75a6e055e15873f3e0d1f8671e5a20367ab7c8fbc72c8a"
+    },
+    {
+      "name": "python-web-security-stderr.log",
+      "sha256": "f6219cd1228f21363dea2d43f3151c7ade469c9c0a8203acebef73ee335d0fea"
+    },
+    {
+      "name": "python-web-security-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "result.json",
+      "sha256": "aca3cb55211e7981462485da62452d775477f588ee439df6f35bf44f57c6fae6"
+    },
+    {
+      "name": "source-after.json",
+      "sha256": "837b1cd4ba3081e96e3cf7a7988166d32cb98a0a15c94fcd45f2d9e1ecd9ee6a"
+    },
+    {
+      "name": "source-before.json",
+      "sha256": "837b1cd4ba3081e96e3cf7a7988166d32cb98a0a15c94fcd45f2d9e1ecd9ee6a"
+    }
+  ]
+}

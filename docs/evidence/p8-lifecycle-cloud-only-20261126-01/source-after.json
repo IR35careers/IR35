@@ -1,0 +1,12 @@
+{
+  "infra/oracle/p8_lifecycle_eligibility.py": "7526e0ed06057fd70299f27f993bcf4df9c314f8916fa5cfbe6d88aacda97aaf",
+  "infra/oracle/p8_lifecycle_owner23.py": "e23474a173ca538d60522616c43cb32ce985d9d65b83be9760d5787da3980b4f",
+  "infra/oracle/p8_lifecycle_owner31.py": "c0fee0f785eb9644d03cc0aa9de194922ace8e2f5763ca59e60228c9d819ed41",
+  "infra/oracle/p8_lifecycle_protocol.py": "1b3a80138956f55c7d6ae637ee7a5c154c0b7d25d3ec692cc92b166736b7bbe3",
+  "infra/oracle/tests/test_p8_lifecycle_cloud_only.py": "18bce1366315a84e8986b48d0a6a8b876be2daca6120bc7eea91135c1d3ba180",
+  "infra/oracle/tests/test_p8_lifecycle_eligibility.py": "46d447c1e600ba6f27106cf70296d7a9fad24fc69485ec9f79b5cc822c5c8ebe",
+  "infra/oracle/tests/test_p8_lifecycle_integration.py": "31f10fdec2d9b5629c607fbca88a7ae485f52e151a7181f550a922bc28c99b2c",
+  "infra/oracle/tests/test_p8_lifecycle_owner23.py": "efbb4b1dd0d885efc0bf2e4a7154eb87027630eaca577b4160df6fc77dc40b5f",
+  "infra/oracle/tests/test_p8_lifecycle_owner31.py": "9666eb35e68f0bc66344ff548496564153959fad5fead7dddbcfcac1345f39b1",
+  "infra/oracle/tests/test_p8_lifecycle_protocol.py": "a0fd02eb13ff05f4850cebb25d2b5f03c34096b270f158102988233b720248a1"
+}

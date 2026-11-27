@@ -1,12 +1,14 @@
-param([switch]$OwnerRetryOnce, [switch]$OwnerFourHour, [switch]$OwnerFourHourReopen, [switch]$OwnerReadyFourHour, [switch]$OwnerMigration)
+param([switch]$OwnerRetryOnce, [switch]$OwnerFourHour, [switch]$OwnerFourHourReopen, [switch]$OwnerReadyFourHour, [switch]$OwnerMigration, [switch]$OwnerMigrationRetry20261125, [switch]$OwnerMigrationRetry2026112502)
 $ErrorActionPreference = 'Stop'
-if (([int]$OwnerRetryOnce.IsPresent + [int]$OwnerFourHour.IsPresent + [int]$OwnerFourHourReopen.IsPresent + [int]$OwnerReadyFourHour.IsPresent + [int]$OwnerMigration.IsPresent) -gt 1) { throw 'Choose only the specifically approved single prompt.' }
+if (([int]$OwnerRetryOnce.IsPresent + [int]$OwnerFourHour.IsPresent + [int]$OwnerFourHourReopen.IsPresent + [int]$OwnerReadyFourHour.IsPresent + [int]$OwnerMigration.IsPresent + [int]$OwnerMigrationRetry20261125.IsPresent + [int]$OwnerMigrationRetry2026112502.IsPresent) -gt 1) { throw 'Choose only the specifically approved single prompt.' }
 $Host.UI.RawUI.WindowTitle = 'IR35 SSH agent — once this boot (NOT OCI API)'
 if ($OwnerRetryOnce) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH agent - OWNER REQUESTED RETRY - NOT OCI API' }
 if ($OwnerFourHour) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH unlock - FOUR HOURS - ONE PROMPT - NOT OCI API' }
 if ($OwnerFourHourReopen) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH unlock - NEW FOUR-HOUR LEASE - ONE PROMPT - NOT OCI API' }
 if ($OwnerReadyFourHour) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH unlock - READY HANDOFF - ONE PROMPT - NOT OCI API' }
 if ($OwnerMigration) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH unlock - MIGRATION - NO LIFETIME - ONE PROMPT - NOT OCI API' }
+if ($OwnerMigrationRetry20261125) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH unlock - OWNER APPROVED 25 NOV RETRY - NO LIFETIME - NOT OCI API' }
+if ($OwnerMigrationRetry2026112502) { $Host.UI.RawUI.WindowTitle = 'IR35 SSH unlock - OWNER RETRY 02 - 25 NOV - NO LIFETIME - NOT OCI API' }
 Write-Host 'This is the EXISTING SSH Ed25519 passphrase, NOT the OCI API passphrase.'
 Write-Host 'ssh-add reads it at the native hidden prompt. Nothing is saved in config, env or logs.'
 Write-Host 'The encrypted key on disk is unchanged; only the agent holds the unlocked identity.'
@@ -18,6 +20,8 @@ if ($OwnerFourHour) { $AgentOperation = 'load-owner-four-hour-and-hold' }
 if ($OwnerFourHourReopen) { $AgentOperation = 'load-owner-four-hour-reopen-and-hold' }
 if ($OwnerReadyFourHour) { $AgentOperation = 'load-owner-ready-four-hour-and-hold' }
 if ($OwnerMigration) { $AgentOperation = 'load-owner-migration-and-hold' }
+if ($OwnerMigrationRetry20261125) { $AgentOperation = 'load-owner-migration-retry-20261125-and-hold' }
+if ($OwnerMigrationRetry2026112502) { $AgentOperation = 'load-owner-migration-retry-20261125-02-and-hold' }
 & wsl.exe --distribution Ubuntu --exec /home/anvesh/.ir35/oci/bin/python $WslAgentScript.Trim() $AgentOperation
 if ($LASTEXITCODE -ne 0) {
     Write-Host 'STOP: SSH identity was not loaded; no automatic re-prompt this boot. Tell Codex.'

@@ -1,0 +1,26 @@
+{
+  "code": "FreshFiveMinuteAlwaysFreeInventoryRequired",
+  "cutover": false,
+  "exceptionType": "OwnerRunError",
+  "freeInventory": {
+    "checkedAt": "2026-11-02T11:40:37.903591+00:00",
+    "cloudWrites": 0,
+    "cutover": false,
+    "keyOrIAMChanges": 0,
+    "objectStorageReads": 14,
+    "ociReads": 42,
+    "phaseComplete": false,
+    "readOnly": true,
+    "status": "PASS"
+  },
+  "nativeRetryAllowed": false,
+  "productionChanges": 0,
+  "rollback": {
+    "createdLifecycleRemoved": false,
+    "createdResourcesRemoved": 1,
+    "originalRootPolicySHA256": "41836268722951511409c9ba1dd2a8b2d293f06e16a9beb7bb694f2302842e9a",
+    "status": "PASS"
+  },
+  "status": "FAIL",
+  "vmChanges": 0
+}
